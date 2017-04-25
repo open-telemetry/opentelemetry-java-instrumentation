@@ -1,7 +1,10 @@
-package com.datadoghq.trace.impl.com.datadoghq.trace;
+package com.datadoghq.trace;
 
-/**
- * Created by gpolaert on 4/25/17.
- */
+import com.datadoghq.trace.impl.Span;
+
 public interface IWriter {
+
+    public void write(Span span);
+
+    public void close();
 }

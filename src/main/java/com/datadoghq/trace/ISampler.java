@@ -1,7 +1,10 @@
-package trace;
+package com.datadoghq.trace;
 
-/**
- * Created by gpolaert on 4/25/17.
- */
+
+import com.datadoghq.trace.impl.Span;
+
 public interface ISampler {
+
+    public boolean sample(Span span);
+
 }

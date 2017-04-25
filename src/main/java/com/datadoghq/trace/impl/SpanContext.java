@@ -1,7 +1,10 @@
 package com.datadoghq.trace.impl;
 
-/**
- * Created by gpolaert on 4/25/17.
- */
-public class SpanContext {
+
+import java.util.Map;
+
+public class SpanContext implements io.opentracing.SpanContext {
+    public Iterable<Map.Entry<String, String>> baggageItems() {
+        return null;
+    }
 }
