@@ -38,10 +38,6 @@ public class DDSpan implements io.opentracing.Span {
         this.durationNano = System.nanoTime() - startTime;
     }
 
-    public void finishWithDuration(long durationNano) {
-        this.durationNano = durationNano;
-    }
-
     public void finish(long stopTime) {
         this.durationNano = startTime - stopTime;
     }
