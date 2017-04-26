@@ -27,16 +27,16 @@ public class Tracer implements io.opentracing.Tracer {
     class SpanBuilder implements io.opentracing.Tracer.SpanBuilder {
 
         private final String operationName;
-        private Map<String, Object> tags = new HashMap();
+        private Map<String, Object> tags = new HashMap<String, Object>();
         private Long timestamp;
-        private Optional<SpanContext> parent = Optional.empty();
+        private Optional<com.datadoghq.trace.impl.SpanContext> parent = Optional.empty();
 
         public SpanBuilder(String operationName) {
             this.operationName = operationName;
         }
 
         public io.opentracing.Tracer.SpanBuilder asChildOf(SpanContext spanContext) {
-            this.parent = Optional.ofNullable(spanContext);
+            this.parent = Optional.ofNullable((com.datadoghq.trace.impl.SpanContext)spanContext);
             return this;
         }
 
@@ -75,7 +75,7 @@ public class Tracer implements io.opentracing.Tracer {
         public Span start() {
 
             // build the context
-            SpanContext context = buildTheSpanContext();
+            com.datadoghq.trace.impl.SpanContext context = buildTheSpanContext();
 
             return new com.datadoghq.trace.impl.Span(
                     Tracer.this,
@@ -85,13 +85,13 @@ public class Tracer implements io.opentracing.Tracer {
                     context);
         }
 
-        private SpanContext buildTheSpanContext() {
+        private com.datadoghq.trace.impl.SpanContext buildTheSpanContext() {
 
-            SpanContext context = null;
+        	com.datadoghq.trace.impl.SpanContext context = null;
 
             long generatedId = generateNewId();
             if (parent.isPresent()) {
-                com.datadoghq.trace.impl.SpanContext p = (com.datadoghq.trace.impl.SpanContext) parent.get();
+                com.datadoghq.trace.impl.SpanContext p = parent.get();
                 context = new com.datadoghq.trace.impl.SpanContext(
                         p.getTraceId(),
                         generatedId,

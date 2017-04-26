@@ -1,8 +1,8 @@
 package com.datadoghq.trace;
 
-import com.datadoghq.trace.impl.Span;
+import io.opentracing.Span;
 
-public interface IWriter {
+public interface Writer {
 
     public void write(Span span);
 
