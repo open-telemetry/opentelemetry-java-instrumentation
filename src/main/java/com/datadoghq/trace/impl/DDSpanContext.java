@@ -1,7 +1,10 @@
 package com.datadoghq.trace.impl;
 
 
+import io.opentracing.Span;
+
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,6 +23,19 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     // Sampler attributes
     private boolean sampled;
 
+    // Testing purpose, @todo better mock
+    DDSpanContext() {
+        serviceName = null;
+        resourceName = null;
+        traceId = 0;
+        spanId = 0;
+        parentId = 0;
+        baggageItems = new HashMap<>();
+        errorFlag = false;
+        metrics = null;
+        spanType = null;
+    }
+
     public DDSpanContext(
             long traceId,
             long spanId,
@@ -30,14 +46,15 @@ public class DDSpanContext implements io.opentracing.SpanContext {
             boolean errorFlag,
             Map<String, Object> metrics,
             String spanType,
-            boolean sampled) {
-        this.serviceName = serviceName;
-        this.resourceName = resourceName;
-        this.traceId = traceId;
+            boolean sampled) {        this.traceId = traceId;
         this.spanId = spanId;
         this.parentId = parentId;
         Optional<Map<String, String>> baggage = Optional.ofNullable(baggageItems);
-        this.baggageItems = baggage.orElse(Collections.emptyMap());
+
+        this.serviceName = serviceName;
+        this.resourceName = resourceName;
+
+        this.baggageItems = baggage.orElse(new HashMap<>());
         this.errorFlag = errorFlag;
         this.metrics = metrics;
 
@@ -73,7 +90,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     }
 
     public boolean isErrorFlag() {
-        return errorFlag;
+        return this.errorFlag;
     }
 
     public Map<String, Object> getMetrics() {
@@ -88,4 +105,15 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         return sampled;
     }
 
+    public void setBaggageItem(String key, String value) {
+        this.baggageItems.put(key, value);
+    }
+
+    public String getBaggageItem(String key) {
+        return this.baggageItems.get(key);
+    }
+
+    public Map<String, String> getBaggageItems() {
+        return baggageItems;
+    }
 }

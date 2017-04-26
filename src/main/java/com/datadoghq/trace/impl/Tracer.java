@@ -4,6 +4,7 @@ import io.opentracing.References;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
+import io.opentracing.tag.Tags;
 
 import java.util.*;
 
@@ -25,7 +26,7 @@ public class Tracer implements io.opentracing.Tracer {
     class SpanBuilder implements io.opentracing.Tracer.SpanBuilder {
 
         private final String operationName;
-        private Map<String, Object> tags = new HashMap();
+        private Map<String, Object> tags = new HashMap<>();
         private Long timestamp;
         private SpanContext parent;
 
@@ -94,30 +95,31 @@ public class Tracer implements io.opentracing.Tracer {
             DDSpanContext context;
 
             long generatedId = generateNewId();
-            if (parent != null) {
-                DDSpanContext p = (DDSpanContext) parent;
+            if (this.parent != null) {
+                DDSpanContext p = (DDSpanContext) this.parent;
                 context = new DDSpanContext(
                         p.getTraceId(),
                         generatedId,
                         p.getSpanId(),
+                        p.getServiceName(),
+                        (String) this.tags.getOrDefault(DDTags.RESOURCE.getKey(), ""),
+                        p.getBaggageItems(),
+                        this.tags.containsKey(Tags.ERROR.getKey()),
                         null,
-                        null,
-                        null,
-                        false,
-                        null,
-                        null,
-                        true);
+                        (String) this.tags.getOrDefault(Tags.SPAN_KIND.getKey(), ""),
+                        true
+                );
             } else {
                 context = new DDSpanContext(
                         generatedId,
                         generatedId,
                         0L,
+                        (String) this.tags.getOrDefault(DDTags.SERVICE.getKey(), ""),
+                        (String) this.tags.getOrDefault(DDTags.RESOURCE.getKey(), ""),
                         null,
+                        this.tags.containsKey(Tags.ERROR.getKey()),
                         null,
-                        null,
-                        false,
-                        null,
-                        null,
+                        (String) this.tags.getOrDefault(Tags.SPAN_KIND.getKey(), ""),
                         true);
             }
 

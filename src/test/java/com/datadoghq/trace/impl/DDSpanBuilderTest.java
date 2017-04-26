@@ -164,23 +164,35 @@ public class DDSpanBuilderTest {
     }
 
     @Test
-    public void shouldInheritOfBaggage() {
+    public void shouldInheritOfTheDDParentAttributes() {
 
         final String expectedName = "fakeName";
+        final String expectedServiceName = "fakeServiceName";
+        final String expectedResourceName = "fakeResourceName";
         final String expectedBaggageItemKey = "fakeKey";
         final String expectedBaggageItemValue = "fakeValue";
 
+        Map<String, String> baggage = new HashMap<String, String>() {{
+            put("service", expectedServiceName);
+        }};
+
         DDSpan parent = (DDSpan) tracer
                 .buildSpan(expectedName)
+                .withTag(DDTags.SERVICE.getKey(), expectedServiceName)
+                .withTag(DDTags.RESOURCE.getKey(), expectedResourceName)
                 .start();
 
-        assertThat(parent.getOperationName()).isEqualTo(expectedName);
-        assertThat(parent.context().baggageItems()).isEmpty();
+        parent.setBaggageItem(expectedBaggageItemKey, expectedBaggageItemValue);
 
-        DDSpan span = (DDSpan) tracer.buildSpan(expectedName).start();
+        DDSpan span = (DDSpan) tracer
+                .buildSpan(expectedName)
+                .asChildOf(parent)
+                .start();
 
         assertThat(span.getOperationName()).isEqualTo(expectedName);
         assertThat(span.getBaggageItem(expectedBaggageItemKey)).isEqualTo(expectedBaggageItemValue);
+        assertThat(span.DDContext().getServiceName()).isEqualTo(expectedServiceName);
+        assertThat(span.DDContext().getResourceName()).isNotEqualTo(expectedResourceName);
 
     }
 

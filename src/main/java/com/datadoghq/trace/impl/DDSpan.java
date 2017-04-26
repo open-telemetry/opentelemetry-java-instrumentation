@@ -72,12 +72,13 @@ public class DDSpan implements io.opentracing.Span {
         return null;
     }
 
-    public io.opentracing.Span setBaggageItem(String s, String s1) {
-        return null;
+    public io.opentracing.Span setBaggageItem(String key, String value) {
+        this.context.setBaggageItem(key, value);
+        return this;
     }
 
-    public String getBaggageItem(String s) {
-        return null;
+    public String getBaggageItem(String key) {
+        return this.context.getBaggageItem(key);
     }
 
     public io.opentracing.Span setOperationName(String s) {
@@ -107,5 +108,8 @@ public class DDSpan implements io.opentracing.Span {
     public DDSpanContext getContext(){
     	return context;
     }
-    
+
+    public DDSpanContext DDContext() {
+        return this.context;
+    }
 }
