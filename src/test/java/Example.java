@@ -1,6 +1,4 @@
-package com.datadoghq.trace;
-
-
+import com.datadoghq.trace.Writer;
 import com.datadoghq.trace.impl.Tracer;
 import com.datadoghq.trace.writer.impl.DDAgentWriter;
 import io.opentracing.Span;
