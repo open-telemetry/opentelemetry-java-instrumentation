@@ -1,9 +1,6 @@
 package com.datadoghq.trace.impl;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import com.datadoghq.trace.Utils.TracerLogger;
 
@@ -34,7 +31,7 @@ public class Tracer implements io.opentracing.Tracer {
         private final String operationName;
         private Map<String, Object> tags = new HashMap<>();
         private Long timestamp;
-        private SpanContext parent;
+        private DDSpan parent;
         private String serviceName;
         private String resourceName;
         private boolean errorFlag;
@@ -45,12 +42,14 @@ public class Tracer implements io.opentracing.Tracer {
         }
 
         public Tracer.SpanBuilder asChildOf(SpanContext spanContext) {
-            this.parent = spanContext;
-            return this;
+            throw new UnsupportedOperationException("Should be a complete span");
+            //this.parent = spanContext;
+            //return this;
         }
 
         public Tracer.SpanBuilder asChildOf(Span span) {
-            return asChildOf(span.context());
+            this.parent = (DDSpan) span;
+            return this;
         }
 
         public Tracer.SpanBuilder addReference(String referenceType, SpanContext spanContext) {
@@ -106,9 +105,15 @@ public class Tracer implements io.opentracing.Tracer {
             DDSpanContext context = buildTheSpanContext();
             logger.startNewSpan(this.operationName, context.getSpanId());
 
+            LinkedHashSet traces = null;
+            if (this.parent != null) {
+                traces = parent.getTraces();
+            }
+
             return new DDSpan(
                     Tracer.this,
                     this.operationName,
+                    traces,
                     this.tags,
                     this.timestamp,
                     context);
@@ -120,7 +125,7 @@ public class Tracer implements io.opentracing.Tracer {
 
             long generatedId = generateNewId();
             if (this.parent != null) {
-                DDSpanContext p = (DDSpanContext) this.parent;
+                DDSpanContext p = (DDSpanContext) this.parent.context();
                 context = new DDSpanContext(
                         p.getTraceId(),
                         generatedId,
@@ -154,7 +159,7 @@ public class Tracer implements io.opentracing.Tracer {
             if (parent == null) {
                 return Collections.emptyList();
             }
-            return parent.baggageItems();
+            return parent.context().baggageItems();
         }
     }
 

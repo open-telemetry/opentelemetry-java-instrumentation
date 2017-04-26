@@ -27,10 +27,8 @@ public class Example {
                 .withServiceName("service-name")
                 .start();
 
-        child.finish();
 
-        writer.write(parent);
-        writer.write(child);
+
 
         writer.close();
 
