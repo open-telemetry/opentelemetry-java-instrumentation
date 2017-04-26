@@ -15,19 +15,19 @@ public class Tracer implements io.opentracing.Tracer {
         return new SpanBuilder(operationName);
     }
 
-
     public <C> void inject(SpanContext spanContext, Format<C> format, C c) {
+        throw new UnsupportedOperationException();
 
     }
 
     public <C> SpanContext extract(Format<C> format, C c) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public class SpanBuilder implements io.opentracing.Tracer.SpanBuilder {
 
         private final String operationName;
-        private Map<String, Object> tags = new HashMap<String, Object>();
+        private Map<String, Object> tags = new HashMap<>();
         private Long timestamp;
         private SpanContext parent;
         private String serviceName;
@@ -49,13 +49,7 @@ public class Tracer implements io.opentracing.Tracer {
         }
 
         public Tracer.SpanBuilder addReference(String referenceType, SpanContext spanContext) {
-
-            if (References.CHILD_OF.equals(referenceType) || References.FOLLOWS_FROM.equals(referenceType)) {
-                // @todo: implements the notion of referenceType, currently only link a span to a parent one
-                return asChildOf(spanContext);
-            } else {
-                throw new IllegalArgumentException();
-            }
+            throw new UnsupportedOperationException();
         }
 
         public Tracer.SpanBuilder withTag(String tag, Number number) {

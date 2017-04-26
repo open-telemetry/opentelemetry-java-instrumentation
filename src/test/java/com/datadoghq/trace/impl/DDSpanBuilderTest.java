@@ -136,56 +136,8 @@ public class DDSpanBuilderTest {
 
         assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
 
-
     }
 
-    @Test
-    public void shouldLinkViaReferenceType() {
-
-
-        final long spanId = 223L;
-        final long expectedParentId = spanId;
-
-        DDSpanContext mockedContext = mock(DDSpanContext.class);
-        when(mockedContext.getSpanId()).thenReturn(spanId);
-
-        final String expectedName = "fakeName";
-
-
-        // case 1, using a CHILD_OF ref
-        DDSpan span = (DDSpan) tracer
-                .buildSpan(expectedName)
-                .addReference(References.CHILD_OF, mockedContext)
-                .start();
-
-        DDSpanContext actualContext = (DDSpanContext) span.context();
-        assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
-
-
-        // case 2, using a FOLLOW_FROM ref
-        span = (DDSpan) tracer
-                .buildSpan(expectedName)
-                .addReference(References.FOLLOWS_FROM, mockedContext)
-                .start();
-
-        actualContext = (DDSpanContext) span.context();
-        assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
-
-
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldErrorUnknownReferenceType() {
-
-        DDSpanContext mockedContext = mock(DDSpanContext.class);
-        when(mockedContext.getSpanId()).thenReturn(123L);
-
-        // case 2, using a WFT ref, should not be linked to the previous
-        DDSpan span = (DDSpan) tracer
-                .buildSpan("fakeName")
-                .addReference("WTF", mockedContext)
-                .start();
-    }
 
     @Test
     public void shouldInheritOfTheDDParentAttributes() {
