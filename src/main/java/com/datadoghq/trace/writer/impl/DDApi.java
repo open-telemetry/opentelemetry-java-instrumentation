@@ -113,15 +113,13 @@ public class DDApi {
 		Thread.sleep(1000);
 
 		parent.finish();
-
-		List<List<Span>> traces = new ArrayList<List<Span>>();
-		traces.add(array);
-
-		DDApi api = new DDApi(DDAgentWriter.DEFAULT_HOSTNAME, DDAgentWriter.DEFAULT_PORT);
 		
-//		String service = "{\"service_name\": {\"app\": \"service-name\",\"app_type\": \"web\"}}";
-//		System.out.println("Pushed service: "+api.callPUT(api.servicesEndpoint, service));
-		System.out.println("Pushed traces: "+api.sendTraces(traces));
+		DDAgentWriter writer = new DDAgentWriter();
+		writer.write(array);
+		
+		Thread.sleep(1000);
+		
+		writer.close();
 
 	}
 }

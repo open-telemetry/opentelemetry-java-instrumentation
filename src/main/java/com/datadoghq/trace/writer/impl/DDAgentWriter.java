@@ -53,6 +53,11 @@ public class DDAgentWriter implements Writer {
 
 	public void close() {
 		asyncWriterThread.interrupt();
+		try {
+			asyncWriterThread.join();
+		} catch (InterruptedException e) {
+			//Nothing to log as we expect and interrupted exception
+		}
 	}
 
 	protected class SpansSendingTask implements Runnable {
@@ -64,6 +69,9 @@ public class DDAgentWriter implements Writer {
 				try {
 					//WAIT until a new span comes
 					payload.add(traces.take());
+					
+					//FIXME proper logging
+					System.out.println("Start writing traces");
 
 					//Drain all spans up to a certain batch suze
 					traces.drainTo(payload, DEFAULT_BATCH_SIZE);
@@ -76,6 +84,9 @@ public class DDAgentWriter implements Writer {
 					for(List<Span> trace:payload){
 						spansCount+=trace.size();
 					}
+					
+					//FIXME proper logging
+					System.out.println("Sent "+spansCount+" spans through "+payload.size()+" traces");
 					
 					//Force garbage collect of the payload
 					payload.clear();
