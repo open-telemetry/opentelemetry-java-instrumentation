@@ -5,12 +5,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import com.datadoghq.trace.Utils.TracerLogger;
+
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 
 
 public class Tracer implements io.opentracing.Tracer {
+
+    private TracerLogger logger = new TracerLogger();
 
     public SpanBuilder buildSpan(String operationName) {
         return new SpanBuilder(operationName);
@@ -100,6 +104,7 @@ public class Tracer implements io.opentracing.Tracer {
 
             // build the context
             DDSpanContext context = buildTheSpanContext();
+            logger.startNewSpan(this.operationName, context.getSpanId());
 
             return new DDSpan(
                     Tracer.this,
