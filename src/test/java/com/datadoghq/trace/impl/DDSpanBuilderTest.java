@@ -5,11 +5,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class DDSpanBuilderTest {
@@ -165,6 +167,30 @@ public class DDSpanBuilderTest {
         assertThat(span.getBaggageItem(expectedBaggageItemKey)).isEqualTo(expectedBaggageItemValue);
         assertThat(((DDSpanContext) span.context()).getServiceName()).isEqualTo(expectedServiceName);
         assertThat(((DDSpanContext) span.context()).getResourceName()).isNotEqualTo(expectedResourceName);
+
+    }
+
+    @Test
+    public void shouldTrackAllSpanInTrace() {
+
+        ArrayList<DDSpan> spans = new ArrayList<DDSpan>();
+        ArrayList<DDSpan> spansClone = new ArrayList<DDSpan>();
+        final int nbSamples = 10;
+
+        DDSpan root = (DDSpan) tracer.buildSpan("fake_O").start();
+        spans.add(root);
+
+        for (int i = 1; i <= 10; i++) {
+            spans.add((DDSpan) tracer.buildSpan("fake_" + i).asChildOf(spans.get(i - 1)).start());
+        }
+
+        assertThat(root.getTraces()).hasSize(nbSamples + 1);
+        assertThat(root.getTraces()).containsAll(spans);
+        assertThat(spans.get((int) (Math.random() * nbSamples)).getTraces()).containsAll(spans);
+
+        root.finish();
+        spans.forEach(span -> assertThat(span.getDurationNano()).isNotNull());
+
 
     }
 

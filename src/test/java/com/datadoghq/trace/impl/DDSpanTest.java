@@ -28,6 +28,7 @@ public class DDSpanTest {
                 "fakeName",
                 null,
                 null,
+                null,
                 context
         );
 
@@ -50,13 +51,13 @@ public class DDSpanTest {
                 expectedOperationName1,
                 null,
                 null,
+                null,
                 null
         );
 
         assertThat(span.getOperationName()).isEqualTo(expectedOperationName1);
 
         span.setOperationName(expectedOperationName2);
-
         assertThat(span.getOperationName()).isEqualTo(expectedOperationName1);
     }
 

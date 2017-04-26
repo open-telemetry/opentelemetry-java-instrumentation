@@ -1,6 +1,9 @@
 package com.datadoghq.trace.impl;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 
@@ -17,19 +20,27 @@ public class DDSpan implements io.opentracing.Span {
     protected long startTimeNano; // Only used to measure nano time durations
     protected long durationNano;
     protected final DDSpanContext context;
+    protected final LinkedHashSet<Span> traces;
 
     DDSpan(
             Tracer tracer,
             String operationName,
+            LinkedHashSet<Span> traces,
             Map<String, Object> tags,
             Long timestamp,
             DDSpanContext context) {
+
         this.tracer = tracer;
         this.operationName = operationName;
+        this.traces = Optional.ofNullable(traces).orElse(new LinkedHashSet<>());
         this.tags = tags;
-        this.startTime = System.currentTimeMillis()*1000000;
+        this.startTime = System.currentTimeMillis() * 1000000;
         this.startTimeNano = System.nanoTime();
         this.context = context;
+
+        // track each span of the trace
+        this.traces.add(this);
+
     }
 
     public SpanContext context() {
@@ -37,15 +48,24 @@ public class DDSpan implements io.opentracing.Span {
     }
 
     public void finish() {
-        this.durationNano = System.nanoTime() - startTimeNano;
+        finish(System.nanoTime());
     }
 
     public void finish(long stopTimeMicro) {
         this.durationNano = stopTimeMicro * 1000L - startTime;
+        if (this.isRootSpan()) {
+            this.traces.stream()
+                    .filter(s -> ((DDSpanContext) s.context()).getSpanId() != ((DDSpanContext) this.context()).getSpanId())
+                    .forEach(s -> s.finish());
+        }
     }
 
     public void close() {
         this.finish();
+    }
+
+    private boolean isRootSpan() {
+        return context.getTraceId() == context.getSpanId();
     }
 
     public io.opentracing.Span setTag(String tag, String value) {
@@ -91,9 +111,11 @@ public class DDSpan implements io.opentracing.Span {
     }
 
     public Span setOperationName(String operationName) {
-    	if(this.operationName!=null)
-    		throw new IllegalArgumentException("The operationName is already assigned.");
-    		
+        // FIXME: @renaud, the operationName (mandatory) is always set by the constructor
+        // FIXME: should be an UnsupportedOperation if we don't want to update the operationName + final
+        if (this.operationName != null) {
+            throw new IllegalArgumentException("The operationName is already assigned.");
+        }
         this.operationName = operationName;
         return this;
     }
@@ -158,5 +180,9 @@ public class DDSpan implements io.opentracing.Span {
 
     public int getError() {
         return context.getErrorFlag() ? 1 : 0;
+    }
+
+    public LinkedHashSet<Span> getTraces() {
+        return traces;
     }
 }
