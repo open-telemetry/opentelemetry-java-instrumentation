@@ -13,22 +13,23 @@ public class Span implements io.opentracing.Span {
     private Map<String, Object> tags;
     private long startTime;
     private long durationMilliseconds;
-    private final SpanContext parent;
-    private SpanContext spanContext;
+    private final SpanContext context;
 
     Span(
-            Tracer tracer, String operationName,
+            Tracer tracer,
+            String operationName,
             Map<String, Object> tags,
-            Optional<Long> timestamp, SpanContext parent) {
+            Optional<Long> timestamp,
+            SpanContext context) {
         this.tracer = tracer;
         this.operationName = operationName;
         this.tags = tags;
         this.startTime = timestamp.orElse(System.currentTimeMillis());
-        this.parent = parent;
+        this.context = context;
     }
 
     public SpanContext context() {
-        return this.spanContext;
+        return this.context;
     }
 
     public void finish() {
@@ -103,7 +104,4 @@ public class Span implements io.opentracing.Span {
         return startTime;
     }
 
-    public SpanContext getParent() {
-        return parent;
-    }
 }
