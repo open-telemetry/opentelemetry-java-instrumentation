@@ -1,13 +1,11 @@
 package com.datadoghq.trace.impl;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import io.opentracing.Span;
 import io.opentracing.SpanContext;
 
 import java.util.Map;
 import java.util.Optional;
-
-import com.fasterxml.jackson.annotation.JsonGetter;
-
-import io.opentracing.Span;
 
 
 public class DDSpan implements io.opentracing.Span {
@@ -124,7 +122,7 @@ public class DDSpan implements io.opentracing.Span {
 
     @JsonGetter(value = "start")
     public long getStartTime() {
-        return startTime * 1000000;
+        return startTime;
     }
 
     @JsonGetter(value = "duration")
