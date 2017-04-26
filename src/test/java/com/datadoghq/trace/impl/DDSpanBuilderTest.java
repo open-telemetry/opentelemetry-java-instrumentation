@@ -187,8 +187,8 @@ public class DDSpanBuilderTest {
 
         assertThat(span.getOperationName()).isEqualTo(expectedName);
         assertThat(span.getBaggageItem(expectedBaggageItemKey)).isEqualTo(expectedBaggageItemValue);
-        assertThat(span.DDContext().getServiceName()).isEqualTo(expectedServiceName);
-        assertThat(span.DDContext().getResourceName()).isNotEqualTo(expectedResourceName);
+        assertThat(((DDSpanContext) span.context()).getServiceName()).isEqualTo(expectedServiceName);
+        assertThat(((DDSpan) span.context()).getResourceName()).isNotEqualTo(expectedResourceName);
 
     }
 

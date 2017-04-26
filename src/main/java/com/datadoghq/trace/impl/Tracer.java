@@ -27,7 +27,7 @@ public class Tracer implements io.opentracing.Tracer {
     public class SpanBuilder implements io.opentracing.Tracer.SpanBuilder {
 
         private final String operationName;
-        private Map<String, Object> tags = new HashMap<>();
+        private Map<String, Object> tags = new HashMap<String,Object>();
         private Long timestamp;
         private SpanContext parent;
         private String serviceName;
@@ -39,16 +39,16 @@ public class Tracer implements io.opentracing.Tracer {
             this.operationName = operationName;
         }
 
-        public io.opentracing.Tracer.SpanBuilder asChildOf(SpanContext spanContext) {
+        public Tracer.SpanBuilder asChildOf(SpanContext spanContext) {
             this.parent = spanContext;
             return this;
         }
 
-        public io.opentracing.Tracer.SpanBuilder asChildOf(Span span) {
+        public Tracer.SpanBuilder asChildOf(Span span) {
             return asChildOf(span.context());
         }
 
-        public io.opentracing.Tracer.SpanBuilder addReference(String referenceType, SpanContext spanContext) {
+        public Tracer.SpanBuilder addReference(String referenceType, SpanContext spanContext) {
 
             if (References.CHILD_OF.equals(referenceType) || References.FOLLOWS_FROM.equals(referenceType)) {
                 // @todo: implements the notion of referenceType, currently only link a span to a parent one
@@ -59,24 +59,24 @@ public class Tracer implements io.opentracing.Tracer {
             }
         }
 
-        public io.opentracing.Tracer.SpanBuilder withTag(String tag, Number number) {
+        public Tracer.SpanBuilder withTag(String tag, Number number) {
             return withTag(tag, (Object) number);
         }
 
-        public io.opentracing.Tracer.SpanBuilder withTag(String tag, String string) {
+        public Tracer.SpanBuilder withTag(String tag, String string) {
             return withTag(tag, (Object) string);
         }
 
-        public io.opentracing.Tracer.SpanBuilder withTag(String tag, boolean bool) {
+        public Tracer.SpanBuilder withTag(String tag, boolean bool) {
             return withTag(tag, (Object) bool);
         }
 
-        private io.opentracing.Tracer.SpanBuilder withTag(String tag, Object value) {
+        private Tracer.SpanBuilder withTag(String tag, Object value) {
             this.tags.put(tag, value);
             return this;
         }
 
-        public io.opentracing.Tracer.SpanBuilder withStartTimestamp(long timestamp) {
+        public Tracer.SpanBuilder withStartTimestamp(long timestamp) {
             this.timestamp = timestamp;
             return this;
         }
@@ -108,7 +108,6 @@ public class Tracer implements io.opentracing.Tracer {
 
             // build the context
             DDSpanContext context = buildTheSpanContext();
-
 
             return new DDSpan(
                     Tracer.this,

@@ -5,6 +5,11 @@ import io.opentracing.SpanContext;
 import java.util.Map;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+
+import io.opentracing.Span;
+import io.opentracing.SpanContext;
+
 
 public class DDSpan implements io.opentracing.Span {
 
@@ -48,36 +53,36 @@ public class DDSpan implements io.opentracing.Span {
         return this.setTag(tag, value);
     }
 
-    public io.opentracing.Span setTag(String tag, boolean value) {
+    public Span setTag(String tag, boolean value) {
         return this.setTag(tag, value);
     }
 
-    public io.opentracing.Span setTag(String tag, Number value) {
+    public Span setTag(String tag, Number value) {
         return this.setTag(tag, (Object) value);
     }
 
-    private io.opentracing.Span setTag(String tag, Object value) {
+    private Span setTag(String tag, Object value) {
         this.tags.put(tag, value);
         return this;
     }
 
-    public io.opentracing.Span log(Map<String, ?> map) {
+    public Span log(Map<String, ?> map) {
         return null;
     }
 
-    public io.opentracing.Span log(long l, Map<String, ?> map) {
+    public Span log(long l, Map<String, ?> map) {
         return null;
     }
 
-    public io.opentracing.Span log(String s) {
+    public Span log(String s) {
         return null;
     }
 
-    public io.opentracing.Span log(long l, String s) {
+    public Span log(long l, String s) {
         return null;
     }
 
-    public io.opentracing.Span setBaggageItem(String key, String value) {
+    public Span setBaggageItem(String key, String value) {
         this.context.setBaggageItem(key, value);
         return this;
     }
@@ -86,36 +91,70 @@ public class DDSpan implements io.opentracing.Span {
         return this.context.getBaggageItem(key);
     }
 
-    public io.opentracing.Span setOperationName(String operationName) {
+    public Span setOperationName(String operationName) {
         this.operationName = operationName;
         return this;
     }
 
-    public io.opentracing.Span log(String s, Object o) {
+    public Span log(String s, Object o) {
         return null;
     }
 
-    public io.opentracing.Span log(long l, String s, Object o) {
+    public Span log(long l, String s, Object o) {
         return null;
     }
 
+    //Getters and JSON serialisation instructions
+
+    @JsonGetter(value="name")
     public String getOperationName() {
         return operationName;
     }
 
+    @JsonGetter(value="meta")
     public Map<String, Object> getTags() {
         return this.tags;
     }
 
+    @JsonGetter(value="start")
     public long getStartTime() {
-        return startTime;
+        return startTime * 1000000;
     }
 
-    public DDSpanContext getContext() {
-        return context;
+    @JsonGetter(value="duration")
+    public long getDurationNano(){
+    	return durationNano;
     }
 
-    public DDSpanContext DDContext() {
-        return this.context;
+    public String getService(){
+    	return context.getServiceName();
+    }
+
+    @JsonGetter(value="trace_id")
+    public long getTraceId(){
+    	return context.getTraceId();
+    }
+
+    @JsonGetter(value="span_id")
+    public long getSpanId(){
+    	return context.getSpanId();
+    }
+
+    @JsonGetter(value="parent_id")
+    public long getParentId(){
+    	return context.getParentId();
+    }
+
+    @JsonGetter(value="resource")
+    public String getResourceName(){
+    	return context.getResourceName()==null?getOperationName():context.getResourceName();
+    }
+
+    public String getType(){
+    	return context.getSpanType();
+    }
+
+    public int getError(){
+    	return context.getErrorFlag()?1:0;
     }
 }

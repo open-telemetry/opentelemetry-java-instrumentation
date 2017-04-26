@@ -89,8 +89,8 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         return resourceName;
     }
 
-    public boolean isErrorFlag() {
-        return this.errorFlag;
+    public boolean getErrorFlag() {
+        return errorFlag;
     }
 
     public Map<String, Object> getMetrics() {
@@ -101,7 +101,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         return spanType;
     }
 
-    public boolean isSampled() {
+    public boolean getSampled() {
         return sampled;
     }
 
