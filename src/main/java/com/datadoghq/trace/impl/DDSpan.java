@@ -8,7 +8,6 @@ import java.util.Optional;
 import com.fasterxml.jackson.annotation.JsonGetter;
 
 import io.opentracing.Span;
-import io.opentracing.SpanContext;
 
 
 public class DDSpan implements io.opentracing.Span {
