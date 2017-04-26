@@ -1,18 +1,19 @@
 package com.datadoghq.trace.impl;
 
+import io.opentracing.SpanContext;
+
 import java.util.Map;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 
 import io.opentracing.Span;
-import io.opentracing.SpanContext;
 
 
 public class DDSpan implements io.opentracing.Span {
 
     protected final Tracer tracer;
-    protected final String operationName;
+    protected String operationName;
     protected Map<String, Object> tags;
     protected long startTime;
     protected long durationNano;
@@ -22,12 +23,12 @@ public class DDSpan implements io.opentracing.Span {
             Tracer tracer,
             String operationName,
             Map<String, Object> tags,
-            Optional<Long> timestamp,
+            Long timestamp,
             DDSpanContext context) {
         this.tracer = tracer;
         this.operationName = operationName;
         this.tags = tags;
-        this.startTime = timestamp.orElse(System.nanoTime());
+        this.startTime = Optional.ofNullable(timestamp).orElse(System.nanoTime());
         this.context = context;
     }
 
@@ -39,8 +40,12 @@ public class DDSpan implements io.opentracing.Span {
         this.durationNano = System.nanoTime() - startTime;
     }
 
-    public void finish(long nano) {
-        this.durationNano = nano;
+    public void finishWithDuration(long durationNano) {
+        this.durationNano = durationNano;
+    }
+
+    public void finish(long stopTime) {
+        this.durationNano = startTime - stopTime;
     }
 
     public void close() {
@@ -89,8 +94,12 @@ public class DDSpan implements io.opentracing.Span {
         return this.context.getBaggageItem(key);
     }
 
-    public Span setOperationName(String s) {
-        return null;
+    public Span setOperationName(String operationName) {
+    	if(this.operationName!=null)
+    		throw new IllegalArgumentException("The operationName is already assigned.");
+    		
+        this.operationName = operationName;
+        return this;
     }
 
     public Span log(String s, Object o) {
@@ -102,56 +111,56 @@ public class DDSpan implements io.opentracing.Span {
     }
 
     //Getters and JSON serialisation instructions
-    
-    @JsonGetter(value="name")
+
+    @JsonGetter(value = "name")
     public String getOperationName() {
         return operationName;
     }
-    
-    @JsonGetter(value="meta")
+
+    @JsonGetter(value = "meta")
     public Map<String, Object> getTags() {
         return this.tags;
     }
 
-    @JsonGetter(value="start")
+    @JsonGetter(value = "start")
     public long getStartTime() {
         return startTime * 1000000;
     }
-    
-    @JsonGetter(value="duration")
-    public long getDurationNano(){
-    	return durationNano;
+
+    @JsonGetter(value = "duration")
+    public long getDurationNano() {
+        return durationNano;
     }
-    
-    public String getService(){
-    	return context.getServiceName();
+
+    public String getService() {
+        return context.getServiceName();
     }
-    
-    @JsonGetter(value="trace_id")
-    public long getTraceId(){
-    	return context.getTraceId();
+
+    @JsonGetter(value = "trace_id")
+    public long getTraceId() {
+        return context.getTraceId();
     }
-    
-    @JsonGetter(value="span_id")
-    public long getSpanId(){
-    	return context.getSpanId();
+
+    @JsonGetter(value = "span_id")
+    public long getSpanId() {
+        return context.getSpanId();
     }
-    
-    @JsonGetter(value="parent_id")
-    public long getParentId(){
-    	return context.getParentId();
+
+    @JsonGetter(value = "parent_id")
+    public long getParentId() {
+        return context.getParentId();
     }
-    
-    @JsonGetter(value="resource")
-    public String getResourceName(){
-    	return context.getResourceName()==null?getOperationName():context.getResourceName();
+
+    @JsonGetter(value = "resource")
+    public String getResourceName() {
+        return context.getResourceName() == null ? getOperationName() : context.getResourceName();
     }
-    
-    public String getType(){
-    	return context.getSpanType();
+
+    public String getType() {
+        return context.getSpanType();
     }
-    
-    public int getError(){
-    	return context.getErrorFlag()?1:0;
+
+    public int getError() {
+        return context.getErrorFlag() ? 1 : 0;
     }
 }

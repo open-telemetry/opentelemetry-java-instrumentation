@@ -70,7 +70,7 @@ public class DDSpanBuilderTest {
     }
 
     @Test
-    public void shouldBuildSpanTimestampInMilli() {
+    public void shouldBuildSpanTimestampInNano() {
 
         final long expectedTimestamp = 487517802L;
         final String expectedName = "fakeName";
@@ -174,8 +174,8 @@ public class DDSpanBuilderTest {
 
         DDSpan parent = (DDSpan) tracer
                 .buildSpan(expectedName)
-                .withTag(DDTags.SERVICE.getKey(), expectedServiceName)
-                .withTag(DDTags.RESOURCE.getKey(), expectedResourceName)
+                .withServiceName(expectedServiceName)
+                .withResourceName(expectedResourceName)
                 .start();
 
         parent.setBaggageItem(expectedBaggageItemKey, expectedBaggageItemValue);
@@ -188,7 +188,7 @@ public class DDSpanBuilderTest {
         assertThat(span.getOperationName()).isEqualTo(expectedName);
         assertThat(span.getBaggageItem(expectedBaggageItemKey)).isEqualTo(expectedBaggageItemValue);
         assertThat(((DDSpanContext) span.context()).getServiceName()).isEqualTo(expectedServiceName);
-        assertThat(((DDSpan) span.context()).getResourceName()).isNotEqualTo(expectedResourceName);
+        assertThat(((DDSpanContext) span.context()).getResourceName()).isNotEqualTo(expectedResourceName);
 
     }
 
