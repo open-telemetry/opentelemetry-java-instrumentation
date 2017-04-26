@@ -78,9 +78,10 @@ public class Tracer implements io.opentracing.Tracer {
         public Span start() {
 
             // build the context
-            SpanContext context = buildTheSpanContext();
+            DDSpanContext context = buildTheSpanContext();
 
-            return new com.datadoghq.trace.impl.Span(
+
+            return new DDSpan(
                     Tracer.this,
                     this.operationName,
                     this.tags,
@@ -88,14 +89,14 @@ public class Tracer implements io.opentracing.Tracer {
                     context);
         }
 
-        private SpanContext buildTheSpanContext() {
+        private DDSpanContext buildTheSpanContext() {
 
-            SpanContext context;
+            DDSpanContext context;
 
             long generatedId = generateNewId();
             if (parent != null) {
-                com.datadoghq.trace.impl.SpanContext p = (com.datadoghq.trace.impl.SpanContext) parent;
-                context = new com.datadoghq.trace.impl.SpanContext(
+                DDSpanContext p = (DDSpanContext) parent;
+                context = new DDSpanContext(
                         p.getTraceId(),
                         generatedId,
                         p.getSpanId(),
@@ -107,7 +108,7 @@ public class Tracer implements io.opentracing.Tracer {
                         null,
                         true);
             } else {
-                context = new com.datadoghq.trace.impl.SpanContext(
+                context = new DDSpanContext(
                         generatedId,
                         generatedId,
                         0L,

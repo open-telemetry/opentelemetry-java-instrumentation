@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class SpanBuilderTest {
+public class DDSpanBuilderTest {
 
     Tracer tracer;
 
@@ -31,7 +31,7 @@ public class SpanBuilderTest {
     public void shouldBuilSimpleSpan() {
 
         final String expectedName = "fakeName";
-        Span span = (Span) tracer.buildSpan(expectedName).start();
+        DDSpan span = (DDSpan) tracer.buildSpan(expectedName).start();
         assertThat(span.getOperationName()).isEqualTo(expectedName);
     }
 
@@ -47,7 +47,7 @@ public class SpanBuilderTest {
             }
         };
 
-        Span span = (Span) tracer
+        DDSpan span = (DDSpan) tracer
                 .buildSpan(expectedName)
                 .withTag("1", (Boolean) tags.get("1"))
                 .withTag("2", (String) tags.get("2"))
@@ -59,7 +59,7 @@ public class SpanBuilderTest {
 
         // with no tag provided
 
-        span = (Span) tracer
+        span = (DDSpan) tracer
                 .buildSpan(expectedName)
                 .start();
 
@@ -75,7 +75,7 @@ public class SpanBuilderTest {
         final long expectedTimestamp = 487517802L * 1000;
         final String expectedName = "fakeName";
 
-        Span span = (Span) tracer
+        DDSpan span = (DDSpan) tracer
                 .buildSpan(expectedName)
                 .withStartTimestamp(expectedTimestamp)
                 .start();
@@ -84,7 +84,7 @@ public class SpanBuilderTest {
 
         // auto-timestamp in nanoseconds
         long tick = System.currentTimeMillis();
-        span = (Span) tracer
+        span = (DDSpan) tracer
                 .buildSpan(expectedName)
                 .start();
 
@@ -100,20 +100,20 @@ public class SpanBuilderTest {
         final long spanId = 1L;
         final long expectedParentId = spanId;
 
-        SpanContext mockedContext = mock(SpanContext.class);
-        Span mockedSpan = mock(Span.class);
+        DDSpanContext mockedContext = mock(DDSpanContext.class);
+        DDSpan mockedSpan = mock(DDSpan.class);
 
         when(mockedSpan.context()).thenReturn(mockedContext);
         when(mockedContext.getSpanId()).thenReturn(spanId);
 
         final String expectedName = "fakeName";
 
-        Span span = (Span) tracer
+        DDSpan span = (DDSpan) tracer
                 .buildSpan(expectedName)
                 .asChildOf(mockedSpan)
                 .start();
 
-        SpanContext actualContext = (SpanContext) span.context();
+        DDSpanContext actualContext = (DDSpanContext) span.context();
 
         assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
 
@@ -127,38 +127,38 @@ public class SpanBuilderTest {
         final long spanId = 223L;
         final long expectedParentId = spanId;
 
-        SpanContext mockedContext = mock(SpanContext.class);
+        DDSpanContext mockedContext = mock(DDSpanContext.class);
         when(mockedContext.getSpanId()).thenReturn(spanId);
 
         final String expectedName = "fakeName";
 
 
         // case 1, using a CHILD_OF ref
-        Span span = (Span) tracer
+        DDSpan span = (DDSpan) tracer
                 .buildSpan(expectedName)
                 .addReference(References.CHILD_OF, mockedContext)
                 .start();
 
-        SpanContext actualContext = (SpanContext) span.context();
+        DDSpanContext actualContext = (DDSpanContext) span.context();
         assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
 
 
         // case 2, using a FOLLOW_FROM ref
-        span = (Span) tracer
+        span = (DDSpan) tracer
                 .buildSpan(expectedName)
                 .addReference(References.FOLLOWS_FROM, mockedContext)
                 .start();
 
-        actualContext = (SpanContext) span.context();
+        actualContext = (DDSpanContext) span.context();
         assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
 
         // case 2, using a WFT ref, should not be linked to the previous
-        span = (Span) tracer
+        span = (DDSpan) tracer
                 .buildSpan(expectedName)
                 .addReference("WTF", mockedContext)
                 .start();
 
-        actualContext = (SpanContext) span.context();
+        actualContext = (DDSpanContext) span.context();
         assertThat(actualContext.getParentId()).isEqualTo(0L);
 
     }
@@ -170,14 +170,14 @@ public class SpanBuilderTest {
         final String expectedBaggageItemKey = "fakeKey";
         final String expectedBaggageItemValue = "fakeValue";
 
-        Span parent = (Span) tracer
+        DDSpan parent = (DDSpan) tracer
                 .buildSpan(expectedName)
                 .start();
 
         assertThat(parent.getOperationName()).isEqualTo(expectedName);
         assertThat(parent.context().baggageItems()).isEmpty();
 
-        Span span = (Span) tracer.buildSpan(expectedName).start();
+        DDSpan span = (DDSpan) tracer.buildSpan(expectedName).start();
 
         assertThat(span.getOperationName()).isEqualTo(expectedName);
         assertThat(span.getBaggageItem(expectedBaggageItemKey)).isEqualTo(expectedBaggageItemValue);

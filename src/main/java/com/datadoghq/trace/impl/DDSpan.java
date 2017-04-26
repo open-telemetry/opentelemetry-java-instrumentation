@@ -6,21 +6,21 @@ import java.util.Map;
 import java.util.Optional;
 
 
-public class Span implements io.opentracing.Span {
+public class DDSpan implements io.opentracing.Span {
 
     private final Tracer tracer;
     private final String operationName;
     private Map<String, Object> tags;
     private long startTime;
     private long durationMilliseconds;
-    private final com.datadoghq.trace.impl.SpanContext context;
+    private final DDSpanContext context;
 
-    Span(
+    DDSpan(
             Tracer tracer,
             String operationName,
             Map<String, Object> tags,
             Optional<Long> timestamp,
-            com.datadoghq.trace.impl.SpanContext context) {
+            DDSpanContext context) {
         this.tracer = tracer;
         this.operationName = operationName;
         this.tags = tags;
@@ -104,7 +104,7 @@ public class Span implements io.opentracing.Span {
         return startTime;
     }
 
-    public com.datadoghq.trace.impl.SpanContext getContext(){
+    public DDSpanContext getContext(){
     	return context;
     }
     

@@ -1,10 +1,10 @@
 package com.datadoghq.trace;
 
 
-import com.datadoghq.trace.impl.Span;
+import com.datadoghq.trace.impl.DDSpan;
 
 public interface Sampler {
 
-    public boolean sample(Span span);
+    public boolean sample(DDSpan span);
 
 }

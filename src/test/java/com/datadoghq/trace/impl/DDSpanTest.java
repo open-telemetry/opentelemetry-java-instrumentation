@@ -5,25 +5,24 @@ import org.junit.Test;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 
-public class SpanTest {
+public class DDSpanTest {
 
 
     @Test
-    public void shouldAddBaggageItem(){
+    public void shouldAddBaggageItem() {
 
 
         Tracer mockedTracer = mock(Tracer.class);
-        SpanContext mockedContext = mock(SpanContext.class);
+        DDSpanContext mockedContext = mock(DDSpanContext.class);
 
         final String expectedBaggageItemKey = "fakeKey";
         final String expectedBaggageItemValue = "fakeValue";
 
 
-        Span span = new Span(
+        DDSpan span = new DDSpan(
                 mockedTracer,
                 "fakeName",
                 null,

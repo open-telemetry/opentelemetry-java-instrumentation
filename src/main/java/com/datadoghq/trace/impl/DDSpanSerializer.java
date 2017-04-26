@@ -17,7 +17,7 @@ public class DDSpanSerializer implements SpanSerializer {
 	}
 
 	public io.opentracing.Span deserialize(String str) throws JsonParseException, JsonMappingException, IOException {
-		return objectMapper.readValue(str, Span.class);
+		return objectMapper.readValue(str, DDSpan.class);
 	}
 
 	public static void main(String[] args) throws Exception{

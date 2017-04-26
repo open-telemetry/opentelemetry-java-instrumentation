@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
-public class SpanContext implements io.opentracing.SpanContext {
+public class DDSpanContext implements io.opentracing.SpanContext {
 
     // Public span attributes
     private final String serviceName;
@@ -20,7 +20,7 @@ public class SpanContext implements io.opentracing.SpanContext {
     // Sampler attributes
     private boolean sampled;
 
-    public SpanContext(
+    public DDSpanContext(
             long traceId,
             long spanId,
             long parentId,
