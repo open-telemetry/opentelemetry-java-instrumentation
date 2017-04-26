@@ -1,16 +1,15 @@
 package com.datadoghq.trace.impl;
 
-import org.assertj.core.data.MapEntry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SpanBuilderTest {
 
@@ -70,9 +69,9 @@ public class SpanBuilderTest {
     }
 
     @Test
-    public void shouldBuilSpanTimestampInNano() {
+    public void shouldBuildSpanTimestampInMilli() {
 
-        final long expectedTimestamp = 487517802L * 1000 * 1000;
+        final long expectedTimestamp = 487517802L * 1000;
         final String expectedName = "fakeName";
 
         Span span = (Span) tracer
@@ -83,15 +82,39 @@ public class SpanBuilderTest {
         assertThat(span.getStartTime()).isEqualTo(expectedTimestamp);
 
         // auto-timestamp in nanoseconds
-        long tick = System.nanoTime();
+        long tick = System.currentTimeMillis();
         span = (Span) tracer
                 .buildSpan(expectedName)
                 .start();
 
         // between now and now + 100ms
-        assertThat(span.getStartTime()).isBetween(tick, tick * 1000 * 100);
+        assertThat(span.getStartTime()).isBetween(tick, tick + 100);
 
     }
 
+
+    @Test
+    public void shouldLinkToParentSpan() {
+
+        final long spanId = 1L;
+        final long expectedParentId = spanId;
+
+        SpanContext mockedContext = mock(SpanContext.class);
+
+        when(mockedContext.getSpanId()).thenReturn(spanId);
+
+        final String expectedName = "fakeName";
+
+        Span span = (Span) tracer
+                .buildSpan(expectedName)
+                .asChildOf(mockedContext)
+                .start();
+
+       SpanContext actualContext = (SpanContext) span.context();
+
+        assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
+
+
+    }
 
 }

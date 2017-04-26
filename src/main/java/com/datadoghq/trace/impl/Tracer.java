@@ -7,6 +7,7 @@ import io.opentracing.propagation.Format;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 
 public class Tracer implements io.opentracing.Tracer {
@@ -28,14 +29,15 @@ public class Tracer implements io.opentracing.Tracer {
         private final String operationName;
         private Map<String, Object> tags = new HashMap();
         private Long timestamp;
-        private Optional<SpanContext> parent;
+        private Optional<SpanContext> parent = Optional.empty();
 
         public SpanBuilder(String operationName) {
             this.operationName = operationName;
         }
 
         public io.opentracing.Tracer.SpanBuilder asChildOf(SpanContext spanContext) {
-            return null;
+            this.parent = Optional.ofNullable(spanContext);
+            return this;
         }
 
         public io.opentracing.Tracer.SpanBuilder asChildOf(Span span) {
@@ -73,36 +75,57 @@ public class Tracer implements io.opentracing.Tracer {
         public Span start() {
 
             // build the context
-            SpanContext context = buildNewSpanContext();
+            SpanContext context = buildTheSpanContext();
 
             return new com.datadoghq.trace.impl.Span(
+                    Tracer.this,
                     this.operationName,
                     this.tags,
                     Optional.ofNullable(this.timestamp),
                     context);
         }
 
-        private SpanContext buildNewSpanContext() {
+        private SpanContext buildTheSpanContext() {
 
-            Optional<Object> parentContext = Optional.ofNullable(this.parent);
-            SpanContext context = new com.datadoghq.trace.impl.SpanContext(
+            SpanContext context = null;
 
-            );
-
-
-
-            if (this.parent == null) {
-                long traceId = 123L;
-
+            long generatedId = generateNewId();
+            if (parent.isPresent()) {
+                com.datadoghq.trace.impl.SpanContext p = (com.datadoghq.trace.impl.SpanContext) parent.get();
+                context = new com.datadoghq.trace.impl.SpanContext(
+                        p.getTraceId(),
+                        generatedId,
+                        p.getSpanId(),
+                        null,
+                        null,
+                        null,
+                        false,
+                        null,
+                        null,
+                        true);
             } else {
-
+                context = new com.datadoghq.trace.impl.SpanContext(
+                        generatedId,
+                        generatedId,
+                        0L,
+                        null,
+                        null,
+                        null,
+                        false,
+                        null,
+                        null,
+                        true);
             }
 
-            return null;
+            return context;
         }
 
         public Iterable<Map.Entry<String, String>> baggageItems() {
             return null;
         }
+    }
+
+    long generateNewId() {
+        return UUID.randomUUID().getMostSignificantBits();
     }
 }
