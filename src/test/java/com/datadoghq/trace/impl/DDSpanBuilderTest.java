@@ -173,8 +173,7 @@ public class DDSpanBuilderTest {
     @Test
     public void shouldTrackAllSpanInTrace() {
 
-        ArrayList<DDSpan> spans = new ArrayList<DDSpan>();
-        ArrayList<DDSpan> spansClone = new ArrayList<DDSpan>();
+        ArrayList<DDSpan> spans = new ArrayList<>();
         final int nbSamples = 10;
 
         DDSpan root = (DDSpan) tracer.buildSpan("fake_O").start();
@@ -189,7 +188,10 @@ public class DDSpanBuilderTest {
         assertThat(spans.get((int) (Math.random() * nbSamples)).getTraces()).containsAll(spans);
 
         root.finish();
+        //TODO Check order
+        //assertThat(root.getTraces()).containsExactly(spans)
         spans.forEach(span -> assertThat(span.getDurationNano()).isNotNull());
+        spans.forEach(span -> assertThat(span.getDurationNano()).isNotZero());
 
 
     }
