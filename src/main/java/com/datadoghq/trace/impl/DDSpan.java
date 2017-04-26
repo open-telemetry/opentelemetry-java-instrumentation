@@ -1,9 +1,12 @@
 package com.datadoghq.trace.impl;
 
-import io.opentracing.SpanContext;
-
 import java.util.Map;
 import java.util.Optional;
+
+import com.fasterxml.jackson.annotation.JsonGetter;
+
+import io.opentracing.Span;
+import io.opentracing.SpanContext;
 
 
 public class DDSpan implements io.opentracing.Span {
@@ -44,35 +47,35 @@ public class DDSpan implements io.opentracing.Span {
 
     }
 
-    public io.opentracing.Span setTag(String s, String s1) {
+    public Span setTag(String s, String s1) {
         return null;
     }
 
-    public io.opentracing.Span setTag(String s, boolean b) {
+    public Span setTag(String s, boolean b) {
         return null;
     }
 
-    public io.opentracing.Span setTag(String s, Number number) {
+    public Span setTag(String s, Number number) {
         return null;
     }
 
-    public io.opentracing.Span log(Map<String, ?> map) {
+    public Span log(Map<String, ?> map) {
         return null;
     }
 
-    public io.opentracing.Span log(long l, Map<String, ?> map) {
+    public Span log(long l, Map<String, ?> map) {
         return null;
     }
 
-    public io.opentracing.Span log(String s) {
+    public Span log(String s) {
         return null;
     }
 
-    public io.opentracing.Span log(long l, String s) {
+    public Span log(long l, String s) {
         return null;
     }
 
-    public io.opentracing.Span setBaggageItem(String s, String s1) {
+    public Span setBaggageItem(String s, String s1) {
         return null;
     }
 
@@ -80,32 +83,70 @@ public class DDSpan implements io.opentracing.Span {
         return null;
     }
 
-    public io.opentracing.Span setOperationName(String s) {
+    public Span setOperationName(String s) {
         return null;
     }
 
-    public io.opentracing.Span log(String s, Object o) {
+    public Span log(String s, Object o) {
         return null;
     }
 
-    public io.opentracing.Span log(long l, String s, Object o) {
+    public Span log(long l, String s, Object o) {
         return null;
     }
 
+    //Getters and JSON serialisation instructions
+    
+    @JsonGetter(value="name")
     public String getOperationName() {
         return operationName;
     }
-
+    
+    @JsonGetter(value="meta")
     public Map<String, Object> getTags() {
         return this.tags;
     }
 
+    @JsonGetter(value="start")
     public long getStartTime() {
-        return startTime;
+        return startTime * 1000000;
     }
-
-    public DDSpanContext getContext(){
-    	return context;
+    
+    @JsonGetter(value="duration")
+    public long getDurationInNS(){
+    	return durationMilliseconds * 1000000;
+    }
+    
+    public String getService(){
+    	return context.getServiceName();
+    }
+    
+    @JsonGetter(value="trace_id")
+    public long getTraceId(){
+    	return context.getTraceId();
+    }
+    
+    @JsonGetter(value="span_id")
+    public long getSpanId(){
+    	return context.getSpanId();
+    }
+    
+    @JsonGetter(value="parent_id")
+    public long getParentId(){
+    	return context.getParentId();
+    }
+    
+    @JsonGetter(value="resource")
+    public String getResourceName(){
+    	return context.getResourceName()==null?getOperationName():context.getResourceName();
+    }
+    
+    public String getType(){
+    	return context.getSpanType();
+    }
+    
+    public int getError(){
+    	return context.getErrorFlag()?1:0;
     }
     
 }

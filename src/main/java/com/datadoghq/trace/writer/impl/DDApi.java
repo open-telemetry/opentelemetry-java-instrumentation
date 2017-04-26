@@ -5,7 +5,11 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
+
+import com.datadoghq.trace.impl.DDSpanSerializer;
+import com.datadoghq.trace.impl.Tracer;
 
 import io.opentracing.Span;
 
@@ -36,9 +40,10 @@ public class DDApi {
 	}
 	
 	private int callPUT(String endpoint,String content){
+		HttpURLConnection httpCon = null;
 		try {
 			URL url = new URL(tracesEndpoint);
-			HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
+			httpCon = (HttpURLConnection) url.openConnection();
 			httpCon.setDoOutput(true);
 			httpCon.setRequestMethod("PUT");
 			httpCon.setRequestProperty("Content-Type", "application/json");
@@ -54,6 +59,37 @@ public class DDApi {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return -1;
-		}
+		} 
+	}
+	
+public static void main(String[] args) throws Exception{
+		
+		Tracer tracer = new Tracer();
+		List<Span> array = new ArrayList<Span>();
+		Span span = tracer.buildSpan("Hello!")
+//				.withTag("port", 1234)
+//				.withTag("bool", true)
+				.withTag("hello", "world")
+				.start();
+		array.add(span);
+		
+		Span span2 = tracer.buildSpan("Hello2!")
+//				.withTag("port", 1234)
+//				.withTag("bool", true)
+				.withTag("hello", "world")
+				.start();
+		array.add(span2);
+		
+		DDSpanSerializer ddSpanSerializer = new DDSpanSerializer();
+		
+		
+		
+		String str = ddSpanSerializer.serialize(array);
+		str = "["+str+"]";
+		
+		DDApi api = new DDApi(DDAgentWriter.DEFAULT_HOSTNAME, DDAgentWriter.DEFAULT_PORT);
+		int status = api.callPUT(api.tracesEndpoint, str);
+		System.out.println("Status: "+status);
+		
 	}
 }
