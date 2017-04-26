@@ -59,6 +59,7 @@ public class DDAgentWriter implements Writer {
 					commandQueue.drainTo(spans, DEFAULT_BATCH_SIZE);
 					
 					//Then write to the agent
+					System.out.println(spans);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					// FIXME proper logging

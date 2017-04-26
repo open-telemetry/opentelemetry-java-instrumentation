@@ -12,7 +12,7 @@ public class DDSpan implements io.opentracing.Span {
     private final String operationName;
     private Map<String, Object> tags;
     private long startTime;
-    private long durationMilliseconds;
+    private long durationNano;
     private final DDSpanContext context;
 
     DDSpan(
@@ -24,7 +24,7 @@ public class DDSpan implements io.opentracing.Span {
         this.tracer = tracer;
         this.operationName = operationName;
         this.tags = tags;
-        this.startTime = timestamp.orElse(System.currentTimeMillis());
+        this.startTime = timestamp.orElse(System.nanoTime());
         this.context = context;
     }
 
@@ -33,27 +33,32 @@ public class DDSpan implements io.opentracing.Span {
     }
 
     public void finish() {
-
+        this.durationNano = System.nanoTime() - startTime;
     }
 
-    public void finish(long l) {
-
+    public void finish(long nano) {
+        this.durationNano = nano;
     }
 
     public void close() {
-
+        this.finish();
     }
 
-    public io.opentracing.Span setTag(String s, String s1) {
-        return null;
+    public io.opentracing.Span setTag(String tag, String value) {
+        return this.setTag(tag, value);
     }
 
-    public io.opentracing.Span setTag(String s, boolean b) {
-        return null;
+    public io.opentracing.Span setTag(String tag, boolean value) {
+        return this.setTag(tag, value);
     }
 
-    public io.opentracing.Span setTag(String s, Number number) {
-        return null;
+    public io.opentracing.Span setTag(String tag, Number value) {
+        return this.setTag(tag, (Object) value);
+    }
+
+    private io.opentracing.Span setTag(String tag, Object value) {
+        this.tags.put(tag, value);
+        return this;
     }
 
     public io.opentracing.Span log(Map<String, ?> map) {
@@ -105,8 +110,8 @@ public class DDSpan implements io.opentracing.Span {
         return startTime;
     }
 
-    public DDSpanContext getContext(){
-    	return context;
+    public DDSpanContext getContext() {
+        return context;
     }
 
     public DDSpanContext DDContext() {

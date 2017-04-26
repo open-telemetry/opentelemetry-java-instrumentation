@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 
 public class DDSpanBuilderTest {
 
-    Tracer tracer;
+    private Tracer tracer;
 
     @Before
     public void setUp() throws Exception {
@@ -72,7 +72,7 @@ public class DDSpanBuilderTest {
     @Test
     public void shouldBuildSpanTimestampInMilli() {
 
-        final long expectedTimestamp = 487517802L * 1000;
+        final long expectedTimestamp = 487517802L;
         final String expectedName = "fakeName";
 
         DDSpan span = (DDSpan) tracer
@@ -83,13 +83,13 @@ public class DDSpanBuilderTest {
         assertThat(span.getStartTime()).isEqualTo(expectedTimestamp);
 
         // auto-timestamp in nanoseconds
-        long tick = System.currentTimeMillis();
+        long tick = System.nanoTime();
         span = (DDSpan) tracer
                 .buildSpan(expectedName)
                 .start();
 
         // between now and now + 100ms
-        assertThat(span.getStartTime()).isBetween(tick, tick + 100);
+        assertThat(span.getStartTime()).isBetween(tick, tick + 100 * 1000);
 
     }
 
@@ -171,10 +171,6 @@ public class DDSpanBuilderTest {
         final String expectedResourceName = "fakeResourceName";
         final String expectedBaggageItemKey = "fakeKey";
         final String expectedBaggageItemValue = "fakeValue";
-
-        Map<String, String> baggage = new HashMap<String, String>() {{
-            put("service", expectedServiceName);
-        }};
 
         DDSpan parent = (DDSpan) tracer
                 .buildSpan(expectedName)
