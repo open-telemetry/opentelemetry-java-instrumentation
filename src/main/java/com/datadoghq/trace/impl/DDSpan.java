@@ -1,11 +1,11 @@
 package com.datadoghq.trace.impl;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonGetter;
+
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
-
-import java.util.Map;
-import java.util.Optional;
 
 
 public class DDSpan implements io.opentracing.Span {
@@ -14,6 +14,7 @@ public class DDSpan implements io.opentracing.Span {
     protected String operationName;
     protected Map<String, Object> tags;
     protected long startTime;
+    protected long startTimeNano; // Only used to measure nano time durations
     protected long durationNano;
     protected final DDSpanContext context;
 
@@ -26,7 +27,8 @@ public class DDSpan implements io.opentracing.Span {
         this.tracer = tracer;
         this.operationName = operationName;
         this.tags = tags;
-        this.startTime = Optional.ofNullable(timestamp).orElse(System.nanoTime());
+        this.startTime = System.currentTimeMillis()*1000000;
+        this.startTimeNano = System.nanoTime();
         this.context = context;
     }
 
@@ -35,15 +37,11 @@ public class DDSpan implements io.opentracing.Span {
     }
 
     public void finish() {
-        this.durationNano = System.nanoTime() - startTime;
+        this.durationNano = System.nanoTime() - startTimeNano;
     }
 
-    public void finishWithDuration(long durationNano) {
-        this.durationNano = durationNano;
-    }
-
-    public void finish(long stopTime) {
-        this.durationNano = startTime - stopTime;
+    public void finish(long stopTimeMicro) {
+        this.durationNano = stopTimeMicro * 1000L - startTime;
     }
 
     public void close() {
