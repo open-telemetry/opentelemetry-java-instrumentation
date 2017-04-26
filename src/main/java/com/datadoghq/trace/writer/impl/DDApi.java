@@ -46,7 +46,7 @@ public class DDApi {
 				return true;
 			}else{
 				
-				//FIXME log status here
+				//FIXME log issue here
 				
 				return false;
 			}
