@@ -9,7 +9,7 @@ import java.util.Optional;
 public class DDSpan implements io.opentracing.Span {
 
     private final Tracer tracer;
-    private final String operationName;
+    private String operationName;
     private Map<String, Object> tags;
     private long startTime;
     private long durationNano;
@@ -19,12 +19,12 @@ public class DDSpan implements io.opentracing.Span {
             Tracer tracer,
             String operationName,
             Map<String, Object> tags,
-            Optional<Long> timestamp,
+            Long timestamp,
             DDSpanContext context) {
         this.tracer = tracer;
         this.operationName = operationName;
         this.tags = tags;
-        this.startTime = timestamp.orElse(System.nanoTime());
+        this.startTime = Optional.ofNullable(timestamp).orElse(System.nanoTime());
         this.context = context;
     }
 
@@ -86,8 +86,9 @@ public class DDSpan implements io.opentracing.Span {
         return this.context.getBaggageItem(key);
     }
 
-    public io.opentracing.Span setOperationName(String s) {
-        return null;
+    public io.opentracing.Span setOperationName(String operationName) {
+        this.operationName = operationName;
+        return this;
     }
 
     public io.opentracing.Span log(String s, Object o) {

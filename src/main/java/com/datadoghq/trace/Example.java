@@ -1,30 +1,32 @@
 package com.datadoghq.trace;
 
 
-import com.datadoghq.trace.impl.DDTags;
+import com.datadoghq.trace.impl.Tracer;
 import com.datadoghq.trace.writer.impl.DDAgentWriter;
 import io.opentracing.Span;
-import io.opentracing.Tracer;
 
 public class Example {
 
     public static void main(String[] args) {
 
 
-        Tracer tracer = new com.datadoghq.trace.impl.Tracer();
+        Tracer tracer = new Tracer();
         Writer writer = new DDAgentWriter();
 
         Span parent = tracer
                 .buildSpan("hello-world")
-                .withTag(DDTags.SERVICE.getKey(), "service-name")
+                .withServiceName("service-name")
                 .start();
 
         parent.setBaggageItem("a-baggage", "value");
         parent.finish();
 
-        Span child = tracer
+        Tracer.SpanBuilder builder =  (Tracer.SpanBuilder) tracer
                 .buildSpan("hello-world")
-                .asChildOf(parent)
+                .asChildOf(parent);
+
+        Span child = builder
+                .withServiceName("service-name")
                 .start();
 
         child.finish();

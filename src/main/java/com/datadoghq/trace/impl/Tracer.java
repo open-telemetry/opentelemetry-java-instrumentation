@@ -15,6 +15,7 @@ public class Tracer implements io.opentracing.Tracer {
         return new SpanBuilder(operationName);
     }
 
+
     public <C> void inject(SpanContext spanContext, Format<C> format, C c) {
 
     }
@@ -23,12 +24,16 @@ public class Tracer implements io.opentracing.Tracer {
         return null;
     }
 
-    class SpanBuilder implements io.opentracing.Tracer.SpanBuilder {
+    public class SpanBuilder implements io.opentracing.Tracer.SpanBuilder {
 
         private final String operationName;
         private Map<String, Object> tags = new HashMap<>();
         private Long timestamp;
         private SpanContext parent;
+        private String serviceName;
+        private String resourceName;
+        private boolean errorFlag;
+        private String spanType;
 
         public SpanBuilder(String operationName) {
             this.operationName = operationName;
@@ -76,6 +81,29 @@ public class Tracer implements io.opentracing.Tracer {
             return this;
         }
 
+        public Tracer.SpanBuilder withServiceName(String serviceName) {
+            this.serviceName = serviceName;
+            return this;
+        }
+
+
+        public Tracer.SpanBuilder withResourceName(String resourceName) {
+            this.resourceName = resourceName;
+            return this;
+        }
+
+        public Tracer.SpanBuilder withErrorFlag() {
+            this.errorFlag = true;
+            return this;
+        }
+
+        public Tracer.SpanBuilder withSpanType(String spanType) {
+            this.spanType = spanType;
+            return this;
+        }
+
+
+
         public Span start() {
 
             // build the context
@@ -86,7 +114,7 @@ public class Tracer implements io.opentracing.Tracer {
                     Tracer.this,
                     this.operationName,
                     this.tags,
-                    Optional.ofNullable(this.timestamp),
+                    this.timestamp,
                     context);
         }
 
@@ -101,12 +129,12 @@ public class Tracer implements io.opentracing.Tracer {
                         p.getTraceId(),
                         generatedId,
                         p.getSpanId(),
-                        p.getServiceName(),
-                        (String) this.tags.getOrDefault(DDTags.RESOURCE.getKey(), ""),
+                        Optional.ofNullable(p.getServiceName()).orElse(this.serviceName),
+                        Optional.ofNullable(this.resourceName).orElse(this.operationName),
                         p.getBaggageItems(),
-                        this.tags.containsKey(Tags.ERROR.getKey()),
+                        errorFlag,
                         null,
-                        (String) this.tags.getOrDefault(Tags.SPAN_KIND.getKey(), ""),
+                        null,
                         true
                 );
             } else {
@@ -114,12 +142,12 @@ public class Tracer implements io.opentracing.Tracer {
                         generatedId,
                         generatedId,
                         0L,
-                        (String) this.tags.getOrDefault(DDTags.SERVICE.getKey(), ""),
-                        (String) this.tags.getOrDefault(DDTags.RESOURCE.getKey(), ""),
+                        this.serviceName,
+                        Optional.ofNullable(this.resourceName).orElse(this.operationName),
                         null,
-                        this.tags.containsKey(Tags.ERROR.getKey()),
+                        errorFlag,
                         null,
-                        (String) this.tags.getOrDefault(Tags.SPAN_KIND.getKey(), ""),
+                        null,
                         true);
             }
 

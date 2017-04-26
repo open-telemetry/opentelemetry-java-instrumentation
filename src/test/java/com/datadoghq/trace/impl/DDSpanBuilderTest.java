@@ -174,8 +174,8 @@ public class DDSpanBuilderTest {
 
         DDSpan parent = (DDSpan) tracer
                 .buildSpan(expectedName)
-                .withTag(DDTags.SERVICE.getKey(), expectedServiceName)
-                .withTag(DDTags.RESOURCE.getKey(), expectedResourceName)
+                .withServiceName(expectedServiceName)
+                .withResourceName(expectedResourceName)
                 .start();
 
         parent.setBaggageItem(expectedBaggageItemKey, expectedBaggageItemValue);
