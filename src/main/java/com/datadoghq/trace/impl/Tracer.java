@@ -1,12 +1,14 @@
 package com.datadoghq.trace.impl;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import io.opentracing.References;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
-import io.opentracing.tag.Tags;
-
-import java.util.*;
 
 
 public class Tracer implements io.opentracing.Tracer {
