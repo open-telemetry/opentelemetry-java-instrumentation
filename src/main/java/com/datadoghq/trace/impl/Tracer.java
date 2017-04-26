@@ -134,6 +134,6 @@ public class Tracer implements io.opentracing.Tracer {
     }
 
     long generateNewId() {
-        return UUID.randomUUID().getMostSignificantBits();
+        return System.nanoTime();
     }
 }

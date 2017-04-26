@@ -7,8 +7,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import com.datadoghq.trace.SpanSerializer;
 import com.datadoghq.trace.impl.DDSpanSerializer;
+import com.datadoghq.trace.impl.DDTags;
 import com.datadoghq.trace.impl.Tracer;
 
 import io.opentracing.Span;
@@ -22,16 +25,22 @@ public class DDApi {
 	protected final int port;
 	protected final String tracesEndpoint;
 	protected final String servicesEndpoint;
+	protected final SpanSerializer spanSerializer;
 	
 	public DDApi(String host, int port) {
+		this(host,port,null);
+	}
+	
+	public DDApi(String host, int port,Optional<SpanSerializer> serializer) {
 		super();
 		this.host = host;
 		this.port = port;
 		this.tracesEndpoint = "http://"+host+":"+port+TRACES_ENDPOINT;
 		this.servicesEndpoint = "http://"+host+":"+port+TRACES_SERVICES;
+		this.spanSerializer = serializer.orElse(new DDSpanSerializer());
 	}
 	
-	public void sendSpans(List<Span> spans){
+	public void sendTraces(List<List<Span>> traces){
 		
 	}
 	
@@ -48,7 +57,7 @@ public class DDApi {
 			httpCon.setRequestMethod("PUT");
 			httpCon.setRequestProperty("Content-Type", "application/json");
 			OutputStreamWriter out = new OutputStreamWriter(httpCon.getOutputStream());
-			out.write("Resource content");
+			out.write(content);
 			out.close();
 			return httpCon.getResponseCode();
 		} catch (MalformedURLException e) {
@@ -64,25 +73,34 @@ public class DDApi {
 	
 public static void main(String[] args) throws Exception{
 		
-		Tracer tracer = new Tracer();
 		List<Span> array = new ArrayList<Span>();
-		Span span = tracer.buildSpan("Hello!")
-//				.withTag("port", 1234)
-//				.withTag("bool", true)
-				.withTag("hello", "world")
-				.start();
-		array.add(span);
-		
-		Span span2 = tracer.buildSpan("Hello2!")
-//				.withTag("port", 1234)
-//				.withTag("bool", true)
-				.withTag("hello", "world")
-				.start();
-		array.add(span2);
+        Tracer tracer = new Tracer();
+       
+        Span parent = tracer
+                .buildSpan("hello-world")
+                .withTag(DDTags.SERVICE.getKey(), "service-name")
+                .start();
+        array.add(parent);
+        
+        parent.setBaggageItem("a-baggage", "value");
+        
+        Thread.sleep(1000);
+
+        Span child = tracer
+                .buildSpan("hello-world")
+                .asChildOf(parent)
+                .start();
+        array.add(child);
+        
+        Thread.sleep(1000);
+        
+        child.finish();
+        
+        Thread.sleep(1000);
+        
+        parent.finish();
 		
 		DDSpanSerializer ddSpanSerializer = new DDSpanSerializer();
-		
-		
 		
 		String str = ddSpanSerializer.serialize(array);
 		str = "["+str+"]";

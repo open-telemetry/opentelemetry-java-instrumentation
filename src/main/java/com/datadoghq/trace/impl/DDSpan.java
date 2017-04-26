@@ -11,12 +11,12 @@ import io.opentracing.SpanContext;
 
 public class DDSpan implements io.opentracing.Span {
 
-    private final Tracer tracer;
-    private final String operationName;
-    private Map<String, Object> tags;
-    private long startTime;
-    private long durationNano;
-    private final DDSpanContext context;
+    protected final Tracer tracer;
+    protected final String operationName;
+    protected Map<String, Object> tags;
+    protected long startTime;
+    protected long durationNano;
+    protected final DDSpanContext context;
 
     DDSpan(
             Tracer tracer,
