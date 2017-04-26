@@ -8,25 +8,27 @@ import java.util.Optional;
 
 public class Span implements io.opentracing.Span {
 
-
+    private final Tracer tracer;
     private final String operationName;
     private Map<String, Object> tags;
     private long startTime;
+    private long durationMilliseconds;
     private final SpanContext parent;
+    private SpanContext spanContext;
 
     Span(
-            String operationName,
+            Tracer tracer, String operationName,
             Map<String, Object> tags,
             Optional<Long> timestamp, SpanContext parent) {
-
+        this.tracer = tracer;
         this.operationName = operationName;
         this.tags = tags;
-        this.startTime = timestamp.orElse(System.nanoTime());
+        this.startTime = timestamp.orElse(System.currentTimeMillis());
         this.parent = parent;
     }
 
     public SpanContext context() {
-        return null;
+        return this.spanContext;
     }
 
     public void finish() {
