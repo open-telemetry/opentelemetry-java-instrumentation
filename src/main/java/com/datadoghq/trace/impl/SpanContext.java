@@ -1,7 +1,9 @@
 package com.datadoghq.trace.impl;
 
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 public class SpanContext implements io.opentracing.SpanContext {
 
@@ -34,7 +36,8 @@ public class SpanContext implements io.opentracing.SpanContext {
         this.traceId = traceId;
         this.spanId = spanId;
         this.parentId = parentId;
-        this.baggageItems = baggageItems;
+        Optional<Map<String, String>> baggage = Optional.ofNullable(baggageItems);
+        this.baggageItems = baggage.orElse(Collections.emptyMap());
         this.errorFlag = errorFlag;
         this.metrics = metrics;
 
@@ -44,7 +47,7 @@ public class SpanContext implements io.opentracing.SpanContext {
 
 
     public Iterable<Map.Entry<String, String>> baggageItems() {
-        return null;
+        return this.baggageItems.entrySet();
     }
 
     public long getTraceId() {

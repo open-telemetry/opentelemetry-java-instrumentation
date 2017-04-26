@@ -1,5 +1,6 @@
 package com.datadoghq.trace.impl;
 
+import io.opentracing.References;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,20 +101,86 @@ public class SpanBuilderTest {
         final long expectedParentId = spanId;
 
         SpanContext mockedContext = mock(SpanContext.class);
+        Span mockedSpan = mock(Span.class);
 
+        when(mockedSpan.context()).thenReturn(mockedContext);
         when(mockedContext.getSpanId()).thenReturn(spanId);
 
         final String expectedName = "fakeName";
 
         Span span = (Span) tracer
                 .buildSpan(expectedName)
-                .asChildOf(mockedContext)
+                .asChildOf(mockedSpan)
                 .start();
 
-       SpanContext actualContext = (SpanContext) span.context();
+        SpanContext actualContext = (SpanContext) span.context();
 
         assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
 
+
+    }
+
+    @Test
+    public void shouldLinkViaReferenceType() {
+
+
+        final long spanId = 223L;
+        final long expectedParentId = spanId;
+
+        SpanContext mockedContext = mock(SpanContext.class);
+        when(mockedContext.getSpanId()).thenReturn(spanId);
+
+        final String expectedName = "fakeName";
+
+
+        // case 1, using a CHILD_OF ref
+        Span span = (Span) tracer
+                .buildSpan(expectedName)
+                .addReference(References.CHILD_OF, mockedContext)
+                .start();
+
+        SpanContext actualContext = (SpanContext) span.context();
+        assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
+
+
+        // case 2, using a FOLLOW_FROM ref
+        span = (Span) tracer
+                .buildSpan(expectedName)
+                .addReference(References.FOLLOWS_FROM, mockedContext)
+                .start();
+
+        actualContext = (SpanContext) span.context();
+        assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
+
+        // case 2, using a WFT ref, should not be linked to the previous
+        span = (Span) tracer
+                .buildSpan(expectedName)
+                .addReference("WTF", mockedContext)
+                .start();
+
+        actualContext = (SpanContext) span.context();
+        assertThat(actualContext.getParentId()).isEqualTo(0L);
+
+    }
+
+    @Test
+    public void shouldInheritOfBaggage() {
+
+        final String expectedName = "fakeName";
+        final String expectedBaggageItemKey = "fakeKey";
+        final String expectedBaggageItemValue = "fakeValue";
+
+        Span parent = (Span) tracer
+                .buildSpan(expectedName)
+                .start();
+
+        assertThat(parent.getOperationName()).isEqualTo(expectedName);
+        assertThat(parent.context().baggageItems()).isEmpty();
+
+        Span span = (Span) tracer.buildSpan(expectedName).start();
+
+        assertThat(span.getOperationName()).isEqualTo(expectedName);
+        assertThat(span.getBaggageItem(expectedBaggageItemKey)).isEqualTo(expectedBaggageItemValue);
 
     }
 
