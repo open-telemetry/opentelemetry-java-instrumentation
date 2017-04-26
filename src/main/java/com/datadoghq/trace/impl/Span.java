@@ -13,14 +13,14 @@ public class Span implements io.opentracing.Span {
     private Map<String, Object> tags;
     private long startTime;
     private long durationMilliseconds;
-    private final SpanContext context;
+    private final com.datadoghq.trace.impl.SpanContext context;
 
     Span(
             Tracer tracer,
             String operationName,
             Map<String, Object> tags,
             Optional<Long> timestamp,
-            SpanContext context) {
+            com.datadoghq.trace.impl.SpanContext context) {
         this.tracer = tracer;
         this.operationName = operationName;
         this.tags = tags;
@@ -104,4 +104,8 @@ public class Span implements io.opentracing.Span {
         return startTime;
     }
 
+    public com.datadoghq.trace.impl.SpanContext getContext(){
+    	return context;
+    }
+    
 }

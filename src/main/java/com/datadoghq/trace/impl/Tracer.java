@@ -25,7 +25,7 @@ public class Tracer implements io.opentracing.Tracer {
     class SpanBuilder implements io.opentracing.Tracer.SpanBuilder {
 
         private final String operationName;
-        private HashMap tags = new HashMap();
+        private Map<String, Object> tags = new HashMap();
         private Long timestamp;
         private SpanContext parent;
 
