@@ -16,7 +16,8 @@ public class DDSpanTest {
 
 
         Tracer mockedTracer = mock(Tracer.class);
-        DDSpanContext mockedContext = mock(DDSpanContext.class);
+        DDSpanContext context = new DDSpanContext();
+
 
         final String expectedBaggageItemKey = "fakeKey";
         final String expectedBaggageItemValue = "fakeValue";
@@ -27,7 +28,7 @@ public class DDSpanTest {
                 "fakeName",
                 null,
                 Optional.empty(),
-                mockedContext
+                context
         );
 
         assertThat(span.context().baggageItems()).isEmpty();

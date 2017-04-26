@@ -14,7 +14,7 @@ import static org.mockito.Mockito.when;
 
 public class DDSpanBuilderTest {
 
-    Tracer tracer;
+    private Tracer tracer;
 
     @Before
     public void setUp() throws Exception {
@@ -72,7 +72,7 @@ public class DDSpanBuilderTest {
     @Test
     public void shouldBuildSpanTimestampInMilli() {
 
-        final long expectedTimestamp = 487517802L * 1000;
+        final long expectedTimestamp = 487517802L;
         final String expectedName = "fakeName";
 
         DDSpan span = (DDSpan) tracer
@@ -83,13 +83,13 @@ public class DDSpanBuilderTest {
         assertThat(span.getStartTime()).isEqualTo(expectedTimestamp);
 
         // auto-timestamp in nanoseconds
-        long tick = System.currentTimeMillis();
+        long tick = System.nanoTime();
         span = (DDSpan) tracer
                 .buildSpan(expectedName)
                 .start();
 
         // between now and now + 100ms
-        assertThat(span.getStartTime()).isBetween(tick, tick + 100);
+        assertThat(span.getStartTime()).isBetween(tick, tick + 100 * 1000);
 
     }
 
@@ -164,23 +164,31 @@ public class DDSpanBuilderTest {
     }
 
     @Test
-    public void shouldInheritOfBaggage() {
+    public void shouldInheritOfTheDDParentAttributes() {
 
         final String expectedName = "fakeName";
+        final String expectedServiceName = "fakeServiceName";
+        final String expectedResourceName = "fakeResourceName";
         final String expectedBaggageItemKey = "fakeKey";
         final String expectedBaggageItemValue = "fakeValue";
 
         DDSpan parent = (DDSpan) tracer
                 .buildSpan(expectedName)
+                .withTag(DDTags.SERVICE.getKey(), expectedServiceName)
+                .withTag(DDTags.RESOURCE.getKey(), expectedResourceName)
                 .start();
 
-        assertThat(parent.getOperationName()).isEqualTo(expectedName);
-        assertThat(parent.context().baggageItems()).isEmpty();
+        parent.setBaggageItem(expectedBaggageItemKey, expectedBaggageItemValue);
 
-        DDSpan span = (DDSpan) tracer.buildSpan(expectedName).start();
+        DDSpan span = (DDSpan) tracer
+                .buildSpan(expectedName)
+                .asChildOf(parent)
+                .start();
 
         assertThat(span.getOperationName()).isEqualTo(expectedName);
         assertThat(span.getBaggageItem(expectedBaggageItemKey)).isEqualTo(expectedBaggageItemValue);
+        assertThat(((DDSpanContext) span.context()).getServiceName()).isEqualTo(expectedServiceName);
+        assertThat(((DDSpan) span.context()).getResourceName()).isNotEqualTo(expectedResourceName);
 
     }
 
