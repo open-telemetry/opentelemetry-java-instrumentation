@@ -47,14 +47,11 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         this.spanId = spanId;
         this.parentId = parentId;
         Optional<Map<String, String>> baggage = Optional.ofNullable(baggageItems);
-
         this.serviceName = serviceName;
         this.resourceName = resourceName;
-
         this.baggageItems = baggage.orElse(new HashMap<>());
         this.errorFlag = errorFlag;
         this.metrics = metrics;
-
         this.spanType = spanType;
         this.sampled = sampled;
     }

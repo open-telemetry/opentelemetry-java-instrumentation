@@ -4,7 +4,7 @@ import io.opentracing.References;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
-import io.opentracing.tag.Tags;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
 
@@ -27,7 +27,7 @@ public class Tracer implements io.opentracing.Tracer {
     public class SpanBuilder implements io.opentracing.Tracer.SpanBuilder {
 
         private final String operationName;
-        private Map<String, Object> tags = new HashMap<String,Object>();
+        private Map<String, Object> tags = new HashMap<String, Object>();
         private Long timestamp;
         private SpanContext parent;
         private String serviceName;
@@ -54,8 +54,7 @@ public class Tracer implements io.opentracing.Tracer {
                 // @todo: implements the notion of referenceType, currently only link a span to a parent one
                 return asChildOf(spanContext);
             } else {
-                // do nothing
-                return this;
+                throw new IllegalArgumentException();
             }
         }
 
@@ -86,7 +85,6 @@ public class Tracer implements io.opentracing.Tracer {
             return this;
         }
 
-
         public Tracer.SpanBuilder withResourceName(String resourceName) {
             this.resourceName = resourceName;
             return this;
@@ -101,7 +99,6 @@ public class Tracer implements io.opentracing.Tracer {
             this.spanType = spanType;
             return this;
         }
-
 
 
         public Span start() {
@@ -133,7 +130,7 @@ public class Tracer implements io.opentracing.Tracer {
                         p.getBaggageItems(),
                         errorFlag,
                         null,
-                        null,
+                        this.spanType,
                         true
                 );
             } else {
@@ -146,7 +143,7 @@ public class Tracer implements io.opentracing.Tracer {
                         null,
                         errorFlag,
                         null,
-                        null,
+                        this.spanType,
                         true);
             }
 
