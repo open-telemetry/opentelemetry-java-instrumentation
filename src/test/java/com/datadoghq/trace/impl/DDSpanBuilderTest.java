@@ -134,6 +134,7 @@ public class DDSpanBuilderTest {
 
         when(mockedSpan.context()).thenReturn(mockedContext);
         when(mockedContext.getSpanId()).thenReturn(spanId);
+        when(mockedContext.getServiceName()).thenReturn("foo");
 
         final String expectedName = "fakeName";
 
@@ -210,13 +211,10 @@ public class DDSpanBuilderTest {
         assertThat(spans.get((int) (Math.random() * nbSamples)).context.getTrace()).containsAll(spans);
 
         root.finish();
-        //TODO Check order
-        //assertThat(root.getTrace()).containsExactly(spans)
-        assertThat(spans.get(1).durationNano).isEqualTo((tickEnd - tickStart) * 1000000L);
-        for (DDSpan span : spans) {
-            assertThat(span.getDurationNano()).isNotNull();
-            assertThat(span.getDurationNano()).isNotZero();
-        }
+
+        // not comparing the nano
+        assertThat(spans.get(1).durationNano / 1000000L).isEqualTo((tickEnd - tickStart));
+
 
 
     }
