@@ -58,15 +58,11 @@ public class DDTracer implements io.opentracing.Tracer {
 
             // build the context
             DDSpanContext context = buildTheSpanContext();
+            Span span = new DDSpan(this.operationName, this.tags, this.timestamp, context);
 
-            // FIXME
-            logger.debug("Starting new span " + this.operationName);
+            logger.debug("Starting a new span. " + span.toString());
 
-            return new DDSpan(
-                    this.operationName,
-                    this.tags,
-                    this.timestamp,
-                    context);
+            return span;
         }
 
         public DDTracer.DDSpanBuilder withTag(String tag, Number number) {
@@ -165,7 +161,7 @@ public class DDTracer implements io.opentracing.Tracer {
                     DDTracer.this
             );
 
-            logger.debug("Building a new span context." + context.toString());
+            logger.debug("Building a new span context. " + context.toString());
 
             return context;
         }

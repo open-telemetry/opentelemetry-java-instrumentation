@@ -46,31 +46,30 @@ public class DDSpan implements io.opentracing.Span {
         if (this.context.getServiceName() == null) {
             throw new IllegalArgumentException("No ServiceName provided");
         }
-
-        logger.debug("Starting a new span. " + this.toString());
-
     }
 
     public void finish(long stopTimeMillis) {
 
-        // formula: millis(stop - start) * 1000 * 1000 + nano(stop - start)
+        // formula: millis(stop - start) * 1000 * 1000 + keepNano(nano(stop - start))
         long stopTimeNano = System.nanoTime();
-        this.durationNano = (stopTimeMillis - startTime) * 1000000L + (stopTimeNano - this.startTimeNano);
+        this.durationNano = (stopTimeMillis - startTime) * 1000000L + ((stopTimeNano - this.startTimeNano) % 1000000L);
 
-        logger.debug("Finishing the span." + this.toString());
+        logger.debug("SPAN" + this.getSpanId() + " - Closing the span." + this.toString());
 
         // warn if one of the parent's children is not finished
         if (this.isRootSpan()) {
-            logger.debug("Checking all children attached to the current root span");
+            logger.debug("SPAN" + this.getSpanId() + " - The current span is marked as a root span");
             List<Span> spans = this.context.getTrace();
+            logger.debug("SPAN" + this.getSpanId() + " - Checking " + spans.size() + " children attached to the current span");
+
             for (Span span : spans) {
                 if (((DDSpan) span).getDurationNano() == 0L) {
                     // FIXME
-                    logger.warn("The parent span is marked as finished but this span isn't. You have to close each children." + this.toString());
+                    logger.warn("SPAN" + this.getSpanId() + " - The parent span is marked as finished but this span isn't. You have to close each children." + this.toString());
                 }
             }
             this.context.getTracer().write(this.context.getTrace());
-            logger.debug("Sending the trace to the writer");
+            logger.debug("SPAN" + this.getSpanId() + " - Sending the trace to the writer");
 
         }
 
@@ -164,7 +163,7 @@ public class DDSpan implements io.opentracing.Span {
 
     @JsonGetter(value = "start")
     public long getStartTime() {
-        return startTimeNano;
+        return startTime * 1000000L;
     }
 
     @JsonGetter(value = "duration")
