@@ -130,12 +130,12 @@ public class Tracer implements io.opentracing.Tracer {
                         p.getTraceId(),
                         generatedId,
                         p.getSpanId(),
-                        Optional.ofNullable(p.getServiceName()).orElse(this.serviceName),
+                        Optional.ofNullable(this.serviceName).orElse(p.getServiceName()),
                         Optional.ofNullable(this.resourceName).orElse(this.operationName),
                         p.getBaggageItems(),
                         errorFlag,
                         null,
-                        this.spanType,
+                        Optional.ofNullable(this.spanType).orElse(p.getSpanType()),
                         true
                 );
             } else {

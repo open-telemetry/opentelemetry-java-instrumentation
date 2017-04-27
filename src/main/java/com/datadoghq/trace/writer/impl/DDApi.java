@@ -16,7 +16,7 @@ import io.opentracing.Span;
 
 public class DDApi {
 
-	protected static final String TRACES_ENDPOINT = "/v0.3/trace";
+	protected static final String TRACES_ENDPOINT = "/v0.3/traces";
 	protected static final String SERVICES_ENDPOINT = "/v0.3/services";
 
 	protected final String host;
@@ -114,14 +114,12 @@ public class DDApi {
 
 		parent.finish();
 
-		List<List<Span>> traces = new ArrayList<List<Span>>();
-		traces.add(array);
+		DDAgentWriter writer = new DDAgentWriter();
+		writer.write(array);
 
-		DDApi api = new DDApi(DDAgentWriter.DEFAULT_HOSTNAME, DDAgentWriter.DEFAULT_PORT);
+		Thread.sleep(1000);
 		
-//		String service = "{\"service_name\": {\"app\": \"service-name\",\"app_type\": \"web\"}}";
-//		System.out.println("Pushed service: "+api.callPUT(api.servicesEndpoint, service));
-		System.out.println("Pushed trace: "+api.sendTraces(traces));
+		writer.close();
 
 	}
 }
