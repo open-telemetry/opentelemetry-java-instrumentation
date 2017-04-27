@@ -1,12 +1,13 @@
 package com.datadoghq.trace.writer.impl;
 
-import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datadoghq.trace.SpanSerializer;
 import com.datadoghq.trace.impl.DDSpanSerializer;
@@ -14,7 +15,12 @@ import com.datadoghq.trace.impl.DDTracer;
 
 import io.opentracing.Span;
 
+/**
+ * The API pointing to a DD agent
+ */
 public class DDApi {
+
+	protected static final Logger logger = LoggerFactory.getLogger(DDApi.class.getName());
 
 	protected static final String TRACES_ENDPOINT = "/v0.3/traces";
 	protected static final String SERVICES_ENDPOINT = "/v0.3/services";
@@ -23,6 +29,10 @@ public class DDApi {
 	protected final int port;
 	protected final String tracesEndpoint;
 	protected final String servicesEndpoint;
+	
+	/**
+	 * The spans serializer: can be replaced. By default, it serialize in JSON.
+	 */
 	protected final SpanSerializer spanSerializer;
 
 	public DDApi(String host, int port) {
@@ -38,49 +48,64 @@ public class DDApi {
 		this.spanSerializer = spanSerializer;
 	}
 
+	/**
+	 * Send traces to the DD agent
+	 * 
+	 * @param traces the traces to be sent
+	 * @return the staus code returned
+	 */
 	public boolean sendTraces(List<List<Span>> traces){
+		String payload = null;
 		try {
-			String payload = spanSerializer.serialize(traces);
-			int status = callPUT(tracesEndpoint,payload);
-			if(status == 200){
-				return true;
-			}else{
-				
-				//FIXME log status here
-				
-				return false;
-			}
+			payload = spanSerializer.serialize(traces);
 		} catch (Exception e) {
-			//FIXME proper exceptino
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Error during serialization of "+traces.size()+" traces.",e);
+			return false;
+		}
+
+		int status = callPUT(tracesEndpoint,payload);
+		if(status == 200){
+			logger.debug("Succesfully sent "+traces.size()+" traces to the DD agent.");
+			return true;
+		}else{
+			logger.warn("Error while sending "+traces.size()+" traces to the DD agent. Status: "+status);
 			return false;
 		}
 	}
 
-	public boolean sendServices(List<String> services){
-		return false;
-	}
-
+	/**
+	 * PUT to an endpoint the provided JSON content
+	 * 
+	 * @param endpoint
+	 * @param content
+	 * @return the status code
+	 */
 	private int callPUT(String endpoint,String content){
 		HttpURLConnection httpCon = null;
-		try {
+		try{
 			URL url = new URL(endpoint);
 			httpCon = (HttpURLConnection) url.openConnection();
 			httpCon.setDoOutput(true);
 			httpCon.setRequestMethod("PUT");
 			httpCon.setRequestProperty("Content-Type", "application/json");
+		} catch (Exception e) {
+			logger.warn("Error thrown before PUT call to the DD agent.",e);
+			return -1;
+		} 
+
+		try{
 			OutputStreamWriter out = new OutputStreamWriter(httpCon.getOutputStream());
 			out.write(content);
 			out.close();
-			return httpCon.getResponseCode();
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return -1;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			int responseCode = httpCon.getResponseCode();
+			if(responseCode != 200){
+				logger.debug("Sent the payload to the DD agent.");
+			}else{
+				logger.warn("Could not send the payload to the DD agent. Status: "+httpCon.getResponseCode()+" ResponseMessage: "+httpCon.getResponseMessage());
+			}
+			return responseCode;
+		} catch (Exception e) {
+			logger.warn("Could not send the payload to the DD agent.",e);
 			return -1;
 		} 
 	}
@@ -118,7 +143,7 @@ public class DDApi {
 		writer.write(array);
 
 		Thread.sleep(1000);
-		
+
 		writer.close();
 
 	}

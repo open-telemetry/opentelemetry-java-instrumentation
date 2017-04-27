@@ -164,6 +164,6 @@ public class DDTracer implements io.opentracing.Tracer {
     }
 
     long generateNewId() {
-        return System.nanoTime();
+        return Math.abs(UUID.randomUUID().getMostSignificantBits());
     }
 }
