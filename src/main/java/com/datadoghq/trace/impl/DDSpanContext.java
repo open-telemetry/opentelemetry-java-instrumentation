@@ -146,4 +146,61 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         return this.tracer;
     }
 
+    @Override
+    public String toString() {
+        return "DDSpanContext{" +
+                "traceId=" + traceId +
+                ", spanId=" + spanId +
+                ", parentId=" + parentId +
+                ", baggageItems=" + baggageItems +
+                ", serviceName='" + serviceName + '\'' +
+                ", resourceName='" + resourceName + '\'' +
+                ", errorFlag=" + errorFlag +
+                ", metrics=" + metrics +
+                ", spanType='" + spanType + '\'' +
+                ", trace.size=" + trace.size() +
+                ", sampled=" + sampled +
+                ", tracer=" + tracer +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DDSpanContext context = (DDSpanContext) o;
+
+        if (traceId != context.traceId) return false;
+        if (spanId != context.spanId) return false;
+        if (parentId != context.parentId) return false;
+        if (errorFlag != context.errorFlag) return false;
+        if (sampled != context.sampled) return false;
+        if (baggageItems != null ? !baggageItems.equals(context.baggageItems) : context.baggageItems != null)
+            return false;
+        if (serviceName != null ? !serviceName.equals(context.serviceName) : context.serviceName != null) return false;
+        if (resourceName != null ? !resourceName.equals(context.resourceName) : context.resourceName != null)
+            return false;
+        if (metrics != null ? !metrics.equals(context.metrics) : context.metrics != null) return false;
+        if (spanType != null ? !spanType.equals(context.spanType) : context.spanType != null) return false;
+        if (trace != null ? !trace.equals(context.trace) : context.trace != null) return false;
+        return tracer != null ? tracer.equals(context.tracer) : context.tracer == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) (traceId ^ (traceId >>> 32));
+        result = 31 * result + (int) (spanId ^ (spanId >>> 32));
+        result = 31 * result + (int) (parentId ^ (parentId >>> 32));
+        result = 31 * result + (baggageItems != null ? baggageItems.hashCode() : 0);
+        result = 31 * result + (serviceName != null ? serviceName.hashCode() : 0);
+        result = 31 * result + (resourceName != null ? resourceName.hashCode() : 0);
+        result = 31 * result + (errorFlag ? 1 : 0);
+        result = 31 * result + (metrics != null ? metrics.hashCode() : 0);
+        result = 31 * result + (spanType != null ? spanType.hashCode() : 0);
+        result = 31 * result + (trace != null ? trace.hashCode() : 0);
+        result = 31 * result + (sampled ? 1 : 0);
+        result = 31 * result + (tracer != null ? tracer.hashCode() : 0);
+        return result;
+    }
 }

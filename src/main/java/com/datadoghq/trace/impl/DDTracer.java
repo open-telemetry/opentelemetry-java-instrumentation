@@ -47,7 +47,7 @@ public class DDTracer implements io.opentracing.Tracer {
 
         private final String operationName;
         private Map<String, Object> tags = new HashMap<String, Object>();
-        private Long timestamp;
+        private long timestamp;
         private DDSpan parent;
         private String serviceName;
         private String resourceName;
@@ -173,5 +173,29 @@ public class DDTracer implements io.opentracing.Tracer {
 
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
+        DDTracer ddTracer = (DDTracer) o;
+
+        if (writer != null ? !writer.equals(ddTracer.writer) : ddTracer.writer != null) return false;
+        return sampler != null ? sampler.equals(ddTracer.sampler) : ddTracer.sampler == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = writer != null ? writer.hashCode() : 0;
+        result = 31 * result + (sampler != null ? sampler.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "DDTracer{" +
+                "writer=" + writer +
+                ", sampler=" + sampler +
+                '}';
+    }
 }
