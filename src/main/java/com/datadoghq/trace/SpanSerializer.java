@@ -14,7 +14,7 @@ public interface SpanSerializer {
 	 * @return the serialized object
 	 * @throws Exception
 	 */
-	public String serialize(Span span) throws Exception;
+    String serialize(Span span) throws Exception;
 	
 	/**
 	 * A collection of Span to serialize
@@ -23,7 +23,7 @@ public interface SpanSerializer {
 	 * @return the serialized objects
 	 * @throws Exception
 	 */
-	public String serialize(Object spans) throws Exception;
+    String serialize(Object spans) throws Exception;
 	
 	/**
 	 * Deserialize a string to convert it in a Span or a Trace
@@ -32,6 +32,6 @@ public interface SpanSerializer {
 	 * @return A Span or a Trace (List<Span>)
 	 * @throws Exception
 	 */
-	public Object deserialize(String str) throws Exception;
+    Object deserialize(String str) throws Exception;
 	
 }

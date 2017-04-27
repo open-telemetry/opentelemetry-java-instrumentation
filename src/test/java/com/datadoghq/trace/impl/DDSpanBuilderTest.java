@@ -1,19 +1,15 @@
 package com.datadoghq.trace.impl;
 
-import com.datadoghq.trace.Writer;
-import com.datadoghq.trace.writer.impl.DDAgentWriter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class DDSpanBuilderTest {
@@ -22,8 +18,7 @@ public class DDSpanBuilderTest {
 
     @Before
     public void setUp() throws Exception {
-        Writer w = mock(Writer.class);
-        tracer = new DDTracer(w, null);
+        tracer = new DDTracer();
     }
 
 
@@ -36,7 +31,7 @@ public class DDSpanBuilderTest {
     public void shouldBuildSimpleSpan() {
 
         final String expectedName = "fakeName";
-        DDSpan span = (DDSpan) tracer.buildSpan(expectedName).withServiceName("foo").start();
+        DDSpan span = tracer.buildSpan(expectedName).withServiceName("foo").start();
         assertThat(span.getOperationName()).isEqualTo(expectedName);
     }
 
@@ -52,7 +47,7 @@ public class DDSpanBuilderTest {
             }
         };
 
-        DDSpan span = (DDSpan) tracer
+        DDSpan span = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
                 .withTag("1", (Boolean) tags.get("1"))
@@ -65,7 +60,7 @@ public class DDSpanBuilderTest {
 
         // with no tag provided
 
-        span = (DDSpan) tracer
+        span = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
                 .start();
@@ -78,7 +73,7 @@ public class DDSpanBuilderTest {
         final String expectedService = "fakeService";
         final String expectedType = "fakeType";
 
-        span = (DDSpan) tracer
+        span = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
                 .withResourceName(expectedResource)
@@ -87,7 +82,7 @@ public class DDSpanBuilderTest {
                 .withSpanType(expectedType)
                 .start();
 
-        DDSpanContext actualContext = (DDSpanContext) span.context();
+        DDSpanContext actualContext = span.context();
 
         assertThat(actualContext.getResourceName()).isEqualTo(expectedResource);
         assertThat(actualContext.getErrorFlag()).isTrue();
@@ -102,7 +97,7 @@ public class DDSpanBuilderTest {
         final long expectedTimestamp = 4875178020000L;
         final String expectedName = "fakeName";
 
-        DDSpan span = (DDSpan) tracer
+        DDSpan span = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
                 .withStartTimestamp(expectedTimestamp)
@@ -112,7 +107,7 @@ public class DDSpanBuilderTest {
 
         // auto-timestamp in nanoseconds
         long tick = System.currentTimeMillis() * 1000000L;
-        span = (DDSpan) tracer
+        span = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
                 .start();
@@ -138,13 +133,13 @@ public class DDSpanBuilderTest {
 
         final String expectedName = "fakeName";
 
-        DDSpan span = (DDSpan) tracer
+        DDSpan span = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
                 .asChildOf(mockedSpan)
                 .start();
 
-        DDSpanContext actualContext = (DDSpanContext) span.context();
+        DDSpanContext actualContext = span.context();
 
         assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
 
@@ -160,7 +155,7 @@ public class DDSpanBuilderTest {
         final String expectedBaggageItemKey = "fakeKey";
         final String expectedBaggageItemValue = "fakeValue";
 
-        DDSpan parent = (DDSpan) tracer
+        DDSpan parent = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
                 .withServiceName(expectedServiceName)
@@ -169,7 +164,7 @@ public class DDSpanBuilderTest {
 
         parent.setBaggageItem(expectedBaggageItemKey, expectedBaggageItemValue);
 
-        DDSpan span = (DDSpan) tracer
+        DDSpan span = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
                 .asChildOf(parent)
@@ -177,8 +172,8 @@ public class DDSpanBuilderTest {
 
         assertThat(span.getOperationName()).isEqualTo(expectedName);
         assertThat(span.getBaggageItem(expectedBaggageItemKey)).isEqualTo(expectedBaggageItemValue);
-        assertThat(((DDSpanContext) span.context()).getServiceName()).isEqualTo(expectedServiceName);
-        assertThat(((DDSpanContext) span.context()).getResourceName()).isNotEqualTo(expectedResourceName);
+        assertThat(span.context().getServiceName()).isEqualTo(expectedServiceName);
+        assertThat(span.context().getResourceName()).isNotEqualTo(expectedResourceName);
 
     }
 
@@ -192,13 +187,13 @@ public class DDSpanBuilderTest {
         // spans[1] has a predictable duration
         // others are just for fun
 
-        DDSpan root = (DDSpan) tracer.buildSpan("fake_O").withServiceName("foo").start();
+        DDSpan root = tracer.buildSpan("fake_O").withServiceName("foo").start();
         spans.add(root);
 
         long tickStart = System.currentTimeMillis();
-        spans.add((DDSpan) tracer.buildSpan("fake_" + 1).withServiceName("foo").asChildOf(spans.get(0)).withStartTimestamp(tickStart).start());
+        spans.add(tracer.buildSpan("fake_" + 1).withServiceName("foo").asChildOf(spans.get(0)).withStartTimestamp(tickStart).start());
         for (int i = 2; i <= 10; i++) {
-            spans.add((DDSpan) tracer.buildSpan("fake_" + i).withServiceName("foo").asChildOf(spans.get(i - 1)).start());
+            spans.add(tracer.buildSpan("fake_" + i).withServiceName("foo").asChildOf(spans.get(i - 1)).start());
         }
 
         Thread.sleep(300);
@@ -214,7 +209,6 @@ public class DDSpanBuilderTest {
 
         // not comparing the nano
         assertThat(spans.get(1).durationNano / 1000000L).isEqualTo((tickEnd - tickStart));
-
 
 
     }

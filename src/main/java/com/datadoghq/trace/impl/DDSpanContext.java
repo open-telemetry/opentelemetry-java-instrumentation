@@ -173,8 +173,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 		DDSpanContext other = (DDSpanContext) obj;
 		if (spanId != other.spanId)
 			return false;
-		if (traceId != other.traceId)
-			return false;
-		return true;
-	}
+        return traceId == other.traceId;
+    }
 }

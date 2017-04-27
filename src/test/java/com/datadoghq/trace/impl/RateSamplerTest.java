@@ -1,6 +1,8 @@
-package com.datadoghq.trace;
+package com.datadoghq.trace.impl;
 
+import com.datadoghq.trace.Sampler;
 import com.datadoghq.trace.impl.DDSpan;
+import com.datadoghq.trace.impl.RateSampler;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +29,20 @@ public class RateSamplerTest {
         }
 
         assertThat(((double) kept / iterations)).isBetween(sampleRate - 0.01, sampleRate + 0.01);
+
+    }
+
+    @Test
+    public void testRateBoundaries() {
+
+        RateSampler sampler = new RateSampler(1000);
+        assertThat(sampler.getSampleRate()).isEqualTo(1);
+
+        sampler = new RateSampler(-1000);
+        assertThat(sampler.getSampleRate()).isEqualTo(1);
+
+        sampler = new RateSampler(0.337);
+        assertThat(sampler.getSampleRate()).isEqualTo(0.337);
 
     }
 }
