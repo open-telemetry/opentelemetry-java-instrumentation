@@ -13,21 +13,20 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
     private static final String SPAN_TYPE_DEFAULT = "custom";
     // Opentracing attributes
-    private final long traceId;
-    private final long spanId;
-    private final long parentId;
-    private final Map<String, String> baggageItems;
+    protected long traceId;
+    protected long spanId;
+    protected long parentId;
+    protected Map<String, String> baggageItems;
     // DD attributes
-    private final String serviceName;
-    private final String resourceName;
-    private final boolean errorFlag;
-    private final Map<String, Object> metrics;
-    private final String spanType;
-    private final List<Span> trace;
+    protected String serviceName;
+    protected String resourceName;
+    protected boolean errorFlag;
+    protected Map<String, Object> metrics;
+    protected String spanType;
+    protected final List<Span> trace;
     // Others attributes
-    private boolean sampled;
-    private DDTracer tracer;
-
+    protected boolean sampled;
+    protected DDTracer tracer;
 
     public DDSpanContext(
             long traceId,

@@ -1,12 +1,15 @@
 package com.datadoghq.trace.impl;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.opentracing.Span;
 
@@ -15,7 +18,7 @@ public class DDSpan implements io.opentracing.Span {
 
     protected String operationName;
     protected Map<String, Object> tags;
-    protected final long startTime;
+    protected long startTime;
     protected long startTimeNano;
     protected long durationNano;
     protected final DDSpanContext context;
@@ -88,20 +91,34 @@ public class DDSpan implements io.opentracing.Span {
         return context.getTraceId() == context.getSpanId();
     }
 
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#setTag(java.lang.String, java.lang.String)
+     */
     public Span setTag(String tag, String value) {
-        return this.setTag(tag, value);
+        return setTag(tag, (Object)value);
     }
 
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#setTag(java.lang.String, boolean)
+     */
     public Span setTag(String tag, boolean value) {
-        return this.setTag(tag, value);
+        return setTag(tag, (Object)value);
     }
 
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#setTag(java.lang.String, java.lang.Number)
+     */
     public Span setTag(String tag, Number value) {
         return this.setTag(tag, (Object) value);
     }
 
+    /**
+     * @param tag
+     * @param value
+     * @return
+     */
     private Span setTag(String tag, Object value) {
-        this.tags.put(tag, value);
+        tags.put(tag, value);
         return this;
     }
 
@@ -157,9 +174,26 @@ public class DDSpan implements io.opentracing.Span {
         return operationName;
     }
 
-    @JsonGetter(value = "meta")
+    @JsonIgnore
     public Map<String, Object> getTags() {
         return this.tags;
+    }
+    
+    /**
+     * Meta merges bagage and tags (stringified values)
+     * 
+     * @return merged context baggages and tags
+     */
+    @JsonGetter
+    public Map<String, String> getMeta() {
+    	Map<String,String> meta = new HashMap<String, String>();
+    	for(Entry<String,String> entry:context().getBaggageItems().entrySet()){
+    		meta.put(entry.getKey(), entry.getValue());
+    	}
+    	for(Entry<String,Object> entry:getTags().entrySet()){
+    		meta.put(entry.getKey(), String.valueOf(entry.getValue()));
+    	}
+        return meta;
     }
 
     @JsonGetter(value = "start")
@@ -172,6 +206,7 @@ public class DDSpan implements io.opentracing.Span {
         return durationNano;
     }
 
+    @JsonGetter
     public String getService() {
         return context.getServiceName();
     }
@@ -196,10 +231,12 @@ public class DDSpan implements io.opentracing.Span {
         return context.getResourceName() == null ? this.operationName : context.getResourceName();
     }
 
+    @JsonGetter
     public String getType() {
         return context.getSpanType();
     }
 
+    @JsonGetter
     public int getError() {
         return context.getErrorFlag() ? 1 : 0;
     }

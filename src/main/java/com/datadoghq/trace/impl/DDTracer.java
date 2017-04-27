@@ -158,7 +158,7 @@ public class DDTracer implements io.opentracing.Tracer {
                     this.parent == null ? null : p.getBaggageItems(),
                     errorFlag,
                     null,
-                    this.spanType,
+                    this.parent == null ? this.spanType : p.getSpanType(),
                     true,
                     this.parent == null ? null : p.getTrace(),
                     DDTracer.this
