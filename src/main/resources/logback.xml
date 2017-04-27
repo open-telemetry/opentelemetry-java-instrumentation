@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-
     <property name="log_directory" value="logs/"/>
 
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
@@ -31,12 +30,12 @@
     </appender>
 
     <logger name="com.datadoghq.trace" level="trace">
-        <appender-ref ref="console"/>
+        <appender-ref ref="console-json"/>
         <appender-ref ref="file-json"/>
     </logger>
 
     <root level="info">
-        <appender-ref ref="console"/>
+        <appender-ref ref="console-json"/>
     </root>
 
 </configuration>
