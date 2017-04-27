@@ -9,12 +9,12 @@ import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 
 
-public class Tracer implements io.opentracing.Tracer {
+public class DDTracer implements io.opentracing.Tracer {
 
     private TracerLogger logger = new TracerLogger();
 
-    public SpanBuilder buildSpan(String operationName) {
-        return new SpanBuilder(operationName);
+    public DDSpanBuilder buildSpan(String operationName) {
+        return new DDSpanBuilder(operationName);
     }
 
     public <C> void inject(SpanContext spanContext, Format<C> format, C c) {
@@ -26,10 +26,10 @@ public class Tracer implements io.opentracing.Tracer {
         throw new UnsupportedOperationException();
     }
 
-    public class SpanBuilder implements io.opentracing.Tracer.SpanBuilder {
+    public class DDSpanBuilder implements SpanBuilder {
 
         private final String operationName;
-        private Map<String, Object> tags = new HashMap<>();
+        private Map<String, Object> tags = new HashMap<String, Object>();
         private Long timestamp;
         private DDSpan parent;
         private String serviceName;
@@ -37,63 +37,63 @@ public class Tracer implements io.opentracing.Tracer {
         private boolean errorFlag;
         private String spanType;
 
-        public SpanBuilder(String operationName) {
+        public DDSpanBuilder(String operationName) {
             this.operationName = operationName;
         }
 
-        public Tracer.SpanBuilder asChildOf(SpanContext spanContext) {
+        public DDTracer.DDSpanBuilder asChildOf(SpanContext spanContext) {
             throw new UnsupportedOperationException("Should be a complete span");
             //this.parent = spanContext;
             //return this;
         }
 
-        public Tracer.SpanBuilder asChildOf(Span span) {
+        public DDTracer.DDSpanBuilder asChildOf(Span span) {
             this.parent = (DDSpan) span;
             return this;
         }
 
-        public Tracer.SpanBuilder addReference(String referenceType, SpanContext spanContext) {
+        public DDTracer.DDSpanBuilder addReference(String referenceType, SpanContext spanContext) {
             throw new UnsupportedOperationException();
         }
 
-        public Tracer.SpanBuilder withTag(String tag, Number number) {
+        public DDTracer.DDSpanBuilder withTag(String tag, Number number) {
             return withTag(tag, (Object) number);
         }
 
-        public Tracer.SpanBuilder withTag(String tag, String string) {
+        public DDTracer.DDSpanBuilder withTag(String tag, String string) {
             return withTag(tag, (Object) string);
         }
 
-        public Tracer.SpanBuilder withTag(String tag, boolean bool) {
+        public DDTracer.DDSpanBuilder withTag(String tag, boolean bool) {
             return withTag(tag, (Object) bool);
         }
 
-        private Tracer.SpanBuilder withTag(String tag, Object value) {
+        private DDTracer.DDSpanBuilder withTag(String tag, Object value) {
             this.tags.put(tag, value);
             return this;
         }
 
-        public Tracer.SpanBuilder withStartTimestamp(long timestampMillis) {
+        public DDTracer.DDSpanBuilder withStartTimestamp(long timestampMillis) {
             this.timestamp = timestampMillis;
             return this;
         }
 
-        public Tracer.SpanBuilder withServiceName(String serviceName) {
+        public DDTracer.DDSpanBuilder withServiceName(String serviceName) {
             this.serviceName = serviceName;
             return this;
         }
 
-        public Tracer.SpanBuilder withResourceName(String resourceName) {
+        public DDTracer.DDSpanBuilder withResourceName(String resourceName) {
             this.resourceName = resourceName;
             return this;
         }
 
-        public Tracer.SpanBuilder withErrorFlag() {
+        public DDTracer.DDSpanBuilder withErrorFlag() {
             this.errorFlag = true;
             return this;
         }
 
-        public Tracer.SpanBuilder withSpanType(String spanType) {
+        public DDTracer.DDSpanBuilder withSpanType(String spanType) {
             this.spanType = spanType;
             return this;
         }
@@ -105,13 +105,13 @@ public class Tracer implements io.opentracing.Tracer {
             DDSpanContext context = buildTheSpanContext();
             logger.startNewSpan(this.operationName, context.getSpanId());
 
-            ArrayList<Span> trace = null;
+            List<Span> trace = null;
             if (this.parent != null) {
                 trace = parent.getTrace();
             }
 
             return new DDSpan(
-                    Tracer.this,
+                    DDTracer.this,
                     this.operationName,
                     trace,
                     this.tags,

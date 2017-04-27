@@ -1,29 +1,32 @@
 package com.datadoghq.trace.impl;
 
 import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 
 
 public class DDSpan implements io.opentracing.Span {
 
-    protected final Tracer tracer;
+    protected final DDTracer tracer;
     protected String operationName;
     protected Map<String, Object> tags;
     protected long startTimeNano;
     protected long durationNano;
     protected final DDSpanContext context;
-    protected final ArrayList<Span> trace;
+    protected final List<Span> trace;
 
     DDSpan(
-            Tracer tracer,
+            DDTracer tracer,
             String operationName,
-            ArrayList<Span> trace,
+            List<Span> trace,
             Map<String, Object> tags,
             Long timestampMilliseconds,
             DDSpanContext context) {
@@ -69,7 +72,7 @@ public class DDSpan implements io.opentracing.Span {
         return context.getTraceId() == context.getSpanId();
     }
 
-    public io.opentracing.Span setTag(String tag, String value) {
+    public Span setTag(String tag, String value) {
         return this.setTag(tag, value);
     }
 
@@ -184,7 +187,7 @@ public class DDSpan implements io.opentracing.Span {
     }
 
     @JsonIgnore
-    public ArrayList<Span> getTrace() {
+    public List<Span> getTrace() {
         return trace;
     }
 }

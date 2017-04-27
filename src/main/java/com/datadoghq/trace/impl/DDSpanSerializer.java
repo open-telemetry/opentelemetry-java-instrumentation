@@ -29,7 +29,7 @@ public class DDSpanSerializer implements SpanSerializer {
 		
 
 		List<Span> array = new ArrayList<Span>();
-		Tracer tracer = new Tracer();
+		DDTracer tracer = new DDTracer();
 
 		Span parent = tracer
 				.buildSpan("hello-world")

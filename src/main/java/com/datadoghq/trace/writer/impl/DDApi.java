@@ -10,7 +10,7 @@ import java.util.List;
 
 import com.datadoghq.trace.SpanSerializer;
 import com.datadoghq.trace.impl.DDSpanSerializer;
-import com.datadoghq.trace.impl.Tracer;
+import com.datadoghq.trace.impl.DDTracer;
 
 import io.opentracing.Span;
 
@@ -88,7 +88,7 @@ public class DDApi {
 	public static void main(String[] args) throws Exception{
 
 		List<Span> array = new ArrayList<Span>();
-		Tracer tracer = new Tracer();
+		DDTracer tracer = new DDTracer();
 
 		Span parent = tracer
 				.buildSpan("hello-world")

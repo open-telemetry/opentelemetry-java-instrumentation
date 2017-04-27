@@ -16,11 +16,11 @@ import static org.mockito.Mockito.when;
 
 public class DDSpanBuilderTest {
 
-    private Tracer tracer;
+    private DDTracer tracer;
 
     @Before
     public void setUp() throws Exception {
-        tracer = new Tracer();
+        tracer = new DDTracer();
     }
 
 

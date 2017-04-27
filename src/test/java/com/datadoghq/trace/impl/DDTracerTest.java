@@ -5,13 +5,13 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TracerTest {
+public class DDTracerTest {
 
 
     @Test
     public void testGenerateNewId() {
 
-        Tracer tracer = new Tracer();
+        DDTracer tracer = new DDTracer();
         long id1 = tracer.generateNewId();
         long id2 = tracer.generateNewId();
 

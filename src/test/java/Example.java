@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.datadoghq.trace.Writer;
-import com.datadoghq.trace.impl.Tracer;
+import com.datadoghq.trace.impl.DDTracer;
 import com.datadoghq.trace.writer.impl.DDAgentWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -13,7 +13,7 @@ public class Example {
     public static void main(String[] args) throws Exception{
     	List<Span> trace = new ArrayList<Span>();
     	
-    	Tracer tracer = new Tracer();
+    	DDTracer tracer = new DDTracer();
         Writer writer = new DDAgentWriter();
 
         Span parent = tracer
