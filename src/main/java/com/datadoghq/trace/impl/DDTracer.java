@@ -99,7 +99,10 @@ public class DDTracer implements io.opentracing.Tracer {
         }
 
 
-        public Span start() {
+        /* (non-Javadoc)
+         * @see io.opentracing.Tracer.SpanBuilder#start()
+         */
+        public DDSpan start() {
 
             // build the context
             DDSpanContext context = buildTheSpanContext();

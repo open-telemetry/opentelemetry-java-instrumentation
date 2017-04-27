@@ -60,11 +60,15 @@ public class DDAgentWriter implements Writer {
 	protected final DDApi api;
 
 	public DDAgentWriter() {
+		this(new DDApi(DEFAULT_HOSTNAME, DEFAULT_PORT));		
+	}
+	
+	public DDAgentWriter(DDApi api) {
 		super();
+		this.api = api;
+		
 		tokens = new Semaphore(DEFAULT_MAX_SPANS);
 		traces = new ArrayBlockingQueue<List<Span>>(DEFAULT_MAX_SPANS);
-
-		api = new DDApi(DEFAULT_HOSTNAME, DEFAULT_PORT);
 
 		asyncWriterThread = new Thread(new SpansSendingTask(), "dd.DDAgentWriter-SpansSendingTask");
 		asyncWriterThread.setDaemon(true);
@@ -102,13 +106,14 @@ public class DDAgentWriter implements Writer {
 	 */
 	protected class SpansSendingTask implements Runnable {
 		
-		protected final List<List<Span>> payload = new ArrayList<List<Span>>();
-		
 		public void run() {
 			while (true) {
 				try {
+					List<List<Span>> payload = new ArrayList<List<Span>>();
+					
 					//WAIT until a new span comes
-					payload.add(traces.take());
+					List<Span> l = DDAgentWriter.this.traces.take();
+					payload.add(l);
 					
 					//Drain all spans up to a certain batch suze
 					traces.drainTo(payload, DEFAULT_BATCH_SIZE);
@@ -123,9 +128,6 @@ public class DDAgentWriter implements Writer {
 						spansCount+=trace.size();
 					}
 					logger.debug("Async writer just sent "+spansCount+" spans through "+payload.size()+" traces");
-
-					//Force garbage collect of the payload
-					payload.clear();
 
 					//Release the tokens
 					tokens.release(spansCount);
