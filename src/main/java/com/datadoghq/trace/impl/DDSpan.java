@@ -22,13 +22,18 @@ public class DDSpan implements io.opentracing.Span {
     private final static Logger logger = LoggerFactory.getLogger(DDSpan.class);
 
     DDSpan(
+            DDTracer tracer,
             String operationName,
+            List<Span> trace,
             Map<String, Object> tags,
             Long timestampMilliseconds,
             DDSpanContext context) {
 
+        this.tracer = tracer;
         this.operationName = operationName;
+        this.trace = Optional.ofNullable(trace).orElse(new ArrayList<>());
         this.tags = tags;
+        this.startTimeNano = Optional.ofNullable(timestampMilliseconds).orElse(Clock.systemUTC().millis()) * 1000000L;
         this.context = context;
 
         // record the start time in nano (current milli + nano delta)
@@ -49,6 +54,8 @@ public class DDSpan implements io.opentracing.Span {
 
         logger.debug("Starting a new span. " + this.toString());
 
+    public void finish() {
+        finish(Clock.systemUTC().millis());
     }
 
     public void finish(long stopTimeMillis) {
@@ -73,7 +80,6 @@ public class DDSpan implements io.opentracing.Span {
             logger.debug("Sending the trace to the writer");
 
         }
-
     }
 
     public void finish() {
@@ -227,4 +233,34 @@ public class DDSpan implements io.opentracing.Span {
         result = 31 * result + (context != null ? context.hashCode() : 0);
         return result;
     }
+
+    @Override
+	public String toString() {
+    	return context.toString();
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((context == null) ? 0 : context.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DDSpan other = (DDSpan) obj;
+		if (context == null) {
+			if (other.context != null)
+				return false;
+		} else if (!context.equals(other.context))
+			return false;
+		return true;
+	}
 }
