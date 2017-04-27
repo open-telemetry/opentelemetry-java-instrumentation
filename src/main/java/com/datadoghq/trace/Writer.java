@@ -1,8 +1,8 @@
 package com.datadoghq.trace;
 
-import java.util.List;
+import com.datadoghq.trace.impl.DDSpan;
 
-import io.opentracing.Span;
+import java.util.List;
 
 /**
  *	A writer is responsible to send collected spans to some place
@@ -14,7 +14,7 @@ public interface Writer {
      * 
      * @param trace the list of spans to write
      */
-    void write(List<Span> trace);
+    void write(List<DDSpan> trace);
 
     /**
      * Indicates to the writer that no future writing will come and it should terminates all connections and tasks

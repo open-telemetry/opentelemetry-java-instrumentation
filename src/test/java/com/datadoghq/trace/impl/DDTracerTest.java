@@ -29,7 +29,7 @@ public class DDTracerTest {
                 .thenReturn(true)
                 .thenReturn(false);
 
-        List<Span> spans = new ArrayList<Span>();
+        List<DDSpan> spans = new ArrayList<DDSpan>();
         spans.add(span);
         spans.add(span);
         spans.add(span);

@@ -20,7 +20,7 @@ public class DDAgentWriterTest {
 
 	DDSpan parent = null;
 	DDApi mockedAPI = null;
-	List<List<Span>> traces = new ArrayList<List<Span>>();
+	List<List<DDSpan>> traces = new ArrayList<List<DDSpan>>();
 	DDAgentWriter ddAgentWriter = null;
 
 	@Before

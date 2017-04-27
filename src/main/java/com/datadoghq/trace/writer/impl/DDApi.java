@@ -5,6 +5,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
+import com.datadoghq.trace.impl.DDSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +54,7 @@ public class DDApi {
      * @param traces the traces to be sent
      * @return the staus code returned
      */
-    public boolean sendTraces(List<List<Span>> traces) {
+    public boolean sendTraces(List<List<DDSpan>> traces) {
         String payload = null;
         try {
             payload = spanSerializer.serialize(traces);

@@ -23,7 +23,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     private final boolean errorFlag;
     private final Map<String, Object> metrics;
     private final String spanType;
-    private final List<Span> trace;
+    private final List<DDSpan> trace;
     // Others attributes
     private boolean sampled;
     private DDTracer tracer;
@@ -40,7 +40,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
             Map<String, Object> metrics,
             String spanType,
             boolean sampled,
-            List<Span> trace,
+            List<DDSpan> trace,
             DDTracer tracer) {
 
         this.traceId = traceId;
@@ -60,7 +60,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         this.sampled = sampled;
 
         if (trace == null) {
-            this.trace = new ArrayList<Span>();
+            this.trace = new ArrayList<DDSpan>();
         } else {
             this.trace = trace;
         }
@@ -137,7 +137,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     }
 
     @JsonIgnore
-    public List<Span> getTrace() {
+    public List<DDSpan> getTrace() {
         return this.trace;
     }
 

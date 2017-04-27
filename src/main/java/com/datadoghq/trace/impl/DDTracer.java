@@ -3,7 +3,6 @@ package com.datadoghq.trace.impl;
 import com.datadoghq.trace.Sampler;
 import com.datadoghq.trace.Writer;
 import com.datadoghq.trace.writer.impl.LoggingWritter;
-
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
@@ -43,9 +42,9 @@ public class DDTracer implements io.opentracing.Tracer {
         throw new UnsupportedOperationException();
     }
 
-    public void write(List<Span> trace) {
+    public void write(List<DDSpan> trace) {
         if (trace.size() == 0) return;
-        if (this.sampler.sample((DDSpan) trace.get(0))) {
+        if (this.sampler.sample(trace.get(0))) {
             this.writer.write(trace);
         }
     }

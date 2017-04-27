@@ -1,17 +1,16 @@
 package com.datadoghq.trace.writer.impl;
 
+import com.datadoghq.trace.Writer;
+import com.datadoghq.trace.impl.DDSpan;
+import io.opentracing.Span;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Semaphore;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.datadoghq.trace.Writer;
-
-import io.opentracing.Span;
 
 /**
  * This writer write provided traces to the a DD agent which is most of time located on the same host.
@@ -47,7 +46,7 @@ public class DDAgentWriter implements Writer {
 	/**
 	 * In memory collection of traces waiting for departure
 	 */
-	protected final BlockingQueue<List<Span>> traces;
+	protected final BlockingQueue<List<DDSpan>> traces;
 	
 	/**
 	 * Async worker that posts the spans to the DD agent
@@ -68,7 +67,7 @@ public class DDAgentWriter implements Writer {
 		this.api = api;
 		
 		tokens = new Semaphore(DEFAULT_MAX_SPANS);
-		traces = new ArrayBlockingQueue<List<Span>>(DEFAULT_MAX_SPANS);
+		traces = new ArrayBlockingQueue<List<DDSpan>>(DEFAULT_MAX_SPANS);
 
 		asyncWriterThread = new Thread(new SpansSendingTask(), "dd.DDAgentWriter-SpansSendingTask");
 		asyncWriterThread.setDaemon(true);
@@ -78,7 +77,7 @@ public class DDAgentWriter implements Writer {
 	/* (non-Javadoc)
 	 * @see com.datadoghq.trace.Writer#write(java.util.List)
 	 */
-	public void write(List<Span> trace) {
+	public void write(List<DDSpan> trace) {
 		//Try to add a new span in the queue
 		boolean proceed = tokens.tryAcquire(trace.size());
 
@@ -109,10 +108,10 @@ public class DDAgentWriter implements Writer {
 		public void run() {
 			while (true) {
 				try {
-					List<List<Span>> payload = new ArrayList<List<Span>>();
+					List<List<DDSpan>> payload = new ArrayList<List<DDSpan>>();
 					
 					//WAIT until a new span comes
-					List<Span> l = DDAgentWriter.this.traces.take();
+					List<DDSpan> l = DDAgentWriter.this.traces.take();
 					payload.add(l);
 					
 					//Drain all spans up to a certain batch suze
@@ -124,7 +123,7 @@ public class DDAgentWriter implements Writer {
 
 					//Compute the number of spans sent
 					int spansCount = 0;
-					for(List<Span> trace:payload){
+					for(List<DDSpan> trace:payload){
 						spansCount+=trace.size();
 					}
 					logger.debug("Async writer just sent "+spansCount+" spans through "+payload.size()+" traces");

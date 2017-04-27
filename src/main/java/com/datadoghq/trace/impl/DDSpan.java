@@ -60,7 +60,7 @@ public class DDSpan implements io.opentracing.Span {
         // warn if one of the parent's children is not finished
         if (this.isRootSpan()) {
             logger.debug(this + " - The current span is marked as a root span");
-            List<Span> spans = this.context.getTrace();
+            List<DDSpan> spans = this.context.getTrace();
             logger.debug(this + " - Checking " + spans.size() + " children attached to the current span");
 
             for (Span span : spans) {
