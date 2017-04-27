@@ -1,5 +1,7 @@
 package com.datadoghq.trace.impl;
 
+import com.datadoghq.trace.Writer;
+import com.datadoghq.trace.writer.impl.DDAgentWriter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +22,8 @@ public class DDSpanBuilderTest {
 
     @Before
     public void setUp() throws Exception {
-        tracer = new DDTracer();
+        Writer w = mock(Writer.class);
+        tracer = new DDTracer(w, null);
     }
 
 
@@ -30,10 +33,10 @@ public class DDSpanBuilderTest {
 
 
     @Test
-    public void shouldBuilSimpleSpan() {
+    public void shouldBuildSimpleSpan() {
 
         final String expectedName = "fakeName";
-        DDSpan span = (DDSpan) tracer.buildSpan(expectedName).start();
+        DDSpan span = (DDSpan) tracer.buildSpan(expectedName).withServiceName("foo").start();
         assertThat(span.getOperationName()).isEqualTo(expectedName);
     }
 
@@ -51,6 +54,7 @@ public class DDSpanBuilderTest {
 
         DDSpan span = (DDSpan) tracer
                 .buildSpan(expectedName)
+                .withServiceName("foo")
                 .withTag("1", (Boolean) tags.get("1"))
                 .withTag("2", (String) tags.get("2"))
                 .withTag("3", (Number) tags.get("3"))
@@ -63,6 +67,7 @@ public class DDSpanBuilderTest {
 
         span = (DDSpan) tracer
                 .buildSpan(expectedName)
+                .withServiceName("foo")
                 .start();
 
         assertThat(span.getTags()).isNotNull();
@@ -75,6 +80,7 @@ public class DDSpanBuilderTest {
 
         span = (DDSpan) tracer
                 .buildSpan(expectedName)
+                .withServiceName("foo")
                 .withResourceName(expectedResource)
                 .withServiceName(expectedService)
                 .withErrorFlag()
@@ -98,15 +104,17 @@ public class DDSpanBuilderTest {
 
         DDSpan span = (DDSpan) tracer
                 .buildSpan(expectedName)
+                .withServiceName("foo")
                 .withStartTimestamp(expectedTimestamp)
                 .start();
 
         assertThat(span.getStartTime()).isEqualTo(expectedTimestamp * 1000000L);
 
         // auto-timestamp in nanoseconds
-        long tick = Clock.systemUTC().millis() * 1000000L;
+        long tick = System.currentTimeMillis() * 1000000L;
         span = (DDSpan) tracer
                 .buildSpan(expectedName)
+                .withServiceName("foo")
                 .start();
 
         // between now and now + 100ms
@@ -131,6 +139,7 @@ public class DDSpanBuilderTest {
 
         DDSpan span = (DDSpan) tracer
                 .buildSpan(expectedName)
+                .withServiceName("foo")
                 .asChildOf(mockedSpan)
                 .start();
 
@@ -152,6 +161,7 @@ public class DDSpanBuilderTest {
 
         DDSpan parent = (DDSpan) tracer
                 .buildSpan(expectedName)
+                .withServiceName("foo")
                 .withServiceName(expectedServiceName)
                 .withResourceName(expectedResourceName)
                 .start();
@@ -160,6 +170,7 @@ public class DDSpanBuilderTest {
 
         DDSpan span = (DDSpan) tracer
                 .buildSpan(expectedName)
+                .withServiceName("foo")
                 .asChildOf(parent)
                 .start();
 
@@ -173,37 +184,39 @@ public class DDSpanBuilderTest {
     @Test
     public void shouldTrackAllSpanInTrace() throws InterruptedException {
 
-        ArrayList<DDSpan> spans = new ArrayList<>();
+        ArrayList<DDSpan> spans = new ArrayList<DDSpan>();
         final int nbSamples = 10;
 
         // root (aka spans[0]) is the parent
         // spans[1] has a predictable duration
         // others are just for fun
 
-        DDSpan root = (DDSpan) tracer.buildSpan("fake_O").start();
+        DDSpan root = (DDSpan) tracer.buildSpan("fake_O").withServiceName("foo").start();
         spans.add(root);
 
-        long tickStart = Clock.systemUTC().millis();
-        spans.add((DDSpan) tracer.buildSpan("fake_" + 1).asChildOf(spans.get(0)).withStartTimestamp(tickStart).start());
+        long tickStart = System.currentTimeMillis();
+        spans.add((DDSpan) tracer.buildSpan("fake_" + 1).withServiceName("foo").asChildOf(spans.get(0)).withStartTimestamp(tickStart).start());
         for (int i = 2; i <= 10; i++) {
-            spans.add((DDSpan) tracer.buildSpan("fake_" + i).asChildOf(spans.get(i - 1)).start());
+            spans.add((DDSpan) tracer.buildSpan("fake_" + i).withServiceName("foo").asChildOf(spans.get(i - 1)).start());
         }
 
         Thread.sleep(300);
-        long tickEnd = Clock.systemUTC().millis();
+        long tickEnd = System.currentTimeMillis();
 
         spans.get(1).finish(tickEnd);
 
-        assertThat(root.getTrace()).hasSize(nbSamples + 1);
-        assertThat(root.getTrace()).containsAll(spans);
-        assertThat(spans.get((int) (Math.random() * nbSamples)).getTrace()).containsAll(spans);
+        assertThat(root.context.getTrace()).hasSize(nbSamples + 1);
+        assertThat(root.context.getTrace()).containsAll(spans);
+        assertThat(spans.get((int) (Math.random() * nbSamples)).context.getTrace()).containsAll(spans);
 
         root.finish();
         //TODO Check order
         //assertThat(root.getTrace()).containsExactly(spans)
         assertThat(spans.get(1).durationNano).isEqualTo((tickEnd - tickStart) * 1000000L);
-        spans.forEach(span -> assertThat(span.getDurationNano()).isNotNull());
-        spans.forEach(span -> assertThat(span.getDurationNano()).isNotZero());
+        for (DDSpan span : spans) {
+            assertThat(span.getDurationNano()).isNotNull();
+            assertThat(span.getDurationNano()).isNotZero();
+        }
 
 
     }
