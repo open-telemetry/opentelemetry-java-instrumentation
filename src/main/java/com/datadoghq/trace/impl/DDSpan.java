@@ -1,12 +1,11 @@
 package com.datadoghq.trace.impl;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Optional;
+import java.time.Clock;
+import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 
@@ -16,30 +15,28 @@ public class DDSpan implements io.opentracing.Span {
     protected final Tracer tracer;
     protected String operationName;
     protected Map<String, Object> tags;
-    protected long startTime;
-    protected long startTimeNano; // Only used to measure nano time durations
+    protected long startTimeNano;
     protected long durationNano;
     protected final DDSpanContext context;
-    protected final LinkedHashSet<Span> traces;
+    protected final ArrayList<Span> trace;
 
     DDSpan(
             Tracer tracer,
             String operationName,
-            LinkedHashSet<Span> traces,
+            ArrayList<Span> trace,
             Map<String, Object> tags,
-            Long timestamp,
+            Long timestampMilliseconds,
             DDSpanContext context) {
 
         this.tracer = tracer;
         this.operationName = operationName;
-        this.traces = Optional.ofNullable(traces).orElse(new LinkedHashSet<>());
+        this.trace = Optional.ofNullable(trace).orElse(new ArrayList<>());
         this.tags = tags;
-        this.startTime = System.currentTimeMillis() * 1000000;
-        this.startTimeNano = System.nanoTime();
+        this.startTimeNano = Optional.ofNullable(timestampMilliseconds).orElse(Clock.systemUTC().millis()) * 1000000L;
         this.context = context;
 
         // track each span of the trace
-        this.traces.add(this);
+        this.trace.add(this);
 
     }
 
@@ -48,15 +45,19 @@ public class DDSpan implements io.opentracing.Span {
     }
 
     public void finish() {
-        finish(System.nanoTime());
+        finish(Clock.systemUTC().millis());
     }
 
-    public void finish(long stopTimeMicro) {
-        this.durationNano = stopTimeMicro * 1000L - startTime;
+    public void finish(long stopTimeMillis) {
+        this.durationNano = (stopTimeMillis * 1000000L - startTimeNano);
         if (this.isRootSpan()) {
-            this.traces.stream()
-                    .filter(s -> ((DDSpanContext) s.context()).getSpanId() != ((DDSpanContext) this.context()).getSpanId())
-                    .forEach(s -> s.finish());
+            this.trace.stream()
+                    .filter(s -> {
+                        boolean isSelf = ((DDSpanContext) s.context()).getSpanId() == ((DDSpanContext) this.context()).getSpanId();
+                        boolean isFinished = ((DDSpan) s).getDurationNano() != 0L;
+                        return !isSelf && !isFinished;
+                    })
+                    .forEach(Span::finish);
         }
     }
 
@@ -142,7 +143,7 @@ public class DDSpan implements io.opentracing.Span {
 
     @JsonGetter(value = "start")
     public long getStartTime() {
-        return startTime;
+        return startTimeNano;
     }
 
     @JsonGetter(value = "duration")
@@ -182,7 +183,8 @@ public class DDSpan implements io.opentracing.Span {
         return context.getErrorFlag() ? 1 : 0;
     }
 
-    public LinkedHashSet<Span> getTraces() {
-        return traces;
+    @JsonIgnore
+    public ArrayList<Span> getTrace() {
+        return trace;
     }
 }

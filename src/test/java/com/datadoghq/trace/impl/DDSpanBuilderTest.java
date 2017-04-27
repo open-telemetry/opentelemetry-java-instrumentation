@@ -1,10 +1,10 @@
 package com.datadoghq.trace.impl;
 
-import io.opentracing.References;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -101,16 +101,16 @@ public class DDSpanBuilderTest {
                 .withStartTimestamp(expectedTimestamp)
                 .start();
 
-        assertThat(span.getStartTime()).isEqualTo(expectedTimestamp);
+        assertThat(span.getStartTime()).isEqualTo(expectedTimestamp * 1000000L);
 
         // auto-timestamp in nanoseconds
-        long tick = System.nanoTime();
+        long tick = Clock.systemUTC().millis() * 1000000L;
         span = (DDSpan) tracer
                 .buildSpan(expectedName)
                 .start();
 
         // between now and now + 100ms
-        assertThat(span.getStartTime()).isBetween(tick, tick + 100 * 1000);
+        assertThat(span.getStartTime()).isBetween(tick, tick + 100 * 1000000L);
 
     }
 
@@ -171,25 +171,37 @@ public class DDSpanBuilderTest {
     }
 
     @Test
-    public void shouldTrackAllSpanInTrace() {
+    public void shouldTrackAllSpanInTrace() throws InterruptedException {
 
         ArrayList<DDSpan> spans = new ArrayList<>();
         final int nbSamples = 10;
 
+        // root (aka spans[0]) is the parent
+        // spans[1] has a predictable duration
+        // others are just for fun
+
         DDSpan root = (DDSpan) tracer.buildSpan("fake_O").start();
         spans.add(root);
 
-        for (int i = 1; i <= 10; i++) {
+        long tickStart = Clock.systemUTC().millis();
+        spans.add((DDSpan) tracer.buildSpan("fake_" + 1).asChildOf(spans.get(0)).withStartTimestamp(tickStart).start());
+        for (int i = 2; i <= 10; i++) {
             spans.add((DDSpan) tracer.buildSpan("fake_" + i).asChildOf(spans.get(i - 1)).start());
         }
 
-        assertThat(root.getTraces()).hasSize(nbSamples + 1);
-        assertThat(root.getTraces()).containsAll(spans);
-        assertThat(spans.get((int) (Math.random() * nbSamples)).getTraces()).containsAll(spans);
+        Thread.sleep(300);
+        long tickEnd = Clock.systemUTC().millis();
+
+        spans.get(1).finish(tickEnd);
+
+        assertThat(root.getTrace()).hasSize(nbSamples + 1);
+        assertThat(root.getTrace()).containsAll(spans);
+        assertThat(spans.get((int) (Math.random() * nbSamples)).getTrace()).containsAll(spans);
 
         root.finish();
         //TODO Check order
-        //assertThat(root.getTraces()).containsExactly(spans)
+        //assertThat(root.getTrace()).containsExactly(spans)
+        assertThat(spans.get(1).durationNano).isEqualTo((tickEnd - tickStart) * 1000000L);
         spans.forEach(span -> assertThat(span.getDurationNano()).isNotNull());
         spans.forEach(span -> assertThat(span.getDurationNano()).isNotZero());
 

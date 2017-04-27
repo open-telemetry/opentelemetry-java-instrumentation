@@ -16,7 +16,7 @@ import io.opentracing.Span;
 
 public class DDApi {
 
-	protected static final String TRACES_ENDPOINT = "/v0.3/traces";
+	protected static final String TRACES_ENDPOINT = "/v0.3/trace";
 	protected static final String SERVICES_ENDPOINT = "/v0.3/services";
 
 	protected final String host;
@@ -121,7 +121,7 @@ public class DDApi {
 		
 //		String service = "{\"service_name\": {\"app\": \"service-name\",\"app_type\": \"web\"}}";
 //		System.out.println("Pushed service: "+api.callPUT(api.servicesEndpoint, service));
-		System.out.println("Pushed traces: "+api.sendTraces(traces));
+		System.out.println("Pushed trace: "+api.sendTraces(traces));
 
 	}
 }

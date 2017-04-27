@@ -73,8 +73,8 @@ public class Tracer implements io.opentracing.Tracer {
             return this;
         }
 
-        public Tracer.SpanBuilder withStartTimestamp(long timestamp) {
-            this.timestamp = timestamp;
+        public Tracer.SpanBuilder withStartTimestamp(long timestampMillis) {
+            this.timestamp = timestampMillis;
             return this;
         }
 
@@ -105,15 +105,15 @@ public class Tracer implements io.opentracing.Tracer {
             DDSpanContext context = buildTheSpanContext();
             logger.startNewSpan(this.operationName, context.getSpanId());
 
-            LinkedHashSet traces = null;
+            ArrayList<Span> trace = null;
             if (this.parent != null) {
-                traces = parent.getTraces();
+                trace = parent.getTrace();
             }
 
             return new DDSpan(
                     Tracer.this,
                     this.operationName,
-                    traces,
+                    trace,
                     this.tags,
                     this.timestamp,
                     context);
