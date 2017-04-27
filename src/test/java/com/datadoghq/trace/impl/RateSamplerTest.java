@@ -17,7 +17,7 @@ public class RateSamplerTest {
         DDSpan mockSpan = mock(DDSpan.class);
 
         final double sampleRate = 0.35;
-        final int iterations = 100000;
+        final int iterations = 1000;
         Sampler sampler = new RateSampler(sampleRate);
 
         int kept = 0;
@@ -28,7 +28,7 @@ public class RateSamplerTest {
             }
         }
 
-        assertThat(((double) kept / iterations)).isBetween(sampleRate - 0.01, sampleRate + 0.01);
+        assertThat(((double) kept / iterations)).isBetween(sampleRate - 0.02, sampleRate + 0.02);
 
     }
 
