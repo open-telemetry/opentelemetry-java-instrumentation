@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.datadoghq.trace.SpanSerializer;
+import com.datadoghq.trace.impl.DDSpan;
 import com.datadoghq.trace.impl.DDSpanSerializer;
 import com.datadoghq.trace.impl.DDTracer;
 
@@ -115,7 +116,7 @@ public class DDApi {
 		parent.finish();
 
 		DDAgentWriter writer = new DDAgentWriter();
-		writer.write(array);
+		writer.write(((DDSpan)parent.getTrace());
 
 		Thread.sleep(1000);
 		
