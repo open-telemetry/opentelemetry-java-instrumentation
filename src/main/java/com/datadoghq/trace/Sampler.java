@@ -5,6 +5,6 @@ import com.datadoghq.trace.impl.DDSpan;
 
 public interface Sampler {
 
-    public boolean sample(DDSpan span);
+    boolean sample(DDSpan span);
 
 }

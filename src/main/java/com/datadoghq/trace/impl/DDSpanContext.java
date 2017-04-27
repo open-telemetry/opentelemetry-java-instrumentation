@@ -1,27 +1,27 @@
 package com.datadoghq.trace.impl;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.opentracing.Span;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import io.opentracing.Span;
+
 public class DDSpanContext implements io.opentracing.SpanContext {
 
-    private static final String SPAN_TYPE_DEFAULT = "custom";
     // Opentracing attributes
     protected long traceId;
     protected long spanId;
     protected long parentId;
     protected Map<String, String> baggageItems;
     // DD attributes
+    
     protected String serviceName;
     protected String resourceName;
     protected boolean errorFlag;
-    protected Map<String, Object> metrics;
     protected String spanType;
     protected final List<Span> trace;
     // Others attributes
@@ -36,9 +36,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
             String resourceName,
             Map<String, String> baggageItems,
             boolean errorFlag,
-            Map<String, Object> metrics,
             String spanType,
-            boolean sampled,
             List<Span> trace,
             DDTracer tracer) {
 
@@ -54,9 +52,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         this.serviceName = serviceName;
         this.resourceName = resourceName;
         this.errorFlag = errorFlag;
-        this.metrics = metrics;
         this.spanType = spanType;
-        this.sampled = sampled;
 
         if (trace == null) {
             this.trace = new ArrayList<Span>();
@@ -66,22 +62,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
         this.tracer = tracer;
     }
-
-    protected static DDSpanContext newContext(long generateId, String serviceName, String resourceName) {
-        DDSpanContext context = new DDSpanContext(
-                // Opentracing attributes
-                generateId, generateId, 0L,
-                // DD attributes
-                serviceName, resourceName,
-                // Other stuff
-                null, false, null,
-                DDSpanContext.SPAN_TYPE_DEFAULT, true,
-                null, null
-
-        );
-        return context;
-    }
-
 
     public long getTraceId() {
         return this.traceId;
@@ -107,16 +87,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         return errorFlag;
     }
 
-    public Map<String, Object> getMetrics() {
-        return metrics;
-    }
 
     public String getSpanType() {
         return spanType;
-    }
-
-    public boolean getSampled() {
-        return sampled;
     }
 
     public void setBaggageItem(String key, String value) {
@@ -172,8 +145,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 		DDSpanContext other = (DDSpanContext) obj;
 		if (spanId != other.spanId)
 			return false;
-		if (traceId != other.traceId)
-			return false;
-		return true;
-	}
+        return traceId == other.traceId;
+    }
 }

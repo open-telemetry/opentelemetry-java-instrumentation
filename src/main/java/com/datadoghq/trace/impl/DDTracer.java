@@ -3,7 +3,6 @@ package com.datadoghq.trace.impl;
 import com.datadoghq.trace.Sampler;
 import com.datadoghq.trace.Writer;
 import com.datadoghq.trace.writer.impl.LoggingWritter;
-
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
@@ -22,10 +21,10 @@ public class DDTracer implements io.opentracing.Tracer {
 
     private final static Logger logger = LoggerFactory.getLogger(DDTracer.class);
 
-    public DDTracer(){
-    	this(new LoggingWritter(),new AllSampler());
+    public DDTracer() {
+        this(new LoggingWritter(), new AllSampler());
     }
-    
+
     public DDTracer(Writer writer, Sampler sampler) {
         this.writer = writer;
         this.sampler = sampler;
@@ -44,7 +43,10 @@ public class DDTracer implements io.opentracing.Tracer {
     }
 
     public void write(List<Span> trace) {
-        this.writer.write(trace);
+        if (trace.size() == 0) return;
+        if (this.sampler.sample((DDSpan)trace.get(0))) {
+            this.writer.write(trace);
+        }
     }
 
     public class DDSpanBuilder implements SpanBuilder {
@@ -146,7 +148,7 @@ public class DDTracer implements io.opentracing.Tracer {
 
             long generatedId = generateNewId();
             DDSpanContext context;
-            DDSpanContext p = this.parent != null ? (DDSpanContext) this.parent.context() : null;
+            DDSpanContext p = this.parent != null ? this.parent.context() : null;
 
             // some attributes are inherited from the parent
             context = new DDSpanContext(
@@ -157,9 +159,7 @@ public class DDTracer implements io.opentracing.Tracer {
                     this.resourceName,
                     this.parent == null ? null : p.getBaggageItems(),
                     errorFlag,
-                    null,
-                    this.parent == null ? this.spanType : p.getSpanType(),
-                    true,
+					this.parent == null ? this.spanType : p.getSpanType(),
                     this.parent == null ? null : p.getTrace(),
                     DDTracer.this
             );

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datadoghq.trace.Writer;
+import com.datadoghq.trace.impl.DDSpan;
 
 import io.opentracing.Span;
 
