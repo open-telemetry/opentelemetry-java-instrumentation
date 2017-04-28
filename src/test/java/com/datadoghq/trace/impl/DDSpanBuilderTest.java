@@ -152,29 +152,52 @@ public class DDSpanBuilderTest {
     public void shouldInheritOfTheDDParentAttributes() {
 
         final String expectedName = "fakeName";
-        final String expectedServiceName = "fakeServiceName";
-        final String expectedResourceName = "fakeResourceName";
+        final String expectedParentServiceName = "fakeServiceName";
+        final String expectedParentResourceName = "fakeResourceName";
+        final String expectedParentType = "fakeType";
+        final String expectedChildServiceName = "fakeServiceName-child";
+        final String expectedChildResourceName = "fakeResourceName-child";
+        final String expectedChildType = "fakeType-child";
         final String expectedBaggageItemKey = "fakeKey";
         final String expectedBaggageItemValue = "fakeValue";
 
         DDSpan parent = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
-                .withResourceName(expectedResourceName)
+                .withResourceName(expectedParentResourceName)
+                .withSpanType(expectedParentType)
                 .start();
 
         parent.setBaggageItem(expectedBaggageItemKey, expectedBaggageItemValue);
 
+        // ServiceName and SpanType are always set by the parent  if they are not present in the child
         DDSpan span = tracer
                 .buildSpan(expectedName)
-                .withServiceName(expectedServiceName)
+                .withServiceName(expectedParentServiceName)
                 .asChildOf(parent)
                 .start();
 
         assertThat(span.getOperationName()).isEqualTo(expectedName);
         assertThat(span.getBaggageItem(expectedBaggageItemKey)).isEqualTo(expectedBaggageItemValue);
-        assertThat(span.context().getServiceName()).isEqualTo(expectedServiceName);
-        assertThat(span.context().getResourceName()).isNotEqualTo(expectedResourceName);
+        assertThat(span.context().getServiceName()).isEqualTo(expectedParentServiceName);
+        assertThat(span.context().getResourceName()).isNotEqualTo(expectedParentResourceName);
+        assertThat(span.context().getSpanType()).isEqualTo(expectedParentType);
+
+        // ServiceName and SpanType are always overwritten by the child  if they are present
+        span = tracer
+                .buildSpan(expectedName)
+                .withServiceName(expectedChildServiceName)
+                .withResourceName(expectedChildResourceName)
+                .withSpanType(expectedChildType)
+                .asChildOf(parent)
+                .start();
+
+        assertThat(span.getOperationName()).isEqualTo(expectedName);
+        assertThat(span.getBaggageItem(expectedBaggageItemKey)).isEqualTo(expectedBaggageItemValue);
+        assertThat(span.context().getServiceName()).isEqualTo(expectedChildServiceName);
+        assertThat(span.context().getResourceName()).isEqualTo(expectedChildResourceName);
+        assertThat(span.context().getSpanType()).isEqualTo(expectedChildType);
+
 
     }
 
