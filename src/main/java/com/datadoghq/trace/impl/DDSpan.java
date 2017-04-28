@@ -83,26 +83,28 @@ public class DDSpan implements io.opentracing.Span {
             throw new IllegalArgumentException("No ServiceName provided");
         }
     }
-
-    /**
-     * Same as finish, see {@link DDSpan#finish}
+    
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#finish()
      */
-    public void finish(long stopTimeMillis) {
-        this.finish(stopTimeMillis, 0L);
+    public void finish() {
+    	this.durationNano = System.nanoTime() - startTimeNano;
+        afterFinish();
+    }
 
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#finish(long)
+     */
+    public void finish(long stoptimeMicros) {
+    	this.durationNano = stoptimeMicros * 1000L - this.startTime * 1000000L;
+        afterFinish();
     }
 
     /**
      * Close the span. If the current span is the parent, check if each child has also been closed
      * If not, warned it
-     *
-     * @param stopTimeMillis The stopTime in milliseconds
      */
-    private void finish(long stopTimeMillis, long stopTimeNano) {
-
-        // formula: millis(stop - start) * 1000 * 1000 + keepNano(nano(stop - start))
-        this.durationNano = (stopTimeMillis - startTime) * 1000000L + ((stopTimeNano - this.startTimeNano) % 1000000L);
-
+    protected void afterFinish() {
         logger.debug(this + " - Closing the span." + this.toString());
 
         // warn if one of the parent's children is not finished
@@ -118,28 +120,20 @@ public class DDSpan implements io.opentracing.Span {
             }
             this.context.getTracer().write(this.context.getTrace());
             logger.debug(this + " - Sending the trace to the writer");
-
         }
     }
 
-    /**
-     * Same as finish, see {@link DDSpan#finish}
-     */
-    public void finish() {
-        finish(System.currentTimeMillis(), System.nanoTime());
-    }
-
-    /**
-     * Same as finish, see {@link DDSpan#finish}
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#close()
      */
     public void close() {
         this.finish();
     }
 
     /**
-     * Check if the span is a parent. It means that the traceId is the same as the spanId
+     * Check if the span is the root parent. It means that the traceId is the same as the spanId
      *
-     * @return
+     * @return true if root, false otherwise
      */
     private boolean isRootSpan() {
         return context.getTraceId() == context.getSpanId();
@@ -194,19 +188,31 @@ public class DDSpan implements io.opentracing.Span {
         return null;
     }
 
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#context()
+     */
     public DDSpanContext context() {
         return this.context;
     }
 
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#setBaggageItem(java.lang.String, java.lang.String)
+     */
     public Span setBaggageItem(String key, String value) {
         this.context.setBaggageItem(key, value);
         return this;
     }
 
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#getBaggageItem(java.lang.String)
+     */
     public String getBaggageItem(String key) {
         return this.context.getBaggageItem(key);
     }
 
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#setOperationName(java.lang.String)
+     */
     public Span setOperationName(String operationName) {
         // FIXME operationName is in each constructor --> always IAE
         if (this.operationName != null) {
@@ -216,10 +222,16 @@ public class DDSpan implements io.opentracing.Span {
         return this;
     }
 
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#log(java.lang.String, java.lang.Object)
+     */
     public Span log(String s, Object o) {
         return null;
     }
 
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#log(long, java.lang.String, java.lang.Object)
+     */
     public Span log(long l, String s, Object o) {
         return null;
     }

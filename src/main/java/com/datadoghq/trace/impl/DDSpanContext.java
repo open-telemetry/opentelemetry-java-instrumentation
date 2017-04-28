@@ -128,6 +128,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         return baggageItems;
     }
 
+    /* (non-Javadoc)
+     * @see io.opentracing.SpanContext#baggageItems()
+     */
     public Iterable<Map.Entry<String, String>> baggageItems() {
         return this.baggageItems.entrySet();
     }
