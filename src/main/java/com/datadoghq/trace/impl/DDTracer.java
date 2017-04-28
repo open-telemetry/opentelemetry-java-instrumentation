@@ -48,11 +48,14 @@ public class DDTracer implements io.opentracing.Tracer {
     }
 
     public <C> void inject(SpanContext spanContext, Format<C> format, C c) {
-        throw new UnsupportedOperationException();
+        //FIXME Implement it ASAP
+        logger.warn("Method `inject` not implemented yet");
     }
 
     public <C> SpanContext extract(Format<C> format, C c) {
-        throw new UnsupportedOperationException();
+        //FIXME Implement it ASAP
+        logger.warn("Method `inject` not implemented yet");
+        return null;
     }
 
 
@@ -98,7 +101,7 @@ public class DDTracer implements io.opentracing.Tracer {
         public DDSpan start() {
 
             // build the context
-            DDSpanContext context = buildTheSpanContext();
+            DDSpanContext context = buildSpanContext();
             DDSpan span = new DDSpan(this.operationName, this.tags, this.timestamp, context);
 
             logger.debug("Starting a new span. " + span.toString());
@@ -166,7 +169,8 @@ public class DDTracer implements io.opentracing.Tracer {
         }
 
         public DDTracer.DDSpanBuilder addReference(String referenceType, SpanContext spanContext) {
-            throw new UnsupportedOperationException();
+            logger.debug("`addReference` method is not implemented. Doing nothing");
+            return this;
         }
 
         // Private methods
@@ -184,25 +188,36 @@ public class DDTracer implements io.opentracing.Tracer {
          * - ServiceName
          * - Baggage
          * - Trace (a list of all spans related)
+         * - SpanType
          *
-         * @return
+         * @return the context
          */
-        private DDSpanContext buildTheSpanContext() {
+        private DDSpanContext buildSpanContext() {
 
             long generatedId = generateNewId();
             DDSpanContext context;
             DDSpanContext p = this.parent != null ? (DDSpanContext) this.parent : null;
+
+            String spanType = this.spanType;
+            if (spanType == null && this.parent != null) {
+                spanType = p.getSpanType();
+            }
+
+            String serviceName = this.serviceName;
+            if (serviceName == null && this.parent != null) {
+                serviceName = p.getServiceName();
+            }
 
             // some attributes are inherited from the parent
             context = new DDSpanContext(
                     this.parent == null ? generatedId : p.getTraceId(),
                     generatedId,
                     this.parent == null ? 0L : p.getSpanId(),
-                    this.parent == null ? this.serviceName : p.getServiceName(),
+                    serviceName,
                     this.resourceName,
                     this.parent == null ? null : p.getBaggageItems(),
                     errorFlag,
-                    this.spanType,
+                    spanType,
                     this.parent == null ? null : p.getTrace(),
                     DDTracer.this
             );

@@ -94,7 +94,8 @@ public class DDSpanBuilderTest {
     @Test
     public void shouldBuildSpanTimestampInNano() {
 
-        final long expectedTimestamp = 4875178020000L;
+        // time in micro
+        final long expectedTimestamp = 487517802L * 1000 * 1000L;
         final String expectedName = "fakeName";
 
         DDSpan span = tracer
@@ -103,17 +104,18 @@ public class DDSpanBuilderTest {
                 .withStartTimestamp(expectedTimestamp)
                 .start();
 
-        assertThat(span.getStartTime()).isEqualTo(expectedTimestamp * 1000000L);
+        // get return nano time
+        assertThat(span.getStartTime()).isEqualTo(expectedTimestamp * 1000L);
 
         // auto-timestamp in nanoseconds
-        long tick = System.currentTimeMillis() * 1000000L;
+        long tick = System.currentTimeMillis() * 1000 * 1000L;
         span = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
                 .start();
 
         // between now and now + 100ms
-        assertThat(span.getStartTime()).isBetween(tick, tick + 100 * 1000000L);
+        assertThat(span.getStartTime()).isBetween(tick, tick + 100 * 1000L);
 
     }
 
@@ -158,7 +160,6 @@ public class DDSpanBuilderTest {
         DDSpan parent = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
-                .withServiceName(expectedServiceName)
                 .withResourceName(expectedResourceName)
                 .start();
 
@@ -166,7 +167,7 @@ public class DDSpanBuilderTest {
 
         DDSpan span = tracer
                 .buildSpan(expectedName)
-                .withServiceName("foo")
+                .withServiceName(expectedServiceName)
                 .asChildOf(parent)
                 .start();
 
@@ -202,7 +203,6 @@ public class DDSpanBuilderTest {
         assertThat(root.context.getTrace()).hasSize(nbSamples + 1);
         assertThat(root.context.getTrace()).containsAll(spans);
         assertThat(spans.get((int) (Math.random() * nbSamples)).context.getTrace()).containsAll(spans);
-
 
 
     }

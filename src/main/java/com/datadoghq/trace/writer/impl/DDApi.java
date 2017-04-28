@@ -109,36 +109,4 @@ public class DDApi {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-
-
-        DDTracer tracer = new DDTracer();
-
-        Span parent = tracer
-                .buildSpan("hello-world")
-                .withServiceName("service-name")
-                .start();
-
-        parent.setBaggageItem("a-baggage", "value");
-
-        Thread.sleep(1000);
-
-        Span child = tracer
-                .buildSpan("hello-world")
-                .asChildOf(parent)
-                .start();
-
-        Thread.sleep(1000);
-
-        child.finish();
-
-        Thread.sleep(1000);
-
-        parent.finish();
-
-
-        Thread.sleep(1000);
-
-
-    }
 }

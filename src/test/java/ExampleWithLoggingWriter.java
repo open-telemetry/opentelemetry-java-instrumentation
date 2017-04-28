@@ -7,13 +7,11 @@ import com.datadoghq.trace.writer.impl.DDAgentWriter;
 
 import io.opentracing.Span;
 
-public class Example {
+public class ExampleWithLoggingWriter {
 
     public static void main(String[] args) throws Exception {
 
-
         DDTracer tracer = new DDTracer();
-
 
         Span parent = tracer
                 .buildSpan("hello-world")
@@ -23,6 +21,7 @@ public class Example {
 
         parent.setBaggageItem("a-baggage", "value");
 
+        Thread.sleep(100);
 
         Span child = tracer
                 .buildSpan("hello-world")
@@ -30,11 +29,13 @@ public class Example {
                 .withResourceName("resource-name")
                 .start();
 
+        Thread.sleep(100);
+
         child.finish();
 
+        Thread.sleep(100);
+
         parent.finish();
-
-
 
     }
 }

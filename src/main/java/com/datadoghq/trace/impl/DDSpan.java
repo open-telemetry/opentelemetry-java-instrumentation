@@ -32,13 +32,13 @@ public class DDSpan implements io.opentracing.Span {
     /**
      * StartTime stores the creation time of the span in milliseconds
      */
-    protected long startTime;
+    protected long startTimeMicro;
     /**
      * StartTimeNano stores the only the nanoseconds for more accuracy
      */
     protected long startTimeNano;
     /**
-     * The duration in nanoseconds computed using the startTime and startTimeNano
+     * The duration in nanoseconds computed using the startTimeMicro and startTimeNano
      */
     protected long durationNano;
     /**
@@ -52,15 +52,15 @@ public class DDSpan implements io.opentracing.Span {
      * A simple constructor.
      * Currently, users have
      *
-     * @param operationName         the operation name associated to the span
-     * @param tags                  Tags attached to the span
-     * @param timestampMilliseconds if set, use this time instead of the auto-generated time
-     * @param context               the context
+     * @param operationName  the operation name associated to the span
+     * @param tags           Tags attached to the span
+     * @param timestampMicro if set, use this time instead of the auto-generated time
+     * @param context        the context
      */
     protected DDSpan(
             String operationName,
             Map<String, Object> tags,
-            long timestampMilliseconds,
+            long timestampMicro,
             DDSpanContext context) {
 
         this.operationName = operationName;
@@ -68,10 +68,10 @@ public class DDSpan implements io.opentracing.Span {
         this.context = context;
 
         // record the start time in nano (current milli + nano delta)
-        if (timestampMilliseconds == 0L) {
-            this.startTime = System.currentTimeMillis();
+        if (timestampMicro == 0L) {
+            this.startTimeMicro = System.currentTimeMillis() * 1000L;
         } else {
-            this.startTime = timestampMilliseconds;
+            this.startTimeMicro = timestampMicro;
         }
         this.startTimeNano = System.nanoTime();
 
@@ -83,12 +83,12 @@ public class DDSpan implements io.opentracing.Span {
             throw new IllegalArgumentException("No ServiceName provided");
         }
     }
-    
+
     /* (non-Javadoc)
      * @see io.opentracing.Span#finish()
      */
     public void finish() {
-    	this.durationNano = System.nanoTime() - startTimeNano;
+        this.durationNano = System.nanoTime() - startTimeNano;
         afterFinish();
     }
 
@@ -96,7 +96,7 @@ public class DDSpan implements io.opentracing.Span {
      * @see io.opentracing.Span#finish(long)
      */
     public void finish(long stoptimeMicros) {
-    	this.durationNano = stoptimeMicros * 1000L - this.startTime * 1000000L;
+        this.durationNano = stoptimeMicros * 1000L - this.startTimeMicro * 1000L;
         afterFinish();
     }
 
@@ -226,15 +226,18 @@ public class DDSpan implements io.opentracing.Span {
      * @see io.opentracing.Span#log(java.lang.String, java.lang.Object)
      */
     public Span log(String s, Object o) {
-        return null;
+        logger.debug("`log` method is not implemented. Doing nothing");
+        return this;
     }
 
     /* (non-Javadoc)
      * @see io.opentracing.Span#log(long, java.lang.String, java.lang.Object)
      */
     public Span log(long l, String s, Object o) {
-        return null;
+        logger.debug("`log` method is not implemented. Doing nothing");
+        return this;
     }
+
 
     //Getters and JSON serialisation instructions
     @JsonGetter(value = "name")
@@ -266,7 +269,7 @@ public class DDSpan implements io.opentracing.Span {
 
     @JsonGetter(value = "start")
     public long getStartTime() {
-        return startTime * 1000000L;
+        return startTimeMicro * 1000L;
     }
 
     @JsonGetter(value = "duration")
