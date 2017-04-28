@@ -5,11 +5,27 @@ import com.datadoghq.trace.Sampler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+/**
+ * This sampler sample the traces at a predefined rate.
+ * <p>
+ * Keep (100 * `sample_rate`)% of the traces.
+ * It samples randomly, its main purpose is to reduce the instrumentation footprint.
+ */
 public class RateSampler implements Sampler {
 
+
     private final static Logger logger = LoggerFactory.getLogger(RateSampler.class);
+    /**
+     * The sample rate used
+     */
     private final double sampleRate;
 
+    /**
+     * Build an instance of the sampler. The Sample rate is fixed for each instance.
+     *
+     * @param sampleRate a number [0,1] representing the rate ratio.
+     */
     public RateSampler(double sampleRate) {
 
         if (sampleRate <= 0) {

@@ -1,8 +1,11 @@
 package com.datadoghq.trace.impl;
 
+import com.datadoghq.trace.SpanSerializer;
+import io.opentracing.Span;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 
 public class DDSpanTest {
@@ -13,4 +16,29 @@ public class DDSpanTest {
         new DDTracer().buildSpan("operationName").start();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldOperationNameImmutable() {
+        Span span = new DDTracer().buildSpan("foo").withServiceName("foo").start();
+        span.setOperationName("boom");
+    }
+
+    @Test
+    public void shouldResourceNameEqualsOperationNameIfNull() {
+
+        final String expectedName = "operationName";
+
+        DDSpan span = new DDTracer().buildSpan(expectedName).withServiceName("foo").start();
+        // ResourceName = expectedName
+        assertThat(span.getResourceName()).isEqualTo(expectedName);
+
+        // ResourceName = expectedResourceName
+        final String expectedResourceName = "fake";
+        span = new DDTracer()
+                .buildSpan(expectedName)
+                .withResourceName(expectedResourceName)
+                .withServiceName("foo").start();
+
+        assertThat(span.getResourceName()).isEqualTo(expectedResourceName);
+
+    }
 }

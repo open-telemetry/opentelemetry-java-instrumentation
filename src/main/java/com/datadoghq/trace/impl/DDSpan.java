@@ -13,19 +13,51 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.opentracing.Span;
 
-
+/**
+ * Represents an in-flight span in the opentracing system.
+ * <p>
+ * <p>Spans are created by the {@link DDTracer#buildSpan}.
+ * This implementation adds some features according to the DD agent.
+ */
 public class DDSpan implements io.opentracing.Span {
 
+    /**
+     * Each span have an operation name describing the current span
+     */
     protected String operationName;
+    /**
+     * Tags are associated to the current span, they will not propagate to the children span
+     */
     protected Map<String, Object> tags;
+    /**
+     * StartTime stores the creation time of the span in milliseconds
+     */
     protected long startTime;
+    /**
+     * StartTimeNano stores the only the nanoseconds for more accuracy
+     */
     protected long startTimeNano;
+    /**
+     * The duration in nanoseconds computed using the startTime and startTimeNano
+     */
     protected long durationNano;
+    /**
+     * The context attached to the span
+     */
     protected final DDSpanContext context;
 
     private final static Logger logger = LoggerFactory.getLogger(DDSpan.class);
 
-    DDSpan(
+    /**
+     * A simple constructor.
+     * Currently, users have
+     *
+     * @param operationName         the operation name associated to the span
+     * @param tags                  Tags attached to the span
+     * @param timestampMilliseconds if set, use this time instead of the auto-generated time
+     * @param context               the context
+     */
+    protected DDSpan(
             String operationName,
             Map<String, Object> tags,
             long timestampMilliseconds,
@@ -52,10 +84,23 @@ public class DDSpan implements io.opentracing.Span {
         }
     }
 
+    /**
+     * Same as finish, see {@link DDSpan#finish}
+     */
     public void finish(long stopTimeMillis) {
+        this.finish(stopTimeMillis, 0L);
+
+    }
+
+    /**
+     * Close the span. If the current span is the parent, check if each child has also been closed
+     * If not, warned it
+     *
+     * @param stopTimeMillis The stopTime in milliseconds
+     */
+    private void finish(long stopTimeMillis, long stopTimeNano) {
 
         // formula: millis(stop - start) * 1000 * 1000 + keepNano(nano(stop - start))
-        long stopTimeNano = System.nanoTime();
         this.durationNano = (stopTimeMillis - startTime) * 1000000L + ((stopTimeNano - this.startTimeNano) % 1000000L);
 
         logger.debug(this + " - Closing the span." + this.toString());
@@ -68,7 +113,6 @@ public class DDSpan implements io.opentracing.Span {
 
             for (Span span : spans) {
                 if (((DDSpan) span).getDurationNano() == 0L) {
-                    // FIXME
                     logger.warn(this + " - The parent span is marked as finished but this span isn't. You have to close each children." + this.toString());
                 }
             }
@@ -76,17 +120,27 @@ public class DDSpan implements io.opentracing.Span {
             logger.debug(this + " - Sending the trace to the writer");
 
         }
-
     }
 
+    /**
+     * Same as finish, see {@link DDSpan#finish}
+     */
     public void finish() {
-        finish(System.currentTimeMillis());
+        finish(System.currentTimeMillis(), System.nanoTime());
     }
 
+    /**
+     * Same as finish, see {@link DDSpan#finish}
+     */
     public void close() {
         this.finish();
     }
 
+    /**
+     * Check if the span is a parent. It means that the traceId is the same as the spanId
+     *
+     * @return
+     */
     private boolean isRootSpan() {
         return context.getTraceId() == context.getSpanId();
     }
@@ -95,14 +149,14 @@ public class DDSpan implements io.opentracing.Span {
      * @see io.opentracing.Span#setTag(java.lang.String, java.lang.String)
      */
     public Span setTag(String tag, String value) {
-        return setTag(tag, (Object)value);
+        return setTag(tag, (Object) value);
     }
 
     /* (non-Javadoc)
      * @see io.opentracing.Span#setTag(java.lang.String, boolean)
      */
     public Span setTag(String tag, boolean value) {
-        return setTag(tag, (Object)value);
+        return setTag(tag, (Object) value);
     }
 
     /* (non-Javadoc)
@@ -113,9 +167,11 @@ public class DDSpan implements io.opentracing.Span {
     }
 
     /**
-     * @param tag
-     * @param value
-     * @return
+     * Add a tag to the span. Tags are not propagated to the children
+     *
+     * @param tag   the tag-name
+     * @param value the value of the value
+     * @return the builder instance
      */
     private Span setTag(String tag, Object value) {
         tags.put(tag, value);
@@ -178,21 +234,21 @@ public class DDSpan implements io.opentracing.Span {
     public Map<String, Object> getTags() {
         return this.tags;
     }
-    
+
     /**
-     * Meta merges bagage and tags (stringified values)
-     * 
-     * @return merged context baggages and tags
+     * Meta merges baggage and tags (stringified values)
+     *
+     * @return merged context baggage and tags
      */
     @JsonGetter
     public Map<String, String> getMeta() {
-    	Map<String,String> meta = new HashMap<String, String>();
-    	for(Entry<String,String> entry:context().getBaggageItems().entrySet()){
-    		meta.put(entry.getKey(), entry.getValue());
-    	}
-    	for(Entry<String,Object> entry:getTags().entrySet()){
-    		meta.put(entry.getKey(), String.valueOf(entry.getValue()));
-    	}
+        Map<String, String> meta = new HashMap<String, String>();
+        for (Entry<String, String> entry : context().getBaggageItems().entrySet()) {
+            meta.put(entry.getKey(), entry.getValue());
+        }
+        for (Entry<String, Object> entry : getTags().entrySet()) {
+            meta.put(entry.getKey(), String.valueOf(entry.getValue()));
+        }
         return meta;
     }
 

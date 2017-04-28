@@ -14,13 +14,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+/**
+ * DDTracer makes it easy to send traces and span to DD using the OpenTracing instrumentation.
+ */
 public class DDTracer implements io.opentracing.Tracer {
+
+    /**
+     * Writer is an charge of reporting traces and spans to the desired endpoint
+     */
     private Writer writer;
+    /**
+     * Sampler defines the sampling policy in order to reduce the number of traces for instance
+     */
     private final Sampler sampler;
+
 
     private final static Logger logger = LoggerFactory.getLogger(DDTracer.class);
 
+    /**
+     * Default constructor, trace/spans are logged, no trace/span dropped
+     */
     public DDTracer() {
         this(new LoggingWritter(), new AllSampler());
     }
@@ -42,24 +55,46 @@ public class DDTracer implements io.opentracing.Tracer {
         throw new UnsupportedOperationException();
     }
 
+
+    /**
+     * We use the sampler to know if the trace has to be reported/written.
+     * The sampler is called on the first span (root span) of the trace.
+     * If the trace is marked as a sample, we report it.
+     *
+     * @param trace a list of the spans related to the same trace
+     */
     public void write(List<Span> trace) {
         if (trace.size() == 0) return;
-        if (this.sampler.sample((DDSpan)trace.get(0))) {
+        if (this.sampler.sample((DDSpan) trace.get(0))) {
             this.writer.write(trace);
         }
     }
 
+    /**
+     * Spans are built using this builder
+     */
     public class DDSpanBuilder implements SpanBuilder {
 
+        /**
+         * Each span must have an operationName according to the opentracing specification
+         */
         private final String operationName;
+
+        // Builder attributes
         private Map<String, Object> tags = new HashMap<String, Object>();
         private long timestamp;
-        private DDSpan parent;
+        private SpanContext parent;
         private String serviceName;
         private String resourceName;
         private boolean errorFlag;
         private String spanType;
 
+        /**
+         * This method actually build the span according to the builder settings
+         * DD-Agent requires a serviceName. If it has not been provided, the method will throw a RuntimeException
+         *
+         * @return An fresh span
+         */
         public DDSpan start() {
 
             // build the context
@@ -70,6 +105,7 @@ public class DDTracer implements io.opentracing.Tracer {
 
             return span;
         }
+
 
         public DDTracer.DDSpanBuilder withTag(String tag, Number number) {
             return withTag(tag, (Object) number);
@@ -87,10 +123,6 @@ public class DDTracer implements io.opentracing.Tracer {
             this.operationName = operationName;
         }
 
-        public DDTracer.DDSpanBuilder asChildOf(Span span) {
-            this.parent = (DDSpan) span;
-            return this;
-        }
 
         public DDTracer.DDSpanBuilder withStartTimestamp(long timestampMillis) {
             this.timestamp = timestampMillis;
@@ -121,12 +153,16 @@ public class DDTracer implements io.opentracing.Tracer {
             if (parent == null) {
                 return Collections.emptyList();
             }
-            return parent.context().baggageItems();
+            return parent.baggageItems();
         }
 
-        // UnsupportedOperation
+        public DDTracer.DDSpanBuilder asChildOf(Span span) {
+            return asChildOf(span.context());
+        }
+
         public DDTracer.DDSpanBuilder asChildOf(SpanContext spanContext) {
-            throw new UnsupportedOperationException("Should be a Span instead of a context due to DD implementation");
+            this.parent = spanContext;
+            return this;
         }
 
         public DDTracer.DDSpanBuilder addReference(String referenceType, SpanContext spanContext) {
@@ -143,12 +179,19 @@ public class DDTracer implements io.opentracing.Tracer {
             return System.nanoTime();
         }
 
-
+        /**
+         * Build the SpanContext, if the actual span has a parent, the following attributes must be propagated:
+         * - ServiceName
+         * - Baggage
+         * - Trace (a list of all spans related)
+         *
+         * @return
+         */
         private DDSpanContext buildTheSpanContext() {
 
             long generatedId = generateNewId();
             DDSpanContext context;
-            DDSpanContext p = this.parent != null ? this.parent.context() : null;
+            DDSpanContext p = this.parent != null ? (DDSpanContext) this.parent : null;
 
             // some attributes are inherited from the parent
             context = new DDSpanContext(
@@ -159,7 +202,7 @@ public class DDTracer implements io.opentracing.Tracer {
                     this.resourceName,
                     this.parent == null ? null : p.getBaggageItems(),
                     errorFlag,
-					this.parent == null ? this.spanType : p.getSpanType(),
+                    this.spanType,
                     this.parent == null ? null : p.getTrace(),
                     DDTracer.this
             );
