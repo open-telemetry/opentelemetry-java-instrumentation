@@ -184,31 +184,25 @@ public class DDSpanBuilderTest {
         final int nbSamples = 10;
 
         // root (aka spans[0]) is the parent
-        // spans[1] has a predictable duration
         // others are just for fun
 
         DDSpan root = tracer.buildSpan("fake_O").withServiceName("foo").start();
         spans.add(root);
 
-        long tickStart = System.currentTimeMillis();
-        spans.add(tracer.buildSpan("fake_" + 1).withServiceName("foo").asChildOf(spans.get(0)).withStartTimestamp(tickStart).start());
-        for (int i = 2; i <= 10; i++) {
-            spans.add(tracer.buildSpan("fake_" + i).withServiceName("foo").asChildOf(spans.get(i - 1)).start());
-        }
 
-        Thread.sleep(300);
+        Thread.sleep(200);
         long tickEnd = System.currentTimeMillis();
 
+
+        for (int i = 1; i <= 10; i++) {
+            spans.add(tracer.buildSpan("fake_" + i).withServiceName("foo").asChildOf(spans.get(i - 1)).start());
+        }
         spans.get(1).finish(tickEnd);
 
         assertThat(root.context.getTrace()).hasSize(nbSamples + 1);
         assertThat(root.context.getTrace()).containsAll(spans);
         assertThat(spans.get((int) (Math.random() * nbSamples)).context.getTrace()).containsAll(spans);
 
-        root.finish();
-
-        // not comparing the nano
-        assertThat(spans.get(1).durationNano / 1000000L).isEqualTo((tickEnd - tickStart));
 
 
     }

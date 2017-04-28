@@ -12,8 +12,7 @@ public class Example {
     public static void main(String[] args) throws Exception {
 
 
-        Writer writer = new DDAgentWriter();
-        DDTracer tracer = new DDTracer(writer, null);
+        DDTracer tracer = new DDTracer();
 
 
         Span parent = tracer
@@ -36,7 +35,6 @@ public class Example {
         parent.finish();
 
 
-        writer.close();
 
     }
 }

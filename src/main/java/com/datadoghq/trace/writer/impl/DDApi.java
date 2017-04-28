@@ -112,8 +112,7 @@ public class DDApi {
     public static void main(String[] args) throws Exception {
 
 
-        DDAgentWriter writer = new DDAgentWriter();
-        DDTracer tracer = new DDTracer(writer, null);
+        DDTracer tracer = new DDTracer();
 
         Span parent = tracer
                 .buildSpan("hello-world")
@@ -140,7 +139,6 @@ public class DDApi {
 
         Thread.sleep(1000);
 
-        writer.close();
 
     }
 }

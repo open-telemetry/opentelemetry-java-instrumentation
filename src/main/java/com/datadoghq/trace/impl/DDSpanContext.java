@@ -10,6 +10,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.opentracing.Span;
 
+/**
+ * SpanContext represents Span state that must propagate to descendant Spans and across process boundaries.
+ * <p>
+ * SpanContext is logically divided into two pieces: (1) the user-level "Baggage" that propagates across Span
+ * boundaries and (2) any Datadog fields that are needed to identify or contextualize
+ * the associated Span instance
+ */
 public class DDSpanContext implements io.opentracing.SpanContext {
 
     // Opentracing attributes
@@ -17,15 +24,32 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     protected long spanId;
     protected long parentId;
     protected Map<String, String> baggageItems;
+
     // DD attributes
-    
+    /**
+     * The service name is required, otherwise the span are dropped by the agent
+     */
     protected String serviceName;
+    /**
+     * The resource associated to the service (server_web, database, etc.)
+     */
     protected String resourceName;
+    /**
+     * True indicates that the span reports an error
+     */
     protected boolean errorFlag;
+    /**
+     * The type of the span. If null, the Datadog Agent will report as a custom
+     */
     protected String spanType;
+    /**
+     * The collection of all span related to this one
+     */
     protected final List<Span> trace;
     // Others attributes
-    protected boolean sampled;
+    /**
+     * For technical reasons, the ref to the original tracer
+     */
     protected DDTracer tracer;
 
     public DDSpanContext(
@@ -119,32 +143,32 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     }
 
     @Override
-	public String toString() {
-		return "Span [traceId=" + traceId 
-				+ ", spanId=" + spanId 
-				+ ", parentId=" + parentId +"]";
-	}
+    public String toString() {
+        return "Span [traceId=" + traceId
+                + ", spanId=" + spanId
+                + ", parentId=" + parentId + "]";
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (spanId ^ (spanId >>> 32));
-		result = prime * result + (int) (traceId ^ (traceId >>> 32));
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (int) (spanId ^ (spanId >>> 32));
+        result = prime * result + (int) (traceId ^ (traceId >>> 32));
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		DDSpanContext other = (DDSpanContext) obj;
-		if (spanId != other.spanId)
-			return false;
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DDSpanContext other = (DDSpanContext) obj;
+        if (spanId != other.spanId)
+            return false;
         return traceId == other.traceId;
     }
 }
