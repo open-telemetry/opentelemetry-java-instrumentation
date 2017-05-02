@@ -1,12 +1,8 @@
 package com.datadoghq.trace.impl;
 
-import com.datadoghq.trace.writer.impl.DDAgentWriter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentracing.Span;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Main DDSpanSerializer: convert spans and traces to proper JSON
@@ -36,39 +32,4 @@ public class DDSpanSerializer {
         throw new UnsupportedOperationException("Deserialisation of spans is not implemented yet");
     }
 
-    public static void main(String[] args) throws Exception {
-
-
-        DDAgentWriter writer = new DDAgentWriter();
-        DDTracer tracer = new DDTracer(writer, null);
-
-        Span parent = tracer
-                .buildSpan("hello-world")
-                .withServiceName("service-name")
-                .start();
-
-        parent.setBaggageItem("a-baggage", "value");
-
-        Thread.sleep(1000);
-
-        Span child = tracer
-                .buildSpan("hello-world")
-                .asChildOf(parent)
-                .start();
-
-        Thread.sleep(1000);
-
-        child.finish();
-
-        Thread.sleep(1000);
-
-        parent.finish();
-
-        List<List<Span>> traces = new ArrayList<List<Span>>();
-
-        DDSpanSerializer serializer = new DDSpanSerializer();
-
-        System.out.println(serializer.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(traces));
-
-    }
 }
