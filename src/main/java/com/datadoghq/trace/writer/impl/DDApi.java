@@ -15,20 +15,20 @@ import java.util.List;
  */
 public class DDApi {
 
-    protected static final Logger logger = LoggerFactory.getLogger(DDApi.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(DDApi.class.getName());
 
-    protected static final String TRACES_ENDPOINT = "/v0.3/traces";
-    protected static final String SERVICES_ENDPOINT = "/v0.3/services";
+    private static final String TRACES_ENDPOINT = "/v0.3/traces";
+    private static final String SERVICES_ENDPOINT = "/v0.3/services";
 
-    protected final String host;
-    protected final int port;
-    protected final String tracesEndpoint;
-    protected final String servicesEndpoint;
+    private final String host;
+    private final int port;
+    private final String tracesEndpoint;
+    private final String servicesEndpoint;
 
     /**
      * The spans serializer: can be replaced. By default, it serialize in JSON.
      */
-    protected final DDSpanSerializer spanSerializer;
+    private final DDSpanSerializer spanSerializer;
 
     public DDApi(String host, int port) {
         this(host, port, new DDSpanSerializer());

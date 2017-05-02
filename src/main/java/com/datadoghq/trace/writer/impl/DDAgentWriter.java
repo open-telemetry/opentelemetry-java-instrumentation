@@ -22,18 +22,18 @@ public class DDAgentWriter implements Writer {
     /**
      * Default location of the DD agent
      */
-    protected static final String DEFAULT_HOSTNAME = "localhost";
-    protected static final int DEFAULT_PORT = 8126;
+    private static final String DEFAULT_HOSTNAME = "localhost";
+    private static final int DEFAULT_PORT = 8126;
 
     /**
      * Maximum number of spans kept in memory
      */
-    protected static final int DEFAULT_MAX_SPANS = 1000;
+    private static final int DEFAULT_MAX_SPANS = 1000;
 
     /**
      * Maximum number of traces sent to the DD agent API at once
      */
-    protected static final int DEFAULT_BATCH_SIZE = 10;
+    private static final int DEFAULT_BATCH_SIZE = 10;
 
     /**
      * Used to ensure that we don't keep too many spans (while the blocking queue collect traces...)

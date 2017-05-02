@@ -9,7 +9,7 @@ import io.opentracing.Span;
  */
 public class DDSpanSerializer {
 
-    protected final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /* (non-Javadoc)
      * @see com.datadoghq.trace.DDSpanSerializer#serialize(io.opentracing.Span)

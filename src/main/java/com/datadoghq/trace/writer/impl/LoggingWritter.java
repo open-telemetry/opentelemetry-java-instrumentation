@@ -11,7 +11,7 @@ import io.opentracing.Span;
 
 public class LoggingWritter implements Writer{
 
-	protected static final Logger logger = LoggerFactory.getLogger(LoggingWritter.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger(LoggingWritter.class.getName());
 	
 	@Override
 	public void write(List<Span> trace) {
