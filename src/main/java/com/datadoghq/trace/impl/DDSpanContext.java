@@ -20,37 +20,37 @@ import io.opentracing.Span;
 public class DDSpanContext implements io.opentracing.SpanContext {
 
     // Opentracing attributes
-    protected long traceId;
-    protected long spanId;
-    protected long parentId;
-    protected Map<String, String> baggageItems;
+    private final long traceId;
+    private final long spanId;
+    private final long parentId;
+    private final Map<String, String> baggageItems;
 
     // DD attributes
     /**
      * The service name is required, otherwise the span are dropped by the agent
      */
-    protected String serviceName;
+    private final String serviceName;
     /**
      * The resource associated to the service (server_web, database, etc.)
      */
-    protected String resourceName;
+    private final String resourceName;
     /**
      * True indicates that the span reports an error
      */
-    protected boolean errorFlag;
+    private final boolean errorFlag;
     /**
      * The type of the span. If null, the Datadog Agent will report as a custom
      */
-    protected String spanType;
+    private final String spanType;
     /**
      * The collection of all span related to this one
      */
-    protected final List<Span> trace;
+    private final List<Span> trace;
     // Others attributes
     /**
      * For technical reasons, the ref to the original tracer
      */
-    protected DDTracer tracer;
+    private final DDTracer tracer;
 
     public DDSpanContext(
             long traceId,
