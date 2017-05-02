@@ -105,21 +105,21 @@ public class DDSpan implements io.opentracing.Span {
      * If not, warned it
      */
     protected void afterFinish() {
-        logger.debug(this + " - Closing the span." + this.toString());
+        logger.debug("{} - Closing the span.", this);
 
         // warn if one of the parent's children is not finished
         if (this.isRootSpan()) {
-            logger.debug(this + " - The current span is marked as a root span");
+            logger.debug("{} - The current span is marked as a root span", this);
             List<Span> spans = this.context.getTrace();
-            logger.debug(this + " - Checking " + spans.size() + " children attached to the current span");
+            logger.debug("{} - Checking {} children attached to the current span", this, spans.size());
 
             for (Span span : spans) {
                 if (((DDSpan) span).getDurationNano() == 0L) {
-                    logger.warn(this + " - The parent span is marked as finished but this span isn't. You have to close each children." + this.toString());
+                    logger.warn("{} - The parent span is marked as finished but this span isn't. You have to close each children.", this);
                 }
             }
             this.context.getTracer().write(this.context.getTrace());
-            logger.debug(this + " - Sending the trace to the writer");
+            logger.debug("{} - Sending the trace to the writer", this);
         }
     }
 
@@ -267,12 +267,12 @@ public class DDSpan implements io.opentracing.Span {
         return meta;
     }
 
-    @JsonGetter(value = "start")
+    @JsonGetter("start")
     public long getStartTime() {
         return startTimeMicro * 1000L;
     }
 
-    @JsonGetter(value = "duration")
+    @JsonGetter("duration")
     public long getDurationNano() {
         return durationNano;
     }
@@ -282,22 +282,22 @@ public class DDSpan implements io.opentracing.Span {
         return context.getServiceName();
     }
 
-    @JsonGetter(value = "trace_id")
+    @JsonGetter("trace_id")
     public long getTraceId() {
         return context.getTraceId();
     }
 
-    @JsonGetter(value = "span_id")
+    @JsonGetter("span_id")
     public long getSpanId() {
         return context.getSpanId();
     }
 
-    @JsonGetter(value = "parent_id")
+    @JsonGetter("parent_id")
     public long getParentId() {
         return context.getParentId();
     }
 
-    @JsonGetter(value = "resource")
+    @JsonGetter("resource")
     public String getResourceName() {
         return context.getResourceName() == null ? this.operationName : context.getResourceName();
     }
@@ -317,28 +317,4 @@ public class DDSpan implements io.opentracing.Span {
         return context.toString();
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((context == null) ? 0 : context.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        DDSpan other = (DDSpan) obj;
-        if (context == null) {
-            if (other.context != null)
-                return false;
-        } else if (!context.equals(other.context))
-            return false;
-        return true;
-    }
 }
