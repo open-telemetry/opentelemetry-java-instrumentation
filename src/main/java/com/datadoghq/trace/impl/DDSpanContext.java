@@ -152,26 +152,4 @@ public class DDSpanContext implements io.opentracing.SpanContext {
                 + ", parentId=" + parentId + "]";
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (int) (spanId ^ (spanId >>> 32));
-        result = prime * result + (int) (traceId ^ (traceId >>> 32));
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        DDSpanContext other = (DDSpanContext) obj;
-        if (spanId != other.spanId)
-            return false;
-        return traceId == other.traceId;
-    }
 }
