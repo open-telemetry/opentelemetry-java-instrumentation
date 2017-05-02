@@ -1,18 +1,15 @@
 package com.datadoghq.trace.writer.impl;
 
+import com.datadoghq.trace.Writer;
+import io.opentracing.Span;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Semaphore;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.datadoghq.trace.Writer;
-import com.datadoghq.trace.impl.DDSpan;
-
-import io.opentracing.Span;
 
 /**
  * This writer write provided traces to the a DD agent which is most of time located on the same host.
@@ -22,7 +19,7 @@ import io.opentracing.Span;
  */
 public class DDAgentWriter implements Writer {
 
-	protected static final Logger logger = LoggerFactory.getLogger(DDAgentWriter.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger(DDAgentWriter.class.getName());
 	
 	/**
 	 * Default location of the DD agent
@@ -48,17 +45,17 @@ public class DDAgentWriter implements Writer {
 	/**
 	 * In memory collection of traces waiting for departure
 	 */
-	protected final BlockingQueue<List<Span>> traces;
+	private final BlockingQueue<List<Span>> traces;
 	
 	/**
 	 * Async worker that posts the spans to the DD agent
 	 */
-	protected final Thread asyncWriterThread;
+	private final Thread asyncWriterThread;
 
 	/**
 	 * The DD agent api
 	 */
-	protected final DDApi api;
+	private final DDApi api;
 
 	public DDAgentWriter() {
 		this(new DDApi(DEFAULT_HOSTNAME, DEFAULT_PORT));		
