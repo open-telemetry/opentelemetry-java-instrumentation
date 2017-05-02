@@ -106,7 +106,7 @@ public class DDTracer implements io.opentracing.Tracer {
             DDSpanContext context = buildSpanContext();
             DDSpan span = new DDSpan(this.operationName, this.tags, this.timestamp, context);
 
-            logger.debug("Starting a new span. " + span.toString());
+            logger.debug("{} - Starting a new span.", span);
 
             return span;
         }
@@ -224,7 +224,7 @@ public class DDTracer implements io.opentracing.Tracer {
                     DDTracer.this
             );
 
-            logger.debug("Building a new span context. " + context.toString());
+            logger.debug("Building a new span context. {}", context);
             return context;
         }
 

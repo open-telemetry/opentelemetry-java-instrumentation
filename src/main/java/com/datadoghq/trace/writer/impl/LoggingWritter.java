@@ -15,7 +15,7 @@ public class LoggingWritter implements Writer{
 	
 	@Override
 	public void write(List<Span> trace) {
-		logger.info("write(trace): "+trace);
+		logger.info("write(trace): {}", trace);
 	}
 
 	@Override

@@ -97,7 +97,7 @@ public class DDSpan implements io.opentracing.Span {
      * @see io.opentracing.Span#finish(long)
      */
     public void finish(long stoptimeMicros) {
-        this.durationNano = TimeUnit.MICROSECONDS.toNanos(stoptimeMicros- this.startTimeMicro);
+        this.durationNano = TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - this.startTimeMicro);
         afterFinish();
     }
 
@@ -173,22 +173,6 @@ public class DDSpan implements io.opentracing.Span {
         return this;
     }
 
-    public Span log(Map<String, ?> map) {
-        return null;
-    }
-
-    public Span log(long l, Map<String, ?> map) {
-        return null;
-    }
-
-    public Span log(String s) {
-        return null;
-    }
-
-    public Span log(long l, String s) {
-        return null;
-    }
-
     /* (non-Javadoc)
      * @see io.opentracing.Span#context()
      */
@@ -220,6 +204,38 @@ public class DDSpan implements io.opentracing.Span {
             throw new IllegalArgumentException("The operationName is already assigned.");
         }
         this.operationName = operationName;
+        return this;
+    }
+
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#log(java.lang.String, java.lang.Object)
+     */
+    public Span log(Map<String, ?> map) {
+        logger.debug("`log` method is not implemented. Doing nothing");
+        return this;
+    }
+
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#log(java.lang.String, java.lang.Object)
+     */
+    public Span log(long l, Map<String, ?> map) {
+        logger.debug("`log` method is not implemented. Doing nothing");
+        return this;
+    }
+
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#log(java.lang.String, java.lang.Object)
+     */
+    public Span log(String s) {
+        logger.debug("`log` method is not implemented. Doing nothing");
+        return this;
+    }
+
+    /* (non-Javadoc)
+     * @see io.opentracing.Span#log(java.lang.String, java.lang.Object)
+     */
+    public Span log(long l, String s) {
+        logger.debug("`log` method is not implemented. Doing nothing");
         return this;
     }
 

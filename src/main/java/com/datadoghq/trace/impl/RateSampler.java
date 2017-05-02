@@ -36,14 +36,14 @@ public class RateSampler implements Sampler {
         }
 
         this.sampleRate = sampleRate;
-        logger.debug("Initializing the RateSampler, sampleRate=" + this.sampleRate * 100 + "%");
+        logger.debug("Initializing the RateSampler, sampleRate: {} %", this.sampleRate * 100);
 
     }
 
     @Override
     public boolean sample(DDSpan span) {
         boolean sample = Math.random() <= this.sampleRate;
-        logger.debug(span + " - Span is sampled: " + sample);
+        logger.debug("{} - Span is sampled: {}", span, sample);
         return sample;
     }
 
