@@ -86,7 +86,7 @@ public class DDAgentWriter implements Writer {
 		if(proceed){
 			traces.add(trace);
 		}else{
-			logger.warn("Cannot add a trace of "+trace.size()+" as the async queue is full. Queue max size:"+DEFAULT_MAX_SPANS);
+			logger.warn("Cannot add a trace of {} as the async queue is full. Queue max size: {}",  trace.size(), DEFAULT_MAX_SPANS);
 		}
 	}
 
@@ -120,7 +120,7 @@ public class DDAgentWriter implements Writer {
 					traces.drainTo(payload, DEFAULT_BATCH_SIZE);
 
 					//SEND the payload to the agent
-					logger.debug("Async writer about to write "+payload.size()+" traces.");
+					logger.debug("Async writer about to write {} traces.", payload.size());
 					api.sendTraces(payload);
 
 					//Compute the number of spans sent
@@ -128,7 +128,7 @@ public class DDAgentWriter implements Writer {
 					for(List<Span> trace:payload){
 						spansCount+=trace.size();
 					}
-					logger.debug("Async writer just sent "+spansCount+" spans through "+payload.size()+" traces");
+					logger.debug("Async writer just sent {} spans through {} traces", spansCount, payload.size());
 
 					//Release the tokens
 					tokens.release(spansCount);
