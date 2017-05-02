@@ -67,7 +67,9 @@ public class DDTracer implements io.opentracing.Tracer {
      * @param trace a list of the spans related to the same trace
      */
     public void write(List<Span> trace) {
-        if (trace.size() == 0) return;
+        if (trace.isEmpty()) {
+            return;
+        }
         if (this.sampler.sample((DDSpan) trace.get(0))) {
             this.writer.write(trace);
         }
