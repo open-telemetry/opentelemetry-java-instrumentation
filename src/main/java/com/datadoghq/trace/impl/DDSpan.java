@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,7 @@ public class DDSpan implements io.opentracing.Span {
 
         // record the start time in nano (current milli + nano delta)
         if (timestampMicro == 0L) {
-            this.startTimeMicro = System.currentTimeMillis() * 1000L;
+            this.startTimeMicro = TimeUnit.MILLISECONDS.toMicros(System.currentTimeMillis());
         } else {
             this.startTimeMicro = timestampMicro;
         }
@@ -96,7 +97,7 @@ public class DDSpan implements io.opentracing.Span {
      * @see io.opentracing.Span#finish(long)
      */
     public void finish(long stoptimeMicros) {
-        this.durationNano = stoptimeMicros * 1000L - this.startTimeMicro * 1000L;
+        this.durationNano = TimeUnit.MICROSECONDS.toNanos(stoptimeMicros- this.startTimeMicro);
         afterFinish();
     }
 
