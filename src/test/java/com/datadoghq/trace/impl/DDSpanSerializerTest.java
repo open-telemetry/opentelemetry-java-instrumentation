@@ -4,11 +4,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class DDSpanSerializerTest {
-	
+
 	DDSpan parent;
 	DDSpan child;
-	DDSpanSerializer serializer; 
-	
+	DDSpanSerializer serializer;
+
 	@Before
 	public void setUp() throws Exception {
 		//Setup
@@ -24,22 +24,22 @@ public class DDSpanSerializerTest {
 
 		child.finish();
 		parent.finish();
-		
+
 		//Forces variable values at a fixed value.
-		parent.startTime = 0L;
+		parent.startTimeMicro = 0L;
 		parent.durationNano = 0L;
 		parent.context.traceId = 1L;
 		parent.context.spanId = 1L;
-		child.startTime = 0L;
+		child.startTimeMicro = 0L;
 		child.durationNano = 0L;
 		child.context.traceId = 1L;
 		child.context.parentId = 1L;
 		child.context.spanId = 2L;
-		
-		
+
+
 		serializer = new DDSpanSerializer();
 	}
-	
+
 	@Test
 	public void test() throws Exception{
 		//FIXME attributes order is not maintained I disabled the test for now
