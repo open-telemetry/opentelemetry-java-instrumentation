@@ -8,9 +8,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.datadoghq.trace.SpanSerializer;
 import com.datadoghq.trace.impl.DDSpanSerializer;
-import com.datadoghq.trace.impl.DDTracer;
 
 import io.opentracing.Span;
 
@@ -32,13 +30,13 @@ public class DDApi {
     /**
      * The spans serializer: can be replaced. By default, it serialize in JSON.
      */
-    protected final SpanSerializer spanSerializer;
+    protected final DDSpanSerializer spanSerializer;
 
     public DDApi(String host, int port) {
         this(host, port, new DDSpanSerializer());
     }
 
-    public DDApi(String host, int port, SpanSerializer spanSerializer) {
+    public DDApi(String host, int port, DDSpanSerializer spanSerializer) {
         super();
         this.host = host;
         this.port = port;
