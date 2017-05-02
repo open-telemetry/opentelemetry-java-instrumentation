@@ -223,9 +223,9 @@ public class DDSpanBuilderTest {
         }
         spans.get(1).finish(tickEnd);
 
-        assertThat(root.context.getTrace()).hasSize(nbSamples + 1);
-        assertThat(root.context.getTrace()).containsAll(spans);
-        assertThat(spans.get((int) (Math.random() * nbSamples)).context.getTrace()).containsAll(spans);
+        assertThat(root.context().getTrace()).hasSize(nbSamples + 1);
+        assertThat(root.context().getTrace()).containsAll(spans);
+        assertThat(spans.get((int) (Math.random() * nbSamples)).context().getTrace()).containsAll(spans);
 
 
     }
