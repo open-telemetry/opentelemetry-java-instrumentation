@@ -24,27 +24,27 @@ public class DDSpan implements io.opentracing.Span {
     /**
      * Each span have an operation name describing the current span
      */
-    protected String operationName;
+    private String operationName;
     /**
      * Tags are associated to the current span, they will not propagate to the children span
      */
-    protected Map<String, Object> tags;
+    private Map<String, Object> tags;
     /**
      * StartTime stores the creation time of the span in milliseconds
      */
-    protected long startTimeMicro;
+    private long startTimeMicro;
     /**
      * StartTimeNano stores the only the nanoseconds for more accuracy
      */
-    protected long startTimeNano;
+    private long startTimeNano;
     /**
      * The duration in nanoseconds computed using the startTimeMicro and startTimeNano
      */
-    protected long durationNano;
+    private long durationNano;
     /**
      * The context attached to the span
      */
-    protected final DDSpanContext context;
+    private final DDSpanContext context;
 
     private final static Logger logger = LoggerFactory.getLogger(DDSpan.class);
 
@@ -240,7 +240,7 @@ public class DDSpan implements io.opentracing.Span {
 
 
     //Getters and JSON serialisation instructions
-    @JsonGetter(value = "name")
+    @JsonGetter("name")
     public String getOperationName() {
         return operationName;
     }
@@ -317,4 +317,28 @@ public class DDSpan implements io.opentracing.Span {
         return context.toString();
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((context == null) ? 0 : context.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        DDSpan other = (DDSpan) obj;
+        if (context == null) {
+            if (other.context != null)
+                return false;
+        } else if (!context.equals(other.context))
+            return false;
+        return true;
+    }
 }
