@@ -75,7 +75,6 @@ public class DDAgentWriter implements Writer {
      */
     public void write(List<Span> trace) {
         //Try to add a new span in the queue
-        //FIXME oldest?
         boolean proceed = tokens.tryAcquire(trace.size());
 
         if (proceed) {

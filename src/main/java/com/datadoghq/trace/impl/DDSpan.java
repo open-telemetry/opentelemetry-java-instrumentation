@@ -1,18 +1,16 @@
 package com.datadoghq.trace.impl;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.opentracing.Span;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import io.opentracing.Span;
 
 /**
  * Represents an in-flight span in the opentracing system.
@@ -22,14 +20,7 @@ import io.opentracing.Span;
  */
 public class DDSpan implements io.opentracing.Span {
 
-    /**
-     * Each span have an operation name describing the current span
-     */
-    private String operationName;
-    /**
-     * Tags are associated to the current span, they will not propagate to the children span
-     */
-    private Map<String, Object> tags;
+
     /**
      * StartTime stores the creation time of the span in milliseconds
      */
@@ -53,19 +44,13 @@ public class DDSpan implements io.opentracing.Span {
      * A simple constructor.
      * Currently, users have
      *
-     * @param operationName  the operation name associated to the span
-     * @param tags           Tags attached to the span
      * @param timestampMicro if set, use this time instead of the auto-generated time
      * @param context        the context
      */
     protected DDSpan(
-            String operationName,
-            Map<String, Object> tags,
             long timestampMicro,
             DDSpanContext context) {
 
-        this.operationName = operationName;
-        this.tags = tags;
         this.context = context;
 
         // record the start time in nano (current milli + nano delta)
@@ -79,11 +64,6 @@ public class DDSpan implements io.opentracing.Span {
         // track each span of the trace
         this.context.getTrace().add(this);
 
-        // check DD attributes required
-        // FIXME Remove IAE
-        if (this.context.getServiceName() == null) {
-            throw new IllegalArgumentException("No ServiceName provided");
-        }
     }
 
     /* (non-Javadoc)
@@ -145,34 +125,26 @@ public class DDSpan implements io.opentracing.Span {
      * @see io.opentracing.Span#setTag(java.lang.String, java.lang.String)
      */
     public Span setTag(String tag, String value) {
-        return setTag(tag, (Object) value);
+        this.context().setTag(tag, (Object) value);
+        return this;
     }
 
     /* (non-Javadoc)
      * @see io.opentracing.Span#setTag(java.lang.String, boolean)
      */
     public Span setTag(String tag, boolean value) {
-        return setTag(tag, (Object) value);
+        this.context().setTag(tag, (Object) value);
+        return this;
     }
 
     /* (non-Javadoc)
      * @see io.opentracing.Span#setTag(java.lang.String, java.lang.Number)
      */
     public Span setTag(String tag, Number value) {
-        return this.setTag(tag, (Object) value);
+         this.context().setTag(tag, (Object) value);
+         return this;
     }
 
-    /**
-     * Add a tag to the span. Tags are not propagated to the children
-     *
-     * @param tag   the tag-name
-     * @param value the value of the value
-     * @return the builder instance
-     */
-    private Span setTag(String tag, Object value) {
-        tags.put(tag, value);
-        return this;
-    }
 
     /* (non-Javadoc)
      * @see io.opentracing.Span#context()
@@ -200,11 +172,7 @@ public class DDSpan implements io.opentracing.Span {
      * @see io.opentracing.Span#setOperationName(java.lang.String)
      */
     public Span setOperationName(String operationName) {
-        // FIXME operationName is in each constructor --> always IAE
-        if (this.operationName != null) {
-            throw new IllegalArgumentException("The operationName is already assigned.");
-        }
-        this.operationName = operationName;
+        this.context().setOperationName(operationName);
         return this;
     }
 
@@ -258,15 +226,6 @@ public class DDSpan implements io.opentracing.Span {
 
 
     //Getters and JSON serialisation instructions
-    @JsonGetter("name")
-    public String getOperationName() {
-        return operationName;
-    }
-
-    @JsonIgnore
-    public Map<String, Object> getTags() {
-        return this.tags;
-    }
 
     /**
      * Meta merges baggage and tags (stringified values)
@@ -295,8 +254,8 @@ public class DDSpan implements io.opentracing.Span {
         return durationNano;
     }
 
-    @JsonGetter
-    public String getService() {
+    @JsonGetter("service")
+    public String getServiceName() {
         return context.getServiceName();
     }
 
@@ -317,9 +276,18 @@ public class DDSpan implements io.opentracing.Span {
 
     @JsonGetter("resource")
     public String getResourceName() {
-        return context.getResourceName() == null ? this.operationName : context.getResourceName();
+        return context.getResourceName() == null ? context.getOperationName() : context.getResourceName();
     }
 
+    @JsonGetter("name")
+    public String getOperationName() {
+        return this.context().getOperationName();
+    }
+
+    @JsonIgnore
+    public Map<String, Object> getTags() {
+        return this.context().getTags();
+    }
     @JsonGetter
     public String getType() {
         return context.getSpanType();
@@ -335,4 +303,19 @@ public class DDSpan implements io.opentracing.Span {
         return context.toString();
     }
 
+
+    public Span setServiceName(String serviceName) {
+        this.context().setServiceName(serviceName);
+        return this;
+    }
+
+    public Span setResourceName(String resourceName) {
+        this.context().setResourceName(resourceName);
+        return this;
+    }
+
+    public Span setType(String type) {
+        this.context().setType(type);
+        return this;
+    }
 }

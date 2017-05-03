@@ -28,16 +28,16 @@ public class DDSpanSerializerTest {
                 2L,
                 0L,
                 "service",
+                "operation",
                 "resource",
                 baggage,
                 false,
                 "type",
+                tags,
                 null,
                 null);
 
         span = new DDSpan(
-                "operation",
-                tags,
                 100L,
                 context);
 
@@ -48,12 +48,14 @@ public class DDSpanSerializerTest {
     @Test
     public void test() throws Exception {
 
+
         String expected = "{\"meta\":{\"a-baggage\":\"value\",\"k1\":\"v1\"},\"service\":\"service\",\"error\":0,\"type\":\"type\",\"name\":\"operation\",\"duration\":33000,\"resource\":\"resource\",\"start\":100000,\"span_id\":2,\"parent_id\":0,\"trace_id\":1}";
-        //FIXME attributes order is not maintained I disabled the test for now
-        //assertEquals("
-        //        , serializer.serialize(span));
         // FIXME At the moment, just compare the string sizes
-        assertThat(serializer.serialize(span).length()).isEqualTo(expected.length());
+        try {
+            assertThat(serializer.serialize(span).length()).isEqualTo(expected.length());
+        } catch (AssertionError e) {
+            assertThat(serializer.serialize(span)).isEqualTo(expected);
+        }
     }
 
 }

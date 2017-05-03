@@ -1,8 +1,6 @@
 package com.datadoghq.trace.impl;
 
 import com.datadoghq.trace.Sampler;
-import com.datadoghq.trace.impl.DDSpan;
-import com.datadoghq.trace.impl.RateSampler;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,7 +12,6 @@ public class RateSamplerTest {
     @Test
     public void testRateSampler() {
 
-        //FIXME test has to be more predictable
         DDSpan mockSpan = mock(DDSpan.class);
 
         final double sampleRate = 0.35;
@@ -28,7 +25,7 @@ public class RateSamplerTest {
                 kept++;
             }
         }
-
+        //FIXME test has to be more predictable
         //assertThat(((double) kept / iterations)).isBetween(sampleRate - 0.02, sampleRate + 0.02);
 
     }
