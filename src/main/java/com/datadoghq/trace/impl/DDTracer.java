@@ -1,15 +1,21 @@
 package com.datadoghq.trace.impl;
 
-import com.datadoghq.trace.Sampler;
-import com.datadoghq.trace.Writer;
-import com.datadoghq.trace.writer.impl.LoggingWritter;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import com.datadoghq.trace.Sampler;
+import com.datadoghq.trace.Writer;
+import com.datadoghq.trace.writer.impl.LoggingWritter;
+
+import io.opentracing.Span;
+import io.opentracing.SpanContext;
+import io.opentracing.propagation.Format;
 
 /**
  * DDTracer makes it easy to send traces and span to DD using the OpenTracing instrumentation.
@@ -24,6 +30,11 @@ public class DDTracer implements io.opentracing.Tracer {
      * Sampler defines the sampling policy in order to reduce the number of traces for instance
      */
     private final Sampler sampler;
+    
+    /**
+     * Span context decorators
+     */
+    private final List<DDSpanContextDecorator> spanContextDecorators = new ArrayList<DDSpanContextDecorator>();
 
 
     private final static Logger logger = LoggerFactory.getLogger(DDTracer.class);
@@ -39,8 +50,27 @@ public class DDTracer implements io.opentracing.Tracer {
         this.writer = writer;
         this.sampler = sampler;
     }
+    
 
-    public DDSpanBuilder buildSpan(String operationName) {
+    /**
+     * Returns the list of span context decorators
+     * 
+     * @return the list of span context decorators
+     */
+    public List<DDSpanContextDecorator> getSpanContextDecorators() {
+		return Collections.unmodifiableList(spanContextDecorators);
+	}
+    
+    /**
+     * Add a new decorator in the list ({@link DDSpanContextDecorator})
+     * 
+     * @param decorator The decorator in the list
+     */
+    public void addDecorator(DDSpanContextDecorator decorator){
+    	spanContextDecorators.add(decorator);
+    }
+
+	public DDSpanBuilder buildSpan(String operationName) {
         return new DDSpanBuilder(operationName);
     }
 
@@ -219,7 +249,7 @@ public class DDTracer implements io.opentracing.Tracer {
                     serviceName,
                     this.operationName,
                     this.resourceName,
-                    this.parent == null ? Collections.<String, String>emptyMap() : p.getBaggageItems(),
+                    this.parent == null ? new HashMap<String, String>() : p.getBaggageItems(),
                     errorFlag,
                     spanType,
                     this.tags,

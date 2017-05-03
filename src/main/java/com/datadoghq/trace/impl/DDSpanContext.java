@@ -1,7 +1,11 @@
 package com.datadoghq.trace.impl;
 
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -76,7 +80,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         this.parentId = parentId;
 
         if (baggageItems == null) {
-            this.baggageItems = Collections.emptyMap();
+            this.baggageItems = new HashMap<String, String>();
         } else {
             this.baggageItems = baggageItems;
         }
@@ -128,9 +132,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     }
 
     public void setBaggageItem(String key, String value) {
-        if (this.baggageItems.isEmpty()) {
-            this.baggageItems = new HashMap<String, String>();
-        }
         this.baggageItems.put(key, value);
     }
 
@@ -166,14 +167,23 @@ public class DDSpanContext implements io.opentracing.SpanContext {
      * @param value the value of the value
      * @return the builder instance
      */
-    public void setTag(String tag, Object value) {
+    public synchronized void setTag(String tag, Object value) {
         if (this.tags.isEmpty()) {
             this.tags = new HashMap<String, Object>();
         }
         this.tags.put(tag, value);
+        
+        //Call decorators
+        for(DDSpanContextDecorator decorator:tracer.getSpanContextDecorators()){
+        	decorator.afterSetTag(this, tag, value);
+        }
     }
 
-    @Override
+    public synchronized Map<String, Object> getTags() {
+	    return Collections.unmodifiableMap(tags);
+	}
+
+	@Override
     public String toString() {
         return "Span [traceId=" + traceId
                 + ", spanId=" + spanId
@@ -188,10 +198,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         return operationName;
     }
 
-    public Map<String, Object> getTags() {
-        return tags;
-    }
-
     public void setServiceName(String serviceName) {
         this.serviceName = serviceName;
     }
@@ -200,7 +206,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         this.resourceName = resourceName;
     }
 
-    public void setType(String type) {
-        this.spanType = type;
+    public void setSpanType(String spanType) {
+        this.spanType = spanType;
     }
 }
