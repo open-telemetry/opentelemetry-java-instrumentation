@@ -2,6 +2,7 @@ package com.datadoghq.trace.impl;
 
 
 import com.datadoghq.trace.Sampler;
+import io.opentracing.Span;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,7 @@ public class RateSampler implements Sampler {
     }
 
     @Override
-    public boolean sample(DDSpan span) {
+    public boolean sample(Span span) {
         boolean sample = Math.random() <= this.sampleRate;
         logger.debug("{} - Span is sampled: {}", span, sample);
         return sample;
