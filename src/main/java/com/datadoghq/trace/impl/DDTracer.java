@@ -228,9 +228,7 @@ public class DDTracer implements io.opentracing.Tracer {
             return context;
         }
 
-
     }
-
 
     @Override
     public String toString() {

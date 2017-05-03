@@ -80,6 +80,7 @@ public class DDSpan implements io.opentracing.Span {
         this.context.getTrace().add(this);
 
         // check DD attributes required
+        // FIXME Remove IAE
         if (this.context.getServiceName() == null) {
             throw new IllegalArgumentException("No ServiceName provided");
         }
