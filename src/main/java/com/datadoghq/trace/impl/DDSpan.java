@@ -118,7 +118,13 @@ public class DDSpan implements io.opentracing.Span {
      * @return true if root, false otherwise
      */
     private boolean isRootSpan() {
-        return context.getTraceId() == context.getSpanId();
+
+        if (context().getTrace().isEmpty()) {
+            return false;
+        }
+        // First item of the array AND tracer set
+        DDSpan first = (DDSpan) context().getTrace().get(0);
+        return first.context.getSpanId() == this.context.getSpanId() && this.context.getTracer() != null;
     }
 
     /* (non-Javadoc)
