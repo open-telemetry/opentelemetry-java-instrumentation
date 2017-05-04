@@ -9,13 +9,16 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.datadoghq.trace.Codec;
 import com.datadoghq.trace.Sampler;
 import com.datadoghq.trace.Writer;
+import com.datadoghq.trace.propagation.impl.HTTPCodec;
 import com.datadoghq.trace.writer.impl.LoggingWritter;
 
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
+
 
 /**
  * DDTracer makes it easy to send traces and span to DD using the OpenTracing instrumentation.
@@ -30,7 +33,7 @@ public class DDTracer implements io.opentracing.Tracer {
      * Sampler defines the sampling policy in order to reduce the number of traces for instance
      */
     private final Sampler sampler;
-    
+
     /**
      * Span context decorators
      */
@@ -38,6 +41,7 @@ public class DDTracer implements io.opentracing.Tracer {
 
 
     private final static Logger logger = LoggerFactory.getLogger(DDTracer.class);
+    private final CodecRegistry registry;
 
     /**
      * Default constructor, trace/spans are logged, no trace/span dropped
@@ -49,21 +53,22 @@ public class DDTracer implements io.opentracing.Tracer {
     public DDTracer(Writer writer, Sampler sampler) {
         this.writer = writer;
         this.sampler = sampler;
+        registry = new CodecRegistry();
+        registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
     }
-    
 
     /**
      * Returns the list of span context decorators
-     * 
+     *
      * @return the list of span context decorators
      */
     public List<DDSpanContextDecorator> getSpanContextDecorators() {
 		return Collections.unmodifiableList(spanContextDecorators);
 	}
-    
+
     /**
      * Add a new decorator in the list ({@link DDSpanContextDecorator})
-     * 
+     *
      * @param decorator The decorator in the list
      */
     public void addDecorator(DDSpanContextDecorator decorator){
@@ -74,14 +79,25 @@ public class DDTracer implements io.opentracing.Tracer {
         return new DDSpanBuilder(operationName);
     }
 
-    public <C> void inject(SpanContext spanContext, Format<C> format, C c) {
-        //FIXME Implement it ASAP
-        logger.warn("Method `inject` not implemented yet");
+
+    public <T> void inject(SpanContext spanContext, Format<T> format, T carrier) {
+
+        Codec<T> codec = registry.get(format);
+        if (codec == null) {
+            logger.warn("Unsupported format for propagation - {}", format.getClass().getName());
+        } else {
+            codec.inject((DDSpanContext) spanContext, carrier);
+        }
     }
 
-    public <C> SpanContext extract(Format<C> format, C c) {
-        //FIXME Implement it ASAP
-        logger.warn("Method `inject` not implemented yet");
+    public <T> SpanContext extract(Format<T> format, T carrier) {
+
+        Codec<T> codec = registry.get(format);
+        if (codec == null) {
+            logger.warn("Unsupported format for propagation - {}", format.getClass().getName());
+        } else {
+            return  codec.extract(carrier);
+        }
         return null;
     }
 
@@ -259,6 +275,20 @@ public class DDTracer implements io.opentracing.Tracer {
 
             logger.debug("Building a new span context. {}", context);
             return context;
+        }
+
+    }
+
+    private static class CodecRegistry {
+
+        private final Map<Format<?>, Codec<?>> codecs = new HashMap<Format<?>, Codec<?>>();
+
+        <T> Codec<T> get(Format<T> format) {
+            return (Codec<T>) codecs.get(format);
+        }
+
+        public <T> void register(Format<T> format, Codec<T> codec) {
+            codecs.put(format, codec);
         }
 
     }
