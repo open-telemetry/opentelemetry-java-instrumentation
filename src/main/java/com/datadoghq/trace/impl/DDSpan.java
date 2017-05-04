@@ -196,7 +196,7 @@ public class DDSpan implements io.opentracing.Span {
      * @see io.opentracing.Span#log(java.lang.String, java.lang.Object)
      */
     public Span log(String s) {
-        logger.debug("`log` method is not implemented. Doing nothing");
+        logger.debug("`log` method is not implemented. Provided log: {}",s);
         return this;
     }
 
@@ -204,7 +204,7 @@ public class DDSpan implements io.opentracing.Span {
      * @see io.opentracing.Span#log(java.lang.String, java.lang.Object)
      */
     public Span log(long l, String s) {
-        logger.debug("`log` method is not implemented. Doing nothing");
+        logger.debug("`log` method is not implemented. Provided log: {}",s);
         return this;
     }
 
@@ -212,7 +212,7 @@ public class DDSpan implements io.opentracing.Span {
      * @see io.opentracing.Span#log(java.lang.String, java.lang.Object)
      */
     public Span log(String s, Object o) {
-        logger.debug("`log` method is not implemented. Doing nothing");
+        logger.debug("`log` method is not implemented. Provided log: {}",s);
         return this;
     }
 
@@ -220,7 +220,7 @@ public class DDSpan implements io.opentracing.Span {
      * @see io.opentracing.Span#log(long, java.lang.String, java.lang.Object)
      */
     public Span log(long l, String s, Object o) {
-        logger.debug("`log` method is not implemented. Doing nothing");
+        logger.debug("`log` method is not implemented. Provided log: {}",s);
         return this;
     }
 
@@ -314,8 +314,8 @@ public class DDSpan implements io.opentracing.Span {
         return this;
     }
 
-    public Span setType(String type) {
-        this.context().setType(type);
+    public Span setSpanType(String type) {
+        this.context().setSpanType(type);
         return this;
     }
 }

@@ -1,10 +1,10 @@
 package com.datadoghq.trace.impl;
 
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 
 public class DDSpanTest {
@@ -44,7 +44,7 @@ public class DDSpanTest {
         assertThat(span.getResourceName()).isEqualTo(expected);
 
         expected = "type";
-        span.setType(expected);
+        span.setSpanType(expected);
         assertThat(span.getType()).isEqualTo(expected);
 
     }
