@@ -1,11 +1,14 @@
 package com.datadoghq.trace.impl;
 
+import com.datadoghq.trace.Codec;
 import com.datadoghq.trace.Sampler;
 import com.datadoghq.trace.Writer;
+import com.datadoghq.trace.propagation.impl.HTTPCodec;
 import com.datadoghq.trace.writer.impl.LoggingWritter;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
+import io.opentracing.propagation.TextMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +30,8 @@ public class DDTracer implements io.opentracing.Tracer {
 
 
     private final static Logger logger = LoggerFactory.getLogger(DDTracer.class);
+    private final CodecRegistry registry;
+    private HTTPCodec codec = new HTTPCodec();
 
     /**
      * Default constructor, trace/spans are logged, no trace/span dropped
@@ -38,20 +43,33 @@ public class DDTracer implements io.opentracing.Tracer {
     public DDTracer(Writer writer, Sampler sampler) {
         this.writer = writer;
         this.sampler = sampler;
+        registry = new CodecRegistry();
+        registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
     }
 
     public DDSpanBuilder buildSpan(String operationName) {
         return new DDSpanBuilder(operationName);
     }
 
-    public <C> void inject(SpanContext spanContext, Format<C> format, C c) {
-        //FIXME Implement it ASAP
-        logger.warn("Method `inject` not implemented yet");
+
+    public <T> void inject(SpanContext spanContext, Format<T> format, T carrier) {
+
+        Codec<T> codec = registry.get(format);
+        if (codec == null) {
+            logger.warn("Unsupported format for propagation - {}", format.getClass().getName());
+        } else {
+            codec.inject((DDSpanContext) spanContext, carrier);
+        }
     }
 
-    public <C> SpanContext extract(Format<C> format, C c) {
-        //FIXME Implement it ASAP
-        logger.warn("Method `inject` not implemented yet");
+    public <T> SpanContext extract(Format<T> format, T carrier) {
+
+        Codec<T> codec = registry.get(format);
+        if (codec == null) {
+            logger.warn("Unsupported format for propagation - {}", format.getClass().getName());
+        } else {
+            return  codec.extract(carrier);
+        }
         return null;
     }
 
@@ -229,6 +247,20 @@ public class DDTracer implements io.opentracing.Tracer {
 
             logger.debug("Building a new span context. {}", context);
             return context;
+        }
+
+    }
+
+    private static class CodecRegistry {
+
+        private final Map<Format<?>, Codec<?>> codecs = new HashMap<Format<?>, Codec<?>>();
+
+        <T> Codec<T> get(Format<T> format) {
+            return (Codec<T>) codecs.get(format);
+        }
+
+        public <T> void register(Format<T> format, Codec<T> codec) {
+            codecs.put(format, codec);
         }
 
     }
