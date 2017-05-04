@@ -93,7 +93,7 @@ public class DDApi {
             out.write(content);
             out.close();
             int responseCode = httpCon.getResponseCode();
-            if (responseCode != 200) {
+            if (responseCode == 200) {
                 logger.debug("Sent the payload to the DD agent.");
             } else {
                 logger.warn("Could not send the payload to the DD agent. Status: {} ResponseMessage: {}", httpCon.getResponseCode(), httpCon.getResponseMessage());
