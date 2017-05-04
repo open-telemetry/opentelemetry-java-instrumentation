@@ -31,7 +31,6 @@ public class DDTracer implements io.opentracing.Tracer {
 
     private final static Logger logger = LoggerFactory.getLogger(DDTracer.class);
     private final CodecRegistry registry;
-    private HTTPCodec codec = new HTTPCodec();
 
     /**
      * Default constructor, trace/spans are logged, no trace/span dropped
