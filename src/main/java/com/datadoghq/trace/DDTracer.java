@@ -1,5 +1,7 @@
 package com.datadoghq.trace;
 
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -162,7 +164,15 @@ public class DDTracer implements io.opentracing.Tracer {
         }
 
         public DDTracer.DDSpanBuilder withTag(String tag, String string) {
-            return withTag(tag, (Object) string);
+        	if(tag.equals(DDTags.SERVICE_NAME)){
+        		return withServiceName(string);
+        	}else if(tag.equals(DDTags.RESOURCE_NAME)){
+        		return withResourceName(string);
+        	}else if(tag.equals(DDTags.SPAN_TYPE)){
+        		return withSpanType(string);
+        	}else{
+        		return withTag(tag, (Object) string);
+        	}
         }
 
         public DDTracer.DDSpanBuilder withTag(String tag, boolean bool) {
