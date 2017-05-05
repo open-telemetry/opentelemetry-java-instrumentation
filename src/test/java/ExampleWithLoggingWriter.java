@@ -1,9 +1,9 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import com.datadoghq.trace.Writer;
-import com.datadoghq.trace.impl.DDTracer;
-import com.datadoghq.trace.writer.impl.DDAgentWriter;
+import com.datadoghq.trace.DDTracer;
+import com.datadoghq.trace.writer.DDAgentWriter;
+import com.datadoghq.trace.writer.Writer;
 
 import io.opentracing.Span;
 

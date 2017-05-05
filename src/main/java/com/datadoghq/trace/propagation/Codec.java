@@ -19,10 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.datadoghq.trace;
+package com.datadoghq.trace.propagation;
 
-
-import com.datadoghq.trace.impl.DDSpanContext;
+import com.datadoghq.trace.DDSpanContext;
 
 public interface Codec<T> {
 

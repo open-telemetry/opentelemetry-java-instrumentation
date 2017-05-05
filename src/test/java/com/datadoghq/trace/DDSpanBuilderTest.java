@@ -1,8 +1,12 @@
-package com.datadoghq.trace.impl;
+package com.datadoghq.trace;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.datadoghq.trace.DDSpan;
+import com.datadoghq.trace.DDSpanContext;
+import com.datadoghq.trace.DDTracer;
 
 import java.util.ArrayList;
 import java.util.HashMap;

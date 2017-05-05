@@ -1,8 +1,9 @@
-import com.datadoghq.trace.Sampler;
-import com.datadoghq.trace.Writer;
-import com.datadoghq.trace.impl.AllSampler;
-import com.datadoghq.trace.impl.DDTracer;
-import com.datadoghq.trace.writer.impl.DDAgentWriter;
+import com.datadoghq.trace.DDTracer;
+import com.datadoghq.trace.sampling.AllSampler;
+import com.datadoghq.trace.sampling.Sampler;
+import com.datadoghq.trace.writer.DDAgentWriter;
+import com.datadoghq.trace.writer.Writer;
+
 import io.opentracing.Span;
 
 public class ExampleWithDDAgentWriter {

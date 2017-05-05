@@ -1,10 +1,14 @@
-package com.datadoghq.trace.impl;
+package com.datadoghq.trace;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Collections;
 
 import org.junit.Test;
+
+import com.datadoghq.trace.DDSpan;
+import com.datadoghq.trace.DDSpanContext;
+import com.datadoghq.trace.DDTracer;
 
 
 public class DDSpanTest {

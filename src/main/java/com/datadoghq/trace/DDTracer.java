@@ -1,4 +1,4 @@
-package com.datadoghq.trace.impl;
+package com.datadoghq.trace;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,11 +9,13 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.datadoghq.trace.Codec;
-import com.datadoghq.trace.Sampler;
-import com.datadoghq.trace.Writer;
-import com.datadoghq.trace.propagation.impl.HTTPCodec;
-import com.datadoghq.trace.writer.impl.LoggingWritter;
+import com.datadoghq.trace.integration.DDSpanContextDecorator;
+import com.datadoghq.trace.propagation.Codec;
+import com.datadoghq.trace.propagation.HTTPCodec;
+import com.datadoghq.trace.sampling.AllSampler;
+import com.datadoghq.trace.sampling.Sampler;
+import com.datadoghq.trace.writer.LoggingWritter;
+import com.datadoghq.trace.writer.Writer;
 
 import io.opentracing.Span;
 import io.opentracing.SpanContext;

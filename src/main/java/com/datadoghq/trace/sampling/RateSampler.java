@@ -1,7 +1,6 @@
-package com.datadoghq.trace.impl;
+package com.datadoghq.trace.sampling;
 
 
-import com.datadoghq.trace.Sampler;
 import io.opentracing.Span;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

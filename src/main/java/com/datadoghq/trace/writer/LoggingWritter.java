@@ -1,11 +1,9 @@
-package com.datadoghq.trace.writer.impl;
+package com.datadoghq.trace.writer;
 
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.datadoghq.trace.Writer;
 
 import io.opentracing.Span;
 

@@ -1,4 +1,4 @@
-package com.datadoghq.trace;
+package com.datadoghq.trace.writer;
 
 import java.util.List;
 

@@ -11,8 +11,10 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.datadoghq.trace.impl.DDSpan;
-import com.datadoghq.trace.impl.DDTracer;
+import com.datadoghq.trace.DDSpan;
+import com.datadoghq.trace.DDTracer;
+import com.datadoghq.trace.writer.DDAgentWriter;
+import com.datadoghq.trace.writer.DDApi;
 
 import io.opentracing.Span;
 

@@ -1,6 +1,8 @@
-package com.datadoghq.trace.impl;
+package com.datadoghq.trace.integration;
 
 import java.util.Map;
+
+import com.datadoghq.trace.DDSpanContext;
 
 /**
  * Remap some tags to other tags

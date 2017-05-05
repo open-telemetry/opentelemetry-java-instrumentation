@@ -1,6 +1,9 @@
-package com.datadoghq.trace.impl;
+package com.datadoghq.trace;
 
-import com.datadoghq.trace.Sampler;
+import com.datadoghq.trace.DDSpan;
+import com.datadoghq.trace.sampling.RateSampler;
+import com.datadoghq.trace.sampling.Sampler;
+
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

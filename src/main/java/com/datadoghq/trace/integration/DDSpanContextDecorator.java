@@ -1,4 +1,6 @@
-package com.datadoghq.trace.impl;
+package com.datadoghq.trace.integration;
+
+import com.datadoghq.trace.DDSpanContext;
 
 /**
  * Span decorators are called when new tags are written and proceed to various remappings and enrichments

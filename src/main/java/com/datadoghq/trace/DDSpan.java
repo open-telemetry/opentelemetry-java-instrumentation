@@ -1,4 +1,4 @@
-package com.datadoghq.trace.impl;
+package com.datadoghq.trace;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;

@@ -1,4 +1,4 @@
-package com.datadoghq.trace;
+package com.datadoghq.trace.sampling;
 
 
 import io.opentracing.Span;

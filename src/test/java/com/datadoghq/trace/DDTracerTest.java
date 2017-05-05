@@ -1,4 +1,4 @@
-package com.datadoghq.trace.impl;
+package com.datadoghq.trace;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -11,7 +11,10 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.datadoghq.trace.Writer;
+import com.datadoghq.trace.DDSpan;
+import com.datadoghq.trace.DDTracer;
+import com.datadoghq.trace.sampling.RateSampler;
+import com.datadoghq.trace.writer.Writer;
 
 import io.opentracing.Span;
 

@@ -1,7 +1,7 @@
-package com.datadoghq.trace.propagation.impl;
+package com.datadoghq.trace.propagation;
 
-import com.datadoghq.trace.Codec;
-import com.datadoghq.trace.impl.DDSpanContext;
+import com.datadoghq.trace.DDSpanContext;
+
 import io.opentracing.propagation.TextMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
