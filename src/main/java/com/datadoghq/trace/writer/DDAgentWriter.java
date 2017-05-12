@@ -4,6 +4,8 @@ import io.opentracing.Span;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.auto.service.AutoService;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -14,6 +16,7 @@ import java.util.concurrent.*;
  * It handles writes asynchronuously so the calling threads are automatically released. However, if too much spans are collected
  * the writers can reach a state where it is forced to drop incoming spans.
  */
+@AutoService(Writer.class)
 public class DDAgentWriter implements Writer {
 
     private static final Logger logger = LoggerFactory.getLogger(DDAgentWriter.class.getName());
@@ -21,8 +24,8 @@ public class DDAgentWriter implements Writer {
     /**
      * Default location of the DD agent
      */
-    private static final String DEFAULT_HOSTNAME = "localhost";
-    private static final int DEFAULT_PORT = 8126;
+    public static final String DEFAULT_HOSTNAME = "localhost";
+    public static final int DEFAULT_PORT = 8126;
 
     /**
      * Maximum number of spans kept in memory
@@ -64,9 +67,6 @@ public class DDAgentWriter implements Writer {
 
         tokens = new Semaphore(DEFAULT_MAX_SPANS);
         traces = new ArrayBlockingQueue<List<Span>>(DEFAULT_MAX_SPANS);
-
-        executor.submit(new SpansSendingTask());
-
     }
 
     /* (non-Javadoc)
@@ -82,6 +82,14 @@ public class DDAgentWriter implements Writer {
             logger.warn("Cannot add a trace of {} as the async queue is full. Queue max size: {}", trace.size(), DEFAULT_MAX_SPANS);
         }
     }
+    
+    /* (non-Javadoc)
+     * @see com.datadoghq.trace.writer.Writer#start()
+     */
+    @Override
+	public void start() {
+    	executor.submit(new SpansSendingTask());
+	}
 
     /* (non-Javadoc)
      * @see com.datadoghq.trace.Writer#close()

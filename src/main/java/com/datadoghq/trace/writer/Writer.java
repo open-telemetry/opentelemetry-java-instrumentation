@@ -15,6 +15,11 @@ public interface Writer {
      * @param trace the list of spans to write
      */
     void write(List<Span> trace);
+    
+    /**
+     * Start the writer
+     */
+    void start();
 
     /**
      * Indicates to the writer that no future writing will come and it should terminates all connections and tasks

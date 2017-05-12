@@ -48,4 +48,12 @@ public class HTTPServiceDecorator implements DDSpanContextDecorator {
 			}
 		}
 	}
+	
+	public String getComponentName() {
+		return componentName;
+	}
+
+	public String getDesiredServiceName() {
+		return desiredServiceName;
+	}
 }

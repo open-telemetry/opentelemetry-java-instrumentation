@@ -59,9 +59,10 @@ public class DDSpanTest {
 
         final String expectedName = "operationName";
 
-        DDSpan span = new DDTracer().buildSpan(expectedName).withServiceName("foo").start();
+        DDSpan span = new DDTracer().buildSpan(expectedName).start();
         // ResourceName = expectedName
         assertThat(span.getResourceName()).isEqualTo(expectedName);
+        assertThat(span.getServiceName()).isEqualTo(DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME);
 
         // ResourceName = expectedResourceName
         final String expectedResourceName = "fake";
@@ -71,6 +72,7 @@ public class DDSpanTest {
                 .withServiceName("foo").start();
 
         assertThat(span.getResourceName()).isEqualTo(expectedResourceName);
+        assertThat(span.getServiceName()).isEqualTo("foo");
 
     }
 

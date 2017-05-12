@@ -40,4 +40,12 @@ public class DBServiceDecorator implements DDSpanContextDecorator {
 			context.setResourceName(String.valueOf(value));
 		}
 	}
+	
+	public String getComponentName() {
+		return componentName;
+	}
+
+	public String getDesiredServiceName() {
+		return desiredServiceName;
+	}
 }

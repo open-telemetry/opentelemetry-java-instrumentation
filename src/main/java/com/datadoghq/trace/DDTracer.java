@@ -14,7 +14,7 @@ import com.datadoghq.trace.propagation.Codec;
 import com.datadoghq.trace.propagation.HTTPCodec;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.Sampler;
-import com.datadoghq.trace.writer.LoggingWritter;
+import com.datadoghq.trace.writer.DDAgentWriter;
 import com.datadoghq.trace.writer.Writer;
 
 import io.opentracing.Span;
@@ -35,6 +35,11 @@ public class DDTracer implements io.opentracing.Tracer {
      * Sampler defines the sampling policy in order to reduce the number of traces for instance
      */
     private final Sampler sampler;
+    
+    /**
+     * Default service name if none provided on the trace or span
+     */
+    private final String defaultServiceName;
 
     /**
      * Span context decorators
@@ -44,16 +49,30 @@ public class DDTracer implements io.opentracing.Tracer {
 
     private final static Logger logger = LoggerFactory.getLogger(DDTracer.class);
     private final CodecRegistry registry;
+    
+    public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
+    public static final Writer UNASSIGNED_WRITER = new DDAgentWriter();
+    public static final Sampler UNASSIGNED_SAMPLER = new AllSampler();
 
     /**
      * Default constructor, trace/spans are logged, no trace/span dropped
      */
     public DDTracer() {
-        this(new LoggingWritter(), new AllSampler());
+        this(UNASSIGNED_WRITER);
+    }
+    
+    public DDTracer(Writer writer) {
+        this(writer, new AllSampler());
     }
 
     public DDTracer(Writer writer, Sampler sampler) {
+        this(UNASSIGNED_DEFAULT_SERVICE_NAME,writer,sampler);
+    }
+    
+    public DDTracer(String defaultServiceName,Writer writer, Sampler sampler) {
+    	this.defaultServiceName = defaultServiceName;
         this.writer = writer;
+        this.writer.start();
         this.sampler = sampler;
         registry = new CodecRegistry();
         registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
@@ -261,8 +280,12 @@ public class DDTracer implements io.opentracing.Tracer {
             }
 
             String serviceName = this.serviceName;
-            if (serviceName == null && this.parent != null) {
-                serviceName = p.getServiceName();
+            if (serviceName == null) {
+                if(p != null){
+                	serviceName = p.getServiceName();
+                }else{
+                	serviceName = defaultServiceName;
+                }
             }
 
             //this.operationName, this.tags,

@@ -47,6 +47,7 @@ public class DDAgentWriterTest {
 		mockedAPI = mock(DDApi.class);
 		when(mockedAPI.sendTraces(traces)).thenReturn(true);
 		ddAgentWriter = new DDAgentWriter(mockedAPI);
+		ddAgentWriter.start();
 	}
 
 	@Test

@@ -1,9 +1,12 @@
 package com.datadoghq.trace.sampling;
 
 
-import io.opentracing.Span;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.auto.service.AutoService;
+
+import io.opentracing.Span;
 
 
 /**
@@ -12,6 +15,7 @@ import org.slf4j.LoggerFactory;
  * Keep (100 * `sample_rate`)% of the traces.
  * It samples randomly, its main purpose is to reduce the instrumentation footprint.
  */
+@AutoService(Sampler.class)
 public class RateSampler implements Sampler {
 
 
