@@ -89,7 +89,7 @@ public class DDTracerResolver extends TracerResolver {
                         if (map.get("type") != null) {
                             DDSpanContextDecorator decorator = null;
                             String componentName = (String) map.get("componentName");
-                            String desiredServiceName = map.get("desiredServiceName") != null ? (String) map.get("desiredServiceName") : (String) map.get("componentName");
+                            String desiredServiceName = (String) map.get("desiredServiceName");
 
                             if (map.get("type").equals(HTTPServiceDecorator.class.getSimpleName())) {
                                 decorator = new HTTPServiceDecorator(componentName, desiredServiceName);
