@@ -4,6 +4,10 @@ import com.datadoghq.trace.DDSpanContext;
 
 import io.opentracing.tag.Tags;
 
+/**
+ * This span decorator leverages DB tags. It allows the dev to define a custom
+ * service name  and retrieves some DB meta such as the statement
+ */
 public class DBServiceDecorator implements DDSpanContextDecorator {
 
 	protected final String componentName;

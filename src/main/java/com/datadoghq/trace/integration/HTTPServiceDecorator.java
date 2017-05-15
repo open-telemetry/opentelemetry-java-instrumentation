@@ -7,6 +7,11 @@ import com.datadoghq.trace.DDSpanContext;
 
 import io.opentracing.tag.Tags;
 
+
+/**
+ * This span decorator leverages HTTP tags. It allows the dev to define a custom
+ * service name  and retrieves some HTTP meta such as the request path
+ */
 public class HTTPServiceDecorator implements DDSpanContextDecorator {
 
 	protected final String componentName;

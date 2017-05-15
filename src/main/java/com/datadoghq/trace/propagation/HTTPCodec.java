@@ -13,7 +13,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-
+/**
+ * A codec designed for HTTP transport via headers
+ */
 public class HTTPCodec implements Codec<TextMap> {
 
     private static final String OT_PREFIX = "ot-tracer-";
@@ -33,8 +35,6 @@ public class HTTPCodec implements Codec<TextMap> {
             carrier.put(OT_BAGGAGE_PREFIX + entry.getKey(), encode(entry.getValue()));
         }
     }
-
-
 
     @Override
     public DDSpanContext extract(TextMap carrier) {
@@ -74,7 +74,6 @@ public class HTTPCodec implements Codec<TextMap> {
                     null);
 
             logger.debug("{} - Parent context extracted", context);
-
         }
 
         return context;

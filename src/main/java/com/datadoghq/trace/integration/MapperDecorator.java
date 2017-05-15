@@ -6,7 +6,7 @@ import com.datadoghq.trace.DDSpanContext;
 import com.datadoghq.trace.DDTags;
 
 /**
- * Remap some tags to other tags
+ * This is a generic decorator, it remaps some tags to other tags
  */
 public class MapperDecorator implements DDSpanContextDecorator {
 	

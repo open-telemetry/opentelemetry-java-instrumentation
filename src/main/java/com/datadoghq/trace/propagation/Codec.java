@@ -23,9 +23,26 @@ package com.datadoghq.trace.propagation;
 
 import com.datadoghq.trace.DDSpanContext;
 
+
+/**
+ * A codec is a simple object that can encode and decode a span context through a carrier
+ */
 public interface Codec<T> {
 
-  void inject(DDSpanContext context, T carrier);
 
-  DDSpanContext extract(T carrier);
+    /**
+     * Serialize the span context using the provided carrier
+     *
+     * @param context
+     * @param carrier
+     */
+    void inject(DDSpanContext context, T carrier);
+
+    /**
+     * Given a carrier, retrieve (rebuild) a span context. This context built will be use as the parent
+     *
+     * @param carrier
+     * @return the span context
+     */
+    DDSpanContext extract(T carrier);
 }
