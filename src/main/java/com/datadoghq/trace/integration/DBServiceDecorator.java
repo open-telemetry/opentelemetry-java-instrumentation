@@ -31,8 +31,6 @@ public class DBServiceDecorator implements DDSpanContextDecorator {
 		if(tag.equals(Tags.COMPONENT.getKey()) && value.equals(componentName)){
 			if(desiredServiceName != null){
 				context.setServiceName(desiredServiceName);
-			}else{
-				context.setServiceName(componentName);
 			}
 			
 			//Assign span type to DB
