@@ -23,14 +23,12 @@ sampler:
 # Decorators are used to add extra information to span
 # Could be DBServiceDecorator, MapperDecorator or HTTPServiceDecorator
 decorators:
-
   # This span decorator leverages HTTP tags such as the URL requested
   - type: HTTPServiceDecorator
     componentName: http
     desiredServiceName: unnamed-java-http
 
   # This span decorator leverages DB tags such as the statement requested
-   - type: DBServiceDecorator
+  - type: DBServiceDecorator
     componentName: db
     desiredServiceName: unnamed-java-db
-    
