@@ -34,10 +34,6 @@ public class DDTracerResolver extends TracerResolver {
 
     private final static Logger logger = LoggerFactory.getLogger(DDTracerResolver.class);
 
-//	private static final ServiceLoader<Writer> WRITERS = ServiceLoader.load(Writer.class);
-//	private static final ServiceLoader<Sampler> SAMPLERS = ServiceLoader.load(Sampler.class);
-//	private static final ServiceLoader<DDSpanContextDecorator> DECORATORS = ServiceLoader.load(DDSpanContextDecorator.class);
-
     public static final String TRACER_CONFIG = "dd-trace.yaml";
     private final ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 
@@ -129,10 +125,10 @@ public class DDTracerResolver extends TracerResolver {
         }
 
         if (tracer == null) {
-            tracer =  NoopTracerFactory.create();
+            tracer = NoopTracerFactory.create();
         }
 
         GlobalTracer.register(tracer);
-        return  tracer;
+        return tracer;
     }
 }
