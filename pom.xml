@@ -29,14 +29,13 @@
 			<artifactId>opentracing-util</artifactId>
 			<version>${opentracing.version}</version>
 		</dependency>
-
-        <!-- Tracer resolver -->
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-tracerresolver</artifactId>
             <version>0.1.0</version>
         </dependency>
 
+        <!-- Other libs used -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
@@ -59,14 +58,8 @@
 			<artifactId>logback-classic</artifactId>
 			<version>1.2.3</version>
 		</dependency>
-		<dependency>
-			<groupId>net.logstash.logback</groupId>
-			<artifactId>logstash-logback-encoder</artifactId>
-			<version>4.9</version>
-		</dependency>
 
-
-
+        <!-- Required for the tracer resolver / annotation -->
 		<dependency>
 			<groupId>com.google.auto.service</groupId>
 			<artifactId>auto-service</artifactId>
