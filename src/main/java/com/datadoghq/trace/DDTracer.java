@@ -35,7 +35,7 @@ public class DDTracer implements io.opentracing.Tracer {
      * Sampler defines the sampling policy in order to reduce the number of traces for instance
      */
     private final Sampler sampler;
-    
+
     /**
      * Default service name if none provided on the trace or span
      */
@@ -49,7 +49,7 @@ public class DDTracer implements io.opentracing.Tracer {
 
     private final static Logger logger = LoggerFactory.getLogger(DDTracer.class);
     private final CodecRegistry registry;
-    
+
     public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
     public static final Writer UNASSIGNED_WRITER = new DDAgentWriter();
     public static final Sampler UNASSIGNED_SAMPLER = new AllSampler();
@@ -60,17 +60,17 @@ public class DDTracer implements io.opentracing.Tracer {
     public DDTracer() {
         this(UNASSIGNED_WRITER);
     }
-    
+
     public DDTracer(Writer writer) {
         this(writer, new AllSampler());
     }
 
     public DDTracer(Writer writer, Sampler sampler) {
-        this(UNASSIGNED_DEFAULT_SERVICE_NAME,writer,sampler);
+        this(UNASSIGNED_DEFAULT_SERVICE_NAME, writer, sampler);
     }
-    
-    public DDTracer(String defaultServiceName,Writer writer, Sampler sampler) {
-    	this.defaultServiceName = defaultServiceName;
+
+    public DDTracer(String defaultServiceName, Writer writer, Sampler sampler) {
+        this.defaultServiceName = defaultServiceName;
         this.writer = writer;
         this.writer.start();
         this.sampler = sampler;
@@ -84,19 +84,19 @@ public class DDTracer implements io.opentracing.Tracer {
      * @return the list of span context decorators
      */
     public List<DDSpanContextDecorator> getSpanContextDecorators() {
-		return Collections.unmodifiableList(spanContextDecorators);
-	}
+        return Collections.unmodifiableList(spanContextDecorators);
+    }
 
     /**
      * Add a new decorator in the list ({@link DDSpanContextDecorator})
      *
      * @param decorator The decorator in the list
      */
-    public void addDecorator(DDSpanContextDecorator decorator){
-    	spanContextDecorators.add(decorator);
+    public void addDecorator(DDSpanContextDecorator decorator) {
+        spanContextDecorators.add(decorator);
     }
 
-	public DDSpanBuilder buildSpan(String operationName) {
+    public DDSpanBuilder buildSpan(String operationName) {
         return new DDSpanBuilder(operationName);
     }
 
@@ -117,7 +117,7 @@ public class DDTracer implements io.opentracing.Tracer {
         if (codec == null) {
             logger.warn("Unsupported format for propagation - {}", format.getClass().getName());
         } else {
-            return  codec.extract(carrier);
+            return codec.extract(carrier);
         }
         return null;
     }
@@ -137,6 +137,10 @@ public class DDTracer implements io.opentracing.Tracer {
         if (this.sampler.sample((DDSpan) trace.get(0))) {
             this.writer.write(trace);
         }
+    }
+
+    public void close() {
+        writer.close();
     }
 
     /**
@@ -181,15 +185,15 @@ public class DDTracer implements io.opentracing.Tracer {
         }
 
         public DDTracer.DDSpanBuilder withTag(String tag, String string) {
-        	if(tag.equals(DDTags.SERVICE_NAME)){
-        		return withServiceName(string);
-        	}else if(tag.equals(DDTags.RESOURCE_NAME)){
-        		return withResourceName(string);
-        	}else if(tag.equals(DDTags.SPAN_TYPE)){
-        		return withSpanType(string);
-        	}else{
-        		return withTag(tag, (Object) string);
-        	}
+            if (tag.equals(DDTags.SERVICE_NAME)) {
+                return withServiceName(string);
+            } else if (tag.equals(DDTags.RESOURCE_NAME)) {
+                return withResourceName(string);
+            } else if (tag.equals(DDTags.SPAN_TYPE)) {
+                return withSpanType(string);
+            } else {
+                return withTag(tag, (Object) string);
+            }
         }
 
         public DDTracer.DDSpanBuilder withTag(String tag, boolean bool) {
@@ -249,7 +253,7 @@ public class DDTracer implements io.opentracing.Tracer {
 
         // Private methods
         private DDTracer.DDSpanBuilder withTag(String tag, Object value) {
-            if (this.tags.isEmpty()){
+            if (this.tags.isEmpty()) {
                 this.tags = new HashMap<String, Object>();
             }
             this.tags.put(tag, value);
@@ -281,10 +285,10 @@ public class DDTracer implements io.opentracing.Tracer {
 
             String serviceName = this.serviceName;
             if (serviceName == null) {
-                if(p != null){
-                	serviceName = p.getServiceName();
-                }else{
-                	serviceName = defaultServiceName;
+                if (p != null && p.getServiceName() != null) {
+                    serviceName = p.getServiceName();
+                } else {
+                    serviceName = defaultServiceName;
                 }
             }
 
