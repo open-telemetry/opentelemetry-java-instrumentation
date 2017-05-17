@@ -310,7 +310,6 @@ public class DDTracer implements io.opentracing.Tracer {
                     DDTracer.this
             );
 
-            logger.debug("Building a new span context. {}", context);
             return context;
         }
 

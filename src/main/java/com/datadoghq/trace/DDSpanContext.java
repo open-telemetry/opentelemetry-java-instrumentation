@@ -1,6 +1,7 @@
 package com.datadoghq.trace;
 
 
+import java.awt.print.Book;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,6 +12,7 @@ import com.datadoghq.trace.integration.DDSpanContextDecorator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.opentracing.Span;
+import io.opentracing.tag.Tags;
 
 /**
  * SpanContext represents Span state that must propagate to descendant Spans and across process boundaries.
@@ -39,7 +41,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	/**
 	 * True indicates that the span reports an error
 	 */
-	private final boolean errorFlag;
+	private boolean errorFlag;
 	/**
 	 * The type of the span. If null, the Datadog Agent will report as a custom
 	 */
@@ -178,6 +180,10 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 		for(DDSpanContextDecorator decorator:tracer.getSpanContextDecorators()){
 			decorator.afterSetTag(this, tag, value);
 		}
+		//Error management
+		if(Tags.ERROR.getKey().equals(tag) && Boolean.TRUE.equals(value)){
+			this.errorFlag = true;
+		}
 	}
 
 	public synchronized Map<String, Object> getTags() {
@@ -186,9 +192,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
 	@Override
 	public String toString() {
-		return "Span [traceId=" + traceId
-				+ ", spanId=" + spanId
-				+ ", parentId=" + parentId + "]";
+		return "Span [ "+traceId+" ] [ "+spanId+" | "+parentId+" ] [ "+getServiceName()+" | "+getOperationName()+" | "+getResourceName()+" ]";
 	}
 
 	public void setOperationName(String operationName) {

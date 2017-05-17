@@ -91,9 +91,7 @@ public class DDSpan implements io.opentracing.Span {
 
         // warn if one of the parent's children is not finished
         if (this.isRootSpan()) {
-            logger.debug("{} - The current span is marked as a root span", this);
             List<Span> spans = this.context.getTrace();
-            logger.debug("{} - Checking {} children attached to the current span", this, spans.size());
 
             for (Span span : spans) {
                 if (((DDSpan) span).getDurationNano() == 0L) {
@@ -101,7 +99,7 @@ public class DDSpan implements io.opentracing.Span {
                 }
             }
             this.context.getTracer().write(this.context.getTrace());
-            logger.debug("{} - Sending the trace to the writer", this);
+            logger.debug("{} - Write the trace", this);
         }
     }
 

@@ -138,6 +138,8 @@ public class DDAgentWriter implements Writer {
 
                     //The thread was interrupted, we break the LOOP
                     break;
+                } catch(Throwable e){
+                	logger.error("Unexpected error! Some traces may have been dropped.",e);
                 }
             }
         }
