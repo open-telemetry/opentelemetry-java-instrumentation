@@ -319,7 +319,8 @@ public class DDTracer implements io.opentracing.Tracer {
 
         private final Map<Format<?>, Codec<?>> codecs = new HashMap<Format<?>, Codec<?>>();
 
-        <T> Codec<T> get(Format<T> format) {
+        @SuppressWarnings("unchecked")
+		<T> Codec<T> get(Format<T> format) {
             return (Codec<T>) codecs.get(format);
         }
 

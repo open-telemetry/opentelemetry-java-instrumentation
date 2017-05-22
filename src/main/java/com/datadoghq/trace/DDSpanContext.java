@@ -1,7 +1,6 @@
 package com.datadoghq.trace;
 
 
-import java.awt.print.Book;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;

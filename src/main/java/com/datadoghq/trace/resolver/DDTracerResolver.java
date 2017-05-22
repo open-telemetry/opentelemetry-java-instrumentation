@@ -1,5 +1,14 @@
 package com.datadoghq.trace.resolver;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.Map;
+import java.util.ServiceLoader;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.integration.DBServiceDecorator;
 import com.datadoghq.trace.integration.DDSpanContextDecorator;
@@ -14,19 +23,11 @@ import com.datadoghq.trace.writer.Writer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.auto.service.AutoService;
+
 import io.opentracing.NoopTracerFactory;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.tracerresolver.TracerResolver;
 import io.opentracing.util.GlobalTracer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.ServiceLoader;
 
 
 @AutoService(TracerResolver.class)
@@ -112,7 +113,8 @@ public class DDTracerResolver extends TracerResolver {
         return tracer;
     }
 
-    public static Tracer registerTracer() {
+    @SuppressWarnings("static-access")
+	public static Tracer registerTracer() {
 
         ServiceLoader<TracerResolver> RESOLVERS = ServiceLoader.load(TracerResolver.class);
 
