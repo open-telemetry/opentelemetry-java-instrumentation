@@ -44,10 +44,10 @@ public class DDTracerResolver extends TracerResolver {
         //Find a resource file named dd-trace.yml
         DDTracer tracer = null;
         try {
-            Enumeration<URL> iter = Thread.currentThread().getContextClassLoader().getResources(TRACER_CONFIG);
+        	ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            Enumeration<URL> iter = classLoader.getResources(TRACER_CONFIG);
             while (iter.hasMoreElements()) {
-
-                TracerConfig config = objectMapper.readValue(new File(iter.nextElement().getFile()), TracerConfig.class);
+                TracerConfig config = objectMapper.readValue(iter.nextElement().openStream(), TracerConfig.class);
 
                 String defaultServiceName = config.getDefaultServiceName() != null ? config.getDefaultServiceName() : DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME;
 
