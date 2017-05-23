@@ -1,21 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
-    <artifactId>raclette-java-examples</artifactId>
+    <artifactId>dd-trace-java</artifactId>
     <groupId>com.datadoghq</groupId>
     <version>1.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>dd-java-agent</artifactId>
-  <version>0.0.1</version>
+  <name>dd-java-agent</name>
   <build>
     <finalName>${project.artifactId}</finalName>
     <plugins>
       <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.6.1</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.20</version>
         <configuration>
-          <argLine>-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${version}/dd-java-agent-${version}.jar</argLine>
+          <argLine>-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${project.version}/dd-java-agent-${project.version}.jar</argLine>
           <includes>
             <include>*Test.java</include>
           </includes>
@@ -548,6 +556,7 @@
     <opentracing.version>0.22.0</opentracing.version>
     <ot.contrib.okhttp.version>0.0.4</ot.contrib.okhttp.version>
     <ot.agent.version>0.0.12</ot.agent.version>
+    <java.version>1.8</java.version>
     <ot.contrib.webservlet.version>0.0.8</ot.contrib.webservlet.version>
     <ot.dd-trace.version>1.0-SNAPSHOT</ot.dd-trace.version>
     <ot.contrib.mongo.version>0.0.1</ot.contrib.mongo.version>

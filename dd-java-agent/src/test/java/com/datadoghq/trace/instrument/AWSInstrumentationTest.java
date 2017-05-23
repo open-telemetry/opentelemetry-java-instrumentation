@@ -20,7 +20,7 @@ public class AWSInstrumentationTest {
 
         assertThat(builder.getRequestHandlers()).isNotNull();
         assertThat(builder.getRequestHandlers().size()).isEqualTo(1);
-        assertThat(builder.getRequestHandlers().get(0).getClass()).isInstanceOf(TracingRequestHandler.class);
+        assertThat(builder.getRequestHandlers().get(0).getClass()).isEqualTo(TracingRequestHandler.class);
     }
 
 

@@ -195,7 +195,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.20</version>
 				<configuration>
-					<argLine>-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${version}/dd-java-agent-${version}.jar</argLine>
+					<argLine>-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${project.version}/dd-java-agent-${project.version}.jar</argLine>
 					<includes>
 						<include>*Test.java</include>
 					</includes>

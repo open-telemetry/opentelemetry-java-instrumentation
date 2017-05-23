@@ -1,7 +1,9 @@
 package com.example.helloworld.resources;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -14,7 +16,6 @@ import org.bson.Document;
 import com.codahale.metrics.annotation.Timed;
 import com.example.helloworld.api.Saying;
 import com.google.common.base.Optional;
-import com.mongodb.Block;
 import com.mongodb.MongoClient;
 import com.mongodb.client.ListDatabasesIterable;
 
@@ -50,8 +51,13 @@ public class HelloWorldResource {
 
 		// Trace: Do  some stuff with the DB
 		ListDatabasesIterable<Document> documents = mongoClient.listDatabases();
-		ArrayList<String> list = new ArrayList<String>();
-		documents.forEach((Block<? super Document>) document -> list.add(document.toJson()));
+		final List<String> list = new ArrayList<String>();
+		documents.forEach(new Consumer<Document>() {
+			@Override
+			public void accept(Document t) {
+				list.add(t.toJson());
+			}
+		});
 		
 		afterDB();
 
