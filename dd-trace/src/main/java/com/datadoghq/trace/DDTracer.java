@@ -291,7 +291,9 @@ public class DDTracer implements io.opentracing.Tracer {
                     serviceName = defaultServiceName;
                 }
             }
-
+            
+            String operationName = this.operationName != null ? this.operationName : this.resourceName;
+            
             //this.operationName, this.tags,
 
             // some attributes are inherited from the parent
@@ -300,7 +302,7 @@ public class DDTracer implements io.opentracing.Tracer {
                     generatedId,
                     this.parent == null ? 0L : p.getSpanId(),
                     serviceName,
-                    this.operationName,
+                    operationName,
                     this.resourceName,
                     this.parent == null ? new HashMap<String, String>() : p.getBaggageItems(),
                     errorFlag,

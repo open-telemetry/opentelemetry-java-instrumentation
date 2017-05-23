@@ -280,12 +280,12 @@ public class DDSpan implements io.opentracing.Span {
 
     @JsonGetter("resource")
     public String getResourceName() {
-        return context.getResourceName() == null ? context.getOperationName() : context.getResourceName();
+        return context.getResourceName();
     }
 
     @JsonGetter("name")
     public String getOperationName() {
-        return this.context().getOperationName();
+        return context.getOperationName();
     }
 
     @JsonIgnore

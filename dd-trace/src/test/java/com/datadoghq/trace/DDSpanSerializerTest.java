@@ -33,7 +33,7 @@ public class DDSpanSerializerTest {
                 0L,
                 "service",
                 "operation",
-                "resource",
+                null,
                 baggage,
                 false,
                 "type",
@@ -53,7 +53,7 @@ public class DDSpanSerializerTest {
     public void test() throws Exception {
 
 
-        String expected = "{\"meta\":{\"a-baggage\":\"value\",\"k1\":\"v1\"},\"service\":\"service\",\"error\":0,\"type\":\"type\",\"name\":\"operation\",\"duration\":33000,\"resource\":\"resource\",\"start\":100000,\"span_id\":2,\"parent_id\":0,\"trace_id\":1}";
+        String expected = "{\"meta\":{\"a-baggage\":\"value\",\"k1\":\"v1\"},\"service\":\"service\",\"error\":0,\"type\":\"type\",\"name\":\"operation\",\"duration\":33000,\"resource\":\"operation\",\"start\":100000,\"span_id\":2,\"parent_id\":0,\"trace_id\":1}";
         // FIXME At the moment, just compare the string sizes
         try {
             assertThat(serializer.serialize(span).length()).isEqualTo(expected.length());

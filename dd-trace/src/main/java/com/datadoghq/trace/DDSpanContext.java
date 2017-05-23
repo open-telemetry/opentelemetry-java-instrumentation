@@ -121,7 +121,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	}
 
 	public String getResourceName() {
-		return resourceName;
+		 return this.resourceName == null || this.resourceName.isEmpty() ? this.operationName : this.resourceName;
 	}
 
 	public boolean getErrorFlag() {

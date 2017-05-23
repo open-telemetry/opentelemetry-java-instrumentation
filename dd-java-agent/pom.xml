@@ -107,6 +107,19 @@
 			</exclusions>
 		</dependency>
 
+		<!-- Apache HTTP instrumentation -->
+		<dependency>
+			<groupId>io.opentracing.contrib</groupId>
+			<artifactId>opentracing-apache-httpclient</artifactId>
+			<version>0.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.3</version>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- JUnit tests -->
 		<dependency>
 			<groupId>io.opentracing</groupId>

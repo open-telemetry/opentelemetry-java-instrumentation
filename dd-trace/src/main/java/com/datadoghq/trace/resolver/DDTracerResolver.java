@@ -35,7 +35,7 @@ public class DDTracerResolver extends TracerResolver {
 
     private final static Logger logger = LoggerFactory.getLogger(DDTracerResolver.class);
 
-    public static final String TRACER_CONFIG = "src/test/resources/dd-trace.yaml";
+    public static final String TRACER_CONFIG = "dd-trace.yaml";
     private final ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 
     @Override

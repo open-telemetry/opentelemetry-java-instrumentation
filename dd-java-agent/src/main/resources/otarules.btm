@@ -15,10 +15,6 @@ ENDRULE
 
 # --------------------------------------------------------
 
-
-
-
-# --------------------------------------------------------
 # Instrument AWS client
 RULE AWS SDK Client instrumentation 1
 CLASS ^com.amazonaws.client.builder.AwsClientBuilder
@@ -44,3 +40,19 @@ DO
   $this.requestHandlers.add(0, requestTracerHandler);
 ENDRULE
 # --------------------------------------------------------
+
+# Instrument Apache HTTP Client
+RULE Apache HTTP Client instrumentation
+CLASS org.apache.http.impl.client.HttpClientBuilder
+METHOD decorateProtocolExec(org.apache.http.impl.execchain.ClientExecChain)
+HELPER io.opentracing.contrib.agent.OpenTracingHelper
+BIND
+  redirectStrategy: org.apache.http.client.RedirectStrategy = $this.redirectStrategy==null?org.apache.http.impl.client.DefaultRedirectStrategy.INSTANCE:$this.redirectStrategy;
+  decorators: java.util.List = java.util.Collections.singletonList(new io.opentracing.contrib.apache.http.client.ApacheClientSpanDecorator$StandardTags());
+  tracingClientExec:io.opentracing.contrib.apache.http.client.TracingClientExec 
+  							= new io.opentracing.contrib.apache.http.client.TracingClientExec($1,redirectStrategy,$this.redirectHandlingDisabled,getTracer(),decorators);
+AT ENTRY
+IF TRUE
+DO
+  return tracingClientExec;
+ENDRULE
