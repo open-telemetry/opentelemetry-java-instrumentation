@@ -23,10 +23,17 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.20</version>
         <configuration>
-          <argLine>-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${project.version}/dd-java-agent-${project.version}.jar</argLine>
           <includes>
             <include>*Test.java</include>
           </includes>
+          <excludes>
+            <exclude>ElasticSearchInstrumentationTest.java</exclude>
+          </excludes>
+          <forkCount>3</forkCount>
+          <reuseForks>false</reuseForks>
+          <argLine>-Xmx500m -Xms500m -XX:MaxPermSize=256m
+						-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${project.version}/dd-java-agent-${project.version}.jar</argLine>
+          <workingDirectory>target/FORK_DIRECTORY_${surefire.forkNumber}</workingDirectory>
         </configuration>
       </plugin>
       <plugin>
@@ -64,26 +71,6 @@
   </build>
   <dependencies>
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.5.3</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>httpcore</artifactId>
-          <groupId>org.apache.httpcomponents</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-logging</artifactId>
-          <groupId>commons-logging</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>commons-codec</artifactId>
-          <groupId>commons-codec</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>io.opentracing</groupId>
       <artifactId>opentracing-mock</artifactId>
       <version>0.22.0</version>
@@ -112,18 +99,6 @@
       <artifactId>mongo-java-driver</artifactId>
       <version>3.4.2</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.squareup.okhttp3</groupId>
-      <artifactId>okhttp</artifactId>
-      <version>3.6.0</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>okio</artifactId>
-          <groupId>com.squareup.okio</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -185,6 +160,10 @@
       <version>1.11.132</version>
       <scope>test</scope>
       <exclusions>
+        <exclusion>
+          <artifactId>httpclient</artifactId>
+          <groupId>org.apache.httpcomponents</groupId>
+        </exclusion>
         <exclusion>
           <artifactId>aws-java-sdk-athena</artifactId>
           <groupId>com.amazonaws</groupId>
@@ -570,6 +549,82 @@
           <groupId>com.amazonaws</groupId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <version>3.6.0</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>okio</artifactId>
+          <groupId>com.squareup.okio</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.3</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>httpcore</artifactId>
+          <groupId>org.apache.httpcomponents</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-codec</artifactId>
+          <groupId>commons-codec</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>transport</artifactId>
+      <version>5.4.0</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>elasticsearch</artifactId>
+          <groupId>org.elasticsearch</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>transport-netty3-client</artifactId>
+          <groupId>org.elasticsearch.plugin</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>transport-netty4-client</artifactId>
+          <groupId>org.elasticsearch.plugin</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>reindex-client</artifactId>
+          <groupId>org.elasticsearch.plugin</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>lang-mustache-client</artifactId>
+          <groupId>org.elasticsearch.plugin</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>percolator-client</artifactId>
+          <groupId>org.elasticsearch.plugin</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>2.7</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.7</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <properties>

@@ -43,7 +43,6 @@ public class ApacheHTTPClientTest {
 		while ((line = rd.readLine()) != null) {
 			result.append(line);
 		}
-		System.out.println(result);
 		
 		assertThat(tracer.finishedSpans().size()).isEqualTo(2);
 	}

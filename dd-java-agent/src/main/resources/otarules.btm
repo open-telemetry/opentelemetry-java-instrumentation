@@ -14,7 +14,6 @@ DO
 ENDRULE
 
 # --------------------------------------------------------
-
 # Instrument AWS client
 RULE AWS SDK Client instrumentation 1
 CLASS ^com.amazonaws.client.builder.AwsClientBuilder
@@ -39,8 +38,8 @@ IF $this.requestHandlers != null AND $this.requestHandlers.get(0).getClass().get
 DO
   $this.requestHandlers.add(0, requestTracerHandler);
 ENDRULE
-# --------------------------------------------------------
 
+# --------------------------------------------------------
 # Instrument Apache HTTP Client
 RULE Apache HTTP Client instrumentation
 CLASS org.apache.http.impl.client.HttpClientBuilder
@@ -56,3 +55,55 @@ IF TRUE
 DO
   return tracingClientExec;
 ENDRULE
+
+# --------------------------------------------------------
+# Instrument Elasticsearch client
+RULE Elasticsearch Client instrumentation 1
+CLASS org.elasticsearch.client.RestClientBuilder
+METHOD build()
+BIND
+  callback:io.opentracing.contrib.elasticsearch.TracingHttpClientConfigCallback =  new io.opentracing.contrib.elasticsearch.TracingHttpClientConfigCallback();
+AT ENTRY
+IF TRUE
+DO
+  $this.setHttpClientConfigCallback(callback);
+ENDRULE
+
+
+RULE Elasticsearch Client instrumentation 2
+CLASS org.elasticsearch.client.transport.TransportClient
+METHOD doExecute
+HELPER io.opentracing.contrib.agent.OpenTracingHelper
+BIND
+  span:io.opentracing.Span = null;
+#  decorator:io.opentracing.contrib.elasticsearch.SpanDecorator = io.opentracing.contrib.elasticsearch.SpanDecorator;
+AT ENTRY
+IF currentSpan() == null
+DO
+    span = getTracer().buildSpan($2.getClass().getSimpleName())
+        .asChildOf()
+        .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
+        .start();
+#    decorator.onRequest(span);
+    $3 = new io.opentracing.contrib.elasticsearch.TracingResponseListener($3, span);
+ENDRULE
+
+
+RULE Elasticsearch Client instrumentation 3
+CLASS org.elasticsearch.client.transport.TransportClient
+METHOD doExecute
+HELPER io.opentracing.contrib.agent.OpenTracingHelper
+BIND
+  span:io.opentracing.Span = null;
+#  decorator:io.opentracing.contrib.elasticsearch.SpanDecorator = io.opentracing.contrib.elasticsearch.SpanDecorator;
+AT ENTRY
+IF currentSpan() != null
+DO
+    span = getTracer().buildSpan($2.getClass().getSimpleName())
+        .asChildOf(currentSpan())
+        .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
+        .start();
+#    decorator.onRequest(span);
+    $3 = new io.opentracing.contrib.elasticsearch.TracingResponseListener($3, span);
+ENDRULE
+# --------------------------------------------------------

@@ -41,7 +41,12 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 	public static void initialize(Retransformer trans) throws Exception {
 		transformer = trans;
 		OpenTracingManager.initialize(trans);
-		loadRules(ClassLoader.getSystemClassLoader());
+		OpenTracingManager.loadRules(ClassLoader.getSystemClassLoader());
+		
+		String value = System.getProperty("javaagent.enableAnnotations","false");
+		if("true".equalsIgnoreCase(value)){
+			loadRules(ClassLoader.getSystemClassLoader());
+		}
 	}
 
 	/**
@@ -50,8 +55,6 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 	 * @param classLoader
 	 */
 	public static void loadRules(ClassLoader classLoader) {
-		OpenTracingManager.loadRules(classLoader);
-
 		Reflections reflections = new Reflections(new ConfigurationBuilder()
 				.forPackages("/")
 				.filterInputsBy(new FilterBuilder().include(".*\\.class"))

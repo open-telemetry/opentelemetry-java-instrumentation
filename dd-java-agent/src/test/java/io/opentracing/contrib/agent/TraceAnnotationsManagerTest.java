@@ -15,6 +15,7 @@ public class TraceAnnotationsManagerTest {
 	@Before
 	public void beforeTest() throws Exception {
 		GlobalTracer.register(tracer);
+		TraceAnnotationsManager.loadRules(ClassLoader.getSystemClassLoader());
 	}
 
 	@Test
