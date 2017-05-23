@@ -32,3 +32,8 @@ Thumbs.db
 # Others #
 ##########
 /logs/*
+
+
+
+/target
+**/target/

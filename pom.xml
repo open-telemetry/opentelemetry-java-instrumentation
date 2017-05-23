@@ -38,6 +38,8 @@
 
     <modules>
         <module>dd-trace</module>
+        <module>dd-java-agent</module>
+        <module>dd-trace-examples</module>
     </modules>
 
 
