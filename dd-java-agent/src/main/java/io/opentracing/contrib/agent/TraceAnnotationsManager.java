@@ -177,10 +177,4 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 		}
 		return "";
 	};
-
-
-	@Trace
-	public static void main(String[] args) throws Throwable{
-		loadRules(ClassLoader.getSystemClassLoader());
-	}
 }
