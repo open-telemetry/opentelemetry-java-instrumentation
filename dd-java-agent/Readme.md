@@ -1,14 +1,12 @@
 # Datadog Java Agent for APM
 
-This is a Java Agent made for instrumenting Java applications using the Datadog Tracer.
+This is a Java Agent made for instrumenting Java applications using the Datadog Tracer. Once attached to one of your JVM you should see traces into your [Datadog APM](https://app.datadoghq.com/apm/search).
 
 Instrumentations are done in 3 ways:
 
 - Automatically over a set of [supported Web servers, frameworks or database drivers](#instrumented-frameworks)
 - By using the [`@trace` annotations](#custom-instrumentations)
 - Or directly with Byteman rules as explained in the inherited Opentracing Java Agent project
-
-Once attached you should see traces into your [Datadog APM](https://app.datadoghq.com/apm/search).
 
 :heavy_exclamation_mark: **Warning:** This library is currently at Alpha stage. This means that even if we rigorously tested instrumentations you may experience strange behaviors depending on your running environment. It must evolve quickly though. For any help please contact [support@datadoghq.com](mailto:support@datadoghq.com).
 
@@ -83,7 +81,7 @@ Modern web application frameworks such as Dropwizard or Spring Boot are automati
 
 By enabling the JDBC instrumentation you'll  intercept all the client calls to the following DBs: MySQL, PostgreSQL, H2, HSQLDB, IBM DB2, SQL Server, Oracle, MariaDB, etc...
 
-But unfortunately this can not be done entirely automatically today. To enable tracing please follow the instructions provided on the [java-jdbc contrib project](https://github.com/opentracing-contrib/java-jdbc#usage).
+But unfortunately this can not be done entirely automatically today. To enable tracing please follow the instructions provided on the [java-jdbc opentracing contrib project](https://github.com/opentracing-contrib/java-jdbc#usage).
 
 We also provide an [example project with Spring Boot & MySQL](web application frameworks).
 
@@ -102,7 +100,7 @@ public void myMethod() throws InterruptedException{
 
 By default, the operation name attach to the spawn span will be the name of the method and no meta tags will be attached.
 
-You can use the the `operationName` and `tagsKV` to change this:
+You can use the the `operationName` and `tagsKV` attributes to customize your trace:
 
 ```java
 @Trace(operationName="Before DB",tagsKV={"mytag","myvalue"})
@@ -123,16 +121,16 @@ public void myMethod() throws InterruptedException{
 </dependency>
 ```
 
-If you want to see custom tracing in action please run the [Dropwizard example](https://github.com/DataDog/dd-trace-java/blob/dev/dd-trace-examples/dropwizard-mongo-client/).
-
 - Enable custom tracing by adding this JVM property `-Ddd.enable_custom_tracing`
+
+If you want to see custom tracing in action please run the [Dropwizard example](https://github.com/DataDog/dd-trace-java/blob/dev/dd-trace-examples/dropwizard-mongo-client/).
 
 ## Other useful resources
 
 Before instrumenting your own project you might want to run the provided examples:
 
-- Dropwizard/MongoDB & Cross process client calls [here](https://github.com/DataDog/dd-trace-java/blob/dev/dd-trace-examples/dropwizard-mongo-client/)
-- Springboot & MySQL over JDBC [here](https://github.com/DataDog/dd-trace-java/tree/dev/dd-trace-examples/spring-boot-jdbc)
+- [Dropwizard/MongoDB & Cross process client calls](https://github.com/DataDog/dd-trace-java/blob/dev/dd-trace-examples/dropwizard-mongo-client/)
+- [Springboot & MySQL over JDBC](https://github.com/DataDog/dd-trace-java/tree/dev/dd-trace-examples/spring-boot-jdbc)
 
 Other links that you might want to read:
 
