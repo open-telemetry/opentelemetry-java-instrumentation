@@ -19,21 +19,3 @@ sampler:
   # RateSample: only a portion of spans are reported to the writer
   #  - Param 'rate': the portion of spans to keep
   type: AllSampler
-
-# Decorators are used to add extra information to span
-# Could be DBServiceDecorator, MapperDecorator or HTTPServiceDecorator
-decorators:
-  - type: HTTP
-    componentName: java-web-servlet
-  - type: HTTP
-    componentName: java-okhttp
-    desiredServiceName: http-client
-  - type: DB
-    componentName: java-mongo
-    desiredServiceName: mongo
-  - type: DB
-    componentName: java-jdbc
-    desiredServiceName: jdbc
-  - type: HTTP
-    componentName: java-aws-sdk
-    desiredServiceName: aws-client

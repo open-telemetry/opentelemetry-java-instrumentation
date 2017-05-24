@@ -19,15 +19,3 @@ sampler:
   # RateSample: only a portion of spans are reported to the writer
   #  - Param 'rate': the portion of spans to keep
   type: AllSampler
-
-# Decorators are used to add extra information to span
-# Could be DBServiceDecorator, MapperDecorator or HTTPServiceDecorator
-decorators:
-  # This span decorator leverages HTTP tags such as the URL requested
-  - type: HTTP
-    componentName: http
-    desiredServiceName: unnamed-java-http
-  # This span decorator leverages DB tags such as the statement requested
-  - type: DB
-    componentName: db
-    desiredServiceName: unnamed-java-db

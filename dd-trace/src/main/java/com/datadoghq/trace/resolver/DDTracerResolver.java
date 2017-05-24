@@ -33,104 +33,112 @@ import io.opentracing.util.GlobalTracer;
 @AutoService(TracerResolver.class)
 public class DDTracerResolver extends TracerResolver {
 
-    private final static Logger logger = LoggerFactory.getLogger(DDTracerResolver.class);
+	private final static Logger logger = LoggerFactory.getLogger(DDTracerResolver.class);
 
-    public static final String TRACER_CONFIG = "dd-trace.yaml";
-    private final ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+	public static final String TRACER_CONFIG = "dd-trace.yaml";
+	public static final String DECORATORS_CONFIG = "dd-trace-decorators.yaml";
 
-    @Override
-    protected Tracer resolve() {
-        logger.info("Creating the Datadog tracer");
+	private final ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 
-        //Find a resource file named dd-trace.yml
-        DDTracer tracer = null;
-        try {
-        	ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            Enumeration<URL> iter = classLoader.getResources(TRACER_CONFIG);
-            while (iter.hasMoreElements()) {
-                TracerConfig config = objectMapper.readValue(iter.nextElement().openStream(), TracerConfig.class);
+	@Override
+	protected Tracer resolve() {
+		logger.info("Creating the Datadog tracer");
 
-                String defaultServiceName = config.getDefaultServiceName() != null ? config.getDefaultServiceName() : DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME;
+		//Find a resource file named dd-trace.yml
+		DDTracer tracer = null;
+		try {
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+			Enumeration<URL> iter = classLoader.getResources(TRACER_CONFIG);
+			while (iter.hasMoreElements()) {
+				TracerConfig config = objectMapper.readValue(iter.nextElement().openStream(), TracerConfig.class);
 
-                //Create writer
-                Writer writer = DDTracer.UNASSIGNED_WRITER;
-                if (config.getWriter() != null && config.getWriter().get("type") != null) {
-                    String type = (String) config.getWriter().get("type");
-                    if (type.equals(DDAgentWriter.class.getSimpleName())) {
-                        String host = config.getWriter().get("host") != null ? (String) config.getWriter().get("host") : DDAgentWriter.DEFAULT_HOSTNAME;
-                        Integer port = config.getWriter().get("port") != null ? (Integer) config.getWriter().get("port") : DDAgentWriter.DEFAULT_PORT;
-                        DDApi api = new DDApi(host, port);
-                        writer = new DDAgentWriter(api);
-                    } else if (type.equals(LoggingWritter.class.getSimpleName())) {
-                        writer = new LoggingWritter();
-                    }
-                }
+				String defaultServiceName = config.getDefaultServiceName() != null ? config.getDefaultServiceName() : DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME;
 
-                //Create sampler
-                Sampler rateSampler = DDTracer.UNASSIGNED_SAMPLER;
-                if (config.getSampler() != null && config.getSampler().get("type") != null) {
-                    String type = (String) config.getSampler().get("type");
-                    if (type.equals(AllSampler.class.getSimpleName())) {
-                        rateSampler = new AllSampler();
-                    } else if (type.equals(RateSampler.class.getSimpleName())) {
-                        rateSampler = new RateSampler((Double) config.getSampler().get("rate"));
-                    }
-                }
+				//Create writer
+				Writer writer = DDTracer.UNASSIGNED_WRITER;
+				if (config.getWriter() != null && config.getWriter().get("type") != null) {
+					String type = (String) config.getWriter().get("type");
+					if (type.equals(DDAgentWriter.class.getSimpleName())) {
+						String host = config.getWriter().get("host") != null ? (String) config.getWriter().get("host") : DDAgentWriter.DEFAULT_HOSTNAME;
+						Integer port = config.getWriter().get("port") != null ? (Integer) config.getWriter().get("port") : DDAgentWriter.DEFAULT_PORT;
+						DDApi api = new DDApi(host, port);
+						writer = new DDAgentWriter(api);
+					} else if (type.equals(LoggingWritter.class.getSimpleName())) {
+						writer = new LoggingWritter();
+					}
+				}
 
-                //Create tracer
-                tracer = new DDTracer(defaultServiceName, writer, rateSampler);
+				//Create sampler
+				Sampler rateSampler = DDTracer.UNASSIGNED_SAMPLER;
+				if (config.getSampler() != null && config.getSampler().get("type") != null) {
+					String type = (String) config.getSampler().get("type");
+					if (type.equals(AllSampler.class.getSimpleName())) {
+						rateSampler = new AllSampler();
+					} else if (type.equals(RateSampler.class.getSimpleName())) {
+						rateSampler = new RateSampler((Double) config.getSampler().get("rate"));
+					}
+				}
 
-                //Find decorators
-                if (config.getDecorators() != null) {
-                    for (Map<String, Object> map : config.getDecorators()) {
-                        if (map.get("type") != null) {
-                            DDSpanContextDecorator decorator = null;
-                            String componentName = (String) map.get("componentName");
-                            String desiredServiceName = (String) map.get("desiredServiceName");
+				//Create tracer
+				tracer = new DDTracer(defaultServiceName, writer, rateSampler);
 
-                            if (map.get("type").equals(HTTP.class.getSimpleName())) {
-                                decorator = new HTTP(componentName, desiredServiceName);
-                                tracer.addDecorator(decorator);
-                            } else if (map.get("type").equals(DB.class.getSimpleName())) {
-                                decorator = new DB(componentName, desiredServiceName);
-                                tracer.addDecorator(decorator);
-                            }
-                        }
-                    }
-                }
+				break; // ONLY the closest resource file is taken into account
+			}
 
-                break;
-            }
-        } catch (IOException e) {
-            logger.error("Could not load tracer configuration file. Loading default tracer.", e);
-        }
+			iter = classLoader.getResources(DECORATORS_CONFIG);
+			while (iter.hasMoreElements()) {
+				TracerConfig config = objectMapper.readValue(iter.nextElement().openStream(), TracerConfig.class);
+				//Find decorators
+				if (config.getDecorators() != null) {
+					for (Map<String, Object> map : config.getDecorators()) {
+						if (map.get("type") != null) {
+							DDSpanContextDecorator decorator = null;
+							String componentName = (String) map.get("componentName");
+							String desiredServiceName = (String) map.get("desiredServiceName");
 
-        if (tracer == null) {
-            logger.info("No valid configuration file 'dd-trace.yaml' found. Loading default tracer.");
-            tracer = new DDTracer();
-        }
+							if (map.get("type").equals(HTTP.class.getSimpleName())) {
+								decorator = new HTTP(componentName, desiredServiceName);
+								tracer.addDecorator(decorator);
+							} else if (map.get("type").equals(DB.class.getSimpleName())) {
+								decorator = new DB(componentName, desiredServiceName);
+								tracer.addDecorator(decorator);
+							}
+						}
+					}
+				}
+				
+				break; // ONLY the closest resource file is taken into account
+			}
+		} catch (IOException e) {
+			logger.error("Could not load tracer configuration file. Loading default tracer.", e);
+		}
 
-        return tracer;
-    }
+		if (tracer == null) {
+			logger.info("No valid configuration file 'dd-trace.yaml' found. Loading default tracer.");
+			tracer = new DDTracer();
+		}
 
-    @SuppressWarnings("static-access")
+		return tracer;
+	}
+
+	@SuppressWarnings("static-access")
 	public static Tracer registerTracer() {
 
-        ServiceLoader<TracerResolver> RESOLVERS = ServiceLoader.load(TracerResolver.class);
+		ServiceLoader<TracerResolver> RESOLVERS = ServiceLoader.load(TracerResolver.class);
 
-        Tracer tracer = null;
-        for (TracerResolver value : RESOLVERS) {
-            tracer = value.resolveTracer();
-            if (tracer != null) {
-                break;
-            }
-        }
+		Tracer tracer = null;
+		for (TracerResolver value : RESOLVERS) {
+			tracer = value.resolveTracer();
+			if (tracer != null) {
+				break;
+			}
+		}
 
-        if (tracer == null) {
-            tracer = NoopTracerFactory.create();
-        }
+		if (tracer == null) {
+			tracer = NoopTracerFactory.create();
+		}
 
-        GlobalTracer.register(tracer);
-        return tracer;
-    }
+		GlobalTracer.register(tracer);
+		return tracer;
+	}
 }
