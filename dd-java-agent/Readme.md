@@ -89,7 +89,43 @@ We also provide an [example project with Spring Boot & MySQL](web application fr
 
 ## Custom instrumentations
 
+### The `@trace` annotation
 
+By adding the `@trace` annotation to a method the `dd-java-agent` automatically measures the execution time.
+
+```java
+@Trace
+public void myMethod() throws InterruptedException{
+		...
+}
+```
+
+By default, the operation name attach to the spawn span will be the name of the method and no meta tags will be attached.
+
+You can use the the `operationName` and `tagsKV` to change this:
+
+```java
+@Trace(operationName="Before DB",tagsKV={"mytag","myvalue"})
+public void myMethod() throws InterruptedException{
+	....
+}
+``` 
+
+### Enabling custom tracing
+
+- Add the agent as a dependency of your project
+
+```xml
+<dependency>
+	<groupId>com.datadoghq</groupId>
+	<artifactId>dd-java-agent</artifactId>
+	<version>{version}</version>
+</dependency>
+```
+
+If you want to see custom tracing in action please run the [Dropwizard example](https://github.com/DataDog/dd-trace-java/blob/dev/dd-trace-examples/dropwizard-mongo-client/).
+
+- Enable custom tracing by adding this JVM property `-Ddd.enable_custom_tracing`
 
 ## Other useful resources
 

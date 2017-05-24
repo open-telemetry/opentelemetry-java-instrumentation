@@ -43,7 +43,7 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 		OpenTracingManager.initialize(trans);
 		OpenTracingManager.loadRules(ClassLoader.getSystemClassLoader());
 		
-		String value = System.getProperty("javaagent.enableAnnotations","false");
+		String value = System.getProperty("dd.enable_custom_tracing","false");
 		if("true".equalsIgnoreCase(value)){
 			loadRules(ClassLoader.getSystemClassLoader());
 		}

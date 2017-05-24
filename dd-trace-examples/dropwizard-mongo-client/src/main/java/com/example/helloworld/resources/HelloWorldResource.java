@@ -64,12 +64,12 @@ public class HelloWorldResource {
 		return list;
 	}
 
-	@Trace(operationName="Before DB",tagsKV={"service-name","method"})
+	@Trace(operationName="Before DB",tagsKV={"mytag","myvalue"})
 	public void beforeDB() throws InterruptedException{
 		Thread.sleep(333);
 	}
 
-	@Trace(operationName="After DB",tagsKV={"service-name","method"})
+	@Trace(operationName="After DB",tagsKV={"mytag","myvalue"})
 	public void afterDB() throws InterruptedException{
 		 Thread.sleep(111);
 	}
