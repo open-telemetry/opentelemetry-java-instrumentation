@@ -1,4 +1,4 @@
-# --------------------------------------------------------
+	# --------------------------------------------------------
 # Instrument mongo client
 RULE Mongo Client instrumentation
 CLASS com.mongodb.MongoClientOptions$Builder
@@ -81,7 +81,6 @@ AT ENTRY
 IF currentSpan() == null
 DO
     span = getTracer().buildSpan($2.getClass().getSimpleName())
-        .asChildOf()
         .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
         .start();
 #    decorator.onRequest(span);
