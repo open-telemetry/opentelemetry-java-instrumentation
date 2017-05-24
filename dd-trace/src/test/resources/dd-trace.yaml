@@ -6,7 +6,7 @@ writer:
 sampler:
   type: AllSampler
 decorators:
-  - type: HTTPServiceDecorator
+  - type: HTTP
     componentName: hello
     desiredServiceName: world
     

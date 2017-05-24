@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.integration.DDSpanContextDecorator;
-import com.datadoghq.trace.integration.HTTPServiceDecorator;
+import com.datadoghq.trace.integration.HTTP;
 
 public class TracerResolverTest {
 
@@ -21,8 +21,8 @@ public class TracerResolverTest {
 		
 		assertThat(decorators.size()).isEqualTo(1);
 		DDSpanContextDecorator decorator = decorators.get(0);
-		assertThat(decorator.getClass()).isEqualTo(HTTPServiceDecorator.class);
-		HTTPServiceDecorator httpServiceDecorator = (HTTPServiceDecorator) decorator;
+		assertThat(decorator.getClass()).isEqualTo(HTTP.class);
+		HTTP httpServiceDecorator = (HTTP) decorator;
 		assertThat(httpServiceDecorator.getComponentName()).isEqualTo("hello");
 		assertThat(httpServiceDecorator.getDesiredServiceName()).isEqualTo("world");
 	}

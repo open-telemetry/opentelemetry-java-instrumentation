@@ -10,9 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datadoghq.trace.DDTracer;
-import com.datadoghq.trace.integration.DBServiceDecorator;
+import com.datadoghq.trace.integration.DB;
 import com.datadoghq.trace.integration.DDSpanContextDecorator;
-import com.datadoghq.trace.integration.HTTPServiceDecorator;
+import com.datadoghq.trace.integration.HTTP;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.RateSampler;
 import com.datadoghq.trace.sampling.Sampler;
@@ -88,11 +88,11 @@ public class DDTracerResolver extends TracerResolver {
                             String componentName = (String) map.get("componentName");
                             String desiredServiceName = (String) map.get("desiredServiceName");
 
-                            if (map.get("type").equals(HTTPServiceDecorator.class.getSimpleName())) {
-                                decorator = new HTTPServiceDecorator(componentName, desiredServiceName);
+                            if (map.get("type").equals(HTTP.class.getSimpleName())) {
+                                decorator = new HTTP(componentName, desiredServiceName);
                                 tracer.addDecorator(decorator);
-                            } else if (map.get("type").equals(DBServiceDecorator.class.getSimpleName())) {
-                                decorator = new DBServiceDecorator(componentName, desiredServiceName);
+                            } else if (map.get("type").equals(DB.class.getSimpleName())) {
+                                decorator = new DB(componentName, desiredServiceName);
                                 tracer.addDecorator(decorator);
                             }
                         }

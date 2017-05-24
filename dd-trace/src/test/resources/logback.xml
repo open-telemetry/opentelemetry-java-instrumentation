@@ -9,7 +9,7 @@
         </layout>
     </appender>
 
-    <root level="INFO">
+    <root level="trace">
         <appender-ref ref="console"/>
     </root>
 

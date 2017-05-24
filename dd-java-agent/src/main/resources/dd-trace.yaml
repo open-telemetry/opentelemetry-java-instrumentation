@@ -23,21 +23,17 @@ sampler:
 # Decorators are used to add extra information to span
 # Could be DBServiceDecorator, MapperDecorator or HTTPServiceDecorator
 decorators:
-  # This span decorator leverages HTTP tags such as the URL requested
-  - type: HTTPServiceDecorator
+  - type: HTTP
     componentName: java-web-servlet
-    
-  # Decorator fot the HTTP client
-  - type: HTTPServiceDecorator
+  - type: HTTP
     componentName: java-okhttp
     desiredServiceName: http-client
-
-  # This span decorator leverages DB tags such as the statement requested
-  - type: DBServiceDecorator
+  - type: DB
     componentName: java-mongo
     desiredServiceName: mongo
-
-  # Decorator for the AWS SDK client
-  - type: HTTPServiceDecorator
+  - type: DB
+    componentName: java-jdbc
+    desiredServiceName: jdbc
+  - type: HTTP
     componentName: java-aws-sdk
     desiredServiceName: aws-client

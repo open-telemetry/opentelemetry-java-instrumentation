@@ -8,18 +8,18 @@ import io.opentracing.tag.Tags;
  * This span decorator leverages DB tags. It allows the dev to define a custom
  * service name  and retrieves some DB meta such as the statement
  */
-public class DBServiceDecorator implements DDSpanContextDecorator {
+public class DB implements DDSpanContextDecorator {
 
 	protected final String componentName;
 	protected final String desiredServiceName;
 	
-	public DBServiceDecorator(String componentName) {
+	public DB(String componentName) {
 		super();
 		this.componentName = componentName;
 		this.desiredServiceName = null;
 	}
 	
-	public DBServiceDecorator(String componentName,String desiredServiceName) {
+	public DB(String componentName,String desiredServiceName) {
 		super();
 		this.componentName = componentName;
 		this.desiredServiceName = desiredServiceName;
