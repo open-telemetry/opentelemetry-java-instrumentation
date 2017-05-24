@@ -1,17 +1,12 @@
 package com.datadoghq.trace;
 
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.datadoghq.trace.integration.DDSpanContextDecorator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
+
+import java.util.*;
 
 /**
  * SpanContext represents Span state that must propagate to descendant Spans and across process boundaries.
@@ -81,8 +76,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 		this.spanId = spanId;
 		this.parentId = parentId;
 
+
 		if (baggageItems == null) {
-			this.baggageItems = new HashMap<String, String>();
+			this.baggageItems = Collections.emptyMap();
 		} else {
 			this.baggageItems = baggageItems;
 		}
@@ -121,7 +117,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	}
 
 	public String getResourceName() {
-		 return this.resourceName == null || this.resourceName.isEmpty() ? this.operationName : this.resourceName;
+		return this.resourceName == null || this.resourceName.isEmpty() ? this.operationName : this.resourceName;
 	}
 
 	public boolean getErrorFlag() {
@@ -134,6 +130,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	}
 
 	public void setBaggageItem(String key, String value) {
+		if (this.baggageItems.isEmpty()) {
+			this.baggageItems = new HashMap<String, String>();
+		}
 		this.baggageItems.put(key, value);
 	}
 
@@ -176,11 +175,11 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 		this.tags.put(tag, value);
 
 		//Call decorators
-		for(DDSpanContextDecorator decorator:tracer.getSpanContextDecorators()){
+		for (DDSpanContextDecorator decorator : tracer.getSpanContextDecorators()) {
 			decorator.afterSetTag(this, tag, value);
 		}
 		//Error management
-		if(Tags.ERROR.getKey().equals(tag) && Boolean.TRUE.equals(value)){
+		if (Tags.ERROR.getKey().equals(tag) && Boolean.TRUE.equals(value)) {
 			this.errorFlag = true;
 		}
 	}
@@ -191,7 +190,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
 	@Override
 	public String toString() {
-		return "Span [ "+traceId+" ] [ "+spanId+" | "+parentId+" ] [ "+getServiceName()+" | "+getOperationName()+" | "+getResourceName()+" ]";
+		return "Span [ " + traceId + " ] [ " + spanId + " | " + parentId + " ] [ " + getServiceName() + " | " + getOperationName() + " | " + getResourceName() + " ]";
 	}
 
 	public void setOperationName(String operationName) {

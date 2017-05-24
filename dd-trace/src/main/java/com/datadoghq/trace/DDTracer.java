@@ -304,7 +304,7 @@ public class DDTracer implements io.opentracing.Tracer {
                     serviceName,
                     operationName,
                     this.resourceName,
-                    this.parent == null ? new HashMap<String, String>() : p.getBaggageItems(),
+                    this.parent == null ? null : p.getBaggageItems(),
                     errorFlag,
                     spanType,
                     this.tags,
