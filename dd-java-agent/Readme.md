@@ -45,6 +45,35 @@ We assume that your `${M2_REPO}` env variable is properly setted. Don't forget t
 
 That's it! If you did this properly the agent was executed at pre-main, had detected and instrumented the supported libraries and custom traces. You should then see traces on [Datadog APM](https://app.datadoghq.com/apm/search).
 
+## Configuration
+
+Configuration is done through a default `dd-trace.yaml` file as a resource in the classpath.
+
+```yaml
+# Service name used if none is provided in the app
+defaultServiceName: java-app
+
+# The writer to use.
+# Could be: LoggingWritter or DDAgentWriter (default)
+writer:
+  # LoggingWriter: Spans are logged using the application configuration
+  # DDAgentWriter: Spans are forwarding to a Datadog Agent
+  #  - Param 'host': the hostname where the DD Agent running (default: localhost)
+  #  - Param 'port': the port to reach the DD Agent (default: 8126)
+  type: DDAgentWriter
+  host: localhost
+  port: 8126
+
+# The sampler to use.
+# Could be: AllSampler (default) or RateSampler
+sampler:
+  # AllSampler: all spans are reported to the writer
+  # RateSample: only a portion of spans are reported to the writer
+  #  - Param 'rate': the portion of spans to keep
+  type: AllSampler
+```
+
+If you want to change it, you should then create it in your project and change it as suited.
 
 ## Instrumented frameworks
 
