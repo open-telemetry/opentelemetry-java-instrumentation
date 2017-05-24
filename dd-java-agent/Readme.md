@@ -10,7 +10,7 @@ Instrumentations are done in 3 ways:
 
 Once attached you should see traces into your [Datadog APM](https://app.datadoghq.com/apm/search).
 
-:heavy_exclamation_mark: **Warning:** This library is currently at Alpha stage. This means that even if we rigorusosly tested instrumentations you may experience strange behaviors depending on your running environment. It must evolve quickly though. For any help please contact [support@datadoghq.com](mailto:support@datadoghq.com).
+:heavy_exclamation_mark: **Warning:** This library is currently at Alpha stage. This means that even if we rigorously tested instrumentations you may experience strange behaviors depending on your running environment. It must evolve quickly though. For any help please contact [support@datadoghq.com](mailto:support@datadoghq.com).
 
 ## Quick start
 
@@ -44,7 +44,7 @@ We assume that your `${M2_REPO}` env variable is properly setted. Don't forget t
 
 ```
 -javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/0.0.1/dd-java-agent-{version}.jar
-``
+```
 
 That's it! If you did this properly the agent was executed at pre-main, had detected and instrumented the supported libraries and custom traces. You should then see traces on [Datadog APM](https://app.datadoghq.com/apm/search).
 
