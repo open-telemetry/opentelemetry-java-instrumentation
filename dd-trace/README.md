@@ -115,15 +115,15 @@ You can start as shown below, here is an example how to use both of them to inst
 
 ```java
 class InstrumentedClass {
-	
-	@Trace
-	void methodAnnoted() {
-		// The annotation will do the same thing as the manual instrumentation below
-		//Do some thing here ...
-		Thread.sleep(1_000);
-	}
-	
-	void methodSDK() {
+    
+    @Trace
+    void methodAnnoted() {
+        // The annotation will do the same thing as the manual instrumentation below
+        //Do some thing here ...
+        Thread.sleep(1_000);
+    }
+    
+    void methodSDK() {
         // Retrieve the tracer using the resolver provided
         // Make sure you have :
         //    1. added the agent to the jvm (-javaagent;/path/to/agent.jar)
@@ -137,7 +137,7 @@ class InstrumentedClass {
         
         // Close the span, the trace will automatically reported to the writer configured
         span.close();   
-	}	
+    }	
 	
 }
 ```
