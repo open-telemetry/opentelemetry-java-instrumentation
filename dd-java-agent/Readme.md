@@ -4,8 +4,8 @@ This is a Java Agent made for instrumenting Java applications using the Datadog 
 
 Instrumentations are done in 3 ways:
 
-- Automatically over a set of supported Web servers, framework or database drivers
-- By using custom anotations
+- Automatically over a set of [supported Web servers, frameworks or database drivers](#instrumented-frameworks)
+- By using the [`@trace` annotations](#custom-instrumentations)
 - Or directly with Byteman rules as explained in the inherited [Opentracing Java Agent project](https://raw.githubusercontent.com/opentracing-contrib/java-agent).
 
 Once attached you should see traces into your [Datadog APM](https://app.datadoghq.com/apm/search).
@@ -60,7 +60,7 @@ When attached to an application the `dd-java-agent` automatically  instruments t
 | OkHTTP | 3.x | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers |
 | Apache HTTP Client | 4.x |HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers|
 | AWS SDK | 1.x | Trace all client calls to any AWS service |
-| Web Servlet Filters| Depending on server | See [Servers]() section |
+| Web Servlet Filters| Depending on server | See [Servers](#servers) section |
 
 ### Servers
 | FWK        | Versions           | Comments  |
@@ -71,8 +71,8 @@ When attached to an application the `dd-java-agent` automatically  instruments t
 ### Databases
 | FWK        | Versions           | Comments  |
 | ------------- |:-------------:| ----- |
-|Spring JDBC| 4.x | Please check the following [JDBC instrumentation]() section |
-|Hibernate| 5.x | Please check the following [JDBC instrumentation]() section |
+|Spring JDBC| 4.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
+|Hibernate| 5.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
 | MongoDB | 3.x | Intercepts all the calls from the MongoDB client |
 | ElasticSearch | 3.x, 5.x | Intercepts all the calls from the ES client |
 
