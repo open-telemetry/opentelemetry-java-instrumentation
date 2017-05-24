@@ -3,11 +3,15 @@
 ### Motivations
 
 The Datadog Java Tracer is an OpenTracing-compatible tracer. It provides all resources needed to instrument your code.
-Opentracing introduces the concept of the *span*. A span is *timed operation* representing an action in the code.
-The span can *be linked together*. And a trace is a list of spans, each related to the same top action/operation.
 
-Let's see an example. When a client does a request on a Http Endpoint, asking for some BD resources, 
-Opentracing provides a way for measuring the time consumed for each operation:
+
+Opentracing introduces the concept of the **span**. A span is **timed operation** representing "a bounded process" in the code.
+The spans can **be linked together**. And a **trace** is a list of spans, each related to the same top action/operation.
+
+Let's see an example. 
+
+The workflow can be a client requesting, via a HTTP endpoint, some resources store in a DB.
+Look at the following scheme.
 
 ````
 TRACE:
@@ -20,119 +24,141 @@ TRACE:
             |----------------------------------------SPAN 4 (Child of 2)..(end)   - 50 ms
 ````
 
-This shows a very simple example of how works [Opentracing](http://opentracing.io/).
-Here, the tracer produces a trace composed of 4 spans, each representing a specific action.
+Opentracing provides a way for measuring the time consumed for each operation.
+As just described, the tracer produces a trace composed of 4 spans, each representing a specific action:
+
+1. Span1 is the time from doing the request to getting the response.
+2. Span2 is the Span1's first child, representing the amount of time to understand the query, and perform the query
+on the DB.
+3. Span3, a Span1' grandchild, represents the DB time used to retrieve the data
+4. Span4 is a child of Span2 and followed Span3. It represents a business process for instance.
+
+This is  a very simple example of how works [Opentracing](http://opentracing.io/).
+Do not hesitate to go deeper and read the full documentation: http://opentracing.io/
 
 
-### How to load the Datadog Tracer (DDTrace) in the project?
+### How to instrument well-known framework?
 
-The current implementation uses the trace-resolver feature provides by Opentracing.
+Datadog instruments many frameworks and libraries by default: SpringBoot, JDBC, Mongo, JMS, Tomcat, etc. 
+Check the dedicated project and agent: [dd-java-agent](../dd-java-agent)
+
+
+### How the Datadog Tracer (DDTrace) is loaded in the project?
+
+This current implementation uses the trace-resolver feature provides by Opentracing.
 That means you can add and load the tracer using a Java Agent directly with the JVM.
 
-And then, the DDTrace can be configured using a YAML file: `dd-trace.yaml`.
-By default, the DDTrace tries to reach a local Datadog Agent, but it can change by settings a different
-location in the config file. Please, refer to the latest configuration template: [dd-trace.yaml](src/main/resources/dd-trace.yaml)
+The DDTrace is autoconfigured using the YAML file provided in the project: `dd-trace.yaml`. 
+By default, the DDTrace tries to reach a local Datadog Agent, but you can change the settings and use a different
+location. In order to do that, please, refer you to the latest configuration: [dd-trace.yaml](src/main/resources/dd-trace.yaml)
 
+```yaml
+# Service name used if none is provided in the app
+defaultServiceName: unnamed-java-app
 
-### How to use the Datadog Tracer (DDTrace) to instrument the code?
+# The writer to use.
+# Could be: LoggingWritter or DDAgentWriter (default)
+writer:
+  # LoggingWriter: Spans are logged using the application configuration
+  # DDAgentWriter: Spans are forwarding to a Datadog Agent
+  #  - Param 'host': the hostname where the DD Agent running (default: localhost)
+  #  - Param 'port': the port to reach the DD Agent (default: 8126)
+  type: DDAgentWriter
+  host: localhost
+  port: 8126
 
-Once, the DDTrace is loaded, you can start to instrument your code using:
-* The `@Trace` annotation,
-* Or the Opentracing SDK.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-This agent is build on the top of the [Open-Tracing contributions](https://github.com/opentracing-contrib/) and the [Datadog
-tracer](https://github.com/DataDog/dd-trace-java).
-
-At the moment, the Datadog Java Agent supports the following framework and librairies:
-
-* Databases
-  * JDBC connections
-  * Mongo
-  * Elasticsearch
-* Web servers and clients
-  * Spring Boot
-  * Jetty Server
-  * Tomcat Servlet
-  * Apache HTTP Client
-  * OkHttp
-* Queueing
-  * JMS
-* Third-party
-  * AMS SDK Client 
-  
-#### Instrument your code
-  
-Here are the instructions.
-Before start, make sure you have a running Datadog Agent with the [APM feature enabled](http://docs.datadoghq.com/tracing/).
-
-1. Download the latest Datadog Java Agent version: https://mvnrepository.com/artifact/com.datadoghq/dd-java-agent.
-```pom.xml
-<dependency>
-    <groupId>com.datadoghq</groupId>
-    <artifactId>dd-java-agent</artifactId>
-    <version>${dd-trace.version}</version>
-</dependency>
+# The sampler to use.
+# Could be: AllSampler (default) or RateSampler
+sampler:
+  # AllSampler: all spans are reported to the writer
+  # RateSample: only a portion of spans are reported to the writer
+  #  - Param 'rate': the portion of spans to keep
+  type: AllSampler
 ```
-2. Add to the JVM the agent. This can be done by editing the command line or via the pom file. 
-```pom.xml
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-surefire-plugin</artifactId>
-    <version>2.20</version>
-    <configuration>
-        <includes>
-            <include>*Test.java</include>
-        </includes>
-        <excludes>
-            <exclude>ElasticSearchInstrumentationTest.java</exclude>
-        </excludes>
-        <forkCount>3</forkCount>
-        <reuseForks>false</reuseForks>
-        <argLine>-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${dd-trace.version}/dd-java-agent-${dd-trace.version}.jar</argLine>
-        <workingDirectory>target/FORK_DIRECTORY_${surefire.forkNumber}</workingDirectory>
-    </configuration>
-</plugin>
 
+To attach the agent to the JVM, you simply have to declare the provided `jar` file in your 
+JVM arguments as a valid `-javaagent:`. We assume that your `${M2_REPO}` env variable is properly set.
+Don't forget to replace the `{version}` placeholder in the following commands.
+
+So first download the `jar` file from the main Maven repository:
+
+```
+> mvn dependency:get -Dartifact=io.opentracing-contrib:opentracing-agent:${version}
+```
+Then add the following JVM argument when launching your application (in IDE, using Maven run or simply in collaboration with the `>java -jar` command):
+
+```
+-javaagent:${M2_REPO}/io/opentracing-contrib/opentracing-agent/${version}/opentracing-agent-${version}.jar
 ```
 
 
-### How it's work
-### Dig deeper
+At this point, the DDTrace is loaded in the project. Let's see now how to instrument it.
+
+### How to use the Datadog Tracer (DDTrace) for instrumenting legacy code?
+
+Once, the DDTrace is loaded, you can start to instrument your code using the Opentracing SDK or the `@Trace` annotation.
+`@Trace` is actually a Datadog specific, but we plan to submit it to Opentracing foundation. 
+
+To use them, you have to add the dependency to the DDTrace.
+Just edit you `pom.xml` and add this:
+
+```xml
+    <dependency>
+        <groupId>com.datadoghq</groupId>
+        <artifactId>dd-trace</artifactId>
+        <version>${dd-trace-java.version}</version>
+    </dependency>
+```
 
 
-Du coup le Readme.md de `java-trace` il faut un truc plutot simple qui expliqe que c la 
-librarie opentracing compliant de Datadog. Il faut expliquer aussi le resolver et son fichier `.yaml`
+You can start as shown below, here is an example how to use both of them to instrument 2 simple methods.
 
-[10:41] 
-Prend peut etre exemple aussi sur une autre lib opentracing compliant
+```java
+class InstrumentedClass {
+	
+	@Trace
+	void methodAnnoted() {
+		// The annotation will do the same thing as the manual instrumentation below
+		//Do some thing here ...
+		Thread.sleep(1_000);
+	}
+	
+	void methodSDK() {
+		// Retrieve the tracer using the resolver provided
+		// Make sure you have :
+		//    1. added the agent to the jvm (-javaagent;/path/to/agent.jar)
+		//    2. a dd-trace.yaml file in your resources directory
+		Tracer tracer = io.opentracing.util.GlobalTracer.get();
+		
+		Span span = tracer.buildSpan("operation-name").build();
+		
+		//Do some thing here ...
+        Thread.sleep(1_000);
+        
+        // Close the span, the trace will automatically reported to the writer configured
+        span.close();   
+	}	
+	
+}
+```
 
-[10:41] 
-Peut etre expliquer ce que c’est un tracer, un span et un ou deux exemple d’instrumentation a la mano¡¡
+If you have a running Datadog Agent with the [APM feature enabled](http://docs.datadoghq.com/tracing/), you should
+see traces directly to your Datadog account.
+
+
+
+### Other useful resources
+
+Before instrumenting your own project you might want to run the provided examples:
+
+- [Dropwizard/MongoDB & Cross process client calls](https://github.com/DataDog/dd-trace-java/blob/dev/dd-trace-examples/dropwizard-mongo-client/)
+- [Springboot & MySQL over JDBC](https://github.com/DataDog/dd-trace-java/tree/dev/dd-trace-examples/spring-boot-jdbc)
+
+Other links that you might want to read:
+
+- Install on [Docker](https://app.datadoghq.com/apm/docs/tutorials/docker)
+- Datadog's APM [Terminology](https://app.datadoghq.com/apm/docs/tutorials/terminology)
+- [FAQ](https://app.datadoghq.com/apm/docs/tutorials/faq)
+
+
+And for any questions, feedback, feel free to send us an email: support@datadoghq.com
