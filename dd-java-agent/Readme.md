@@ -1,0 +1,103 @@
+# Datadog Java Agent for APM
+
+This is a Java Agent made for instrumenting Java applications using the Datadog Tracer.
+
+Instrumentations are done in 3 ways:
+
+- Automatically over a set of supported Web servers, framework or database drivers
+- By using custom anotations
+- Or directly with Byteman rules as explained in the inherited [Opentracing Java Agent project](https://raw.githubusercontent.com/opentracing-contrib/java-agent).
+
+Once attached you should see traces into your [Datadog APM](https://app.datadoghq.com/apm/search).
+
+:heavy_exclamation_mark: **Warning:** This library is currently at Alpha stage. This means that even if we rigorusosly tested instrumentations you may experience strange behaviors depending on your running environment. It must evolve quickly though. For any help please contact [support@datadoghq.com](mailto:support@datadoghq.com).
+
+## Quick start
+
+### 1. Install the Datadog Agent on your OS
+
+The Java instrumentation library works in collaboration with a local Datadog Agent that transmits the traces to Datadog. So:
+
+- Run the latest [Datadog Agent](https://app.datadoghq.com/account/settings#agent) (version 5.11.0 or above)
+- [Enable APM in the Datadog Agent configuration file](https://app.datadoghq.com/apm/docs/tutorials/configuration) `/etc/dd-agent/datadog.conf`.
+
+```
+[Main]
+# Enable the trace agent.
+apm_enabled: true
+```
+- [Restart the Agent](http://docs.datadoghq.com/guides/basic_agent_usage/)
+
+### 2. Instrument your application
+
+To instrument your project or your servers you simply have to declare the provided `jar` file in your JVM arguments as a valid `javaagent`.
+
+We assume that your `${M2_REPO}` env variable is properly setted. Don't forget to replace the `{version}` placeholder in the following commands.
+
+- So first download the `jar` file from the main Maven repository:
+
+```
+> mvn dependency:get -Dartifact=com.datadoghq:dd-java-agent:{version}
+```
+
+- Then add the following JVM argument when launching your application (in IDE, using Maven run or simply in collaboration with the `>java -jar` command):
+
+```
+-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/0.0.1/dd-java-agent-{version}.jar
+``
+
+That's it! If you did this properly the agent was executed at pre-main, had detected and instrumented the supported libraries and custom traces. You should then see traces on [Datadog APM](https://app.datadoghq.com/apm/search).
+
+
+## Instrumented frameworks
+
+When attached to an application the `dd-java-agent` automatically  instruments the following set of frameworks & servers.
+
+### Frameworks
+
+| FWK        | Versions           | Comments  |
+| ------------- |:-------------:| ----- |
+| OkHTTP | 3.x | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers |
+| Apache HTTP Client | 4.x |HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers|
+| AWS SDK | 1.x | Trace all client calls to any AWS service |
+| Web Servlet Filters| Depending on server | See [Servers]() section |
+
+### Servers
+| FWK        | Versions           | Comments  |
+| ------------- |:-------------:| -----|
+| Jetty | 8.x, 9.x  | Trace all incoming HTTP calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) capabilities |
+| Tomcat |   8.0.x, 8.5.x & 9.x   |  Trace all incoming HTTP calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) capabilities  |
+
+### Databases
+| FWK        | Versions           | Comments  |
+| ------------- |:-------------:| ----- |
+|Spring JDBC| 4.x | Please check the following [JDBC instrumentation]() section |
+|Hibernate| 5.x | Please check the following [JDBC instrumentation]() section |
+| MongoDB | 3.x | Intercepts all the calls from the MongoDB client |
+| ElasticSearch | 3.x, 5.x | Intercepts all the calls from the ES client |
+
+#### JDBC instrumentation
+
+By using JDBC you intercept all the client calls to the following DB clients: MySQL, PostgreSQL, H2, HSQLDB, IBM DB2, SQL Server, Oracle, MariaDB, etc...
+
+But unfortunately this can not be done entirely automatically today. 
+
+To enable tracing please follow instructions provided on the [java-jdbc contrib project](https://github.com/opentracing-contrib/java-jdbc#usage).
+
+## Custom instrumentations
+
+
+
+## Useful resources
+
+Before instrumenting your own project you might want to run the provided examples:
+
+- Dropwizard/MongoDB & Cross process client calls [here](https://github.com/DataDog/dd-trace-java/blob/dev/dd-trace-examples/dropwizard-mongo-client/)
+- Springboot & MySQL over JDBC [here](https://github.com/DataDog/dd-trace-java/tree/dev/dd-trace-examples/spring-boot-jdbc)
+
+Other links that you might want to read:
+
+- Install on [Docker](https://app.datadoghq.com/apm/docs/tutorials/docker)
+- Datadog's APM [Terminology](https://app.datadoghq.com/apm/docs/tutorials/terminology)
+- [FAQ](https://app.datadoghq.com/apm/docs/tutorials/faq)
+
