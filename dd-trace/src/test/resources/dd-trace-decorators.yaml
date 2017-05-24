@@ -1,0 +1,4 @@
+decorators:
+  - type: HTTP
+    componentName: hello
+    desiredServiceName: world
