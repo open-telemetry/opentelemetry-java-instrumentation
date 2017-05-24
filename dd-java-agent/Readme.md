@@ -5,7 +5,7 @@ This is a Java Agent made for instrumenting Java applications using the Datadog 
 Tracing instrumentations can be done in 2 ways:
 
 - Automatically over a set of [supported Web servers, frameworks or database drivers](#instrumented-frameworks)
-- By using the [`@trace` annotations](#custom-instrumentations)
+- By using the [`@trace` annotation](#custom-instrumentations)
 
 :heavy_exclamation_mark: **Warning:** This library is currently at Alpha stage. This means that even if we rigorously tested instrumentations you may experience strange behaviors depending on your running environment. It must evolve quickly though. For any help please contact [support@datadoghq.com](mailto:support@datadoghq.com).
 
@@ -13,7 +13,7 @@ Tracing instrumentations can be done in 2 ways:
 
 ### 1. Install the Datadog Agent on your OS
 
-The Java instrumentation library works in collaboration with a local agent that transmits the traces to Datadog. So:
+The Java instrumentation library works in collaboration with a local agent that transmits the traces to Datadog. To install it with tracing please follow these steps:
 
 - Run the latest [Datadog Agent](https://app.datadoghq.com/account/settings#agent) (version 5.11.0 or above)
 - [Enable APM in the Datadog Agent configuration file](https://app.datadoghq.com/apm/docs/tutorials/configuration) `/etc/dd-agent/datadog.conf`.
