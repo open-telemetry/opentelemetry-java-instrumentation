@@ -2,11 +2,10 @@
 
 This is a Java Agent made for instrumenting Java applications using the Datadog Tracer. Once attached to one of your JVM you should see traces into your [Datadog APM](https://app.datadoghq.com/apm/search).
 
-Instrumentations are done in 3 ways:
+Tracing instrumentations can be done in 2 ways:
 
 - Automatically over a set of [supported Web servers, frameworks or database drivers](#instrumented-frameworks)
 - By using the [`@trace` annotations](#custom-instrumentations)
-- Or directly with Byteman rules as explained in the inherited Opentracing Java Agent project
 
 :heavy_exclamation_mark: **Warning:** This library is currently at Alpha stage. This means that even if we rigorously tested instrumentations you may experience strange behaviors depending on your running environment. It must evolve quickly though. For any help please contact [support@datadoghq.com](mailto:support@datadoghq.com).
 
