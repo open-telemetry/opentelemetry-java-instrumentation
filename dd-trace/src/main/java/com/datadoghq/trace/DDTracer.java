@@ -238,7 +238,7 @@ public class DDTracer implements io.opentracing.Tracer {
         }
 
         public DDTracer.DDSpanBuilder asChildOf(Span span) {
-            return asChildOf(span.context());
+            return asChildOf(span==null? null : span.context());
         }
 
         public DDTracer.DDSpanBuilder asChildOf(SpanContext spanContext) {
