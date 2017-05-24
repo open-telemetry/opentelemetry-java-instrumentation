@@ -6,7 +6,7 @@ Instrumentations are done in 3 ways:
 
 - Automatically over a set of [supported Web servers, frameworks or database drivers](#instrumented-frameworks)
 - By using the [`@trace` annotations](#custom-instrumentations)
-- Or directly with Byteman rules as explained in the inherited [Opentracing Java Agent project](https://raw.githubusercontent.com/opentracing-contrib/java-agent).
+- Or directly with Byteman rules as explained in the inherited Opentracing Java Agent project
 
 Once attached you should see traces into your [Datadog APM](https://app.datadoghq.com/apm/search).
 
@@ -16,7 +16,7 @@ Once attached you should see traces into your [Datadog APM](https://app.datadogh
 
 ### 1. Install the Datadog Agent on your OS
 
-The Java instrumentation library works in collaboration with a local Datadog Agent that transmits the traces to Datadog. So:
+The Java instrumentation library works in collaboration with a local agent that transmits the traces to Datadog. So:
 
 - Run the latest [Datadog Agent](https://app.datadoghq.com/account/settings#agent) (version 5.11.0 or above)
 - [Enable APM in the Datadog Agent configuration file](https://app.datadoghq.com/apm/docs/tutorials/configuration) `/etc/dd-agent/datadog.conf`.
@@ -30,7 +30,7 @@ apm_enabled: true
 
 ### 2. Instrument your application
 
-To instrument your project or your servers you simply have to declare the provided `jar` file in your JVM arguments as a valid `javaagent`.
+To instrument your project or your servers you simply have to declare the provided `jar` file in your JVM arguments as a valid `-javaagent:`.
 
 We assume that your `${M2_REPO}` env variable is properly setted. Don't forget to replace the `{version}` placeholder in the following commands.
 
@@ -63,10 +63,13 @@ When attached to an application the `dd-java-agent` automatically  instruments t
 | Web Servlet Filters| Depending on server | See [Servers](#servers) section |
 
 ### Servers
+
 | FWK        | Versions           | Comments  |
 | ------------- |:-------------:| -----|
 | Jetty | 8.x, 9.x  | Trace all incoming HTTP calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) capabilities |
 | Tomcat |   8.0.x, 8.5.x & 9.x   |  Trace all incoming HTTP calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) capabilities  |
+
+Modern web application frameworks such as Dropwizard or Spring Boot are automatically instrumented thanks to these servers instrumentation. (See [example projects](#other-useful-resources)) 
 
 ### Databases
 | FWK        | Versions           | Comments  |
@@ -78,17 +81,17 @@ When attached to an application the `dd-java-agent` automatically  instruments t
 
 #### JDBC instrumentation
 
-By using JDBC you intercept all the client calls to the following DB clients: MySQL, PostgreSQL, H2, HSQLDB, IBM DB2, SQL Server, Oracle, MariaDB, etc...
+By enabling the JDBC instrumentation you'll  intercept all the client calls to the following DBs: MySQL, PostgreSQL, H2, HSQLDB, IBM DB2, SQL Server, Oracle, MariaDB, etc...
 
-But unfortunately this can not be done entirely automatically today. 
+But unfortunately this can not be done entirely automatically today. To enable tracing please follow the instructions provided on the [java-jdbc contrib project](https://github.com/opentracing-contrib/java-jdbc#usage).
 
-To enable tracing please follow instructions provided on the [java-jdbc contrib project](https://github.com/opentracing-contrib/java-jdbc#usage).
+We also provide an [example project with Spring Boot & MySQL](web application frameworks).
 
 ## Custom instrumentations
 
 
 
-## Useful resources
+## Other useful resources
 
 Before instrumenting your own project you might want to run the provided examples:
 
