@@ -18,7 +18,7 @@ public class TracedClient {
 		OkHttpClient client = new OkHttpClient().newBuilder().build();
 
 		Request request = new Request.Builder()
-				.url("http://localhost:8080/hello/history")
+				.url("http://localhost:8080/demo/")
 				.build();
 
 		Response response = client.newCall(request).execute();

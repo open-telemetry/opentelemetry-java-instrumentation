@@ -1,6 +1,3 @@
-template: Hello, %s!
-defaultName: Stranger
-
 logging:
   level: INFO
   loggers:
