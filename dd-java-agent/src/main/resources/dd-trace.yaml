@@ -19,3 +19,6 @@ sampler:
   # RateSample: only a portion of spans are reported to the writer
   #  - Param 'rate': the portion of spans to keep
   type: AllSampler
+  
+# Enable custom tracing (annotations)
+# enableCustomTracing: true

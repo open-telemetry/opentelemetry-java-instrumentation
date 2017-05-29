@@ -261,7 +261,7 @@
 					</excludes>
 					<forkCount>3</forkCount>
 					<reuseForks>false</reuseForks>
-					<argLine>-Xmx500m -Xms500m -XX:MaxPermSize=256m -Dorg.jboss.byteman.verbose=true -Djavaagent.enableAnnotations
+					<argLine>-Xmx1g -Xms1g -XX:MaxPermSize=512m -Dorg.jboss.byteman.verbose=true
 						-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${project.version}/dd-java-agent-${project.version}.jar</argLine>
 					<workingDirectory>target/FORK_DIRECTORY_${surefire.forkNumber}</workingDirectory>
 				</configuration>
