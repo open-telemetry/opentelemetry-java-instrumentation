@@ -5,12 +5,14 @@
 
     <groupId>com.datadoghq</groupId>
     <artifactId>dd-trace-java</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <properties>
         <opentracing.version>0.22.0</opentracing.version>
         <java.version>1.7</java.version>
+        <ot.dd-trace.version>0.0.1-SNAPSHOT</ot.dd-trace.version>
+
     </properties>
 
     <licenses>
@@ -79,30 +81,30 @@
                 </configuration>
             </plugin>
             <!--<plugin>-->
-                <!--<groupId>org.apache.maven.plugins</groupId>-->
-                <!--<artifactId>maven-gpg-plugin</artifactId>-->
-                <!--<version>1.6</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>sign-artifacts</id>-->
-                        <!--<phase>verify</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>sign</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
+            <!--<groupId>org.apache.maven.plugins</groupId>-->
+            <!--<artifactId>maven-gpg-plugin</artifactId>-->
+            <!--<version>1.6</version>-->
+            <!--<executions>-->
+            <!--<execution>-->
+            <!--<id>sign-artifacts</id>-->
+            <!--<phase>verify</phase>-->
+            <!--<goals>-->
+            <!--<goal>sign</goal>-->
+            <!--</goals>-->
+            <!--</execution>-->
+            <!--</executions>-->
             <!--</plugin>-->
-<!--             <plugin> -->
-<!--                 <groupId>org.sonatype.plugins</groupId> -->
-<!--                 <artifactId>nexus-staging-maven-plugin</artifactId> -->
-<!--                 <version>1.6.3</version> -->
-<!--                 <extensions>true</extensions> -->
-<!--                 <configuration> -->
-<!--                     <serverId>ossrh</serverId> -->
-<!--                     <nexusUrl>https://oss.sonatype.org/</nexusUrl> -->
-<!--                     <autoReleaseAfterClose>true</autoReleaseAfterClose> -->
-<!--                 </configuration> -->
-<!--             </plugin> -->
+            <!--             <plugin> -->
+            <!--                 <groupId>org.sonatype.plugins</groupId> -->
+            <!--                 <artifactId>nexus-staging-maven-plugin</artifactId> -->
+            <!--                 <version>1.6.3</version> -->
+            <!--                 <extensions>true</extensions> -->
+            <!--                 <configuration> -->
+            <!--                     <serverId>ossrh</serverId> -->
+            <!--                     <nexusUrl>https://oss.sonatype.org/</nexusUrl> -->
+            <!--                     <autoReleaseAfterClose>true</autoReleaseAfterClose> -->
+            <!--                 </configuration> -->
+            <!--             </plugin> -->
         </plugins>
     </build>
 
