@@ -31,7 +31,7 @@
           </excludes>
           <forkCount>3</forkCount>
           <reuseForks>false</reuseForks>
-          <argLine>-Xmx500m -Xms500m -XX:MaxPermSize=256m
+          <argLine>-Xmx500m -Xms500m -XX:MaxPermSize=256m -Dorg.jboss.byteman.verbose=true -Djavaagent.enableAnnotations
 						-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${project.version}/dd-java-agent-${project.version}.jar</argLine>
           <workingDirectory>target/FORK_DIRECTORY_${surefire.forkNumber}</workingDirectory>
         </configuration>
@@ -611,6 +611,34 @@
         <exclusion>
           <artifactId>percolator-client</artifactId>
           <groupId>org.elasticsearch.plugin</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.elasticsearch.client</groupId>
+      <artifactId>rest</artifactId>
+      <version>5.4.0</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>httpasyncclient</artifactId>
+          <groupId>org.apache.httpcomponents</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>httpcore-nio</artifactId>
+          <groupId>org.apache.httpcomponents</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>httpcore</artifactId>
+          <groupId>org.apache.httpcomponents</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-codec</artifactId>
+          <groupId>commons-codec</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
         </exclusion>
       </exclusions>
     </dependency>
