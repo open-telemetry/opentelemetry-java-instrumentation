@@ -1,4 +1,5 @@
 decorators:
-  - type: HTTP
-    componentName: hello
-    desiredServiceName: world
+  - type: HTTPComponent
+    matchingValue: hello
+    setValue: world
+  - type: URLAsResourceName
