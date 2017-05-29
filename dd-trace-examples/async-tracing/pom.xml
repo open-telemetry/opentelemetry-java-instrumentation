@@ -9,8 +9,8 @@
 		<version>1.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>asynchronuous-tracing</artifactId>
-	<name>asynchronuous-tracing</name>
+	<artifactId>async-tracing</artifactId>
+	<name>async-tracing</name>
 
 	<url>http://maven.apache.org</url>
 	

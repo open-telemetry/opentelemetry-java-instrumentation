@@ -14,7 +14,7 @@
 
 
     <modules>
-        <module>asynchronuous-tracing</module>
+        <module>async-tracing</module>
         <module>dropwizard-mongo-client</module>
         <module>spring-boot-jdbc</module>
     </modules>
