@@ -1,5 +1,7 @@
 # Datadog Java Agent for APM
 
+*Minimal Java version required: 1.7*
+
 This is a Java Agent made for instrumenting Java applications using the Datadog Tracer. Once attached to one of your JVM you should see traces into your [Datadog APM](https://app.datadoghq.com/apm/search).
 
 Tracing instrumentations can be done in 2 ways:
