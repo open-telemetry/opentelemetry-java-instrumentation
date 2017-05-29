@@ -13,6 +13,10 @@
     <packaging>jar</packaging>
     <name>dd-trace</name>
 
+    <properties>
+        <java.version>1.6</java.version>
+    </properties>
+
     <dependencies>
 
         <!-- Opentracing core -->

@@ -38,7 +38,7 @@ public class DDTracer implements io.opentracing.Tracer {
 	/**
 	 * Span context decorators
 	 */
-	private final Map<String, List<DDSpanContextDecorator>> spanContextDecorators = new HashMap<>();
+	private final Map<String, List<DDSpanContextDecorator>> spanContextDecorators = new HashMap<String, List<DDSpanContextDecorator>>();
 
 
 	private final static Logger logger = LoggerFactory.getLogger(DDTracer.class);
@@ -78,12 +78,8 @@ public class DDTracer implements io.opentracing.Tracer {
 	 * @return the list of span context decorators
 	 */
 	public List<DDSpanContextDecorator> getSpanContextDecorators(String tag) {
-		List<DDSpanContextDecorator> decorators = Collections.emptyList();
-		String key = getHashKey(tag);
 
-		if (spanContextDecorators.containsKey(key)) {
-			decorators = Collections.unmodifiableList(spanContextDecorators.get(key));
-		}
+		List<DDSpanContextDecorator> decorators = spanContextDecorators.get(tag);
 
 		return decorators;
 	}
@@ -94,15 +90,14 @@ public class DDTracer implements io.opentracing.Tracer {
 	 * @param decorator The decorator in the list
 	 */
 	public void addDecorator(DDSpanContextDecorator decorator) {
-		String key = getHashKey(decorator.getMatchingTag());
 
-		List<DDSpanContextDecorator> list = spanContextDecorators.get(key);
+		List<DDSpanContextDecorator> list = spanContextDecorators.get(decorator.getMatchingTag());
 		if (list == null) {
-			list = new ArrayList<>();
+			list = new ArrayList<DDSpanContextDecorator>();
 		}
 		list.add(decorator);
 
-		spanContextDecorators.put(key, list);
+		spanContextDecorators.put(decorator.getMatchingTag(), list);
 	}
 
 
@@ -327,9 +322,6 @@ public class DDTracer implements io.opentracing.Tracer {
 
 	}
 
-	private String getHashKey(String tag) {
-		return tag;
-	}
 
 	private static class CodecRegistry {
 
