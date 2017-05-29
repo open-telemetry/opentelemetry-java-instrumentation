@@ -3,11 +3,7 @@
 ### Purpose
 
 This project aims at demonstrating how to instrument legacy code based on Dropwizard and a client querying a Mongo database.
-
-We also:
-
-* demonstrate cross-process tracing through the `TracedClient` example
-* demonstrate how you can instrument custom method by providing your own ByteMan instrumentation rules  
+We also demonstrate cross-process tracing through the `TracedClient` example.
 
 ### Run the demo
 
@@ -18,14 +14,15 @@ We also:
 #### Run the application
 
 If you want to enable tracing you have to launch the application with the datadog java agent.
+Get the latest version of the dd-java-agent: 
 
-That can be done by providing the following JVM argument (assuming the `M2_REPO` env variable is set and we run version `0.0.1`):
-`-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/0.0.1/dd-java-agent-0.0.1.jar`.
+```
+# use latest version 
+curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/0.0.1/dd-java-agent-0.0.1.jar
+```
 
-There are 2 ways to test it:
-
-- Either with the command line after generating the project: `java -jar <jar_path> -javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/0.0.1/dd-java-agent-0.0.1.jar`
-- Or if you prefer with your IDE providing the java agent command
+Then add the agent to the JVM. That can be done by providing the following argument:
+`-javaagent:/path/to/dd-java-agent-0.0.1.jar`.
 
 ### Generate traces
 
@@ -37,7 +34,7 @@ There are 2 ways to test it:
 
 Once the application runs. Go to the following url:
 
-* [http://localhost:8080/hello/history]()
+* [http://localhost:8080/demo/]()
 
 Then get back to Datadog and wait a bit to see a trace coming.
 

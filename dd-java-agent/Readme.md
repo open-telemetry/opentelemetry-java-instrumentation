@@ -31,18 +31,17 @@ apm_enabled: true
 
 To instrument your project or your servers you simply have to declare the provided `jar` file in your JVM arguments as a valid `-javaagent:`.
 
-We assume that your `${M2_REPO}` env variable is properly setted. Don't forget to replace the `{version}` placeholder in the following commands.
-
-- So first download the `jar` file from the main Maven repository:
+- So first download the `jar` file from the main repository.
 
 ```
-> mvn dependency:get -Dartifact=com.datadoghq:dd-java-agent:{version}
+# use latest version 
+curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/0.0.1/dd-java-agent-0.0.1.jar
 ```
 
 - Then add the following JVM argument when launching your application (in IDE, using Maven run or simply in collaboration with the `>java -jar` command):
 
 ```
--javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/0.0.1/dd-java-agent-{version}.jar
+-javaagent:/path/to/the/dd-java-agent-0.0.1.jar
 ```
 
 That's it! If you did this properly the agent was executed at pre-main, had detected and instrumented the supported libraries and custom traces. You should then see traces on [Datadog APM](https://app.datadoghq.com/apm/search).
