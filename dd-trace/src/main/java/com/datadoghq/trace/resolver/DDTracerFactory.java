@@ -1,5 +1,12 @@
 package com.datadoghq.trace.resolver;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Enumeration;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.RateSampler;
@@ -8,12 +15,20 @@ import com.datadoghq.trace.writer.DDAgentWriter;
 import com.datadoghq.trace.writer.DDApi;
 import com.datadoghq.trace.writer.LoggingWritter;
 import com.datadoghq.trace.writer.Writer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 /**
  * Create a tracer from a configuration file
  */
 public class DDTracerFactory {
-	
+
+	private final static Logger logger = LoggerFactory.getLogger(DDTracerFactory.class);
+
+	public static final String CONFIG_PATH = "dd-trace.yaml";
+	private static final ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+
+
 	/**
 	 * Create a tracer from a TracerConfig object
 	 * 
@@ -52,4 +67,27 @@ public class DDTracerFactory {
 		return new DDTracer(defaultServiceName, writer, rateSampler);
 	}
 	
+	public static DDTracer createFromResources(){
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		DDTracer tracer = null;
+		try {
+			Enumeration<URL> iter = classLoader.getResources(CONFIG_PATH);
+			while (iter.hasMoreElements()) {
+				TracerConfig config = objectMapper.readValue(iter.nextElement().openStream(), TracerConfig.class);
+
+				tracer = DDTracerFactory.create(config);
+
+				break; // ONLY the closest resource file is taken into account
+			}
+		} catch (IOException e) {
+			logger.error("Could not load tracer configuration file.", e);
+		}
+
+		if (tracer == null) {
+			logger.info("No valid configuration file {} found. Loading default tracer.",CONFIG_PATH);
+			tracer = new DDTracer();
+		}
+		return tracer;
+	}
+
 }
