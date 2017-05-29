@@ -1,6 +1,7 @@
 package com.datadoghq.trace.integration;
 
 import com.datadoghq.trace.DDSpanContext;
+import com.datadoghq.trace.DDTags;
 
 /**
  * Span decorators are called when new tags are written and proceed to various remappings and enrichments
@@ -18,8 +19,17 @@ public abstract class DDSpanContextDecorator {
 	public boolean afterSetTag(DDSpanContext context, String tag, Object value) {
 		if ((this.getMatchingValue() == null || value.equals(this.getMatchingValue()))) {
 			String targetTag = getSetTag() == null ? tag : getSetTag();
-			String targetValue = getSetValue() == null ? String.valueOf(value) : getSetTag();
-			context.setTag(targetTag, targetValue);
+			String targetValue = getSetValue() == null ? String.valueOf(value) : getSetValue();
+			
+			if (targetTag.equals(DDTags.SERVICE_NAME)) {
+				context.setServiceName(targetValue);
+			} else if (targetTag.equals(DDTags.RESOURCE_NAME)) {
+				context.setResourceName(targetValue);
+			} else if (targetTag.equals(DDTags.SPAN_TYPE)) {
+				context.setSpanType(targetValue);
+			} else {
+				context.setTag(targetTag, targetValue);
+			}
 			return true;
 		} else {
 			return false;

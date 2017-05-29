@@ -21,7 +21,6 @@ public class HTTPComponent extends DDSpanContextDecorator {
 	public boolean afterSetTag(DDSpanContext context, String tag, Object value) {
 		//Assign service name
 		if (super.afterSetTag(context, tag, value)) {
-
 			//Assign span type to WEB
 			context.setSpanType("web");
 			return true;

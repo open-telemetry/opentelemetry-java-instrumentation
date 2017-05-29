@@ -19,7 +19,7 @@ public class URLAsResourceName extends DDSpanContextDecorator {
 		//Assign resource name
 		try {
 			String path = new java.net.URL(String.valueOf(value)).getPath();
-			context.setTag(this.getSetTag(), path);
+			context.setResourceName(path);
 		} catch (MalformedURLException e) {
 			context.setResourceName(String.valueOf(value));
 		}

@@ -8,6 +8,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.opentracing.Span;
 
 /**
@@ -22,21 +26,13 @@ public class DDApi {
 
     private final String tracesEndpoint;
 //    private final String servicesEndpoint;
-
-    /**
-     * The spans serializer: can be replaced. By default, it serialize in JSON.
-     */
-    private final DDSpanSerializer spanSerializer;
+    
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final JsonFactory jsonFactory = objectMapper.getFactory();
 
     public DDApi(String host, int port) {
-        this(host, port, new DDSpanSerializer());
-    }
-
-    public DDApi(String host, int port, DDSpanSerializer spanSerializer) {
-        super();
         this.tracesEndpoint = "http://" + host + ":" + port + TRACES_ENDPOINT;
-//        this.servicesEndpoint = "http://" + host + ":" + port + SERVICES_ENDPOINT;
-        this.spanSerializer = spanSerializer;
+//      this.servicesEndpoint = "http://" + host + ":" + port + SERVICES_ENDPOINT;
     }
 
     /**
@@ -46,15 +42,7 @@ public class DDApi {
      * @return the staus code returned
      */
     public boolean sendTraces(List<List<Span>> traces) {
-        String payload = null;
-        try {
-            payload = spanSerializer.serialize(traces);
-        } catch (Exception e) {
-            logger.error("Error during serialization of " + traces.size() + " traces.", e);
-            return false;
-        }
-
-        int status = callPUT(tracesEndpoint, payload);
+        int status = callPUT(tracesEndpoint, traces);
         if (status == 200) {
             logger.debug("Succesfully sent {} traces to the DD agent.", traces.size());
             return true;
@@ -71,7 +59,7 @@ public class DDApi {
      * @param content
      * @return the status code
      */
-    private int callPUT(String endpoint, String content) {
+    private int callPUT(String endpoint, Object content) {
         HttpURLConnection httpCon = null;
         try {
             URL url = new URL(endpoint);
@@ -86,8 +74,10 @@ public class DDApi {
 
         try {
             OutputStreamWriter out = new OutputStreamWriter(httpCon.getOutputStream());
-            out.write(content);
-            out.close();
+            JsonGenerator jsonGen = jsonFactory.createGenerator(out);
+            objectMapper.writeValue(jsonGen, content);
+            jsonGen.flush();
+            jsonGen.close();
             int responseCode = httpCon.getResponseCode();
             if (responseCode == 200) {
                 logger.debug("Sent the payload to the DD agent.");

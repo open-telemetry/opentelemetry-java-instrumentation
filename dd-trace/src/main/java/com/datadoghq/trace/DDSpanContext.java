@@ -36,6 +36,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	 * True indicates that the span reports an error
 	 */
 	private boolean errorFlag;
+
 	/**
 	 * The type of the span. If null, the Datadog Agent will report as a custom
 	 */
@@ -123,7 +124,10 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	public boolean getErrorFlag() {
 		return errorFlag;
 	}
-
+	
+	public void setErrorFlag(boolean errorFlag) {
+		this.errorFlag = errorFlag;
+	}
 
 	public String getSpanType() {
 		return spanType;
@@ -175,8 +179,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 		this.tags.put(tag, value);
 
 		//Call decorators
-		if (tracer.getSpanContextDecorators(tag) != null) {
-			for (DDSpanContextDecorator decorator : tracer.getSpanContextDecorators(tag)) {
+		List<DDSpanContextDecorator> decorators = tracer.getSpanContextDecorators(tag);
+		if (decorators != null) {
+			for (DDSpanContextDecorator decorator : decorators) {
 				decorator.afterSetTag(this, tag, value);
 			}
 		}

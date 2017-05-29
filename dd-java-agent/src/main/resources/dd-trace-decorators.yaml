@@ -2,8 +2,6 @@
 # Could be DBServiceDecorator, MapperDecorator or HTTPServiceDecorator
 decorators:
   - type: HTTPComponent
-    matchingValue: java-web-servlet
-  - type: HTTPComponent
     matchingValue: java-okhttp
     setValue: http-client
   - type: DBComponent
@@ -16,3 +14,5 @@ decorators:
     matchingValue: java-aws-sdk
     setValue: aws-client
   - type: URLAsResourceName
+  - type: DBStatementAsResourceName
+  - type: ErrorFlag

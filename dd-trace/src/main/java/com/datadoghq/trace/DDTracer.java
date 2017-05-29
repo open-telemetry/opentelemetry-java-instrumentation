@@ -78,10 +78,7 @@ public class DDTracer implements io.opentracing.Tracer {
 	 * @return the list of span context decorators
 	 */
 	public List<DDSpanContextDecorator> getSpanContextDecorators(String tag) {
-
-		List<DDSpanContextDecorator> decorators = spanContextDecorators.get(tag);
-
-		return decorators;
+		return spanContextDecorators.get(tag);
 	}
 
 	/**

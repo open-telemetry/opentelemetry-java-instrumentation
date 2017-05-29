@@ -3,6 +3,7 @@ package com.datadoghq.trace.resolver;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 /**
  * Tracer configuration
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TracerConfig {
 	private String defaultServiceName;
 	private Map<String,Object> writer;

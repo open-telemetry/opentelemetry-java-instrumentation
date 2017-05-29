@@ -22,9 +22,6 @@ public class DBComponent extends DDSpanContextDecorator {
 		if (super.afterSetTag(context, tag, value)) {
 			//Assign span type to DB
 			context.setSpanType("db");
-
-			//Assign resource name
-			context.setResourceName(String.valueOf(value));
 			return true;
 		}
 		return false;
