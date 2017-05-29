@@ -3,23 +3,13 @@ package com.datadoghq.trace.resolver;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.Map;
 import java.util.ServiceLoader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datadoghq.trace.DDTracer;
-import com.datadoghq.trace.integration.DB;
 import com.datadoghq.trace.integration.DDSpanContextDecorator;
-import com.datadoghq.trace.integration.HTTP;
-import com.datadoghq.trace.sampling.AllSampler;
-import com.datadoghq.trace.sampling.RateSampler;
-import com.datadoghq.trace.sampling.Sampler;
-import com.datadoghq.trace.writer.DDAgentWriter;
-import com.datadoghq.trace.writer.DDApi;
-import com.datadoghq.trace.writer.LoggingWritter;
-import com.datadoghq.trace.writer.Writer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.auto.service.AutoService;
@@ -52,35 +42,7 @@ public class DDTracerResolver extends TracerResolver {
 			while (iter.hasMoreElements()) {
 				TracerConfig config = objectMapper.readValue(iter.nextElement().openStream(), TracerConfig.class);
 
-				String defaultServiceName = config.getDefaultServiceName() != null ? config.getDefaultServiceName() : DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME;
-
-				//Create writer
-				Writer writer = DDTracer.UNASSIGNED_WRITER;
-				if (config.getWriter() != null && config.getWriter().get("type") != null) {
-					String type = (String) config.getWriter().get("type");
-					if (type.equals(DDAgentWriter.class.getSimpleName())) {
-						String host = config.getWriter().get("host") != null ? (String) config.getWriter().get("host") : DDAgentWriter.DEFAULT_HOSTNAME;
-						Integer port = config.getWriter().get("port") != null ? (Integer) config.getWriter().get("port") : DDAgentWriter.DEFAULT_PORT;
-						DDApi api = new DDApi(host, port);
-						writer = new DDAgentWriter(api);
-					} else if (type.equals(LoggingWritter.class.getSimpleName())) {
-						writer = new LoggingWritter();
-					}
-				}
-
-				//Create sampler
-				Sampler rateSampler = DDTracer.UNASSIGNED_SAMPLER;
-				if (config.getSampler() != null && config.getSampler().get("type") != null) {
-					String type = (String) config.getSampler().get("type");
-					if (type.equals(AllSampler.class.getSimpleName())) {
-						rateSampler = new AllSampler();
-					} else if (type.equals(RateSampler.class.getSimpleName())) {
-						rateSampler = new RateSampler((Double) config.getSampler().get("rate"));
-					}
-				}
-
-				//Create tracer
-				tracer = new DDTracer(defaultServiceName, writer, rateSampler);
+				tracer = DDTracerFactory.create(config);
 
 				break; // ONLY the closest resource file is taken into account
 			}
@@ -90,20 +52,8 @@ public class DDTracerResolver extends TracerResolver {
 				TracerConfig config = objectMapper.readValue(iter.nextElement().openStream(), TracerConfig.class);
 				//Find decorators
 				if (config.getDecorators() != null) {
-					for (Map<String, Object> map : config.getDecorators()) {
-						if (map.get("type") != null) {
-							DDSpanContextDecorator decorator = null;
-							String componentName = (String) map.get("componentName");
-							String desiredServiceName = (String) map.get("desiredServiceName");
-
-							if (map.get("type").equals(HTTP.class.getSimpleName())) {
-								decorator = new HTTP(componentName, desiredServiceName);
-								tracer.addDecorator(decorator);
-							} else if (map.get("type").equals(DB.class.getSimpleName())) {
-								decorator = new DB(componentName, desiredServiceName);
-								tracer.addDecorator(decorator);
-							}
-						}
+					for(DDSpanContextDecorator decorator:DDDecoratorsFactory.create(config.getDecorators())){
+						tracer.addDecorator(decorator);
 					}
 				}
 				

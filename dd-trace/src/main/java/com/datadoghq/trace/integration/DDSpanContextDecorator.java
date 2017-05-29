@@ -5,16 +5,56 @@ import com.datadoghq.trace.DDSpanContext;
 /**
  * Span decorators are called when new tags are written and proceed to various remappings and enrichments
  */
-public interface DDSpanContextDecorator {
+public abstract class DDSpanContextDecorator {
 
-	/**
-	 * A tag was just added to the context. The decorator provides a way to enrich the context a bit more.
-	 * 
-	 * @param context the target context to decorate
-	 * @param tag The tag set
-	 * @param value the value assigned to the tag
-	 */
-	public void afterSetTag(DDSpanContext context , String tag, Object value);
-	
-	
+	private String matchingTag;
+
+	private String matchingValue;
+
+	private String setTag;
+
+	private String setValue;
+
+	public boolean afterSetTag(DDSpanContext context, String tag, Object value){
+		if(tag.equals(this.getMatchingTag()) && (this.getMatchingValue()==null || value.equals(this.getMatchingValue()))){
+			String targetTag = getSetTag()==null?tag:getSetTag();
+			String targetValue = getSetValue()==null?String.valueOf(value):getSetTag();
+			context.setTag(targetTag, targetValue);
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+	public String getMatchingTag() {
+		return matchingTag;
+	}
+
+	public void setMatchingTag(String tag) {
+		this.matchingTag = tag;
+	}
+
+	public String getMatchingValue() {
+		return matchingValue;
+	}
+
+	public void setMatchingValue(String value) {
+		this.matchingValue = value;
+	}
+
+	public String getSetTag() {
+		return setTag;
+	}
+
+	public void setSetTag(String targetTag) {
+		this.setTag = targetTag;
+	}
+
+	public String getSetValue() {
+		return setValue;
+	}
+
+	public void setSetValue(String targetValue) {
+		this.setValue = targetValue;
+	}
 }
