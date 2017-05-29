@@ -17,6 +17,10 @@ import org.reflections.scanners.MethodAnnotationsScanner;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
+import com.datadoghq.trace.resolver.AgentTracerConfig;
+import com.datadoghq.trace.resolver.DDTracerFactory;
+import com.datadoghq.trace.resolver.FactoryUtils;
+
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -30,8 +34,8 @@ import javassist.bytecode.Descriptor;
 public class TraceAnnotationsManager extends OpenTracingManager{
 	private static Logger log = Logger.getLogger(TraceAnnotationsManager.class.getName());
 
-	 private static Retransformer transformer;
-	
+	private static Retransformer transformer;
+
 	/**
 	 * This method initializes the manager.
 	 *
@@ -42,9 +46,12 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 		transformer = trans;
 		OpenTracingManager.initialize(trans);
 		OpenTracingManager.loadRules(ClassLoader.getSystemClassLoader());
-		
-		String value = System.getProperty("dd.enable_custom_tracing","false");
-		if("true".equalsIgnoreCase(value)){
+
+		//Load configuration
+		AgentTracerConfig agentTracerConfig = FactoryUtils.loadConfigFromResource(DDTracerFactory.CONFIG_PATH, AgentTracerConfig.class);
+
+		//Check if annotations are enabled
+		if(agentTracerConfig.isEnableCustomTracing()){
 			loadRules(ClassLoader.getSystemClassLoader());
 		}
 	}
@@ -59,7 +66,7 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 				.forPackages("/")
 				.filterInputsBy(new FilterBuilder().include(".*\\.class"))
 				.setScanners(new MethodAnnotationsScanner()));
-		
+
 		Set<Method> methods = reflections.getMethodsAnnotatedWith(Trace.class);
 
 		StringBuilder generatedScripts = new StringBuilder();
@@ -78,7 +85,7 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 						START;
 				RuleScript script = createRuleScript("Child of ",cc, javassistMethod,  Location.create(LocationType.ENTRY,""),ruleText);
 				generatedScripts.append(script).append("\n");
-				
+
 				//AT ENTRY: new trace
 				ruleText = 
 						CURRENT_SPAN_NOT_EXISTS+
@@ -87,11 +94,11 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 						START;
 				script = createRuleScript("New trace ",cc, javassistMethod,  Location.create(LocationType.ENTRY,""),ruleText);
 				generatedScripts.append(script).append("\n");
-				
+
 				//AT EXIT
 				script = createRuleScript("Close span ",cc, javassistMethod, Location.create(LocationType.EXIT,""),EXIT_RULE);
 				generatedScripts.append(script).append("\n");
-				
+
 			}catch(Exception e){
 				log.log(Level.SEVERE,"Could not create rule for method "+method+". Proceed to next annoted method.",e);
 			}
@@ -132,13 +139,13 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 				false);
 		return ruleScript;
 	}
-	
+
 	private static String CURRENT_SPAN_EXISTS = "IF currentSpan() != null\n";
 	private static String CURRENT_SPAN_NOT_EXISTS = "IF currentSpan() == null\n";
-	
+
 	private static String BUILD_SPAN = "DO\n"+"activateSpan(getTracer().buildSpan(\"";
 	private static String CLOSE_PARENTHESIS = "\")";
-	
+
 	private static String CHILD_OF_CURRENT_SPAN = ".asChildOf(currentSpan())";
 	private static String START = ".start());";
 
@@ -146,7 +153,7 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 			"DO\n"+ 
 			"currentSpan().finish();\n"+
 			"deactivateCurrentSpan();";
-	
+
 	private static String buildSpan(CtMethod javassistMethod){
 		try {
 			Trace trace = (Trace) javassistMethod.getAnnotation(Trace.class);
@@ -158,7 +165,7 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 		}
 		return BUILD_SPAN+javassistMethod.getName()+CLOSE_PARENTHESIS;
 	};
-	
+
 	private static String buildWithTags(CtMethod javassistMethod){
 		try {
 			Trace trace = (Trace) javassistMethod.getAnnotation(Trace.class);
@@ -167,8 +174,8 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 					StringBuilder sb = new StringBuilder();
 					for(int i = 0;i<trace.tagsKV().length;i=i+2){
 						sb.append(".withTag(\"")
-							.append(trace.tagsKV()[i]).append("\",\"").append(trace.tagsKV()[i+1])
-							.append(CLOSE_PARENTHESIS);
+						.append(trace.tagsKV()[i]).append("\",\"").append(trace.tagsKV()[i+1])
+						.append(CLOSE_PARENTHESIS);
 					}
 					return sb.toString();
 				}else{

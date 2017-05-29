@@ -1,17 +1,12 @@
 package com.datadoghq.trace.resolver;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datadoghq.trace.integration.DDSpanContextDecorator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 /**
  * Create DDSpaDecorators from a valid configuration
@@ -24,7 +19,6 @@ public class DDDecoratorsFactory {
 
 	public static final String CONFIG_PATH = "dd-trace-decorators.yaml";
 
-	private static final ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 
 	/**
 	 * Create decorators from configuration
@@ -77,22 +71,11 @@ public class DDDecoratorsFactory {
 	}
 
 	public static List<DDSpanContextDecorator> createFromResources(){
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
 		List<DDSpanContextDecorator> result = new ArrayList<DDSpanContextDecorator>();
-		try{
-			Enumeration<URL> iter = classLoader.getResources(CONFIG_PATH);
-			while (iter.hasMoreElements()) {
-				TracerConfig config = objectMapper.readValue(iter.nextElement().openStream(), TracerConfig.class);
-				result = DDDecoratorsFactory.create(config.getDecorators());
-				
-				break; // ONLY the closest resource file is taken into account
-			}
-		}catch(IOException e){
-			logger.error("Could not load decorators configuration file.", e);
+		TracerConfig config = FactoryUtils.loadConfigFromResource(CONFIG_PATH, TracerConfig.class);
+		if(config!=null){
+			result = DDDecoratorsFactory.create(config.getDecorators());
 		}
-
-
 		return result;
 	}
 }

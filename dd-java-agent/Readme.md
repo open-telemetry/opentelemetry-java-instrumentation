@@ -150,7 +150,7 @@ public void myMethod() throws InterruptedException{
 </dependency>
 ```
 
-- Enable custom tracing by adding this JVM property `-Ddd.enable_custom_tracing`
+- Enable custom tracing by adding in the `dd-trace.yaml` config file `enableCustomTracing: true`
 
 If you want to see custom tracing in action please run the [Dropwizard example](https://github.com/DataDog/dd-trace-java/blob/dev/dd-trace-examples/dropwizard-mongo-client/).
 

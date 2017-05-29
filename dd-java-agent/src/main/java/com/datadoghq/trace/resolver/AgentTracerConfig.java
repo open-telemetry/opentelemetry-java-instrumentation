@@ -14,4 +14,5 @@ public class AgentTracerConfig extends TracerConfig {
 	public void setEnableCustomTracing(boolean enableCustomTracing) {
 		this.enableCustomTracing = enableCustomTracing;
 	}
+	
 }

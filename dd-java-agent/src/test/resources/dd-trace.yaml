@@ -5,5 +5,3 @@ writer:
   port: 10000
 sampler:
   type: AllSampler
-    
-    
