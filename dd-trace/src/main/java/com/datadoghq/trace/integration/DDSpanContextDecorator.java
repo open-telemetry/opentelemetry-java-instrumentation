@@ -15,13 +15,13 @@ public abstract class DDSpanContextDecorator {
 
 	private String setValue;
 
-	public boolean afterSetTag(DDSpanContext context, String tag, Object value){
-		if(tag.equals(this.getMatchingTag()) && (this.getMatchingValue()==null || value.equals(this.getMatchingValue()))){
-			String targetTag = getSetTag()==null?tag:getSetTag();
-			String targetValue = getSetValue()==null?String.valueOf(value):getSetTag();
+	public boolean afterSetTag(DDSpanContext context, String tag, Object value) {
+		if ((this.getMatchingValue() == null || value.equals(this.getMatchingValue()))) {
+			String targetTag = getSetTag() == null ? tag : getSetTag();
+			String targetValue = getSetValue() == null ? String.valueOf(value) : getSetTag();
 			context.setTag(targetTag, targetValue);
 			return true;
-		}else{
+		} else {
 			return false;
 		}
 	}

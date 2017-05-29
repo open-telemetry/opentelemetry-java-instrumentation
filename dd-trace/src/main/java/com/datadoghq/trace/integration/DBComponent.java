@@ -2,7 +2,6 @@ package com.datadoghq.trace.integration;
 
 import com.datadoghq.trace.DDSpanContext;
 import com.datadoghq.trace.DDTags;
-
 import io.opentracing.tag.Tags;
 
 /**
@@ -10,7 +9,7 @@ import io.opentracing.tag.Tags;
  * service name  and retrieves some DB meta such as the statement
  */
 public class DBComponent extends DDSpanContextDecorator {
-	
+
 	public DBComponent() {
 		super();
 		this.setMatchingTag(Tags.COMPONENT.getKey());
@@ -20,14 +19,12 @@ public class DBComponent extends DDSpanContextDecorator {
 	@Override
 	public boolean afterSetTag(DDSpanContext context, String tag, Object value) {
 		//Assign service name
-		if(super.afterSetTag(context, tag, value)){
+		if (super.afterSetTag(context, tag, value)) {
 			//Assign span type to DB
 			context.setSpanType("db");
-			
+
 			//Assign resource name
-			if(tag.equals(Tags.DB_STATEMENT.getKey())){
-				context.setResourceName(String.valueOf(value));
-			}
+			context.setResourceName(String.valueOf(value));
 			return true;
 		}
 		return false;

@@ -175,7 +175,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 		this.tags.put(tag, value);
 
 		//Call decorators
-		for (DDSpanContextDecorator decorator : tracer.getSpanContextDecorators()) {
+		for (DDSpanContextDecorator decorator : tracer.getSpanContextDecorators(tag)) {
 			decorator.afterSetTag(this, tag, value);
 		}
 		//Error management
