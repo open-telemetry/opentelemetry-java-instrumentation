@@ -1,8 +1,5 @@
 package com.datadoghq.trace.resolver;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.RateSampler;
@@ -11,6 +8,8 @@ import com.datadoghq.trace.writer.DDAgentWriter;
 import com.datadoghq.trace.writer.DDApi;
 import com.datadoghq.trace.writer.LoggingWritter;
 import com.datadoghq.trace.writer.Writer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Create a tracer from a configuration file
@@ -21,57 +20,69 @@ public class DDTracerFactory {
 
 	public static final String CONFIG_PATH = "dd-trace.yaml";
 
+	private static final String DD_AGENT_WRITER_TYPE = DDAgentWriter.class.getSimpleName();
+	private static final String LOGGING_WRITER_TYPE = LoggingWritter.class.getSimpleName();
+	private static final String ALL_SAMPLER_TYPE = AllSampler.class.getSimpleName();
+	private static final String RATE_SAMPLER_TYPE = RateSampler.class.getSimpleName();
+
 	/**
 	 * Create a tracer from a TracerConfig object
-	 * 
+	 *
 	 * @param config
 	 * @return the corresponding tracer
 	 */
-	public static DDTracer create(TracerConfig config){
+	public static DDTracer create(TracerConfig config) {
 		String defaultServiceName = config.getDefaultServiceName() != null ? config.getDefaultServiceName() : DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME;
 
 		//Create writer
-		Writer writer = DDTracer.UNASSIGNED_WRITER;
-		if (config.getWriter() != null && config.getWriter().get("type") != null) {
-			String type = (String) config.getWriter().get("type");
-			if (type.equals(DDAgentWriter.class.getSimpleName())) {
-				String host = config.getWriter().get("host") != null ? (String) config.getWriter().get("host") : DDAgentWriter.DEFAULT_HOSTNAME;
-				Integer port = config.getWriter().get("port") != null ? (Integer) config.getWriter().get("port") : DDAgentWriter.DEFAULT_PORT;
-				DDApi api = new DDApi(host, port);
-				writer = new DDAgentWriter(api);
-			} else if (type.equals(LoggingWritter.class.getSimpleName())) {
+		Writer writer;
+
+		if (config.getWriter() != null) {
+			WriterConfig c = config.getWriter();
+			if (DD_AGENT_WRITER_TYPE.equals(c.getType())) {
+				writer = new DDAgentWriter(new DDApi(c.getHost(DDAgentWriter.DEFAULT_HOSTNAME), c.getPort(DDAgentWriter.DEFAULT_PORT)));
+			} else if (LOGGING_WRITER_TYPE.equals(c.getType())) {
 				writer = new LoggingWritter();
+			} else {
+				writer = DDTracer.UNASSIGNED_WRITER;
 			}
+		} else {
+			writer = DDTracer.UNASSIGNED_WRITER;
+
 		}
 
 		//Create sampler
-		Sampler rateSampler = DDTracer.UNASSIGNED_SAMPLER;
-		if (config.getSampler() != null && config.getSampler().get("type") != null) {
-			String type = (String) config.getSampler().get("type");
-			if (type.equals(AllSampler.class.getSimpleName())) {
-				rateSampler = new AllSampler();
-			} else if (type.equals(RateSampler.class.getSimpleName())) {
-				rateSampler = new RateSampler((Double) config.getSampler().get("rate"));
+		Sampler sampler;
+
+		if (config.getSampler() != null) {
+			if (RATE_SAMPLER_TYPE.equals(config.getSampler().getType())) {
+				sampler = new RateSampler(config.getSampler().getRate());
+			} else if (ALL_SAMPLER_TYPE.equals(config.getSampler().getType())) {
+				sampler = new AllSampler();
+			} else {
+				sampler = DDTracer.UNASSIGNED_SAMPLER;
 			}
+		} else {
+			sampler = DDTracer.UNASSIGNED_SAMPLER;
 		}
 
 		//Create tracer
-		return new DDTracer(defaultServiceName, writer, rateSampler);
+		return new DDTracer(defaultServiceName, writer, sampler);
+
 	}
 
 
-	
-	public static DDTracer createFromResources(){
+	public static DDTracer createFromResources() {
 		TracerConfig tracerConfig = FactoryUtils.loadConfigFromResource(CONFIG_PATH, TracerConfig.class);
-		
+
 		DDTracer tracer = null;
 		if (tracerConfig == null) {
-			logger.info("No valid configuration file {} found. Loading default tracer.",CONFIG_PATH);
+			logger.info("No valid configuration file {} found. Loading default tracer.", CONFIG_PATH);
 			tracer = new DDTracer();
-		}else{
+		} else {
 			tracer = DDTracerFactory.create(tracerConfig);
 		}
-		
+
 		return tracer;
 	}
 
