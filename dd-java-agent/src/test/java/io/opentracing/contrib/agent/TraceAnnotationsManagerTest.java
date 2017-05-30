@@ -15,11 +15,11 @@ public class TraceAnnotationsManagerTest {
 	@Before
 	public void beforeTest() throws Exception {
 		GlobalTracer.register(tracer);
-		TraceAnnotationsManager.loadRules(ClassLoader.getSystemClassLoader());
+		TraceAnnotationsManager.loadAnnotationsRules(ClassLoader.getSystemClassLoader());
 	}
 
 	@Test
-	public void test() {
+	public void testAnnotations() {
 		//Test single span in new trace
 		SayTracedHello.sayHello();
 		

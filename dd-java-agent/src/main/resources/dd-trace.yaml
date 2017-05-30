@@ -19,6 +19,11 @@ sampler:
   # RateSample: only a portion of spans are reported to the writer
   #  - Param 'rate': the portion of spans to keep
   type: AllSampler
+  # Skip some traces if the root span tag values matches some regexp patterns
+  # skipTagsPatterns: {"http.url": ".*/demo/add.*"}
   
-# Enable custom tracing (annotations)
+# Enable custom tracing (Custom annotations for now)
 # enableCustomTracing: true
+
+# Disable some instrumentations
+# disabledInstrumentations: ["apache http", "mongo", "jetty", "tomcat", ...]

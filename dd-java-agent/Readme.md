@@ -72,9 +72,17 @@ sampler:
   # RateSample: only a portion of spans are reported to the writer
   #  - Param 'rate': the portion of spans to keep
   type: AllSampler
+  # Skip some traces if the root span tag values matches some regexp patterns
+  # skipTagsPatterns: {"http.url": ".*/demo/add.*"}
+  
+# Enable custom tracing (Custom annotations for now)
+enableCustomTracing: true
+
+# Disable some instrumentations
+# disabledInstrumentations: ["apache http", "mongo", "jetty", "tomcat", ...]
 ```
 
-If you want to change it, you should then create it in your project and change it as suited.
+If you want to change it, you must create it in your project.
 
 ## Instrumented frameworks
 
@@ -113,6 +121,21 @@ By enabling the JDBC instrumentation you'll  intercept all the client calls to t
 But unfortunately this can not be done entirely automatically today. To enable tracing please follow the instructions provided on the [java-jdbc opentracing contrib project](https://github.com/opentracing-contrib/java-jdbc#usage).
 
 We also provide an [example project with Spring Boot & MySQL](web application frameworks).
+
+### Disabling instrumentations
+
+If for some reasons you need to disable an instrumentation you should uncomment the `disabledInstrumentations: ` attribute in the configuration and provide a list as illustrated below:
+
+```yaml
+...
+
+# Disable a few instrumentations
+disabledInstrumentations: ["apache http", "mongo", "tomcat"]
+
+...
+```
+
+### 
 
 ## Custom instrumentations
 

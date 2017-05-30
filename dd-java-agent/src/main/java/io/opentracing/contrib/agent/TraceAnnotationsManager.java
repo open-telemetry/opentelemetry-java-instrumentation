@@ -1,12 +1,23 @@
 package io.opentracing.contrib.agent;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jboss.byteman.agent.Location;
 import org.jboss.byteman.agent.LocationType;
@@ -31,10 +42,12 @@ import javassist.bytecode.Descriptor;
  * 
  * It loads all the scripts contained in all the 'oatrules.btm' resource files then instrument all the methods annoted with the @Trace.
  */
-public class TraceAnnotationsManager extends OpenTracingManager{
+public class TraceAnnotationsManager {
 	private static Logger log = Logger.getLogger(TraceAnnotationsManager.class.getName());
 
 	private static Retransformer transformer;
+
+	private static final String AGENT_RULES = "otarules.btm";
 
 	/**
 	 * This method initializes the manager.
@@ -44,16 +57,49 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 	 */
 	public static void initialize(Retransformer trans) throws Exception {
 		transformer = trans;
-		OpenTracingManager.initialize(trans);
-		OpenTracingManager.loadRules(ClassLoader.getSystemClassLoader());
-
 		//Load configuration
 		AgentTracerConfig agentTracerConfig = FactoryUtils.loadConfigFromResource(DDTracerFactory.CONFIG_PATH, AgentTracerConfig.class);
+		
+		List<String> loadedScripts = loadRules(ClassLoader.getSystemClassLoader());
+		
+		//Check if some rules have to be uninstalled
+		if(agentTracerConfig != null){
+			List<String> uninstallContributions = agentTracerConfig.getDisabledInstrumentations();
+			if(uninstallContributions!=null && !uninstallContributions.isEmpty()){
+				uninstallScripts(loadedScripts,uninstallContributions);
+			}
+		}
 
 		//Check if annotations are enabled
-		if(agentTracerConfig.isEnableCustomTracing()){
-			loadRules(ClassLoader.getSystemClassLoader());
+		if(agentTracerConfig != null && agentTracerConfig.isEnableCustomTracing()){
+			loadAnnotationsRules(ClassLoader.getSystemClassLoader());
 		}
+	}
+
+	/**
+	 * Uninstall some scripts from a list of patterns.
+	 * All the rules that contain the pattern will be uninstalled 
+	 * 
+	 * @param installedScripts 
+	 * @param patterns not case sensitive (eg. "mongo", "apache http", "elasticsearch", etc...])
+	 */
+	public static void uninstallScripts(List<String> installedScripts, List<String> patterns) throws Exception{
+		Set<String> rulesToRemove = new HashSet<String>();
+
+		for(String strPattern : patterns){
+			Pattern pattern = Pattern.compile("(?i)RULE [^\n]*"+strPattern+"[^\n]*\n");
+			for(String loadedScript : installedScripts){
+				Matcher matcher = pattern.matcher(loadedScript);
+				while(matcher.find()){
+					rulesToRemove.add(matcher.group());
+				}
+			}
+		}
+		StringWriter sw = new StringWriter();
+		try(PrintWriter pr = new PrintWriter(sw)){
+			transformer.removeScripts(new ArrayList<String>(rulesToRemove), pr);
+		}
+		log.log(Level.INFO, sw.toString());
 	}
 
 	/**
@@ -61,7 +107,7 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 	 * 
 	 * @param classLoader
 	 */
-	public static void loadRules(ClassLoader classLoader) {
+	public static void loadAnnotationsRules(ClassLoader classLoader) {
 		Reflections reflections = new Reflections(new ConfigurationBuilder()
 				.forPackages("/")
 				.filterInputsBy(new FilterBuilder().include(".*\\.class"))
@@ -138,6 +184,67 @@ public class TraceAnnotationsManager extends OpenTracingManager{
 				"",
 				false);
 		return ruleScript;
+	}
+
+	/**
+	 * This method loads any OpenTracing Agent rules (otarules.btm) found as resources
+	 * within the supplied classloader.
+	 *
+	 * @param classLoader The classloader
+	 */
+	public static List<String> loadRules(ClassLoader classLoader) {
+		List<String> scripts = new ArrayList<>();
+		if (transformer == null) {
+			log.severe("Attempt to load OpenTracing agent rules before transformer initialized");
+			return scripts;
+		}
+
+		List<String> scriptNames = new ArrayList<>();
+
+		// Load default and custom rules
+		try {
+			Enumeration<URL> iter = classLoader.getResources(AGENT_RULES);
+			while (iter.hasMoreElements()) {
+				loadRules(iter.nextElement().toURI(), scriptNames, scripts);
+			}
+
+			StringWriter sw=new StringWriter();
+			try (PrintWriter writer = new PrintWriter(sw)) {
+				try {
+					transformer.installScript(scripts, scriptNames, writer);
+				} catch (Exception e) {
+					log.log(Level.SEVERE, "Failed to install scripts", e);
+				}
+			}
+			if (log.isLoggable(Level.FINEST)) {
+				log.finest(sw.toString());
+			}
+		} catch (IOException | URISyntaxException e) {
+			log.log(Level.SEVERE, "Failed to load OpenTracing agent rules", e);
+		}
+
+		if (log.isLoggable(Level.FINE)) {
+			log.fine("OpenTracing Agent rules loaded");
+		}
+		return scripts;
+	}
+
+	private static void loadRules(URI uri, final List<String> scriptNames,
+			final List<String> scripts) throws IOException {
+		if (log.isLoggable(Level.FINE)) {
+			log.fine("Load rules from URI = " + uri);
+		}
+
+		StringBuilder str=new StringBuilder();
+		try (InputStream is = uri.toURL().openStream()) {
+			byte[] b = new byte[10240];
+			int len;
+			while ((len = is.read(b)) != -1) {
+				str.append(new String(b, 0, len));
+			}
+		}
+		scripts.add(str.toString());
+		scriptNames.add(uri.toString());
 	}
 
 	private static String CURRENT_SPAN_EXISTS = "IF currentSpan() != null\n";
