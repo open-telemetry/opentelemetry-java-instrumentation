@@ -96,7 +96,7 @@ When attached to an application the `dd-java-agent` automatically  instruments t
 | Jetty | 8.x, 9.x  | Trace all incoming HTTP calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) capabilities |
 | Tomcat |   8.0.x, 8.5.x & 9.x   |  Trace all incoming HTTP calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) capabilities  |
 
-Modern web application frameworks such as Dropwizard or Spring Boot are automatically instrumented thanks to these servers instrumentation. (See [example projects](#other-useful-resources)) 
+Modern web application frameworks such as Dropwizard or Spring Boot are automatically instrumented thanks to these servers instrumentation. (See [example projects](#other-useful-resources))
 
 ### Databases
 | FWK        | Versions           | Comments  |

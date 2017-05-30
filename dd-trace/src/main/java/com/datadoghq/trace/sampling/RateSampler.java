@@ -16,7 +16,7 @@ import io.opentracing.Span;
  * It samples randomly, its main purpose is to reduce the instrumentation footprint.
  */
 @AutoService(Sampler.class)
-public class RateSampler implements Sampler {
+public class RateSampler extends ASampler {
 
 
     private final static Logger logger = LoggerFactory.getLogger(RateSampler.class);
@@ -45,7 +45,7 @@ public class RateSampler implements Sampler {
     }
 
     @Override
-    public boolean sample(Span span) {
+    public boolean doSample(Span span) {
         boolean sample = Math.random() <= this.sampleRate;
         logger.debug("{} - Span is sampled: {}", span, sample);
         return sample;
