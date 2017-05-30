@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Tracer configuration
@@ -68,6 +69,7 @@ class SamplerConfig {
 
 	private Double rate;
 	private String type;
+	private Map<String, String> skipTagsPatterns;
 
 	public String getType() {
 		return type;
@@ -84,6 +86,10 @@ class SamplerConfig {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public Map<String, String> getSkipTagsPatterns() {
+		return skipTagsPatterns;
 	}
 }
 

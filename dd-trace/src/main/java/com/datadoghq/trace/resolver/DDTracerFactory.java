@@ -1,9 +1,7 @@
 package com.datadoghq.trace.resolver;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.datadoghq.trace.DDTracer;
+import com.datadoghq.trace.sampling.ASampler;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.RateSampler;
 import com.datadoghq.trace.sampling.Sampler;
@@ -11,6 +9,11 @@ import com.datadoghq.trace.writer.DDAgentWriter;
 import com.datadoghq.trace.writer.DDApi;
 import com.datadoghq.trace.writer.LoggingWritter;
 import com.datadoghq.trace.writer.Writer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Create a tracer from a configuration file
@@ -28,7 +31,7 @@ public class DDTracerFactory {
 
 	/**
 	 * Create a tracer from a TracerConfig object
-	 * 
+	 *
 	 * @param config
 	 * @return the corresponding tracer
 	 */
@@ -62,26 +65,21 @@ public class DDTracerFactory {
 				sampler = new AllSampler();
 			} else {
 				sampler = DDTracer.UNASSIGNED_SAMPLER;
-		Sampler sampler = DDTracer.UNASSIGNED_SAMPLER;
-		if (config.getSampler() != null && config.getSampler().get("type") != null) {
-			String type = (String) config.getSampler().get("type");
-			if (type.equals(AllSampler.class.getSimpleName())) {
-				sampler = new AllSampler();
-			} else if (type.equals(RateSampler.class.getSimpleName())) {
-				sampler = new RateSampler((Double) config.getSampler().get("rate"));
 			}
 
-			//Add sampled tags
-			Map<String,String> skipTagsPatterns = (Map<String, String>) config.getSampler().get("skipTagsPatterns");
-			if(skipTagsPatterns!=null && sampler instanceof ASampler){
-				ASampler aSampler = (ASampler) sampler;
-				for(Entry<String,String> entry:skipTagsPatterns.entrySet()){
-					aSampler.addSkipTagPattern(entry.getKey(), Pattern.compile(entry.getValue()));
-				}
-			}
 		} else {
 			sampler = DDTracer.UNASSIGNED_SAMPLER;
 		}
+
+		//Add sampled tags
+		Map<String, String> skipTagsPatterns = config.getSampler().getSkipTagsPatterns();
+		if (skipTagsPatterns != null && sampler instanceof ASampler) {
+			ASampler aSampler = (ASampler) sampler;
+			for (Map.Entry<String, String> entry : skipTagsPatterns.entrySet()) {
+				aSampler.addSkipTagPattern(entry.getKey(), Pattern.compile(entry.getValue()));
+			}
+		}
+
 
 		//Create tracer
 		return new DDTracer(defaultServiceName, writer, sampler);
