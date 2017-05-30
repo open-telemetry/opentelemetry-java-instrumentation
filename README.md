@@ -1,19 +1,23 @@
-## Datadog Trace Java
+## Datadog APM - Java Agent and Core Tracer
 
-This repository is the official Datadog Trace Java.
-It offers you all resources you needed to start to instrument your Java project and
-see traces in your [Datadog](https://app.datadoghq.com) account.
-
-![](https://datadog-live.imgix.net/img/datadog_logo_share_tt.png)
-
-
-This project hosts 3 parts:
-
-* [dd-trace](dd-trace) is the Datadog implementation of an Opentracing tracer
-* [dd-java-agent](dd-java-agent) is the Java agent allows you to automatically instrument a dozen of frameworks (Spring Boot, Mongo, 
-JMS, MySQl, etc.) without editing one line of code.
-* [dd-trace-examples](dd-trace-examples) provides you useful examples to start easily your first instrumentation.
+Datadog APM gives you powerful tools to observe and optimize modern applications. 
+It enables you to see exactly where your requests go and which services or calls are contributing to overall latency. 
+The lightweight agent is designed to be deployed on every host in your infrastructure, 
+so it generates gap-free distributed request traces even in the most complex microservice architectures.
  
- 
+This repository offers you all resources you needed to start to instrument your project and
+gather all traces in your [Datadog](https://app.datadoghq.com) account.
+
+![](https://datadog-live.imgix.net/img/blog/set-and-monitor-slas/a-postgres-90-percent.png?fit=max)
+
+
+### Start in minutes
+
+* [Introduction to the Datadog APM](https://www.datadoghq.com/apm/). Learn what you can do with the Next-Gen APM and how to get started.
+* [Install the Datadog Java agent](https://github.con/datadog/dd-trace-java/dd-java-agent). Instructions for supported technologies, web-servers and frameworks.
+* [Browse examples](https://github.con/datadog/dd-trace-java/dd-trace-examples). See how to instrument legacy projects based on the most used tehcnologies.
+* [DD Trace API](https://github.con/datadog/dd-trace-java/dd-trace). We choose to embrace the Opentracting initiative, use the Trace Java API to customize your instrumentation.
+
+### Help or questions? 
  
 And for any questions or feedback, feel free to send us an email: support@datadoghq.com
