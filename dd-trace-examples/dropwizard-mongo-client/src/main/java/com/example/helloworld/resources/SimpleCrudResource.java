@@ -3,7 +3,6 @@ package com.example.helloworld.resources;
 import com.example.helloworld.api.Book;
 import com.google.common.base.Optional;
 import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import io.opentracing.contrib.agent.Trace;
@@ -21,26 +20,36 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 public class SimpleCrudResource {
 
-	// Instantiate Synchronous Tracing MongoClient
+	private final MongoClient client;
 	private final MongoDatabase db;
+	private static final String HOSTNAME = "localhost";
+	private static final String DATABASE = "demo";
+	private static final java.lang.String COLLECTION = "books";
 
 	public SimpleCrudResource() {
 
-		MongoClientOptions settings = MongoClientOptions.builder()
-				.codecRegistry(com.mongodb.MongoClient.getDefaultCodecRegistry())
-				.build();
-
-		MongoClient client = new MongoClient("localhost", settings);
-
-		client.dropDatabase("demo");
-
-		db = client.getDatabase("demo");
-		db.createCollection("books");
+		// Init the client
+		client = new MongoClient(HOSTNAME);
 
 
+		// For this example, start from a fresh DB
+		try {
+			client.dropDatabase(DATABASE);
+		} catch (Exception e) {
+			// do nothing here
+		}
+
+		// Init the connection to the collection
+		db = client.getDatabase(DATABASE);
+		db.createCollection(COLLECTION);
 	}
 
-
+	/**
+	 * Add a book to the DB
+	 *
+	 * @return The status of the save
+	 * @throws InterruptedException
+	 */
 	@GET
 	@Path("/add")
 	public String addBook(
@@ -50,7 +59,7 @@ public class SimpleCrudResource {
 	) throws InterruptedException {
 
 
-		// Simple business need to execute before saving a new book
+		// The methodDB is traced (see below), this will be produced a new child span
 		beforeDB();
 
 		if (!isbn.isPresent()) {
@@ -59,40 +68,65 @@ public class SimpleCrudResource {
 
 		Book book = new Book(
 				isbn.get(),
-				title.or("missing title"),
+				title.or("Missing title"),
 				page.or(0));
 
-		db.getCollection("books").insertOne(book.toDocument());
-		return "Book saved";
+		db.getCollection(COLLECTION).insertOne(book.toDocument());
+		return "Book saved!";
 	}
 
+	/**
+	 * List all books present in the DB
+	 *
+	 * @return list of Books
+	 * @throws InterruptedException
+	 */
 	@GET
 	public List<Book> getBooks() throws InterruptedException {
 
-		// Simple business need to execute before saving a new book
+		// The methodDB is traced (see below), this will be produced a new childre span
 		beforeDB();
 
 		List<Book> books = new ArrayList<>();
-		try (MongoCursor<Document> cursor = db.getCollection("books").find().iterator();) {
+		try (MongoCursor<Document> cursor = db.getCollection(COLLECTION).find().iterator();) {
 			while (cursor.hasNext()) {
 				books.add(new Book(cursor.next()));
 			}
 		}
 
-		// Simple business need to execute after retrieve the book list
-		afterDB();
+		// The methodDB is traced (see below), this will be produced a new child span
+		beforeDB();
 
 		return books;
 	}
 
+	/**
+	 * The beforeDB is traced using the annotation @trace
+	 * Tags, the operation name can be configured using tagsKV and operationName options
+	 *
+	 * @throws InterruptedException
+	 */
 	@Trace(operationName = "Before DB", tagsKV = {"mytag", "myvalue"})
 	public void beforeDB() throws InterruptedException {
 		Thread.sleep(333);
 	}
 
+	/**
+	 * The beforeDB is traced using the annotation @trace
+	 * Tags, the operation name can be configured using tagsKV and operationName options
+	 *
+	 * @throws InterruptedException
+	 */
 	@Trace(operationName = "After DB", tagsKV = {"mytag", "myvalue"})
 	public void afterDB() throws InterruptedException {
 		Thread.sleep(111);
+	}
+
+	/**
+	 * Flush resources
+	 */
+	public void close() {
+		client.close();
 	}
 }
 
