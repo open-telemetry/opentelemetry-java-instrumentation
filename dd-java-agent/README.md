@@ -2,14 +2,14 @@
 
 *Minimal Java version required: 1.7*
 
-This is a Java Agent made for instrumenting Java applications using the Datadog Tracer. Once attached to one of your JVM you should see traces into your [Datadog APM](https://app.datadoghq.com/apm/search).
+This is a Java Agent to instrument Java applications using the Datadog Tracer. Once attached to one of your JVM you should see traces in [Datadog APM](https://app.datadoghq.com/apm/search).
 
-Tracing instrumentations can be done in 2 ways:
+Tracing instrumentation can be done in 2 ways:
 
 - Automatically over a set of [supported Web servers, frameworks or database drivers](#instrumented-frameworks)
 - By using the [`@trace` annotation](#custom-instrumentations)
 
-:heavy_exclamation_mark: **Warning:** This library is currently at Alpha stage. This means that even if we rigorously tested instrumentations you may experience strange behaviors depending on your running environment. It must evolve quickly though. For any help please contact [support@datadoghq.com](mailto:support@datadoghq.com).
+:heavy_exclamation_mark: **Warning:** This library is currently in Alpha. This means that even though we rigorously tested instrumentations you may experience strange behaviors depending on your running environment. Be sure to test thoroughly on a staging environment before releasing to production. For any help please contact [tracehelp@datadoghq.com](mailto:tracehelp@datadoghq.com).
 
 ## Quick start
 
@@ -86,7 +86,7 @@ If you want to change it, you must create it in your project.
 
 ## Instrumented frameworks
 
-When attached to an application the `dd-java-agent` automatically  instruments the following set of frameworks & servers.
+When attached to an application the `dd-java-agent` automatically instruments the following set of frameworks & servers:
 
 ### Frameworks
 
