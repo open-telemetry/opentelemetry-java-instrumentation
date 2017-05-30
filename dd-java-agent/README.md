@@ -99,7 +99,7 @@ When attached to an application the `dd-java-agent` automatically instruments th
 
 ### Servers
 
-| FWK        | Versions           | Comments  |
+| Server        | Versions           | Comments  |
 | ------------- |:-------------:| -----|
 | Jetty | 8.x, 9.x  | Trace all incoming HTTP calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) capabilities |
 | Tomcat |   8.0.x, 8.5.x & 9.x   |  Trace all incoming HTTP calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) capabilities  |
@@ -107,7 +107,7 @@ When attached to an application the `dd-java-agent` automatically instruments th
 Modern web application frameworks such as Dropwizard or Spring Boot are automatically instrumented thanks to these servers instrumentation. (See [example projects](#other-useful-resources))
 
 ### Databases
-| FWK        | Versions           | Comments  |
+| DB        | Versions           | Comments  |
 | ------------- |:-------------:| ----- |
 |Spring JDBC| 4.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
 |Hibernate| 5.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
@@ -123,7 +123,7 @@ We also provide an [example project with Spring Boot & MySQL](web application fr
 
 ### Disabling instrumentations
 
-If for some reasons you need to disable an instrumentation you should uncomment the `disabledInstrumentations: ` attribute in the configuration and provide a list as illustrated below:
+If for some reason you need to disable an instrumentation you should uncomment the `disabledInstrumentations: ` attribute in the configuration and provide a list as illustrated below:
 
 ```yaml
 ...
@@ -149,7 +149,7 @@ public void myMethod() throws InterruptedException{
 }
 ```
 
-By default, the operation name attach to the spawn span will be the name of the method and no meta tags will be attached.
+By default, the operation name attached to the spawn span will be the name of the method and no meta tags will be attached.
 
 You can use the the `operationName` and `tagsKV` attributes to customize your trace:
 
