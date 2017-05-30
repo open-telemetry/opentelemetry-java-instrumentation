@@ -2,33 +2,40 @@
 
 ### Purpose
 
-This project aims at demonstrating how to instrument legacy code based on Dropwizard and a client querying a Mongo database.
-We also demonstrate cross-process tracing through the `TracedClient` example.
+This project aims at demonstrating how to instrument legacy code based on:
+* the Dropwizard framework
+* a Mongo database.
+
+We also demonstrate user cross-process tracing through the `TracedClient` example.
 
 ### Run the demo
 
 #### Prerequisites
-1. Please make sure that you read and executed the prerequisites provided [on this page](../README.md)
-2. Make sure that you have a local mongo database running.
+
+1. Make sure that you have a local mongo database running (hostname: `localhost`, port: `27017`).
+2. No process holding the 8080 and the 8081 port, they are used by the Dropwizard server.
+
+If you're using Docker, you can run a mongo instance as follow:
+
+```bash
+docker run -it --rm -p 27017:27017 --name mongo -d mongo
+```
 
 #### Run the application
 
-If you want to enable tracing you have to launch the application with the datadog java agent.
-Get the latest version of the dd-java-agent: 
+If you want to enable tracing you have to launch the application with the Datadog java agent.
+First, get the latest version of the dd-java-agent: 
 
 ```
-# use latest version 
+# Use latest version 
 curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/0.0.1/dd-java-agent-0.0.1.jar
 ```
 
-Then add the agent to the JVM. That can be done by providing the following argument:
-`-javaagent:/path/to/dd-java-agent-0.0.1.jar`.
+Then, add the agent to the JVM. That can be done by providing the following argument:
+`java -javaagent:/path/to/dd-java-agent-0.0.1.jar ...`.
 
 ### Generate traces
 
-*A trace example*
-
-![](./apm.png)
 
 #### With your web browser
 
@@ -46,27 +53,19 @@ In that case, we instrument the `OkHttpClient` and you then observe a similar tr
 
 Cross process tracing is working thanks to headers injected on the client side that are extracted on the server. If you want to understand more you can refer to the [opentracing documentation](http://opentracing.io/documentation/pages/api/cross-process-tracing.html).
 
+*A trace example*
+
+![](./apm.png)
+
 ### How did we instrument this project?
 
 #### Auto-instrumentation with the `dd-trace-agent`
 
 The instrumentation is entirely done by the datadog agent which embed a set of rules that automatically recognizes & instruments:
 
-- The java servlet filters
+- The Java servlet filters
 - The Mongo client
 - The OkHTTP client
 
-The datadog agent embeds the [open tracing java agent](https://github.com/opentracing-contrib/java-agent).
-
-#### Custom methods instrumentation
-
-As an illustration of
-
-We wrote 4 rules in the `otarules.btm` files in order to instrument the `HelloWorldResource.beforeDB()` & `HelloWorldResource.afterDB()` methods.
-
-It brief, it consists in wrapping the content of this method with 2 rules:
-
-* 1 ENTRY rule: that start a child span
-* 1 EXIT rule: that finishes & deactivate the current span
-
-We encourage to open the rules file to get the details.
+The Datadog agent embeds the [open tracing java agent](https://github.com/opentracing-contrib/java-agent).
+We strongly recommend you to refer to the [Datadog Agent documentation](../../dd-java-agent) if you want to dig deeper.
