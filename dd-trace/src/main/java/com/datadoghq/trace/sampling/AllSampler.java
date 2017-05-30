@@ -5,10 +5,10 @@ import io.opentracing.Span;
 /**
  * Sampler that always says yes...
  */
-public class AllSampler implements Sampler {
+public class AllSampler extends ASampler {
 
 	@Override
-	public boolean sample(Span span) {
+	public boolean doSample(Span span) {
 		return true;
 	}
 
