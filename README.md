@@ -16,7 +16,7 @@ gather all traces in your [Datadog](https://app.datadoghq.com) account.
 * [Introduction to the Datadog APM](https://www.datadoghq.com/apm/). Learn what you can do with the Next-Gen APM and how to get started.
 * [Install the Datadog Java agent](dd-java-agent). Instructions for supported technologies, web-servers and frameworks.
 * [Browse examples](dd-trace-examples). See how to instrument legacy projects based on the most used tehcnologies.
-* [DD Trace API](dd-trace). We choose to embrace the Opentracting initiative, use the Trace Java API to customize your instrumentation.
+* [DD Trace API](dd-trace). We choose to embrace the Opentracting initiative. So feel free to use the Trace Java API to customize your instrumentation.
 
 ### Help or questions? 
  
