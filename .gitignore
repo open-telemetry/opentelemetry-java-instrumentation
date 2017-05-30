@@ -32,3 +32,9 @@ Thumbs.db
 # Others #
 ##########
 /logs/*
+
+
+
+/target
+**/target/
+/dd-java-agent/dependency-reduced-pom.xml
