@@ -256,9 +256,6 @@
 					<includes>
 						<include>*Test.java</include>
 					</includes>
-					<excludes>
-						<exclude>ElasticSearchInstrumentationTest.java</exclude>
-					</excludes>
 					<forkCount>3</forkCount>
 					<reuseForks>false</reuseForks>
 					<argLine>-Xmx1g -Xms1g -XX:MaxPermSize=512m -Dorg.jboss.byteman.verbose=true
