@@ -1,11 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>com.datadoghq</groupId>
         <artifactId>dd-trace-java</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.0.1</version>
     </parent>
 
     <artifactId>dd-java-agent</artifactId>
@@ -22,7 +21,7 @@
         <ot.contrib.okhttp.version>0.0.4</ot.contrib.okhttp.version>
         <opentracing.version>0.22.0</opentracing.version>
         <java.version>1.8</java.version>
-        <ot.dd-trace.version>0.0.1-SNAPSHOT</ot.dd-trace.version>
+        <ot.dd-trace.version>0.0.1</ot.dd-trace.version>
     </properties>
 
     <dependencies>
@@ -299,12 +298,10 @@
                                 </excludes>
                             </artifactSet>
                             <transformers>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>otarules.btm</resource>
                                 </transformer>
-                                <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Agent-Class>io.opentracing.contrib.agent.AnnotationsTracingAgent</Agent-Class>
                                         <Premain-Class>io.opentracing.contrib.agent.AnnotationsTracingAgent
