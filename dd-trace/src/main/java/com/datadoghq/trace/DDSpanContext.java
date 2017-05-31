@@ -170,7 +170,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	 *
 	 * @param tag   the tag-name
 	 * @param value the value of the value
-	 * @return the builder instance
 	 */
 	public synchronized void setTag(String tag, Object value) {
 		if (this.tags.isEmpty()) {
