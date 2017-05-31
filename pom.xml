@@ -6,16 +6,11 @@
     <artifactId>dd-trace-java</artifactId>
     <version>0.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
+
+    <!-- Project information -->
     <name>dd-trace-java</name>
     <description>Datadog tracing in Java</description>
     <url>https://github.com/datadog/dd-trace-java</url>
-
-
-    <properties>
-        <opentracing.version>0.22.0</opentracing.version>
-        <java.version>1.7</java.version>
-        <ot.dd-trace.version>0.0.1-SNAPSHOT</ot.dd-trace.version>
-    </properties>
 
     <licenses>
         <license>
@@ -25,13 +20,6 @@
         </license>
     </licenses>
 
-    <scm>
-        <url>https://github.com/datadog/dd-trace-java</url>
-        <connection>scm:git:git://github.com/datadog/dd-trace-java.git</connection>
-        <developerConnection>scm:git:git@github.com:datadog/dd-trace-java.git</developerConnection>
-        <tag>v0.0.1</tag>
-    </scm>
-
     <developers>
         <developer>
             <id>datadog</id>
@@ -40,12 +28,23 @@
         </developer>
     </developers>
 
+    <scm>
+        <url>https://github.com/datadog/dd-trace-java</url>
+        <connection>scm:git:git://github.com/datadog/dd-trace-java.git</connection>
+        <developerConnection>scm:git:git@github.com:datadog/dd-trace-java.git</developerConnection>
+    </scm>
+
     <modules>
         <module>dd-trace</module>
         <module>dd-java-agent</module>
+        <module>dd-java-agent-ittests</module>
         <module>dd-trace-examples</module>
     </modules>
 
+    <properties>
+        <opentracing.version>0.22.0</opentracing.version>
+        <java.version>1.7</java.version>
+    </properties>
 
     <distributionManagement>
         <snapshotRepository>
@@ -60,6 +59,7 @@
 
     <build>
         <plugins>
+            <!-- Attach sources -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -73,6 +73,23 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Attach Javadoc -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.4</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Sign jar and resources -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
@@ -87,6 +104,8 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Default Java Compatibility for the projects -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -96,6 +115,8 @@
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
+
+            <!-- Stuff for releasing on the Maven Central -->
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
