@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.datadoghq</groupId>
         <artifactId>dd-trace-java</artifactId>
-        <version>0.0.1</version>
+        <version>0.0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>dd-java-agent</artifactId>
@@ -21,7 +21,7 @@
         <ot.contrib.okhttp.version>0.0.4</ot.contrib.okhttp.version>
         <opentracing.version>0.22.0</opentracing.version>
         <java.version>1.8</java.version>
-        <ot.dd-trace.version>0.0.1</ot.dd-trace.version>
+        <ot.dd-trace.version>0.0.2-SNAPSHOT</ot.dd-trace.version>
     </properties>
 
     <dependencies>
