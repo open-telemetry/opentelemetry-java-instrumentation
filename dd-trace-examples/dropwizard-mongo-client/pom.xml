@@ -12,6 +12,11 @@
     <name>dropwizard-mongo-client</name>
     <packaging>jar</packaging>
 
+    <properties>
+        <!-- Datadog version -->
+        <dd-trace.version>0.0.3-SNAPSHOT</dd-trace.version>
+    </properties>
+
 
     <dependencies>
         <!-- This dependency is required for the @trace annotation -->

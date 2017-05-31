@@ -17,10 +17,6 @@
     </modules>
 
     <properties>
-        <!-- Datadog version -->
-        <dd-trace.version>0.0.2-SNAPSHOT</dd-trace.version>
-        <!-- Opentracing versions -->
-        <opentracing.spanmanager.version>0.0.5</opentracing.spanmanager.version>
         <!-- Others versions -->
         <java.version>1.8</java.version>
     </properties>
