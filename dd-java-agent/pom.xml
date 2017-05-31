@@ -10,6 +10,8 @@
 	<artifactId>dd-java-agent</artifactId>
 	<packaging>jar</packaging>
 	<name>dd-java-agent</name>
+	<description>Datadog Java Agent for tracing</description>
+	<url>https://github.com/datadog/dd-trace-java</url>
 
 
 	<properties>
