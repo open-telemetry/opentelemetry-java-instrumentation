@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.datadoghq</groupId>
         <artifactId>dd-trace-java</artifactId>
-        <version>0.0.2-SNAPSHOT</version>
+        <version>0.0.2</version>
     </parent>
 
     <artifactId>dd-java-agent</artifactId>
@@ -16,7 +16,7 @@
 
     <properties>
         <!-- Datadog versions -->
-        <dd-trace.version>0.0.2-SNAPSHOT</dd-trace.version>
+        <dd-trace.version>0.0.2</dd-trace.version>
         <!-- Opentracing versions -->
         <opentracing.version>0.22.0</opentracing.version>
         <ot.agent.version>0.0.12</ot.agent.version>
