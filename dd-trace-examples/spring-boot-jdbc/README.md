@@ -20,12 +20,12 @@ Each contribution hides the complexity to the developers.
 
 If you want to enable tracing you have to launch the application with the datadog java agent.
 
-That can be done by providing the following JVM argument (assuming the `M2_REPO` env variable is set and we run version `0.0.1`):
-`-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/0.0.1/dd-java-agent-0.0.1.jar`.
+That can be done by providing the following JVM argument (assuming the `M2_REPO` env variable is set and we run version `{version}`):
+`-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar`.
 
 There are 2 ways to test it:
 
-- Either with Maven: `mvn spring-boot:run -Djavaagent:${M2_REPO}/com/datadoghq/dd-java-agent/0.0.1/dd-java-agent-0.0.1.jar`
+- Either with Maven: `mvn spring-boot:run -Djavaagent:${M2_REPO}/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar`
 - Or if you prefer with your IDE providing the java agent command
 
 
