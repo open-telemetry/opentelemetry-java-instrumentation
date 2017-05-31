@@ -10,7 +10,7 @@
 
     <artifactId>async-tracing</artifactId>
     <name>async-tracing</name>
-    
+
     <properties>
         <!-- Datadog version -->
         <dd-trace.version>0.0.3-SNAPSHOT</dd-trace.version>
