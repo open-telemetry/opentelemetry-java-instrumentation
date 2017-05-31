@@ -24,7 +24,7 @@ public class DDDecoratorsFactory {
 	 * Create decorators from configuration
 	 * 
 	 * @param decoratorsConfig
-	 * @return the list of instanciated & configured decorators
+	 * @return the list of instanciated and configured decorators
 	 */
 	public static List<DDSpanContextDecorator> create(List<DDSpanDecoratorConfig> decoratorsConfig){
 		List<DDSpanContextDecorator> decorators = new ArrayList<DDSpanContextDecorator>();
