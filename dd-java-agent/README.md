@@ -2,14 +2,14 @@
 
 *Minimal Java version required: 1.7*
 
-This is a Java Agent made for instrumenting Java applications using the Datadog Tracer. Once attached to one of your JVM you should see traces into your [Datadog APM](https://app.datadoghq.com/apm/search).
+This is a Java Agent to instrument Java applications using the Datadog Tracer. Once attached to one of your JVM you should see traces in [Datadog APM](https://app.datadoghq.com/apm/search).
 
-Tracing instrumentations can be done in 2 ways:
+Tracing instrumentation can be done in 2 ways:
 
 - Automatically over a set of [supported Web servers, frameworks or database drivers](#instrumented-frameworks)
 - By using the [`@trace` annotation](#custom-instrumentations)
 
-:heavy_exclamation_mark: **Warning:** This library is currently at Alpha stage. This means that even if we rigorously tested instrumentations you may experience strange behaviors depending on your running environment. It must evolve quickly though. For any help please contact [support@datadoghq.com](mailto:support@datadoghq.com).
+:heavy_exclamation_mark: **Warning:** This library is currently in Alpha. This means that even though we rigorously tested instrumentations you may experience strange behaviors depending on your running environment. Be sure to test thoroughly on a staging environment before releasing to production. For any help please contact [tracehelp@datadoghq.com](mailto:tracehelp@datadoghq.com).
 
 ## Quick start
 
@@ -86,7 +86,7 @@ If you want to change it, you must create it in your project.
 
 ## Instrumented frameworks
 
-When attached to an application the `dd-java-agent` automatically  instruments the following set of frameworks & servers.
+When attached to an application the `dd-java-agent` automatically instruments the following set of frameworks & servers:
 
 ### Frameworks
 
@@ -99,7 +99,7 @@ When attached to an application the `dd-java-agent` automatically  instruments t
 
 ### Servers
 
-| FWK        | Versions           | Comments  |
+| Server        | Versions           | Comments  |
 | ------------- |:-------------:| -----|
 | Jetty | 8.x, 9.x  | Trace all incoming HTTP calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) capabilities |
 | Tomcat |   8.0.x, 8.5.x & 9.x   |  Trace all incoming HTTP calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) capabilities  |
@@ -107,7 +107,7 @@ When attached to an application the `dd-java-agent` automatically  instruments t
 Modern web application frameworks such as Dropwizard or Spring Boot are automatically instrumented thanks to these servers instrumentation. (See [example projects](#other-useful-resources))
 
 ### Databases
-| FWK        | Versions           | Comments  |
+| DB        | Versions           | Comments  |
 | ------------- |:-------------:| ----- |
 |Spring JDBC| 4.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
 |Hibernate| 5.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
@@ -123,7 +123,7 @@ We also provide an [example project with Spring Boot & MySQL](web application fr
 
 ### Disabling instrumentations
 
-If for some reasons you need to disable an instrumentation you should uncomment the `disabledInstrumentations: ` attribute in the configuration and provide a list as illustrated below:
+If for some reason you need to disable an instrumentation you should uncomment the `disabledInstrumentations: ` attribute in the configuration and provide a list as illustrated below:
 
 ```yaml
 ...
@@ -149,7 +149,7 @@ public void myMethod() throws InterruptedException{
 }
 ```
 
-By default, the operation name attach to the spawn span will be the name of the method and no meta tags will be attached.
+By default, the operation name attached to the spawn span will be the name of the method and no meta tags will be attached.
 
 You can use the the `operationName` and `tagsKV` attributes to customize your trace:
 
