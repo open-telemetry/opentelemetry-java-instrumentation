@@ -12,11 +12,6 @@
     <artifactId>dd-trace-examples</artifactId>
     <packaging>pom</packaging>
 
-    <properties>
-        <maven.deploy.skip>true</maven.deploy.skip>
-    </properties>
-
-
     <modules>
         <module>async-tracing</module>
         <module>dropwizard-mongo-client</module>
