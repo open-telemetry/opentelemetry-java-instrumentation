@@ -104,7 +104,7 @@ public class JarVersionsChecker {
 							if(key!=null){
 								potentialIssues.add(key);
 							}
-							log.log(Level.WARNING, "DD agent: The JAR {} as been found in the classpath. It may create some intrumentation issue, some rules are about to get disabled.",jarName);
+							log.log(Level.WARNING, "DD agent: The JAR {0} has been found in the classpath. It may create some intrumentation issue, some rules are about to get disabled.",jarName);
 						}
 					}
 				}
