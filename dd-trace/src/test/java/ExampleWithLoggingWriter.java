@@ -1,11 +1,6 @@
-import java.util.ArrayList;
-import java.util.List;
-
 import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.sampling.AllSampler;
-import com.datadoghq.trace.writer.DDAgentWriter;
-import com.datadoghq.trace.writer.LoggingWritter;
-import com.datadoghq.trace.writer.Writer;
+import com.datadoghq.trace.writer.LoggingWriter;
 
 import io.opentracing.Span;
 
@@ -13,7 +8,7 @@ public class ExampleWithLoggingWriter {
 
     public static void main(String[] args) throws Exception {
 
-        DDTracer tracer = new DDTracer(new LoggingWritter(), new AllSampler());
+        DDTracer tracer = new DDTracer(new LoggingWriter(), new AllSampler());
 
         Span parent = tracer
                 .buildSpan("hello-world")

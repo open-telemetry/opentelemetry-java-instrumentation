@@ -10,9 +10,9 @@ import com.google.auto.service.AutoService;
 import io.opentracing.Span;
 
 @AutoService(Writer.class)
-public class LoggingWritter implements Writer{
+public class LoggingWriter implements Writer{
 
-	private static final Logger logger = LoggerFactory.getLogger(LoggingWritter.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger(LoggingWriter.class.getName());
 	
 	@Override
 	public void write(List<Span> trace) {
