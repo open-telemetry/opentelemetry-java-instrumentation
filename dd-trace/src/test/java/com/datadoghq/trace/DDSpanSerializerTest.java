@@ -1,21 +1,19 @@
 package com.datadoghq.trace;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import com.datadoghq.trace.DDSpan;
-import com.datadoghq.trace.DDSpanContext;
-import com.datadoghq.trace.writer.DDSpanSerializer;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DDSpanSerializerTest {
 
 
-    DDSpanSerializer serializer;
+    ObjectMapper serializer;
     DDSpan span;
 
     @Before
@@ -46,7 +44,7 @@ public class DDSpanSerializerTest {
                 context);
 
         span.finish(133L);
-        serializer = new DDSpanSerializer();
+        serializer = new ObjectMapper();
     }
 
     @Test
@@ -56,9 +54,9 @@ public class DDSpanSerializerTest {
         String expected = "{\"meta\":{\"a-baggage\":\"value\",\"k1\":\"v1\"},\"service\":\"service\",\"error\":0,\"type\":\"type\",\"name\":\"operation\",\"duration\":33000,\"resource\":\"operation\",\"start\":100000,\"span_id\":2,\"parent_id\":0,\"trace_id\":1}";
         // FIXME At the moment, just compare the string sizes
         try {
-            assertThat(serializer.serialize(span).length()).isEqualTo(expected.length());
+            assertThat(serializer.writeValueAsString(span).length()).isEqualTo(expected.length());
         } catch (AssertionError e) {
-            assertThat(serializer.serialize(span)).isEqualTo(expected);
+            assertThat(serializer.writeValueAsString(span)).isEqualTo(expected);
         }
     }
 

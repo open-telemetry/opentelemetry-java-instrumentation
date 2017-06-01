@@ -22,7 +22,7 @@
         <!-- This dependency is required for the @trace annotation -->
         <dependency>
             <groupId>com.datadoghq</groupId>
-            <artifactId>dd-java-agent</artifactId>
+            <artifactId>dd-trace</artifactId>
             <version>${dd-trace.version}</version>
         </dependency>
 
