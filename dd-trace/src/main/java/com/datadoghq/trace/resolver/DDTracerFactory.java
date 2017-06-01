@@ -7,7 +7,7 @@ import com.datadoghq.trace.sampling.RateSampler;
 import com.datadoghq.trace.sampling.Sampler;
 import com.datadoghq.trace.writer.DDAgentWriter;
 import com.datadoghq.trace.writer.DDApi;
-import com.datadoghq.trace.writer.LoggingWritter;
+import com.datadoghq.trace.writer.LoggingWriter;
 import com.datadoghq.trace.writer.Writer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +25,7 @@ public class DDTracerFactory {
 	public static final String CONFIG_PATH = "dd-trace.yaml";
 
 	private static final String DD_AGENT_WRITER_TYPE = DDAgentWriter.class.getSimpleName();
-	private static final String LOGGING_WRITER_TYPE = LoggingWritter.class.getSimpleName();
+	private static final String LOGGING_WRITER_TYPE = LoggingWriter.class.getSimpleName();
 	private static final String ALL_SAMPLER_TYPE = AllSampler.class.getSimpleName();
 	private static final String RATE_SAMPLER_TYPE = RateSampler.class.getSimpleName();
 
@@ -46,7 +46,7 @@ public class DDTracerFactory {
 			if (DD_AGENT_WRITER_TYPE.equals(c.getType())) {
 				writer = new DDAgentWriter(new DDApi(c.getHost(DDAgentWriter.DEFAULT_HOSTNAME), c.getPort(DDAgentWriter.DEFAULT_PORT)));
 			} else if (LOGGING_WRITER_TYPE.equals(c.getType())) {
-				writer = new LoggingWritter();
+				writer = new LoggingWriter();
 			} else {
 				writer = DDTracer.UNASSIGNED_WRITER;
 			}
