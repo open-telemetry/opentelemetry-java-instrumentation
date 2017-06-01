@@ -14,7 +14,7 @@
 
     <properties>
         <!-- Datadog version -->
-        <dd-trace.version>0.0.3-SNAPSHOT</dd-trace.version>
+        <dd-trace.version>0.0.3</dd-trace.version>
     </properties>
 
 
