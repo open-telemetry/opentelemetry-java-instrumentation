@@ -28,11 +28,11 @@ First, get the latest version of the dd-java-agent:
 
 ```
 # Use latest version 
-curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/0.0.1/dd-java-agent-0.0.1.jar
+curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar
 ```
 
 Then, add the agent to the JVM. That can be done by providing the following argument:
-`java -javaagent:/path/to/dd-java-agent-0.0.1.jar ...`.
+`java -javaagent:/path/to/dd-java-agent-{version}.jar ...`.
 
 ### Generate traces
 

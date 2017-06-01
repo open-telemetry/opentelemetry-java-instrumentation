@@ -3,7 +3,7 @@
     <parent>
         <artifactId>dd-trace-java</artifactId>
         <groupId>com.datadoghq</groupId>
-        <version>0.0.2-SNAPSHOT</version>
+        <version>0.0.3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -16,32 +16,27 @@
         <module>spring-boot-jdbc</module>
     </modules>
 
+    <properties>
+        <!-- Others versions -->
+        <java.version>1.8</java.version>
+    </properties>
+
     <build>
         <pluginManagement>
             <plugins>
                 <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <version>2.8.2</version>
-                    <configuration>
-                        <skip>true</skip>
-                    </configuration>
-                </plugin>
-                <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.6.1</version>
                     <configuration>
-                        <source>1.8</source>
-                        <target>1.8</target>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
                         <fork>true</fork>
                         <maxmem>512m</maxmem>
-                        <useIncrementalCompilation>false
-                        </useIncrementalCompilation><!-- http://bcn.adityakishore.com/2014/11/broken-incremental-compilation-with.html  -->
+                        <useIncrementalCompilation>false</useIncrementalCompilation>
                     </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
-
     </build>
 
 </project>

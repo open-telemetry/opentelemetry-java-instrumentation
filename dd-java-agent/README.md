@@ -35,13 +35,13 @@ To instrument your project or your servers you simply have to declare the provid
 
 ```
 # use latest version 
-curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/0.0.1/dd-java-agent-0.0.1.jar
+curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar
 ```
 
 - Then add the following JVM argument when launching your application (in IDE, using Maven run or simply in collaboration with the `>java -jar` command):
 
 ```
--javaagent:/path/to/the/dd-java-agent-0.0.1.jar
+-javaagent:/path/to/the/dd-java-agent-{version}.jar
 ```
 
 That's it! If you did this properly the agent was executed at pre-main, had detected and instrumented the supported libraries and custom traces. You should then see traces on [Datadog APM](https://app.datadoghq.com/apm/search).
