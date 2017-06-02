@@ -49,9 +49,10 @@ That's it! If you did this properly the agent was executed at pre-main, had dete
 ## Configuration
 
 Configuration is done through a default `dd-trace.yaml` file as a resource in the classpath.
+You can also override it by adding the file path as a system property when launching the JVM: `-Ddd.trace.configurationFile`.
 
 ```yaml
-# Service name used if none is provided in the app
+# Main service name for the app
 defaultServiceName: java-app
 
 # The writer to use.
@@ -81,8 +82,6 @@ enableCustomTracing: true
 # Disable some instrumentations
 # disabledInstrumentations: ["apache http", "mongo", "jetty", "tomcat", ...]
 ```
-
-If you want to change it, you must create it in your project.
 
 ## Instrumented frameworks
 

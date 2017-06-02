@@ -58,7 +58,7 @@ public class TraceAnnotationsManager {
 	public static void initialize(Retransformer trans) throws Exception {
 		transformer = trans;
 		//Load configuration
-		AgentTracerConfig agentTracerConfig = FactoryUtils.loadConfigFromResource(DDTracerFactory.CONFIG_PATH, AgentTracerConfig.class);
+		AgentTracerConfig agentTracerConfig = FactoryUtils.loadConfigFromFilePropertyOrResource(DDTracerFactory.SYSTEM_PROPERTY_CONFIG_PATH,DDTracerFactory.CONFIG_PATH, AgentTracerConfig.class);
 		
 		List<String> loadedScripts = loadRules(ClassLoader.getSystemClassLoader());
 		
