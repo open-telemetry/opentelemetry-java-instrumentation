@@ -2,7 +2,7 @@
 defaultServiceName: java-app
 
 # The writer to use.
-# Could be: LoggingWritter or DDAgentWriter (default)
+# Could be: LoggingWriter or DDAgentWriter (default)
 writer:
   # LoggingWriter: Spans are logged using the application configuration
   # DDAgentWriter: Spans are forwarding to a Datadog Agent
