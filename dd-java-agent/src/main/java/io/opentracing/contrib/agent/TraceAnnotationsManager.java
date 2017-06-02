@@ -97,11 +97,14 @@ public class TraceAnnotationsManager {
 				}
 			}
 		}
-		StringWriter sw = new StringWriter();
-		try(PrintWriter pr = new PrintWriter(sw)){
-			transformer.removeScripts(new ArrayList<String>(rulesToRemove), pr);
+		
+		if(!rulesToRemove.isEmpty()){
+			StringWriter sw = new StringWriter();
+			try(PrintWriter pr = new PrintWriter(sw)){
+				transformer.removeScripts(new ArrayList<String>(rulesToRemove), pr);
+			}
+			log.log(Level.INFO, sw.toString());
 		}
-		log.log(Level.INFO, sw.toString());
 	}
 
 	/**

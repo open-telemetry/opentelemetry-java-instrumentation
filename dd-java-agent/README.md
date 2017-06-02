@@ -93,7 +93,7 @@ When attached to an application the `dd-java-agent` automatically instruments th
 | FWK        | Versions           | Comments  |
 | ------------- |:-------------:| ----- |
 | OkHTTP | 3.x | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers |
-| Apache HTTP Client | 4.x |HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers|
+| Apache HTTP Client | 4.3 + |HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers|
 | AWS SDK | 1.x | Trace all client calls to any AWS service |
 | Web Servlet Filters| Depending on server | See [Servers](#servers) section |
 

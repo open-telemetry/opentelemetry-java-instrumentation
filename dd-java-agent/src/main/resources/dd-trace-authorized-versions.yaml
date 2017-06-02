@@ -3,7 +3,10 @@ okhttp:
   valid_versions: 3\..*
 httpclient:
   key: apache http
-  valid_versions: 4\..*
+  valid_versions: 4\.[3|4|5]\..*
+commons-httpclient:
+  key: apache http
+  valid_versions: none
 aws-java-sdk:
   key: aws
   valid_versions: 1\..*
