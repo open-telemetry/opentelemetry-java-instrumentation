@@ -4,13 +4,15 @@
     <parent>
         <groupId>com.datadoghq</groupId>
         <artifactId>dd-trace-examples</artifactId>
-        <version>${global.version}</version>
+        <version>0.0.4</version>
     </parent>
 
     <artifactId>async-tracing</artifactId>
     <name>async-tracing</name>
 
     <properties>
+        <!-- Datadog version -->
+        <dd-trace.version>0.0.4</dd-trace.version>
         <!-- Opentracing versions -->
         <opentracing.spanmanager.version>0.0.5</opentracing.spanmanager.version>
     </properties>
@@ -19,7 +21,7 @@
         <dependency>
             <groupId>com.datadoghq</groupId>
             <artifactId>dd-trace</artifactId>
-            <version>${global.version}</version>
+            <version>${dd-trace.version}</version>
         </dependency>
         <dependency>
             <groupId>io.opentracing.contrib</groupId>

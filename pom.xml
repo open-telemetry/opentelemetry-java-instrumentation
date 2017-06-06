@@ -4,7 +4,7 @@
 
     <groupId>com.datadoghq</groupId>
     <artifactId>dd-trace-java</artifactId>
-    <version>${global.version}</version>
+    <version>0.0.4</version>
     <packaging>pom</packaging>
 
     <!-- Project information -->
@@ -32,7 +32,7 @@
         <url>https://github.com/datadog/dd-trace-java</url>
         <connection>scm:git:git://github.com/datadog/dd-trace-java.git</connection>
         <developerConnection>scm:git:git@github.com:datadog/dd-trace-java.git</developerConnection>
-      <tag>HEAD</tag>
+      <tag>v0.0.4</tag>
   </scm>
 
     <modules>
@@ -45,7 +45,6 @@
     <properties>
         <opentracing.version>0.22.0</opentracing.version>
         <java.version>1.7</java.version>
-        <global.version>0.0.4</global.version>
     </properties>
 
     <distributionManagement>
@@ -139,6 +138,9 @@
                     <useReleaseProfile>false</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
                     <goals>deploy</goals>
+                    <checkModificationExcludes>
+						<checkModificationExclude>**/pom.xml</checkModificationExclude>
+					</checkModificationExcludes>
                 </configuration>
             </plugin>
         </plugins>
