@@ -4,7 +4,7 @@
 
     <groupId>com.datadoghq</groupId>
     <artifactId>dd-trace-java</artifactId>
-    <version>0.0.4</version>
+    <version>0.0.5-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <!-- Project information -->
@@ -32,7 +32,7 @@
         <url>https://github.com/datadog/dd-trace-java</url>
         <connection>scm:git:git://github.com/datadog/dd-trace-java.git</connection>
         <developerConnection>scm:git:git@github.com:datadog/dd-trace-java.git</developerConnection>
-      <tag>v0.0.4</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <modules>
