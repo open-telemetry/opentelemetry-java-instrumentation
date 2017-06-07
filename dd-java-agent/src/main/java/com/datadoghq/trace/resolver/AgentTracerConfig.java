@@ -7,10 +7,18 @@ import java.util.List;
  * Configuration POJO for the agent
  */
 public class AgentTracerConfig extends TracerConfig {
-
-	private boolean enableCustomTracing = false;
 	
 	private List<String> disabledInstrumentations = new ArrayList<String>();
+	
+	private String[] enableCustomAnnotationTracingOver = {"io","com","org"};
+
+	public String[] getEnableCustomAnnotationTracingOver() {
+		return enableCustomAnnotationTracingOver;
+	}
+
+	public void setEnableCustomAnnotationTracingOver(String[] enableCustomAnnotationTracingOver) {
+		this.enableCustomAnnotationTracingOver = enableCustomAnnotationTracingOver;
+	}
 
 	public List<String> getDisabledInstrumentations() {
 		return disabledInstrumentations;
@@ -20,12 +28,4 @@ public class AgentTracerConfig extends TracerConfig {
 		this.disabledInstrumentations = uninstallContributions;
 	}
 
-	public boolean isEnableCustomTracing() {
-		return enableCustomTracing;
-	}
-
-	public void setEnableCustomTracing(boolean enableCustomTracing) {
-		this.enableCustomTracing = enableCustomTracing;
-	}
-	
 }

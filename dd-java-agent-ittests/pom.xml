@@ -141,8 +141,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19</version>
                 <configuration>
-                    <!-- TODO fixit, Due to a Java Heap error, skiping test-->
-                    <skipTests>false</skipTests>
                     <includes>
                         <include>*Test.java</include>
                     </includes>

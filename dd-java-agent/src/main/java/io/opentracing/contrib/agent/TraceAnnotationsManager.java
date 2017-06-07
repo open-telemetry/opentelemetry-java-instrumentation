@@ -73,8 +73,10 @@ public class TraceAnnotationsManager {
 		uninstallScripts(loadedScripts,uninstallScripts);
 
 		//Check if annotations are enabled
-		if(agentTracerConfig != null && agentTracerConfig.isEnableCustomTracing()){
-			loadAnnotationsRules(ClassLoader.getSystemClassLoader());
+		if(agentTracerConfig != null 
+				&& agentTracerConfig.getEnableCustomAnnotationTracingOver()!=null
+				&& agentTracerConfig.getEnableCustomAnnotationTracingOver().length>0){
+			loadAnnotationsRules(agentTracerConfig.getEnableCustomAnnotationTracingOver());
 		}
 	}
 
@@ -152,13 +154,16 @@ public class TraceAnnotationsManager {
 
 	/**
 	 * Find all the methods annoted with @Trace and inject rules
-	 * 
-	 * @param classLoader
+	 * @param scannedPackages 
 	 */
-	public static void loadAnnotationsRules(ClassLoader classLoader) {
+	public static void loadAnnotationsRules(String... scannedPackages) {
+		
+		log.info("Looking for annotations over the following packages: "+Arrays.asList(scannedPackages));
+		long cur = System.currentTimeMillis();
+		
 		Reflections reflections = new Reflections(new ConfigurationBuilder()
-				.forPackages("/")
-				.filterInputsBy(new FilterBuilder().include(".*\\.class"))
+				.forPackages(scannedPackages)
+				.filterInputsBy(new FilterBuilder().includePackage(scannedPackages).include(".*\\.class"))
 				.setScanners(new MethodAnnotationsScanner()));
 
 		Set<Method> methods = reflections.getMethodsAnnotatedWith(Trace.class);
@@ -206,6 +211,8 @@ public class TraceAnnotationsManager {
 		} catch (Exception e) {
 			log.log(Level.SEVERE,"Could not install annotation scripts.",e);
 		}
+		
+		log.info("Finished annotation scanning in " + (System.currentTimeMillis() - cur) +" ms. You can accelerate this process by refining the packages you want to scan with `scannedPackages` in the dd-trace.yaml configuration file.");
 	}
 
 	private static RuleScript createRuleScript(
