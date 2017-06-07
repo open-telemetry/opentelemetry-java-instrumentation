@@ -8,11 +8,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.datadoghq.trace.DDBaseSpan;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.opentracing.Span;
 
 /**
  * The API pointing to a DD agent
@@ -41,7 +40,7 @@ public class DDApi {
      * @param traces the traces to be sent
      * @return the staus code returned
      */
-    public boolean sendTraces(List<List<Span>> traces) {
+    public boolean sendTraces(List<List<DDBaseSpan<?>>> traces) {
         int status = callPUT(tracesEndpoint, traces);
         if (status == 200) {
             logger.debug("Succesfully sent {} traces to the DD agent.", traces.size());

@@ -1,6 +1,6 @@
 package com.datadoghq.trace.sampling;
 
-import io.opentracing.Span;
+import com.datadoghq.trace.DDBaseSpan;
 
 /**
  * Sampler that always says yes...
@@ -8,7 +8,7 @@ import io.opentracing.Span;
 public class AllSampler extends ASampler {
 
 	@Override
-	public boolean doSample(Span span) {
+	public boolean doSample(DDBaseSpan<?> span) {
 		return true;
 	}
 
