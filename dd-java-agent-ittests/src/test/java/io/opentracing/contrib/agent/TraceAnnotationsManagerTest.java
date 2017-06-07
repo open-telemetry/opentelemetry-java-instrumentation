@@ -5,16 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.opentracing.mock.MockTracer;
-import io.opentracing.util.GlobalTracer;
+import com.datadoghq.trace.instrument.AAgentIntegration;
 
-public class TraceAnnotationsManagerTest {
-
-	protected MockTracer tracer = new MockTracer();
-
+public class TraceAnnotationsManagerTest extends AAgentIntegration{
+	
 	@Before
 	public void beforeTest() throws Exception {
-		GlobalTracer.register(tracer);
+		super.beforeTest();
 		TraceAnnotationsManager.loadAnnotationsRules(ClassLoader.getSystemClassLoader());
 	}
 

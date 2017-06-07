@@ -9,20 +9,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.junit.Before;
 import org.junit.Test;
 
-import io.opentracing.mock.MockTracer;
-import io.opentracing.util.GlobalTracer;
-
-public class ApacheHTTPClientTest {
-
-	protected MockTracer tracer = new MockTracer();
-
-	@Before
-	public void beforeTest() throws Exception {
-		GlobalTracer.register(tracer);
-	}
+public class ApacheHTTPClientTest extends AAgentIntegration{
 	
 	@Test
 	public void test() throws Exception{
