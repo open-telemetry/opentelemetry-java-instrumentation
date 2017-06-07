@@ -150,7 +150,7 @@ public void myMethod() throws InterruptedException{
 
 By default, the operation name attached to the spawn span will be the name of the method and no meta tags will be attached.
 
-You can use the the `operationName` and `tagsKV` attributes to customize your trace:
+You can use the `operationName` and `tagsKV` attributes to customize your trace:
 
 ```java
 @Trace(operationName="Before DB",tagsKV={"mytag","myvalue"})
@@ -161,12 +161,12 @@ public void myMethod() throws InterruptedException{
 
 ### Enabling custom tracing
 
-- Add the agent as a dependency of your project
+- Add the annotations jar as a dependency of your project
 
 ```xml
 <dependency>
 	<groupId>com.datadoghq</groupId>
-	<artifactId>dd-java-agent</artifactId>
+	<artifactId>dd-trace-annotations</artifactId>
 	<version>{version}</version>
 </dependency>
 ```

@@ -37,6 +37,11 @@
             <artifactId>dd-trace</artifactId>
             <version>${dd-trace.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.datadoghq</groupId>
+            <artifactId>dd-trace-annotations</artifactId>
+            <version>${dd-trace.version}</version>
+        </dependency>
 
         <!-- Opentracing agent -->
         <dependency>
