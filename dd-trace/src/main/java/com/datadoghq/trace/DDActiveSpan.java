@@ -1,5 +1,7 @@
 package com.datadoghq.trace;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.opentracing.ActiveSpan;
 
 /**
@@ -8,6 +10,7 @@ import io.opentracing.ActiveSpan;
 public class DDActiveSpan extends DDBaseSpan<ActiveSpan> implements ActiveSpan{
 
 	protected final DDActiveSpan parent;
+	protected boolean deactivated = false;
 	
 	protected DDActiveSpan(DDActiveSpan parent,DDSpan span) {
 		super(span.startTimeMicro, span.context());
@@ -24,14 +27,26 @@ public class DDActiveSpan extends DDBaseSpan<ActiveSpan> implements ActiveSpan{
 	/**
 	 * @return the generating parent if not null
 	 */
+	@JsonIgnore
 	public DDActiveSpan getParent() {
 		return parent;
+	}
+	
+	/**
+	 * @return true if the span has already been deactivated
+	 */
+	public boolean isDeactivated() {
+		return deactivated;
 	}
 
 	@Override
 	public void deactivate() {
-		context().getTracer().deactivate(this);
+		DDTracer tracer = context().getTracer();
+		if(tracer!=null){
+			tracer.deactivate(this);
+		}
 		finish();
+		deactivated = true;
 	}
 
 	@Override

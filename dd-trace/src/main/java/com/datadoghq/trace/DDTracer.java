@@ -14,7 +14,7 @@ import com.datadoghq.trace.propagation.Codec;
 import com.datadoghq.trace.propagation.HTTPCodec;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.Sampler;
-import com.datadoghq.trace.writer.DDAgentWriter;
+import com.datadoghq.trace.writer.LoggingWriter;
 import com.datadoghq.trace.writer.Writer;
 
 import io.opentracing.ActiveSpan;
@@ -53,7 +53,7 @@ public class DDTracer implements io.opentracing.Tracer {
 	private final CodecRegistry registry;
 
 	public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
-	public static final Writer UNASSIGNED_WRITER = new DDAgentWriter();
+	public static final Writer UNASSIGNED_WRITER = new LoggingWriter();
 	public static final Sampler UNASSIGNED_SAMPLER = new AllSampler();
 
 	/**
@@ -166,7 +166,11 @@ public class DDTracer implements io.opentracing.Tracer {
 	 * @param activeSpan
 	 */
 	protected void makeActive(DDActiveSpan activeSpan){
-		currentActiveSpan.set(activeSpan);
+		//We cannot make active a preably deactivated span
+		if(activeSpan!=null && activeSpan.isDeactivated())
+			currentActiveSpan.set(null);
+		else
+			currentActiveSpan.set(activeSpan);
 	}
 	
 	/**
@@ -183,7 +187,7 @@ public class DDTracer implements io.opentracing.Tracer {
 	}
 
 	@Override
-	public ActiveSpan makeActive(Span span) {
+	public DDActiveSpan makeActive(Span span) {
 		if(!(span instanceof DDSpan))
 			throw new IllegalArgumentException("Cannot transform a non DDSpan into a DDActiveSpan. Provided class: "+span.getClass());
 		
@@ -231,6 +235,9 @@ public class DDTracer implements io.opentracing.Tracer {
 					activeParent = current;
 				}
 			}
+			
+			//Ensure parent inheritance
+			asChildOf(activeParent);
 			
 			//Create the active span
 			DDActiveSpan activeSpan = new DDActiveSpan(activeParent,this.timestamp, buildSpanContext());

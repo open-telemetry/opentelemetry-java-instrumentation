@@ -111,7 +111,7 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
             return false;
         }
         // First item of the array AND tracer set
-        DDSpan first = (DDSpan) context().getTrace().get(0);
+        DDBaseSpan<?> first = context().getTrace().get(0);
         return first.context().getSpanId() == this.context().getSpanId() && this.context.getTracer() != null;
     }
 
