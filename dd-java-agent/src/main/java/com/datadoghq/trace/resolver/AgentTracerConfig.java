@@ -10,7 +10,7 @@ public class AgentTracerConfig extends TracerConfig {
 	
 	private List<String> disabledInstrumentations = new ArrayList<String>();
 	
-	private String[] enableCustomAnnotationTracingOver = {"io","com","org"};
+	private String[] enableCustomAnnotationTracingOver = {};
 
 	public String[] getEnableCustomAnnotationTracingOver() {
 		return enableCustomAnnotationTracingOver;
