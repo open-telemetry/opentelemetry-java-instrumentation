@@ -72,4 +72,9 @@ public class DDActiveSpan extends DDBaseSpan<ActiveSpan> implements ActiveSpan{
 		}
 		
 	}
+
+	@Override
+	public void close() {
+		deactivate();
+	}
 }

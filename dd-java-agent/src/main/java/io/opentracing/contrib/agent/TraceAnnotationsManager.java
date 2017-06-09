@@ -217,7 +217,7 @@ public class TraceAnnotationsManager {
 
 		RuleScript ruleScript = new RuleScript(
 				ruleNamePrefix+loc+" "+javassistMethod.getLongName(),
-				"^"+cc.getName(),
+				cc.getName(),
 				false, 
 				false,
 				javassistMethod.getName() + Descriptor.toString(javassistMethod.getSignature()),

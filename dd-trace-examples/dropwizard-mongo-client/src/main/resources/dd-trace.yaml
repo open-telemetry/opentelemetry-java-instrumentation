@@ -22,8 +22,8 @@ sampler:
   # Skip some traces if the root span tag values matches some regexp patterns
   # skipTagsPatterns: {"http.url": ".*/demo/add.*"}
   
-# Enable custom tracing (Custom annotations for now)
-enableCustomTracing: true
+# Enable custom annotation tracing over a selected set of packages
+enableCustomAnnotationTracingOver: ["com.example"]
 
 # Disable some instrumentations
 # disabledInstrumentations: ["apache http", "mongo", "jetty", "tomcat", ...]

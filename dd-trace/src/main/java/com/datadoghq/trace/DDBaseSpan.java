@@ -93,13 +93,6 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
         }
     }
 
-    /* (non-Javadoc)
-     * @see io.opentracing.Span#close()
-     */
-    public final void close() {
-        this.finish();
-    }
-
     /**
      * Check if the span is the root parent. It means that the traceId is the same as the spanId
      *
