@@ -18,9 +18,9 @@ public class DDActiveSpanTest {
 	public void setUp(){
 		listWriter.start();
 	}
-
+	
 	@Test
-	public void testContextPropagation() {
+	public void testThreadContextPropagation() {
 
 		DDActiveSpan span1 = ddTracer.buildSpan("op1").startActive();
 
@@ -115,5 +115,15 @@ public class DDActiveSpanTest {
 		assertThat(manualSpan.context()).isEqualTo(span1.context());
 		assertThat(manualSpan.startTimeNano).isEqualTo(span1.startTimeNano);
 		assertThat(manualSpan.startTimeMicro).isEqualTo(span1.startTimeMicro);
+	}
+	
+	@Test
+	public void testCrossContextPropagation() {
+		final DDSpan manualSpan = ddTracer.buildSpan("op1").startManual();
+		
+		DDActiveSpan activeSpan = ddTracer.buildSpan("op2").asChildOf(manualSpan.context()).startActive();
+		
+		assertThat(activeSpan.getParentId()).isEqualTo(manualSpan.getSpanId());
+		assertThat(activeSpan.getTraceId()).isEqualTo(manualSpan.getTraceId());
 	}
 }

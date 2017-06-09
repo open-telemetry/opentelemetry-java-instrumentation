@@ -233,11 +233,11 @@ public class DDTracer implements io.opentracing.Tracer {
 				DDActiveSpan current = activeSpan();
 				if(current!=null){
 					activeParent = current;
+					
+					//Ensure parent inheritance
+					asChildOf(activeParent);
 				}
 			}
-			
-			//Ensure parent inheritance
-			asChildOf(activeParent);
 			
 			//Create the active span
 			DDActiveSpan activeSpan = new DDActiveSpan(activeParent,this.timestamp, buildSpanContext());
