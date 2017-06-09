@@ -77,7 +77,7 @@ sampler:
   # skipTagsPatterns: {"http.url": ".*/demo/add.*"}
   
 # Enable custom tracing (Custom annotations for now)
-enableCustomTracing: true
+# enableCustomAnnotationTracingOver: ["io","org","com"]
 
 # Disable some instrumentations
 # disabledInstrumentations: ["apache http", "mongo", "jetty", "tomcat", ...]
@@ -171,7 +171,7 @@ public void myMethod() throws InterruptedException{
 </dependency>
 ```
 
-- Enable custom tracing by adding in the `dd-trace.yaml` config file `enableCustomTracing: true`
+- Enable custom tracing by adding in the `dd-trace.yaml` config file the packages you would like to scan as follow `enableCustomAnnotationTracingOver: ["io","org","com"]`.
 
 If you want to see custom tracing in action please run the [Dropwizard example](https://github.com/DataDog/dd-trace-java/blob/dev/dd-trace-examples/dropwizard-mongo-client/).
 

@@ -12,7 +12,6 @@ public class TraceAnnotationsManagerTest extends AAgentIntegration{
 	@Before
 	public void beforeTest() throws Exception {
 		super.beforeTest();
-		TraceAnnotationsManager.loadAnnotationsRules(ClassLoader.getSystemClassLoader());
 	}
 
 	@Test
