@@ -18,14 +18,13 @@
         <!-- Datadog versions -->
         <dd-trace.version>0.0.7-SNAPSHOT</dd-trace.version>
         <!-- Opentracing versions -->
-        <opentracing.version>0.22.0</opentracing.version>
-        <ot.agent.version>0.0.12</ot.agent.version>
-        <ot.contrib.webservlet.version>0.0.8</ot.contrib.webservlet.version>
-        <ot.contrib.mongo.version>0.0.1</ot.contrib.mongo.version>
-        <ot.contrib.okhttp.version>0.0.4</ot.contrib.okhttp.version>
-        <ot.contrib.jdbc.version>0.0.1</ot.contrib.jdbc.version>
-        <ot.contrib.aws.version>0.0.1</ot.contrib.aws.version>
-        <ot.contrib.httpclient.version>0.0.1</ot.contrib.httpclient.version>
+        <ot.agent.version>0.1.0</ot.agent.version>
+        <ot.contrib.webservlet.version>0.0.9</ot.contrib.webservlet.version>
+        <ot.contrib.mongo.version>0.0.2</ot.contrib.mongo.version>
+        <ot.contrib.okhttp.version>0.0.5</ot.contrib.okhttp.version>
+        <ot.contrib.jdbc.version>0.0.2</ot.contrib.jdbc.version>
+        <ot.contrib.aws.version>0.0.2</ot.contrib.aws.version>
+        <ot.contrib.httpclient.version>0.0.2</ot.contrib.httpclient.version>
         <!-- Others versions -->
         <java.version>1.7</java.version>
     </properties>

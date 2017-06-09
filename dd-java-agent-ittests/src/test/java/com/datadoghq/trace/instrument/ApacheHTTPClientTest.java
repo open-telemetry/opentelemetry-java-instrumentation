@@ -33,7 +33,7 @@ public class ApacheHTTPClientTest extends AAgentIntegration{
 			result.append(line);
 		}
 		
-		assertThat(tracer.finishedSpans().size()).isEqualTo(2);
+		assertThat(writer.firstTrace().size()).isEqualTo(2);
 	}
 
 }

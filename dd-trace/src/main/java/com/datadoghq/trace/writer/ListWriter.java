@@ -1,13 +1,12 @@
-package com.datadoghq.trace.writer.impl;
+package com.datadoghq.trace.writer;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.datadoghq.trace.DDBaseSpan;
-import com.datadoghq.trace.writer.Writer;
 
 /**
- *	
+ *	List writer used by tests mostly
  */
 public class ListWriter implements Writer {
 
@@ -15,6 +14,10 @@ public class ListWriter implements Writer {
 	
 	public List<List<DDBaseSpan<?>>> getList() {
 		return list;
+	}
+	
+	public List<DDBaseSpan<?>> firstTrace() {
+		return list.get(0);
 	}
 
 	@Override

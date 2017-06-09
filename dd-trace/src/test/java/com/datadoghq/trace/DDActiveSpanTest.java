@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.datadoghq.trace.writer.impl.ListWriter;
+import com.datadoghq.trace.writer.ListWriter;
 
 import io.opentracing.ActiveSpan.Continuation;
 
@@ -75,12 +75,12 @@ public class DDActiveSpanTest {
 	}
 
 	@Test
-	public void testContinuation() {
+	public void testContinuation() throws Exception{
 		final DDActiveSpan span1 = ddTracer.buildSpan("op1").startActive();
 
 		final Continuation continuation = span1.capture();
 
-		new Thread(new Runnable() {
+		Thread t = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				assertThat(ddTracer.activeSpan()).isNull();
@@ -91,8 +91,11 @@ public class DDActiveSpanTest {
 				span2.deactivate();
 				assertThat(ddTracer.activeSpan()).isEqualTo(span1);
 			}
-		}).start();
+		});
 
+		t.start();
+		t.join();
+		
 		span1.deactivate();
 		assertThat(ddTracer.activeSpan()).isNull();
 

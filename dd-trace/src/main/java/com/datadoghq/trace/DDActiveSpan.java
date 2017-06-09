@@ -35,6 +35,7 @@ public class DDActiveSpan extends DDBaseSpan<ActiveSpan> implements ActiveSpan{
 	/**
 	 * @return true if the span has already been deactivated
 	 */
+	@JsonIgnore
 	public boolean isDeactivated() {
 		return deactivated;
 	}
