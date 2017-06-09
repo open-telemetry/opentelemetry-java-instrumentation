@@ -4,11 +4,11 @@
   <parent>
     <groupId>com.datadoghq</groupId>
     <artifactId>dd-trace-java</artifactId>
-    <version>0.0.6</version>
+    <version>0.0.7-SNAPSHOT</version>
   </parent>
   <groupId>com.datadoghq</groupId>
   <artifactId>dd-trace-annotations</artifactId>
-  <version>0.0.6</version>
+  <version>0.0.7-SNAPSHOT</version>
   <name>dd-trace-annotations</name>
   <url>http://maven.apache.org</url>
   <properties>
