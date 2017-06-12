@@ -55,3 +55,18 @@ IF TRUE
 DO
   return tracingClientExec;
 ENDRULE
+
+
+# --------------------------------------------------------
+# Cassandra
+RULE Cassandra
+CLASS com.datastax.driver.core.Cluster$Manager
+METHOD newSession()
+HELPER io.opentracing.contrib.agent.helper.CassandraHelper
+#BIND
+AT EXIT
+IF TRUE
+DO
+   $! = patch($!);
+   traceln("OTARULES: CassandraDriver patched");
+ENDRULE

@@ -2,6 +2,7 @@ package com.datadoghq.trace.instrument;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.sqs.AmazonSQSClient;
 import io.opentracing.contrib.aws.TracingRequestHandler;
 import org.junit.Test;
 
@@ -9,7 +10,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class AWSInstrumentationTest {
 
-
+    public AmazonSQSClient getMortarSQSClient() {
+        return new AmazonSQSClient();
+    }
     @Test
     public void test() {
 
@@ -21,10 +24,18 @@ public class AWSInstrumentationTest {
         assertThat(builder.getRequestHandlers()).isNotNull();
         assertThat(builder.getRequestHandlers().size()).isEqualTo(1);
         assertThat(builder.getRequestHandlers().get(0).getClass()).isEqualTo(TracingRequestHandler.class);
+
+
+
+        /** @deprecated */
+    @Deprecated
+    public AmazonSQSClient(AWSCredentials awsCredentials, ClientConfiguration clientConfiguration) {
+            super(clientConfiguration);
+            this.exceptionUnmarshallers = new ArrayList();
+            this.awsCredentialsProvider = new StaticCredentialsProvider(awsCredentials);
+            this.init();
+        }
     }
 
 
-    public static void main(String[] args) {
-        new AWSInstrumentationTest().test();
-    }
 }
