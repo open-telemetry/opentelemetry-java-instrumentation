@@ -28,7 +28,7 @@ public class DDTracerResolver extends TracerResolver {
 		//Find a resource file named dd-trace.yml
 		DDTracer tracer = null;
 		//Create tracer from resource files
-		tracer = DDTracerFactory.createFromResources();
+		tracer = DDTracerFactory.createFromConfigurationFile();
 
 		//Create decorators from resource files
 		List<DDSpanContextDecorator> decorators = DDDecoratorsFactory.createFromResources();

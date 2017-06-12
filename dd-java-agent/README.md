@@ -49,9 +49,10 @@ That's it! If you did this properly the agent was executed at pre-main, had dete
 ## Configuration
 
 Configuration is done through a default `dd-trace.yaml` file as a resource in the classpath.
+You can also override it by adding the file path as a system property when launching the JVM: `-Ddd.trace.configurationFile`.
 
 ```yaml
-# Service name used if none is provided in the app
+# Main service name for the app
 defaultServiceName: java-app
 
 # The writer to use.
@@ -76,13 +77,11 @@ sampler:
   # skipTagsPatterns: {"http.url": ".*/demo/add.*"}
   
 # Enable custom tracing (Custom annotations for now)
-enableCustomTracing: true
+# enableCustomAnnotationTracingOver: ["io","org","com"]
 
 # Disable some instrumentations
 # disabledInstrumentations: ["apache http", "mongo", "jetty", "tomcat", ...]
 ```
-
-If you want to change it, you must create it in your project.
 
 ## Instrumented frameworks
 
@@ -151,7 +150,7 @@ public void myMethod() throws InterruptedException{
 
 By default, the operation name attached to the spawn span will be the name of the method and no meta tags will be attached.
 
-You can use the the `operationName` and `tagsKV` attributes to customize your trace:
+You can use the `operationName` and `tagsKV` attributes to customize your trace:
 
 ```java
 @Trace(operationName="Before DB",tagsKV={"mytag","myvalue"})
@@ -162,17 +161,17 @@ public void myMethod() throws InterruptedException{
 
 ### Enabling custom tracing
 
-- Add the agent as a dependency of your project
+- Add the annotations jar as a dependency of your project
 
 ```xml
 <dependency>
 	<groupId>com.datadoghq</groupId>
-	<artifactId>dd-java-agent</artifactId>
+	<artifactId>dd-trace-annotations</artifactId>
 	<version>{version}</version>
 </dependency>
 ```
 
-- Enable custom tracing by adding in the `dd-trace.yaml` config file `enableCustomTracing: true`
+- Enable custom tracing by adding in the `dd-trace.yaml` config file the packages you would like to scan as follow `enableCustomAnnotationTracingOver: ["io","org","com"]`.
 
 If you want to see custom tracing in action please run the [Dropwizard example](https://github.com/DataDog/dd-trace-java/blob/dev/dd-trace-examples/dropwizard-mongo-client/).
 

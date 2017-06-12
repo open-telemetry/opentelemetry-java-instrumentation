@@ -22,6 +22,7 @@ public class DDTracerFactory {
 
 	private final static Logger logger = LoggerFactory.getLogger(DDTracerFactory.class);
 
+	public static final String SYSTEM_PROPERTY_CONFIG_PATH = "dd.trace.configurationFile";
 	public static final String CONFIG_PATH = "dd-trace.yaml";
 
 	private static final String DD_AGENT_WRITER_TYPE = DDAgentWriter.class.getSimpleName();
@@ -87,8 +88,8 @@ public class DDTracerFactory {
 	}
 
 
-	public static DDTracer createFromResources() {
-		TracerConfig tracerConfig = FactoryUtils.loadConfigFromResource(CONFIG_PATH, TracerConfig.class);
+	public static DDTracer createFromConfigurationFile() {
+		TracerConfig tracerConfig = FactoryUtils.loadConfigFromFilePropertyOrResource(SYSTEM_PROPERTY_CONFIG_PATH,CONFIG_PATH, TracerConfig.class);
 
 		DDTracer tracer = null;
 		if (tracerConfig == null) {

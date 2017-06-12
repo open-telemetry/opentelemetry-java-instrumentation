@@ -4,7 +4,7 @@
 
     <groupId>com.datadoghq</groupId>
     <artifactId>dd-trace-java</artifactId>
-    <version>0.0.4-SNAPSHOT</version>
+    <version>0.0.7-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <!-- Project information -->
@@ -40,6 +40,7 @@
         <module>dd-java-agent</module>
         <module>dd-java-agent-ittests</module>
         <module>dd-trace-examples</module>
+        <module>dd-trace-annotations</module>
     </modules>
 
     <properties>
@@ -138,6 +139,9 @@
                     <useReleaseProfile>false</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
                     <goals>deploy</goals>
+                    <checkModificationExcludes>
+						<checkModificationExclude>**/pom.xml</checkModificationExclude>
+					</checkModificationExcludes>
                 </configuration>
             </plugin>
         </plugins>

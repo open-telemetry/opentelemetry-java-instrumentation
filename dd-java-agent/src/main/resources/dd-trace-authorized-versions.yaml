@@ -9,7 +9,7 @@ commons-httpclient:
   valid_versions: none
 aws-java-sdk:
   key: aws
-  valid_versions: 1\..*
+  valid_versions: 1\.11\..*
 jetty-server:
   key: jetty
   valid_versions: (8\.|9\.).*

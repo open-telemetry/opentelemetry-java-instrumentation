@@ -37,5 +37,5 @@ Thumbs.db
 
 /target
 **/target/
-/dd-java-agent/dependency-reduced-pom.xml
-/dd-trace/dependency-reduced-pom.xml
+**/dependency-reduced-pom.xml
+/bin
