@@ -2,6 +2,7 @@ package com.example.helloworld.client;
 
 import java.io.IOException;
 
+import io.opentracing.contrib.agent.Trace;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -14,7 +15,14 @@ import okhttp3.Response;
  */
 public class TracedClient {
 
+	
 	public static void main(String[] args) throws Exception{
+		executeCall();
+		System.out.println("After execute");
+	}
+
+	@Trace(tagsKV={"service-name","TracedClient"})
+	private static void executeCall() throws IOException {
 		OkHttpClient client = new OkHttpClient().newBuilder().build();
 
 		Request request = new Request.Builder()

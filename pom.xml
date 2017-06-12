@@ -44,7 +44,7 @@
     </modules>
 
     <properties>
-        <opentracing.version>0.22.0</opentracing.version>
+        <opentracing.version>0.30.0</opentracing.version>
         <java.version>1.7</java.version>
     </properties>
 

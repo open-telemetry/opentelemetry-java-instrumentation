@@ -131,9 +131,7 @@ public class DDSpanBuilderTest {
         final long expectedParentId = spanId;
 
         DDSpanContext mockedContext = mock(DDSpanContext.class);
-        DDSpan mockedSpan = mock(DDSpan.class);
-
-        when(mockedSpan.context()).thenReturn(mockedContext);
+       
         when(mockedContext.getSpanId()).thenReturn(spanId);
         when(mockedContext.getServiceName()).thenReturn("foo");
 
@@ -142,13 +140,12 @@ public class DDSpanBuilderTest {
         DDSpan span = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
-                .asChildOf(mockedSpan)
+                .asChildOf(mockedContext)
                 .start();
 
         DDSpanContext actualContext = span.context();
 
         assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
-
     }
 
 

@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.datadoghq.trace.DDBaseSpan;
 import com.datadoghq.trace.DDSpan;
 import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.writer.DDAgentWriter;
@@ -22,7 +23,7 @@ public class DDAgentWriterTest {
 
 	DDSpan parent = null;
 	DDApi mockedAPI = null;
-	List<List<Span>> traces = new ArrayList<List<Span>>();
+	List<List<DDBaseSpan<?>>> traces = new ArrayList<List<DDBaseSpan<?>>>();
 	DDAgentWriter ddAgentWriter = null;
 
 	@Before

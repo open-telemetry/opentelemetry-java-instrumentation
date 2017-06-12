@@ -10,11 +10,12 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class DDSpanSerializerTest {
+public class DDSpanSerializationTest {
 
 
     ObjectMapper serializer;
     DDSpan span;
+    DDActiveSpan activeSpan;
 
     @Before
     public void setUp() throws Exception {
@@ -42,8 +43,10 @@ public class DDSpanSerializerTest {
         span = new DDSpan(
                 100L,
                 context);
-
         span.finish(133L);
+        
+        activeSpan = new DDActiveSpan(null,100L,context);
+        activeSpan.deactivate();
         serializer = new ObjectMapper();
     }
 
@@ -55,9 +58,16 @@ public class DDSpanSerializerTest {
         // FIXME At the moment, just compare the string sizes
         try {
             assertThat(serializer.writeValueAsString(span).length()).isEqualTo(expected.length());
+            
         } catch (AssertionError e) {
             assertThat(serializer.writeValueAsString(span)).isEqualTo(expected);
         }
+        
+//        try {
+//            assertThat(serializer.writeValueAsString(activeSpan).length()).isEqualTo(expected.length());
+//        } catch (AssertionError e) {
+//            assertThat(serializer.writeValueAsString(activeSpan)).isEqualTo(expected);
+//        }
     }
 
 }

@@ -1,12 +1,16 @@
 package com.datadoghq.trace;
 
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.datadoghq.trace.integration.DDSpanContextDecorator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.opentracing.Span;
-import io.opentracing.tag.Tags;
 
-import java.util.*;
+import io.opentracing.tag.Tags;
 
 /**
  * SpanContext represents Span state that must propagate to descendant Spans and across process boundaries.
@@ -44,7 +48,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	/**
 	 * The collection of all span related to this one
 	 */
-	private final List<Span> trace;
+	private final List<DDBaseSpan<?>> trace;
 	/**
 	 * Each span have an operation name describing the current span
 	 */
@@ -70,7 +74,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 			boolean errorFlag,
 			String spanType,
 			Map<String, Object> tags,
-			List<Span> trace,
+			List<DDBaseSpan<?>> trace,
 			DDTracer tracer) {
 
 		this.traceId = traceId;
@@ -93,7 +97,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 		this.tags = tags;
 
 		if (trace == null) {
-			this.trace = new ArrayList<Span>();
+			this.trace = new ArrayList<DDBaseSpan<?>>();
 		} else {
 			this.trace = trace;
 		}
@@ -156,7 +160,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	}
 
 	@JsonIgnore
-	public List<Span> getTrace() {
+	public List<DDBaseSpan<?>> getTrace() {
 		return this.trace;
 	}
 
