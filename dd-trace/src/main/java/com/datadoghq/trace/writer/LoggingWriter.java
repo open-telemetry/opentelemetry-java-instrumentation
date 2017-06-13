@@ -5,9 +5,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.datadoghq.trace.DDBaseSpan;
 import com.google.auto.service.AutoService;
-
-import io.opentracing.Span;
 
 @AutoService(Writer.class)
 public class LoggingWriter implements Writer{
@@ -15,7 +14,7 @@ public class LoggingWriter implements Writer{
 	private static final Logger logger = LoggerFactory.getLogger(LoggingWriter.class.getName());
 	
 	@Override
-	public void write(List<Span> trace) {
+	public void write(List<DDBaseSpan<?>> trace) {
 		logger.info("write(trace): {}", trace);
 	}
 

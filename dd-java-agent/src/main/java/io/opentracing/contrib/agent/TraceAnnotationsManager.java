@@ -180,18 +180,8 @@ public class TraceAnnotationsManager {
 						CURRENT_SPAN_EXISTS+
 						buildSpan(javassistMethod)+
 						buildWithTags(javassistMethod)+
-						CHILD_OF_CURRENT_SPAN+
 						START;
-				RuleScript script = createRuleScript("Child of ",cc, javassistMethod,  Location.create(LocationType.ENTRY,""),ruleText);
-				generatedScripts.append(script).append("\n");
-
-				//AT ENTRY: new trace
-				ruleText = 
-						CURRENT_SPAN_NOT_EXISTS+
-						buildSpan(javassistMethod)+
-						buildWithTags(javassistMethod)+
-						START;
-				script = createRuleScript("New trace ",cc, javassistMethod,  Location.create(LocationType.ENTRY,""),ruleText);
+				RuleScript script = createRuleScript("Start Active Span ",cc, javassistMethod,  Location.create(LocationType.ENTRY,""),ruleText);
 				generatedScripts.append(script).append("\n");
 
 				//AT EXIT
@@ -227,7 +217,7 @@ public class TraceAnnotationsManager {
 
 		RuleScript ruleScript = new RuleScript(
 				ruleNamePrefix+loc+" "+javassistMethod.getLongName(),
-				"^"+cc.getName(),
+				cc.getName(),
 				false, 
 				false,
 				javassistMethod.getName() + Descriptor.toString(javassistMethod.getSignature()),
@@ -259,19 +249,16 @@ public class TraceAnnotationsManager {
 		scriptNames.add(uri.toString());
 	}
 
-	private static String CURRENT_SPAN_EXISTS = "IF currentSpan() != null\n";
-	private static String CURRENT_SPAN_NOT_EXISTS = "IF currentSpan() == null\n";
+	private static String CURRENT_SPAN_EXISTS = "IF TRUE\n";
 
-	private static String BUILD_SPAN = "DO\n"+"activateSpan(getTracer().buildSpan(\"";
+	private static String BUILD_SPAN = "DO\n"+"getTracer().buildSpan(\"";
 	private static String CLOSE_PARENTHESIS = "\")";
 
-	private static String CHILD_OF_CURRENT_SPAN = ".asChildOf(currentSpan())";
-	private static String START = ".start());";
+	private static String START = ".startActive();";
 
-	private static String EXIT_RULE = "IF currentSpan() != null\n"+
+	private static String EXIT_RULE = "IF getTracer().activeSpan() != null\n"+
 			"DO\n"+ 
-			"currentSpan().finish();\n"+
-			"deactivateCurrentSpan();";
+			"getTracer().activeSpan().deactivate();\n";
 
 	private static String buildSpan(CtMethod javassistMethod){
 		try {

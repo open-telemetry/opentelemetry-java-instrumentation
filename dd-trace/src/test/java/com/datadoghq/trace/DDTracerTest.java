@@ -16,6 +16,7 @@ import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.sampling.RateSampler;
 import com.datadoghq.trace.writer.Writer;
 
+import io.opentracing.BaseSpan;
 import io.opentracing.Span;
 
 
@@ -34,7 +35,7 @@ public class DDTracerTest {
                 .thenReturn(true)
                 .thenReturn(false);
 
-        List<Span> spans = new ArrayList<Span>();
+        List<DDBaseSpan<?>> spans = new ArrayList<DDBaseSpan<?>>();
         spans.add(span);
         spans.add(span);
         spans.add(span);

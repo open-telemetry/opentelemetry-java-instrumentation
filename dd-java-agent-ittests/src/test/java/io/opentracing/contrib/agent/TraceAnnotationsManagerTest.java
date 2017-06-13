@@ -19,35 +19,31 @@ public class TraceAnnotationsManagerTest extends AAgentIntegration{
 		//Test single span in new trace
 		SayTracedHello.sayHello();
 		
-		assertThat(tracer.finishedSpans().size()).isEqualTo(1);
-		assertThat(tracer.finishedSpans().get(0).operationName()).isEqualTo("SAY_HELLO");
-		assertThat(tracer.finishedSpans().get(0).tags().get("service-name")).isEqualTo("test");
+		assertThat(writer.firstTrace().size()).isEqualTo(1);
+		assertThat(writer.firstTrace().get(0).getOperationName()).isEqualTo("SAY_HELLO");
+		assertThat(writer.firstTrace().get(0).getServiceName()).isEqualTo("test");
 		
-		tracer.reset();
+		writer.start();
 
 		//Test new trace with 2 children spans
 		SayTracedHello.sayHELLOsayHA();
-		assertThat(tracer.finishedSpans().size()).isEqualTo(3);
-		assertThat(tracer.finishedSpans().get(0).operationName()).isEqualTo("SAY_HELLO");
-		assertThat(tracer.finishedSpans().get(0).tags().get("service-name")).isEqualTo("test");
+		assertThat(writer.firstTrace().size()).isEqualTo(3);
+		long parentId = writer.firstTrace().get(0).context().getTraceId();
 		
-		long traceId = tracer.finishedSpans().get(0).context().traceId();
-		long parentId = tracer.finishedSpans().get(0).parentId();
+		assertThat(writer.firstTrace().get(0).getOperationName()).isEqualTo("NEW_TRACE");
+		assertThat(writer.firstTrace().get(0).getParentId()).isEqualTo(0);//ROOT / no parent
+		assertThat(writer.firstTrace().get(0).context().getParentId()).isEqualTo(0);
+		assertThat(writer.firstTrace().get(0).getServiceName()).isEqualTo("test2");
 		
-		assertThat(tracer.finishedSpans().get(1).operationName()).isEqualTo("SAY_HA");
-		assertThat(tracer.finishedSpans().get(1).parentId()).isEqualTo(parentId);
-		assertThat(tracer.finishedSpans().get(1).context().traceId()).isEqualTo(traceId);
-		assertThat(tracer.finishedSpans().get(1).tags().get("span-type")).isEqualTo("DB");
-		assertThat(tracer.finishedSpans().get(1).tags().get("service-name")).isEqualTo("test");
+		assertThat(writer.firstTrace().get(1).getOperationName()).isEqualTo("SAY_HELLO");
+		assertThat(writer.firstTrace().get(1).getServiceName()).isEqualTo("test");
+		assertThat(writer.firstTrace().get(1).getParentId()).isEqualTo(parentId);
 		
-		assertThat(tracer.finishedSpans().get(2).operationName()).isEqualTo("NEW_TRACE");
-		assertThat(tracer.finishedSpans().get(2).parentId()).isEqualTo(0);//ROOT / no parent
-		assertThat(tracer.finishedSpans().get(2).context().traceId()).isEqualTo(traceId);
-		assertThat(tracer.finishedSpans().get(2).tags().get("service-name")).isEqualTo("test2");
+		assertThat(writer.firstTrace().get(2).getOperationName()).isEqualTo("SAY_HA");
+		assertThat(writer.firstTrace().get(2).getParentId()).isEqualTo(parentId);
+		assertThat(writer.firstTrace().get(2).context().getSpanType()).isEqualTo("DB");
 		
-		
-		System.out.println(tracer.finishedSpans());
-		tracer.reset();
+		writer.start();
 	}
 
 }
