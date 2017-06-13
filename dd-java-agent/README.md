@@ -108,9 +108,10 @@ Modern web application frameworks such as Dropwizard or Spring Boot are automati
 ### Databases
 | DB        | Versions           | Comments  |
 | ------------- |:-------------:| ----- |
-|Spring JDBC| 4.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
-|Hibernate| 5.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
+| Spring JDBC| 4.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
+| Hibernate| 5.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
 | MongoDB | 3.x | Intercepts all the calls from the MongoDB client |
+| Cassandra | 3.2.x | Intercepts all the calls from the Cassandra client |
 
 #### JDBC instrumentation
 
