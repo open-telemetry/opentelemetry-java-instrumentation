@@ -129,12 +129,12 @@
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-cassandra-driver</artifactId>
             <version>${ot.contrib.cassandra.version}</version>
-            <exclusions>
-                <exclusion>
-                        <groupId>com.datastax.cassandra</groupId>
-                        <artifactId>cassandra-driver-core</artifactId>
-                </exclusion>
-            </exclusions>
+            <!--<exclusions>-->
+                <!--<exclusion>-->
+                        <!--<groupId>com.datastax.cassandra</groupId>-->
+                        <!--<artifactId>cassandra-driver-core</artifactId>-->
+                <!--</exclusion>-->
+            <!--</exclusions>-->
         </dependency>
 
         <!-- Apache HTTP instrumentation -->

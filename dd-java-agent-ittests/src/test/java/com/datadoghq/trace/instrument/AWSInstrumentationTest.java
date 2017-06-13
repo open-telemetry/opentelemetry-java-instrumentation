@@ -2,7 +2,6 @@ package com.datadoghq.trace.instrument;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.sqs.AmazonSQSClient;
 import io.opentracing.contrib.aws.TracingRequestHandler;
 import org.junit.Test;
 
@@ -10,32 +9,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class AWSInstrumentationTest {
 
-    public AmazonSQSClient getMortarSQSClient() {
-        return new AmazonSQSClient();
-    }
-    @Test
-    public void test() {
 
-        // Build AWS client with TracingRequestHandler e.g.
-        AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard();
-        builder.withRegion(Regions.US_EAST_1);
-        builder.build();
+	@Test
+	public void test() {
 
-        assertThat(builder.getRequestHandlers()).isNotNull();
-        assertThat(builder.getRequestHandlers().size()).isEqualTo(1);
-        assertThat(builder.getRequestHandlers().get(0).getClass()).isEqualTo(TracingRequestHandler.class);
+		// Build AWS client with TracingRequestHandler e.g.
+		AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard();
+		builder.withRegion(Regions.US_EAST_1);
+		builder.build();
 
-
-
-        /** @deprecated */
-    @Deprecated
-    public AmazonSQSClient(AWSCredentials awsCredentials, ClientConfiguration clientConfiguration) {
-            super(clientConfiguration);
-            this.exceptionUnmarshallers = new ArrayList();
-            this.awsCredentialsProvider = new StaticCredentialsProvider(awsCredentials);
-            this.init();
-        }
-    }
-
-
+		assertThat(builder.getRequestHandlers()).isNotNull();
+		assertThat(builder.getRequestHandlers().size()).isEqualTo(1);
+		assertThat(builder.getRequestHandlers().get(0).getClass()).isEqualTo(TracingRequestHandler.class);
+	}
 }

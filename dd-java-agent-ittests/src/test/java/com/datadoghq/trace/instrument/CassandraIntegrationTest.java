@@ -2,12 +2,17 @@ package com.datadoghq.trace.instrument;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
-import com.google.common.util.concurrent.ListenableFuture;
+import org.apache.cassandra.exceptions.ConfigurationException;
+import org.apache.thrift.transport.TTransportException;
+import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 
 /**
  * Created by gpolaert on 6/2/17.
@@ -15,9 +20,20 @@ import static org.mockito.Mockito.spy;
 public class CassandraIntegrationTest {
 
 
+	@Before
+	public void start() throws InterruptedException, TTransportException, ConfigurationException, IOException {
+		EmbeddedCassandraServerHelper.startEmbeddedCassandra(20000L);
+	}
+
+	@After
+	public void stop() {
+		EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
+	}
+
+
 	@Test
 	public void testNewSessionSync() throws ClassNotFoundException {
-		Cluster cluster = new Cluster.Builder().addContactPoint("").build();
+		Cluster cluster = EmbeddedCassandraServerHelper.getCluster();
 		Session session = cluster.newSession();
 		assertThat(session).isInstanceOf(Class.forName("io.opentracing.contrib.cassandra.TracingSession"));
 
@@ -25,20 +41,10 @@ public class CassandraIntegrationTest {
 	}
 
 	@Test
-	public void testNewSessionAsync() throws ClassNotFoundException {
-
-
-		Cluster cluster = spy(new Cluster.Builder().addContactPoint("").build());
-		doReturn(cluster).when(cluster).init();
-		ListenableFuture<Session> session = null;
-		try {
-			session = cluster.connectAsync();
-		} catch (Exception e) {
-
-		}
-
-		// find a way to test
-//		assertThat(session).isInstanceOf(Class.forName("io.opentracing.contrib.cassandra.TracingSession"));
+	public void testNewSessionAsync() throws ClassNotFoundException, ExecutionException, InterruptedException {
+		Cluster cluster = EmbeddedCassandraServerHelper.getCluster();
+		Session session = cluster.connectAsync().get();
+		assertThat(session).isInstanceOf(Class.forName("io.opentracing.contrib.cassandra.TracingSession"));
 
 
 	}

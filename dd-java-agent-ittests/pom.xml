@@ -121,6 +121,22 @@
             <scope>test</scope>
         </dependency>
 
+
+        <!-- Cassandra BD -->
+        <dependency>
+            <groupId>com.datastax.cassandra</groupId>
+            <artifactId>cassandra-driver-core</artifactId>
+            <version>3.2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.cassandraunit</groupId>
+            <artifactId>cassandra-unit</artifactId>
+            <version>3.1.3.2</version>
+            <scope>test</scope>
+        </dependency>
+
+
     </dependencies>
     <build>
         <plugins>
@@ -148,7 +164,7 @@
 <!--                     <forkCount>1</forkCount> -->
 <!--                     <reuseForks>false</reuseForks> -->
                     <argLine>
-                        -javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${project.version}/dd-java-agent-${project.version}.jar
+                        -javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${project.version}/dd-java-agent-${project.version}.jar -Dorg.jboss.byteman.verbose
                     </argLine>
 <!--                     <workingDirectory>target/FORK_DIRECTORY_${surefire.forkNumber}</workingDirectory> -->
                 </configuration>

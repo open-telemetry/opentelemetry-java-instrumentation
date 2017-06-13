@@ -70,5 +70,4 @@ AT EXIT
 IF TRUE
 DO
    $! = patch($!);
-   traceln("OTARULES: CassandraDriver patched");
 ENDRULE
