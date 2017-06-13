@@ -4,19 +4,16 @@ import com.datastax.driver.core.Session;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.agent.OpenTracingHelper;
 import org.jboss.byteman.rule.Rule;
-import org.jboss.byteman.rule.helper.Helper;
 
 import java.lang.reflect.Constructor;
 
 
-public class CassandraHelper extends Helper {
+public class CassandraHelper extends OpenTracingHelper {
 
-	private final OpenTracingHelper otHelper;
 	private static final String LOG_PREFIX = "OTARULES - Cassandra contrib - ";
 
 	protected CassandraHelper(Rule rule) {
 		super(rule);
-		otHelper = new OpenTracingHelper(rule);
 	}
 
 	/**
@@ -29,7 +26,7 @@ public class CassandraHelper extends Helper {
 
 		try {
 
-			Tracer tracer = otHelper.getTracer();
+			Tracer tracer = getTracer();
 			Class<?> clazz = Class.forName("io.opentracing.contrib.cassandra.TracingSession");
 			Constructor<?> constructor = clazz.getDeclaredConstructor(Session.class, Tracer.class);
 			constructor.setAccessible(true);
