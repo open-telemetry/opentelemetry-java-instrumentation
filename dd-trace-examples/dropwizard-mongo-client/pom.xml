@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.datadoghq</groupId>
         <artifactId>dd-trace-examples</artifactId>
-        <version>0.0.7</version>
+        <version>0.0.8-SNAPSHOT</version>
     </parent>
 
     <artifactId>dropwizard-mongo-client</artifactId>
@@ -14,7 +14,7 @@
 
     <properties>
         <!-- Datadog version -->
-        <dd-trace.version>0.0.7</dd-trace.version>
+        <dd-trace.version>0.0.8-SNAPSHOT</dd-trace.version>
     </properties>
 
 
