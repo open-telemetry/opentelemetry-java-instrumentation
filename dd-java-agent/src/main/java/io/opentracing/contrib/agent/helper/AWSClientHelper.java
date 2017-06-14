@@ -30,7 +30,7 @@ public class AWSClientHelper extends DDTracingHelper<com.amazonaws.client.builde
 
 		RequestHandler2 handler = new TracingRequestHandler(tracer);
 
-		Field field = client.getClass().getDeclaredField(HANDLERS_FIELD_NAME);
+		Field field = AwsClientBuilder.class.getDeclaredField("requestHandlers");
 		field.setAccessible(true);
 		List<RequestHandler2> handlers = (List<RequestHandler2>) field.get(client);
 
@@ -42,7 +42,7 @@ public class AWSClientHelper extends DDTracingHelper<com.amazonaws.client.builde
 				handlers.add(0, handler);
 			}
 		}
-
+		client.setRequestHandlers((RequestHandler2[]) handlers.toArray());
 		return client;
 	}
 

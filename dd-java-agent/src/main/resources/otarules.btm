@@ -25,7 +25,7 @@ ENDRULE
 
 # Instrument Apache HTTP Client
 # =============================
-RULE Apache HTTP Client instrumentation
+RULE apache http
 CLASS org.apache.http.impl.client.HttpClientBuilder
 METHOD create()
 HELPER io.opentracing.contrib.agent.helper.ApacheHTTPClientHelper
