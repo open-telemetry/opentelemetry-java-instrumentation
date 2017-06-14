@@ -2,45 +2,33 @@ package io.opentracing.contrib.agent.helper;
 
 import com.datastax.driver.core.Session;
 import io.opentracing.Tracer;
-import io.opentracing.contrib.agent.OpenTracingHelper;
 import org.jboss.byteman.rule.Rule;
 
 import java.lang.reflect.Constructor;
 
 
-public class CassandraHelper extends OpenTracingHelper {
+public class CassandraHelper extends DDTracingHelper<Session>  {
 
-	private static final String LOG_PREFIX = "OTARULES - Cassandra contrib - ";
 
 	protected CassandraHelper(Rule rule) {
 		super(rule);
 	}
 
-	/**
-	 * @param session The session to be patched
-	 */
+
 	public Session patch(Session session) {
+		return super.patch(session);
+	}
+
+	@Override
+	protected Session doPatch(Session session) throws Exception {
 
 
-		debug(LOG_PREFIX + "Try to patch the session");
+		Class<?> clazz = Class.forName("io.opentracing.contrib.cassandra.TracingSession");
+		Constructor<?> constructor = clazz.getDeclaredConstructor(Session.class, Tracer.class);
+		constructor.setAccessible(true);
+		Session newSession = (Session) constructor.newInstance(session, tracer);
 
-		try {
-
-			Tracer tracer = getTracer();
-			Class<?> clazz = Class.forName("io.opentracing.contrib.cassandra.TracingSession");
-			Constructor<?> constructor = clazz.getDeclaredConstructor(Session.class, Tracer.class);
-			constructor.setAccessible(true);
-			Object newSession = constructor.newInstance(session, tracer);
-			debug(LOG_PREFIX + "Session patched");
-			return (Session) newSession;
-
-		} catch (Exception e) {
-			err(LOG_PREFIX + "Session not patched, " + e.getMessage());
-			errTraceException(e);
-		}
-
-		return session;
-
+		return newSession;
 
 
 	}
