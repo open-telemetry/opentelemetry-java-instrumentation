@@ -4,7 +4,7 @@
 
     <groupId>com.datadoghq</groupId>
     <artifactId>dd-trace-java</artifactId>
-    <version>0.0.7-SNAPSHOT</version>
+    <version>0.0.8-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <!-- Project information -->
@@ -44,7 +44,7 @@
     </modules>
 
     <properties>
-        <opentracing.version>0.22.0</opentracing.version>
+        <opentracing.version>0.30.0</opentracing.version>
         <java.version>1.7</java.version>
     </properties>
 

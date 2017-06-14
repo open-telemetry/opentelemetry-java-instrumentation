@@ -2,7 +2,7 @@ package com.datadoghq.trace.writer;
 
 import java.util.List;
 
-import io.opentracing.Span;
+import com.datadoghq.trace.DDBaseSpan;
 
 /**
  *	A writer is responsible to send collected spans to some place
@@ -14,7 +14,7 @@ public interface Writer {
      * 
      * @param trace the list of spans to write
      */
-    void write(List<Span> trace);
+    void write(List<DDBaseSpan<?>> trace);
     
     /**
      * Start the writer

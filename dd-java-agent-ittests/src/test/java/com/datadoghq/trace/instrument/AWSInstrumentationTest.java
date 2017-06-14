@@ -10,21 +10,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class AWSInstrumentationTest {
 
 
-    @Test
-    public void test() {
+	@Test
+	public void test() {
 
-        // Build AWS client with TracingRequestHandler e.g.
-        AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard();
-        builder.withRegion(Regions.US_EAST_1);
-        builder.build();
+		// Build AWS client with TracingRequestHandler e.g.
+		AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard();
+		builder.withRegion(Regions.US_EAST_1);
+		builder.build();
 
-        assertThat(builder.getRequestHandlers()).isNotNull();
-        assertThat(builder.getRequestHandlers().size()).isEqualTo(1);
-        assertThat(builder.getRequestHandlers().get(0).getClass()).isEqualTo(TracingRequestHandler.class);
-    }
-
-
-    public static void main(String[] args) {
-        new AWSInstrumentationTest().test();
-    }
+		assertThat(builder.getRequestHandlers()).isNotNull();
+		assertThat(builder.getRequestHandlers().size()).isEqualTo(1);
+		assertThat(builder.getRequestHandlers().get(0).getClass()).isEqualTo(TracingRequestHandler.class);
+	}
 }

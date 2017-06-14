@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.datadoghq</groupId>
         <artifactId>dd-trace-java</artifactId>
-        <version>0.0.7-SNAPSHOT</version>
+        <version>0.0.8-SNAPSHOT</version>
     </parent>
 
     <artifactId>dd-java-agent-ittests</artifactId>
@@ -15,7 +15,7 @@
 
 
     <properties>
-        <dd-trace.version>0.0.7-SNAPSHOT</dd-trace.version>
+        <dd-trace.version>0.0.8-SNAPSHOT</dd-trace.version>
     </properties>
 
     <dependencies>
@@ -94,7 +94,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk</artifactId>
-            <version>1.11.132</version>
+            <version>1.11.119</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -120,6 +120,22 @@
             <scope>test</scope>
         </dependency>
 
+
+        <!-- Cassandra BD -->
+        <!--<dependency>-->
+            <!--<groupId>com.datastax.cassandra</groupId>-->
+            <!--<artifactId>cassandra-driver-core</artifactId>-->
+            <!--<version>3.2.0</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.cassandraunit</groupId>-->
+            <!--<artifactId>cassandra-unit</artifactId>-->
+            <!--<version>3.1.3.2</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
+
+
     </dependencies>
     <build>
         <plugins>
@@ -141,16 +157,55 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19</version>
                 <configuration>
-                    <includes>
-                        <include>*Test.java</include>
-                    </includes>
+                    <!--<includes>-->
+                        <!--<include>*Test.java</include>-->
+                    <!--</includes>-->
+                    <excludes>
+                        <exclude>*Test.java</exclude>
+                    </excludes>
 <!--                     <forkCount>1</forkCount> -->
 <!--                     <reuseForks>false</reuseForks> -->
                     <argLine>
-                        -javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${project.version}/dd-java-agent-${project.version}.jar
+                        -javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${project.version}/dd-java-agent-${project.version}.jar -Dorg.jboss.byteman.verbose
                     </argLine>
 <!--                     <workingDirectory>target/FORK_DIRECTORY_${surefire.forkNumber}</workingDirectory> -->
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <artifactSet>
+                                <excludes>
+                                    <!-- <exclude>ch.qos.logback:*</exclude> -->
+                                    <!-- <exclude>org.slf4j:*</exclude> -->
+                                </excludes>
+                            </artifactSet>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>otarules.btm</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Agent-Class>io.opentracing.contrib.agent.AnnotationsTracingAgent</Agent-Class>
+                                        <Premain-Class>io.opentracing.contrib.agent.AnnotationsTracingAgent
+                                        </Premain-Class>
+                                        <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                                        <Can-Retransform-Classes>true</Can-Retransform-Classes>
+                                        <Boot-Class-Path>./${project.artifactId}.jar</Boot-Class-Path>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

@@ -31,5 +31,8 @@ mongo-java-driver:
 opentracing-api:
   key: opentracing-api
   valid_versions: 0\.2.*
+cassandra-driver-core:
+  key: cassandra
+  valid_versions: 3\.2.*
 
   

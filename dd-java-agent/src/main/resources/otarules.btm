@@ -6,7 +6,7 @@ METHOD build()
 HELPER io.opentracing.contrib.agent.OpenTracingHelper
 BIND
   listener:io.opentracing.contrib.mongo.TracingCommandListener =
-        new io.opentracing.contrib.mongo.TracingCommandListener();
+        new io.opentracing.contrib.mongo.TracingCommandListener(getTracer());
 AT ENTRY
 IF TRUE
 DO
@@ -18,8 +18,9 @@ ENDRULE
 RULE AWS SDK Client instrumentation 1
 CLASS ^com.amazonaws.client.builder.AwsClientBuilder
 METHOD build()
+HELPER io.opentracing.contrib.agent.OpenTracingHelper
 BIND
-  requestTracerHandler:io.opentracing.contrib.aws.TracingRequestHandler = new io.opentracing.contrib.aws.TracingRequestHandler();
+  requestTracerHandler:io.opentracing.contrib.aws.TracingRequestHandler = new io.opentracing.contrib.aws.TracingRequestHandler(getTracer());
   requests:java.util.List = new java.util.ArrayList();
 AT ENTRY
 IF $this.requestHandlers == null
@@ -31,8 +32,9 @@ ENDRULE
 RULE AWS SDK Client instrumentation 2
 CLASS ^com.amazonaws.client.builder.AwsClientBuilder
 METHOD build()
+HELPER io.opentracing.contrib.agent.OpenTracingHelper
 BIND
-  requestTracerHandler:io.opentracing.contrib.aws.TracingRequestHandler = new io.opentracing.contrib.aws.TracingRequestHandler();
+  requestTracerHandler:io.opentracing.contrib.aws.TracingRequestHandler = new io.opentracing.contrib.aws.TracingRequestHandler(getTracer());
 AT ENTRY
 IF $this.requestHandlers != null AND $this.requestHandlers.get(0).getClass().getCanonicalName() != "io.opentracing.contrib.aws.TracingRequestHandler"
 DO
@@ -54,4 +56,18 @@ AT ENTRY
 IF TRUE
 DO
   return tracingClientExec;
+ENDRULE
+
+
+# --------------------------------------------------------
+# Cassandra
+RULE Cassandra
+CLASS com.datastax.driver.core.Cluster$Manager
+METHOD newSession()
+HELPER io.opentracing.contrib.agent.helper.CassandraHelper
+#BIND
+AT EXIT
+IF TRUE
+DO
+   $! = patch($!);
 ENDRULE

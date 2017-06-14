@@ -4,9 +4,8 @@ package com.datadoghq.trace.sampling;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.datadoghq.trace.DDBaseSpan;
 import com.google.auto.service.AutoService;
-
-import io.opentracing.Span;
 
 
 /**
@@ -45,7 +44,7 @@ public class RateSampler extends ASampler {
     }
 
     @Override
-    public boolean doSample(Span span) {
+    public boolean doSample(DDBaseSpan<?> span) {
         boolean sample = Math.random() <= this.sampleRate;
         logger.debug("{} - Span is sampled: {}", span, sample);
         return sample;
