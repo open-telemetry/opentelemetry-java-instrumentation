@@ -10,10 +10,10 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class AWSClientHelperAgent extends DDAgentTracingHelper<AwsClientBuilder> {
+public class AWSClientHelper extends DDAgentTracingHelper<AwsClientBuilder> {
 
 
-	public AWSClientHelperAgent(Rule rule) {
+	public AWSClientHelper(Rule rule) {
 		super(rule);
 	}
 

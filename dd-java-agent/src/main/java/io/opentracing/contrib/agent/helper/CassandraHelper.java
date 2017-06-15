@@ -7,10 +7,10 @@ import org.jboss.byteman.rule.Rule;
 import java.lang.reflect.Constructor;
 
 
-public class CassandraHelperAgent extends DDAgentTracingHelper<Session> {
+public class CassandraHelper extends DDAgentTracingHelper<Session> {
 
 
-	protected CassandraHelperAgent(Rule rule) {
+	protected CassandraHelper(Rule rule) {
 		super(rule);
 	}
 

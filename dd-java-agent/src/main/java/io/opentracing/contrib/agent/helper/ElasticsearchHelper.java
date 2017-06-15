@@ -11,9 +11,9 @@ import org.jboss.byteman.rule.Rule;
 import java.lang.reflect.Method;
 
 
-public class ElasticsearchHelperAgent extends DDAgentTracingHelper<ActionListener> {
+public class ElasticsearchHelper extends DDAgentTracingHelper<ActionListener> {
 
-	public ElasticsearchHelperAgent(Rule rule) {
+	public ElasticsearchHelper(Rule rule) {
 		super(rule);
 	}
 

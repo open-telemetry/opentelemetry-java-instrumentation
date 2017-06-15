@@ -5,10 +5,10 @@ import io.opentracing.contrib.mongo.TracingCommandListener;
 import org.jboss.byteman.rule.Rule;
 
 
-public class MongoHelperAgent extends DDAgentTracingHelper<MongoClientOptions.Builder> {
+public class MongoHelper extends DDAgentTracingHelper<MongoClientOptions.Builder> {
 
 
-	public MongoHelperAgent(Rule rule) {
+	public MongoHelper(Rule rule) {
 		super(rule);
 	}
 

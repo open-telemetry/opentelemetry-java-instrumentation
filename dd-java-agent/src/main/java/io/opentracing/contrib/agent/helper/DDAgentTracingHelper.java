@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 
 public abstract class DDAgentTracingHelper<E> extends OpenTracingHelper {
 
-
 	protected static Tracer tracer;
 	private static final Logger LOGGER = Logger.getLogger(DDAgentTracingHelper.class.getCanonicalName());
 

@@ -11,10 +11,10 @@ import static io.opentracing.contrib.okhttp3.OkHttpClientSpanDecorator.STANDARD_
 /**
  * Created by gpolaert on 6/15/17.
  */
-public class OkHttpHelperAgent extends DDAgentTracingHelper<OkHttpClient.Builder> {
+public class OkHttpHelper extends DDAgentTracingHelper<OkHttpClient.Builder> {
 
 
-	public OkHttpHelperAgent(Rule rule) {
+	public OkHttpHelper(Rule rule) {
 		super(rule);
 	}
 
