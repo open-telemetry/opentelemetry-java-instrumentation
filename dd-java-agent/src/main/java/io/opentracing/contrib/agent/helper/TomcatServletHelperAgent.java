@@ -10,9 +10,9 @@ import java.util.EnumSet;
 /**
  * Created by gpolaert on 6/15/17.
  */
-public class TomcatServletHelper extends DDTracingHelper<ApplicationContext> {
+public class TomcatServletHelperAgent extends DDAgentTracingHelper<ApplicationContext> {
 
-	public TomcatServletHelper(Rule rule) {
+	public TomcatServletHelperAgent(Rule rule) {
 		super(rule);
 	}
 

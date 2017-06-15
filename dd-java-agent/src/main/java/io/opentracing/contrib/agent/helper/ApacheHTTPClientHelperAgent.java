@@ -5,11 +5,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.jboss.byteman.rule.Rule;
 
 
-public class ApacheHTTPClientHelper extends DDTracingHelper<HttpClientBuilder> {
+public class ApacheHTTPClientHelperAgent extends DDAgentTracingHelper<HttpClientBuilder> {
 
-
-
-	public ApacheHTTPClientHelper(Rule rule) {
+	public ApacheHTTPClientHelperAgent(Rule rule) {
 		super(rule);
 	}
 

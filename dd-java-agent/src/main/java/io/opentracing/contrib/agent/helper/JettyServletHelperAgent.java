@@ -10,9 +10,9 @@ import java.util.EnumSet;
 /**
  * Created by gpolaert on 6/15/17.
  */
-public class JettyServletHelper extends DDTracingHelper<ServletContextHandler> {
+public class JettyServletHelperAgent extends DDAgentTracingHelper<ServletContextHandler> {
 
-	public JettyServletHelper(Rule rule) {
+	public JettyServletHelperAgent(Rule rule) {
 		super(rule);
 	}
 

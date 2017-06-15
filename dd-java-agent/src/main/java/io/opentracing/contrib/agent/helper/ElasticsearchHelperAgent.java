@@ -11,9 +11,9 @@ import org.jboss.byteman.rule.Rule;
 import java.lang.reflect.Method;
 
 
-public class ElasticsearchHelper extends DDTracingHelper<ActionListener> {
+public class ElasticsearchHelperAgent extends DDAgentTracingHelper<ActionListener> {
 
-	public ElasticsearchHelper(Rule rule) {
+	public ElasticsearchHelperAgent(Rule rule) {
 		super(rule);
 	}
 
@@ -36,8 +36,8 @@ public class ElasticsearchHelper extends DDTracingHelper<ActionListener> {
 			return listener;
 		}
 
-		Tracer.SpanBuilder spanBuilder = this.tracer.buildSpan(request.getClass().getSimpleName()).ignoreActiveSpan().withTag(Tags.SPAN_KIND.getKey(), "client");
-		ActiveSpan parentSpan = this.tracer.activeSpan();
+		Tracer.SpanBuilder spanBuilder = tracer.buildSpan(request.getClass().getSimpleName()).ignoreActiveSpan().withTag(Tags.SPAN_KIND.getKey(), "client");
+		ActiveSpan parentSpan = tracer.activeSpan();
 		if(parentSpan != null) {
 			spanBuilder.asChildOf(parentSpan.context());
 		}

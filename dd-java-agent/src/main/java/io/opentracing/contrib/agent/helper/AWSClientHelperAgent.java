@@ -10,18 +10,11 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class AWSClientHelper extends DDTracingHelper<com.amazonaws.client.builder.AwsClientBuilder> {
+public class AWSClientHelperAgent extends DDAgentTracingHelper<AwsClientBuilder> {
 
 
-	private static final String HANDLERS_FIELD_NAME = "requestHandlers";
-
-	public AWSClientHelper(Rule rule) {
+	public AWSClientHelperAgent(Rule rule) {
 		super(rule);
-	}
-
-
-	public AwsClientBuilder patch(AwsClientBuilder client) {
-		return super.patch(client);
 	}
 
 
