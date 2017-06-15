@@ -1,24 +1,12 @@
 package io.opentracing.contrib.agent;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.lang.reflect.Method;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.datadoghq.trace.resolver.AgentTracerConfig;
+import com.datadoghq.trace.resolver.DDTracerFactory;
+import com.datadoghq.trace.resolver.FactoryUtils;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtMethod;
+import javassist.bytecode.Descriptor;
 import org.jboss.byteman.agent.Location;
 import org.jboss.byteman.agent.LocationType;
 import org.jboss.byteman.agent.Retransformer;
@@ -28,14 +16,19 @@ import org.reflections.scanners.MethodAnnotationsScanner;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
 
-import com.datadoghq.trace.resolver.AgentTracerConfig;
-import com.datadoghq.trace.resolver.DDTracerFactory;
-import com.datadoghq.trace.resolver.FactoryUtils;
-
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtMethod;
-import javassist.bytecode.Descriptor;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This manager is loaded at pre-main.
@@ -63,7 +56,7 @@ public class TraceAnnotationsManager {
 		List<String> loadedScripts = loadRules(ClassLoader.getSystemClassLoader());
 		
 		//Check if some rules have to be uninstalled
-		List<String> uninstallScripts = JarVersionsChecker.checkJarVersions();
+		List<String> uninstallScripts = new ArrayList<>();
 		if(agentTracerConfig != null){
 			List<String> disabledInstrumentations = agentTracerConfig.getDisabledInstrumentations();
 			if(disabledInstrumentations!=null && !disabledInstrumentations.isEmpty()){
@@ -270,7 +263,7 @@ public class TraceAnnotationsManager {
 			log.log(Level.WARNING, "Error when building injection rule on method " + javassistMethod + ". Fallback on default value.", e);
 		}
 		return BUILD_SPAN+javassistMethod.getName()+CLOSE_PARENTHESIS;
-	};
+	}
 
 	private static String buildWithTags(CtMethod javassistMethod){
 		try {
@@ -292,5 +285,5 @@ public class TraceAnnotationsManager {
 			log.log(Level.WARNING, "Error when building injection rule on method " + javassistMethod + ". Fallback on default value.", e);
 		}
 		return "";
-	};
+	}
 }
