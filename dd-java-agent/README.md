@@ -93,7 +93,7 @@ When attached to an application the `dd-java-agent` automatically instruments th
 | ------------- |:-------------:| ----- |
 | OkHTTP | 3.x | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers |
 | Apache HTTP Client | 4.3 + |HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers|
-| AWS SDK | 1.x | Trace all client calls to any AWS service |
+| AWS SDK | 1.11.119+ | Trace all client calls to any AWS service |
 | Web Servlet Filters| Depending on server | See [Servers](#servers) section |
 
 ### Servers
@@ -112,6 +112,7 @@ Modern web application frameworks such as Dropwizard or Spring Boot are automati
 | Hibernate| 5.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
 | MongoDB | 3.x | Intercepts all the calls from the MongoDB client |
 | Cassandra | 3.2.x | Intercepts all the calls from the Cassandra client |
+| Elasticsearch | 5.4.x | Intercepts all the calls from the ES Transport client |
 
 #### JDBC instrumentation
 
