@@ -97,7 +97,7 @@ RULE okhttp
 CLASS okhttp3.OkHttpClient$Builder
 METHOD build()
 HELPER io.opentracing.contrib.agent.helper.OkHttpHelper
-AT EXIT
+AT ENTRY
 IF TRUE
 DO
     patch($this)
