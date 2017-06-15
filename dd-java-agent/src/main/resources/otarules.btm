@@ -1,73 +1,104 @@
-	# --------------------------------------------------------
-# Instrument mongo client
-RULE Mongo Client instrumentation
+# Instrument Mongo client
+# ========================
+RULE mongo
 CLASS com.mongodb.MongoClientOptions$Builder
-METHOD build()
-HELPER io.opentracing.contrib.agent.OpenTracingHelper
-BIND
-  listener:io.opentracing.contrib.mongo.TracingCommandListener =
-        new io.opentracing.contrib.mongo.TracingCommandListener(getTracer());
+METHOD build
+HELPER io.opentracing.contrib.agent.helper.MongoHelper
 AT ENTRY
 IF TRUE
 DO
-  $this.addCommandListener(listener);
+  patch($this);
 ENDRULE
 
-# --------------------------------------------------------
-# Instrument AWS client
-RULE AWS SDK Client instrumentation 1
+
+# Instrument AWS SDK client
+# ==========================
+RULE awsclient
 CLASS ^com.amazonaws.client.builder.AwsClientBuilder
 METHOD build()
-HELPER io.opentracing.contrib.agent.OpenTracingHelper
-BIND
-  requestTracerHandler:io.opentracing.contrib.aws.TracingRequestHandler = new io.opentracing.contrib.aws.TracingRequestHandler(getTracer());
-  requests:java.util.List = new java.util.ArrayList();
+HELPER io.opentracing.contrib.agent.helper.AWSClientHelper
 AT ENTRY
-IF $this.requestHandlers == null
+IF TRUE
 DO
-  requests.add(requestTracerHandler);
-  $this.requestHandlers = requests;
+  patch($this);
 ENDRULE
 
-RULE AWS SDK Client instrumentation 2
-CLASS ^com.amazonaws.client.builder.AwsClientBuilder
-METHOD build()
-HELPER io.opentracing.contrib.agent.OpenTracingHelper
-BIND
-  requestTracerHandler:io.opentracing.contrib.aws.TracingRequestHandler = new io.opentracing.contrib.aws.TracingRequestHandler(getTracer());
-AT ENTRY
-IF $this.requestHandlers != null AND $this.requestHandlers.get(0).getClass().getCanonicalName() != "io.opentracing.contrib.aws.TracingRequestHandler"
-DO
-  $this.requestHandlers.add(0, requestTracerHandler);
-ENDRULE
-
-# --------------------------------------------------------
 # Instrument Apache HTTP Client
-RULE Apache HTTP Client instrumentation
+# =============================
+RULE apache http
 CLASS org.apache.http.impl.client.HttpClientBuilder
-METHOD decorateProtocolExec(org.apache.http.impl.execchain.ClientExecChain)
-HELPER io.opentracing.contrib.agent.OpenTracingHelper
-BIND
-  redirectStrategy: org.apache.http.client.RedirectStrategy = $this.redirectStrategy==null?org.apache.http.impl.client.DefaultRedirectStrategy.INSTANCE:$this.redirectStrategy;
-  decorators: java.util.List = java.util.Collections.singletonList(new io.opentracing.contrib.apache.http.client.ApacheClientSpanDecorator$StandardTags());
-  tracingClientExec:io.opentracing.contrib.apache.http.client.TracingClientExec 
-  							= new io.opentracing.contrib.apache.http.client.TracingClientExec($1,redirectStrategy,$this.redirectHandlingDisabled,getTracer(),decorators);
-AT ENTRY
+METHOD create()
+HELPER io.opentracing.contrib.agent.helper.ApacheHTTPClientHelper
+AT EXIT
 IF TRUE
 DO
-  return tracingClientExec;
+  $! = patch($!);
 ENDRULE
 
+# Instrument Elasticsearch Transport Client
+# ==========================================
+RULE elasticsearch
+INTERFACE org.elasticsearch.client.ElasticsearchClient
+METHOD execute(org.elasticsearch.action.Action,org.elasticsearch.action.ActionRequest,org.elasticsearch.action.ActionListener)
+HELPER io.opentracing.contrib.agent.helper.ElasticsearchHelper
+AT ENTRY
+IF $# == 3 AND NOT $3.getClass().getCanonicalName().equals("io.opentracing.contrib.elasticsearch.TracingResponseListener")
+DO
+  registerArgs($1);
+  $3 = patch($3);
+ENDRULE
 
-# --------------------------------------------------------
-# Cassandra
-RULE Cassandra
+# Instrument Cassandra client
+# ===========================
+RULE cassandra
 CLASS com.datastax.driver.core.Cluster$Manager
 METHOD newSession()
 HELPER io.opentracing.contrib.agent.helper.CassandraHelper
-#BIND
 AT EXIT
 IF TRUE
 DO
    $! = patch($!);
+ENDRULE
+
+
+
+# Instrument Jetty
+# ===========================
+# State 0 - no filter installed
+# State 1 - filter installed
+RULE jetty
+CLASS org.eclipse.jetty.servlet.ServletContextHandler
+METHOD <init>
+HELPER io.opentracing.contrib.agent.helper.JettyServletHelper
+AT EXIT
+IF getState($0.getServletContext()) == 0
+DO
+    patch($this)
+ENDRULE
+
+
+# Instrument Tomcat
+# ===========================
+RULE tomcat
+CLASS org.apache.catalina.core.ApplicationContext
+METHOD <init>
+HELPER io.opentracing.contrib.agent.helper.TomcatServletHelper
+AT EXIT
+IF TRUE
+DO
+    patch($this)
+ENDRULE
+
+
+
+# Instrument OkHttp
+# ===========================
+RULE okhttp
+CLASS okhttp3.OkHttpClient$Builder
+METHOD build()
+HELPER io.opentracing.contrib.agent.helper.OkHttpHelper
+AT EXIT
+IF TRUE
+DO
+    patch($this)
 ENDRULE

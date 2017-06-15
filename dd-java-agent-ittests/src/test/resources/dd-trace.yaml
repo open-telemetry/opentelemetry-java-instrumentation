@@ -8,9 +8,7 @@ writer:
   # DDAgentWriter: Spans are forwarding to a Datadog Agent
   #  - Param 'host': the hostname where the DD Agent running (default: localhost)
   #  - Param 'port': the port to reach the DD Agent (default: 8126)
-  type: DDAgentWriter
-  host: localhost
-  port: 8126
+  type: ListWriter
 
 # The sampler to use.
 # Could be: AllSampler (default) or RateSampler
