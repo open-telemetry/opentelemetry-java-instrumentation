@@ -59,3 +59,34 @@ IF TRUE
 DO
    $! = patch($!);
 ENDRULE
+
+
+
+# Instrument Jetty
+# ===========================
+# State 0 - no filter installed
+# State 1 - filter installed
+
+RULE jetty
+CLASS org.eclipse.jetty.servlet.ServletContextHandler
+METHOD <init>
+HELPER io.opentracing.contrib.agent.helper.JettyServletHelper
+AT EXIT
+IF getState($0.getServletContext()) == 0
+DO
+    patch($this)
+ENDRULE
+
+
+# Instrument Tomcat
+# ===========================
+
+RULE tomcat
+CLASS org.apache.catalina.core.ApplicationContext
+METHOD <init>
+HELPER io.opentracing.contrib.agent.helper.TomcatServletHelper
+AT EXIT
+IF TRUE
+DO
+    patch($this)
+ENDRULE
