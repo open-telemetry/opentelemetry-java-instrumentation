@@ -3,7 +3,6 @@ package io.opentracing.contrib.agent.helper;
 import io.opentracing.ActiveSpan;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
-import io.opentracing.contrib.elasticsearch.TracingPreBuiltTransportClient;
 import io.opentracing.contrib.elasticsearch.TracingResponseListener;
 import io.opentracing.tag.Tags;
 import org.elasticsearch.action.ActionListener;
@@ -33,6 +32,9 @@ public class ElasticsearchHelper extends DDTracingHelper<ActionListener> {
 	@Override
 	protected  ActionListener doPatch(ActionListener listener) throws Exception {
 
+		if (listener instanceof  TracingResponseListener) {
+			return listener;
+		}
 
 		Tracer.SpanBuilder spanBuilder = this.tracer.buildSpan(request.getClass().getSimpleName()).ignoreActiveSpan().withTag(Tags.SPAN_KIND.getKey(), "client");
 		ActiveSpan parentSpan = this.tracer.activeSpan();
@@ -43,7 +45,8 @@ public class ElasticsearchHelper extends DDTracingHelper<ActionListener> {
 		Span span = spanBuilder.startManual();
 
 		Class<?> clazz = Class.forName("io.opentracing.contrib.elasticsearch.SpanDecorator");
-		Method method = clazz.getMethod("onRequest", Span.class);
+		Method method = clazz.getDeclaredMethod("onRequest", Span.class);
+		method.setAccessible(true);
 		method.invoke(null, span);
 
 		ActionListener newListener = new TracingResponseListener(listener, span);

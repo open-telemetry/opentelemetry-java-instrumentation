@@ -38,18 +38,15 @@ ENDRULE
 # Instrument Elasticsearch Transport Client
 # ==========================================
 RULE elasticsearch
-CLASS org.elasticsearch.transport.client.TransportClient
-METHOD doExecute
+INTERFACE org.elasticsearch.client.ElasticsearchClient
+METHOD execute(org.elasticsearch.action.Action,org.elasticsearch.action.ActionRequest,org.elasticsearch.action.ActionListener)
 HELPER io.opentracing.contrib.agent.helper.ElasticsearchHelper
 AT ENTRY
-IF TRUE
+IF $# == 3 AND NOT $3.getClass().getCanonicalName().equals("io.opentracing.contrib.elasticsearch.TracingResponseListener")
 DO
   registerArgs($1);
   $3 = patch($3);
 ENDRULE
-
-#PreBuiltTransportClient(Settings settings, Collection<Class<? extends Plugin>> plugins, HostFailureListener hostFailureListener)
-
 
 # Instrument Cassandra client
 # ===========================
