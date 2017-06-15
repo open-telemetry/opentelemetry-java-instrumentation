@@ -51,11 +51,7 @@
             <artifactId>opentracing-agent</artifactId>
             <version>${ot.agent.version}</version>
         </dependency>
-        <dependency>
-            <groupId>io.opentracing.contrib</groupId>
-            <artifactId>opentracing-agent-rules-java-okhttp</artifactId>
-            <version>${ot.agent.version}</version>
-        </dependency>
+
 
         <!-- Used to find annotated methods -->
         <dependency>
@@ -136,6 +132,12 @@
                     <artifactId>okhttp</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>3.6.0</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- AWS SDK instrumentation -->
