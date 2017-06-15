@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.datadoghq</groupId>
         <artifactId>dd-trace-java</artifactId>
-        <version>0.1.0</version>
+        <version>0.1.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>dd-java-agent-ittests</artifactId>
@@ -15,7 +15,7 @@
 
 
     <properties>
-        <dd-trace.version>0.1.0</dd-trace.version>
+        <dd-trace.version>0.1.1-SNAPSHOT</dd-trace.version>
     </properties>
 
     <dependencies>
