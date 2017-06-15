@@ -7,7 +7,7 @@ This is a Java Agent to instrument Java applications using the Datadog Tracer. O
 Tracing instrumentation can be done in 2 ways:
 
 - Automatically over a set of [supported Web servers, frameworks or database drivers](#instrumented-frameworks)
-- By using the [`@trace` annotation](#custom-instrumentations)
+- By using the [`@Trace` annotation](#custom-instrumentations)
 
 :heavy_exclamation_mark: **Warning:** This library is currently in Alpha. This means that even though we rigorously tested instrumentations you may experience strange behaviors depending on your running environment. Be sure to test thoroughly on a staging environment before releasing to production. For any help please contact [tracehelp@datadoghq.com](mailto:tracehelp@datadoghq.com).
 
@@ -59,9 +59,9 @@ defaultServiceName: java-app
 # Could be: LoggingWritter or DDAgentWriter (default)
 writer:
   # LoggingWriter: Spans are logged using the application configuration
-  # DDAgentWriter: Spans are forwarding to a Datadog Agent
-  #  - Param 'host': the hostname where the DD Agent running (default: localhost)
-  #  - Param 'port': the port to reach the DD Agent (default: 8126)
+  # DDAgentWriter: Spans are forwarding to a Datadog trace Agent
+  #  - Param 'host': the hostname where the DD trace Agent is running (default: localhost)
+  #  - Param 'port': the port to reach the DD trace Agent (default: 8126)
   type: DDAgentWriter
   host: localhost
   port: 8126
@@ -138,9 +138,9 @@ disabledInstrumentations: ["apache http", "mongo", "tomcat"]
 
 ## Custom instrumentations
 
-### The `@trace` annotation
+### The `@Trace` annotation
 
-By adding the `@trace` annotation to a method the `dd-java-agent` automatically measures the execution time.
+By adding the `@Trace` annotation to a method the `dd-java-agent` automatically measures the execution time.
 
 ```java
 @Trace
