@@ -11,9 +11,9 @@ import java.util.logging.Logger;
 /**
  * This class provides helpfull stuff in order to easy patch object using Byteman rules
  *
- * @param <ObjectType> The type of the object to patch
+ * @param <T> The type of the object to patch
  */
-public abstract class DDAgentTracingHelper<ObjectType> extends OpenTracingHelper {
+public abstract class DDAgentTracingHelper<T> extends OpenTracingHelper {
 
 	private static final Logger LOGGER = Logger.getLogger(DDAgentTracingHelper.class.getCanonicalName());
 
@@ -48,15 +48,22 @@ public abstract class DDAgentTracingHelper<ObjectType> extends OpenTracingHelper
 	 * @param args The object to patch, the type is defined by the subclass instantiation
 	 * @return The object patched
 	 */
-	public ObjectType patch(ObjectType args) {
+	public T patch(T args) {
 
-		info("Try to patch " + args.getClass().getName());
-		ObjectType patched;
+		if (args == null) {
+			info("Skipping " + rule.getName() + "' rule because the input arg is null");
+			return args;
+		}
+
+		String className = args.getClass().getName();
+		info("Try to patch " + className);
+
+		T patched;
 		try {
 			patched = doPatch(args);
-			info(args.getClass().getName() + " patched");
+			info(className + " patched");
 		} catch (Throwable e) {
-			warning("Failed to patch" + args.getClass().getName() + ", reason: " + e.getMessage());
+			warning("Failed to patch" + className + ", reason: " + e.getMessage());
 			logStackTrace(e.getMessage(), e);
 			patched = args;
 		}
@@ -70,7 +77,7 @@ public abstract class DDAgentTracingHelper<ObjectType> extends OpenTracingHelper
 	 * @return the object patched
 	 * @throws Exception The exceptions are managed directly to the patch method
 	 */
-	abstract protected ObjectType doPatch(ObjectType obj) throws Exception;
+	abstract protected T doPatch(T obj) throws Exception;
 
 
 	/**

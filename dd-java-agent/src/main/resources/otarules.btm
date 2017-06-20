@@ -102,3 +102,28 @@ IF TRUE
 DO
     patch($this)
 ENDRULE
+
+
+# Instrument JMS
+# ===========================
+RULE jms producer
+INTERFACE javax.jms.Session
+METHOD createProducer
+HELPER io.opentracing.contrib.agent.helper.JMSMessageProducerHelper
+AT EXIT
+IF TRUE
+DO
+   $! = patch($!);
+ENDRULE
+
+
+RULE jms consumer
+INTERFACE javax.jms.Session
+METHOD createConsumer
+HELPER io.opentracing.contrib.agent.helper.JMSMessageConsumerHelper
+AT EXIT
+IF TRUE
+DO
+   $! = patch($!);
+ENDRULE
+
