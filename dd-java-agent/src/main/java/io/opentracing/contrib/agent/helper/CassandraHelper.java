@@ -2,46 +2,47 @@ package io.opentracing.contrib.agent.helper;
 
 import com.datastax.driver.core.Session;
 import io.opentracing.Tracer;
-import io.opentracing.contrib.agent.OpenTracingHelper;
 import org.jboss.byteman.rule.Rule;
 
 import java.lang.reflect.Constructor;
 
+/**
+ * Patch each new sessions created when trying to connect to a Cassandra cluster.
+ */
+public class CassandraHelper extends DDAgentTracingHelper<Session> {
 
-public class CassandraHelper extends OpenTracingHelper {
-
-	private static final String LOG_PREFIX = "OTARULES - Cassandra contrib - ";
 
 	protected CassandraHelper(Rule rule) {
 		super(rule);
 	}
 
-	/**
-	 * @param session The session to be patched
-	 */
+	@Override
 	public Session patch(Session session) {
+		return super.patch(session);
+	}
 
 
-		debug(LOG_PREFIX + "Try to patch the session");
+	/**
+	 * Strategy: each time we build a connection to a Cassandra cluster, the com.datastax.driver.core.Cluster$Manager.newSession()
+	 * method is called. The opentracing contribution is a simple wrapper, so we just have to wrap the new session.
+	 *
+	 * @param session The fresh session to patch
+	 * @return A new tracing session
+	 * @throws Exception
+	 */
+	protected Session doPatch(Session session) throws Exception {
 
-		try {
 
-			Tracer tracer = getTracer();
-			Class<?> clazz = Class.forName("io.opentracing.contrib.cassandra.TracingSession");
-			Constructor<?> constructor = clazz.getDeclaredConstructor(Session.class, Tracer.class);
-			constructor.setAccessible(true);
-			Object newSession = constructor.newInstance(session, tracer);
-			debug(LOG_PREFIX + "Session patched");
-			return (Session) newSession;
-
-		} catch (Exception e) {
-			err(LOG_PREFIX + "Session not patched, " + e.getMessage());
-			errTraceException(e);
+		if ("io.opentracing.contrib.cassandra.TracingSession".equals(session.getClass().getCanonicalName())) {
+			return session;
 		}
 
-		return session;
+		Class<?> clazz = Class.forName("io.opentracing.contrib.cassandra.TracingSession");
+		Constructor<?> constructor = clazz.getDeclaredConstructor(Session.class, Tracer.class);
+		constructor.setAccessible(true);
+		Session newSession = (Session) constructor.newInstance(session, tracer);
 
-
+		return newSession;
 
 	}
 

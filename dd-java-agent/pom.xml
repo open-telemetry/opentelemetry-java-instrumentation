@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.datadoghq</groupId>
         <artifactId>dd-trace-java</artifactId>
-        <version>0.0.8-SNAPSHOT</version>
+        <version>0.1.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>dd-java-agent</artifactId>
@@ -16,7 +16,7 @@
 
     <properties>
         <!-- Datadog versions -->
-        <dd-trace.version>0.0.8-SNAPSHOT</dd-trace.version>
+        <dd-trace.version>0.1.2-SNAPSHOT</dd-trace.version>
         <!-- Opentracing versions -->
         <ot.agent.version>0.1.0</ot.agent.version>
         <ot.contrib.webservlet.version>0.0.9</ot.contrib.webservlet.version>
@@ -26,6 +26,7 @@
         <ot.contrib.aws.version>0.0.2</ot.contrib.aws.version>
         <ot.contrib.httpclient.version>0.0.2</ot.contrib.httpclient.version>
         <ot.contrib.cassandra.version>0.0.2</ot.contrib.cassandra.version>
+        <ot.contrib.elasticsearch.version>0.0.2</ot.contrib.elasticsearch.version>
         <!-- Others versions -->
         <java.version>1.7</java.version>
     </properties>
@@ -49,16 +50,7 @@
             <artifactId>opentracing-agent</artifactId>
             <version>${ot.agent.version}</version>
         </dependency>
-        <dependency>
-            <groupId>io.opentracing.contrib</groupId>
-            <artifactId>opentracing-agent-rules-java-okhttp</artifactId>
-            <version>${ot.agent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.opentracing.contrib</groupId>
-            <artifactId>opentracing-agent-rules-java-web-servlet-filter</artifactId>
-            <version>${ot.agent.version}</version>
-        </dependency>
+
 
         <!-- Used to find annotated methods -->
         <dependency>
@@ -72,6 +64,24 @@
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-web-servlet-filter</artifactId>
             <version>${ot.contrib.webservlet.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-servlet</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>9.3.6.v20151106</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>9.0.0.M1</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Mongo instrumentation -->
@@ -89,6 +99,18 @@
                     <artifactId>mongo-java-driver</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>3.4.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-async</artifactId>
+            <version>3.4.2</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Opentracing JDBC contribution -->
@@ -110,6 +132,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>3.6.0</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- AWS SDK instrumentation -->
         <dependency>
@@ -122,6 +150,12 @@
                     <artifactId>aws-java-sdk</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk</artifactId>
+            <version>1.11.119</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Cassandra instrumentation -->
@@ -143,6 +177,25 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Elasticsearch instrumentation -->
+        <dependency>
+            <groupId>io.opentracing.contrib</groupId>
+            <artifactId>opentracing-elasticsearch-client</artifactId>
+            <version>${ot.contrib.elasticsearch.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.elasticsearch.client</groupId>
+                    <artifactId>transport</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>transport</artifactId>
+            <version>5.4.1</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- Apache HTTP instrumentation -->
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
@@ -155,6 +208,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.3</version>
+            <scope>provided</scope>
+        </dependency>
+
 
     </dependencies>
     <build>
