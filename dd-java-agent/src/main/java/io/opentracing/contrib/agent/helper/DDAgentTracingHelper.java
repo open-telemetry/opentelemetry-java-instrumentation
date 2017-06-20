@@ -9,7 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
-public abstract class DDAgentTracingHelper<E> extends OpenTracingHelper {
+public abstract class DDAgentTracingHelper<ObjectType> extends OpenTracingHelper {
 
 	protected static Tracer tracer;
 	private static final Logger LOGGER = Logger.getLogger(DDAgentTracingHelper.class.getCanonicalName());
@@ -25,10 +25,10 @@ public abstract class DDAgentTracingHelper<E> extends OpenTracingHelper {
 		}
 	}
 
-	public E patch(E args) {
+	public ObjectType patch(ObjectType args) {
 
 		info("Try to patch " + args.getClass().getName());
-		E patched;
+		ObjectType patched;
 		try {
 			patched = doPatch(args);
 			info(args.getClass().getName() + " patched");
@@ -41,7 +41,7 @@ public abstract class DDAgentTracingHelper<E> extends OpenTracingHelper {
 
 	}
 
-	abstract protected E doPatch(E input) throws Exception;
+	abstract protected ObjectType doPatch(ObjectType input) throws Exception;
 
 	protected void warning(String message) {
 		log(Level.WARNING, message);
