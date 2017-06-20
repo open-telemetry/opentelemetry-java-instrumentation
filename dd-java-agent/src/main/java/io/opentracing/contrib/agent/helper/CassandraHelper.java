@@ -6,7 +6,9 @@ import org.jboss.byteman.rule.Rule;
 
 import java.lang.reflect.Constructor;
 
-
+/**
+ * Patch each new sessions created when trying to connect to a Cassandra cluster.
+ */
 public class CassandraHelper extends DDAgentTracingHelper<Session> {
 
 
@@ -14,14 +16,26 @@ public class CassandraHelper extends DDAgentTracingHelper<Session> {
 		super(rule);
 	}
 
-
+	@Override
 	public Session patch(Session session) {
 		return super.patch(session);
 	}
 
-	@Override
+
+	/**
+	 * Strategy: each time we build a connection to a Cassandra cluster, the com.datastax.driver.core.Cluster$Manager.newSession()
+	 * method is called. The opentracing contribution is a simple wrapper, so we just have to wrap the new session.
+	 *
+	 * @param session The fresh session to patch
+	 * @return A new tracing session
+	 * @throws Exception
+	 */
 	protected Session doPatch(Session session) throws Exception {
 
+
+		if ("io.opentracing.contrib.cassandra.TracingSession".equals(session.getClass().getCanonicalName())) {
+			return session;
+		}
 
 		Class<?> clazz = Class.forName("io.opentracing.contrib.cassandra.TracingSession");
 		Constructor<?> constructor = clazz.getDeclaredConstructor(Session.class, Tracer.class);
@@ -29,7 +43,6 @@ public class CassandraHelper extends DDAgentTracingHelper<Session> {
 		Session newSession = (Session) constructor.newInstance(session, tracer);
 
 		return newSession;
-
 
 	}
 

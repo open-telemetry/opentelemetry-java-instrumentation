@@ -9,7 +9,10 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 
-
+/**
+ * Patch the AWS  Client during the building steps.
+ * This opentracing integration is compatible with the latest release of the AWS SDK
+ */
 public class AWSClientHelper extends DDAgentTracingHelper<AwsClientBuilder> {
 
 
@@ -17,8 +20,14 @@ public class AWSClientHelper extends DDAgentTracingHelper<AwsClientBuilder> {
 		super(rule);
 	}
 
-
-	@Override
+	/**
+	 * Strategy: we add a tracing handler to the client when it has just been built. We intercept the return value of
+	 * the com.amazonaws.client.builder.AwsClientBuilder.build() method and add the handler.
+	 *
+	 * @param client The fresh AWS client instance
+	 * @return The same instance, but patched
+	 * @throws Exception
+	 */
 	protected AwsClientBuilder doPatch(AwsClientBuilder client) throws Exception {
 
 		RequestHandler2 handler = new TracingRequestHandler(tracer);

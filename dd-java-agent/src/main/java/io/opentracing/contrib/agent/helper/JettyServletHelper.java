@@ -8,7 +8,7 @@ import javax.servlet.Filter;
 import java.util.EnumSet;
 
 /**
- * Created by gpolaert on 6/15/17.
+ * Patch the Jetty Servlet during the init steps
  */
 public class JettyServletHelper extends DDAgentTracingHelper<ServletContextHandler> {
 
@@ -16,7 +16,13 @@ public class JettyServletHelper extends DDAgentTracingHelper<ServletContextHandl
 		super(rule);
 	}
 
-	@Override
+	/**
+	 * Strategy: Use the contextHandler provided to add a new Tracing filter
+	 *
+	 * @param contextHandler The current contextHandler
+	 * @return The same current contextHandler but patched
+	 * @throws Exception
+	 */
 	protected ServletContextHandler doPatch(ServletContextHandler contextHandler) throws Exception {
 
 		String[] patterns = {"/*"};

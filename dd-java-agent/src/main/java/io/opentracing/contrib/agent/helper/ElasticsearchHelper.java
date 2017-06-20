@@ -10,7 +10,11 @@ import org.jboss.byteman.rule.Rule;
 
 import java.lang.reflect.Method;
 
-
+/**
+ * Instrument all Elasticsearch queries.
+ * We have not found a way to inject the opentracing contribution, so this helper is the instrumentation.
+ * FIXME find a better to way to inject the OT contrib
+ */
 public class ElasticsearchHelper extends DDAgentTracingHelper<ActionListener> {
 
 	public ElasticsearchHelper(Rule rule) {
@@ -19,26 +23,38 @@ public class ElasticsearchHelper extends DDAgentTracingHelper<ActionListener> {
 
 	private Object request;
 
+	/**
+	 * This method is used to register/save some object that will be used for the instrumentation.
+	 * Currently, we need to keep a reference of the request called
+	 *
+	 * @param request The request used for the query
+	 */
 	public void registerArgs(Object request) {
 		this.request = request;
 	}
 
-
+	@Override
 	public ActionListener patch(ActionListener listener) {
 		return super.patch(listener);
 	}
 
+	/**
+	 * Strategy: When a query is executed, if start the instrumentation and a new Span.
+	 * We override the default FutureAction by using the one provided in the opentracing contribution.
+	 *
+	 * @param listener default listener
+	 * @return The tracing listener, the default listener is wrapped in this one.
+	 * @throws Exception
+	 */
+	protected ActionListener doPatch(ActionListener listener) throws Exception {
 
-	@Override
-	protected  ActionListener doPatch(ActionListener listener) throws Exception {
-
-		if (listener instanceof  TracingResponseListener) {
+		if (listener instanceof TracingResponseListener) {
 			return listener;
 		}
 
 		Tracer.SpanBuilder spanBuilder = tracer.buildSpan(request.getClass().getSimpleName()).ignoreActiveSpan().withTag(Tags.SPAN_KIND.getKey(), "client");
 		ActiveSpan parentSpan = tracer.activeSpan();
-		if(parentSpan != null) {
+		if (parentSpan != null) {
 			spanBuilder.asChildOf(parentSpan.context());
 		}
 

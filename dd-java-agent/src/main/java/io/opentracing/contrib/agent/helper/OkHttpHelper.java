@@ -8,8 +8,9 @@ import java.util.Collections;
 
 import static io.opentracing.contrib.okhttp3.OkHttpClientSpanDecorator.STANDARD_TAGS;
 
+
 /**
- * Created by gpolaert on 6/15/17.
+ * Patch the OkHttp Client during the building steps.
  */
 public class OkHttpHelper extends DDAgentTracingHelper<OkHttpClient.Builder> {
 
@@ -18,7 +19,14 @@ public class OkHttpHelper extends DDAgentTracingHelper<OkHttpClient.Builder> {
 		super(rule);
 	}
 
-	@Override
+	/**
+	 * Strategy: Just before the okhttp3.OkHttpClient$Builder.build() method called, we add a new interceptor for the tracing
+	 * part.
+	 *
+	 * @param builder The builder instance to patch
+	 * @return The same builder instance with a new tracing interceptor
+	 * @throws Exception
+	 */
 	protected OkHttpClient.Builder doPatch(OkHttpClient.Builder builder) throws Exception {
 		TracingInterceptor interceptor = new TracingInterceptor(tracer, Collections.singletonList(STANDARD_TAGS));
 		builder.addInterceptor(interceptor);
