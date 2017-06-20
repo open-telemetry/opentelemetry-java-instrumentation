@@ -1,16 +1,11 @@
 package com.datadoghq.trace;
 
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.datadoghq.trace.integration.DDSpanContextDecorator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import io.opentracing.tag.Tags;
+
+import java.util.*;
 
 /**
  * SpanContext represents Span state that must propagate to descendant Spans and across process boundaries.
@@ -21,6 +16,7 @@ import io.opentracing.tag.Tags;
  */
 public class DDSpanContext implements io.opentracing.SpanContext {
 
+	public static final String LANGUAGE_FIELDNAME = "lang";
 	// Opentracing attributes
 	private final long traceId;
 	private final long spanId;
@@ -53,6 +49,8 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	 * Each span have an operation name describing the current span
 	 */
 	private String operationName;
+
+
 	/**
 	 * Tags are associated to the current span, they will not propagate to the children span
 	 */

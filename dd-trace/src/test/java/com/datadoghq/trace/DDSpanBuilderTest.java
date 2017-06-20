@@ -4,10 +4,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.datadoghq.trace.DDSpan;
-import com.datadoghq.trace.DDSpanContext;
-import com.datadoghq.trace.DDTracer;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,60 +36,75 @@ public class DDSpanBuilderTest {
     }
 
     @Test
-    public void shouldBuildMoreComplexSpan() {
+	public void shouldBuildMoreComplexSpan() {
 
-        final String expectedName = "fakeName";
-        final Map tags = new HashMap<String, Object>() {
-            {
-                put("1", true);
-                put("2", "fakeString");
-                put("3", 42.0);
-            }
-        };
+		final String expectedName = "fakeName";
+		final Map tags = new HashMap<String, Object>() {
+			{
+				put("1", true);
+				put("2", "fakeString");
+				put("3", 42.0);
+			}
+		};
 
-        DDSpan span = tracer
-                .buildSpan(expectedName)
-                .withServiceName("foo")
-                .withTag("1", (Boolean) tags.get("1"))
-                .withTag("2", (String) tags.get("2"))
-                .withTag("3", (Number) tags.get("3"))
-                .start();
+		DDSpan span = tracer
+				.buildSpan(expectedName)
+				.withServiceName("foo")
+				.withTag("1", (Boolean) tags.get("1"))
+				.withTag("2", (String) tags.get("2"))
+				.withTag("3", (Number) tags.get("3"))
+				.start();
 
-        assertThat(span.getOperationName()).isEqualTo(expectedName);
-        assertThat(span.getTags()).containsAllEntriesOf(tags);
+		assertThat(span.getOperationName()).isEqualTo(expectedName);
+		assertThat(span.getTags()).containsAllEntriesOf(tags);
 
-        // with no tag provided
+		// with no tag provided
 
-        span = tracer
-                .buildSpan(expectedName)
-                .withServiceName("foo")
-                .start();
+		span = tracer
+				.buildSpan(expectedName)
+				.withServiceName("foo")
+				.start();
 
-        assertThat(span.getTags()).isNotNull();
-        assertThat(span.getTags()).isEmpty();
+		assertThat(span.getTags()).isNotNull();
+		assertThat(span.getTags()).isEmpty();
 
-        // with all custom fields provided
-        final String expectedResource = "fakeResource";
-        final String expectedService = "fakeService";
-        final String expectedType = "fakeType";
+		// with all custom fields provided
+		final String expectedResource = "fakeResource";
+		final String expectedService = "fakeService";
+		final String expectedType = "fakeType";
 
-        span = tracer
-                .buildSpan(expectedName)
-                .withServiceName("foo")
-                .withResourceName(expectedResource)
-                .withServiceName(expectedService)
-                .withErrorFlag()
-                .withSpanType(expectedType)
-                .start();
+		span = tracer
+				.buildSpan(expectedName)
+				.withServiceName("foo")
+				.withResourceName(expectedResource)
+				.withServiceName(expectedService)
+				.withErrorFlag()
+				.withSpanType(expectedType)
+				.start();
 
-        DDSpanContext actualContext = span.context();
+		DDSpanContext actualContext = span.context();
 
-        assertThat(actualContext.getResourceName()).isEqualTo(expectedResource);
-        assertThat(actualContext.getErrorFlag()).isTrue();
-        assertThat(actualContext.getServiceName()).isEqualTo(expectedService);
-        assertThat(actualContext.getSpanType()).isEqualTo(expectedType);
+		assertThat(actualContext.getResourceName()).isEqualTo(expectedResource);
+		assertThat(actualContext.getErrorFlag()).isTrue();
+		assertThat(actualContext.getServiceName()).isEqualTo(expectedService);
+		assertThat(actualContext.getSpanType()).isEqualTo(expectedType);
 
-    }
+
+	}
+
+	@Test
+	public void shouldAddLangMeta() {
+
+		final String expectedName = "fakeName";
+
+		DDSpan span = tracer
+				.buildSpan(expectedName)
+				.withServiceName("foo")
+				.start();
+
+		assertThat(span.getBaggageItem(DDSpanContext.LANGUAGE_FIELDNAME)).isEqualTo("java");
+
+	}
 
     @Test
     public void shouldBuildSpanTimestampInNano() {
