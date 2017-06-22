@@ -3,6 +3,7 @@ package com.datadoghq.trace;
 
 import com.datadoghq.trace.integration.DDSpanContextDecorator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Maps;
 import io.opentracing.tag.Tags;
 
 import java.util.*;
@@ -21,6 +22,8 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	private final long traceId;
 	private final long spanId;
 	private final long parentId;
+	private final String threadName = Thread.currentThread().getName();
+	private final long threadId = Thread.currentThread().getId();
 	private Map<String, String> baggageItems;
 
 	// DD attributes
@@ -126,7 +129,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	public boolean getErrorFlag() {
 		return errorFlag;
 	}
-	
+
 	public void setErrorFlag(boolean errorFlag) {
 		this.errorFlag = errorFlag;
 	}
@@ -193,6 +196,11 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	}
 
 	public synchronized Map<String, Object> getTags() {
+		if(tags.isEmpty()) {
+			tags = Maps.newHashMapWithExpectedSize(2);
+		}
+		tags.put(DDTags.THREAD_NAME, threadName);
+		tags.put(DDTags.THREAD_ID, threadId);
 		return Collections.unmodifiableMap(tags);
 	}
 

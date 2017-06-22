@@ -66,7 +66,7 @@ public class DDSpanBuilderTest {
 				.start();
 
 		assertThat(span.getTags()).isNotNull();
-		assertThat(span.getTags()).isEmpty();
+		assertThat(span.getTags().size()).isEqualTo(2);
 
 		// with all custom fields provided
 		final String expectedResource = "fakeResource";
@@ -88,7 +88,8 @@ public class DDSpanBuilderTest {
 		assertThat(actualContext.getErrorFlag()).isTrue();
 		assertThat(actualContext.getServiceName()).isEqualTo(expectedService);
 		assertThat(actualContext.getSpanType()).isEqualTo(expectedType);
-
+		assertThat(actualContext.getTags().get(DDTags.THREAD_NAME)).isEqualTo(Thread.currentThread().getName());
+		assertThat(actualContext.getTags().get(DDTags.THREAD_ID)).isEqualTo(Thread.currentThread().getId());
 
 	}
 
