@@ -14,10 +14,6 @@
     <description>Datadog core library</description>
     <url>https://github.com/datadog/dd-trace-java</url>
 
-    <properties>
-        <java.version>1.6</java.version>
-    </properties>
-
     <dependencies>
 
         <!-- Opentracing core -->

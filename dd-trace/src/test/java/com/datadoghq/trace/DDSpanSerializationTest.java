@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -16,14 +17,27 @@ public class DDSpanSerializationTest {
     ObjectMapper serializer;
     DDSpan span;
     DDActiveSpan activeSpan;
+    Map<String,Object> expected = Maps.newHashMap();
 
     @Before
     public void setUp() throws Exception {
 
-        Map<String, String> baggage = new HashMap<String, String>();
+        Map<String, String> baggage = new HashMap<>();
         baggage.put("a-baggage", "value");
-        Map<String, Object> tags = new HashMap<String, Object>();
+        Map<String, Object> tags = new HashMap<>();
         baggage.put("k1", "v1");
+
+        expected.put("meta", baggage);
+        expected.put("service", "service");
+        expected.put("error", 0);
+        expected.put("type", "type");
+        expected.put("name", "operation");
+        expected.put("duration", 33000);
+        expected.put("resource", "operation");
+        expected.put("start", 100000);
+        expected.put("span_id", 2l);
+        expected.put("parent_id", 0l);
+        expected.put("trace_id", 1l);
 
 
         DDSpanContext context = new DDSpanContext(
@@ -33,12 +47,15 @@ public class DDSpanSerializationTest {
                 "service",
                 "operation",
                 null,
-                baggage,
+                new HashMap<String, String>(baggage),
                 false,
                 "type",
                 tags,
                 null,
                 null);
+
+        baggage.put("thread-name", Thread.currentThread().getName());
+        baggage.put("thread-id", String.valueOf(Thread.currentThread().getId()));
 
         span = new DDSpan(
                 100L,
@@ -52,22 +69,7 @@ public class DDSpanSerializationTest {
 
     @Test
     public void test() throws Exception {
-
-
-        String expected = "{\"meta\":{\"a-baggage\":\"value\",\"k1\":\"v1\"},\"service\":\"service\",\"error\":0,\"type\":\"type\",\"name\":\"operation\",\"duration\":33000,\"resource\":\"operation\",\"start\":100000,\"span_id\":2,\"parent_id\":0,\"trace_id\":1}";
-        // FIXME At the moment, just compare the string sizes
-        try {
-            assertThat(serializer.writeValueAsString(span).length()).isEqualTo(expected.length());
-            
-        } catch (AssertionError e) {
-            assertThat(serializer.writeValueAsString(span)).isEqualTo(expected);
-        }
-        
-//        try {
-//            assertThat(serializer.writeValueAsString(activeSpan).length()).isEqualTo(expected.length());
-//        } catch (AssertionError e) {
-//            assertThat(serializer.writeValueAsString(activeSpan)).isEqualTo(expected);
-//        }
+        assertThat(serializer.readTree(serializer.writeValueAsString(span)))
+                .isEqualTo(serializer.readTree(serializer.writeValueAsString(expected)));
     }
-
 }
