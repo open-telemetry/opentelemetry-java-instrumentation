@@ -6,11 +6,11 @@
     <artifactId>dd-trace-java</artifactId>
     <version>0.1.2-SNAPSHOT</version>
   </parent>
-  <groupId>com.datadoghq</groupId>
   <artifactId>dd-trace-annotations</artifactId>
   <version>0.1.2-SNAPSHOT</version>
   <name>dd-trace-annotations</name>
-  <url>http://maven.apache.org</url>
+  <url>https://github.com/datadog/dd-trace-java</url>
+  <packaging>jar</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
