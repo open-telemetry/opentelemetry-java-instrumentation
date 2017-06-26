@@ -12,7 +12,7 @@ writer:
   host: localhost
   port: 8126
 
-# The sampler to use.
+# The sampling to use.
 # Could be: AllSampler (default) or RateSampler
 sampler:
   # AllSampler: all spans are reported to the writer

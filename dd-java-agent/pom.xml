@@ -141,23 +141,6 @@
         </dependency>
 
         <!-- JMS instrumentation -->
-        <!--<dependency>-->
-        <!--<groupId>io.opentracing.contrib</groupId>-->
-        <!--<artifactId>opentracing-jms-1</artifactId>-->
-        <!--<version>${ot.contrib.jms.version}</version>-->
-        <!--<exclusions>-->
-        <!--<exclusion>-->
-        <!--<groupId>javax.jms</groupId>-->
-        <!--<artifactId>jms-api</artifactId>-->
-        <!--</exclusion>-->
-        <!--</exclusions>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>javax.jms</groupId>-->
-        <!--<artifactId>jms-api</artifactId>-->
-        <!--<version>1.1-rev-1</version>-->
-        <!--<scope>provided</scope>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-jms-2</artifactId>
@@ -252,6 +235,32 @@
             <scope>provided</scope>
         </dependency>
 
+
+        <!-- JUnit tests -->
+        <dependency>
+            <groupId>io.opentracing</groupId>
+            <artifactId>opentracing-mock</artifactId>
+            <version>${opentracing.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.6.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>2.7.22</version>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
     <build>

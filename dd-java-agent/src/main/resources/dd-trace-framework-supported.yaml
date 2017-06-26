@@ -1,0 +1,67 @@
+opentracing-apache-httpclient:
+  - check:
+    artifact: httpclient
+    supported_version: 4\.[3|4|5]\..*
+  - check:
+    artifact: commons-httpclient
+    supported_version: none
+
+opentracing-aws-sdk:
+  - check:
+    artifact: aws-java-sdk
+    supported_version: 1\.11\..*
+
+opentracing-elasticsearch-client:
+  - check:
+    artifact: transport
+    supported_version: 5\.4\..*
+
+opentracing-cassandra-driver:
+  - check:
+    artifact: cassandra-driver-core
+    supported_version: 3\.2.*
+
+opentracing-web-servlet-filter:
+  - check:
+    artifact: jetty-server
+    supported_version: (8\.|9\.).*
+  - check:
+    artifact: tomcat_catalina
+    supported_version: (8\.|9\.).*
+  - check:
+    artifact: tomcat-embed-core
+    supported_version: (8\.|9\.).*
+
+opentracing-okhttp3:
+  - check:
+    artifact: okhttp
+    supported_version: 3\..*
+
+opentracing-jms-2:
+  - check:
+    artifact: jms-api
+    supported_version: 2\..*
+
+opentracing-mongo-driver:
+  - check:
+    artifact: mongo-java-driver
+    supported_version: 3\..*
+  - check:
+    artifact: mongodb-driver-async
+    supported_version: 3\..*
+
+#todo jdbc, opentracing api
+
+#spring_jdbc:
+#  artifact: jdbc
+#  supported_version: 4\..*
+#hibernate-core:
+#  artifact: jdbc
+#  supported_version: 5\..*
+#opentracing-mongo-driver:
+#  artifact: mongo-java-driver
+#  supported_version: 3\..*
+#opentracing-api:
+#  artifact: opentracing-api
+#  supported_version: 0\.2.*
+
