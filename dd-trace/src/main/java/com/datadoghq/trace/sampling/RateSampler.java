@@ -1,11 +1,10 @@
 package com.datadoghq.trace.sampling;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.datadoghq.trace.DDBaseSpan;
 import com.google.auto.service.AutoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -15,7 +14,7 @@ import com.google.auto.service.AutoService;
  * It samples randomly, its main purpose is to reduce the instrumentation footprint.
  */
 @AutoService(Sampler.class)
-public class RateSampler extends ASampler {
+public class RateSampler extends AbstractSampler {
 
 
     private final static Logger logger = LoggerFactory.getLogger(RateSampler.class);

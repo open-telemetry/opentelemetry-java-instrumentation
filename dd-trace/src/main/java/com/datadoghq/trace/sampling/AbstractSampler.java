@@ -1,13 +1,13 @@
 package com.datadoghq.trace.sampling;
 
+import com.datadoghq.trace.DDBaseSpan;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
-import com.datadoghq.trace.DDBaseSpan;
-
-public abstract class ASampler implements Sampler{
+public abstract class AbstractSampler implements Sampler {
 
 	/**
 	 * Sample tags

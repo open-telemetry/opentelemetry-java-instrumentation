@@ -5,7 +5,7 @@ import com.datadoghq.trace.DDBaseSpan;
 /**
  * Sampler that always says yes...
  */
-public class AllSampler extends ASampler {
+public class AllSampler extends AbstractSampler {
 
 	@Override
 	public boolean doSample(DDBaseSpan<?> span) {
