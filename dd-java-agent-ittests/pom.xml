@@ -8,10 +8,10 @@
     </parent>
 
     <artifactId>dd-java-agent-ittests</artifactId>
-    <packaging>jar</packaging>
     <name>dd-java-agent-ittests</name>
     <description>Datadog Java Agent integration tests</description>
     <url>https://github.com/datadog/dd-trace-java</url>
+    <packaging>pom</packaging>
 
 
     <properties>

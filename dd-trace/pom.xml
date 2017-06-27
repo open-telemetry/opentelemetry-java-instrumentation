@@ -9,10 +9,10 @@
     </parent>
 
     <artifactId>dd-trace</artifactId>
-    <packaging>jar</packaging>
     <name>dd-trace</name>
     <description>Datadog core library</description>
     <url>https://github.com/datadog/dd-trace-java</url>
+    <packaging>jar</packaging>
 
     <dependencies>
 
@@ -121,10 +121,10 @@
                                     <pattern>com.fasterxml</pattern>
                                     <shadedPattern>dd.com.fasterxml</shadedPattern>
                                 </relocation>
-                                <relocation>
-                                    <pattern>com.google</pattern>
-                                    <shadedPattern>dd.com.google</shadedPattern>
-                                </relocation>
+                                <!--<relocation>-->
+                                    <!--<pattern>com.google</pattern>-->
+                                    <!--<shadedPattern>dd.com.google</shadedPattern>-->
+                                <!--</relocation>-->
                                 <relocation>
                                     <pattern>org.yaml</pattern>
                                     <shadedPattern>dd.org.yaml</shadedPattern>
