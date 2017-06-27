@@ -18,7 +18,7 @@ import java.util.*;
 
 
 /**
- * DDTracer makes it easy to send traces and span to DD using the OpenTracing instrumentation.
+ * DDTracer makes it easy to send traces and span to DD using the OpenTracing integration.
  */
 public class DDTracer implements io.opentracing.Tracer {
 

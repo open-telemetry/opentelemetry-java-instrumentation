@@ -60,7 +60,7 @@
             <version>0.9.11</version>
         </dependency>
 
-        <!-- Server side instrumentation -->
+        <!-- Server sintegrationtion -->
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-web-servlet-filter</artifactId>
@@ -85,7 +85,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Mongo instrumentation -->
+        <!-- Mointegrationtion -->
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-mongo-driver</artifactId>
@@ -121,7 +121,7 @@
             <version>${ot.contrib.jdbc.version}</version>
         </dependency>
 
-        <!-- Client side instrumentation -->
+        <!-- Client sintegrationtion -->
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-okhttp3</artifactId>
@@ -140,7 +140,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- JMS instrumentation -->
+        <!-- integrationtion -->
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-jms-2</artifactId>
@@ -159,7 +159,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- AWS SDK instrumentation -->
+        <!-- AWS integrationtion -->
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-aws-sdk</artifactId>
@@ -178,7 +178,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Cassandra instrumentation -->
+        <!-- Cassanintegrationtion -->
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-cassandra-driver</artifactId>
@@ -197,7 +197,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Elasticsearch instrumentation -->
+        <!-- Elasticseaintegrationtion -->
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-elasticsearch-client</artifactId>
@@ -216,7 +216,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Apache HTTP instrumentation -->
+        <!-- Apache Hintegrationtion -->
         <dependency>
             <groupId>io.opentracing.contrib</groupId>
             <artifactId>opentracing-apache-httpclient</artifactId>
@@ -293,8 +293,8 @@
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Agent-Class>io.opentracing.contrib.agent.AnnotationsTracingAgent</Agent-Class>
-                                        <Premain-Class>io.opentracing.contrib.agent.AnnotationsTracingAgent
+                                        <Agent-Class>com.datadoghq.trace.agent.AnnotationsTracingAgent</Agent-Class>
+                                        <Premain-Class>com.datadoghq.trace.agent.AnnotationsTracingAgent
                                         </Premain-Class>
                                         <Can-Redefine-Classes>true</Can-Redefine-Classes>
                                         <Can-Retransform-Classes>true</Can-Retransform-Classes>

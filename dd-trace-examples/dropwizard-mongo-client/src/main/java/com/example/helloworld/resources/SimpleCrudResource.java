@@ -1,11 +1,11 @@
 package com.example.helloworld.resources;
 
+import com.datadog.trace.Trace;
 import com.example.helloworld.api.Book;
 import com.google.common.base.Optional;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import io.opentracing.contrib.agent.Trace;
 import org.bson.Document;
 
 import javax.ws.rs.GET;
