@@ -28,6 +28,8 @@ public class MongoHelper extends DDAgentTracingHelper<MongoClientOptions.Builder
 		TracingCommandListener listener = new TracingCommandListener(tracer);
 		builder.addCommandListener(listener);
 
+		setState(builder, 1);
+
 		return builder;
 
 	}

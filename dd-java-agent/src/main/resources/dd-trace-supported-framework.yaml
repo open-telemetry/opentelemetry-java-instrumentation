@@ -1,0 +1,61 @@
+### This file define all supported libraries
+### Syntax:
+###   <rulename>:                   # the rule name defined in the otarules.btm
+###     - check:                    # a list of tests, if one not matched, thus the rule is removed
+###       articfact: <artifactId>   # the artifact name to be tested
+###       supported_version:        # a regex expression to express the version required by the rule
+###     - check: ...
+
+opentracing-apache-httpclient:
+  - check:
+    artifact: httpclient
+    supported_version: 4\.[3|4|5]\..*
+  - check:
+    artifact: commons-httpclient
+    supported_version: none
+
+opentracing-aws-sdk:
+  - check:
+    artifact: aws-java-sdk
+    supported_version: 1\.11\..*
+
+opentracing-elasticsearch-client:
+  - check:
+    artifact: transport
+    supported_version: 5\.4\..*
+
+opentracing-cassandra-driver:
+  - check:
+    artifact: cassandra-driver-core
+    supported_version: 3\.2.*
+
+opentracing-web-servlet-filter:
+  - check:
+    artifact: jetty-server
+    supported_version: (8\.|9\.).*
+  - check:
+    artifact: tomcat_catalina
+    supported_version: (8\.|9\.).*
+  - check:
+    artifact: tomcat-embed-core
+    supported_version: (8\.|9\.).*
+
+opentracing-okhttp3:
+  - check:
+    artifact: okhttp
+    supported_version: 3\..*
+
+# For rules opentracing-jms-2_{consumer,producer}
+opentracing-jms-2:
+  - check:
+    artifact: jms-api
+    supported_version: 2\..*
+
+opentracing-mongo-driver:
+  - check:
+    artifact: mongo-java-driver
+    supported_version: 3\..*
+  - check:
+    artifact: mongodb-driver-async
+    supported_version: 3\..*
+

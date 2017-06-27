@@ -1,11 +1,21 @@
+### The contributions are injected using this file and byteman
+###
+### Helpers are a DD specific, they are defined in the current project
+### The rule names provided (RULE <rulename>) are also used in the configuration.
+### The name is used to remove the script if there is no support of the framework
+###
+### So, ensure that the rule name is correct defined both here and in the dd-trace-supported-framework.yaml
+###
+
+
 # Instrument Mongo client
 # ========================
-RULE mongo
+RULE opentracing-mongo-driver
 CLASS com.mongodb.MongoClientOptions$Builder
 METHOD build
 HELPER io.opentracing.contrib.agent.helper.MongoHelper
 AT ENTRY
-IF TRUE
+IF getState($0) == 0
 DO
   patch($this);
 ENDRULE
@@ -13,7 +23,7 @@ ENDRULE
 
 # Instrument AWS SDK client
 # ==========================
-RULE awsclient
+RULE opentracing-aws-sdk
 CLASS ^com.amazonaws.client.builder.AwsClientBuilder
 METHOD build()
 HELPER io.opentracing.contrib.agent.helper.AWSClientHelper
@@ -23,9 +33,10 @@ DO
   patch($this);
 ENDRULE
 
+
 # Instrument Apache HTTP Client
 # =============================
-RULE apache http
+RULE opentracing-apache-httpclient
 CLASS org.apache.http.impl.client.HttpClientBuilder
 METHOD create()
 HELPER io.opentracing.contrib.agent.helper.ApacheHTTPClientHelper
@@ -35,9 +46,10 @@ DO
   $! = patch($!);
 ENDRULE
 
+
 # Instrument Elasticsearch Transport Client
 # ==========================================
-RULE elasticsearch
+RULE opentracing-elasticsearch-client
 INTERFACE org.elasticsearch.client.ElasticsearchClient
 METHOD execute(org.elasticsearch.action.Action,org.elasticsearch.action.ActionRequest,org.elasticsearch.action.ActionListener)
 HELPER io.opentracing.contrib.agent.helper.ElasticsearchHelper
@@ -48,9 +60,10 @@ DO
   $3 = patch($3);
 ENDRULE
 
+
 # Instrument Cassandra client
 # ===========================
-RULE cassandra
+RULE opentracing-cassandra-driver
 CLASS com.datastax.driver.core.Cluster$Manager
 METHOD newSession()
 HELPER io.opentracing.contrib.agent.helper.CassandraHelper
@@ -61,12 +74,11 @@ DO
 ENDRULE
 
 
-
 # Instrument Jetty
 # ===========================
 # State 0 - no filter installed
 # State 1 - filter installed
-RULE jetty
+RULE opentracing-web-servlet-filter_jetty
 CLASS org.eclipse.jetty.servlet.ServletContextHandler
 METHOD <init>
 HELPER io.opentracing.contrib.agent.helper.JettyServletHelper
@@ -79,7 +91,7 @@ ENDRULE
 
 # Instrument Tomcat
 # ===========================
-RULE tomcat
+RULE opentracing-web-servlet-filter_tomcat
 CLASS org.apache.catalina.core.ApplicationContext
 METHOD <init>
 HELPER io.opentracing.contrib.agent.helper.TomcatServletHelper
@@ -90,10 +102,9 @@ DO
 ENDRULE
 
 
-
 # Instrument OkHttp
 # ===========================
-RULE okhttp
+RULE opentracing-okhttp3
 CLASS okhttp3.OkHttpClient$Builder
 METHOD build()
 HELPER io.opentracing.contrib.agent.helper.OkHttpHelper
@@ -106,7 +117,7 @@ ENDRULE
 
 # Instrument JMS
 # ===========================
-RULE jms producer
+RULE opentracing-jms-2_producer
 INTERFACE javax.jms.Session
 METHOD createProducer
 HELPER io.opentracing.contrib.agent.helper.JMSMessageProducerHelper
@@ -117,7 +128,7 @@ DO
 ENDRULE
 
 
-RULE jms consumer
+RULE opentracing-jms-2_consumer
 INTERFACE javax.jms.Session
 METHOD createConsumer
 HELPER io.opentracing.contrib.agent.helper.JMSMessageConsumerHelper

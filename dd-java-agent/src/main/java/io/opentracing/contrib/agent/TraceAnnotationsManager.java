@@ -56,7 +56,7 @@ public class TraceAnnotationsManager {
 		List<String> loadedScripts = loadRules(ClassLoader.getSystemClassLoader());
 		
 		//Check if some rules have to be uninstalled
-		List<String> uninstallScripts = new ArrayList<>();
+		List<String> uninstallScripts = InstrumentationChecker.getUnsupportedRules();
 		if(agentTracerConfig != null){
 			List<String> disabledInstrumentations = agentTracerConfig.getDisabledInstrumentations();
 			if(disabledInstrumentations!=null && !disabledInstrumentations.isEmpty()){

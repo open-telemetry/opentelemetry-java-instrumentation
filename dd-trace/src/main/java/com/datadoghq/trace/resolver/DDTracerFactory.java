@@ -1,7 +1,7 @@
 package com.datadoghq.trace.resolver;
 
 import com.datadoghq.trace.DDTracer;
-import com.datadoghq.trace.sampling.ASampler;
+import com.datadoghq.trace.sampling.AbstractSampler;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.RateSampler;
 import com.datadoghq.trace.sampling.Sampler;
@@ -74,8 +74,8 @@ public class DDTracerFactory {
 
 		//Add sampled tags
 		Map<String, String> skipTagsPatterns = config.getSampler().getSkipTagsPatterns();
-		if (skipTagsPatterns != null && sampler instanceof ASampler) {
-			ASampler aSampler = (ASampler) sampler;
+		if (skipTagsPatterns != null && sampler instanceof AbstractSampler) {
+			AbstractSampler aSampler = (AbstractSampler) sampler;
 			for (Map.Entry<String, String> entry : skipTagsPatterns.entrySet()) {
 				aSampler.addSkipTagPattern(entry.getKey(), Pattern.compile(entry.getValue()));
 			}
