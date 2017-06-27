@@ -1,3 +1,13 @@
+### The contributions are injected using this file and byteman
+###
+### Helpers are a DD specific, they are defined in the current project
+### The rule names provided (RULE <rulename>) are also used in the configuration.
+### The name is used to remove the script if there is no support of the framework
+###
+### So, ensure that the rule name is correct defined both here and in the dd-trace-supported-framework.yaml
+###
+
+
 # Instrument Mongo client
 # ========================
 RULE opentracing-mongo-driver
@@ -23,6 +33,7 @@ DO
   patch($this);
 ENDRULE
 
+
 # Instrument Apache HTTP Client
 # =============================
 RULE opentracing-apache-httpclient
@@ -34,6 +45,7 @@ IF TRUE
 DO
   $! = patch($!);
 ENDRULE
+
 
 # Instrument Elasticsearch Transport Client
 # ==========================================
@@ -48,6 +60,7 @@ DO
   $3 = patch($3);
 ENDRULE
 
+
 # Instrument Cassandra client
 # ===========================
 RULE opentracing-cassandra-driver
@@ -59,7 +72,6 @@ IF TRUE
 DO
    $! = patch($!);
 ENDRULE
-
 
 
 # Instrument Jetty
@@ -88,7 +100,6 @@ IF TRUE
 DO
     patch($this)
 ENDRULE
-
 
 
 # Instrument OkHttp

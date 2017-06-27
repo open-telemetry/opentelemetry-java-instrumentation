@@ -1,3 +1,11 @@
+### This file define all supported libraries
+### Syntax:
+###   <rulename>:                   # the rule name defined in the otarules.btm
+###     - check:                    # a list of tests, if one not matched, thus the rule is removed
+###       articfact: <artifactId>   # the artifact name to be tested
+###       supported_version:        # a regex expression to express the version required by the rule
+###     - check: ...
+
 opentracing-apache-httpclient:
   - check:
     artifact: httpclient
@@ -37,6 +45,7 @@ opentracing-okhttp3:
     artifact: okhttp
     supported_version: 3\..*
 
+# For rules opentracing-jms-2_{consumer,producer}
 opentracing-jms-2:
   - check:
     artifact: jms-api
@@ -49,19 +58,4 @@ opentracing-mongo-driver:
   - check:
     artifact: mongodb-driver-async
     supported_version: 3\..*
-
-#todo jdbc, opentracing api
-
-#spring_jdbc:
-#  artifact: jdbc
-#  supported_version: 4\..*
-#hibernate-core:
-#  artifact: jdbc
-#  supported_version: 5\..*
-#opentracing-mongo-driver:
-#  artifact: mongo-java-driver
-#  supported_version: 3\..*
-#opentracing-api:
-#  artifact: opentracing-api
-#  supported_version: 0\.2.*
 

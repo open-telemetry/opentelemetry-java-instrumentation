@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
  */
 public class InstrumentationChecker {
 
-	private static final String CONFIG_FILE = "dd-trace-framework-supported.yaml";
+	private static final String CONFIG_FILE = "dd-trace-supported-framework.yaml";
 	private final Map<String, List<Map<String, String>>> rules;
 	private final Map<String, String> frameworks;
 
