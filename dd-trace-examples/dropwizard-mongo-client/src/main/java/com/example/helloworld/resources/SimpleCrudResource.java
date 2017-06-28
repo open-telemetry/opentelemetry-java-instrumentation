@@ -1,6 +1,6 @@
 package com.example.helloworld.resources;
 
-import com.datadog.trace.Trace;
+import com.datadoghq.trace.Trace;
 import com.example.helloworld.api.Book;
 import com.google.common.base.Optional;
 import com.mongodb.MongoClient;

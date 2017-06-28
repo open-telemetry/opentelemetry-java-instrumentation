@@ -1,4 +1,4 @@
-package com.datadog.trace;
+package com.datadoghq.trace;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;

@@ -1,6 +1,6 @@
 package com.datadoghq.trace.agent;
 
-import com.datadog.trace.Trace;
+import com.datadoghq.trace.Trace;
 import com.datadoghq.trace.resolver.DDTracerFactory;
 import com.datadoghq.trace.resolver.FactoryUtils;
 import javassist.ClassPool;
