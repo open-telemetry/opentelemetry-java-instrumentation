@@ -11,6 +11,7 @@
     <name>async-tracing</name>
 
     <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
         <!-- Datadog version -->
         <dd-trace.version>0.1.2-SNAPSHOT</dd-trace.version>
         <!-- Opentracing versions -->

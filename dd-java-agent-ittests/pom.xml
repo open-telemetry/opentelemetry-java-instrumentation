@@ -15,6 +15,7 @@
 
 
     <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
         <dd-trace.version>0.1.2-SNAPSHOT</dd-trace.version>
     </properties>
 
