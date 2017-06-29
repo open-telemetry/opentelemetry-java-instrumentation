@@ -17,8 +17,6 @@
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
         <dd-trace.version>0.1.2-SNAPSHOT</dd-trace.version>
-        <!--Skip tests-->
-        <skipTests>true</skipTests>
     </properties>
 
     <dependencies>
@@ -30,14 +28,6 @@
             <version>${dd-trace.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- Required for the tracer resolver / annotation -->
-        <dependency>
-            <groupId>com.google.auto.service</groupId>
-            <artifactId>auto-service</artifactId>
-            <version>1.0-rc3</version>
-            <scope>compile</scope>
-        </dependency>
-
 
         <!-- JUnit tests -->
         <dependency>
@@ -220,7 +210,6 @@
                         -javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${project.version}/dd-java-agent-${project.version}.jar
                         -Dorg.jboss.byteman.verbose=true
                     </argLine>
-                    <skipTests>${skipTests}</skipTests>
                 </configuration>
             </plugin>
             <plugin>
