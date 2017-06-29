@@ -123,20 +123,8 @@
                                     <shadedPattern>shaded.com.fasterxml</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>com.google.guava</pattern>
-                                    <shadedPattern>shaded.com.google.guava</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.google.common</pattern>
-                                    <shadedPattern>shaded.com.google.common</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.google.auto</pattern>
-                                    <shadedPattern>shaded.com.google.auto</shadedPattern>
-                                </relocation>
-                                <relocation>
-                                    <pattern>com.google.thirdparty</pattern>
-                                    <shadedPattern>shaded.com.google.thirdparty</shadedPattern>
+                                    <pattern>com.google</pattern>
+                                    <shadedPattern>shaded.com.google</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>org.yaml</pattern>
@@ -147,9 +135,6 @@
                                     <shadedPattern>shaded.org.slf4j</shadedPattern>
                                 </relocation>
                             </relocations>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer" />
-                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
