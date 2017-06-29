@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
  * This sampler sample the traces at a predefined rate.
  * <p>
  * Keep (100 * `sample_rate`)% of the traces.
- * It samples randomly, its main purpose is to reduce the instrumentation footprint.
+ * It samples randomly, its main purpose is to reduce the integration footprint.
  */
 @AutoService(Sampler.class)
 public class RateSampler extends AbstractSampler {

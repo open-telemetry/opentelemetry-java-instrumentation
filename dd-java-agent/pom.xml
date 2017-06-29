@@ -293,8 +293,8 @@
                                 </transformer>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
-                                        <Agent-Class>io.opentracing.contrib.agent.AnnotationsTracingAgent</Agent-Class>
-                                        <Premain-Class>io.opentracing.contrib.agent.AnnotationsTracingAgent
+                                        <Agent-Class>com.datadoghq.trace.agent.AnnotationsTracingAgent</Agent-Class>
+                                        <Premain-Class>com.datadoghq.trace.agent.AnnotationsTracingAgent
                                         </Premain-Class>
                                         <Can-Redefine-Classes>true</Can-Redefine-Classes>
                                         <Can-Retransform-Classes>true</Can-Retransform-Classes>

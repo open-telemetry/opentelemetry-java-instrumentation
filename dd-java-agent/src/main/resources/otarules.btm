@@ -13,7 +13,7 @@
 RULE opentracing-mongo-driver
 CLASS com.mongodb.MongoClientOptions$Builder
 METHOD build
-HELPER io.opentracing.contrib.agent.helper.MongoHelper
+HELPER com.datadoghq.trace.agent.integration.MongoHelper
 AT ENTRY
 IF getState($0) == 0
 DO
@@ -26,7 +26,7 @@ ENDRULE
 RULE opentracing-aws-sdk
 CLASS ^com.amazonaws.client.builder.AwsClientBuilder
 METHOD build()
-HELPER io.opentracing.contrib.agent.helper.AWSClientHelper
+HELPER com.datadoghq.trace.agent.integration.AWSClientHelper
 AT ENTRY
 IF TRUE
 DO
@@ -39,7 +39,7 @@ ENDRULE
 RULE opentracing-apache-httpclient
 CLASS org.apache.http.impl.client.HttpClientBuilder
 METHOD create()
-HELPER io.opentracing.contrib.agent.helper.ApacheHTTPClientHelper
+HELPER com.datadoghq.trace.agent.integration.ApacheHTTPClientHelper
 AT EXIT
 IF TRUE
 DO
@@ -52,7 +52,7 @@ ENDRULE
 RULE opentracing-elasticsearch-client
 INTERFACE org.elasticsearch.client.ElasticsearchClient
 METHOD execute(org.elasticsearch.action.Action,org.elasticsearch.action.ActionRequest,org.elasticsearch.action.ActionListener)
-HELPER io.opentracing.contrib.agent.helper.ElasticsearchHelper
+HELPER com.datadoghq.trace.agent.integration.ElasticsearchHelper
 AT ENTRY
 IF $# == 3 AND NOT $3.getClass().getCanonicalName().equals("io.opentracing.contrib.elasticsearch.TracingResponseListener")
 DO
@@ -66,7 +66,7 @@ ENDRULE
 RULE opentracing-cassandra-driver
 CLASS com.datastax.driver.core.Cluster$Manager
 METHOD newSession()
-HELPER io.opentracing.contrib.agent.helper.CassandraHelper
+HELPER com.datadoghq.trace.agent.integration.CassandraHelper
 AT EXIT
 IF TRUE
 DO
@@ -81,7 +81,7 @@ ENDRULE
 RULE opentracing-web-servlet-filter_jetty
 CLASS org.eclipse.jetty.servlet.ServletContextHandler
 METHOD <init>
-HELPER io.opentracing.contrib.agent.helper.JettyServletHelper
+HELPER com.datadoghq.trace.agent.integration.JettyServletHelper
 AT EXIT
 IF getState($0.getServletContext()) == 0
 DO
@@ -94,7 +94,7 @@ ENDRULE
 RULE opentracing-web-servlet-filter_tomcat
 CLASS org.apache.catalina.core.ApplicationContext
 METHOD <init>
-HELPER io.opentracing.contrib.agent.helper.TomcatServletHelper
+HELPER com.datadoghq.trace.agent.integration.TomcatServletHelper
 AT EXIT
 IF TRUE
 DO
@@ -107,7 +107,7 @@ ENDRULE
 RULE opentracing-okhttp3
 CLASS okhttp3.OkHttpClient$Builder
 METHOD build()
-HELPER io.opentracing.contrib.agent.helper.OkHttpHelper
+HELPER com.datadoghq.trace.agent.integration.OkHttpHelper
 AT ENTRY
 IF TRUE
 DO
@@ -120,7 +120,7 @@ ENDRULE
 RULE opentracing-jms-2_producer
 INTERFACE javax.jms.Session
 METHOD createProducer
-HELPER io.opentracing.contrib.agent.helper.JMSMessageProducerHelper
+HELPER com.datadoghq.trace.agent.integration.JMSMessageProducerHelper
 AT EXIT
 IF TRUE
 DO
@@ -131,7 +131,7 @@ ENDRULE
 RULE opentracing-jms-2_consumer
 INTERFACE javax.jms.Session
 METHOD createConsumer
-HELPER io.opentracing.contrib.agent.helper.JMSMessageConsumerHelper
+HELPER com.datadoghq.trace.agent.integration.JMSMessageConsumerHelper
 AT EXIT
 IF TRUE
 DO

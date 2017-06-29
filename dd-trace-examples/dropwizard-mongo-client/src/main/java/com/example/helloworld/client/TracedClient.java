@@ -2,7 +2,7 @@ package com.example.helloworld.client;
 
 import java.io.IOException;
 
-import io.opentracing.contrib.agent.Trace;
+import com.datadoghq.trace.Trace;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
