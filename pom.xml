@@ -32,8 +32,8 @@
         <url>https://github.com/datadog/dd-trace-java</url>
         <connection>scm:git:git://github.com/datadog/dd-trace-java.git</connection>
         <developerConnection>scm:git:git@github.com:datadog/dd-trace-java.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <modules>
         <module>dd-trace</module>
@@ -47,6 +47,7 @@
         <maven.deploy.skip>true</maven.deploy.skip>
         <opentracing.version>0.30.0</opentracing.version>
         <java.version>1.7</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <distributionManagement>
