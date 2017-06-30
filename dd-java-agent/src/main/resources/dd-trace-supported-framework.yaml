@@ -48,7 +48,7 @@ opentracing-okhttp3:
 # For rules opentracing-jms-2_{consumer,producer}
 opentracing-jms-2:
   - check:
-    artifact: jms-api
+    artifact: javax.jms-api
     supported_version: 2\..*
 
 opentracing-mongo-driver:
