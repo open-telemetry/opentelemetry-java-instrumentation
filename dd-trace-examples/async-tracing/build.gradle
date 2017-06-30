@@ -1,0 +1,5 @@
+description = 'async-tracing'
+dependencies {
+    compile project(':dd-trace')
+    compile group: 'io.opentracing.contrib', name: 'opentracing-spanmanager', version: '0.0.5'
+}
