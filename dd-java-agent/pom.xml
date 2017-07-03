@@ -62,7 +62,6 @@
             <groupId>com.google.auto.service</groupId>
             <artifactId>auto-service</artifactId>
             <version>1.0-rc3</version>
-            <scope>compile</scope>
         </dependency>
 
         <!-- Server side instrumentation -->
