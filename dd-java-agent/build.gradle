@@ -1,0 +1,85 @@
+plugins {
+    id 'application'
+    id "com.github.johnrengelman.shadow" version "2.0.1"
+}
+
+description = 'dd-java-agent'
+mainClassName = "com.datadoghq.trace.agent.AnnotationsTracingAgent"
+
+dependencies {
+    compile project(':dd-trace')
+    compile project(':dd-trace-annotations')
+
+    compile group: 'io.opentracing.contrib', name: 'opentracing-agent', version: '0.1.0'
+    compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
+
+
+    compile(group: 'io.opentracing.contrib', name: 'opentracing-web-servlet-filter', version: '0.0.9') {
+        exclude(module: 'jetty-servlet')
+    }
+    compile(group: 'io.opentracing.contrib', name: 'opentracing-mongo-driver', version: '0.0.2') {
+        exclude(module: 'mongodb-driver-async')
+        exclude(module: 'mongo-java-driver')
+    }
+    compile group: 'io.opentracing.contrib', name: 'opentracing-jdbc', version: '0.0.2'
+    compile(group: 'io.opentracing.contrib', name: 'opentracing-okhttp3', version: '0.0.5') {
+        exclude(module: 'okhttp')
+    }
+    compile(group: 'io.opentracing.contrib', name: 'opentracing-jms-2', version: '0.0.3') {
+        exclude(module: 'javax.jms-api')
+    }
+    compile(group: 'io.opentracing.contrib', name: 'opentracing-aws-sdk', version: '0.0.2') {
+        exclude(module: 'aws-java-sdk')
+    }
+    compile(group: 'io.opentracing.contrib', name: 'opentracing-cassandra-driver', version: '0.0.2') {
+        exclude(module: 'cassandra-driver-core')
+    }
+    compile(group: 'io.opentracing.contrib', name: 'opentracing-elasticsearch-client', version: '0.0.2') {
+        exclude(module: 'transport')
+    }
+    compile(group: 'io.opentracing.contrib', name: 'opentracing-apache-httpclient', version: '0.0.2') {
+        exclude(module: 'httpclient')
+    }
+
+    testCompile group: 'io.opentracing', name: 'opentracing-mock', version: '0.30.0'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'org.assertj', name: 'assertj-core', version: '3.6.2'
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '2.7.22'
+    compileOnly group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.3.6.v20151106'
+    compileOnly group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.0.M1'
+    compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
+    compileOnly group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
+    compileOnly group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+    compileOnly group: 'javax.jms', name: 'javax.jms-api', version: '2.0.1'
+    compileOnly group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.119'
+    compileOnly group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'
+    compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '5.4.1'
+    compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3'
+}
+
+jar {
+    manifest {
+        attributes(
+                // I don't think we want to define this since we can't really load after startup:
+                //"Agent-Class": "com.datadoghq.trace.agent.AnnotationsTracingAgent",
+                "Premain-Class": "com.datadoghq.trace.agent.AnnotationsTracingAgent",
+                "Can-Redefine-Classes": true,
+                "Can-Retransform-Classes": true,
+                // It is dangerous putting everything on the bootstrap classpath,
+                // but kept for consistency with previous versions.
+                "Boot-Class-Path": "./${jar.archiveName}.jar"
+        )
+    }
+}
+
+shadowJar {
+    append 'otarules.btm'
+
+    classifier 'shadow'
+
+//    mergeServiceFiles()
+
+    relocate('', 'dd.deps.') {
+        exclude '%ant[META-INF/**/*]'
+    }
+}

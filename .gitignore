@@ -2,6 +2,12 @@
 #########
 target
 
+# Gradle #
+#########
+/.gradle
+*/build/
+dd-trace-examples/**/build/
+
 # Eclipse #
 ###########
 *.launch
