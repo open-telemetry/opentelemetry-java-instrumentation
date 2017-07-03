@@ -51,11 +51,11 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>nexus</id>
+            <id>nexus-local</id>
             <url>http://localhost:8081/nexus/content/repositories/snapshots</url>
         </snapshotRepository>
         <repository>
-            <id>nexus</id>
+            <id>nexus-local</id>
             <url>http://localhost:8081/nexus/content/repositories/snapshots</url>
         </repository>
         <!--<snapshotRepository>-->
