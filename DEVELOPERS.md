@@ -1,6 +1,29 @@
 ## Developer instructions
 
-* How to release a new version
+### Testing a release locally
+Run nexus locally (assuming you have docker running locally):
+
+```bash
+docker run -d -p 8081:8081 --name nexus sonatype/nexus
+```
+
+Configure the `distributionManagement` section in the root `pom.xml` to point to the repo on localhost.
+
+Add/update your `~/.m2/settings.xml` with the following config block:
+
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>nexus-local</id>
+      <username>admin</username>
+      <password>admin123</password>
+    </server>
+  </servers>
+</settings>
+```
+
+Perform the release process as described below.
 
 
 ### How to release a new version
