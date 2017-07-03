@@ -3,6 +3,8 @@ package com.example.helloworld.client;
 import java.io.IOException;
 
 import com.datadoghq.trace.Trace;
+import io.opentracing.tag.StringTag;
+import io.opentracing.util.GlobalTracer;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -21,8 +23,9 @@ public class TracedClient {
 		System.out.println("After execute");
 	}
 
-	@Trace(tagsKV={"service-name","TracedClient"})
+	@Trace
 	private static void executeCall() throws IOException {
+		new StringTag("service-name").set(GlobalTracer.get().activeSpan(), "TracedClient");
 		OkHttpClient client = new OkHttpClient().newBuilder().build();
 
 		Request request = new Request.Builder()

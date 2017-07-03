@@ -6,6 +6,8 @@ import com.google.common.base.Optional;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import io.opentracing.tag.StringTag;
+import io.opentracing.util.GlobalTracer;
 import org.bson.Document;
 
 import javax.ws.rs.GET;
@@ -101,24 +103,24 @@ public class SimpleCrudResource {
 	}
 
 	/**
-	 * The beforeDB is traced using the annotation @trace
-	 * Tags, the operation name can be configured using tagsKV and operationName options
+	 * The beforeDB is traced using the annotation @trace with a custom operationName and a custom tag.
 	 *
 	 * @throws InterruptedException
 	 */
-	@Trace(operationName = "Before DB", tagsKV = {"mytag", "myvalue"})
+	@Trace(operationName = "Before DB")
 	public void beforeDB() throws InterruptedException {
+		new StringTag("mytag").set(GlobalTracer.get().activeSpan(), "myvalue");
 		Thread.sleep(333);
 	}
 
 	/**
-	 * The beforeDB is traced using the annotation @trace
-	 * Tags, the operation name can be configured using tagsKV and operationName options
+	 * The beforeDB is traced using the annotation @trace with a custom operationName and a custom tag.
 	 *
 	 * @throws InterruptedException
 	 */
-	@Trace(operationName = "After DB", tagsKV = {"mytag", "myvalue"})
+	@Trace(operationName = "After DB")
 	public void afterDB() throws InterruptedException {
+		new StringTag("mytag").set(GlobalTracer.get().activeSpan(), "myvalue");
 		Thread.sleep(111);
 	}
 
