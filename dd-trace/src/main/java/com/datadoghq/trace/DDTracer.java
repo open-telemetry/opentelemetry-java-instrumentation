@@ -22,6 +22,9 @@ import java.util.*;
  */
 public class DDTracer implements io.opentracing.Tracer {
 
+	public final static String CURRENT_VERSION = DDTracer.class.getPackage().getImplementationVersion();
+	public final static String JAVA_VERSION = System.getProperty("java.version", "unknown");
+
 	/**
 	 * Writer is an charge of reporting traces and spans to the desired endpoint
 	 */
