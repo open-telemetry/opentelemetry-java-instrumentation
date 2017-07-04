@@ -152,10 +152,10 @@ public void myMethod() throws InterruptedException{
 
 By default, the operation name attached to the spawn span will be the name of the method and no meta tags will be attached.
 
-You can use the `operationName` and `tagsKV` attributes to customize your trace:
+You can use the `operationName` customize your trace:
 
 ```java
-@Trace(operationName="Before DB",tagsKV={"mytag","myvalue"})
+@Trace(operationName="Before DB")
 public void myMethod() throws InterruptedException{
 	....
 }
