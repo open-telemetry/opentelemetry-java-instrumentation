@@ -172,7 +172,6 @@ public class TraceAnnotationsManager {
 				String ruleText = 
 						CURRENT_SPAN_EXISTS+
 						buildSpan(javassistMethod)+
-						buildWithTags(javassistMethod)+
 						START;
 				RuleScript script = createRuleScript("Start Active Span ",cc, javassistMethod,  Location.create(LocationType.ENTRY,""),ruleText);
 				generatedScripts.append(script).append("\n");
@@ -263,27 +262,5 @@ public class TraceAnnotationsManager {
 			log.log(Level.WARNING, "Error when building injection rule on method " + javassistMethod + ". Fallback on default value.", e);
 		}
 		return BUILD_SPAN+javassistMethod.getName()+CLOSE_PARENTHESIS;
-	}
-
-	private static String buildWithTags(CtMethod javassistMethod){
-		try {
-			Trace trace = (Trace) javassistMethod.getAnnotation(Trace.class);
-			if(trace.tagsKV()!=null && trace.tagsKV().length>0){
-				if(trace.tagsKV().length%2==0){
-					StringBuilder sb = new StringBuilder();
-					for(int i = 0;i<trace.tagsKV().length;i=i+2){
-						sb.append(".withTag(\"")
-						.append(trace.tagsKV()[i]).append("\",\"").append(trace.tagsKV()[i+1])
-						.append(CLOSE_PARENTHESIS);
-					}
-					return sb.toString();
-				}else{
-					throw new IllegalArgumentException("The 'tagsKV' annotation attribute must define Key/Value pairs only");
-				}
-			}
-		} catch (Exception e) {
-			log.log(Level.WARNING, "Error when building injection rule on method " + javassistMethod + ". Fallback on default value.", e);
-		}
-		return "";
 	}
 }
