@@ -105,7 +105,7 @@ class InstrumentedClass {
 
 The method above is now instrumented. As you can see, the tracer is retrieved from a global registry, called `GlobalTracer`.
 
-The last thing you have to do is providing a configured tracer. This can be easily done by using the `TracerFactory`.
+The last thing you have to do is providing a configured tracer. This can be easily done by using the `TracerFactory` or manually
 in the bootstrap method (like the `main`).
 
 ```java
@@ -115,6 +115,12 @@ public class Application {
 	
         // Init the tracer from the configuration file      
         Tracer tracer = DDTracerFactory.createFromConfigurationFile();
+        io.opentracing.util.GlobalTracer.register(tracer);
+        
+        // Init the tracer from the API
+        Writer writer = new com.datadoghq.trace.writer.DDAgentWriter();
+        Sampler sampler = new com.datadoghq.trace.sampling.AllSampler();
+        Tracer tracer = new com.datadoghq.trace.DDTracer(writer, sampler);
         io.opentracing.util.GlobalTracer.register(tracer);
         
         // ...
