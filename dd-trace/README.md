@@ -2,8 +2,8 @@
 
 ## Motivations
 
-The Datadog Tracer is an Opentracing compatible tracer. It provides all resources needed to instrument your code
-and report each operations, each traces directly to a Datadog APM platform.
+The Datadog Tracer is an [Opentracing](http://opentracing.io/) compatible tracer. It provides all resources needed to instrument your code
+and report each operation and each trace directly to a Datadog APM platform.
 
 
 Opentracing uses the concept of the **span**. A span is **timed operation** representing a bunch of work executed.
@@ -45,12 +45,14 @@ There are 3 ways to instrument an application:
 2. [Use the Opentracing API](#api)
 3. [Use annotations](#annotation)
  
-### <a name="framework"></a>Use the autotracing agent for well-known framework
+### <a name="framework"></a>Use the Datadog Java agent for well-known framework
 
-Datadog instruments many frameworks and libraries by default: SpringBoot, JDBC, Mongo, JMS, Tomcat, etc.
-By using the autotracing agent, you just need to follow few steps in order to get traces. 
+Datadog uses instrumentation contributed by [the community](https://github.com/opentracing-contrib) to instrument many frameworks: 
+SpringBoot, JDBC, Mongo, JMS, Tomcat, etc.
+By using the Datadog Java agent, you just need to follow few steps in order to get traces. 
 
 Check the dedicated project and agent: [dd-java-agent](../dd-java-agent)
+
 
 
 ### <a name="api"></a>Custom instrumentations using Opentracing API
@@ -65,7 +67,7 @@ Let's look at a simple example.
 class InstrumentedClass {
 
     
-    void methodSDK() {
+    void method0() {
         // Retrieve the tracer using the resolver provided
         // Make sure you have :
         //    1. added the agent to the jvm (-javaagent;/path/to/agent.jar)
@@ -73,6 +75,8 @@ class InstrumentedClass {
         Tracer tracer = io.opentracing.util.GlobalTracer.get();
         
         Span span = tracer.buildSpan("operation-name").startActive();
+        new io.opentracing.tag.StringTag("service-name").set(span, "new-service-name"); 
+        
         
         //Do some thing here ...
         Thread.sleep(1_000);
@@ -143,7 +147,7 @@ Do not forget to add the corresponding dependencies to your project.
             <version>${opentracing.version}</version>
         </dependency>
         
-        <!-- Datadog Tracer (only useful if you do not use the Datadog autotracing agent) -->
+        <!-- Datadog Tracer (only needed if you do not use the Datadog autotracing agent) -->
         <dependency>
             <groupId>com.datadoghq</groupId>
             <artifactId>dd-trace</artifactId>
@@ -160,8 +164,19 @@ The following example is the same as above. Just add `@Trace` to the methods you
 ```java
 class InstrumentedClass {
 
-    @Trace(operationName = "operation-name")
-    void methodSDK() {
+    @Trace(operationName = "operation-name-1")
+    void method1() {
+
+        //Do some thing here ...
+        Thread.sleep(1_000);
+    }	
+    
+    @Trace(operationName = "operation-name-2")
+    void method2() {
+        
+        // You can get the current span and add tag as follow
+        Span current = io.opentracing.util.GlobalTracer.get().activeSpan();
+        new io.opentracing.tag.StringTag("service-name").set(current, "new-service-name");
 
         //Do some thing here ...
         Thread.sleep(1_000);
@@ -178,24 +193,10 @@ In order to use annotations, the only required dependency is that package.
             <version>${dd-trace-java.version}</version>
         </dependency>
 ```
-The annotations are resolved at the runtime by the autotracing agent. If you want to use the annotations,
-so have to provide the agent.
+The annotations are resolved at the runtime by the Datadog Java agent. If you want to use the annotations,
+so you must run the Datadog Java Agent.
 
-To attach the agent to the JVM, you simply have to declare the provided `jar` file in your 
-JVM arguments as a valid `-javaagent`. Don't forget to replace the `{version}` placeholder in the following commands.
-
-So first download the `jar` file from the main Maven repository: http://central.maven.org/maven2/com/datadoghq/dd-java-agent/
-
-```
-> curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar   
-```
-Then add the following JVM argument when launching your application (in IDE, using Maven run or simply in collaboration with the `>java -jar` command):
-
-```
--javaagent:/path/to/dd-java-agent-{version}.jar   
-```
-
-At this point, the DDTrace is loaded in the project.
+To run the agent, please refer to the Datadog Java agent documentation: [dd-java-agent](../dd-java-agent)
 
 
 ## Other useful resources
