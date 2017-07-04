@@ -48,11 +48,26 @@ There are 3 ways to instrument an application:
 ### <a name="framework"></a>Use the Datadog Java agent for well-known framework
 
 Datadog uses instrumentation contributed by [the community](https://github.com/opentracing-contrib) to instrument many frameworks: 
-SpringBoot, JDBC, Mongo, JMS, Tomcat, etc.
-By using the Datadog Java agent, you just need to follow few steps in order to get traces. 
+SpringBoot, JDBC, Mongo, JMS, Tomcat, etc. By using the Datadog Java agent, you just need to follow few steps in order to get traces.
+ 
+ 
+Get the latest version of the Datadog Java agent (Do not forget to replace the version `${version}` by the appropriate one).
 
-Check the dedicated project and agent: [dd-java-agent](../dd-java-agent)
+```bash
+version=0.1.1
+curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/${version}/dd-java-agent-${version}.jar 
+```
+Then, attach the Java agent to your JVM using th `javaagent` option.
 
+```bash 
+java -javaagent:/path/to/dd-java-agent-${version}.jar ...
+```
+
+If you have a local Datadog agent running on your host, traces are visible in your Datadog account.
+
+
+You can choose which framework you want to instrument, or sending traces to a remote Datadog agent by configuring the Datadog Java Agent YAML file. 
+Check the dedicated project for the full documentation: [dd-java-agent](../dd-java-agent)
 
 
 ### <a name="api"></a>Custom instrumentations using Opentracing API
