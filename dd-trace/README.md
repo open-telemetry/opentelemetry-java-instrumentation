@@ -40,10 +40,47 @@ To dig deeper, read the full documentation: http://opentracing.io/
 
 ## How to instrument your application?
 
-There are 3 ways to instrument an application:
-1. [Use the autotracing agent for supported frawemorks](#framework)
-2. [Use the Opentracing API](#api)
-3. [Use annotations](#annotation)
+In order to start to instrument your application, you need to:
+
+1. [Configure the Datadog Tracer](#config)
+2. Choose one of the 3 ways to instrument an application:
+    1. [Use the autotracing agent for supported frawemorks](#framework)
+    2. [Use the Opentracing API](#api)
+    3. [Use annotations](#annotation)
+
+### <a name="config"></a> Datadog Tracer configuration 
+
+The DDTracer is auto-configured using this YAML file.
+ 
+By default, the DDTracer tries to reach a local Datadog Agent, but you can change the settings and use a different
+location. In order to do that, please, refer you to the latest configuration: [dd-trace.yaml](src/main/resources/dd-trace.yaml)
+
+*Make sure that file is present in your classpath*.
+
+```yaml
+# Service name used if none is provided in the app
+defaultServiceName: unnamed-java-app
+
+# The writer to use.
+# Could be: LoggingWritter or DDAgentWriter (default)
+writer:
+  # LoggingWriter: Spans are logged using the application configuration
+  # DDAgentWriter: Spans are forwarding to a Datadog Agent
+  #  - Param 'host': the hostname where the DD Agent running (default: localhost)
+  #  - Param 'port': the port to reach the DD Agent (default: 8126)
+  type: DDAgentWriter
+  host: localhost
+  port: 8126
+
+# The sampler to use.
+# Could be: AllSampler (default) or RateSampler
+sampler:
+  # AllSampler: all spans are reported to the writer
+  # RateSample: only a portion of spans are reported to the writer
+  #  - Param 'rate': the portion of spans to keep
+  type: AllSampler
+```
+
  
 ### <a name="framework"></a>Use the Datadog Java agent for well-known framework
 
@@ -128,36 +165,9 @@ public class Application {
 }
 ```
 
-The factory looks for a `dd-trace.yaml` file in the classpath. The DDTracer is auto-configured using this YAML file.
- 
-By default, the DDTracer tries to reach a local Datadog Agent, but you can change the settings and use a different
-location. In order to do that, please, refer you to the latest configuration: [dd-trace.yaml](src/main/resources/dd-trace.yaml)
+The factory looks for a `dd-trace.yaml` file in the classpath. 
 
-```yaml
-# Service name used if none is provided in the app
-defaultServiceName: unnamed-java-app
-
-# The writer to use.
-# Could be: LoggingWritter or DDAgentWriter (default)
-writer:
-  # LoggingWriter: Spans are logged using the application configuration
-  # DDAgentWriter: Spans are forwarding to a Datadog Agent
-  #  - Param 'host': the hostname where the DD Agent running (default: localhost)
-  #  - Param 'port': the port to reach the DD Agent (default: 8126)
-  type: DDAgentWriter
-  host: localhost
-  port: 8126
-
-# The sampler to use.
-# Could be: AllSampler (default) or RateSampler
-sampler:
-  # AllSampler: all spans are reported to the writer
-  # RateSample: only a portion of spans are reported to the writer
-  #  - Param 'rate': the portion of spans to keep
-  type: AllSampler
-```
-
-Do not forget to add the corresponding dependencies to your project.
+Finally, do not forget to add the corresponding dependencies to your project.
 
 
 ```xml
