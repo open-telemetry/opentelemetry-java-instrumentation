@@ -170,7 +170,7 @@ The factory looks for a `dd-trace.yaml` file in the classpath.
 Finally, do not forget to add the corresponding dependencies to your project.
 
 
-```xml
+```
         <!-- Opentracing API -->
         <dependency>
             <groupId>io.opentracing</groupId>
@@ -184,6 +184,10 @@ Finally, do not forget to add the corresponding dependencies to your project.
             <artifactId>dd-trace</artifactId>
             <version>${dd-trace-java.version}</version>
         </dependency>
+        
+        compile group: 'io.opentracing', name: 'opentracing-api', version: '${opentracing.version}'
+        compile group: 'com.datadoghq', name: 'dd-trace', version: '${dd-trace-java.version}'
+
 ```
 
 
@@ -216,13 +220,15 @@ class InstrumentedClass {
 ```
 
 In order to use annotations, the only required dependency is that package.
-```xml
+```
         <!-- Datadog annotations -->
         <dependency>
             <groupId>com.datadoghq</groupId>
             <artifactId>dd-trace-annotations</artifactId>
             <version>${dd-trace-java.version}</version>
         </dependency>
+                
+        compile group: 'com.datadoghq', name: 'dd-trace-annotations', version: '${dd-trace-java.version}'
 ```
 The annotations are resolved at the runtime by the Datadog Java agent. If you want to use the annotations,
 so you must run the Datadog Java Agent.
