@@ -12,6 +12,7 @@ dependencies {
 
     compile group: 'io.opentracing.contrib', name: 'opentracing-agent', version: '0.1.0'
     compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
+    compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
 
 
     compile(group: 'io.opentracing.contrib', name: 'opentracing-web-servlet-filter', version: '0.0.9') {
@@ -45,6 +46,7 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.assertj', name: 'assertj-core', version: '3.6.2'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.7.22'
+    testCompile group: 'ch.qos.logback', name: 'logback-classic' , version: '1.2.3'
     compileOnly group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.3.6.v20151106'
     compileOnly group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.0.M1'
     compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'

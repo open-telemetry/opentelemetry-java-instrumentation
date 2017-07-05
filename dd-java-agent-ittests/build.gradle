@@ -5,6 +5,7 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.assertj', name: 'assertj-core', version: '3.6.2'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.7.22'
+    testCompile group: 'ch.qos.logback', name: 'logback-classic' , version: '1.2.3'
     testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
     testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.1.v20170120'
     testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.1.v20170120'

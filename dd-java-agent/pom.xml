@@ -52,12 +52,16 @@
             <version>${ot.agent.version}</version>
         </dependency>
 
-
         <!-- Used to find annotated methods -->
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>0.9.11</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.auto.service</groupId>
+            <artifactId>auto-service</artifactId>
+            <version>1.0-rc3</version>
         </dependency>
 
         <!-- Server side instrumentation -->
@@ -236,7 +240,13 @@
         </dependency>
 
 
-        <!-- JUnit tests -->
+        <!-- Tests -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.3</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>io.opentracing</groupId>
             <artifactId>opentracing-mock</artifactId>
@@ -287,6 +297,39 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <artifactSet>
+                                <excludes>
+                                    <!-- If not, the shade plugin doesn't work -->
+                                    <exclude>io.opentracing.contrib:opentracing-agent</exclude>
+                                    <exclude>org.jboss.byteman:byteman</exclude>
+                                </excludes>
+                            </artifactSet>
+                            <relocations>
+                                <relocation>
+                                    <pattern>javassist</pattern>
+                                    <shadedPattern>shaded.javassist</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.reflections</pattern>
+                                    <shadedPattern>shaded.org.reflections</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.fasterxml</pattern>
+                                    <shadedPattern>shaded.com.fasterxml</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.google</pattern>
+                                    <shadedPattern>shaded.com.google</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.yaml</pattern>
+                                    <shadedPattern>shaded.org.yaml</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.slf4j</pattern>
+                                    <shadedPattern>shaded.org.slf4j</shadedPattern>
+                                </relocation>
+                            </relocations>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>otarules.btm</resource>
@@ -294,8 +337,7 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Agent-Class>com.datadoghq.trace.agent.AnnotationsTracingAgent</Agent-Class>
-                                        <Premain-Class>com.datadoghq.trace.agent.AnnotationsTracingAgent
-                                        </Premain-Class>
+                                        <Premain-Class>com.datadoghq.trace.agent.AnnotationsTracingAgent</Premain-Class>
                                         <Can-Redefine-Classes>true</Can-Redefine-Classes>
                                         <Can-Retransform-Classes>true</Can-Retransform-Classes>
                                         <Boot-Class-Path>./${project.artifactId}.jar</Boot-Class-Path>

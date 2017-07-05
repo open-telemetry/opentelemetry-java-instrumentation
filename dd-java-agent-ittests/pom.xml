@@ -11,11 +11,13 @@
     <name>dd-java-agent-ittests</name>
     <description>Datadog Java Agent integration tests</description>
     <url>https://github.com/datadog/dd-trace-java</url>
-
+    <packaging>jar</packaging>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
         <dd-trace.version>0.1.2-SNAPSHOT</dd-trace.version>
+        <!--Skip tests-->
+        <skipTests>true</skipTests>
     </properties>
 
     <dependencies>
@@ -27,8 +29,22 @@
             <version>${dd-trace.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Required for the tracer resolver / annotation -->
+        <dependency>
+            <groupId>com.google.auto.service</groupId>
+            <artifactId>auto-service</artifactId>
+            <version>1.0-rc3</version>
+            <scope>compile</scope>
+        </dependency>
+
 
         <!-- JUnit tests -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.3</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>io.opentracing</groupId>
             <artifactId>opentracing-mock</artifactId>
@@ -196,35 +212,14 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.4</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.19</version>
                 <configuration>
-                    <includes>
-                        <!--<include>*Test.java</include>-->
-                    </includes>
-                    <excludes>
-                        <exclude>*Test.java</exclude>
-                    </excludes>
-                    <!--<forkCount>3</forkCount>-->
-                    <!--<reuseForks>false</reuseForks>-->
                     <argLine>
                         -javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/${project.version}/dd-java-agent-${project.version}.jar
                         -Dorg.jboss.byteman.verbose=true
                     </argLine>
-                    <!--<workingDirectory>target/FORK_DIRECTORY_${surefire.forkNumber}</workingDirectory>-->
+                    <skipTests>${skipTests}</skipTests>
                 </configuration>
             </plugin>
             <plugin>
@@ -238,25 +233,9 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <artifactSet>
-                                <excludes>
-                                    <!-- <exclude>ch.qos.logback:*</exclude> -->
-                                    <!-- <exclude>org.slf4j:*</exclude> -->
-                                </excludes>
-                            </artifactSet>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                                     <resource>otarules.btm</resource>
-                                </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <manifestEntries>
-                                        <Agent-Class>com.datadoghq.trace.agent.AnnotationsTracingAgent</Agent-Class>
-                                        <Premain-Class>com.datadoghq.trace.agent.AnnotationsTracingAgent
-                                        </Premain-Class>
-                                        <Can-Redefine-Classes>true</Can-Redefine-Classes>
-                                        <Can-Retransform-Classes>true</Can-Retransform-Classes>
-                                        <Boot-Class-Path>./${project.artifactId}.jar</Boot-Class-Path>
-                                    </manifestEntries>
                                 </transformer>
                             </transformers>
                         </configuration>
