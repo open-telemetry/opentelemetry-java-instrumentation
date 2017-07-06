@@ -177,6 +177,17 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 	 * @param value the value of the value
 	 */
 	public synchronized void setTag(String tag, Object value) {
+		if (tag.equals(DDTags.SERVICE_NAME)) {
+			setServiceName(value.toString());
+			return;
+		} else if (tag.equals(DDTags.RESOURCE_NAME)) {
+			setResourceName(value.toString());
+			return;
+		} else if (tag.equals(DDTags.SPAN_TYPE)) {
+			setSpanType(value.toString());
+			return;
+		}
+
 		if (this.tags.isEmpty()) {
 			this.tags = new HashMap<String, Object>();
 		}
