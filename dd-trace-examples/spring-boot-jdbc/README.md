@@ -4,29 +4,77 @@
 This project aims at demonstrating how to instrument legacy code based on the SpringBoot framework
 and a MySQL JDBC connection.
 
-Along with the [opentracing agent](https://github.com/opentracing-contrib/java-agent) we use 2 Opentracing contributions:
- * The JDBC contrib, that intercepts and trace all the calls to the DB
- * The Spring-Boot contrib, which intercepts and trace all incoming HTTP calls
+We are using the [opentracing contributions](https://github.com/opentracing-contrib) in order to trace:
+ * All the JDBC queries and calls to the DB
+ * All incoming HTTP calls
  
-Each contribution hides the complexity to the developers.
-
+ 
+The instrumentation is injected via the Datadog Java Agent. Java agents allows developers to execute
+some code before starting the legacy application. All operations for instrumenting the code are done
+at this time.
+ 
 ### Run the demo
 
+The demo consistes into a very simple backend backed by a MySQL db. The Spring Boot application exposes
+2 endpoints that can be reached via an HTTP request.
+
 #### Prerequisites
-1. Please make sure that you read and executed the prerequisites provided [on this page](../../../raclette-java-examples/README.md)
-2. Make also sure that you have a MySQL DB running (and an access to it). Then [Update your settings here](src/main/resources/application.properties).
+1. Run the latest version of Datadog Agent. For instance, you can run it through a docker container: 
+  `docker run -d --name dd-agent -v /var/run/docker.sock:/var/run/docker.sock:ro -v /proc/:/host/proc/:ro -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro -e API_KEY=<YOUR-API-KEY> -e SD_BACKEND=docker -p 8126:8126 -P  datadog/docker-dd-agent:latest`
+2. Run an instance of MyQSL. This could also be done using docker: 
+  `docker run -dt --name mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 -e MYSQL_DATABASE=springdb mysql`
     
 #### Run the application
 
-If you want to enable tracing you have to launch the application with the datadog java agent.
+The first step is to edit the Spring configuration file and the Datadog Tracer file and check if the
+connection properties are okay.
 
-That can be done by providing the following JVM argument (assuming the `M2_REPO` env variable is set and we run version `{version}`):
-`-javaagent:${M2_REPO}/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar`.
+```properties
+# file: src/resources/application.properties
 
-There are 2 ways to test it:
+spring.datasource.driver-class-name= io.opentracing.contrib.jdbc.TracingDriver
+spring.datasource.url= jdbc:tracing:mysql://localhost:3306/springdb
+spring.datasource.username=root
+spring.datasource.password=root
+```
 
-- Either with Maven: `mvn spring-boot:run -Djavaagent:${M2_REPO}/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar`
-- Or if you prefer with your IDE providing the java agent command
+```yaml
+# file: src/resources/dd-trace.yaml
+
+# Service name used if none is provided in the app
+defaultServiceName: spring-app
+
+# The writer to use.
+writer:
+  type: DDAgentWriter
+  host: localhost
+  port: 8126
+
+# The sampler to use.
+sampler:
+  type: AllSampler
+```
+
+Then, is to run the Spring Application along the Datadog Java Agent.
+
+- So first download the `jar` file from the main repository.
+
+```
+# use latest version 
+curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar
+```
+
+- Then add the following JVM argument when launching your application (in IDE, using Maven run or simply in collaboration with the `>java -jar` command):
+
+```
+-javaagent:/path/to/the/dd-java-agent-{version}.jar
+```
+
+- Finally, run the application through your IDE or Maven with the `javaagent` option.
+
+```
+mvn spring-boot:run -Djavaagent:/path/to/the/dd-java-agent-{version}.jar
+```
 
 
 ### Generate traces
