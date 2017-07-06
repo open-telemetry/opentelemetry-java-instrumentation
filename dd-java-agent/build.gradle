@@ -1,10 +1,8 @@
 plugins {
-    id 'application'
     id "com.github.johnrengelman.shadow" version "2.0.1"
 }
 
 description = 'dd-java-agent'
-mainClassName = "com.datadoghq.trace.agent.AnnotationsTracingAgent"
 
 dependencies {
     compile project(':dd-trace')
@@ -13,7 +11,6 @@ dependencies {
     compile group: 'io.opentracing.contrib', name: 'opentracing-agent', version: '0.1.0'
     compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
     compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
-
 
     compile(group: 'io.opentracing.contrib', name: 'opentracing-web-servlet-filter', version: '0.0.9') {
         exclude(module: 'jetty-servlet')
@@ -84,4 +81,14 @@ shadowJar {
     relocate('', 'dd.deps.') {
         exclude '%ant[META-INF/**/*]'
     }
+
+    //Exclude Java 9 compiled classes:
+    exclude 'org/jboss/byteman/agent/JigsawAccessEnablerGenerator.class'
+    exclude 'org/jboss/byteman/agent/JigsawAccessManager$1.class'
+    exclude 'org/jboss/byteman/agent/JigsawAccessManager.class'
+    exclude 'org/jboss/byteman/layer/LayerFactory.class'
+    exclude 'org/jboss/byteman/layer/LayerModuleFinder$1.class'
+    exclude 'org/jboss/byteman/layer/LayerModuleFinder.class'
+    exclude 'org/jboss/byteman/layer/LayerModuleReader.class'
+    exclude 'org/jboss/byteman/layer/LayerModuleReference.class'
 }

@@ -17,6 +17,9 @@ dependencies {
     testCompile group: 'org.assertj', name: 'assertj-core', version: '3.6.2'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.7.22'
     testCompile group: 'ch.qos.logback', name: 'logback-classic' , version: '1.2.3'
+    testCompile group: 'org.spockframework', name: 'spock-core', version: '1.0-groovy-2.4'
+    testCompile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.4'
+    testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.6'
 }
 
 shadowJar {
