@@ -1,4 +1,22 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<!--
+  ~    Copyright 2017 Datadog
+  ~
+  ~    Licensed under the Apache License, Version 2.0 (the "License");
+  ~    you may not use this file except in compliance with the License.
+  ~    You may obtain a copy of the License at
+  ~
+  ~        http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~    Unless required by applicable law or agreed to in writing, software
+  ~    distributed under the License is distributed on an "AS IS" BASIS,
+  ~    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~    See the License for the specific language governing permissions and
+  ~    limitations under the License.
+  ~
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -297,13 +315,36 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <artifactSet>
-                                <excludes>
-                                    <!-- If not, the shade plugin doesn't work -->
-                                    <exclude>io.opentracing.contrib:opentracing-agent</exclude>
-                                    <exclude>org.jboss.byteman:byteman</exclude>
-                                </excludes>
-                            </artifactSet>
+                            <!-- If not, the shade plugin doesn't work -->
+                            <!--This class are built along the 1.9 SDK-->
+                            <filters>
+                                <filter>
+                                    <artifact>io.opentracing.contrib:opentracing-agent</artifact>
+                                    <excludes>
+                                        <exclude>org/jboss/byteman/layer/LayerFactory.class</exclude>
+                                        <exclude>org/jboss/byteman/agent/JigsawAccessManager$1.class</exclude>
+                                        <exclude>org/jboss/byteman/layer/LayerModuleReader.class</exclude>
+                                        <exclude>org/jboss/byteman/layer/LayerModuleFinder$1.class</exclude>
+                                        <exclude>org/jboss/byteman/agent/JigsawAccessEnablerGenerator.class</exclude>
+                                        <exclude>org/jboss/byteman/agent/JigsawAccessManager.class</exclude>
+                                        <exclude>org/jboss/byteman/layer/LayerModuleFinder.class</exclude>
+                                        <exclude>org/jboss/byteman/layer/LayerModuleReference.class</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.jboss.byteman:byteman</artifact>
+                                    <excludes>
+                                        <exclude>org/jboss/byteman/layer/LayerFactory.class</exclude>
+                                        <exclude>org/jboss/byteman/agent/JigsawAccessManager$1.class</exclude>
+                                        <exclude>org/jboss/byteman/layer/LayerModuleReader.class</exclude>
+                                        <exclude>org/jboss/byteman/layer/LayerModuleFinder$1.class</exclude>
+                                        <exclude>org/jboss/byteman/agent/JigsawAccessEnablerGenerator.class</exclude>
+                                        <exclude>org/jboss/byteman/agent/JigsawAccessManager.class</exclude>
+                                        <exclude>org/jboss/byteman/layer/LayerModuleFinder.class</exclude>
+                                        <exclude>org/jboss/byteman/layer/LayerModuleReference.class</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                             <relocations>
                                 <relocation>
                                     <pattern>javassist</pattern>
