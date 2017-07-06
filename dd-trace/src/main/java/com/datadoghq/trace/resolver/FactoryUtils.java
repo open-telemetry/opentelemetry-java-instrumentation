@@ -20,6 +20,7 @@ public class FactoryUtils {
 		String filePath = System.getProperty(systemProperty);
 		if(filePath!=null){
 			try {
+				logger.info("Loading config from file " + filePath);
 				return objectMapper.readValue(new File(filePath), targetClass);
 			} catch (Exception e) {
 				logger.error("Cannot read provided configuration file "+ filePath +". Using the default one.", e);
@@ -35,10 +36,10 @@ public class FactoryUtils {
 		A config = null;
 		try {
 			Enumeration<URL> iter = classLoader.getResources(resourceName);
-			while (iter.hasMoreElements()) {
-				config = objectMapper.readValue(iter.nextElement().openStream(), targetClass);
-
-				break; // ONLY the closest resource file is taken into account
+			if (iter.hasMoreElements()) {
+				URL url = iter.nextElement();
+				logger.info("Loading config from resource " + url);
+				config = objectMapper.readValue(url.openStream(), targetClass);
 			}
 		} catch (IOException e) {
 			logger.warn("Could not load configuration file {}.", resourceName);

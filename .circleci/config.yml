@@ -1,0 +1,40 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/dd-trace-java
+    docker:
+      - image: circleci/openjdk:8-jdk
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: dd-trace-java-{{ checksum "build.gradle" }}-{{ checksum "dd-java-agent/build.gradle" }}-{{ checksum "dd-trace/build.gradle" }}
+
+      - run:
+          name: Run Tests
+          command: ./gradlew clean shadowJar check
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: dd-trace-java-{{ checksum "build.gradle" }}-{{ checksum "dd-java-agent/build.gradle" }}-{{ checksum "dd-trace/build.gradle" }}
+
+      - store_test_results:
+          path: dd-java-agent/build/test-results
+      - store_test_results:
+          path: dd-java-agent-ittests/build/test-results
+      - store_test_results:
+          path: dd-trace/build/test-results
+
+      - store_artifacts:
+          path: dd-java-agent/build/reports
+      - store_artifacts:
+          path: dd-java-agent-ittests/build/reports
+      - store_artifacts:
+          path: dd-trace/build/reports
+
+      - store_artifacts:
+          path: dd-java-agent/build/libs
+      - store_artifacts:
+          path: dd-trace/build/libs
