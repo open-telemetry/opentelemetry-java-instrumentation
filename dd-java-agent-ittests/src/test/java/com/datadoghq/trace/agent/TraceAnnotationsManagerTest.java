@@ -3,7 +3,6 @@ package com.datadoghq.trace.agent;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.datadoghq.trace.agent.integration.AAgentIntegration;
@@ -15,7 +14,6 @@ public class TraceAnnotationsManagerTest extends AAgentIntegration{
 		super.beforeTest();
 	}
 
-	@Ignore("Test is failing in CI but not locally. :-(")
 	@Test
 	public void testAnnotations() {
 		//Test single span in new trace
