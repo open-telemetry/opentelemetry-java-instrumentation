@@ -1,7 +1,4 @@
-package com.datadog.trace
-
-import com.datadoghq.trace.DDSpan
-import com.datadoghq.trace.DDSpanContext
+package com.datadoghq.trace
 
 class SpanFactory {
     static def newSpanOf(long timestampMicro) {

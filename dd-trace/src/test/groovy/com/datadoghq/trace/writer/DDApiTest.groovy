@@ -1,10 +1,10 @@
 package com.datadoghq.trace.writer
 
-import com.datadog.trace.SpanFactory
-import com.datadoghq.trace.DDSpan
+import com.datadoghq.trace.SpanFactory
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import ratpack.http.Headers
 import ratpack.http.MediaType
-import spock.lang.AutoCleanup
 import spock.lang.Specification
 
 import java.util.concurrent.atomic.AtomicReference
@@ -54,11 +54,13 @@ class DDApiTest extends Specification {
     def "content is sent as JSON"() {
         setup:
         def requestContentType = new AtomicReference<MediaType>()
+        def requestHeaders = new AtomicReference<Headers>()
         def requestBody = new AtomicReference<String>()
         def agent = ratpack {
             handlers {
                 put("v0.3/traces") {
                     requestContentType.set(request.contentType)
+                    requestHeaders.set(request.headers)
                     request.body.then {
                         requestBody.set(it.text)
                         response.send()
@@ -71,47 +73,47 @@ class DDApiTest extends Specification {
         expect:
         client.sendTraces(traces)
         requestContentType.get().type == APPLICATION_JSON
-        areEqual(requestBody.get(), expectedRequestBody)
+        requestHeaders.get().get("Datadog-Meta-Lang") == "java"
+        requestHeaders.get().get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown");
+        requestHeaders.get().get("Datadog-Meta-Tracer-Version") == "unknown"
+        convert(requestBody.get()) == expectedRequestBody
 
         cleanup:
         agent.close()
 
+        // Populate thread info dynamically as it is different when run via gradle vs idea.
         where:
-        traces                      | expectedRequestBody
-        []                          | '[]'
-        [SpanFactory.newSpanOf(1L)] | '''[{
+        traces                        | expectedRequestBody
+        []                            | []
+        [SpanFactory.newSpanOf(1L)]   | [new TreeMap<>([
             "duration":0,
             "error":0,
-            "meta":{"thread-name":"main","thread-id":"1"},
+            "meta":["thread-name":Thread.currentThread().getName(),"thread-id":"${Thread.currentThread().id}"],
             "name":"fakeOperation",
             "parent_id":0,
-            "resource":"fakeResource"
+            "resource":"fakeResource",
             "service":"fakeService",
             "span_id":1,
             "start":1000,
             "trace_id":1,
-            "type":"fakeType",
-        }]'''
-        [SpanFactory.newSpanOf(100L)] | '''[{
+            "type":"fakeType"
+        ])]
+        [SpanFactory.newSpanOf(100L)] | [new TreeMap<>([
             "duration":0,
             "error":0,
-            "meta":{"thread-name":"main","thread-id":"1"},
+            "meta":["thread-name":Thread.currentThread().getName(),"thread-id":"${Thread.currentThread().id}"],
             "name":"fakeOperation",
             "parent_id":0,
-            "resource":"fakeResource"
+            "resource":"fakeResource",
             "service":"fakeService",
             "span_id":1,
             "start":100000,
             "trace_id":1,
-            "type":"fakeType",
-        }]'''
+            "type":"fakeType"
+        ])]
     }
 
-
-    static void areEqual(String json1, String json2) {
-        def tree1 = mapper.readTree json1
-        def tree2 = mapper.readTree json2
-
-        assert tree1.equals(tree2)
+    static List<TreeMap<String, Object>> convert(String json) {
+        return mapper.readValue(json, new TypeReference<List<TreeMap<String, Object>>>() {})
     }
 }

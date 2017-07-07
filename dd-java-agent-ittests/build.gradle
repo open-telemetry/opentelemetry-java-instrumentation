@@ -37,3 +37,7 @@ test {
 }
 
 test.dependsOn project(':dd-java-agent').shadowJar
+
+parent.subprojects.collect { it.tasks.withType(Test) } each {
+    test.shouldRunAfter it
+}

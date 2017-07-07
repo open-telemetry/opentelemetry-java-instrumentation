@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -124,15 +125,14 @@ public class DDSpanBuilderTest {
         assertThat(span.getStartTime()).isEqualTo(expectedTimestamp * 1000L);
 
         // auto-timestamp in nanoseconds
-        long tick = System.currentTimeMillis() * 1000 * 1000L;
+        long tick = System.currentTimeMillis();
         span = tracer
                 .buildSpan(expectedName)
                 .withServiceName("foo")
                 .start();
 
-        // between now and now + 100ms
-        assertThat(span.getStartTime()).isBetween(tick, tick + 100 * 1000L);
-
+        // Give a range of +/- 2 millis
+        assertThat(span.getStartTime()).isBetween(MILLISECONDS.toNanos(tick - 2), MILLISECONDS.toNanos(tick + 2));
     }
 
 
@@ -143,7 +143,7 @@ public class DDSpanBuilderTest {
         final long expectedParentId = spanId;
 
         DDSpanContext mockedContext = mock(DDSpanContext.class);
-       
+
         when(mockedContext.getSpanId()).thenReturn(spanId);
         when(mockedContext.getServiceName()).thenReturn("foo");
 
