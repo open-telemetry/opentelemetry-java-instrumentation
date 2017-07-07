@@ -18,7 +18,7 @@ public class AAgentIntegration {
 		try{
 			GlobalTracer.register(tracer);
 		}catch(Exception e){
-			// Force it using reflexion, I'm proud of this solution
+			// Force it anyway using reflexion
 			final Field field = GlobalTracer.class.getDeclaredField("tracer");
 			field.setAccessible(true);
 			field.set(null, tracer);
