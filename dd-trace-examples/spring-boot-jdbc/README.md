@@ -31,10 +31,10 @@ There are 2 ways to test it:
 
 ### Generate traces
 
-Once the application runs. Go to the following url:
+Once the application runs. Go to the following urls:
 
-* [http://localhost:8080/demo/add?name=foo&email=bar]()
-* [http://localhost:8080/demo/all]()
+* [http://localhost:8080/demo/add?name=foo&email=bar](http://localhost:8080/demo/add?name=foo&email=bar)
+* [http://localhost:8080/demo/all](http://localhost:8080/demo/all)
 
 Then, you will able to see traces directly to the DataDog UI.
 
