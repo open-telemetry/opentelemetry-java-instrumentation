@@ -22,7 +22,7 @@ public class CassandraIntegrationTest {
 
 	@Before
 	public void start() throws InterruptedException, TTransportException, ConfigurationException, IOException {
-		EmbeddedCassandraServerHelper.startEmbeddedCassandra(20000L);
+		EmbeddedCassandraServerHelper.startEmbeddedCassandra(40000L);
 	}
 
 	@After

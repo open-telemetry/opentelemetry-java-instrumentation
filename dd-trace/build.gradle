@@ -17,6 +17,9 @@ dependencies {
     testCompile group: 'org.assertj', name: 'assertj-core', version: '3.6.2'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.7.22'
     testCompile group: 'ch.qos.logback', name: 'logback-classic' , version: '1.2.3'
+    testCompile group: 'org.spockframework', name: 'spock-core', version: '1.0-groovy-2.4'
+    testCompile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.4'
+    testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.6'
 }
 
 shadowJar {
@@ -24,7 +27,12 @@ shadowJar {
 
     classifier 'shadow'
 
-    relocate('', 'dd.deps.') {
-        exclude '%ant[META-INF/**/*]'
-    }
+    relocate 'ch.qos.logback', 'dd.deps.ch.qos.logback'
+    relocate 'com.fasterxml', 'dd.deps.com.fasterxml'
+    relocate 'com.google', 'dd.deps.com.google'
+    relocate 'javassist', 'dd.deps.javassist'
+    relocate 'org.jboss.byteman', 'dd.deps.org.jboss.byteman'
+    relocate 'org.reflections', 'dd.deps.org.reflections'
+    relocate 'org.slf4j', 'dd.deps.org.slf4j'
+    relocate 'org.yaml', 'dd.deps.org.yaml'
 }

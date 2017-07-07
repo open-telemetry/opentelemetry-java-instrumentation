@@ -12,7 +12,7 @@ subprojects {
 
     task packageSources(type: Jar) {
         classifier = 'sources'
-        from sourceSets.main.allSource\
+        from sourceSets.main.allSource
     }
     artifacts.archives packageSources
     repositories {
