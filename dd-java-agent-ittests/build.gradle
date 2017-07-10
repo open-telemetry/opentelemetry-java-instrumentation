@@ -1,3 +1,6 @@
+// Not adding jacoco here as it inexplicably breaks our tests.
+// apply from: "${rootDir}/gradle/jacoco.gradle"
+
 description = 'dd-java-agent-ittests'
 dependencies {
     testCompile project(':dd-java-agent')
