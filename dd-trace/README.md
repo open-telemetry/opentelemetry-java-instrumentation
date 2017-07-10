@@ -1,17 +1,18 @@
-## Datadog Java Tracer
+# Datadog Opentracing Tracer
 
-### Motivations
+## Motivations
 
-The Datadog Java Tracer is an OpenTracing-compatible tracer. It provides all resources needed to instrument your code.
+The Datadog Tracer is an [Opentracing](http://opentracing.io/) compatible tracer. It provides all resources needed to instrument your code
+and report each operation and each trace directly to a Datadog APM platform.
 
 
-Opentracing introduces the concept of the **span**. A span is **timed operation** representing "a bounded process" in the code.
-The spans can **be linked together**. And a **trace** is a list of spans, each related to the same top action/operation.
+Opentracing uses the concept of the **span**. A span is **timed operation** representing a bunch of work executed.
+Spans can **be linked together**. And a **trace** is a collection of spans, related to the same top action/operation.
 
 Let's see an example. 
 
-The workflow can be a client requesting, via a HTTP endpoint, some resources store in a DB.
-Look at the following scheme.
+For instance, a client requesting a resource through an HTTP endpoint.
+Look at the following workflow.
 
 ````
 TRACE:
@@ -31,26 +32,30 @@ As just described, the tracer produces a trace composed of 4 spans, each represe
 2. Span2 is the Span1's first child, representing the amount of time to understand the query, and perform the query
 on the DB.
 3. Span3, a Span1' grandchild, represents the DB time used to retrieve the data
-4. Span4 is a child of Span2 and followed Span3. It represents a business process for instance.
+4. Span4 is a child of Span2 and followed Span3. It represents a business/legacy operation.
 
 This is  a very simple example of how works [Opentracing](http://opentracing.io/).
-Do not hesitate to go deeper and read the full documentation: http://opentracing.io/
+To dig deeper, read the full documentation: http://opentracing.io/
 
 
-### How to instrument well-known framework?
+## How to instrument your application?
 
-Datadog instruments many frameworks and libraries by default: SpringBoot, JDBC, Mongo, JMS, Tomcat, etc. 
-Check the dedicated project and agent: [dd-java-agent](../dd-java-agent)
+In order to start to instrument your application, you need to:
 
+1. [Configure the Datadog Tracer](#config)
+2. Choose one of the 3 ways to instrument an application:
+    1. [Use the autotracing agent for supported frawemorks](#framework)
+    2. [Use the Opentracing API](#api)
+    3. [Use annotations](#annotation)
 
-### How the Datadog Tracer (DDTrace) is loaded in the project?
+### <a name="config"></a> Datadog Tracer configuration 
 
-This current implementation uses the trace-resolver feature provides by Opentracing.
-That means you can add and load the tracer using a Java Agent directly with the JVM.
-
-The DDTrace is autoconfigured using the YAML file provided in the project: `dd-trace.yaml`. 
-By default, the DDTrace tries to reach a local Datadog Agent, but you can change the settings and use a different
+The DDTracer is auto-configured using this YAML file.
+ 
+By default, the DDTracer tries to reach a local Datadog Agent, but you can change the settings and use a different
 location. In order to do that, please, refer you to the latest configuration: [dd-trace.yaml](src/main/resources/dd-trace.yaml)
+
+*Make sure that file is present in your classpath*.
 
 ```yaml
 # Service name used if none is provided in the app
@@ -76,78 +81,162 @@ sampler:
   type: AllSampler
 ```
 
-To attach the agent to the JVM, you simply have to declare the provided `jar` file in your 
-JVM arguments as a valid `-javaagent:`. We assume that your `${M2_REPO}` env variable is properly set.
-Don't forget to replace the `{version}` placeholder in the following commands.
+ 
+### <a name="framework"></a>Use the Datadog Java agent for well-known framework
 
-So first download the `jar` file from the main Maven repository:
+Datadog uses instrumentation contributed by [the community](https://github.com/opentracing-contrib) to instrument many frameworks: 
+SpringBoot, JDBC, Mongo, JMS, Tomcat, etc. By using the Datadog Java agent, you just need to follow few steps in order to get traces.
+ 
+ 
+Get the latest version of the Datadog Java agent (Do not forget to replace the version `${version}` by the appropriate one).
 
+```bash
+version=0.1.1
+curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/${version}/dd-java-agent-${version}.jar 
 ```
-> mvn dependency:get -Dartifact=io.opentracing-contrib:opentracing-agent:${version}
-```
-Then add the following JVM argument when launching your application (in IDE, using Maven run or simply in collaboration with the `>java -jar` command):
+Then, attach the Java agent to your JVM using th `javaagent` option.
 
-```
--javaagent:${M2_REPO}/io/opentracing-contrib/opentracing-agent/${version}/opentracing-agent-${version}.jar
-```
-
-
-At this point, the DDTrace is loaded in the project. Let's see now how to instrument it.
-
-### How to use the Datadog Tracer (DDTrace) for instrumenting legacy code?
-
-Once, the DDTrace is loaded, you can start to instrument your code using the Opentracing SDK or the `@Trace` annotation.
-`@Trace` is actually a Datadog specific, but we plan to submit it to Opentracing foundation. 
-
-To use them, you have to add the dependency to the DDTrace.
-Just edit you `pom.xml` and add this:
-
-```xml
-    <dependency>
-        <groupId>com.datadoghq</groupId>
-        <artifactId>dd-trace</artifactId>
-        <version>${dd-trace-java.version}</version>
-    </dependency>
+```bash 
+java -javaagent:/path/to/dd-java-agent-${version}.jar ...
 ```
 
+If you have a local Datadog agent running on your host, traces are visible in your Datadog account.
 
-You can start as shown below, here is an example how to use both of them to instrument 2 simple methods.
+
+You can choose which framework you want to instrument, or sending traces to a remote Datadog agent by configuring the Datadog Java Agent YAML file. 
+Check the dedicated project for the full documentation: [dd-java-agent](../dd-java-agent)
+
+
+### <a name="api"></a>Custom instrumentations using Opentracing API
+
+If you want to add custom instrumenting to your code, you have to use the Opentracing API.
+The official documentation can be found right here: [](https://github.com/opentracing/opentracing-java).
+
+Let's look at a simple example.
+
 
 ```java
 class InstrumentedClass {
+
     
-    @Trace
-    void methodAnnoted() {
-        // The annotation will do the same thing as the manual instrumentation below
-        //Do some thing here ...
-        Thread.sleep(1_000);
-    }
-    
-    void methodSDK() {
+    void method0() {
         // Retrieve the tracer using the resolver provided
         // Make sure you have :
         //    1. added the agent to the jvm (-javaagent;/path/to/agent.jar)
         //    2. a dd-trace.yaml file in your resources directory
         Tracer tracer = io.opentracing.util.GlobalTracer.get();
         
-        Span span = tracer.buildSpan("operation-name").build();
+        Span span = tracer.buildSpan("operation-name").startActive();
+        new io.opentracing.tag.StringTag("service-name").set(span, "new-service-name"); 
+        
         
         //Do some thing here ...
         Thread.sleep(1_000);
         
         // Close the span, the trace will automatically reported to the writer configured
-        span.close();   
+        span.finish();   
     }	
 	
 }
+``` 
+
+The method above is now instrumented. As you can see, the tracer is retrieved from a global registry, called `GlobalTracer`.
+
+The last thing you have to do is providing a configured tracer. This can be easily done by using the `TracerFactory` or manually
+in the bootstrap method (like the `main`).
+
+```java
+public class Application {
+
+    public static void main(String[] args) {
+	
+        // Init the tracer from the configuration file      
+        Tracer tracer = DDTracerFactory.createFromConfigurationFile();
+        io.opentracing.util.GlobalTracer.register(tracer);
+        
+        // Init the tracer from the API
+        Writer writer = new com.datadoghq.trace.writer.DDAgentWriter();
+        Sampler sampler = new com.datadoghq.trace.sampling.AllSampler();
+        Tracer tracer = new com.datadoghq.trace.DDTracer(writer, sampler);
+        io.opentracing.util.GlobalTracer.register(tracer);
+        
+        // ...
+    }
+}
 ```
 
-If you have a running Datadog Agent with the [APM feature enabled](http://docs.datadoghq.com/tracing/), you should
-see traces directly to your Datadog account.
+The factory looks for a `dd-trace.yaml` file in the classpath. 
+
+Finally, do not forget to add the corresponding dependencies to your project.
 
 
+```
+        <!-- Opentracing API -->
+        <dependency>
+            <groupId>io.opentracing</groupId>
+            <artifactId>opentracing-api</artifactId>
+            <version>${opentracing.version}</version>
+        </dependency>
+        
+        <!-- Datadog Tracer (only needed if you do not use the Datadog autotracing agent) -->
+        <dependency>
+            <groupId>com.datadoghq</groupId>
+            <artifactId>dd-trace</artifactId>
+            <version>${dd-trace-java.version}</version>
+        </dependency>
+        
+        compile group: 'io.opentracing', name: 'opentracing-api', version: '${opentracing.version}'
+        compile group: 'com.datadoghq', name: 'dd-trace', version: '${dd-trace-java.version}'
 
-### Other useful resources
+```
+
+
+### <a name="annotation"></a>Custom instrumentations using Annotation
+
+Datadog provides a third way to instrument your code: annotations.
+The following example is the same as above. Just add `@Trace` to the methods you want to instrument.
+
+```java
+class InstrumentedClass {
+
+    @Trace(operationName = "operation-name-1")
+    void method1() {
+
+        //Do some thing here ...
+        Thread.sleep(1_000);
+    }	
+    
+    @Trace(operationName = "operation-name-2")
+    void method2() {
+        
+        // You can get the current span and add tag as follow
+        Span current = io.opentracing.util.GlobalTracer.get().activeSpan();
+        new io.opentracing.tag.StringTag("service-name").set(current, "new-service-name");
+
+        //Do some thing here ...
+        Thread.sleep(1_000);
+    }	
+}
+```
+
+In order to use annotations, the only required dependency is that package.
+```
+        <!-- Datadog annotations -->
+        <dependency>
+            <groupId>com.datadoghq</groupId>
+            <artifactId>dd-trace-annotations</artifactId>
+            <version>${dd-trace-java.version}</version>
+        </dependency>
+                
+        compile group: 'com.datadoghq', name: 'dd-trace-annotations', version: '${dd-trace-java.version}'
+```
+The annotations are resolved at the runtime by the Datadog Java agent. If you want to use the annotations,
+so you must run the Datadog Java Agent.
+
+To run the agent, please refer to the Datadog Java agent documentation: [dd-java-agent](../dd-java-agent)
+
+
+## Other useful resources
 
 Before instrumenting your own project you might want to run the provided examples:
 
