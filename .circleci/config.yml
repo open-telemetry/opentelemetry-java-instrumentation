@@ -9,16 +9,16 @@ jobs:
       - checkout
 
       - restore_cache:
-          key: dd-trace-java-{{ checksum "build.gradle" }}-{{ checksum "dd-java-agent/build.gradle" }}-{{ checksum "dd-trace/build.gradle" }}
+          key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ checksum "dd-java-agent/dd-java-agent.gradle" }}-{{ checksum "dd-trace/dd-trace.gradle" }}
 
       - run:
           name: Run Tests
-          command: ./gradlew clean shadowJar check
+          command: ./gradlew clean shadowJar check --parallel
 
       - save_cache:
           paths:
             - ~/.gradle
-          key: dd-trace-java-{{ checksum "build.gradle" }}-{{ checksum "dd-java-agent/build.gradle" }}-{{ checksum "dd-trace/build.gradle" }}
+          key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ checksum "dd-java-agent/dd-java-agent.gradle" }}-{{ checksum "dd-trace/dd-trace.gradle" }}
 
       - store_test_results:
           path: dd-java-agent/build/test-results
