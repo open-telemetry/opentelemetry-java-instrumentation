@@ -41,19 +41,10 @@ public class DDTracerResolver extends TracerResolver {
 
 	@SuppressWarnings("static-access")
 	public static Tracer registerTracer() {
-
-		ServiceLoader<TracerResolver> RESOLVERS = ServiceLoader.load(TracerResolver.class);
-
-		Tracer tracer = null;
-		for (TracerResolver value : RESOLVERS) {
-			tracer = value.resolveTracer();
-			if (tracer != null) {
-				break;
-			}
-		}
+		Tracer tracer = TracerResolver.resolveTracer();
 
 		if (tracer == null) {
-			tracer = NoopTracerFactory.create();
+			return NoopTracerFactory.create();
 		}
 
 		GlobalTracer.register(tracer);

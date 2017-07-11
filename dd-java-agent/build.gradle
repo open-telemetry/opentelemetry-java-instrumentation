@@ -4,6 +4,16 @@ plugins {
 
 description = 'dd-java-agent'
 
+apply from: "${rootDir}/gradle/jacoco.gradle"
+jacocoTestReport.dependsOn project(':dd-java-agent-ittests').test
+whitelistedInstructionClasses += whitelistedBranchClasses += [
+        "com.datadoghq.trace.agent.integration.*",
+        'com.datadoghq.trace.agent.AnnotationsTracingAgent',
+        'com.datadoghq.trace.agent.AgentTracerConfig',
+        'com.datadoghq.trace.agent.TraceAnnotationsManager',
+        'com.datadoghq.trace.agent.InstrumentationChecker'
+]
+
 dependencies {
     compile project(':dd-trace')
     compile project(':dd-trace-annotations')

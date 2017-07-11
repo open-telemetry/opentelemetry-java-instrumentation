@@ -1,3 +1,5 @@
+apply from: "${rootDir}/gradle/jacoco.gradle"
+
 description = 'dd-trace-annotations'
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '3.8.1'
