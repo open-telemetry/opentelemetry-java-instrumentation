@@ -31,7 +31,7 @@ tasks.withType(Upload).matching { it.name != "install" }.all {
     }
 }
 
-def isSnapshot = !version.endsWith("-SNAPSHOT")
+def isSnapshot = version.endsWith("-SNAPSHOT")
 
 //if (!isSnapshot) {
 //    tasks.withType(Upload) {
@@ -100,13 +100,18 @@ artifacts {
     archives javaDocJar
 }
 
+// define in ~/.gradle/gradle.properties to override for testing
+def forceLocal = project.hasProperty('forceLocal') && forceLocal
+
 artifactoryPublish { task ->
     artifactory {
         publish {
-            contextUrl = 'http://localhost:8080/artifactory'
+            contextUrl = forceLocal ? 'http://localhost:8080/artifactory' : 'https://oss.jfrog.org'
             repository {
-                repoKey = !isSnapshot ? 'libs-snapshot-local' : 'libs-release-local'
-//                repoKey = isSnapshot ? 'oss-snapshot-local' : 'oss-release-local'
+                if(forceLocal)
+                    repoKey = isSnapshot ? 'libs-snapshot-local' : 'libs-release-local'
+                else
+                    repoKey = isSnapshot ? 'oss-snapshot-local' : 'oss-release-local'
                 gradle.taskGraph.whenReady { taskGraph ->
                     if (taskGraph.hasTask(task)) {
                         username = bintrayUser
