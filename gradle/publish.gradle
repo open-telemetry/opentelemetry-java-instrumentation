@@ -72,34 +72,6 @@ configurations {
     }
 }
 
-javadoc {
-    source = sourceSets.main.allJava
-    classpath = configurations.compileClasspath
-
-    options {
-        setMemberLevel JavadocMemberLevel.PUBLIC
-        setAuthor true
-
-        links "https://docs.oracle.com/javase/8/docs/api/"
-    }
-}
-
-task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
-    classifier = 'sources'
-}
-
-task javaDocJar(type: Jar, dependsOn: javadoc) {
-    from javadoc.destinationDir
-    classifier = 'javadoc'
-}
-
-artifacts {
-    archives jar
-    archives sourceJar
-    archives javaDocJar
-}
-
 // define in ~/.gradle/gradle.properties to override for testing
 def forceLocal = project.hasProperty('forceLocal') && forceLocal
 
