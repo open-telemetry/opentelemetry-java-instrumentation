@@ -1,4 +1,5 @@
 rootProject.name = 'dd-trace-java'
+
 include ':dd-trace'
 include ':dd-java-agent'
 include ':dd-java-agent-ittests'
@@ -8,11 +9,11 @@ include ':dd-trace-examples:spring-boot-jdbc'
 include ':dd-trace-examples'
 include ':dd-trace-annotations'
 
-project(':dd-trace').projectDir = "$rootDir/dd-trace" as File
-project(':dd-java-agent').projectDir = "$rootDir/dd-java-agent" as File
-project(':dd-java-agent-ittests').projectDir = "$rootDir/dd-java-agent-ittests" as File
-project(':dd-trace-examples:async-tracing').projectDir = "$rootDir/dd-trace-examples/async-tracing" as File
-project(':dd-trace-examples:dropwizard-mongo-client').projectDir = "$rootDir/dd-trace-examples/dropwizard-mongo-client" as File
-project(':dd-trace-examples:spring-boot-jdbc').projectDir = "$rootDir/dd-trace-examples/spring-boot-jdbc" as File
-project(':dd-trace-examples').projectDir = "$rootDir/dd-trace-examples" as File
-project(':dd-trace-annotations').projectDir = "$rootDir/dd-trace-annotations" as File
+def setBuildFile(project) {
+    project.buildFileName = "${project.name}.gradle"
+    project.children.each {
+        setBuildFile(it)
+    }
+}
+
+setBuildFile(rootProject)
