@@ -1,3 +1,6 @@
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/jacoco.gradle"
+
 description = 'async-tracing'
 dependencies {
     compile project(':dd-trace')

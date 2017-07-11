@@ -1,28 +1,29 @@
 ## Developer instructions
 
 ### Testing a release locally
-Run nexus locally (assuming you have docker running locally):
+Run artifactory locally (assuming you have docker running locally):
 
 ```bash
-docker run -d -p 8081:8081 --name nexus sonatype/nexus
+docker run -p 8080:8080 mattgruter/artifactory
 ```
 
-Configure the `distributionManagement` section in the root `pom.xml` to point to the repo on localhost.
+Configure the `contextUrl` section in `publish.gradle` to point to `http://localhost:8080/artifactory`.
 
-Add/update your `~/.m2/settings.xml` with the following config block:
+Add/update your `~/.gradle/gradle.properties` with the following config block:
 
-```xml
-<settings>
-  <servers>
-    <server>
-      <id>nexus-local</id>
-      <username>admin</username>
-      <password>admin123</password>
-    </server>
-  </servers>
-</settings>
+```properties
+bintrayUser=admin
+bintrayApiKey=password
 ```
 
+Upload artifacts to the local artifactory:
+
+```bash
+./gradlew artifactoryPublish
+```
+
+
+## LEGACY BELOW PENDING UPDATE
 Perform the release process as described below.
 
 

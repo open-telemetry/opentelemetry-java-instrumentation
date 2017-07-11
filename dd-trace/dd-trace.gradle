@@ -5,6 +5,8 @@ plugins {
 
 description = 'dd-trace'
 
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/publish.gradle"
 apply from: "${rootDir}/gradle/jacoco.gradle"
 minimumBranchCoverage = 0.3
 minimumInstructionCoverage = 0.5

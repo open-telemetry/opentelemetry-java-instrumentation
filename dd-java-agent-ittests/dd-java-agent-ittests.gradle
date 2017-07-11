@@ -1,3 +1,5 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
 // Not adding jacoco here as it inexplicably breaks our tests.
 // apply from: "${rootDir}/gradle/jacoco.gradle"
 
