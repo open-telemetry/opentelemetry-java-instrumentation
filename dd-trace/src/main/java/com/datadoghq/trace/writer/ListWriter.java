@@ -1,38 +1,34 @@
 package com.datadoghq.trace.writer;
 
+import com.datadoghq.trace.DDBaseSpan;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.datadoghq.trace.DDBaseSpan;
-
-/**
- *	List writer used by tests mostly
- */
+/** List writer used by tests mostly */
 public class ListWriter implements Writer {
 
-	protected List<List<DDBaseSpan<?>>> list = new ArrayList<List<DDBaseSpan<?>>>();
-	
-	public List<List<DDBaseSpan<?>>> getList() {
-		return list;
-	}
-	
-	public List<DDBaseSpan<?>> firstTrace() {
-		return list.get(0);
-	}
+  protected List<List<DDBaseSpan<?>>> list = new ArrayList<List<DDBaseSpan<?>>>();
 
-	@Override
-	public void write(List<DDBaseSpan<?>> trace) {
-		list.add(trace);
-	}
+  public List<List<DDBaseSpan<?>>> getList() {
+    return list;
+  }
 
-	@Override
-	public void start() {
-		list.clear();
-	}
+  public List<DDBaseSpan<?>> firstTrace() {
+    return list.get(0);
+  }
 
-	@Override
-	public void close() {
-		list.clear();
-	}
+  @Override
+  public void write(List<DDBaseSpan<?>> trace) {
+    list.add(trace);
+  }
 
+  @Override
+  public void start() {
+    list.clear();
+  }
+
+  @Override
+  public void close() {
+    list.clear();
+  }
 }

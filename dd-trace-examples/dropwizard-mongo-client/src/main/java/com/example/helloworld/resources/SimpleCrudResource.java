@@ -8,127 +8,120 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import io.opentracing.tag.StringTag;
 import io.opentracing.util.GlobalTracer;
-import org.bson.Document;
-
+import java.util.ArrayList;
+import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
-import java.util.List;
+import org.bson.Document;
 
 @Path("/demo")
 @Produces(MediaType.APPLICATION_JSON)
 public class SimpleCrudResource {
 
-	private final MongoClient client;
-	private final MongoDatabase db;
-	private static final String HOSTNAME = "localhost";
-	private static final String DATABASE = "demo";
-	private static final java.lang.String COLLECTION = "books";
+  private final MongoClient client;
+  private final MongoDatabase db;
+  private static final String HOSTNAME = "localhost";
+  private static final String DATABASE = "demo";
+  private static final java.lang.String COLLECTION = "books";
 
-	public SimpleCrudResource() {
+  public SimpleCrudResource() {
 
-		// Init the client
-		client = new MongoClient(HOSTNAME);
+    // Init the client
+    client = new MongoClient(HOSTNAME);
 
+    // For this example, start from a fresh DB
+    try {
+      client.dropDatabase(DATABASE);
+    } catch (Exception e) {
+      // do nothing here
+    }
 
-		// For this example, start from a fresh DB
-		try {
-			client.dropDatabase(DATABASE);
-		} catch (Exception e) {
-			// do nothing here
-		}
+    // Init the connection to the collection
+    db = client.getDatabase(DATABASE);
+    db.createCollection(COLLECTION);
+  }
 
-		// Init the connection to the collection
-		db = client.getDatabase(DATABASE);
-		db.createCollection(COLLECTION);
-	}
+  /**
+   * Add a book to the DB
+   *
+   * @return The status of the save
+   * @throws InterruptedException
+   */
+  @GET
+  @Path("/add")
+  public String addBook(
+      @QueryParam("isbn") Optional<String> isbn,
+      @QueryParam("title") Optional<String> title,
+      @QueryParam("page") Optional<Integer> page)
+      throws InterruptedException {
 
-	/**
-	 * Add a book to the DB
-	 *
-	 * @return The status of the save
-	 * @throws InterruptedException
-	 */
-	@GET
-	@Path("/add")
-	public String addBook(
-			@QueryParam("isbn") Optional<String> isbn,
-			@QueryParam("title") Optional<String> title,
-			@QueryParam("page") Optional<Integer> page
-	) throws InterruptedException {
+    // The methodDB is traced (see below), this will be produced a new child span
+    beforeDB();
 
+    if (!isbn.isPresent()) {
+      throw new IllegalArgumentException("ISBN should not be null");
+    }
 
-		// The methodDB is traced (see below), this will be produced a new child span
-		beforeDB();
+    Book book = new Book(isbn.get(), title.or("Missing title"), page.or(0));
 
-		if (!isbn.isPresent()) {
-			throw new IllegalArgumentException("ISBN should not be null");
-		}
+    db.getCollection(COLLECTION).insertOne(book.toDocument());
+    return "Book saved!";
+  }
 
-		Book book = new Book(
-				isbn.get(),
-				title.or("Missing title"),
-				page.or(0));
+  /**
+   * List all books present in the DB
+   *
+   * @return list of Books
+   * @throws InterruptedException
+   */
+  @GET
+  public List<Book> getBooks() throws InterruptedException {
 
-		db.getCollection(COLLECTION).insertOne(book.toDocument());
-		return "Book saved!";
-	}
+    // The methodDB is traced (see below), this will be produced a new childre span
+    beforeDB();
 
-	/**
-	 * List all books present in the DB
-	 *
-	 * @return list of Books
-	 * @throws InterruptedException
-	 */
-	@GET
-	public List<Book> getBooks() throws InterruptedException {
+    List<Book> books = new ArrayList<>();
+    try (MongoCursor<Document> cursor = db.getCollection(COLLECTION).find().iterator(); ) {
+      while (cursor.hasNext()) {
+        books.add(new Book(cursor.next()));
+      }
+    }
 
-		// The methodDB is traced (see below), this will be produced a new childre span
-		beforeDB();
+    // The methodDB is traced (see below), this will be produced a new child span
+    beforeDB();
 
-		List<Book> books = new ArrayList<>();
-		try (MongoCursor<Document> cursor = db.getCollection(COLLECTION).find().iterator();) {
-			while (cursor.hasNext()) {
-				books.add(new Book(cursor.next()));
-			}
-		}
+    return books;
+  }
 
-		// The methodDB is traced (see below), this will be produced a new child span
-		beforeDB();
+  /**
+   * The beforeDB is traced using the annotation @trace with a custom operationName and a custom
+   * tag.
+   *
+   * @throws InterruptedException
+   */
+  @Trace(operationName = "Before DB")
+  public void beforeDB() throws InterruptedException {
+    new StringTag("mytag").set(GlobalTracer.get().activeSpan(), "myvalue");
+    Thread.sleep(333);
+  }
 
-		return books;
-	}
+  /**
+   * The beforeDB is traced using the annotation @trace with a custom operationName and a custom
+   * tag.
+   *
+   * @throws InterruptedException
+   */
+  @Trace(operationName = "After DB")
+  public void afterDB() throws InterruptedException {
+    new StringTag("mytag").set(GlobalTracer.get().activeSpan(), "myvalue");
+    Thread.sleep(111);
+  }
 
-	/**
-	 * The beforeDB is traced using the annotation @trace with a custom operationName and a custom tag.
-	 *
-	 * @throws InterruptedException
-	 */
-	@Trace(operationName = "Before DB")
-	public void beforeDB() throws InterruptedException {
-		new StringTag("mytag").set(GlobalTracer.get().activeSpan(), "myvalue");
-		Thread.sleep(333);
-	}
-
-	/**
-	 * The beforeDB is traced using the annotation @trace with a custom operationName and a custom tag.
-	 *
-	 * @throws InterruptedException
-	 */
-	@Trace(operationName = "After DB")
-	public void afterDB() throws InterruptedException {
-		new StringTag("mytag").set(GlobalTracer.get().activeSpan(), "myvalue");
-		Thread.sleep(111);
-	}
-
-	/**
-	 * Flush resources
-	 */
-	public void close() {
-		client.close();
-	}
+  /** Flush resources */
+  public void close() {
+    client.close();
+  }
 }
-

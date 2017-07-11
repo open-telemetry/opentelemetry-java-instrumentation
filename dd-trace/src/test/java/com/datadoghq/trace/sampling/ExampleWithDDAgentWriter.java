@@ -7,47 +7,38 @@ import io.opentracing.Span;
 
 public class ExampleWithDDAgentWriter {
 
-	public static void main(String[] args) throws Exception {
+  public static void main(String[] args) throws Exception {
 
-		// Instantiate the DDWriter
-		// By default, traces are written to localhost:8126 (the ddagent)
-		Writer writer = new DDAgentWriter();
+    // Instantiate the DDWriter
+    // By default, traces are written to localhost:8126 (the ddagent)
+    Writer writer = new DDAgentWriter();
 
-		// Instantiate the proper Sampler
-		// - RateSampler if you want to keep `ratio` traces
-		// - AllSampler to keep all traces
-		Sampler sampler = new AllSampler();
+    // Instantiate the proper Sampler
+    // - RateSampler if you want to keep `ratio` traces
+    // - AllSampler to keep all traces
+    Sampler sampler = new AllSampler();
 
+    // Create the tracer
+    DDTracer tracer = new DDTracer(writer, sampler);
 
-		// Create the tracer
-		DDTracer tracer = new DDTracer(writer, sampler);
+    Span parent =
+        tracer.buildSpan("hello-world").withServiceName("service-name").withSpanType("web").start();
 
+    Thread.sleep(100);
 
-		Span parent = tracer
-				.buildSpan("hello-world")
-				.withServiceName("service-name")
-				.withSpanType("web")
-				.start();
+    parent.setBaggageItem("a-baggage", "value");
 
-		Thread.sleep(100);
+    Span child =
+        tracer.buildSpan("hello-world").asChildOf(parent).withResourceName("resource-name").start();
 
-		parent.setBaggageItem("a-baggage", "value");
+    Thread.sleep(100);
 
-		Span child = tracer
-				.buildSpan("hello-world")
-				.asChildOf(parent)
-				.withResourceName("resource-name")
-				.start();
+    child.finish();
 
-		Thread.sleep(100);
+    Thread.sleep(100);
 
-		child.finish();
+    parent.finish();
 
-		Thread.sleep(100);
-
-		parent.finish();
-
-		writer.close();
-
-	}
+    writer.close();
+  }
 }
