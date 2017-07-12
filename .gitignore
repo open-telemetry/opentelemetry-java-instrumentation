@@ -6,7 +6,7 @@ target
 #########
 !/gradle/wrapper/*
 /.gradle
-*/build/
+**/build/
 dd-trace-examples/**/build/
 
 # Eclipse #

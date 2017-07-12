@@ -6,6 +6,4 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
 @Configuration
 @EnableAutoConfiguration
-public class ApplicationConfig extends WebMvcConfigurerAdapter {
-
-}
+public class ApplicationConfig extends WebMvcConfigurerAdapter {}

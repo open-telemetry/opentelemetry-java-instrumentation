@@ -1,38 +1,30 @@
 import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.writer.LoggingWriter;
-
 import io.opentracing.Span;
 
 public class ExampleWithLoggingWriter {
 
-    public static void main(String[] args) throws Exception {
+  public static void main(String[] args) throws Exception {
 
-        DDTracer tracer = new DDTracer(new LoggingWriter(), new AllSampler());
+    DDTracer tracer = new DDTracer(new LoggingWriter(), new AllSampler());
 
-        Span parent = tracer
-                .buildSpan("hello-world")
-                .withServiceName("service-name")
-                .withSpanType("web")
-                .start();
+    Span parent =
+        tracer.buildSpan("hello-world").withServiceName("service-name").withSpanType("web").start();
 
-        parent.setBaggageItem("a-baggage", "value");
+    parent.setBaggageItem("a-baggage", "value");
 
-        Thread.sleep(100);
+    Thread.sleep(100);
 
-        Span child = tracer
-                .buildSpan("hello-world")
-                .asChildOf(parent)
-                .withResourceName("resource-name")
-                .start();
+    Span child =
+        tracer.buildSpan("hello-world").asChildOf(parent).withResourceName("resource-name").start();
 
-        Thread.sleep(100);
+    Thread.sleep(100);
 
-        child.finish();
+    child.finish();
 
-        Thread.sleep(100);
+    Thread.sleep(100);
 
-        parent.finish();
-
-    }
+    parent.finish();
+  }
 }

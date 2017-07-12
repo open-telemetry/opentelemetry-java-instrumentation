@@ -7,24 +7,23 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
 public class HelloWorldApplication extends Application<Configuration> {
-	public static void main(String[] args) throws Exception {
-		new HelloWorldApplication().run(args);
-	}
+  public static void main(String[] args) throws Exception {
+    new HelloWorldApplication().run(args);
+  }
 
-	@Override
-	public String getName() {
-		return "hello-world";
-	}
+  @Override
+  public String getName() {
+    return "hello-world";
+  }
 
-	@Override
-	public void initialize(Bootstrap<Configuration> bootstrap) {
-		// nothing to do yet
-	}
+  @Override
+  public void initialize(Bootstrap<Configuration> bootstrap) {
+    // nothing to do yet
+  }
 
-	@Override
-	public void run(Configuration configuration, Environment environment) {
+  @Override
+  public void run(Configuration configuration, Environment environment) {
 
-		environment.jersey().register(new SimpleCrudResource());
-	}
-
+    environment.jersey().register(new SimpleCrudResource());
+  }
 }
