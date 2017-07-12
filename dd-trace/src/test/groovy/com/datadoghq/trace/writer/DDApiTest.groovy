@@ -13,7 +13,7 @@ import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 import static ratpack.http.MediaType.APPLICATION_JSON
 
 class DDApiTest extends Specification {
-    static def mapper = new ObjectMapper()
+    static mapper = new ObjectMapper()
 
     def "sending an empty list of traces returns no errors"() {
         setup:
@@ -74,7 +74,7 @@ class DDApiTest extends Specification {
         client.sendTraces(traces)
         requestContentType.get().type == APPLICATION_JSON
         requestHeaders.get().get("Datadog-Meta-Lang") == "java"
-        requestHeaders.get().get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown");
+        requestHeaders.get().get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown")
         requestHeaders.get().get("Datadog-Meta-Tracer-Version") == "unknown"
         convert(requestBody.get()) == expectedRequestBody
 

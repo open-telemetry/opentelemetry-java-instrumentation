@@ -1,7 +1,7 @@
 package com.datadoghq.trace
 
 class SpanFactory {
-    static def newSpanOf(long timestampMicro) {
+    static newSpanOf(long timestampMicro) {
         def context = new DDSpanContext(
                 1L,
                 1L,
@@ -14,7 +14,7 @@ class SpanFactory {
                 "fakeType",
                 Collections.emptyMap(),
                 null,
-                null);
+                null)
         return new DDSpan(timestampMicro, context)
     }
 }
