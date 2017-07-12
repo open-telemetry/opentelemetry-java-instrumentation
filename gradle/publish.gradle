@@ -1,0 +1,128 @@
+/*
+ * Copyright 2015 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Source: https://github.com/ratpack/ratpack/blob/master/gradle/publish.gradle
+
+apply plugin: 'maven'
+apply plugin: "com.jfrog.artifactory"
+apply plugin: "signing"
+apply from: "${rootDir}/gradle/pom.gradle"
+
+afterEvaluate {
+    assert description: "Project $project.path is published, must have a description"
+}
+
+tasks.withType(Upload).matching { it.name != "install" }.all {
+    rootProject.subprojects {
+        mustRunAfter tasks.matching { it instanceof VerificationTask }
+    }
+}
+
+def isSnapshot = version.endsWith("-SNAPSHOT")
+
+//if (!isSnapshot) {
+//    tasks.withType(Upload) {
+//        repositories.matching { it.name == "mavenInstaller" }.all {
+//            beforeDeployment { deployment ->
+//                signing.signPom(deployment)
+//            }
+//        }
+//    }
+//}
+//
+//signing {
+//    if (!isSnapshot) {
+//        required = true
+//        sign configurations.archives
+//    }
+//}
+//
+//configurations.signatures.artifacts.all {
+//    extension = toSignArtifact.extension + "." + extension
+//}
+
+configurations {
+    configurations {
+        all {
+            incoming.afterResolve {
+                dependencies.withType(ModuleDependency) { dep ->
+                    excludeRules.each {
+                        if ([it.group, it.module].any { it == null }) {
+                            throw new InvalidUserDataException(
+                                    "Partial exclude for dependency '$dep.group:$dep.name:$dep.version' of $project: [group: $it.group, module: $it.module]\n\nExcludes must specify both group and module and neither can be '*'."
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+javadoc {
+    source = sourceSets.main.allJava
+    classpath = configurations.compileClasspath
+
+    options {
+        setMemberLevel JavadocMemberLevel.PUBLIC
+        setAuthor true
+
+        links "https://docs.oracle.com/javase/8/docs/api/"
+    }
+}
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+    classifier = 'sources'
+}
+
+task javaDocJar(type: Jar, dependsOn: javadoc) {
+    from javadoc.destinationDir
+    classifier = 'javadoc'
+}
+
+artifacts {
+    archives jar
+    archives sourceJar
+    archives javaDocJar
+}
+
+// define in ~/.gradle/gradle.properties to override for testing
+def forceLocal = project.hasProperty('forceLocal') && forceLocal
+
+artifactoryPublish { task ->
+    artifactory {
+        publish {
+            contextUrl = forceLocal ? 'http://localhost:8080/artifactory' : 'https://oss.jfrog.org'
+            repository {
+                if(forceLocal)
+                    repoKey = isSnapshot ? 'libs-snapshot-local' : 'libs-release-local'
+                else
+                    repoKey = isSnapshot ? 'oss-snapshot-local' : 'oss-release-local'
+                gradle.taskGraph.whenReady { taskGraph ->
+                    if (taskGraph.hasTask(task)) {
+                        username = bintrayUser
+                        password = bintrayApiKey
+                    }
+                }
+            }
+            defaults {
+                publishConfigs('archives')
+                publishIvy = false
+            }
+        }
+    }
+}

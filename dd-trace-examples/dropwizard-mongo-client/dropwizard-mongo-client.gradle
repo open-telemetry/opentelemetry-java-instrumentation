@@ -2,6 +2,9 @@ plugins {
     id "com.github.johnrengelman.shadow" version "2.0.1"
 }
 
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/jacoco.gradle"
+
 description = 'dropwizard-mongo-client'
 
 dependencies {

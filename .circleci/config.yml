@@ -9,7 +9,7 @@ jobs:
       - checkout
 
       - restore_cache:
-          key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ checksum "dd-java-agent/dd-java-agent.gradle" }}-{{ checksum "dd-trace/dd-trace.gradle" }}
+          key: dd-trace-java
 
       - run:
           name: Run Tests
@@ -18,7 +18,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.gradle
-          key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ checksum "dd-java-agent/dd-java-agent.gradle" }}-{{ checksum "dd-trace/dd-trace.gradle" }}
+          key: dd-trace-java
 
       - store_test_results:
           path: dd-java-agent/build/test-results
@@ -38,3 +38,10 @@ jobs:
           path: dd-java-agent/build/libs
       - store_artifacts:
           path: dd-trace/build/libs
+
+      - deploy:
+          name: Publish master to Artifactory
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              ./gradlew -PbintrayUser=${BINTRAY_USER} -PbintrayApiKey=${BINTRAY_API_KEY} artifactoryPublish
+            fi

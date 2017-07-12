@@ -1,3 +1,6 @@
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/jacoco.gradle"
+
 description = 'spring-boot-jdbc'
 dependencies {
     compile group: 'com.h2database', name: 'h2', version: '1.4.196'
