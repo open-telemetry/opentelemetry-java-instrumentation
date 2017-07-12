@@ -25,6 +25,7 @@ def checkstyleConfigDir = new File(buildscript.sourceFile.parentFile, 'enforceme
 checkstyle {
     configFile = new File(checkstyleConfigDir, "checkstyle.xml")
     configProperties.checkstyleConfigDir = checkstyleConfigDir
+    maxWarnings = 500
 }
 
 plugins.withType(GroovyBasePlugin) {
