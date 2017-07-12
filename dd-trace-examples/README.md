@@ -1,7 +1,7 @@
 ## Datadog Java Tracer examples
 
 The goal of this repository is to offer you some examples about how to instrument your code
-using the Opentracing API and the DD Tracer.
+using the OpenTracing API and the DD Tracer.
 
 ![](https://datadog-live.imgix.net/img/datadog_logo_share_tt.png)
 

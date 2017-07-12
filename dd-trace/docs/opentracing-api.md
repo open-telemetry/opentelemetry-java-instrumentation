@@ -1,10 +1,10 @@
-# Opentracing API
+# OpenTracing API
 
 
 The Opentraction group offers an API to instrument your code. 
 This document is a kind of a "Quick start for the" official specifications: https://github.com/opentracing/specification
 
-There are several concepts expose by the Opentracing API:
+There are several concepts expose by the OpenTracing API:
 
 * The core API used for instrumenting the code
 * The tracer implementations, in charge of generating physically the traces. For instance the Datadog Java Tracer generates
@@ -12,7 +12,7 @@ traces that can be consumed by the Datadog agent.
 * The Asynchronous API to help developers managing their spans and traces in a concurrency context.
 
  
-## Opentracing Core API
+## OpenTracing Core API
 
 Official documentation link: [Opentracting Tracer specification](https://github.com/opentracing/specification/blob/master/specification.md#tracer)
 
@@ -34,7 +34,7 @@ to send the traces to a logger or directly to a running Datadog agent.
     Tracer tracer = new DDTracer();
 ```
 
-Once a tracer is instantiated, you can use it to create and manage span. Opentracing defines a SpanBuilder accessible through
+Once a tracer is instantiated, you can use it to create and manage span. OpenTracing defines a SpanBuilder accessible through
 the method `buildSpan(String operationName)` to serve this purpose.
 
 
@@ -77,7 +77,7 @@ You can manipulate them at any time and add extra information using the tags.
 Tags are local to the span. So, no tags will be inherit from the parent. In order to propagate meta accross all spans of a
 trace, use the `baggageItems` (see right after).
 
-Opentracing Tags are standardized meta and allow developers to add more value to the span. 
+OpenTracing Tags are standardized meta and allow developers to add more value to the span. 
 
 ```java
     // Create a span, but do not promoting it as the active span 
@@ -93,7 +93,7 @@ Opentracing Tags are standardized meta and allow developers to add more value to
     Tags.HTTP_STATUS.setTag(valuableSpan, 200);
 ```
 
-All standardized tags can be consulted there: [Opentracing Semantic specification](https://github.com/opentracing/specification/blob/master/semantic_conventions.md)
+All standardized tags can be consulted there: [OpenTracing Semantic specification](https://github.com/opentracing/specification/blob/master/semantic_conventions.md)
 
 So, tags are local to the span. If you want set for meta for a trace, you have to use `baggabeItems` instead.
 Baggage are very similar to the tags, but they have a powerful capabilities:
@@ -106,5 +106,5 @@ Baggage are very similar to the tags, but they have a powerful capabilities:
 ```
 
 
-## Opentracing Asynchronous API
+## OpenTracing Asynchronous API
 see WIP: https://github.com/opentracing/specification/issues/23
