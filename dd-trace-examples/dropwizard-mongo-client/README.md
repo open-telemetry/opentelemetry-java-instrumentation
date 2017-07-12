@@ -31,9 +31,13 @@ First, get the latest version of the dd-java-agent:
 curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar
 ```
 
-Then, add the agent to the JVM. That can be done by providing the following argument:
-`java -javaagent:/path/to/dd-java-agent-{version}.jar ...`.
 
+Then, build the app add the agent to the JVM. That can be done as follow:
+```
+cd path/to/dd-trace-examples/dropwizard-mongo-client
+gradle clean shadowJar
+java -javaagent:/path/to/dd-java-agent-{version}.jar  -jar  build/libs/dropwizard-mongo-client-{version}-all.jar server
+```
 ### Generate traces
 
 
@@ -41,7 +45,9 @@ Then, add the agent to the JVM. That can be done by providing the following argu
 
 Once the application runs. Go to the following url:
 
+* [http://localhost:8080/demo/add?title=some-book-title&isbn=1234&page=42]()
 * [http://localhost:8080/demo/]()
+
 
 Then get back to Datadog and wait a bit to see a trace coming.
 
@@ -57,6 +63,8 @@ Cross process tracing is working thanks to headers injected on the client side t
 
 ![](./apm.png)
 
+To run the distributed example, first start the dropwizard app, the mongo db and finally run the `main` from `com.example.helloworld.client.TracedClient` 
+
 ### How did we instrument this project?
 
 #### Auto-instrumentation with the `dd-trace-agent`
@@ -66,6 +74,7 @@ The instrumentation is entirely done by the datadog agent which embed a set of r
 - The Java servlet filters
 - The Mongo client
 - The OkHTTP client
+- The `@Trace` annotation
 
 The Datadog agent embeds the [open tracing java agent](https://github.com/opentracing-contrib/java-agent).
 We strongly recommend you to refer to the [Datadog Agent documentation](../../dd-java-agent) if you want to dig deeper.
