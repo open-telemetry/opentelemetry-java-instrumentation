@@ -109,8 +109,8 @@ Check the dedicated project for the full documentation: [dd-java-agent](../dd-ja
 
 ### <a name="api"></a>Custom instrumentations using OpenTracing API
 
-If you want to add custom instrumenting to your code, you have to use the OpenTracing API.
-The official documentation can be found right here: [](https://github.com/opentracing/opentracing-java).
+Rather than referencing classes directly from `dd-trace` (other than registering `DDTracer`), we strongly suggest using the [OpenTracing API](https://github.com/opentracing/opentracing-java).
+[Additional documentation on the api](docs/opentracing-api.md) is also available. 
 
 Let's look at a simple example.
 
