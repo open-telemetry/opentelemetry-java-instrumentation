@@ -35,7 +35,7 @@ on the DB.
 4. Span4 is a child of Span2 and follows Span3. It represents a business/legacy operation.
 
 This is  a very simple example of how works [OpenTracing](http://opentracing.io/).
-Fore more information, see http://docs.datadoghq.com/tracing/terminology/ or http://opentracing.io/.
+For more information, see http://docs.datadoghq.com/tracing/terminology/ or http://opentracing.io/.
 
 
 ## How to instrument your application?
