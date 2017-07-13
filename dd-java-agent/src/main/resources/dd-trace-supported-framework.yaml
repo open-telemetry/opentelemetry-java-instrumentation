@@ -59,3 +59,11 @@ opentracing-mongo-driver:
     artifact: mongodb-driver-async
     supported_version: 3\..*
 
+org.elasticsearch.client:
+  - check:
+    artifact: transport
+    supported_version: 5\.4\..*
+
+
+
+
