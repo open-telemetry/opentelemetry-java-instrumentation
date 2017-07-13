@@ -22,4 +22,4 @@ gather all traces in your [Datadog](https://app.datadoghq.com) account.
 ### Help or questions? 
  
 For any questions or feedback, feel free to send us an email: tracehelp@datadoghq.com
-You can also ask for help in the datadoghq slack channel: #apm-java.  Signup at chat.datadoghq.com 
+You can also ask for help in the datadoghq slack channel: #apm-java.  Signup at [chat.datadoghq.com](http://chat.datadoghq.com) 
