@@ -6,8 +6,8 @@ The Datadog Tracer is an [OpenTracing](http://opentracing.io/) compatible tracer
 and report each operation and each trace directly to a Datadog APM platform.
 
 
-OpenTracing uses the concept of the **span**. A span is **timed operation** representing a bunch of work executed.
-Spans can **be linked together**. And a **trace** is a collection of spans, related to the same top action/operation.
+OpenTracing uses the concept of spans and traces. A **span** is timed operation representing a bunch of work executed.
+Spans can be linked together. A **trace** is a collection of spans, related to the same top action/operation.
 
 Let's see an example. 
 
@@ -35,7 +35,7 @@ on the DB.
 4. Span4 is a child of Span2 and followed Span3. It represents a business/legacy operation.
 
 This is  a very simple example of how works [OpenTracing](http://opentracing.io/).
-To dig deeper, read the full documentation: http://opentracing.io/
+Fore more information, see http://docs.datadoghq.com/tracing/terminology/ or http://opentracing.io/.
 
 
 ## How to instrument your application?
