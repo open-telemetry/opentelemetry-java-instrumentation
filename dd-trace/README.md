@@ -31,8 +31,8 @@ As just described, the tracer produces a trace composed of 4 spans, each represe
 1. Span1 is the time from doing the request to getting the response.
 2. Span2 is the Span1's first child, representing the amount of time to understand the query, and perform the query
 on the DB.
-3. Span3, a Span1' grandchild, represents the DB time used to retrieve the data
-4. Span4 is a child of Span2 and followed Span3. It represents a business/legacy operation.
+3. Span3 is Span1's grandchild, represents the DB time used to retrieve the data
+4. Span4 is a child of Span2 and follows Span3. It represents a business/legacy operation.
 
 This is  a very simple example of how works [OpenTracing](http://opentracing.io/).
 Fore more information, see http://docs.datadoghq.com/tracing/terminology/ or http://opentracing.io/.
