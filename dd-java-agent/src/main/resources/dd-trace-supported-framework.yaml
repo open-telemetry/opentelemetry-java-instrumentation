@@ -59,11 +59,12 @@ opentracing-mongo-driver:
     artifact: mongodb-driver-async
     supported_version: 3\..*
 
-org.elasticsearch.client:
-  - check:
-    artifact: transport
-    supported_version: 5\.4\..*
-
+# TODO, remove me, Issue NPE with the OT contrib v0.0.2, so disabling at this time
+#org.elasticsearch.client:
+#  - check:
+#    artifact: transport
+#    supported_version: none
+##    supported_version: 5\.4\..*
 
 
 
