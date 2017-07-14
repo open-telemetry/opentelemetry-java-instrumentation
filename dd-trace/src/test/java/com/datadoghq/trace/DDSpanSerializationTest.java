@@ -13,7 +13,6 @@ public class DDSpanSerializationTest {
 
   ObjectMapper serializer;
   DDSpan span;
-  DDActiveSpan activeSpan;
   Map<String, Object> expected = Maps.newHashMap();
 
   @Before
@@ -56,9 +55,6 @@ public class DDSpanSerializationTest {
 
     span = new DDSpan(100L, context);
     span.finish(133L);
-
-    activeSpan = new DDActiveSpan(null, 100L, context);
-    activeSpan.deactivate();
     serializer = new ObjectMapper();
   }
 

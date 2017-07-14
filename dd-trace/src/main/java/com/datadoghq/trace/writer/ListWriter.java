@@ -5,30 +5,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** List writer used by tests mostly */
-public class ListWriter implements Writer {
-
-  protected List<List<DDBaseSpan<?>>> list = new ArrayList<List<DDBaseSpan<?>>>();
+public class ListWriter extends ArrayList<List<DDBaseSpan<?>>> implements Writer {
 
   public List<List<DDBaseSpan<?>>> getList() {
-    return list;
+    return this;
   }
 
   public List<DDBaseSpan<?>> firstTrace() {
-    return list.get(0);
+    return get(0);
   }
 
   @Override
   public void write(List<DDBaseSpan<?>> trace) {
-    list.add(trace);
+    add(trace);
   }
 
   @Override
   public void start() {
-    list.clear();
+    clear();
   }
 
   @Override
   public void close() {
-    list.clear();
+    clear();
   }
 }
