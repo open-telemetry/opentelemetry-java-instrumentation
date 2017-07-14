@@ -1,7 +1,7 @@
-## Opentracing Javaagent
+## OpenTracing Javaagent
 ### Purpose
 
-The Opentracing Java Agent contribution is designed to inject code directly to the JVM.
+The OpenTracing Java Agent contribution is designed to inject code directly to the JVM.
 It provides to developers a way to instrument their code, without modifying it.
 The Java Agent is a compiled Jar and it is added to the JVM using the `-javaagent` option.
 
@@ -10,7 +10,7 @@ a set of rules for instrumenting the code through a collection of `otarules.btm`
 
 The contrib is basically able to serve 2 goals:
 - Instrumenting custom or legacy code without modifying it (extremely verbose and painful)
-- Inject the others Opentracing contribution in your app (Spring Boot, JDBC wrapper, Jax-Rs, etc. )
+- Inject the others OpenTracing contribution in your app (Spring Boot, JDBC wrapper, Jax-Rs, etc. )
 and configure them on-fly. 
 
 ### Run the demo
@@ -39,7 +39,7 @@ First add the contrib to the dependencies.
 You can find them here: https://github.com/opentracing-contrib
 
 ```xml
-    <!-- Opentracing dependencies -->
+    <!-- OpenTracing dependencies -->
     <dependency>
         <groupId>io.opentracing.contrib</groupId>
         <artifactId>opentracing-agent-rules-java-net</artifactId>
@@ -97,5 +97,3 @@ You have to add all rules necessary to instrument your code as you want.
 This is why (almost) nobody uses the agent in that way.
  
 Similarly to the previous example, the tracer is initialised through the yaml config file.
- 
- 

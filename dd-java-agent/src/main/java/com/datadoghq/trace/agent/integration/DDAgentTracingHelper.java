@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import org.jboss.byteman.rule.Rule;
 
 /**
- * This class provides helpfull stuff in order to easy patch object using Byteman rules
+ * This class provides helpful stuff in order to easy patch object using Byteman rules
  *
  * @param <T> The type of the object to patch
  */
