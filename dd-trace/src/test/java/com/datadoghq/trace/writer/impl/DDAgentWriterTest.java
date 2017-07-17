@@ -27,12 +27,12 @@ public class DDAgentWriterTest {
     //Setup
     DDTracer tracer = new DDTracer();
 
-    parent = tracer.buildSpan("hello-world").withServiceName("service-name").start();
+    parent = tracer.buildSpan("hello-world").withServiceName("service-name").startManual();
     parent.setBaggageItem("a-baggage", "value");
 
     Thread.sleep(100);
 
-    DDSpan child = tracer.buildSpan("hello-world").asChildOf(parent).start();
+    DDSpan child = tracer.buildSpan("hello-world").asChildOf(parent).startManual();
     Thread.sleep(100);
 
     child.finish();
