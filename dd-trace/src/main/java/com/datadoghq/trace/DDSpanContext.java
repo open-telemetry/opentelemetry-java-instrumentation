@@ -200,19 +200,20 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   @Override
   public String toString() {
-    return "Span [ "
-        + traceId
-        + " ] [ "
-        + spanId
-        + " | "
-        + parentId
-        + " ] [ "
-        + getServiceName()
-        + " | "
-        + getOperationName()
-        + " | "
-        + getResourceName()
-        + " ]";
+    return new StringBuilder()
+      .append("Span [ t_id=")
+      .append(traceId)
+      .append(", s_id=")
+      .append(spanId)
+      .append(", p_id=")
+      .append(parentId)
+      .append("] trace=")
+      .append(getServiceName())
+      .append("/")
+      .append(getOperationName())
+      .append("/")
+      .append(getResourceName())
+      .toString();
   }
 
   public void setOperationName(String operationName) {

@@ -304,6 +304,10 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
 
   @Override
   public String toString() {
-    return context.toString();
+    return new StringBuilder()
+      .append(context.toString())
+      .append(", duration_ns=")
+      .append(durationNano)
+      .toString();
   }
 }
