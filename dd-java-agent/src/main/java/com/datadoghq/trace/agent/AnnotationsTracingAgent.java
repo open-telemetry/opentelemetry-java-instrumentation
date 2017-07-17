@@ -17,36 +17,34 @@
 package com.datadoghq.trace.agent;
 
 import io.opentracing.contrib.agent.OpenTracingAgent;
-
 import java.lang.instrument.Instrumentation;
 
 /**
- * This class provides a wrapper around the ByteMan agent, to establish required system
- * properties and the manager class.
+ * This class provides a wrapper around the ByteMan agent, to establish required system properties
+ * and the manager class.
  */
 public class AnnotationsTracingAgent extends OpenTracingAgent {
 
-    public static void premain(String agentArgs, Instrumentation inst) throws Exception {
-        agentArgs = addManager(agentArgs);
+  public static void premain(String agentArgs, Instrumentation inst) throws Exception {
+    agentArgs = addManager(agentArgs);
 
-        org.jboss.byteman.agent.Main.premain(agentArgs, inst);
+    org.jboss.byteman.agent.Main.premain(agentArgs, inst);
+  }
+
+  public static void agentmain(String agentArgs, Instrumentation inst) throws Exception {
+    agentArgs = addManager(agentArgs);
+
+    org.jboss.byteman.agent.Main.agentmain(agentArgs, inst);
+  }
+
+  protected static String addManager(String agentArgs) {
+    if (agentArgs == null || agentArgs.trim().isEmpty()) {
+      agentArgs = "";
+    } else {
+      agentArgs += ",";
     }
+    agentArgs += "manager:" + TraceAnnotationsManager.class.getName();
 
-    public static void agentmain(String agentArgs, Instrumentation inst) throws Exception {
-        agentArgs = addManager(agentArgs);
-
-        org.jboss.byteman.agent.Main.agentmain(agentArgs, inst);
-    }
-
-    protected static String addManager(String agentArgs) {
-        if (agentArgs == null || agentArgs.trim().isEmpty()) {
-            agentArgs = "";
-        } else {
-            agentArgs += ",";
-        }
-        agentArgs += "manager:" + TraceAnnotationsManager.class.getName();
-
-        return agentArgs;
-    }
-
+    return agentArgs;
+  }
 }

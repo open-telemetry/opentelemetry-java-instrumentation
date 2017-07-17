@@ -9,7 +9,7 @@ Tracing instrumentation can be done in 2 ways:
 - Automatically over a set of [supported Web servers, frameworks or database drivers](#instrumented-frameworks)
 - By using the [`@Trace` annotation](#custom-instrumentations)
 
-:heavy_exclamation_mark: **Warning:** This library is currently in Alpha. This means that even though we rigorously tested instrumentations you may experience strange behaviors depending on your running environment. Be sure to test thoroughly on a staging environment before releasing to production. For any help please contact [tracehelp@datadoghq.com](mailto:tracehelp@datadoghq.com).
+:heavy_exclamation_mark: **Warning:** This library is currently in Alpha. This means that even though we rigorously tested instrumentations you may experience strange behaviors depending on your running environment. Be sure to test thoroughly on a staging environment before releasing to production. For any help please contact [tracehelp@datadoghq.com](mailto:tracehelp@datadoghq.com) or reach out in the datadoghq slack channel: #apm-java.
 
 ## Quick start
 
@@ -17,7 +17,7 @@ Tracing instrumentation can be done in 2 ways:
 
 The Java instrumentation library works in collaboration with a local agent that transmits the traces to Datadog. To install it with tracing please follow these steps:
 
-- Run the latest [Datadog Agent](https://app.datadoghq.com/account/settings#agent) (version 5.11.0 or above)
+- Run the latest [Datadog Agent](https://app.datadoghq.com/account/settings#agent) (version 5.11.0 or above, or [special instructions for Mac OS X](https://github.com/DataDog/datadog-trace-agent#run-on-osx))
 - [Enable APM in the Datadog Agent configuration file](https://app.datadoghq.com/apm/docs/tutorials/configuration) `/etc/dd-agent/datadog.conf`.
 
 ```
@@ -29,7 +29,7 @@ apm_enabled: true
 
 ### 2. Instrument your application
 
-To instrument your project or your servers you simply have to declare the provided `jar` file in your JVM arguments as a valid `-javaagent:`.
+To dynamically apply instrumentation you simply have to declare the provided `jar` file in your JVM arguments as a valid `-javaagent:`.
 
 - So first download the `jar` file from the main repository.
 
@@ -38,13 +38,14 @@ To instrument your project or your servers you simply have to declare the provid
 curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar
 ```
 
-- Then add the following JVM argument when launching your application (in IDE, using Maven run or simply in collaboration with the `>java -jar` command):
+- Then add the following JVM argument when launching your application (in your IDE, your maven or gradle application script, or your `java -jar` command):
 
 ```
 -javaagent:/path/to/the/dd-java-agent-{version}.jar
 ```
 
 That's it! If you did this properly the agent was executed at pre-main, had detected and instrumented the supported libraries and custom traces. You should then see traces on [Datadog APM](https://app.datadoghq.com/apm/search).
+For troubleshooting, look for the `trace-agent.log` along side the other [agent logs](https://help.datadoghq.com/hc/en-us/articles/203037159-Log-Locations).
 
 ## Configuration
 
@@ -80,21 +81,22 @@ sampler:
 # enableCustomAnnotationTracingOver: ["io","org","com"]
 
 # Disable some instrumentations
-# disabledInstrumentations: ["apache http", "mongo", "jetty", "tomcat", ...]
+# disabledInstrumentations: ["opentracing-apache-httpclient", "opentracing-mongo-driver", "opentracing-web-servlet-filter"]
 ```
 
 ## Instrumented frameworks
 
-When attached to an application the `dd-java-agent` automatically instruments the following set of frameworks & servers:
+When attached to an application the `dd-java-agent` dynamically applies the following opentracing-contrib instrumentation for the following set of frameworks & servers, though additional configuration may be required ([JDBC](#jdbc-instrumentation)):
 
 ### Frameworks
 
-| FWK        | Versions           | Comments  |
+| Framework        | Versions           | Comments  |
 | ------------- |:-------------:| ----- |
-| OkHTTP | 3.x | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers |
-| Apache HTTP Client | 4.3 + |HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers|
-| AWS SDK | 1.11.119+ | Trace all client calls to any AWS service |
-| Web Servlet Filters| Depending on server | See [Servers](#servers) section |
+| [OkHTTP](https://github.com/opentracing-contrib/java-okhttp) | 3.x | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers |
+| [Apache HTTP Client](https://github.com/opentracing-contrib/java-apache-httpclient) | 4.3 + | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers|
+| [AWS SDK](https://github.com/opentracing-contrib/java-aws-sdk) | 1.11.119+ | Trace all client calls to any AWS service |
+| [Web Servlet Filters](https://github.com/opentracing-contrib/java-web-servlet-filter) | Depending on server | See [Servers](#servers) section |
+| [JMS 2](https://github.com/opentracing-contrib/java-jms) | 2.x | Trace calls to message brokers, but distributed trace propagation not yet implemented |
 
 ### Servers
 
@@ -110,9 +112,9 @@ Modern web application frameworks such as Dropwizard or Spring Boot are automati
 | ------------- |:-------------:| ----- |
 | Spring JDBC| 4.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
 | Hibernate| 5.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
-| MongoDB | 3.x | Intercepts all the calls from the MongoDB client |
-| Cassandra | 3.2.x | Intercepts all the calls from the Cassandra client |
-| Elasticsearch | 5.4.x | Intercepts all the calls from the ES Transport client |
+| [MongoDB](https://github.com/opentracing-contrib/java-mongo-driver) | 3.x | Intercepts all the calls from the MongoDB client |
+| [Cassandra](https://github.com/opentracing-contrib/java-cassandra-driver) | 3.2.x | Intercepts all the calls from the Cassandra client |
+| [Elasticsearch](https://github.com/opentracing-contrib/java-elasticsearch-client) | 5.4.x | Intercepts all the calls from the ES Transport client |
 
 #### JDBC instrumentation
 
@@ -120,7 +122,7 @@ By enabling the JDBC instrumentation you'll  intercept all the client calls to t
 
 But unfortunately this can not be done entirely automatically today. To enable tracing please follow the instructions provided on the [java-jdbc opentracing contrib project](https://github.com/opentracing-contrib/java-jdbc#usage).
 
-We also provide an [example project with Spring Boot & MySQL](web application frameworks).
+We also provide an [example project](../dd-trace-examples/spring-boot-jdbc) with Spring Boot & H2.
 
 ### Disabling instrumentations
 
@@ -130,14 +132,14 @@ If for some reason you need to disable an instrumentation you should uncomment t
 ...
 
 # Disable a few instrumentations
-disabledInstrumentations: ["apache http", "mongo", "tomcat"]
+disabledInstrumentations: ["opentracing-apache-httpclient", "opentracing-mongo-driver", "opentracing-web-servlet-filter"]
 
-...
 ```
+The list of values that can be disabled are the top level keys found [here](src/main/resources/dd-trace-supported-framework.yaml)
 
 ### 
 
-## Custom instrumentations
+## Custom instrumentation
 
 ### The `@Trace` annotation
 
@@ -172,21 +174,25 @@ public void myMethod() throws InterruptedException{
 	<version>{version}</version>
 </dependency>
 ```
+or
+```gradle
+compile group: 'com.datadoghq', name: 'dd-trace-annotations', version: {version}
+```
 
-- Enable custom tracing by adding in the `dd-trace.yaml` config file the packages you would like to scan as follow `enableCustomAnnotationTracingOver: ["io","org","com"]`.
+- Enable custom tracing in the `dd-trace.yaml` config file by setting the packages you would like to scan as follows `enableCustomAnnotationTracingOver: ["io","org","com"]`.
 
 If you want to see custom tracing in action please run the [Dropwizard example](https://github.com/DataDog/dd-trace-java/blob/dev/dd-trace-examples/dropwizard-mongo-client/).
 
 ## Other useful resources
 
-Before instrumenting your own project you might want to run the provided examples:
+Before instrumenting your own project you might want to review the provided examples:
 
 - [Dropwizard/MongoDB & Cross process client calls](https://github.com/DataDog/dd-trace-java/blob/dev/dd-trace-examples/dropwizard-mongo-client/)
-- [Springboot & MySQL over JDBC](https://github.com/DataDog/dd-trace-java/tree/dev/dd-trace-examples/spring-boot-jdbc)
+- [Springboot & H2 over JDBC](https://github.com/DataDog/dd-trace-java/tree/dev/dd-trace-examples/spring-boot-jdbc)
 
 Other links that you might want to read:
 
-- Install on [Docker](https://app.datadoghq.com/apm/docs/tutorials/docker)
+- Improve your APM experience for apps running on docker by enabling the [Docker Agent](https://app.datadoghq.com/apm/docs/tutorials/docker)
 - Datadog's APM [Terminology](https://app.datadoghq.com/apm/docs/tutorials/terminology)
 - [FAQ](https://app.datadoghq.com/apm/docs/tutorials/faq)
 

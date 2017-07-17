@@ -4,8 +4,11 @@ plugins {
 
 description = 'dd-java-agent'
 
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/publish.gradle"
 apply from: "${rootDir}/gradle/jacoco.gradle"
-jacocoTestReport.dependsOn project(':dd-java-agent-ittests').test
+jacocoTestReport.dependsOn ':dd-java-agent-ittests:test'
+
 whitelistedInstructionClasses += whitelistedBranchClasses += [
         "com.datadoghq.trace.agent.integration.*",
         'com.datadoghq.trace.agent.AnnotationsTracingAgent',
@@ -23,30 +26,30 @@ dependencies {
     compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
 
     compile(group: 'io.opentracing.contrib', name: 'opentracing-web-servlet-filter', version: '0.0.9') {
-        exclude(module: 'jetty-servlet')
+        exclude(group: 'org.eclipse.jetty', module: 'jetty-servlet')
     }
     compile(group: 'io.opentracing.contrib', name: 'opentracing-mongo-driver', version: '0.0.2') {
-        exclude(module: 'mongodb-driver-async')
-        exclude(module: 'mongo-java-driver')
+        exclude(group: 'org.mongodb', module: 'mongodb-driver-async')
+        exclude(group: 'org.mongodb', module: 'mongo-java-driver')
     }
     compile group: 'io.opentracing.contrib', name: 'opentracing-jdbc', version: '0.0.2'
     compile(group: 'io.opentracing.contrib', name: 'opentracing-okhttp3', version: '0.0.5') {
-        exclude(module: 'okhttp')
+        exclude(group: 'com.squareup.okhttp3', module: 'okhttp')
     }
     compile(group: 'io.opentracing.contrib', name: 'opentracing-jms-2', version: '0.0.3') {
-        exclude(module: 'javax.jms-api')
+        exclude(group: 'javax.jms', module: 'javax.jms-api')
     }
     compile(group: 'io.opentracing.contrib', name: 'opentracing-aws-sdk', version: '0.0.2') {
-        exclude(module: 'aws-java-sdk')
+        exclude(group: 'com.amazonaws', module: 'aws-java-sdk')
     }
     compile(group: 'io.opentracing.contrib', name: 'opentracing-cassandra-driver', version: '0.0.2') {
-        exclude(module: 'cassandra-driver-core')
+        exclude(group: 'com.datastax.cassandra', module: 'cassandra-driver-core')
     }
     compile(group: 'io.opentracing.contrib', name: 'opentracing-elasticsearch-client', version: '0.0.2') {
-        exclude(module: 'transport')
+        exclude(group: 'org.elasticsearch.client', module: 'transport')
     }
     compile(group: 'io.opentracing.contrib', name: 'opentracing-apache-httpclient', version: '0.0.2') {
-        exclude(module: 'httpclient')
+        exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
 
     testCompile group: 'io.opentracing', name: 'opentracing-mock', version: '0.30.0'

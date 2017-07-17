@@ -1,53 +1,48 @@
 package com.datadoghq.trace.resolver;
 
-import java.util.List;
-import java.util.ServiceLoader;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.integration.DDSpanContextDecorator;
 import com.google.auto.service.AutoService;
-
 import io.opentracing.NoopTracerFactory;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.tracerresolver.TracerResolver;
 import io.opentracing.util.GlobalTracer;
-
+import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @AutoService(TracerResolver.class)
 public class DDTracerResolver extends TracerResolver {
 
-	private final static Logger logger = LoggerFactory.getLogger(DDTracerResolver.class);
+  private static final Logger logger = LoggerFactory.getLogger(DDTracerResolver.class);
 
-	@Override
-	protected Tracer resolve() {
-		logger.info("Creating the Datadog tracer");
+  @Override
+  protected Tracer resolve() {
+    logger.info("Creating the Datadog tracer");
 
-		//Find a resource file named dd-trace.yml
-		DDTracer tracer = null;
-		//Create tracer from resource files
-		tracer = DDTracerFactory.createFromConfigurationFile();
+    //Find a resource file named dd-trace.yml
+    DDTracer tracer = null;
+    //Create tracer from resource files
+    tracer = DDTracerFactory.createFromConfigurationFile();
 
-		//Create decorators from resource files
-		List<DDSpanContextDecorator> decorators = DDDecoratorsFactory.createFromResources();
-		for(DDSpanContextDecorator decorator : decorators){
-			tracer.addDecorator(decorator);
-		}
+    //Create decorators from resource files
+    List<DDSpanContextDecorator> decorators = DDDecoratorsFactory.createFromResources();
+    for (DDSpanContextDecorator decorator : decorators) {
+      tracer.addDecorator(decorator);
+    }
 
-		return tracer;
-	}
+    return tracer;
+  }
 
-	@SuppressWarnings("static-access")
-	public static Tracer registerTracer() {
-		Tracer tracer = TracerResolver.resolveTracer();
+  @SuppressWarnings("static-access")
+  public static Tracer registerTracer() {
+    Tracer tracer = TracerResolver.resolveTracer();
 
-		if (tracer == null) {
-			return NoopTracerFactory.create();
-		}
+    if (tracer == null) {
+      return NoopTracerFactory.create();
+    }
 
-		GlobalTracer.register(tracer);
-		return tracer;
-	}
+    GlobalTracer.register(tracer);
+    return tracer;
+  }
 }

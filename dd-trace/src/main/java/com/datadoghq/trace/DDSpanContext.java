@@ -1,242 +1,244 @@
 package com.datadoghq.trace;
 
-
 import com.datadoghq.trace.integration.DDSpanContextDecorator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
 import io.opentracing.tag.Tags;
-
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * SpanContext represents Span state that must propagate to descendant Spans and across process boundaries.
- * <p>
- * SpanContext is logically divided into two pieces: (1) the user-level "Baggage" that propagates across Span
- * boundaries and (2) any Datadog fields that are needed to identify or contextualize
+ * SpanContext represents Span state that must propagate to descendant Spans and across process
+ * boundaries.
+ *
+ * <p>SpanContext is logically divided into two pieces: (1) the user-level "Baggage" that propagates
+ * across Span boundaries and (2) any Datadog fields that are needed to identify or contextualize
  * the associated Span instance
  */
 public class DDSpanContext implements io.opentracing.SpanContext {
 
-	public static final String LANGUAGE_FIELDNAME = "lang";
-	// Opentracing attributes
-	private final long traceId;
-	private final long spanId;
-	private final long parentId;
-	private final String threadName = Thread.currentThread().getName();
-	private final long threadId = Thread.currentThread().getId();
-	private Map<String, String> baggageItems;
+  public static final String LANGUAGE_FIELDNAME = "lang";
+  // Opentracing attributes
+  private final long traceId;
+  private final long spanId;
+  private final long parentId;
+  private final String threadName = Thread.currentThread().getName();
+  private final long threadId = Thread.currentThread().getId();
+  private Map<String, String> baggageItems;
 
-	// DD attributes
-	/**
-	 * The service name is required, otherwise the span are dropped by the agent
-	 */
-	private String serviceName;
-	/**
-	 * The resource associated to the service (server_web, database, etc.)
-	 */
-	private String resourceName;
-	/**
-	 * True indicates that the span reports an error
-	 */
-	private boolean errorFlag;
+  // DD attributes
+  /** The service name is required, otherwise the span are dropped by the agent */
+  private String serviceName;
+  /** The resource associated to the service (server_web, database, etc.) */
+  private String resourceName;
+  /** True indicates that the span reports an error */
+  private boolean errorFlag;
 
-	/**
-	 * The type of the span. If null, the Datadog Agent will report as a custom
-	 */
-	private String spanType;
-	/**
-	 * The collection of all span related to this one
-	 */
-	private final List<DDBaseSpan<?>> trace;
-	/**
-	 * Each span have an operation name describing the current span
-	 */
-	private String operationName;
+  /** The type of the span. If null, the Datadog Agent will report as a custom */
+  private String spanType;
+  /** The collection of all span related to this one */
+  private final List<DDBaseSpan<?>> trace;
+  /** Each span have an operation name describing the current span */
+  private String operationName;
 
+  /** Tags are associated to the current span, they will not propagate to the children span */
+  private Map<String, Object> tags;
+  // Others attributes
+  /** For technical reasons, the ref to the original tracer */
+  private final DDTracer tracer;
 
-	/**
-	 * Tags are associated to the current span, they will not propagate to the children span
-	 */
-	private Map<String, Object> tags;
-	// Others attributes
-	/**
-	 * For technical reasons, the ref to the original tracer
-	 */
-	private final DDTracer tracer;
+  public DDSpanContext(
+      final long traceId,
+      final long spanId,
+      final long parentId,
+      final String serviceName,
+      final String operationName,
+      final String resourceName,
+      final Map<String, String> baggageItems,
+      final boolean errorFlag,
+      final String spanType,
+      final Map<String, Object> tags,
+      final List<DDBaseSpan<?>> trace,
+      final DDTracer tracer) {
 
-	public DDSpanContext(
-			long traceId,
-			long spanId,
-			long parentId,
-			String serviceName,
-			String operationName,
-			String resourceName,
-			Map<String, String> baggageItems,
-			boolean errorFlag,
-			String spanType,
-			Map<String, Object> tags,
-			List<DDBaseSpan<?>> trace,
-			DDTracer tracer) {
+    this.traceId = traceId;
+    this.spanId = spanId;
+    this.parentId = parentId;
 
-		this.traceId = traceId;
-		this.spanId = spanId;
-		this.parentId = parentId;
+    if (baggageItems == null) {
+      this.baggageItems = Collections.emptyMap();
+    } else {
+      this.baggageItems = baggageItems;
+    }
 
+    this.serviceName = serviceName;
+    this.operationName = operationName;
+    this.resourceName = resourceName;
+    this.errorFlag = errorFlag;
+    this.spanType = spanType;
 
-		if (baggageItems == null) {
-			this.baggageItems = Collections.emptyMap();
-		} else {
-			this.baggageItems = baggageItems;
-		}
+    this.tags = tags;
 
-		this.serviceName = serviceName;
-		this.operationName = operationName;
-		this.resourceName = resourceName;
-		this.errorFlag = errorFlag;
-		this.spanType = spanType;
+    if (trace == null) {
+      // TODO: figure out better concurrency model.
+      this.trace = new CopyOnWriteArrayList<>(); // must be thread safe!
+    } else {
+      this.trace = trace;
+    }
 
-		this.tags = tags;
+    this.tracer = tracer;
+  }
 
-		if (trace == null) {
-			this.trace = new ArrayList<DDBaseSpan<?>>();
-		} else {
-			this.trace = trace;
-		}
+  public long getTraceId() {
+    return this.traceId;
+  }
 
-		this.tracer = tracer;
-	}
+  public long getParentId() {
+    return this.parentId;
+  }
 
-	public long getTraceId() {
-		return this.traceId;
-	}
+  public long getSpanId() {
+    return this.spanId;
+  }
 
-	public long getParentId() {
-		return this.parentId;
-	}
+  public String getServiceName() {
+    return serviceName;
+  }
 
-	public long getSpanId() {
-		return this.spanId;
-	}
+  public String getResourceName() {
+    return this.resourceName == null || this.resourceName.isEmpty()
+        ? this.operationName
+        : this.resourceName;
+  }
 
-	public String getServiceName() {
-		return serviceName;
-	}
+  public boolean getErrorFlag() {
+    return errorFlag;
+  }
 
-	public String getResourceName() {
-		return this.resourceName == null || this.resourceName.isEmpty() ? this.operationName : this.resourceName;
-	}
+  public void setErrorFlag(final boolean errorFlag) {
+    this.errorFlag = errorFlag;
+  }
 
-	public boolean getErrorFlag() {
-		return errorFlag;
-	}
+  public String getSpanType() {
+    return spanType;
+  }
 
-	public void setErrorFlag(boolean errorFlag) {
-		this.errorFlag = errorFlag;
-	}
+  public void setBaggageItem(final String key, final String value) {
+    if (this.baggageItems.isEmpty()) {
+      this.baggageItems = new HashMap<String, String>();
+    }
+    this.baggageItems.put(key, value);
+  }
 
-	public String getSpanType() {
-		return spanType;
-	}
+  public String getBaggageItem(final String key) {
+    return this.baggageItems.get(key);
+  }
 
-	public void setBaggageItem(String key, String value) {
-		if (this.baggageItems.isEmpty()) {
-			this.baggageItems = new HashMap<String, String>();
-		}
-		this.baggageItems.put(key, value);
-	}
+  public Map<String, String> getBaggageItems() {
+    return baggageItems;
+  }
 
-	public String getBaggageItem(String key) {
-		return this.baggageItems.get(key);
-	}
+  /* (non-Javadoc)
+   * @see io.opentracing.SpanContext#baggageItems()
+   */
+  @Override
+  public Iterable<Map.Entry<String, String>> baggageItems() {
+    return this.baggageItems.entrySet();
+  }
 
-	public Map<String, String> getBaggageItems() {
-		return baggageItems;
-	}
+  @JsonIgnore
+  public List<DDBaseSpan<?>> getTrace() {
+    return this.trace;
+  }
 
-	/* (non-Javadoc)
-	 * @see io.opentracing.SpanContext#baggageItems()
-	 */
-	public Iterable<Map.Entry<String, String>> baggageItems() {
-		return this.baggageItems.entrySet();
-	}
+  @JsonIgnore
+  public DDTracer getTracer() {
+    return this.tracer;
+  }
 
-	@JsonIgnore
-	public List<DDBaseSpan<?>> getTrace() {
-		return this.trace;
-	}
+  /**
+   * Add a tag to the span. Tags are not propagated to the children
+   *
+   * @param tag the tag-name
+   * @param value the value of the value
+   */
+  public synchronized void setTag(final String tag, final Object value) {
+    if (tag.equals(DDTags.SERVICE_NAME)) {
+      setServiceName(value.toString());
+      return;
+    } else if (tag.equals(DDTags.RESOURCE_NAME)) {
+      setResourceName(value.toString());
+      return;
+    } else if (tag.equals(DDTags.SPAN_TYPE)) {
+      setSpanType(value.toString());
+      return;
+    }
 
-	@JsonIgnore
-	public DDTracer getTracer() {
-		return this.tracer;
-	}
+    if (this.tags.isEmpty()) {
+      this.tags = new HashMap<String, Object>();
+    }
+    this.tags.put(tag, value);
 
-	/**
-	 * Add a tag to the span. Tags are not propagated to the children
-	 *
-	 * @param tag   the tag-name
-	 * @param value the value of the value
-	 */
-	public synchronized void setTag(String tag, Object value) {
-		if (tag.equals(DDTags.SERVICE_NAME)) {
-			setServiceName(value.toString());
-			return;
-		} else if (tag.equals(DDTags.RESOURCE_NAME)) {
-			setResourceName(value.toString());
-			return;
-		} else if (tag.equals(DDTags.SPAN_TYPE)) {
-			setSpanType(value.toString());
-			return;
-		}
+    //Call decorators
+    final List<DDSpanContextDecorator> decorators = tracer.getSpanContextDecorators(tag);
+    if (decorators != null) {
+      for (final DDSpanContextDecorator decorator : decorators) {
+        decorator.afterSetTag(this, tag, value);
+      }
+    }
+    //Error management
+    if (Tags.ERROR.getKey().equals(tag) && Boolean.TRUE.equals(value)) {
+      this.errorFlag = true;
+    }
+  }
 
-		if (this.tags.isEmpty()) {
-			this.tags = new HashMap<String, Object>();
-		}
-		this.tags.put(tag, value);
+  public synchronized Map<String, Object> getTags() {
+    if (tags.isEmpty()) {
+      tags = Maps.newHashMapWithExpectedSize(2);
+    }
+    tags.put(DDTags.THREAD_NAME, threadName);
+    tags.put(DDTags.THREAD_ID, threadId);
+    return Collections.unmodifiableMap(tags);
+  }
 
-		//Call decorators
-		List<DDSpanContextDecorator> decorators = tracer.getSpanContextDecorators(tag);
-		if (decorators != null) {
-			for (DDSpanContextDecorator decorator : decorators) {
-				decorator.afterSetTag(this, tag, value);
-			}
-		}
-		//Error management
-		if (Tags.ERROR.getKey().equals(tag) && Boolean.TRUE.equals(value)) {
-			this.errorFlag = true;
-		}
-	}
+  @Override
+  public String toString() {
+    return new StringBuilder()
+        .append("Span [ t_id=")
+        .append(traceId)
+        .append(", s_id=")
+        .append(spanId)
+        .append(", p_id=")
+        .append(parentId)
+        .append("] trace=")
+        .append(getServiceName())
+        .append("/")
+        .append(getOperationName())
+        .append("/")
+        .append(getResourceName())
+        .toString();
+  }
 
-	public synchronized Map<String, Object> getTags() {
-		if(tags.isEmpty()) {
-			tags = Maps.newHashMapWithExpectedSize(2);
-		}
-		tags.put(DDTags.THREAD_NAME, threadName);
-		tags.put(DDTags.THREAD_ID, threadId);
-		return Collections.unmodifiableMap(tags);
-	}
+  public void setOperationName(final String operationName) {
+    this.operationName = operationName;
+  }
 
-	@Override
-	public String toString() {
-		return "Span [ " + traceId + " ] [ " + spanId + " | " + parentId + " ] [ " + getServiceName() + " | " + getOperationName() + " | " + getResourceName() + " ]";
-	}
+  public String getOperationName() {
+    return operationName;
+  }
 
-	public void setOperationName(String operationName) {
-		this.operationName = operationName;
-	}
+  public void setServiceName(final String serviceName) {
+    this.serviceName = serviceName;
+  }
 
-	public String getOperationName() {
-		return operationName;
-	}
+  public void setResourceName(final String resourceName) {
+    this.resourceName = resourceName;
+  }
 
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
-	}
-
-	public void setResourceName(String resourceName) {
-		this.resourceName = resourceName;
-	}
-
-	public void setSpanType(String spanType) {
-		this.spanType = spanType;
-	}
+  public void setSpanType(final String spanType) {
+    this.spanType = spanType;
+  }
 }

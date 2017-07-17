@@ -1,23 +1,21 @@
-allprojects {
-    apply plugin: 'maven'
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.18"
+    }
+}
 
+plugins {
+    id 'com.github.sherter.google-java-format' version '0.6'
+}
+
+allprojects {
     group = 'com.datadoghq'
     version = '0.1.2-SNAPSHOT'
 }
 
-subprojects {
-    apply plugin: 'java'
-    sourceCompatibility = 1.7
-    targetCompatibility = 1.7
-
-    task packageSources(type: Jar) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-    artifacts.archives packageSources
-    repositories {
-        mavenLocal()
-
-        maven { url "http://repo.maven.apache.org/maven2" }
-    }
+repositories {
+    jcenter()
 }

@@ -5,64 +5,63 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 public class DDSpanDecoratorConfig {
-	
-	private String type;
-	
-	private String matchingTag;
-	
-	private String matchingValue;
-	
-	private String setTag;
-	
-	private String setValue;
-	
-	public String getMatchingTag() {
-		return matchingTag;
-	}
 
-	public void setMatchingTag(String matchingTag) {
-		this.matchingTag = matchingTag;
-	}
+  private String type;
 
-	public String getMatchingValue() {
-		return matchingValue;
-	}
+  private String matchingTag;
 
-	public void setMatchingValue(String matchingValue) {
-		this.matchingValue = matchingValue;
-	}
+  private String matchingValue;
 
-	public String getSetTag() {
-		return setTag;
-	}
+  private String setTag;
 
-	public void setSetTag(String setTag) {
-		this.setTag = setTag;
-	}
+  private String setValue;
 
-	public String getSetValue() {
-		return setValue;
-	}
+  public String getMatchingTag() {
+    return matchingTag;
+  }
 
-	public void setSetValue(String setValue) {
-		this.setValue = setValue;
-	}
+  public void setMatchingTag(String matchingTag) {
+    this.matchingTag = matchingTag;
+  }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+  public String getMatchingValue() {
+    return matchingValue;
+  }
 
-	public String getType() {
-		return type;
-	}
+  public void setMatchingValue(String matchingValue) {
+    this.matchingValue = matchingValue;
+  }
 
-	@Override
-	public String toString() {
-		try {
-			return new ObjectMapper(new YAMLFactory()).writeValueAsString(this);
-		} catch (JsonProcessingException e) {
-			return null;
-		}
-	}
-	
+  public String getSetTag() {
+    return setTag;
+  }
+
+  public void setSetTag(String setTag) {
+    this.setTag = setTag;
+  }
+
+  public String getSetValue() {
+    return setValue;
+  }
+
+  public void setSetValue(String setValue) {
+    this.setValue = setValue;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  @Override
+  public String toString() {
+    try {
+      return new ObjectMapper(new YAMLFactory()).writeValueAsString(this);
+    } catch (JsonProcessingException e) {
+      return null;
+    }
+  }
 }
