@@ -31,28 +31,12 @@ tasks.withType(Upload).matching { it.name != "install" }.all {
     }
 }
 
-def isSnapshot = version.endsWith("-SNAPSHOT")
+def isCI = Boolean.parseBoolean("$System.env.CI")
 
-//if (!isSnapshot) {
-//    tasks.withType(Upload) {
-//        repositories.matching { it.name == "mavenInstaller" }.all {
-//            beforeDeployment { deployment ->
-//                signing.signPom(deployment)
-//            }
-//        }
-//    }
-//}
-//
-//signing {
-//    if (!isSnapshot) {
-//        required = true
-//        sign configurations.archives
-//    }
-//}
-//
-//configurations.signatures.artifacts.all {
-//    extension = toSignArtifact.extension + "." + extension
-//}
+signing {
+  required = isCI
+  sign configurations.archives
+}
 
 configurations {
     configurations {
@@ -72,6 +56,7 @@ configurations {
     }
 }
 
+def isSnapshot = version.endsWith("-SNAPSHOT")
 // define in ~/.gradle/gradle.properties to override for testing
 def forceLocal = project.hasProperty('forceLocal') && forceLocal
 
