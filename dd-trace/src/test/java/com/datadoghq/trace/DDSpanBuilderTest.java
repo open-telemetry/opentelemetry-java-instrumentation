@@ -141,7 +141,11 @@ public class DDSpanBuilderTest {
     final String expectedName = "fakeName";
 
     DDSpan span =
-        tracer.buildSpan(expectedName).withServiceName("foo").asChildOf(mockedContext).startManual();
+        tracer
+            .buildSpan(expectedName)
+            .withServiceName("foo")
+            .asChildOf(mockedContext)
+            .startManual();
 
     DDSpanContext actualContext = span.context();
 
@@ -219,7 +223,11 @@ public class DDSpanBuilderTest {
 
     for (int i = 1; i <= 10; i++) {
       spans.add(
-          tracer.buildSpan("fake_" + i).withServiceName("foo").asChildOf(spans.get(i - 1)).startManual());
+          tracer
+              .buildSpan("fake_" + i)
+              .withServiceName("foo")
+              .asChildOf(spans.get(i - 1))
+              .startManual());
     }
     spans.get(1).finish(tickEnd);
 
