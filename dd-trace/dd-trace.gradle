@@ -12,6 +12,7 @@ minimumBranchCoverage = 0.3
 minimumInstructionCoverage = 0.5
 whitelistedInstructionClasses += whitelistedBranchClasses += [
         "com.datadoghq.trace.integration.*",
+        'com.datadoghq.trace.writer.ListWriter',
         'com.datadoghq.trace.DDTags'
 ]
 

@@ -79,7 +79,7 @@ If child spans are unfinished when the parent attempts to finish, the span will 
 
 
 Now, you are able to create, start and stop very simple spans. 
-You can manipulate them at any time and add contextual information using tags.
+You can manipulate them at any time and add extra contextual information using the tags.
 
 ### Tags
 

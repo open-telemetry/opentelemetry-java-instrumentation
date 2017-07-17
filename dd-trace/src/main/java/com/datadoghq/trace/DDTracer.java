@@ -7,16 +7,18 @@ import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.Sampler;
 import com.datadoghq.trace.writer.LoggingWriter;
 import com.datadoghq.trace.writer.Writer;
+import io.opentracing.ActiveSpan;
+import io.opentracing.ActiveSpanSource;
 import io.opentracing.BaseSpan;
-import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
+import io.opentracing.util.ThreadLocalActiveSpanSource;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing integration. */
-public class DDTracer implements io.opentracing.Tracer {
+public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentracing.Tracer {
 
   public static final String JAVA_VERSION = System.getProperty("java.version", "unknown");
   public static final String CURRENT_VERSION;
@@ -93,7 +95,7 @@ public class DDTracer implements io.opentracing.Tracer {
   }
 
   public DDSpanBuilder buildSpan(String operationName) {
-    return new DDSpanBuilder(operationName);
+    return new DDSpanBuilder(operationName, this);
   }
 
   public <T> void inject(SpanContext spanContext, Format<T> format, T carrier) {
@@ -136,53 +138,9 @@ public class DDTracer implements io.opentracing.Tracer {
     writer.close();
   }
 
-  private final ThreadLocal<DDActiveSpan> currentActiveSpan = new ThreadLocal<DDActiveSpan>();
-
-  @Override
-  public DDActiveSpan activeSpan() {
-    return currentActiveSpan.get();
-  }
-
-  /**
-   * Set the newly created active span as the active one from the Tracer's perspective
-   *
-   * @param activeSpan
-   */
-  protected void makeActive(DDActiveSpan activeSpan) {
-    //We cannot make active a preably deactivated span
-    if (activeSpan != null && activeSpan.isDeactivated()) currentActiveSpan.set(null);
-    else currentActiveSpan.set(activeSpan);
-  }
-
-  /**
-   * Deactivate the current span (if active) and make the parent active (again)
-   *
-   * @param activeSpan
-   */
-  protected void deactivate(DDActiveSpan activeSpan) {
-    DDActiveSpan current = activeSpan();
-    if (current == activeSpan) {
-      //The parent becomes the active span
-      makeActive(activeSpan.getParent());
-    }
-  }
-
-  @Override
-  public DDActiveSpan makeActive(Span span) {
-    if (!(span instanceof DDSpan))
-      throw new IllegalArgumentException(
-          "Cannot transform a non DDSpan into a DDActiveSpan. Provided class: " + span.getClass());
-
-    //Wrap the provided manual span into an active one with the current parent
-    DDActiveSpan activeSpan = new DDActiveSpan(activeSpan(), (DDSpan) span);
-
-    makeActive(activeSpan);
-
-    return activeSpan;
-  }
-
   /** Spans are built using this builder */
   public class DDSpanBuilder implements SpanBuilder {
+    private final ActiveSpanSource spanSource;
 
     /** Each span must have an operationName according to the opentracing specification */
     private String operationName;
@@ -203,32 +161,20 @@ public class DDTracer implements io.opentracing.Tracer {
       return this;
     }
 
+    private DDSpan startSpan() {
+      return new DDSpan(this.timestamp, buildSpanContext());
+    }
+
     @Override
-    public DDActiveSpan startActive() {
-      //Set the active span as parent if ignoreActiveSpan==true
-      DDActiveSpan activeParent = null;
-      if (!ignoreActiveSpan) {
-        DDActiveSpan current = activeSpan();
-        if (current != null) {
-          activeParent = current;
-
-          //Ensure parent inheritance
-          asChildOf(activeParent);
-        }
-      }
-
-      //Create the active span
-      DDActiveSpan activeSpan = new DDActiveSpan(activeParent, this.timestamp, buildSpanContext());
+    public ActiveSpan startActive() {
+      ActiveSpan activeSpan = spanSource.makeActive(startSpan());
       logger.debug("{} - Starting a new active span.", activeSpan);
-
-      makeActive(activeSpan);
-
       return activeSpan;
     }
 
     @Override
     public DDSpan startManual() {
-      DDSpan span = new DDSpan(this.timestamp, buildSpanContext());
+      DDSpan span = startSpan();
       logger.debug("{} - Starting a new manuel span.", span);
       return span;
     }
@@ -240,12 +186,12 @@ public class DDTracer implements io.opentracing.Tracer {
     }
 
     @Override
-    public DDTracer.DDSpanBuilder withTag(String tag, Number number) {
+    public DDSpanBuilder withTag(String tag, Number number) {
       return withTag(tag, (Object) number);
     }
 
     @Override
-    public DDTracer.DDSpanBuilder withTag(String tag, String string) {
+    public DDSpanBuilder withTag(String tag, String string) {
       if (tag.equals(DDTags.SERVICE_NAME)) {
         return withServiceName(string);
       } else if (tag.equals(DDTags.RESOURCE_NAME)) {
@@ -258,36 +204,37 @@ public class DDTracer implements io.opentracing.Tracer {
     }
 
     @Override
-    public DDTracer.DDSpanBuilder withTag(String tag, boolean bool) {
+    public DDSpanBuilder withTag(String tag, boolean bool) {
       return withTag(tag, (Object) bool);
     }
 
-    public DDSpanBuilder(String operationName) {
+    public DDSpanBuilder(String operationName, ActiveSpanSource spanSource) {
       this.operationName = operationName;
+      this.spanSource = spanSource;
     }
 
     @Override
-    public DDTracer.DDSpanBuilder withStartTimestamp(long timestampMillis) {
+    public DDSpanBuilder withStartTimestamp(long timestampMillis) {
       this.timestamp = timestampMillis;
       return this;
     }
 
-    public DDTracer.DDSpanBuilder withServiceName(String serviceName) {
+    public DDSpanBuilder withServiceName(String serviceName) {
       this.serviceName = serviceName;
       return this;
     }
 
-    public DDTracer.DDSpanBuilder withResourceName(String resourceName) {
+    public DDSpanBuilder withResourceName(String resourceName) {
       this.resourceName = resourceName;
       return this;
     }
 
-    public DDTracer.DDSpanBuilder withErrorFlag() {
+    public DDSpanBuilder withErrorFlag() {
       this.errorFlag = true;
       return this;
     }
 
-    public DDTracer.DDSpanBuilder withSpanType(String spanType) {
+    public DDSpanBuilder withSpanType(String spanType) {
       this.spanType = spanType;
       return this;
     }
@@ -300,24 +247,24 @@ public class DDTracer implements io.opentracing.Tracer {
     }
 
     @Override
-    public DDTracer.DDSpanBuilder asChildOf(BaseSpan<?> span) {
+    public DDSpanBuilder asChildOf(BaseSpan<?> span) {
       return asChildOf(span == null ? null : span.context());
     }
 
     @Override
-    public DDTracer.DDSpanBuilder asChildOf(SpanContext spanContext) {
+    public DDSpanBuilder asChildOf(SpanContext spanContext) {
       this.parent = spanContext;
       return this;
     }
 
     @Override
-    public DDTracer.DDSpanBuilder addReference(String referenceType, SpanContext spanContext) {
+    public DDSpanBuilder addReference(String referenceType, SpanContext spanContext) {
       logger.debug("`addReference` method is not implemented. Doing nothing");
       return this;
     }
 
     // Private methods
-    private DDTracer.DDSpanBuilder withTag(String tag, Object value) {
+    private DDSpanBuilder withTag(String tag, Object value) {
       if (this.tags.isEmpty()) {
         this.tags = new HashMap<String, Object>();
       }
@@ -336,22 +283,38 @@ public class DDTracer implements io.opentracing.Tracer {
      * @return the context
      */
     private DDSpanContext buildSpanContext() {
-      long generatedId = generateNewId();
-      DDSpanContext context;
-      DDSpanContext p = this.parent != null ? (DDSpanContext) this.parent : null;
+      final long traceId;
+      final long spanId = generateNewId();
+      final long parentSpanId;
+      final Map<String, String> baggage;
+      final List<DDBaseSpan<?>> parentTrace;
 
-      String spanType = this.spanType;
-      if (spanType == null && this.parent != null) {
-        spanType = p.getSpanType();
+      DDSpanContext context;
+      SpanContext parentContext = this.parent;
+      if (parentContext == null && !ignoreActiveSpan) {
+        // use the ActiveSpan as parent unless overridden or ignored.
+        ActiveSpan activeSpan = activeSpan();
+        if (activeSpan != null) parentContext = activeSpan.context();
       }
 
-      String serviceName = this.serviceName;
+      if (parentContext instanceof DDSpanContext) {
+        DDSpanContext ddsc = (DDSpanContext) parentContext;
+        traceId = ddsc.getTraceId();
+        parentSpanId = ddsc.getSpanId();
+        baggage = ddsc.getBaggageItems();
+        parentTrace = ddsc.getTrace();
+
+        if (this.serviceName == null) this.serviceName = ddsc.getServiceName();
+        if (this.spanType == null) this.spanType = ddsc.getSpanType();
+      } else {
+        traceId = spanId;
+        parentSpanId = 0L;
+        baggage = null;
+        parentTrace = null;
+      }
+
       if (serviceName == null) {
-        if (p != null && p.getServiceName() != null) {
-          serviceName = p.getServiceName();
-        } else {
-          serviceName = defaultServiceName;
-        }
+        serviceName = defaultServiceName;
       }
 
       String operationName = this.operationName != null ? this.operationName : this.resourceName;
@@ -361,17 +324,17 @@ public class DDTracer implements io.opentracing.Tracer {
       // some attributes are inherited from the parent
       context =
           new DDSpanContext(
-              this.parent == null ? generatedId : p.getTraceId(),
-              generatedId,
-              this.parent == null ? 0L : p.getSpanId(),
+              traceId,
+              spanId,
+              parentSpanId,
               serviceName,
               operationName,
               this.resourceName,
-              this.parent == null ? null : p.getBaggageItems(),
+              baggage,
               errorFlag,
               spanType,
               this.tags,
-              this.parent == null ? null : p.getTrace(),
+              parentTrace,
               DDTracer.this);
 
       // Force the lang meta
