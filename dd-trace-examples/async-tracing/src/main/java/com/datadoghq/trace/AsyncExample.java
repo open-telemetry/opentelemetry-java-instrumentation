@@ -16,9 +16,7 @@ public class AsyncExample {
 
   public static Integer bar() throws Exception {
 
-    try (ActiveSpan __ = GlobalTracer.get()
-      .buildSpan("bar")
-      .startActive()) {
+    try (ActiveSpan __ = GlobalTracer.get().buildSpan("bar").startActive()) {
       System.out.println("bar");
       Thread.sleep(1000);
     }
@@ -28,27 +26,23 @@ public class AsyncExample {
 
   public static Future<Integer> foo() throws Exception {
 
-    try (ActiveSpan span = GlobalTracer.get()
-      .buildSpan("foo")
-      .startActive()) {
+    try (ActiveSpan span = GlobalTracer.get().buildSpan("foo").startActive()) {
 
       System.out.println("foo");
       Thread.sleep(500);
 
       final ActiveSpan.Continuation cont = span.capture();
 
-      Future<Integer> future = ex.submit(() -> {
-        try (ActiveSpan __ = cont.activate()) {
+      Future<Integer> future =
+          ex.submit(
+              () -> {
+                try (ActiveSpan __ = cont.activate()) {
 
-          return bar();
-        }
-      });
-
-
+                  return bar();
+                }
+              });
 
       return future;
-
-
     }
   }
 
@@ -56,14 +50,12 @@ public class AsyncExample {
 
     DDAgentWriter writer = new DDAgentWriter(new DDApi("localhost", 8126));
     Tracer tracer = new DDTracer("dd-trace-test-app", writer, new AllSampler());
-//		Tracer tracer = new DDTracer(new LoggingWriter(), new AllSampler());
+    //		Tracer tracer = new DDTracer(new LoggingWriter(), new AllSampler());
     GlobalTracer.register(tracer);
 
     System.out.printf("%d%n", foo().get());
 
     writer.close();
     ex.shutdownNow();
-
   }
-
 }

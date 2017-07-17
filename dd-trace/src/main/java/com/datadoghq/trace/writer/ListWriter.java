@@ -1,11 +1,11 @@
 package com.datadoghq.trace.writer;
 
 import com.datadoghq.trace.DDBaseSpan;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /** List writer used by tests mostly */
-public class ListWriter extends ArrayList<List<DDBaseSpan<?>>> implements Writer {
+public class ListWriter extends CopyOnWriteArrayList<List<DDBaseSpan<?>>> implements Writer {
 
   public List<List<DDBaseSpan<?>>> getList() {
     return this;
@@ -16,7 +16,7 @@ public class ListWriter extends ArrayList<List<DDBaseSpan<?>>> implements Writer
   }
 
   @Override
-  public void write(List<DDBaseSpan<?>> trace) {
+  public void write(final List<DDBaseSpan<?>> trace) {
     add(trace);
   }
 

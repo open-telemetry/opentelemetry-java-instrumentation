@@ -8,14 +8,10 @@ import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import io.reactivex.Observable;
 
-
 public class AsyncExampleReactive {
 
-
   public static Integer bar() throws Exception {
-    try (ActiveSpan __ = GlobalTracer.get()
-      .buildSpan("bar")
-      .startActive()) {
+    try (ActiveSpan __ = GlobalTracer.get().buildSpan("bar").startActive()) {
       System.out.println("bar");
       Thread.sleep(1000);
     }
@@ -24,19 +20,18 @@ public class AsyncExampleReactive {
   }
 
   public static Observable<Integer> foo() throws Exception {
-    try (ActiveSpan span = GlobalTracer.get()
-      .buildSpan("foo")
-      .startActive()) {
+    try (ActiveSpan span = GlobalTracer.get().buildSpan("foo").startActive()) {
 
       System.out.println("foo");
       Thread.sleep(500);
 
       final ActiveSpan.Continuation cont = span.capture();
-      return Observable.fromCallable(() -> {
-        try (ActiveSpan __ = cont.activate()) {
-          return bar();
-        }
-      });
+      return Observable.fromCallable(
+          () -> {
+            try (ActiveSpan __ = cont.activate()) {
+              return bar();
+            }
+          });
     }
   }
 
@@ -49,6 +44,4 @@ public class AsyncExampleReactive {
 
     writer.close();
   }
-
 }
-
