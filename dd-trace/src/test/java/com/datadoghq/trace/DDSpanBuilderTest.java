@@ -28,7 +28,7 @@ public class DDSpanBuilderTest {
   public void shouldBuildSimpleSpan() {
 
     final String expectedName = "fakeName";
-    DDSpan span = tracer.buildSpan(expectedName).withServiceName("foo").start();
+    DDSpan span = tracer.buildSpan(expectedName).withServiceName("foo").startManual();
     assertThat(span.getOperationName()).isEqualTo(expectedName);
   }
 
@@ -52,14 +52,14 @@ public class DDSpanBuilderTest {
             .withTag("1", (Boolean) tags.get("1"))
             .withTag("2", (String) tags.get("2"))
             .withTag("3", (Number) tags.get("3"))
-            .start();
+            .startManual();
 
     assertThat(span.getOperationName()).isEqualTo(expectedName);
     assertThat(span.getTags()).containsAllEntriesOf(tags);
 
     // with no tag provided
 
-    span = tracer.buildSpan(expectedName).withServiceName("foo").start();
+    span = tracer.buildSpan(expectedName).withServiceName("foo").startManual();
 
     assertThat(span.getTags()).isNotNull();
     assertThat(span.getTags().size()).isEqualTo(2);
@@ -77,7 +77,7 @@ public class DDSpanBuilderTest {
             .withServiceName(expectedService)
             .withErrorFlag()
             .withSpanType(expectedType)
-            .start();
+            .startManual();
 
     DDSpanContext actualContext = span.context();
 
@@ -96,7 +96,7 @@ public class DDSpanBuilderTest {
 
     final String expectedName = "fakeName";
 
-    DDSpan span = tracer.buildSpan(expectedName).withServiceName("foo").start();
+    DDSpan span = tracer.buildSpan(expectedName).withServiceName("foo").startManual();
 
     assertThat(span.getBaggageItem(DDSpanContext.LANGUAGE_FIELDNAME)).isEqualTo("java");
   }
@@ -120,7 +120,7 @@ public class DDSpanBuilderTest {
 
     // auto-timestamp in nanoseconds
     long tick = System.currentTimeMillis();
-    span = tracer.buildSpan(expectedName).withServiceName("foo").start();
+    span = tracer.buildSpan(expectedName).withServiceName("foo").startManual();
 
     // Give a range of +/- 2 millis
     assertThat(span.getStartTime())
@@ -141,7 +141,11 @@ public class DDSpanBuilderTest {
     final String expectedName = "fakeName";
 
     DDSpan span =
-        tracer.buildSpan(expectedName).withServiceName("foo").asChildOf(mockedContext).start();
+        tracer
+            .buildSpan(expectedName)
+            .withServiceName("foo")
+            .asChildOf(mockedContext)
+            .startManual();
 
     DDSpanContext actualContext = span.context();
 
@@ -167,7 +171,7 @@ public class DDSpanBuilderTest {
             .withServiceName("foo")
             .withResourceName(expectedParentResourceName)
             .withSpanType(expectedParentType)
-            .start();
+            .startManual();
 
     parent.setBaggageItem(expectedBaggageItemKey, expectedBaggageItemValue);
 
@@ -177,7 +181,7 @@ public class DDSpanBuilderTest {
             .buildSpan(expectedName)
             .withServiceName(expectedParentServiceName)
             .asChildOf(parent)
-            .start();
+            .startManual();
 
     assertThat(span.getOperationName()).isEqualTo(expectedName);
     assertThat(span.getBaggageItem(expectedBaggageItemKey)).isEqualTo(expectedBaggageItemValue);
@@ -193,7 +197,7 @@ public class DDSpanBuilderTest {
             .withResourceName(expectedChildResourceName)
             .withSpanType(expectedChildType)
             .asChildOf(parent)
-            .start();
+            .startManual();
 
     assertThat(span.getOperationName()).isEqualTo(expectedName);
     assertThat(span.getBaggageItem(expectedBaggageItemKey)).isEqualTo(expectedBaggageItemValue);
@@ -211,7 +215,7 @@ public class DDSpanBuilderTest {
     // root (aka spans[0]) is the parent
     // others are just for fun
 
-    DDSpan root = tracer.buildSpan("fake_O").withServiceName("foo").start();
+    DDSpan root = tracer.buildSpan("fake_O").withServiceName("foo").startManual();
     spans.add(root);
 
     Thread.sleep(200);
@@ -219,7 +223,11 @@ public class DDSpanBuilderTest {
 
     for (int i = 1; i <= 10; i++) {
       spans.add(
-          tracer.buildSpan("fake_" + i).withServiceName("foo").asChildOf(spans.get(i - 1)).start());
+          tracer
+              .buildSpan("fake_" + i)
+              .withServiceName("foo")
+              .asChildOf(spans.get(i - 1))
+              .startManual());
     }
     spans.get(1).finish(tickEnd);
 

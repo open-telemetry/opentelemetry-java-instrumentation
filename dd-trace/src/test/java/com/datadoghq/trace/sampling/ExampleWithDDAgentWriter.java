@@ -22,14 +22,22 @@ public class ExampleWithDDAgentWriter {
     DDTracer tracer = new DDTracer(writer, sampler);
 
     Span parent =
-        tracer.buildSpan("hello-world").withServiceName("service-name").withSpanType("web").start();
+        tracer
+            .buildSpan("hello-world")
+            .withServiceName("service-name")
+            .withSpanType("web")
+            .startManual();
 
     Thread.sleep(100);
 
     parent.setBaggageItem("a-baggage", "value");
 
     Span child =
-        tracer.buildSpan("hello-world").asChildOf(parent).withResourceName("resource-name").start();
+        tracer
+            .buildSpan("hello-world")
+            .asChildOf(parent)
+            .withResourceName("resource-name")
+            .startManual();
 
     Thread.sleep(100);
 

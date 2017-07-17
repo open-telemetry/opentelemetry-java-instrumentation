@@ -10,14 +10,22 @@ public class ExampleWithLoggingWriter {
     DDTracer tracer = new DDTracer(new LoggingWriter(), new AllSampler());
 
     Span parent =
-        tracer.buildSpan("hello-world").withServiceName("service-name").withSpanType("web").start();
+        tracer
+            .buildSpan("hello-world")
+            .withServiceName("service-name")
+            .withSpanType("web")
+            .startManual();
 
     parent.setBaggageItem("a-baggage", "value");
 
     Thread.sleep(100);
 
     Span child =
-        tracer.buildSpan("hello-world").asChildOf(parent).withResourceName("resource-name").start();
+        tracer
+            .buildSpan("hello-world")
+            .asChildOf(parent)
+            .withResourceName("resource-name")
+            .startManual();
 
     Thread.sleep(100);
 
