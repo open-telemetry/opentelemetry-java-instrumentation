@@ -93,13 +93,13 @@ Get the latest version of the Datadog Java agent (Do not forget to replace the v
 *NOTE:* While in beta, the latest version is best found on the [Snapshot Repo](https://oss.jfrog.org/artifactory/oss-snapshot-local/com/datadoghq/). 
 
 ```bash
-version=0.1.1
-curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/${version}/dd-java-agent-${version}.jar 
+# download the latest published version:
+wget -O dd-java-agent.jar 'https://search.maven.org/remote_content?g=com.datadoghq&a=dd-java-agent&v=LATEST' 
 ```
 Then, attach the Java agent to your JVM using th `javaagent` option.
 
 ```bash 
-java -javaagent:/path/to/dd-java-agent-${version}.jar ...
+java -javaagent:/path/to/dd-java-agent.jar ...
 ```
 
 If you have a local Datadog agent running on your host, traces are visible in your Datadog account.
