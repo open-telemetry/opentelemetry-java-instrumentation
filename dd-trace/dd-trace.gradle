@@ -1,6 +1,7 @@
 plugins {
   id 'groovy'
   id "com.github.johnrengelman.shadow" version "2.0.1"
+  id "me.champeau.gradle.jmh" version "0.4.4"
 }
 
 description = 'dd-trace'
@@ -32,6 +33,7 @@ dependencies {
   testCompile group: 'org.spockframework', name: 'spock-core', version: '1.0-groovy-2.4'
   testCompile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.4'
   testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.6'
+  jmh 'commons-io:commons-io:2.4'
 }
 
 shadowJar {
@@ -45,4 +47,30 @@ shadowJar {
   relocate 'org.jboss.byteman', 'dd.deps.org.jboss.byteman'
   relocate 'org.reflections', 'dd.deps.org.reflections'
   relocate 'org.yaml', 'dd.deps.org.yaml'
+}
+
+jmh {
+  timeUnit = 'us' // Output time unit. Available time units are: [m, s, ms, us, ns].
+  benchmarkMode = ['thrpt', 'avgt']
+  timeOnIteration = '1s'
+  iterations = 1 // Number of measurement iterations to do.
+//  fork = 2 // How many times to forks a single benchmark. Use 0 to disable forking altogether
+  jvmArgs = []
+  failOnError = true // Should JMH fail immediately if any benchmark had experienced the unrecoverable error?
+  warmup = '2s' // Time to spend at each warmup iteration.
+  warmupIterations = 1 // Number of warmup iterations to do.
+//  warmupForks = 0 // How many warmup forks to make for a single benchmark. 0 to disable warmup forks.
+
+//  profilers = ['stack']
+  // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr]
+
+//  humanOutputFile = project.file("${project.buildDir}/reports/jmh/human.txt") // human-readable output file
+//  operationsPerInvocation = 10 // Operations per invocation.
+//  synchronizeIterations = false // Synchronize iterations?
+//  timeout = '1s' // Timeout for benchmark iteration.
+//  includeTests = true
+  // Allows to include test sources into generate JMH jar, i.e. use it when benchmarks depend on the test classes.
+
+  duplicateClassesStrategy = 'fail'
+  jmhVersion = '1.19' // Specifies JMH version
 }
