@@ -9,7 +9,8 @@ jobs:
       - checkout
 
       - restore_cache:
-          key: dd-trace-java
+          # Reset the cache approx every release
+          key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
 
       - run:
           name: Run Tests
@@ -18,7 +19,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.gradle
-          key: dd-trace-java
+          key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
 
       - store_test_results:
           path: dd-java-agent/build/test-results
@@ -38,6 +39,14 @@ jobs:
           path: dd-java-agent/build/libs
       - store_artifacts:
           path: dd-trace/build/libs
+
+      - run:
+          name: Decode Signing Key
+          command: echo $PGP_KEY_FILE | base64 --decode > /home/circleci/dd-trace-java/.circleci/secring.gpg
+
+      - run:
+          name: Sign Archives
+          command: ./gradlew -Psigning.keyId=${PGP_KEY_ID} -Psigning.password=${PGP_KEY_PASS} -Psigning.secretKeyRingFile=/home/circleci/dd-trace-java/.circleci/secring.gpg signArchives
 
       - deploy:
           name: Publish master to Artifactory
