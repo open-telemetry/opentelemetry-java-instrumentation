@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.opentracing.BaseSpan;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,10 +65,10 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
 
     // warn if one of the parent's children is not finished
     if (this.isRootSpan()) {
-      final List<DDBaseSpan<?>> spans = this.context().getTrace();
+      final Queue<DDBaseSpan<?>> spans = this.context().getTrace();
 
       for (final DDBaseSpan<?> span : spans) {
-        if (((DDBaseSpan<?>) span).getDurationNano() == 0L) {
+        if (span.getDurationNano() == 0L) {
           logger.warn(
               "{} - The parent span is marked as finished but this span isn't. You have to close each children.",
               this);
@@ -90,7 +90,7 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
       return false;
     }
     // First item of the array AND tracer set
-    final DDBaseSpan<?> first = context().getTrace().get(0);
+    final DDBaseSpan<?> first = context().getTrace().peek();
     return first.context().getSpanId() == this.context().getSpanId()
         && this.context.getTracer() != null;
   }

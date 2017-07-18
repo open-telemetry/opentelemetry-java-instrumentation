@@ -8,7 +8,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * SpanContext represents Span state that must propagate to descendant Spans and across process
@@ -40,7 +41,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   /** The type of the span. If null, the Datadog Agent will report as a custom */
   private String spanType;
   /** The collection of all span related to this one */
-  private final List<DDBaseSpan<?>> trace;
+  private final Queue<DDBaseSpan<?>> trace;
   /** Each span have an operation name describing the current span */
   private String operationName;
 
@@ -61,7 +62,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final boolean errorFlag,
       final String spanType,
       final Map<String, Object> tags,
-      final List<DDBaseSpan<?>> trace,
+      final Queue<DDBaseSpan<?>> trace,
       final DDTracer tracer) {
 
     this.traceId = traceId;
@@ -84,7 +85,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
     if (trace == null) {
       // TODO: figure out better concurrency model.
-      this.trace = new CopyOnWriteArrayList<>(); // must be thread safe!
+      this.trace = new ConcurrentLinkedQueue<>();
     } else {
       this.trace = trace;
     }
@@ -150,7 +151,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   }
 
   @JsonIgnore
-  public List<DDBaseSpan<?>> getTrace() {
+  public Queue<DDBaseSpan<?>> getTrace() {
     return this.trace;
   }
 

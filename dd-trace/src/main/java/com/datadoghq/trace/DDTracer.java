@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,12 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     CURRENT_VERSION = version != null ? version : "unknown";
   }
 
+  public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
+  public static final Writer UNASSIGNED_WRITER = new LoggingWriter();
+  public static final Sampler UNASSIGNED_SAMPLER = new AllSampler();
+
+  private static final Logger logger = LoggerFactory.getLogger(DDTracer.class);
+
   /** Writer is an charge of reporting traces and spans to the desired endpoint */
   private final Writer writer;
   /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
@@ -43,12 +50,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
   /** Span context decorators */
   private final Map<String, List<DDSpanContextDecorator>> spanContextDecorators = new HashMap<>();
 
-  private static final Logger logger = LoggerFactory.getLogger(DDTracer.class);
   private final CodecRegistry registry;
-
-  public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
-  public static final Writer UNASSIGNED_WRITER = new LoggingWriter();
-  public static final Sampler UNASSIGNED_SAMPLER = new AllSampler();
 
   /** Default constructor, trace/spans are logged, no trace/span dropped */
   public DDTracer() {
@@ -131,12 +133,12 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
    *
    * @param trace a list of the spans related to the same trace
    */
-  public void write(final List<DDBaseSpan<?>> trace) {
+  public void write(final Queue<DDBaseSpan<?>> trace) {
     if (trace.isEmpty()) {
       return;
     }
-    if (this.sampler.sample(trace.get(0))) {
-      this.writer.write(trace);
+    if (this.sampler.sample(trace.peek())) {
+      this.writer.write(new ArrayList<>(trace));
     }
   }
 
@@ -293,7 +295,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
       final long spanId = generateNewId();
       final long parentSpanId;
       final Map<String, String> baggage;
-      final List<DDBaseSpan<?>> parentTrace;
+      final Queue<DDBaseSpan<?>> parentTrace;
 
       final DDSpanContext context;
       SpanContext parentContext = this.parent;
