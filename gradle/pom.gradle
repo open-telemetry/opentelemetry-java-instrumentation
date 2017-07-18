@@ -17,29 +17,29 @@
 // Source: https://github.com/ratpack/ratpack/blob/master/gradle/pom.gradle
 
 ext {
-    pomModifications = []
-    modifyPom = { pomModifications << it }
+  pomModifications = []
+  modifyPom = { pomModifications << it }
 }
 
 tasks.withType(Upload) {
-    repositories.withType(org.gradle.api.artifacts.maven.MavenResolver) {
-        it.pom.whenConfigured { pom ->
-            pomModifications.each {
-                configure(pom, it)
-            }
-        }
+  repositories.withType(org.gradle.api.artifacts.maven.MavenResolver) {
+    it.pom.whenConfigured { pom ->
+      pomModifications.each {
+        configure(pom, it)
+      }
     }
+  }
 }
 
 modifyPom {
-    dependencies.removeAll { it.scope == "test" }
+  dependencies.removeAll { it.scope == "test" }
 }
 
 modifyPom {
-    project {
-        name project.name
-        description project.description
-        url "https://github.com/datadog/dd-trace-java"
+  project {
+    name project.name
+    description project.description
+    url "https://github.com/datadog/dd-trace-java"
 //        licenses {
 //            license {
 //                name "The Apache Software License, Version 2.0"
@@ -47,16 +47,16 @@ modifyPom {
 //                distribution "repo"
 //            }
 //        }
-        scm {
-            connection "scm:https://datadog@github.com/datadog/dd-trace-java"
-            developerConnection "scm:git@github.com:datadog/dd-trace-java.git"
-            url "https://github.com/datadog/dd-trace-java"
-        }
-        developers {
-            developer {
-                id "datadog"
-                name "Datadog"
-            }
-        }
+    scm {
+      connection "scm:https://datadog@github.com/datadog/dd-trace-java"
+      developerConnection "scm:git@github.com:datadog/dd-trace-java.git"
+      url "https://github.com/datadog/dd-trace-java"
     }
+    developers {
+      developer {
+        id "datadog"
+        name "Datadog"
+      }
+    }
+  }
 }

@@ -17,26 +17,26 @@
 apply plugin: 'checkstyle'
 
 dependencies {
-    checkstyle 'com.puppycrawl.tools:checkstyle:8.0'
+  checkstyle 'com.puppycrawl.tools:checkstyle:8.0'
 }
 
 def checkstyleConfigDir = new File(buildscript.sourceFile.parentFile, 'enforcement')
 
 checkstyle {
-    configFile = new File(checkstyleConfigDir, "checkstyle.xml")
-    configProperties.checkstyleConfigDir = checkstyleConfigDir
-    maxWarnings = 500
+  configFile = new File(checkstyleConfigDir, "checkstyle.xml")
+  configProperties.checkstyleConfigDir = checkstyleConfigDir
+  maxWarnings = 500
 }
 
 plugins.withType(GroovyBasePlugin) {
-    sourceSets.all { sourceSet ->
-        task "${sourceSet.getTaskName('checkstyle', 'groovy')}"(type: Checkstyle) {
-            configFile = new File(checkstyleConfigDir, "checkstyle-groovy.xml")
-            source sourceSet.allGroovy
-            classpath = sourceSet.compileClasspath
-            reports.xml.destination new File(checkstyle.reportsDir, "${sourceSet.name}-groovy.xml")
-        }
+  sourceSets.all { sourceSet ->
+    task "${sourceSet.getTaskName('checkstyle', 'groovy')}"(type: Checkstyle) {
+      configFile = new File(checkstyleConfigDir, "checkstyle-groovy.xml")
+      source sourceSet.allGroovy
+      classpath = sourceSet.compileClasspath
+      reports.xml.destination new File(checkstyle.reportsDir, "${sourceSet.name}-groovy.xml")
     }
+  }
 }
 
 def checkstyleTasks = tasks.withType(Checkstyle)
@@ -46,7 +46,7 @@ task checkstyle(dependsOn: checkstyleTasks)
 check.dependsOn checkstyleTasks
 
 tasks.withType(Test) {
-    mustRunAfter checkstyleTasks
+  mustRunAfter checkstyleTasks
 }
 
 apply plugin: 'com.github.sherter.google-java-format'

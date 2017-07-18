@@ -9,5 +9,5 @@ dependencies {
   compile project(':dd-trace')
   compile group: 'io.opentracing.contrib', name: 'opentracing-spanmanager', version: '0.0.5'
   compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-  compile group:'io.reactivex.rxjava2', name:'rxjava', version:'2.1.1'
+  compile group: 'io.reactivex.rxjava2', name: 'rxjava', version: '2.1.1'
 }

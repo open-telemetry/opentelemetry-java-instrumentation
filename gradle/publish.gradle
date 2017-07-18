@@ -22,13 +22,13 @@ apply plugin: "signing"
 apply from: "${rootDir}/gradle/pom.gradle"
 
 afterEvaluate {
-    assert description: "Project $project.path is published, must have a description"
+  assert description: "Project $project.path is published, must have a description"
 }
 
 tasks.withType(Upload).matching { it.name != "install" }.all {
-    rootProject.subprojects {
-        mustRunAfter tasks.matching { it instanceof VerificationTask }
-    }
+  rootProject.subprojects {
+    mustRunAfter tasks.matching { it instanceof VerificationTask }
+  }
 }
 
 def isCI = Boolean.parseBoolean("$System.env.CI")
@@ -39,21 +39,21 @@ signing {
 }
 
 configurations {
-    configurations {
-        all {
-            incoming.afterResolve {
-                dependencies.withType(ModuleDependency) { dep ->
-                    excludeRules.each {
-                        if ([it.group, it.module].any { it == null }) {
-                            throw new InvalidUserDataException(
-                                    "Partial exclude for dependency '$dep.group:$dep.name:$dep.version' of $project: [group: $it.group, module: $it.module]\n\nExcludes must specify both group and module and neither can be '*'."
-                            )
-                        }
-                    }
-                }
+  configurations {
+    all {
+      incoming.afterResolve {
+        dependencies.withType(ModuleDependency) { dep ->
+          excludeRules.each {
+            if ([it.group, it.module].any { it == null }) {
+              throw new InvalidUserDataException(
+                "Partial exclude for dependency '$dep.group:$dep.name:$dep.version' of $project: [group: $it.group, module: $it.module]\n\nExcludes must specify both group and module and neither can be '*'."
+              )
             }
+          }
         }
+      }
     }
+  }
 }
 
 def isSnapshot = version.endsWith("-SNAPSHOT")
@@ -61,25 +61,25 @@ def isSnapshot = version.endsWith("-SNAPSHOT")
 def forceLocal = project.hasProperty('forceLocal') && forceLocal
 
 artifactoryPublish { task ->
-    artifactory {
-        publish {
-            contextUrl = forceLocal ? 'http://localhost:8080/artifactory' : 'https://oss.jfrog.org'
-            repository {
-                if(forceLocal)
-                    repoKey = isSnapshot ? 'libs-snapshot-local' : 'libs-release-local'
-                else
-                    repoKey = isSnapshot ? 'oss-snapshot-local' : 'oss-release-local'
-                gradle.taskGraph.whenReady { taskGraph ->
-                    if (taskGraph.hasTask(task)) {
-                        username = bintrayUser
-                        password = bintrayApiKey
-                    }
-                }
-            }
-            defaults {
-                publishConfigs('archives')
-                publishIvy = false
-            }
+  artifactory {
+    publish {
+      contextUrl = forceLocal ? 'http://localhost:8080/artifactory' : 'https://oss.jfrog.org'
+      repository {
+        if (forceLocal)
+          repoKey = isSnapshot ? 'libs-snapshot-local' : 'libs-release-local'
+        else
+          repoKey = isSnapshot ? 'oss-snapshot-local' : 'oss-release-local'
+        gradle.taskGraph.whenReady { taskGraph ->
+          if (taskGraph.hasTask(task)) {
+            username = bintrayUser
+            password = bintrayApiKey
+          }
         }
+      }
+      defaults {
+        publishConfigs('archives')
+        publishIvy = false
+      }
     }
+  }
 }
