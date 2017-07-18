@@ -12,7 +12,7 @@ public class LoggingWriter implements Writer {
   private static final Logger logger = LoggerFactory.getLogger(LoggingWriter.class.getName());
 
   @Override
-  public void write(List<DDBaseSpan<?>> trace) {
+  public void write(final List<DDBaseSpan<?>> trace) {
     logger.info("write(trace): {}", trace);
   }
 

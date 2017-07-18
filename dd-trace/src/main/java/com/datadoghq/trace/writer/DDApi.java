@@ -25,7 +25,7 @@ public class DDApi {
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final JsonFactory jsonFactory = objectMapper.getFactory();
 
-  public DDApi(String host, int port) {
+  public DDApi(final String host, final int port) {
     this.tracesEndpoint = "http://" + host + ":" + port + TRACES_ENDPOINT;
   }
 
@@ -35,8 +35,8 @@ public class DDApi {
    * @param traces the traces to be sent
    * @return the staus code returned
    */
-  public boolean sendTraces(List<List<DDBaseSpan<?>>> traces) {
-    int status = callPUT(traces);
+  public boolean sendTraces(final List<List<DDBaseSpan<?>>> traces) {
+    final int status = callPUT(traces);
     if (status == 200) {
       logger.debug("Succesfully sent {} traces to the DD agent.", traces.size());
       return true;
@@ -54,22 +54,22 @@ public class DDApi {
    * @param content
    * @return the status code
    */
-  private int callPUT(Object content) {
+  private int callPUT(final Object content) {
     HttpURLConnection httpCon = null;
     try {
       httpCon = getHttpURLConnection();
-    } catch (Exception e) {
+    } catch (final Exception e) {
       logger.warn("Error thrown before PUT call to the DD agent.", e);
       return -1;
     }
 
     try {
-      OutputStreamWriter out = new OutputStreamWriter(httpCon.getOutputStream());
-      JsonGenerator jsonGen = jsonFactory.createGenerator(out);
+      final OutputStreamWriter out = new OutputStreamWriter(httpCon.getOutputStream());
+      final JsonGenerator jsonGen = jsonFactory.createGenerator(out);
       objectMapper.writeValue(jsonGen, content);
       jsonGen.flush();
       jsonGen.close();
-      int responseCode = httpCon.getResponseCode();
+      final int responseCode = httpCon.getResponseCode();
       if (responseCode == 200) {
         logger.debug("Sent the payload to the DD agent.");
       } else {
@@ -79,15 +79,15 @@ public class DDApi {
             httpCon.getResponseMessage());
       }
       return responseCode;
-    } catch (Exception e) {
+    } catch (final Exception e) {
       logger.warn("Could not send the payload to the DD agent.", e);
       return -1;
     }
   }
 
   private HttpURLConnection getHttpURLConnection() throws IOException {
-    HttpURLConnection httpCon;
-    URL url = new URL(tracesEndpoint);
+    final HttpURLConnection httpCon;
+    final URL url = new URL(tracesEndpoint);
     httpCon = (HttpURLConnection) url.openConnection();
     httpCon.setDoOutput(true);
     httpCon.setRequestMethod("PUT");

@@ -22,24 +22,24 @@ public class HTTPCodec implements Codec<TextMap> {
   private static final Logger logger = LoggerFactory.getLogger(HTTPCodec.class);
 
   @Override
-  public void inject(DDSpanContext context, TextMap carrier) {
+  public void inject(final DDSpanContext context, final TextMap carrier) {
 
     carrier.put(TRACE_ID_KEY, String.valueOf(context.getTraceId()));
     carrier.put(SPAN_ID_KEY, String.valueOf(context.getSpanId()));
 
-    for (Map.Entry<String, String> entry : context.baggageItems()) {
+    for (final Map.Entry<String, String> entry : context.baggageItems()) {
       carrier.put(OT_BAGGAGE_PREFIX + entry.getKey(), encode(entry.getValue()));
     }
   }
 
   @Override
-  public DDSpanContext extract(TextMap carrier) {
+  public DDSpanContext extract(final TextMap carrier) {
 
     Map<String, String> baggage = Collections.emptyMap();
     Long traceId = 0L;
     Long spanId = 0L;
 
-    for (Map.Entry<String, String> entry : carrier) {
+    for (final Map.Entry<String, String> entry : carrier) {
 
       if (entry.getKey().equals(TRACE_ID_KEY)) {
         traceId = Long.parseLong(entry.getValue());
@@ -47,7 +47,7 @@ public class HTTPCodec implements Codec<TextMap> {
         spanId = Long.parseLong(entry.getValue());
       } else if (entry.getKey().startsWith(OT_BAGGAGE_PREFIX)) {
         if (baggage.isEmpty()) {
-          baggage = new HashMap<String, String>();
+          baggage = new HashMap<>();
         }
         baggage.put(entry.getKey().replace(OT_BAGGAGE_PREFIX, ""), decode(entry.getValue()));
       }
@@ -65,21 +65,21 @@ public class HTTPCodec implements Codec<TextMap> {
     return context;
   }
 
-  private String encode(String value) {
+  private String encode(final String value) {
     String encoded = value;
     try {
       encoded = URLEncoder.encode(value, "UTF-8");
-    } catch (UnsupportedEncodingException e) {
+    } catch (final UnsupportedEncodingException e) {
       logger.info("Failed to encode value - {}", value);
     }
     return encoded;
   }
 
-  private String decode(String value) {
+  private String decode(final String value) {
     String decoded = value;
     try {
       decoded = URLDecoder.decode(value, "UTF-8");
-    } catch (UnsupportedEncodingException e) {
+    } catch (final UnsupportedEncodingException e) {
       logger.info("Failed to decode value - {}", value);
     }
     return decoded;

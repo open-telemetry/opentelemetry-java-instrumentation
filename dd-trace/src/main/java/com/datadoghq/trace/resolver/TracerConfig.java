@@ -20,7 +20,7 @@ public class TracerConfig {
     return defaultServiceName;
   }
 
-  public void setDefaultServiceName(String defaultServiceName) {
+  public void setDefaultServiceName(final String defaultServiceName) {
     this.defaultServiceName = defaultServiceName;
   }
 
@@ -28,7 +28,7 @@ public class TracerConfig {
     return writer;
   }
 
-  public void setWriter(WriterConfig writer) {
+  public void setWriter(final WriterConfig writer) {
     this.writer = writer;
   }
 
@@ -36,7 +36,7 @@ public class TracerConfig {
     return sampler;
   }
 
-  public void setSampler(SamplerConfig sampler) {
+  public void setSampler(final SamplerConfig sampler) {
     this.sampler = sampler;
   }
 
@@ -44,7 +44,7 @@ public class TracerConfig {
     return decorators;
   }
 
-  public void setDecorators(List<DDSpanDecoratorConfig> decorators) {
+  public void setDecorators(final List<DDSpanDecoratorConfig> decorators) {
     this.decorators = decorators;
   }
 
@@ -52,7 +52,7 @@ public class TracerConfig {
   public String toString() {
     try {
       return new ObjectMapper(new YAMLFactory()).writeValueAsString(this);
-    } catch (JsonProcessingException e) {
+    } catch (final JsonProcessingException e) {
       //FIXME better toString() while config object stabilized
       return null;
     }
@@ -73,11 +73,11 @@ class SamplerConfig {
     return rate;
   }
 
-  public void setRate(Double rate) {
+  public void setRate(final Double rate) {
     this.rate = rate;
   }
 
-  public void setType(String type) {
+  public void setType(final String type) {
     this.type = type;
   }
 
@@ -92,15 +92,15 @@ class WriterConfig {
   private Integer port;
   private String type;
 
-  public void setHost(String host) {
+  public void setHost(final String host) {
     this.host = host;
   }
 
-  public void setPort(Integer port) {
+  public void setPort(final Integer port) {
     this.port = port;
   }
 
-  public void setType(String type) {
+  public void setType(final String type) {
     this.type = type;
   }
 
@@ -116,11 +116,11 @@ class WriterConfig {
     return type;
   }
 
-  public String getHost(String defaultHostname) {
+  public String getHost(final String defaultHostname) {
     return host == null ? defaultHostname : host;
   }
 
-  public Integer getPort(int defaultPort) {
+  public Integer getPort(final int defaultPort) {
     return port == null ? defaultPort : port;
   }
 }

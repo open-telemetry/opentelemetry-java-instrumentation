@@ -26,17 +26,16 @@ public class DDTracerResolver extends TracerResolver {
     tracer = DDTracerFactory.createFromConfigurationFile();
 
     //Create decorators from resource files
-    List<DDSpanContextDecorator> decorators = DDDecoratorsFactory.createFromResources();
-    for (DDSpanContextDecorator decorator : decorators) {
+    final List<DDSpanContextDecorator> decorators = DDDecoratorsFactory.createFromResources();
+    for (final DDSpanContextDecorator decorator : decorators) {
       tracer.addDecorator(decorator);
     }
 
     return tracer;
   }
 
-  @SuppressWarnings("static-access")
   public static Tracer registerTracer() {
-    Tracer tracer = TracerResolver.resolveTracer();
+    final Tracer tracer = TracerResolver.resolveTracer();
 
     if (tracer == null) {
       return NoopTracerFactory.create();

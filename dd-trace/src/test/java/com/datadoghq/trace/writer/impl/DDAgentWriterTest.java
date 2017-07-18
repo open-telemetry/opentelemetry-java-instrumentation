@@ -19,20 +19,20 @@ public class DDAgentWriterTest {
 
   DDSpan parent = null;
   DDApi mockedAPI = null;
-  List<List<DDBaseSpan<?>>> traces = new ArrayList<List<DDBaseSpan<?>>>();
+  List<List<DDBaseSpan<?>>> traces = new ArrayList<>();
   DDAgentWriter ddAgentWriter = null;
 
   @Before
   public void setUp() throws Exception {
     //Setup
-    DDTracer tracer = new DDTracer();
+    final DDTracer tracer = new DDTracer();
 
     parent = tracer.buildSpan("hello-world").withServiceName("service-name").startManual();
     parent.setBaggageItem("a-baggage", "value");
 
     Thread.sleep(100);
 
-    DDSpan child = tracer.buildSpan("hello-world").asChildOf(parent).startManual();
+    final DDSpan child = tracer.buildSpan("hello-world").asChildOf(parent).startManual();
     Thread.sleep(100);
 
     child.finish();

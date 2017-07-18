@@ -55,20 +55,21 @@ public class DDAgentWriter implements Writer {
     this(new DDApi(DEFAULT_HOSTNAME, DEFAULT_PORT));
   }
 
-  public DDAgentWriter(DDApi api) {
+  public DDAgentWriter(final DDApi api) {
     super();
     this.api = api;
 
     tokens = new Semaphore(DEFAULT_MAX_SPANS);
-    traces = new ArrayBlockingQueue<List<DDBaseSpan<?>>>(DEFAULT_MAX_SPANS);
+    traces = new ArrayBlockingQueue<>(DEFAULT_MAX_SPANS);
   }
 
   /* (non-Javadoc)
    * @see com.datadoghq.trace.Writer#write(java.util.List)
    */
-  public void write(List<DDBaseSpan<?>> trace) {
+  @Override
+  public void write(final List<DDBaseSpan<?>> trace) {
     //Try to add a new span in the queue
-    boolean proceed = tokens.tryAcquire(trace.size());
+    final boolean proceed = tokens.tryAcquire(trace.size());
 
     if (proceed) {
       traces.add(trace);
@@ -91,11 +92,12 @@ public class DDAgentWriter implements Writer {
   /* (non-Javadoc)
    * @see com.datadoghq.trace.Writer#close()
    */
+  @Override
   public void close() {
     executor.shutdownNow();
     try {
       executor.awaitTermination(500, TimeUnit.MILLISECONDS);
-    } catch (InterruptedException e) {
+    } catch (final InterruptedException e) {
       logger.info("Writer properly closed and async writer interrupted.");
     }
   }
@@ -103,13 +105,14 @@ public class DDAgentWriter implements Writer {
   /** Infinite tasks blocking until some spans come in the blocking queue. */
   protected class SpansSendingTask implements Runnable {
 
+    @Override
     public void run() {
       while (true) {
         try {
-          List<List<DDBaseSpan<?>>> payload = new ArrayList<List<DDBaseSpan<?>>>();
+          final List<List<DDBaseSpan<?>>> payload = new ArrayList<>();
 
           //WAIT until a new span comes
-          List<DDBaseSpan<?>> l = DDAgentWriter.this.traces.take();
+          final List<DDBaseSpan<?>> l = DDAgentWriter.this.traces.take();
           payload.add(l);
 
           //Drain all spans up to a certain batch suze
@@ -121,7 +124,7 @@ public class DDAgentWriter implements Writer {
 
           //Compute the number of spans sent
           int spansCount = 0;
-          for (List<DDBaseSpan<?>> trace : payload) {
+          for (final List<DDBaseSpan<?>> trace : payload) {
             spansCount += trace.size();
           }
           logger.debug(
@@ -129,12 +132,12 @@ public class DDAgentWriter implements Writer {
 
           //Release the tokens
           tokens.release(spansCount);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
           logger.info("Async writer interrupted.");
 
           //The thread was interrupted, we break the LOOP
           break;
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
           logger.error("Unexpected error! Some traces may have been dropped.", e);
         }
       }

@@ -18,9 +18,9 @@ public class DDSpanSerializationTest {
   @Before
   public void setUp() throws Exception {
 
-    Map<String, String> baggage = new HashMap<>();
+    final Map<String, String> baggage = new HashMap<>();
     baggage.put("a-baggage", "value");
-    Map<String, Object> tags = new HashMap<>();
+    final Map<String, Object> tags = new HashMap<>();
     baggage.put("k1", "v1");
 
     expected.put("meta", baggage);
@@ -35,7 +35,7 @@ public class DDSpanSerializationTest {
     expected.put("parent_id", 0l);
     expected.put("trace_id", 1l);
 
-    DDSpanContext context =
+    final DDSpanContext context =
         new DDSpanContext(
             1L,
             2L,
@@ -43,7 +43,7 @@ public class DDSpanSerializationTest {
             "service",
             "operation",
             null,
-            new HashMap<String, String>(baggage),
+            new HashMap<>(baggage),
             false,
             "type",
             tags,
