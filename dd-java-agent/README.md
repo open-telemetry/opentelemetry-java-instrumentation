@@ -33,6 +33,8 @@ To dynamically apply instrumentation you simply have to declare the provided `ja
 
 - So first download the `jar` file from the main repository.
 
+*NOTE:* While in beta, the latest version is best found on the [Snapshot Repo](https://oss.jfrog.org/artifactory/oss-snapshot-local/com/datadoghq/). 
+
 ```
 # use latest version 
 curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar

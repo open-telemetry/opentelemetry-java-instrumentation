@@ -90,6 +90,8 @@ SpringBoot, JDBC, Mongo, JMS, Tomcat, etc. By using [dd-java-agent](../dd-java-a
  
 Get the latest version of the Datadog Java agent (Do not forget to replace the version `${version}` by the appropriate one).
 
+*NOTE:* While in beta, the latest version is best found on the [Snapshot Repo](https://oss.jfrog.org/artifactory/oss-snapshot-local/com/datadoghq/). 
+
 ```bash
 version=0.1.1
 curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/${version}/dd-java-agent-${version}.jar 
