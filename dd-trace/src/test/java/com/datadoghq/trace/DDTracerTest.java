@@ -9,7 +9,8 @@ import static org.mockito.Mockito.when;
 import com.datadoghq.trace.sampling.RateSampler;
 import com.datadoghq.trace.writer.Writer;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedList;
+import java.util.Queue;
 import org.junit.Test;
 
 public class DDTracerTest {
@@ -24,7 +25,7 @@ public class DDTracerTest {
     // Rate 0.5
     when(sampler.sample(any(DDSpan.class))).thenReturn(true).thenReturn(false);
 
-    final List<DDBaseSpan<?>> spans = new ArrayList<>();
+    final Queue<DDBaseSpan<?>> spans = new LinkedList<>();
     spans.add(span);
     spans.add(span);
     spans.add(span);
@@ -35,6 +36,6 @@ public class DDTracerTest {
     tracer.write(spans);
 
     verify(sampler, times(2)).sample(span);
-    verify(writer, times(1)).write(spans);
+    verify(writer, times(1)).write(new ArrayList<>(spans));
   }
 }

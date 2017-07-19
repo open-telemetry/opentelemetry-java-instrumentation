@@ -40,7 +40,7 @@ public class DDAgentWriterTest {
     parent.finish();
 
     //Create DDWriter
-    traces.add(parent.context().getTrace());
+    traces.add(new ArrayList<>(parent.context().getTrace()));
     mockedAPI = mock(DDApi.class);
     when(mockedAPI.sendTraces(traces)).thenReturn(true);
     ddAgentWriter = new DDAgentWriter(mockedAPI);
@@ -49,7 +49,7 @@ public class DDAgentWriterTest {
 
   @Test
   public void testWrite() throws Exception {
-    ddAgentWriter.write(parent.context().getTrace());
+    ddAgentWriter.write(new ArrayList<>(parent.context().getTrace()));
     Thread.sleep(500);
     verify(mockedAPI).sendTraces(traces);
   }
@@ -58,7 +58,7 @@ public class DDAgentWriterTest {
   public void testClose() throws Exception {
     ddAgentWriter.close();
 
-    ddAgentWriter.write(parent.context().getTrace());
+    ddAgentWriter.write(new ArrayList<>(parent.context().getTrace()));
     Thread.sleep(500);
     verifyNoMoreInteractions(mockedAPI);
   }
