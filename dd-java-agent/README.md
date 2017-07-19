@@ -33,15 +33,17 @@ To dynamically apply instrumentation you simply have to declare the provided `ja
 
 - So first download the `jar` file from the main repository.
 
+*NOTE:* While in beta, the latest version is best found on the [Snapshot Repo](https://oss.jfrog.org/artifactory/oss-snapshot-local/com/datadoghq/). 
+
 ```
-# use latest version 
-curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar
+# download the latest published version:
+wget -O dd-java-agent.jar 'https://search.maven.org/remote_content?g=com.datadoghq&a=dd-java-agent&v=LATEST'
 ```
 
 - Then add the following JVM argument when launching your application (in your IDE, your maven or gradle application script, or your `java -jar` command):
 
 ```
--javaagent:/path/to/the/dd-java-agent-{version}.jar
+-javaagent:/path/to/the/dd-java-agent.jar
 ```
 
 That's it! If you did this properly the agent was executed at pre-main, had detected and instrumented the supported libraries and custom traces. You should then see traces on [Datadog APM](https://app.datadoghq.com/apm/search).
