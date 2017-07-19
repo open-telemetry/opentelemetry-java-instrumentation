@@ -5,6 +5,7 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/jacoco.gradle"
 
+version = 'demo'
 description = 'dropwizard-mongo-client'
 
 dependencies {

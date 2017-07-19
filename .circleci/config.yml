@@ -44,13 +44,14 @@ jobs:
           name: Decode Signing Key
           command: echo $PGP_KEY_FILE | base64 --decode > /home/circleci/dd-trace-java/.circleci/secring.gpg
 
-      - run:
-          name: Sign Archives
-          command: ./gradlew -Psigning.keyId=${PGP_KEY_ID} -Psigning.password=${PGP_KEY_PASS} -Psigning.secretKeyRingFile=/home/circleci/dd-trace-java/.circleci/secring.gpg signArchives
-
       - deploy:
           name: Publish master to Artifactory
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              ./gradlew -PbintrayUser=${BINTRAY_USER} -PbintrayApiKey=${BINTRAY_API_KEY} artifactoryPublish
+              ./gradlew -Psigning.keyId=${PGP_KEY_ID} \
+                -Psigning.password=${PGP_KEY_PASS} \
+                -Psigning.secretKeyRingFile=/home/circleci/dd-trace-java/.circleci/secring.gpg \
+                -PbintrayUser=${BINTRAY_USER} \
+                -PbintrayApiKey=${BINTRAY_API_KEY} \
+                artifactoryPublish
             fi

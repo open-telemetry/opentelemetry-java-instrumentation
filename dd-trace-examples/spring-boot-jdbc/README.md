@@ -21,8 +21,6 @@ The demo consistes into a very simple backend backed by a MySQL db. The Spring B
 #### Prerequisites
 1. Run the latest version of Datadog Agent. For instance, you can run it through a docker container: 
   `docker run -d --name dd-agent -v /var/run/docker.sock:/var/run/docker.sock:ro -v /proc/:/host/proc/:ro -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro -e API_KEY=<YOUR-API-KEY> -e SD_BACKEND=docker -p 8126:8126 -P  datadog/docker-dd-agent:latest`
-2. Run an instance of MyQSL. This could also be done using docker: 
-  `docker run -dt --name mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 -e MYSQL_DATABASE=springdb mysql`
     
 #### Run the application
 
@@ -59,23 +57,24 @@ Then, is to run the Spring Application along the Datadog Java Agent.
 
 - So first download the `jar` file from the main repository.
 
+*NOTE:* While in beta, the latest version is best found on the [Snapshot Repo](https://oss.jfrog.org/artifactory/oss-snapshot-local/com/datadoghq/). 
+
 ```
-# use latest version 
-curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar
+# download the latest published version:
+wget -O dd-java-agent.jar 'https://search.maven.org/remote_content?g=com.datadoghq&a=dd-java-agent&v=LATEST'
 ```
 
 - Then add the following JVM argument when launching your application (in IDE, using Maven run or simply in collaboration with the `>java -jar` command):
 
 ```
--javaagent:/path/to/the/dd-java-agent-{version}.jar
+-javaagent:/path/to/the/dd-java-agent.jar
 ```
 
 - Finally, run the application through your IDE or Maven with the `javaagent` option.
 
 ```
-mvn spring-boot:run -Djavaagent:/path/to/the/dd-java-agent-{version}.jar
+mvn spring-boot:run -Djavaagent:/path/to/the/dd-java-agent.jar
 ```
-
 
 ### Generate traces
 

@@ -16,7 +16,7 @@ and configure them on-fly.
 ### Run the demo
 
 1. Check prerequisites [here](../../../raclette-java-examples/README.md)
-2. Run the application from your IDE using `-javaagent:path/to/opentracing-agent-x.y.z.jar`
+2. Run the application from your IDE using `-javaagent:path/to/dd-java-agent.jar`
 
 ![](java-agent-ide.png)
 
