@@ -10,13 +10,11 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /** The API pointing to a DD agent */
+@Slf4j
 public class DDApi {
-
-  private static final Logger logger = LoggerFactory.getLogger(DDApi.class.getName());
 
   private static final String TRACES_ENDPOINT = "/v0.3/traces";
 
@@ -38,11 +36,10 @@ public class DDApi {
   public boolean sendTraces(final List<List<DDBaseSpan<?>>> traces) {
     final int status = callPUT(traces);
     if (status == 200) {
-      logger.debug("Succesfully sent {} traces to the DD agent.", traces.size());
+      log.debug("Succesfully sent {} traces to the DD agent.", traces.size());
       return true;
     } else {
-      logger.warn(
-          "Error while sending {} traces to the DD agent. Status: {}", traces.size(), status);
+      log.warn("Error while sending {} traces to the DD agent. Status: {}", traces.size(), status);
       return false;
     }
   }
@@ -59,7 +56,7 @@ public class DDApi {
     try {
       httpCon = getHttpURLConnection();
     } catch (final Exception e) {
-      logger.warn("Error thrown before PUT call to the DD agent.", e);
+      log.warn("Error thrown before PUT call to the DD agent.", e);
       return -1;
     }
 
@@ -71,16 +68,16 @@ public class DDApi {
       jsonGen.close();
       final int responseCode = httpCon.getResponseCode();
       if (responseCode == 200) {
-        logger.debug("Sent the payload to the DD agent.");
+        log.debug("Sent the payload to the DD agent.");
       } else {
-        logger.warn(
+        log.warn(
             "Could not send the payload to the DD agent. Status: {} ResponseMessage: {}",
             httpCon.getResponseCode(),
             httpCon.getResponseMessage());
       }
       return responseCode;
     } catch (final Exception e) {
-      logger.warn("Could not send the payload to the DD agent.", e);
+      log.warn("Could not send the payload to the DD agent.", e);
       return -1;
     }
   }

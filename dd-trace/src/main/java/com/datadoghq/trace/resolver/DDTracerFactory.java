@@ -11,13 +11,11 @@ import com.datadoghq.trace.writer.LoggingWriter;
 import com.datadoghq.trace.writer.Writer;
 import java.util.Map;
 import java.util.regex.Pattern;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /** Create a tracer from a configuration file */
+@Slf4j
 public class DDTracerFactory {
-
-  private static final Logger logger = LoggerFactory.getLogger(DDTracerFactory.class);
 
   public static final String SYSTEM_PROPERTY_CONFIG_PATH = "dd.trace.configurationFile";
   public static final String CONFIG_PATH = "dd-trace.yaml";
@@ -95,7 +93,7 @@ public class DDTracerFactory {
 
     DDTracer tracer = null;
     if (tracerConfig == null) {
-      logger.info("No valid configuration file {} found. Loading default tracer.", CONFIG_PATH);
+      log.info("No valid configuration file {} found. Loading default tracer.", CONFIG_PATH);
       tracer = new DDTracer();
     } else {
       tracer = DDTracerFactory.create(tracerConfig);

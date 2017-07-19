@@ -6,11 +6,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class FactoryUtils {
-  private static final Logger logger = LoggerFactory.getLogger(FactoryUtils.class);
 
   private static final ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 
@@ -19,10 +18,10 @@ public class FactoryUtils {
     final String filePath = System.getProperty(systemProperty);
     if (filePath != null) {
       try {
-        logger.info("Loading config from file " + filePath);
+        log.info("Loading config from file " + filePath);
         return objectMapper.readValue(new File(filePath), targetClass);
       } catch (final Exception e) {
-        logger.error(
+        log.error(
             "Cannot read provided configuration file " + filePath + ". Using the default one.", e);
       }
     }
@@ -38,12 +37,12 @@ public class FactoryUtils {
       final Enumeration<URL> iter = classLoader.getResources(resourceName);
       if (iter.hasMoreElements()) {
         final URL url = iter.nextElement();
-        logger.info("Loading config from resource " + url);
+        log.info("Loading config from resource " + url);
         config = objectMapper.readValue(url.openStream(), targetClass);
       }
     } catch (final IOException e) {
-      logger.warn("Could not load configuration file {}.", resourceName);
-      logger.error("Error when loading config file", e);
+      log.warn("Could not load configuration file {}.", resourceName);
+      log.error("Error when loading config file", e);
     }
     return config;
   }

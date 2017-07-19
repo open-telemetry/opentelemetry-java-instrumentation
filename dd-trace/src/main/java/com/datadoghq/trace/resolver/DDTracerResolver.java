@@ -8,17 +8,15 @@ import io.opentracing.Tracer;
 import io.opentracing.contrib.tracerresolver.TracerResolver;
 import io.opentracing.util.GlobalTracer;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @AutoService(TracerResolver.class)
 public class DDTracerResolver extends TracerResolver {
 
-  private static final Logger logger = LoggerFactory.getLogger(DDTracerResolver.class);
-
   @Override
   protected Tracer resolve() {
-    logger.info("Creating the Datadog tracer");
+    log.info("Creating the Datadog tracer");
 
     //Find a resource file named dd-trace.yml
     DDTracer tracer = null;

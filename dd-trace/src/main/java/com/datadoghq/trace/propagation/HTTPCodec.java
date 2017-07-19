@@ -8,18 +8,16 @@ import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /** A codec designed for HTTP transport via headers */
+@Slf4j
 public class HTTPCodec implements Codec<TextMap> {
 
   private static final String OT_PREFIX = "ot-tracer-";
   private static final String OT_BAGGAGE_PREFIX = "ot-baggage-";
   private static final String TRACE_ID_KEY = OT_PREFIX + "traceid";
   private static final String SPAN_ID_KEY = OT_PREFIX + "spanid";
-
-  private static final Logger logger = LoggerFactory.getLogger(HTTPCodec.class);
 
   @Override
   public void inject(final DDSpanContext context, final TextMap carrier) {
@@ -59,7 +57,7 @@ public class HTTPCodec implements Codec<TextMap> {
           new DDSpanContext(
               traceId, spanId, 0L, null, null, null, baggage, false, null, null, null, null);
 
-      logger.debug("{} - Parent context extracted", context);
+      log.debug("{} - Parent context extracted", context);
     }
 
     return context;
@@ -70,7 +68,7 @@ public class HTTPCodec implements Codec<TextMap> {
     try {
       encoded = URLEncoder.encode(value, "UTF-8");
     } catch (final UnsupportedEncodingException e) {
-      logger.info("Failed to encode value - {}", value);
+      log.info("Failed to encode value - {}", value);
     }
     return encoded;
   }
@@ -80,7 +78,7 @@ public class HTTPCodec implements Codec<TextMap> {
     try {
       decoded = URLDecoder.decode(value, "UTF-8");
     } catch (final UnsupportedEncodingException e) {
-      logger.info("Failed to decode value - {}", value);
+      log.info("Failed to decode value - {}", value);
     }
     return decoded;
   }

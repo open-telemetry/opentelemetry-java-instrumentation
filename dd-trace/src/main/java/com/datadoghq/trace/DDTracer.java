@@ -19,10 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing integration. */
+@Slf4j
 public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentracing.Tracer {
 
   public static final String JAVA_VERSION = System.getProperty("java.version", "unknown");
@@ -36,8 +36,6 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
   public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
   public static final Writer UNASSIGNED_WRITER = new LoggingWriter();
   public static final Sampler UNASSIGNED_SAMPLER = new AllSampler();
-
-  private static final Logger logger = LoggerFactory.getLogger(DDTracer.class);
 
   /** Writer is an charge of reporting traces and spans to the desired endpoint */
   private final Writer writer;
@@ -109,7 +107,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
 
     final Codec<T> codec = registry.get(format);
     if (codec == null) {
-      logger.warn("Unsupported format for propagation - {}", format.getClass().getName());
+      log.warn("Unsupported format for propagation - {}", format.getClass().getName());
     } else {
       codec.inject((DDSpanContext) spanContext, carrier);
     }
@@ -120,7 +118,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
 
     final Codec<T> codec = registry.get(format);
     if (codec == null) {
-      logger.warn("Unsupported format for propagation - {}", format.getClass().getName());
+      log.warn("Unsupported format for propagation - {}", format.getClass().getName());
     } else {
       return codec.extract(carrier);
     }
@@ -176,14 +174,14 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     @Override
     public ActiveSpan startActive() {
       final ActiveSpan activeSpan = spanSource.makeActive(startSpan());
-      logger.debug("{} - Starting a new active span.", activeSpan);
+      log.debug("{} - Starting a new active span.", activeSpan);
       return activeSpan;
     }
 
     @Override
     public DDSpan startManual() {
       final DDSpan span = startSpan();
-      logger.debug("{} - Starting a new manuel span.", span);
+      log.debug("{} - Starting a new manuel span.", span);
       return span;
     }
 
@@ -267,7 +265,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
 
     @Override
     public DDSpanBuilder addReference(final String referenceType, final SpanContext spanContext) {
-      logger.debug("`addReference` method is not implemented. Doing nothing");
+      log.debug("`addReference` method is not implemented. Doing nothing");
       return this;
     }
 

@@ -23,6 +23,7 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.bytecode.Descriptor;
+import lombok.extern.slf4j.Slf4j;
 import org.jboss.byteman.agent.Location;
 import org.jboss.byteman.agent.LocationType;
 import org.jboss.byteman.agent.Retransformer;
@@ -31,8 +32,6 @@ import org.reflections.Reflections;
 import org.reflections.scanners.MethodAnnotationsScanner;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This manager is loaded at pre-main.
@@ -40,9 +39,8 @@ import org.slf4j.LoggerFactory;
  * <p>It loads all the scripts contained in all the 'oatrules.btm' resource files then instrument
  * all the methods annoted with the @Trace.
  */
+@Slf4j
 public class TraceAnnotationsManager {
-
-  private static Logger LOGGER = LoggerFactory.getLogger(TraceAnnotationsManager.class);
 
   private static Retransformer transformer;
 
@@ -53,21 +51,21 @@ public class TraceAnnotationsManager {
    *
    * @param trans The ByteMan retransformer
    */
-  public static void initialize(Retransformer trans) throws Exception {
+  public static void initialize(final Retransformer trans) throws Exception {
     transformer = trans;
     //Load configuration
-    AgentTracerConfig agentTracerConfig =
+    final AgentTracerConfig agentTracerConfig =
         FactoryUtils.loadConfigFromFilePropertyOrResource(
             DDTracerFactory.SYSTEM_PROPERTY_CONFIG_PATH,
             DDTracerFactory.CONFIG_PATH,
             AgentTracerConfig.class);
 
-    List<String> loadedScripts = loadRules(ClassLoader.getSystemClassLoader());
+    final List<String> loadedScripts = loadRules(ClassLoader.getSystemClassLoader());
 
     //Check if some rules have to be uninstalled
-    List<String> uninstallScripts = InstrumentationChecker.getUnsupportedRules();
+    final List<String> uninstallScripts = InstrumentationChecker.getUnsupportedRules();
     if (agentTracerConfig != null) {
-      List<String> disabledInstrumentations = agentTracerConfig.getDisabledInstrumentations();
+      final List<String> disabledInstrumentations = agentTracerConfig.getDisabledInstrumentations();
       if (disabledInstrumentations != null && !disabledInstrumentations.isEmpty()) {
         uninstallScripts.addAll(disabledInstrumentations);
       }
@@ -88,14 +86,14 @@ public class TraceAnnotationsManager {
    *
    * @param patterns not case sensitive (eg. "mongo", "apache http", "elasticsearch", etc...])
    */
-  public static void uninstallScripts(List<String> installedScripts, List<String> patterns)
-      throws Exception {
-    Set<String> rulesToRemove = new HashSet<String>();
+  public static void uninstallScripts(
+      final List<String> installedScripts, final List<String> patterns) throws Exception {
+    final Set<String> rulesToRemove = new HashSet<>();
 
-    for (String strPattern : patterns) {
-      Pattern pattern = Pattern.compile("(?i)RULE [^\n]*" + strPattern + "[^\n]*\n");
-      for (String loadedScript : installedScripts) {
-        Matcher matcher = pattern.matcher(loadedScript);
+    for (final String strPattern : patterns) {
+      final Pattern pattern = Pattern.compile("(?i)RULE [^\n]*" + strPattern + "[^\n]*\n");
+      for (final String loadedScript : installedScripts) {
+        final Matcher matcher = pattern.matcher(loadedScript);
         while (matcher.find()) {
           rulesToRemove.add(matcher.group());
         }
@@ -103,11 +101,11 @@ public class TraceAnnotationsManager {
     }
 
     if (!rulesToRemove.isEmpty()) {
-      StringWriter sw = new StringWriter();
+      final StringWriter sw = new StringWriter();
       try (PrintWriter pr = new PrintWriter(sw)) {
-        transformer.removeScripts(new ArrayList<String>(rulesToRemove), pr);
+        transformer.removeScripts(new ArrayList<>(rulesToRemove), pr);
       }
-      LOGGER.info(sw.toString());
+      log.info(sw.toString());
     }
   }
 
@@ -117,47 +115,47 @@ public class TraceAnnotationsManager {
    *
    * @param classLoader The classloader
    */
-  public static List<String> loadRules(ClassLoader classLoader) {
-    List<String> scripts = new ArrayList<>();
+  public static List<String> loadRules(final ClassLoader classLoader) {
+    final List<String> scripts = new ArrayList<>();
     if (transformer == null) {
-      LOGGER.warn("Attempt to load OpenTracing agent rules before transformer initialized");
+      log.warn("Attempt to load OpenTracing agent rules before transformer initialized");
       return scripts;
     }
 
-    List<String> scriptNames = new ArrayList<>();
+    final List<String> scriptNames = new ArrayList<>();
 
     // Load default and custom rules
     try {
-      Enumeration<URL> iter = classLoader.getResources(AGENT_RULES);
+      final Enumeration<URL> iter = classLoader.getResources(AGENT_RULES);
       while (iter.hasMoreElements()) {
         loadRules(iter.nextElement().toURI(), scriptNames, scripts);
       }
 
-      StringWriter sw = new StringWriter();
+      final StringWriter sw = new StringWriter();
       try (PrintWriter writer = new PrintWriter(sw)) {
         try {
           transformer.installScript(scripts, scriptNames, writer);
-        } catch (Exception e) {
-          LOGGER.warn("Failed to install scripts", e);
+        } catch (final Exception e) {
+          log.warn("Failed to install scripts", e);
         }
       }
-      LOGGER.trace(sw.toString());
+      log.trace(sw.toString());
     } catch (IOException | URISyntaxException e) {
-      LOGGER.warn("Failed to load OpenTracing agent rules", e);
+      log.warn("Failed to load OpenTracing agent rules", e);
     }
 
-    LOGGER.debug("OpenTracing Agent rules loaded");
+    log.debug("OpenTracing Agent rules loaded");
     return scripts;
   }
 
   /** Find all the methods annoted with @Trace and inject rules */
-  public static void loadAnnotationsRules(String... scannedPackages) {
+  public static void loadAnnotationsRules(final String... scannedPackages) {
 
-    LOGGER.info(
+    log.info(
         "Looking for annotations over the following packages: {}", Arrays.asList(scannedPackages));
-    long cur = System.currentTimeMillis();
+    final long cur = System.currentTimeMillis();
 
-    Reflections reflections =
+    final Reflections reflections =
         new Reflections(
             new ConfigurationBuilder()
                 .forPackages(scannedPackages)
@@ -165,17 +163,17 @@ public class TraceAnnotationsManager {
                     new FilterBuilder().includePackage(scannedPackages).include(".*\\.class"))
                 .setScanners(new MethodAnnotationsScanner()));
 
-    Set<Method> methods = reflections.getMethodsAnnotatedWith(Trace.class);
+    final Set<Method> methods = reflections.getMethodsAnnotatedWith(Trace.class);
 
-    StringBuilder generatedScripts = new StringBuilder();
-    for (Method method : methods) {
+    final StringBuilder generatedScripts = new StringBuilder();
+    for (final Method method : methods) {
       try {
-        ClassPool pool = ClassPool.getDefault();
-        CtClass cc = pool.get(method.getDeclaringClass().getCanonicalName());
-        CtMethod javassistMethod = cc.getDeclaredMethod(method.getName());
+        final ClassPool pool = ClassPool.getDefault();
+        final CtClass cc = pool.get(method.getDeclaringClass().getCanonicalName());
+        final CtMethod javassistMethod = cc.getDeclaredMethod(method.getName());
 
         //AT ENTRY: child of current case
-        String ruleText = CURRENT_SPAN_EXISTS + buildSpan(javassistMethod) + START;
+        final String ruleText = CURRENT_SPAN_EXISTS + buildSpan(javassistMethod) + START;
         RuleScript script =
             createRuleScript(
                 "Start Active Span ",
@@ -195,34 +193,38 @@ public class TraceAnnotationsManager {
                 EXIT_RULE);
         generatedScripts.append(script).append("\n");
 
-      } catch (Exception e) {
-        LOGGER.warn(
+      } catch (final Exception e) {
+        log.warn(
             "Could not create rule for method " + method + ". Proceed to next annoted method.", e);
       }
     }
     try {
-      StringWriter sw = new StringWriter();
+      final StringWriter sw = new StringWriter();
       try (PrintWriter pr = new PrintWriter(sw)) {
         transformer.installScript(
             Arrays.asList(generatedScripts.toString()), Arrays.asList("@Trace annotations"), pr);
       }
-      LOGGER.debug(sw.toString());
-    } catch (Exception e) {
-      LOGGER.warn("Could not install annotation scripts.", e);
+      log.debug(sw.toString());
+    } catch (final Exception e) {
+      log.warn("Could not install annotation scripts.", e);
     }
 
-    LOGGER.info(
+    log.info(
         "Finished annotation scanning in "
             + (System.currentTimeMillis() - cur)
             + " ms. You can accelerate this process by refining the packages you want to scan with `scannedPackages` in the dd-trace.yaml configuration file.");
   }
 
   private static RuleScript createRuleScript(
-      String ruleNamePrefix, CtClass cc, CtMethod javassistMethod, Location loc, String ruleText) {
-    int lineNumber = javassistMethod.getMethodInfo().getLineNumber(0);
-    String[] imports = new String[0];
+      final String ruleNamePrefix,
+      final CtClass cc,
+      final CtMethod javassistMethod,
+      final Location loc,
+      final String ruleText) {
+    final int lineNumber = javassistMethod.getMethodInfo().getLineNumber(0);
+    final String[] imports = new String[0];
 
-    RuleScript ruleScript =
+    final RuleScript ruleScript =
         new RuleScript(
             ruleNamePrefix + loc + " " + javassistMethod.getLongName(),
             cc.getName(),
@@ -239,14 +241,15 @@ public class TraceAnnotationsManager {
     return ruleScript;
   }
 
-  private static void loadRules(URI uri, final List<String> scriptNames, final List<String> scripts)
+  private static void loadRules(
+      final URI uri, final List<String> scriptNames, final List<String> scripts)
       throws IOException {
-    LOGGER.debug("Load rules from URI uri={} ", uri);
+    log.debug("Load rules from URI uri={} ", uri);
 
-    StringBuilder str = new StringBuilder();
+    final StringBuilder str = new StringBuilder();
     try (InputStream is = uri.toURL().openStream()) {
 
-      byte[] b = new byte[10240];
+      final byte[] b = new byte[10240];
       int len;
       while ((len = is.read(b)) != -1) {
         str.append(new String(b, 0, len));
@@ -256,24 +259,24 @@ public class TraceAnnotationsManager {
     scriptNames.add(uri.toString());
   }
 
-  private static String CURRENT_SPAN_EXISTS = "IF TRUE\n";
+  private static final String CURRENT_SPAN_EXISTS = "IF TRUE\n";
 
-  private static String BUILD_SPAN = "DO\n" + "getTracer().buildSpan(\"";
-  private static String CLOSE_PARENTHESIS = "\")";
+  private static final String BUILD_SPAN = "DO\n" + "getTracer().buildSpan(\"";
+  private static final String CLOSE_PARENTHESIS = "\")";
 
-  private static String START = ".startActive();";
+  private static final String START = ".startActive();";
 
-  private static String EXIT_RULE =
+  private static final String EXIT_RULE =
       "IF getTracer().activeSpan() != null\n" + "DO\n" + "getTracer().activeSpan().deactivate();\n";
 
-  private static String buildSpan(CtMethod javassistMethod) {
+  private static String buildSpan(final CtMethod javassistMethod) {
     try {
-      Trace trace = (Trace) javassistMethod.getAnnotation(Trace.class);
+      final Trace trace = (Trace) javassistMethod.getAnnotation(Trace.class);
       if (trace.operationName() != null & !trace.operationName().isEmpty()) {
         return BUILD_SPAN + trace.operationName() + CLOSE_PARENTHESIS;
       }
-    } catch (Exception e) {
-      LOGGER.warn(
+    } catch (final Exception e) {
+      log.warn(
           "Error when building injection rule on method "
               + javassistMethod
               + ". Fallback on default value.",

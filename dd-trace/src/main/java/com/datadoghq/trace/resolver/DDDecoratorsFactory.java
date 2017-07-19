@@ -3,13 +3,11 @@ package com.datadoghq.trace.resolver;
 import com.datadoghq.trace.integration.DDSpanContextDecorator;
 import java.util.ArrayList;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /** Create DDSpaDecorators from a valid configuration */
+@Slf4j
 public class DDDecoratorsFactory {
-
-  private static final Logger logger = LoggerFactory.getLogger(DDDecoratorsFactory.class);
 
   public static String DECORATORS_PACKAGE = "com.datadoghq.trace.integration.";
 
@@ -26,7 +24,7 @@ public class DDDecoratorsFactory {
     final List<DDSpanContextDecorator> decorators = new ArrayList<>();
     for (final DDSpanDecoratorConfig decoratorConfig : decoratorsConfig) {
       if (decoratorConfig.getType() == null) {
-        logger.warn("Cannot create decorator without type from configuration {}", decoratorConfig);
+        log.warn("Cannot create decorator without type from configuration {}", decoratorConfig);
         continue;
       }
 
@@ -35,7 +33,7 @@ public class DDDecoratorsFactory {
       try {
         decoratorClass = Class.forName(DECORATORS_PACKAGE + decoratorConfig.getType());
       } catch (final ClassNotFoundException e) {
-        logger.warn(
+        log.warn(
             "Cannot create decorator as the class {} is not defined. Provided configuration {}",
             decoratorConfig);
         continue;
@@ -45,7 +43,7 @@ public class DDDecoratorsFactory {
       try {
         decorator = (DDSpanContextDecorator) decoratorClass.getConstructor().newInstance();
       } catch (final Exception e) {
-        logger.warn(
+        log.warn(
             "Cannot create decorator as we could not invoke the default constructor. Provided configuration {}",
             decoratorConfig);
         continue;
