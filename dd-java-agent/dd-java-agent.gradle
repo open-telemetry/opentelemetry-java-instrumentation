@@ -24,6 +24,7 @@ dependencies {
   compile group: 'io.opentracing.contrib', name: 'opentracing-agent', version: '0.1.0'
   compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
   compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
+  compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
 
   compile(group: 'io.opentracing.contrib', name: 'opentracing-web-servlet-filter', version: '0.0.9') {
     exclude(group: 'org.eclipse.jetty', module: 'jetty-servlet')

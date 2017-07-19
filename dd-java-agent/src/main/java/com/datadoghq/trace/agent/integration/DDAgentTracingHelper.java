@@ -3,9 +3,9 @@ package com.datadoghq.trace.agent.integration;
 import io.opentracing.NoopTracerFactory;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.agent.OpenTracingHelper;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jboss.byteman.rule.Rule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class provides helpful stuff in order to easy patch object using Byteman rules
@@ -14,8 +14,7 @@ import org.jboss.byteman.rule.Rule;
  */
 public abstract class DDAgentTracingHelper<T> extends OpenTracingHelper {
 
-  private static final Logger LOGGER =
-      Logger.getLogger(DDAgentTracingHelper.class.getCanonicalName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(DDAgentTracingHelper.class);
 
   /**
    * The current instance of the tracer. If something goes wrong during the resolution, we provides
@@ -31,8 +30,8 @@ public abstract class DDAgentTracingHelper<T> extends OpenTracingHelper {
       tracerResolved = tracerResolved == null ? NoopTracerFactory.create() : tracerResolved;
     } catch (Exception e) {
       tracerResolved = NoopTracerFactory.create();
-      warning("Failed to retrieve the tracer, using a NoopTracer instead: " + e.getMessage());
-      logStackTrace(e.getMessage(), e);
+      LOGGER.warn("Failed to retrieve the tracer, using a NoopTracer instead: {}", e.getMessage());
+      LOGGER.warn(e.getMessage(), e);
     }
     tracer = tracerResolved;
   }
@@ -50,20 +49,20 @@ public abstract class DDAgentTracingHelper<T> extends OpenTracingHelper {
   public T patch(T args) {
 
     if (args == null) {
-      info("Skipping " + rule.getName() + "' rule because the input arg is null");
-      return args;
+      LOGGER.debug("Skipping rule={} because the input arg is null", rule.getName());
+      return null;
     }
 
     String className = args.getClass().getName();
-    info("Try to patch " + className);
+    LOGGER.debug("Try to patch class={}", className);
 
     T patched;
     try {
       patched = doPatch(args);
-      info(className + " patched");
+      LOGGER.debug("class={} patched", className);
     } catch (Throwable e) {
-      warning("Failed to patch" + className + ", reason: " + e.getMessage());
-      logStackTrace(e.getMessage(), e);
+      LOGGER.warn("Failed to patch class={}, reason: {}", className, e.getMessage());
+      LOGGER.warn(e.getMessage(), e);
       patched = args;
     }
     return patched;
@@ -77,36 +76,4 @@ public abstract class DDAgentTracingHelper<T> extends OpenTracingHelper {
    * @throws Exception The exceptions are managed directly to the patch method
    */
   protected abstract T doPatch(T obj) throws Exception;
-
-  /**
-   * Simple wrapper to emit a warning
-   *
-   * @param message the message to log as a warning
-   */
-  protected void warning(String message) {
-    log(Level.WARNING, message);
-  }
-
-  /**
-   * Simple wrapper to emit an info
-   *
-   * @param message the message to log as an info
-   */
-  protected void info(String message) {
-    log(Level.INFO, message);
-  }
-
-  /**
-   * Simple wrapper to emit the corresponding stacktrace. To not warn the user, we log the stack as
-   * a debug info. By default, the stack traces are noit shown in the log.
-   *
-   * @param message the stacktrace to log as a debug
-   */
-  protected void logStackTrace(String message, Throwable th) {
-    LOGGER.log(Level.FINE, message, th);
-  }
-
-  private void log(Level level, String message) {
-    LOGGER.log(level, String.format("%s - %s", getClass().getSimpleName(), message));
-  }
 }
