@@ -26,9 +26,11 @@ docker run -it --rm -p 27017:27017 --name mongo -d mongo
 If you want to enable tracing you have to launch the application with the Datadog java agent.
 First, get the latest version of the dd-java-agent: 
 
+*NOTE:* While in beta, the latest version is best found on the [Snapshot Repo](https://oss.jfrog.org/artifactory/oss-snapshot-local/com/datadoghq/). 
+
 ```
-# Use latest version 
-curl -OL http://central.maven.org/maven2/com/datadoghq/dd-java-agent/{version}/dd-java-agent-{version}.jar
+# download the latest published version:
+wget -O dd-java-agent.jar 'https://search.maven.org/remote_content?g=com.datadoghq&a=dd-java-agent&v=LATEST'
 ```
 
 
@@ -36,7 +38,7 @@ Then, build the app add the agent to the JVM. That can be done as follow:
 ```
 cd path/to/dd-trace-examples/dropwizard-mongo-client
 gradle clean shadowJar
-java -javaagent:/path/to/dd-java-agent-{version}.jar  -jar  build/libs/dropwizard-mongo-client-{version}-all.jar server
+java -javaagent:/path/to/dd-java-agent.jar  -jar  build/libs/dropwizard-mongo-client-demo-all.jar server
 ```
 ### Generate traces
 
