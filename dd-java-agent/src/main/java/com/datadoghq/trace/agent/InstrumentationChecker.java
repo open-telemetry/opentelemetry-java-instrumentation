@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class to check the validity of the classpath concerning the java automated
@@ -15,6 +17,7 @@ import java.util.regex.Pattern;
  */
 public class InstrumentationChecker {
 
+  public static final Logger LOGGER = LoggerFactory.getLogger(InstrumentationChecker.class);
   private static final String CONFIG_FILE = "dd-trace-supported-framework.yaml";
   private final Map<String, List<Map<String, String>>> rules;
   private final Map<String, String> frameworks;
@@ -61,14 +64,20 @@ public class InstrumentationChecker {
               Pattern.matches(
                   check.get("supported_version"), frameworks.get(check.get("artifact")));
           if (!matched) {
+            LOGGER.debug(
+                "Library conflict: supported_version={}, actual_version={}",
+                check.get("supported_version"),
+                frameworks.get(check.get("artifact")));
             supported = false;
             break;
           }
           supported = true;
+          LOGGER.trace("Instrumentation rule={} is supported", rule);
         }
       }
 
       if (!supported) {
+        LOGGER.info("Instrumentation rule={} is not supported", rule);
         unsupportedRules.add(rule);
       }
     }
