@@ -12,11 +12,11 @@ public class RateSamplerTest {
   @Test
   public void testRateSampler() {
 
-    DDSpan mockSpan = mock(DDSpan.class);
+    final DDSpan mockSpan = mock(DDSpan.class);
 
     final double sampleRate = 0.35;
     final int iterations = 1000;
-    Sampler sampler = new RateSampler(sampleRate);
+    final Sampler sampler = new RateSampler(sampleRate);
 
     int kept = 0;
 

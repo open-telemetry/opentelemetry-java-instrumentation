@@ -9,17 +9,17 @@ import java.util.regex.Pattern;
 public abstract class AbstractSampler implements Sampler {
 
   /** Sample tags */
-  protected Map<String, Pattern> skipTagsPatterns = new HashMap<String, Pattern>();
+  protected Map<String, Pattern> skipTagsPatterns = new HashMap<>();
 
   @Override
-  public boolean sample(DDBaseSpan<?> span) {
+  public boolean sample(final DDBaseSpan<?> span) {
 
     //Filter by tag values
-    for (Entry<String, Pattern> entry : skipTagsPatterns.entrySet()) {
-      Object value = span.getTags().get(entry.getKey());
+    for (final Entry<String, Pattern> entry : skipTagsPatterns.entrySet()) {
+      final Object value = span.getTags().get(entry.getKey());
       if (value != null) {
-        String strValue = String.valueOf(value);
-        Pattern skipPattern = entry.getValue();
+        final String strValue = String.valueOf(value);
+        final Pattern skipPattern = entry.getValue();
         if (skipPattern.matcher(strValue).matches()) {
           return false;
         }
@@ -35,7 +35,7 @@ public abstract class AbstractSampler implements Sampler {
    * @param tag
    * @param skipPattern
    */
-  public void addSkipTagPattern(String tag, Pattern skipPattern) {
+  public void addSkipTagPattern(final String tag, final Pattern skipPattern) {
     skipTagsPatterns.put(tag, skipPattern);
   }
 

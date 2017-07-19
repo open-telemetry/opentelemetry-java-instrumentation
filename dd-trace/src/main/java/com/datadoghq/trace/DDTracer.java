@@ -13,7 +13,11 @@ import io.opentracing.BaseSpan;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.ThreadLocalActiveSpanSource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,12 +28,12 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
   public static final String CURRENT_VERSION;
 
   static {
-    String version = DDTracer.class.getPackage().getImplementationVersion();
+    final String version = DDTracer.class.getPackage().getImplementationVersion();
     CURRENT_VERSION = version != null ? version : "unknown";
   }
 
   /** Writer is an charge of reporting traces and spans to the desired endpoint */
-  private Writer writer;
+  private final Writer writer;
   /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
   private final Sampler sampler;
 
@@ -37,8 +41,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
   private final String defaultServiceName;
 
   /** Span context decorators */
-  private final Map<String, List<DDSpanContextDecorator>> spanContextDecorators =
-      new HashMap<String, List<DDSpanContextDecorator>>();
+  private final Map<String, List<DDSpanContextDecorator>> spanContextDecorators = new HashMap<>();
 
   private static final Logger logger = LoggerFactory.getLogger(DDTracer.class);
   private final CodecRegistry registry;
@@ -52,15 +55,15 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     this(UNASSIGNED_WRITER);
   }
 
-  public DDTracer(Writer writer) {
+  public DDTracer(final Writer writer) {
     this(writer, new AllSampler());
   }
 
-  public DDTracer(Writer writer, Sampler sampler) {
+  public DDTracer(final Writer writer, final Sampler sampler) {
     this(UNASSIGNED_DEFAULT_SERVICE_NAME, writer, sampler);
   }
 
-  public DDTracer(String defaultServiceName, Writer writer, Sampler sampler) {
+  public DDTracer(final String defaultServiceName, final Writer writer, final Sampler sampler) {
     this.defaultServiceName = defaultServiceName;
     this.writer = writer;
     this.writer.start();
@@ -74,7 +77,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
    *
    * @return the list of span context decorators
    */
-  public List<DDSpanContextDecorator> getSpanContextDecorators(String tag) {
+  public List<DDSpanContextDecorator> getSpanContextDecorators(final String tag) {
     return spanContextDecorators.get(tag);
   }
 
@@ -83,24 +86,26 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
    *
    * @param decorator The decorator in the list
    */
-  public void addDecorator(DDSpanContextDecorator decorator) {
+  public void addDecorator(final DDSpanContextDecorator decorator) {
 
     List<DDSpanContextDecorator> list = spanContextDecorators.get(decorator.getMatchingTag());
     if (list == null) {
-      list = new ArrayList<DDSpanContextDecorator>();
+      list = new ArrayList<>();
     }
     list.add(decorator);
 
     spanContextDecorators.put(decorator.getMatchingTag(), list);
   }
 
-  public DDSpanBuilder buildSpan(String operationName) {
+  @Override
+  public DDSpanBuilder buildSpan(final String operationName) {
     return new DDSpanBuilder(operationName, this);
   }
 
-  public <T> void inject(SpanContext spanContext, Format<T> format, T carrier) {
+  @Override
+  public <T> void inject(final SpanContext spanContext, final Format<T> format, final T carrier) {
 
-    Codec<T> codec = registry.get(format);
+    final Codec<T> codec = registry.get(format);
     if (codec == null) {
       logger.warn("Unsupported format for propagation - {}", format.getClass().getName());
     } else {
@@ -108,9 +113,10 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     }
   }
 
-  public <T> SpanContext extract(Format<T> format, T carrier) {
+  @Override
+  public <T> SpanContext extract(final Format<T> format, final T carrier) {
 
-    Codec<T> codec = registry.get(format);
+    final Codec<T> codec = registry.get(format);
     if (codec == null) {
       logger.warn("Unsupported format for propagation - {}", format.getClass().getName());
     } else {
@@ -125,7 +131,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
    *
    * @param trace a list of the spans related to the same trace
    */
-  public void write(List<DDBaseSpan<?>> trace) {
+  public void write(final List<DDBaseSpan<?>> trace) {
     if (trace.isEmpty()) {
       return;
     }
@@ -143,7 +149,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     private final ActiveSpanSource spanSource;
 
     /** Each span must have an operationName according to the opentracing specification */
-    private String operationName;
+    private final String operationName;
 
     // Builder attributes
     private Map<String, Object> tags = Collections.emptyMap();
@@ -167,14 +173,14 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
 
     @Override
     public ActiveSpan startActive() {
-      ActiveSpan activeSpan = spanSource.makeActive(startSpan());
+      final ActiveSpan activeSpan = spanSource.makeActive(startSpan());
       logger.debug("{} - Starting a new active span.", activeSpan);
       return activeSpan;
     }
 
     @Override
     public DDSpan startManual() {
-      DDSpan span = startSpan();
+      final DDSpan span = startSpan();
       logger.debug("{} - Starting a new manuel span.", span);
       return span;
     }
@@ -186,12 +192,12 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     }
 
     @Override
-    public DDSpanBuilder withTag(String tag, Number number) {
+    public DDSpanBuilder withTag(final String tag, final Number number) {
       return withTag(tag, (Object) number);
     }
 
     @Override
-    public DDSpanBuilder withTag(String tag, String string) {
+    public DDSpanBuilder withTag(final String tag, final String string) {
       if (tag.equals(DDTags.SERVICE_NAME)) {
         return withServiceName(string);
       } else if (tag.equals(DDTags.RESOURCE_NAME)) {
@@ -204,27 +210,27 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     }
 
     @Override
-    public DDSpanBuilder withTag(String tag, boolean bool) {
+    public DDSpanBuilder withTag(final String tag, final boolean bool) {
       return withTag(tag, (Object) bool);
     }
 
-    public DDSpanBuilder(String operationName, ActiveSpanSource spanSource) {
+    public DDSpanBuilder(final String operationName, final ActiveSpanSource spanSource) {
       this.operationName = operationName;
       this.spanSource = spanSource;
     }
 
     @Override
-    public DDSpanBuilder withStartTimestamp(long timestampMillis) {
+    public DDSpanBuilder withStartTimestamp(final long timestampMillis) {
       this.timestamp = timestampMillis;
       return this;
     }
 
-    public DDSpanBuilder withServiceName(String serviceName) {
+    public DDSpanBuilder withServiceName(final String serviceName) {
       this.serviceName = serviceName;
       return this;
     }
 
-    public DDSpanBuilder withResourceName(String resourceName) {
+    public DDSpanBuilder withResourceName(final String resourceName) {
       this.resourceName = resourceName;
       return this;
     }
@@ -234,7 +240,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
       return this;
     }
 
-    public DDSpanBuilder withSpanType(String spanType) {
+    public DDSpanBuilder withSpanType(final String spanType) {
       this.spanType = spanType;
       return this;
     }
@@ -247,26 +253,26 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     }
 
     @Override
-    public DDSpanBuilder asChildOf(BaseSpan<?> span) {
+    public DDSpanBuilder asChildOf(final BaseSpan<?> span) {
       return asChildOf(span == null ? null : span.context());
     }
 
     @Override
-    public DDSpanBuilder asChildOf(SpanContext spanContext) {
+    public DDSpanBuilder asChildOf(final SpanContext spanContext) {
       this.parent = spanContext;
       return this;
     }
 
     @Override
-    public DDSpanBuilder addReference(String referenceType, SpanContext spanContext) {
+    public DDSpanBuilder addReference(final String referenceType, final SpanContext spanContext) {
       logger.debug("`addReference` method is not implemented. Doing nothing");
       return this;
     }
 
     // Private methods
-    private DDSpanBuilder withTag(String tag, Object value) {
+    private DDSpanBuilder withTag(final String tag, final Object value) {
       if (this.tags.isEmpty()) {
-        this.tags = new HashMap<String, Object>();
+        this.tags = new HashMap<>();
       }
       this.tags.put(tag, value);
       return this;
@@ -289,16 +295,16 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
       final Map<String, String> baggage;
       final List<DDBaseSpan<?>> parentTrace;
 
-      DDSpanContext context;
+      final DDSpanContext context;
       SpanContext parentContext = this.parent;
       if (parentContext == null && !ignoreActiveSpan) {
         // use the ActiveSpan as parent unless overridden or ignored.
-        ActiveSpan activeSpan = activeSpan();
+        final ActiveSpan activeSpan = activeSpan();
         if (activeSpan != null) parentContext = activeSpan.context();
       }
 
       if (parentContext instanceof DDSpanContext) {
-        DDSpanContext ddsc = (DDSpanContext) parentContext;
+        final DDSpanContext ddsc = (DDSpanContext) parentContext;
         traceId = ddsc.getTraceId();
         parentSpanId = ddsc.getSpanId();
         baggage = ddsc.getBaggageItems();
@@ -317,7 +323,8 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
         serviceName = defaultServiceName;
       }
 
-      String operationName = this.operationName != null ? this.operationName : this.resourceName;
+      final String operationName =
+          this.operationName != null ? this.operationName : this.resourceName;
 
       //this.operationName, this.tags,
 
@@ -348,14 +355,13 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
 
   private static class CodecRegistry {
 
-    private final Map<Format<?>, Codec<?>> codecs = new HashMap<Format<?>, Codec<?>>();
+    private final Map<Format<?>, Codec<?>> codecs = new HashMap<>();
 
-    @SuppressWarnings("unchecked")
-    <T> Codec<T> get(Format<T> format) {
+    <T> Codec<T> get(final Format<T> format) {
       return (Codec<T>) codecs.get(format);
     }
 
-    public <T> void register(Format<T> format, Codec<T> codec) {
+    public <T> void register(final Format<T> format, final Codec<T> codec) {
       codecs.put(format, codec);
     }
   }

@@ -33,17 +33,17 @@ public class DDTracerFactory {
    * @param config
    * @return the corresponding tracer
    */
-  public static DDTracer create(TracerConfig config) {
-    String defaultServiceName =
+  public static DDTracer create(final TracerConfig config) {
+    final String defaultServiceName =
         config.getDefaultServiceName() != null
             ? config.getDefaultServiceName()
             : DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME;
 
     //Create writer
-    Writer writer;
+    final Writer writer;
 
     if (config.getWriter() != null) {
-      WriterConfig c = config.getWriter();
+      final WriterConfig c = config.getWriter();
       if (DD_AGENT_WRITER_TYPE.equals(c.getType())) {
         writer =
             new DDAgentWriter(
@@ -60,7 +60,7 @@ public class DDTracerFactory {
     }
 
     //Create sampler
-    Sampler sampler;
+    final Sampler sampler;
 
     if (config.getSampler() != null) {
       if (RATE_SAMPLER_TYPE.equals(config.getSampler().getType())) {
@@ -76,10 +76,10 @@ public class DDTracerFactory {
     }
 
     //Add sampled tags
-    Map<String, String> skipTagsPatterns = config.getSampler().getSkipTagsPatterns();
+    final Map<String, String> skipTagsPatterns = config.getSampler().getSkipTagsPatterns();
     if (skipTagsPatterns != null && sampler instanceof AbstractSampler) {
-      AbstractSampler aSampler = (AbstractSampler) sampler;
-      for (Map.Entry<String, String> entry : skipTagsPatterns.entrySet()) {
+      final AbstractSampler aSampler = (AbstractSampler) sampler;
+      for (final Map.Entry<String, String> entry : skipTagsPatterns.entrySet()) {
         aSampler.addSkipTagPattern(entry.getKey(), Pattern.compile(entry.getValue()));
       }
     }
@@ -89,7 +89,7 @@ public class DDTracerFactory {
   }
 
   public static DDTracer createFromConfigurationFile() {
-    TracerConfig tracerConfig =
+    final TracerConfig tracerConfig =
         FactoryUtils.loadConfigFromFilePropertyOrResource(
             SYSTEM_PROPERTY_CONFIG_PATH, CONFIG_PATH, TracerConfig.class);
 

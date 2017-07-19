@@ -1,21 +1,21 @@
 buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.18"
-    }
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.18"
+  }
 }
 
 plugins {
-    id 'com.github.sherter.google-java-format' version '0.6'
+  id 'com.github.sherter.google-java-format' version '0.6'
 }
 
 allprojects {
-    group = 'com.datadoghq'
-    version = '0.1.2-SNAPSHOT'
+  group = 'com.datadoghq'
+  version = '0.1.2-SNAPSHOT'
 }
 
 repositories {
-    jcenter()
+  jcenter()
 }

@@ -10,7 +10,7 @@ public class DDSpanTest {
   @Test
   public void testGetterSetter() {
 
-    DDSpanContext context =
+    final DDSpanContext context =
         new DDSpanContext(
             1L,
             1L,
@@ -26,7 +26,7 @@ public class DDSpanTest {
             null);
 
     String expected;
-    DDSpan span = new DDSpan(1L, context);
+    final DDSpan span = new DDSpan(1L, context);
 
     expected = "service";
     span.setServiceName(expected);

@@ -28,7 +28,7 @@ public class DDSpanBuilderTest {
   public void shouldBuildSimpleSpan() {
 
     final String expectedName = "fakeName";
-    DDSpan span = tracer.buildSpan(expectedName).withServiceName("foo").startManual();
+    final DDSpan span = tracer.buildSpan(expectedName).withServiceName("foo").startManual();
     assertThat(span.getOperationName()).isEqualTo(expectedName);
   }
 
@@ -79,7 +79,7 @@ public class DDSpanBuilderTest {
             .withSpanType(expectedType)
             .startManual();
 
-    DDSpanContext actualContext = span.context();
+    final DDSpanContext actualContext = span.context();
 
     assertThat(actualContext.getResourceName()).isEqualTo(expectedResource);
     assertThat(actualContext.getErrorFlag()).isTrue();
@@ -96,7 +96,7 @@ public class DDSpanBuilderTest {
 
     final String expectedName = "fakeName";
 
-    DDSpan span = tracer.buildSpan(expectedName).withServiceName("foo").startManual();
+    final DDSpan span = tracer.buildSpan(expectedName).withServiceName("foo").startManual();
 
     assertThat(span.getBaggageItem(DDSpanContext.LANGUAGE_FIELDNAME)).isEqualTo("java");
   }
@@ -119,7 +119,7 @@ public class DDSpanBuilderTest {
     assertThat(span.getStartTime()).isEqualTo(expectedTimestamp * 1000L);
 
     // auto-timestamp in nanoseconds
-    long tick = System.currentTimeMillis();
+    final long tick = System.currentTimeMillis();
     span = tracer.buildSpan(expectedName).withServiceName("foo").startManual();
 
     // Give a range of +/- 2 millis
@@ -133,21 +133,21 @@ public class DDSpanBuilderTest {
     final long spanId = 1L;
     final long expectedParentId = spanId;
 
-    DDSpanContext mockedContext = mock(DDSpanContext.class);
+    final DDSpanContext mockedContext = mock(DDSpanContext.class);
 
     when(mockedContext.getSpanId()).thenReturn(spanId);
     when(mockedContext.getServiceName()).thenReturn("foo");
 
     final String expectedName = "fakeName";
 
-    DDSpan span =
+    final DDSpan span =
         tracer
             .buildSpan(expectedName)
             .withServiceName("foo")
             .asChildOf(mockedContext)
             .startManual();
 
-    DDSpanContext actualContext = span.context();
+    final DDSpanContext actualContext = span.context();
 
     assertThat(actualContext.getParentId()).isEqualTo(expectedParentId);
   }
@@ -165,7 +165,7 @@ public class DDSpanBuilderTest {
     final String expectedBaggageItemKey = "fakeKey";
     final String expectedBaggageItemValue = "fakeValue";
 
-    DDSpan parent =
+    final DDSpan parent =
         tracer
             .buildSpan(expectedName)
             .withServiceName("foo")
@@ -209,17 +209,17 @@ public class DDSpanBuilderTest {
   @Test
   public void shouldTrackAllSpanInTrace() throws InterruptedException {
 
-    ArrayList<DDSpan> spans = new ArrayList<DDSpan>();
+    final ArrayList<DDSpan> spans = new ArrayList<>();
     final int nbSamples = 10;
 
     // root (aka spans[0]) is the parent
     // others are just for fun
 
-    DDSpan root = tracer.buildSpan("fake_O").withServiceName("foo").startManual();
+    final DDSpan root = tracer.buildSpan("fake_O").withServiceName("foo").startManual();
     spans.add(root);
 
     Thread.sleep(200);
-    long tickEnd = System.currentTimeMillis();
+    final long tickEnd = System.currentTimeMillis();
 
     for (int i = 1; i <= 10; i++) {
       spans.add(

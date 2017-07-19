@@ -10,10 +10,10 @@ include ':dd-trace-examples'
 include ':dd-trace-annotations'
 
 def setBuildFile(project) {
-    project.buildFileName = "${project.name}.gradle"
-    project.children.each {
-        setBuildFile(it)
-    }
+  project.buildFileName = "${project.name}.gradle"
+  project.children.each {
+    setBuildFile(it)
+  }
 }
 
 setBuildFile(rootProject)

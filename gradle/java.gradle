@@ -3,57 +3,57 @@ sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
 task packageSources(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
+  classifier = 'sources'
+  from sourceSets.main.allSource
 }
 artifacts.archives packageSources
 repositories {
-    mavenLocal()
+  mavenLocal()
 
-    maven { url "http://repo.maven.apache.org/maven2" }
+  maven { url "http://repo.maven.apache.org/maven2" }
 }
 
 tasks.withType(Javadoc) {
-    options.encoding = "utf-8"
-    options.docEncoding = "utf-8"
-    options.charSet = "utf-8"
-    exclude "**/internal/**"
+  options.encoding = "utf-8"
+  options.docEncoding = "utf-8"
+  options.charSet = "utf-8"
+  exclude "**/internal/**"
 
-    options.addStringOption('Xdoclint:none', '-quiet')
+  options.addStringOption('Xdoclint:none', '-quiet')
 
-    doFirst {
-        if (project.ext.has("apiLinks")) {
-            options.links(*project.apiLinks)
-        }
+  doFirst {
+    if (project.ext.has("apiLinks")) {
+      options.links(*project.apiLinks)
     }
+  }
 }
 
 javadoc {
-    source = sourceSets.main.allJava
-    classpath = configurations.compileClasspath
+  source = sourceSets.main.allJava
+  classpath = configurations.compileClasspath
 
-    options {
-        setMemberLevel JavadocMemberLevel.PUBLIC
-        setAuthor true
+  options {
+    setMemberLevel JavadocMemberLevel.PUBLIC
+    setAuthor true
 
-        links "https://docs.oracle.com/javase/8/docs/api/"
-    }
+    links "https://docs.oracle.com/javase/8/docs/api/"
+  }
 }
 
 task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
-    classifier = 'sources'
+  from sourceSets.main.allJava
+  classifier = 'sources'
 }
 
 task javaDocJar(type: Jar, dependsOn: javadoc) {
-    from javadoc.destinationDir
-    classifier = 'javadoc'
+  from javadoc.destinationDir
+  classifier = 'javadoc'
 }
 
 artifacts {
-    archives jar
-    archives sourceJar
-    archives javaDocJar
+  archives jar
+  archives sourceJar
+  archives javaDocJar
 }
 
 apply from: "$rootDir/gradle/checkstyle.gradle"
