@@ -1,13 +1,11 @@
 package com.datadoghq.trace.resolver;
 
 import com.datadoghq.trace.DDTracer;
-import com.datadoghq.trace.integration.DDSpanContextDecorator;
 import com.google.auto.service.AutoService;
 import io.opentracing.NoopTracerFactory;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.tracerresolver.TracerResolver;
 import io.opentracing.util.GlobalTracer;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -22,7 +20,6 @@ public class DDTracerResolver extends TracerResolver {
     DDTracer tracer = null;
     //Create tracer from resource files
     tracer = DDTracerFactory.createFromConfigurationFile();
-
 
 
     return tracer;
