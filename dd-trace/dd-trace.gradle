@@ -36,11 +36,16 @@ dependencies {
   jmh 'commons-io:commons-io:2.4'
 }
 
+jar {
+  classifier = 'unbundled'
+}
+
 shadowJar {
 //    mergeServiceFiles()
 
-  classifier 'shadow'
+  classifier null
 
+  // Don't relocate slf4j or opentracing deps.
   relocate 'com.fasterxml', 'dd.deps.com.fasterxml'
   relocate 'com.google', 'dd.deps.com.google'
   relocate 'javassist', 'dd.deps.javassist'

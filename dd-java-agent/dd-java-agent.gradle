@@ -71,6 +71,8 @@ dependencies {
 }
 
 jar {
+  classifier = 'unbundled'
+
   manifest {
     attributes(
       // I don't think we want to define this since we can't really load after startup:
@@ -88,16 +90,15 @@ jar {
 shadowJar {
   append 'otarules.btm'
 
-  classifier 'shadow'
+  classifier null
 
 //    mergeServiceFiles()
 
   // Various tests fail when these are uncommented:
-//    relocate 'ch.qos.logback', 'dd.deps.ch.qos.logback'
 //    relocate 'com.google', 'dd.deps.com.google'
 //    relocate 'org.jboss.byteman', 'dd.deps.org.jboss.byteman'
-//    relocate 'org.slf4j', 'dd.deps.org.slf4j'
 
+  // Don't relocate slf4j or opentracing deps.
   relocate 'com.fasterxml', 'dd.deps.com.fasterxml'
   relocate 'javassist', 'dd.deps.javassist'
   relocate 'org.reflections', 'dd.deps.org.reflections'

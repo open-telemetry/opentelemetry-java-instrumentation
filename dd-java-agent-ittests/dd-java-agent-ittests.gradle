@@ -37,7 +37,7 @@ dependencies {
 
 test {
   jvmArgs "-Ddd.trace.configurationFile=${project.buildDir}/resources/test/dd-trace.yaml"
-  jvmArgs "-javaagent:${project(':dd-java-agent').buildDir}/libs/dd-java-agent-${project.version}-shadow.jar"
+  jvmArgs "-javaagent:${project(':dd-java-agent').buildDir}/libs/dd-java-agent-${project.version}.jar"
   jvmArgs "-Dorg.jboss.byteman.verbose=true"
 }
 

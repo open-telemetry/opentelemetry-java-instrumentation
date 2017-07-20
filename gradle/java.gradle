@@ -25,7 +25,6 @@ tasks.withType(Javadoc) {
   options.encoding = "utf-8"
   options.docEncoding = "utf-8"
   options.charSet = "utf-8"
-  exclude "**/internal/**"
 
   options.addStringOption('Xdoclint:none', '-quiet')
 
@@ -59,9 +58,18 @@ task javaDocJar(type: Jar, dependsOn: javadoc) {
 }
 
 artifacts {
-  archives jar
   archives sourceJar
   archives javaDocJar
+}
+
+if (project.plugins.hasPlugin('com.github.johnrengelman.shadow')) {
+  // Remove the no-deps jar from the archives to prevent publication
+  configurations.archives.with {
+    artifacts.remove artifacts.find { it.archiveTask.is jar }
+  }
+  artifacts {
+    archives shadowJar
+  }
 }
 
 apply from: "$rootDir/gradle/checkstyle.gradle"

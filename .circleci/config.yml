@@ -14,7 +14,7 @@ jobs:
 
       - run:
           name: Run Tests
-          command: ./gradlew clean shadowJar check --parallel
+          command: ./gradlew clean check --parallel
 
       - save_cache:
           paths:
