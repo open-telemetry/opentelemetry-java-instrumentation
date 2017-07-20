@@ -1,6 +1,7 @@
 package com.datadoghq.trace.resolver;
 
 import com.datadoghq.trace.DDTracer;
+import com.datadoghq.trace.integration.DDSpanContextDecorator;
 import com.datadoghq.trace.sampling.AbstractSampler;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.RateSampler;
@@ -9,6 +10,7 @@ import com.datadoghq.trace.writer.DDAgentWriter;
 import com.datadoghq.trace.writer.DDApi;
 import com.datadoghq.trace.writer.LoggingWriter;
 import com.datadoghq.trace.writer.Writer;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
@@ -97,6 +99,12 @@ public class DDTracerFactory {
       tracer = new DDTracer();
     } else {
       tracer = DDTracerFactory.create(tracerConfig);
+    }
+
+    //Create decorators from resource files
+    final List<DDSpanContextDecorator> decorators = DDDecoratorsFactory.createFromResources();
+    for (final DDSpanContextDecorator decorator : decorators) {
+      tracer.addDecorator(decorator);
     }
 
     return tracer;
