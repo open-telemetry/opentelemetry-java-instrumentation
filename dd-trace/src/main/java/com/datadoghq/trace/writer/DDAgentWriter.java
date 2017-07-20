@@ -10,8 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This writer write provided traces to the a DD agent which is most of time located on the same
@@ -21,10 +20,9 @@ import org.slf4j.LoggerFactory;
  * if too much spans are collected the writers can reach a state where it is forced to drop incoming
  * spans.
  */
+@Slf4j
 @AutoService(Writer.class)
 public class DDAgentWriter implements Writer {
-
-  private static final Logger logger = LoggerFactory.getLogger(DDAgentWriter.class.getName());
 
   /** Default location of the DD agent */
   public static final String DEFAULT_HOSTNAME = "localhost";
@@ -74,7 +72,7 @@ public class DDAgentWriter implements Writer {
     if (proceed) {
       traces.add(trace);
     } else {
-      logger.warn(
+      log.warn(
           "Cannot add a trace of {} as the async queue is full. Queue max size: {}",
           trace.size(),
           DEFAULT_MAX_SPANS);
@@ -98,7 +96,7 @@ public class DDAgentWriter implements Writer {
     try {
       executor.awaitTermination(500, TimeUnit.MILLISECONDS);
     } catch (final InterruptedException e) {
-      logger.info("Writer properly closed and async writer interrupted.");
+      log.info("Writer properly closed and async writer interrupted.");
     }
   }
 
@@ -119,7 +117,7 @@ public class DDAgentWriter implements Writer {
           traces.drainTo(payload, DEFAULT_BATCH_SIZE);
 
           //SEND the payload to the agent
-          logger.debug("Async writer about to write {} traces.", payload.size());
+          log.debug("Async writer about to write {} traces.", payload.size());
           api.sendTraces(payload);
 
           //Compute the number of spans sent
@@ -127,18 +125,18 @@ public class DDAgentWriter implements Writer {
           for (final List<DDBaseSpan<?>> trace : payload) {
             spansCount += trace.size();
           }
-          logger.debug(
+          log.debug(
               "Async writer just sent {} spans through {} traces", spansCount, payload.size());
 
           //Release the tokens
           tokens.release(spansCount);
         } catch (final InterruptedException e) {
-          logger.info("Async writer interrupted.");
+          log.info("Async writer interrupted.");
 
           //The thread was interrupted, we break the LOOP
           break;
         } catch (final Throwable e) {
-          logger.error("Unexpected error! Some traces may have been dropped.", e);
+          log.error("Unexpected error! Some traces may have been dropped.", e);
         }
       }
     }

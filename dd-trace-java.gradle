@@ -3,6 +3,7 @@ buildscript {
     jcenter()
   }
   dependencies {
+    classpath "io.franzbecker:gradle-lombok:1.8"
     classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.18"
   }
 }

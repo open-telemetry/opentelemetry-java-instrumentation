@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
 
   /** StartTime stores the creation time of the span in milliseconds */
@@ -21,8 +21,6 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
   protected long durationNano;
   /** The context attached to the span */
   protected final DDSpanContext context;
-
-  private static final Logger logger = LoggerFactory.getLogger(DDBaseSpan.class);
 
   /**
    * A simple constructor. Currently, users have
@@ -61,7 +59,7 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
    * not, warned it
    */
   protected final void afterFinish() {
-    logger.debug("{} - Closing the span.", this);
+    log.debug("{} - Closing the span.", this);
 
     // warn if one of the parent's children is not finished
     if (this.isRootSpan()) {
@@ -69,13 +67,13 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
 
       for (final DDBaseSpan<?> span : spans) {
         if (span.getDurationNano() == 0L) {
-          logger.warn(
+          log.warn(
               "{} - The parent span is marked as finished but this span isn't. You have to close each children.",
               this);
         }
       }
       this.context.getTracer().write(this.context.getTrace());
-      logger.debug("{} - Write the trace", this);
+      log.debug("{} - Write the trace", this);
     }
   }
 
@@ -161,7 +159,7 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
    */
   @Override
   public final S log(final Map<String, ?> map) {
-    logger.debug("`log` method is not implemented. Doing nothing");
+    log.debug("`log` method is not implemented. Doing nothing");
     return thisInstance();
   }
 
@@ -170,7 +168,7 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
    */
   @Override
   public final S log(final long l, final Map<String, ?> map) {
-    logger.debug("`log` method is not implemented. Doing nothing");
+    log.debug("`log` method is not implemented. Doing nothing");
     return thisInstance();
   }
 
@@ -179,7 +177,7 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
    */
   @Override
   public final S log(final String s) {
-    logger.debug("`log` method is not implemented. Provided log: {}", s);
+    log.debug("`log` method is not implemented. Provided log: {}", s);
     return thisInstance();
   }
 
@@ -188,7 +186,7 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
    */
   @Override
   public final S log(final long l, final String s) {
-    logger.debug("`log` method is not implemented. Provided log: {}", s);
+    log.debug("`log` method is not implemented. Provided log: {}", s);
     return thisInstance();
   }
 
@@ -197,7 +195,7 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
    */
   @Override
   public final S log(final String s, final Object o) {
-    logger.debug("`log` method is not implemented. Provided log: {}", s);
+    log.debug("`log` method is not implemented. Provided log: {}", s);
     return thisInstance();
   }
 
@@ -206,7 +204,7 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
    */
   @Override
   public final S log(final long l, final String s, final Object o) {
-    logger.debug("`log` method is not implemented. Provided log: {}", s);
+    log.debug("`log` method is not implemented. Provided log: {}", s);
     return thisInstance();
   }
 

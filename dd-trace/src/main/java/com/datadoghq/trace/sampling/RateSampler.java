@@ -2,8 +2,7 @@ package com.datadoghq.trace.sampling;
 
 import com.datadoghq.trace.DDBaseSpan;
 import com.google.auto.service.AutoService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This sampler sample the traces at a predefined rate.
@@ -11,10 +10,10 @@ import org.slf4j.LoggerFactory;
  * <p>Keep (100 * `sample_rate`)% of the traces. It samples randomly, its main purpose is to reduce
  * the integration footprint.
  */
+@Slf4j
 @AutoService(Sampler.class)
 public class RateSampler extends AbstractSampler {
 
-  private static final Logger logger = LoggerFactory.getLogger(RateSampler.class);
   /** The sample rate used */
   private final double sampleRate;
 
@@ -27,19 +26,19 @@ public class RateSampler extends AbstractSampler {
 
     if (sampleRate <= 0) {
       sampleRate = 1;
-      logger.error("SampleRate is negative or null, disabling the sampler");
+      log.error("SampleRate is negative or null, disabling the sampler");
     } else if (sampleRate > 1) {
       sampleRate = 1;
     }
 
     this.sampleRate = sampleRate;
-    logger.debug("Initializing the RateSampler, sampleRate: {} %", this.sampleRate * 100);
+    log.debug("Initializing the RateSampler, sampleRate: {} %", this.sampleRate * 100);
   }
 
   @Override
-  public boolean doSample(DDBaseSpan<?> span) {
-    boolean sample = Math.random() <= this.sampleRate;
-    logger.debug("{} - Span is sampled: {}", span, sample);
+  public boolean doSample(final DDBaseSpan<?> span) {
+    final boolean sample = Math.random() <= this.sampleRate;
+    log.debug("{} - Span is sampled: {}", span, sample);
     return sample;
   }
 
