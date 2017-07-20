@@ -10,11 +10,11 @@ import com.datadoghq.trace.writer.DDAgentWriter;
 import com.datadoghq.trace.writer.DDApi;
 import com.datadoghq.trace.writer.LoggingWriter;
 import com.datadoghq.trace.writer.Writer;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import lombok.extern.slf4j.Slf4j;
 
 /** Create a tracer from a configuration file */
 @Slf4j
