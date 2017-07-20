@@ -23,11 +23,7 @@ public class DDTracerResolver extends TracerResolver {
     //Create tracer from resource files
     tracer = DDTracerFactory.createFromConfigurationFile();
 
-    //Create decorators from resource files
-    final List<DDSpanContextDecorator> decorators = DDDecoratorsFactory.createFromResources();
-    for (final DDSpanContextDecorator decorator : decorators) {
-      tracer.addDecorator(decorator);
-    }
+
 
     return tracer;
   }
