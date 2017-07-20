@@ -21,7 +21,6 @@ public class DDTracerResolver extends TracerResolver {
     //Create tracer from resource files
     tracer = DDTracerFactory.createFromConfigurationFile();
 
-
     return tracer;
   }
 

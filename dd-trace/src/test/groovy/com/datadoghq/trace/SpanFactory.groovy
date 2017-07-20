@@ -18,7 +18,7 @@ class SpanFactory {
     return new DDSpan(timestampMicro, context)
   }
 
-  static newSpanTracer(DDTracer tracer) {
+  static newSpanOf(DDTracer tracer) {
     def context = new DDSpanContext(
       1L,
       1L,
@@ -32,6 +32,6 @@ class SpanFactory {
       Collections.emptyMap(),
       null,
       tracer)
-    return new DDSpan(0, context)
+    return new DDSpan(1, context)
   }
 }

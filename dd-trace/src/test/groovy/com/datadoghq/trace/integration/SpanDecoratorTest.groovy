@@ -25,12 +25,11 @@ class SpanDecoratorTest extends Specification {
     decorator.setSetValue("newBar")
     tracer.addDecorator(decorator)
 
-    def span = SpanFactory.newSpanTracer(tracer)
+    def span = SpanFactory.newSpanOf(tracer)
     new StringTag("foo").set(span, "bar")
 
     expect:
     span.getTags().containsKey("newFoo")
-    ((String) span.getTags().get("newFoo")) == "newBar"
-
+    span.getTags().get("newFoo") == "newBar"
   }
 }
