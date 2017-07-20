@@ -91,6 +91,7 @@ public class DDApi {
     httpCon.setRequestProperty("Content-Type", "application/json");
     httpCon.setRequestProperty("Datadog-Meta-Lang", "java");
     httpCon.setRequestProperty("Datadog-Meta-Lang-Version", DDTracer.JAVA_VERSION);
+    httpCon.setRequestProperty("Datadog-Meta-Lang-Interpreter", DDTracer.JAVA_VM_NAME);
     httpCon.setRequestProperty("Datadog-Meta-Tracer-Version", DDTracer.CURRENT_VERSION);
     return httpCon;
   }

@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentracing.Tracer {
 
   public static final String JAVA_VERSION = System.getProperty("java.version", "unknown");
+  public static final String JAVA_VM_NAME = System.getProperty("java.vm.name", "unknown");
   public static final String CURRENT_VERSION;
 
   static {
