@@ -14,7 +14,8 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
   'com.datadoghq.trace.agent.AnnotationsTracingAgent',
   'com.datadoghq.trace.agent.AgentTracerConfig',
   'com.datadoghq.trace.agent.TraceAnnotationsManager',
-  'com.datadoghq.trace.agent.InstrumentationChecker'
+  'com.datadoghq.trace.agent.InstrumentationChecker',
+  'com.datadoghq.trace.agent.DDJavaAgentInfo',
 ]
 
 dependencies {
@@ -113,4 +114,8 @@ shadowJar {
   exclude 'org/jboss/byteman/layer/LayerModuleFinder.class'
   exclude 'org/jboss/byteman/layer/LayerModuleReader.class'
   exclude 'org/jboss/byteman/layer/LayerModuleReference.class'
+
+  dependencies {
+    exclude(dependency('org.projectlombok:lombok:1.16.18'))
+  }
 }

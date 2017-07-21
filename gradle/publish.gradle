@@ -19,6 +19,8 @@
 apply plugin: 'maven'
 apply plugin: "com.jfrog.artifactory"
 apply plugin: "signing"
+
+apply from: "$rootDir/gradle/version.gradle"
 apply from: "${rootDir}/gradle/pom.gradle"
 
 afterEvaluate {

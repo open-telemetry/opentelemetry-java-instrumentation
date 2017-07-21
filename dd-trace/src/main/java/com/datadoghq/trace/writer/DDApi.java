@@ -1,7 +1,7 @@
 package com.datadoghq.trace.writer;
 
 import com.datadoghq.trace.DDBaseSpan;
-import com.datadoghq.trace.DDTracer;
+import com.datadoghq.trace.DDTraceInfo;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -90,9 +90,9 @@ public class DDApi {
     httpCon.setRequestMethod("PUT");
     httpCon.setRequestProperty("Content-Type", "application/json");
     httpCon.setRequestProperty("Datadog-Meta-Lang", "java");
-    httpCon.setRequestProperty("Datadog-Meta-Lang-Version", DDTracer.JAVA_VERSION);
-    httpCon.setRequestProperty("Datadog-Meta-Lang-Interpreter", DDTracer.JAVA_VM_NAME);
-    httpCon.setRequestProperty("Datadog-Meta-Tracer-Version", DDTracer.CURRENT_VERSION);
+    httpCon.setRequestProperty("Datadog-Meta-Lang-Version", DDTraceInfo.JAVA_VERSION);
+    httpCon.setRequestProperty("Datadog-Meta-Lang-Interpreter", DDTraceInfo.JAVA_VM_NAME);
+    httpCon.setRequestProperty("Datadog-Meta-Tracer-Version", DDTraceInfo.VERSION);
     return httpCon;
   }
 }
