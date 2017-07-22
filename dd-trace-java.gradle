@@ -20,3 +20,7 @@ allprojects {
 repositories {
   jcenter()
 }
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '4.0'
+}

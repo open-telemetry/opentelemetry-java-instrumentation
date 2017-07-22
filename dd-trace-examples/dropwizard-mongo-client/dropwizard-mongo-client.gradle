@@ -28,3 +28,7 @@ jar {
 shadowJar {
   mergeServiceFiles()
 }
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '4.0'
+}
