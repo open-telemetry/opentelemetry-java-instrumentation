@@ -14,7 +14,8 @@ minimumInstructionCoverage = 0.5
 whitelistedInstructionClasses += whitelistedBranchClasses += [
   "com.datadoghq.trace.integration.*",
   'com.datadoghq.trace.writer.ListWriter',
-  'com.datadoghq.trace.DDTags'
+  'com.datadoghq.trace.DDTags',
+  'com.datadoghq.trace.DDTraceInfo',
 ]
 
 dependencies {
@@ -52,6 +53,10 @@ shadowJar {
   relocate 'org.jboss.byteman', 'dd.deps.org.jboss.byteman'
   relocate 'org.reflections', 'dd.deps.org.reflections'
   relocate 'org.yaml', 'dd.deps.org.yaml'
+
+  dependencies {
+    exclude(dependency('org.projectlombok:lombok:1.16.18'))
+  }
 }
 
 jmh {

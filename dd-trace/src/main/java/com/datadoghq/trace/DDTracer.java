@@ -25,14 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentracing.Tracer {
 
-  public static final String JAVA_VERSION = System.getProperty("java.version", "unknown");
-  public static final String CURRENT_VERSION;
-
-  static {
-    final String version = DDTracer.class.getPackage().getImplementationVersion();
-    CURRENT_VERSION = version != null ? version : "unknown";
-  }
-
   public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
   public static final Writer UNASSIGNED_WRITER = new LoggingWriter();
   public static final Sampler UNASSIGNED_SAMPLER = new AllSampler();
