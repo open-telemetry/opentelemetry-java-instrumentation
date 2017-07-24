@@ -8,6 +8,5 @@ decorators:
   - type: HTTPComponent
     matchingValue: java-aws-sdk
     setValue: aws-client
-#  - type: URLAsResourceName   # Performance issues, no URL generalisation
   - type: DBStatementAsResourceName
   - type: ErrorFlag
