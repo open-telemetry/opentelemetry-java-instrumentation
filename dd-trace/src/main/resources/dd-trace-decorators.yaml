@@ -1,0 +1,24 @@
+# Decorators are used to add extra information to span
+# Could be DBServiceDecorator, MapperDecorator or HTTPServiceDecorator
+decorators:
+  - type: HTTPComponent
+    matchingValue: java-okhttp
+    setValue: http-client
+  - type: DBComponent
+    matchingValue: java-mongo
+    setValue: mongo
+  - type: DBComponent
+    matchingValue: java-jdbc
+    setValue: jdbc
+  - type: DBComponent
+    matchingValue: java-cassandra
+    setValue: cassandra
+  - type: DBComponent
+    matchingValue: java-elasticsearch
+    setValue: elasticsearch
+  - type: HTTPComponent
+    matchingValue: java-aws-sdk
+    setValue: aws-client
+#  - type: URLAsResourceName   # Performance issues, no URL generalisation
+  - type: DBStatementAsResourceName
+  - type: ErrorFlag
