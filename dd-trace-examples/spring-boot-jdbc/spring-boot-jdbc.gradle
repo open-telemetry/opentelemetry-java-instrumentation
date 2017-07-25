@@ -1,3 +1,7 @@
+plugins {
+  id 'org.springframework.boot' version '1.5.4.RELEASE'
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/jacoco.gradle"
 
@@ -6,6 +10,22 @@ description = 'spring-boot-jdbc'
 
 dependencies {
   compile group: 'com.h2database', name: 'h2', version: '1.4.196'
-  compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.3.RELEASE'
-  compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '1.5.3.RELEASE'
+  compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.4.RELEASE'
+  compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa', version: '1.5.4.RELEASE'
+}
+
+bootRepackage {
+  mainClass = 'com.datadoghq.examples.Application'
+}
+
+bootRun {
+  if (project.hasProperty('javaagent')) {
+    jvmArgs = ["-javaagent:$javaagent"]
+  } else {
+    jvmArgs = ["-javaagent:${project(':dd-java-agent').tasks.shadowJar.outputs.files.getFiles().iterator().next()}"]
+  }
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '4.0'
 }

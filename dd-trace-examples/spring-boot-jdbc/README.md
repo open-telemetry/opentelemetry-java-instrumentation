@@ -64,16 +64,17 @@ Then, is to run the Spring Application along the Datadog Java Agent.
 wget -O dd-java-agent.jar 'https://search.maven.org/remote_content?g=com.datadoghq&a=dd-java-agent&v=LATEST'
 ```
 
-- Then add the following JVM argument when launching your application (in IDE, using Maven run or simply in collaboration with the `>java -jar` command):
+- Then add the following JVM argument when launching your application (in IDE, using Maven/Gradle run or simply in collaboration with the `>java -jar` command):
 
 ```
 -javaagent:/path/to/the/dd-java-agent.jar
 ```
 
-- Finally, run the application through your IDE or Maven with the `javaagent` option.
+- Finally, build and run the application with the `javaagent` option. (Note, actual flag set in `spring-boot-jdbc.gradle`)
 
 ```
-mvn spring-boot:run -Djavaagent:/path/to/the/dd-java-agent.jar
+cd path/to/dd-trace-examples/spring-boot-jdbc
+./gradlew bootRun -Pjavaagent=/path/to/the/dd-java-agent.jar
 ```
 
 ### Generate traces

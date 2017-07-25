@@ -37,8 +37,8 @@ wget -O dd-java-agent.jar 'https://search.maven.org/remote_content?g=com.datadog
 Then, build the app add the agent to the JVM. That can be done as follow:
 ```
 cd path/to/dd-trace-examples/dropwizard-mongo-client
-gradle clean shadowJar
-java -javaagent:/path/to/dd-java-agent.jar  -jar  build/libs/dropwizard-mongo-client-demo-all.jar server
+./gradlew clean shadowJar
+java -javaagent:/path/to/dd-java-agent.jar -jar build/libs/dropwizard-mongo-client-demo-all.jar server
 ```
 ### Generate traces
 
