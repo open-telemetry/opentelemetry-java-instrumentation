@@ -12,12 +12,12 @@ public class DBComponent extends DDSpanContextDecorator {
 
   public DBComponent() {
     super();
-    this.setMatchingTag(Tags.COMPONENT.getKey());
+    this.setMatchingTag(Tags.DB_TYPE.getKey());
     this.setSetTag(DDTags.SERVICE_NAME);
   }
 
   @Override
-  public boolean afterSetTag(DDSpanContext context, String tag, Object value) {
+  public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
     //Assign service name
     if (super.afterSetTag(context, tag, value)) {
       //Assign span type to DB

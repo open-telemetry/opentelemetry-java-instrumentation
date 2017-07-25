@@ -116,7 +116,6 @@ Modern web application frameworks such as Dropwizard or Spring Boot are automati
 | Hibernate| 5.x | Please check the following [JDBC instrumentation](#jdbc-instrumentation) section |
 | [MongoDB](https://github.com/opentracing-contrib/java-mongo-driver) | 3.x | Intercepts all the calls from the MongoDB client |
 | [Cassandra](https://github.com/opentracing-contrib/java-cassandra-driver) | 3.2.x | Intercepts all the calls from the Cassandra client |
-| [Elasticsearch](https://github.com/opentracing-contrib/java-elasticsearch-client) | 5.4.x | Intercepts all the calls from the ES Transport client |
 
 #### JDBC instrumentation
 
