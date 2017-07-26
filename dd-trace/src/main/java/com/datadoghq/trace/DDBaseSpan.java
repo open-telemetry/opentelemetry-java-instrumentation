@@ -35,18 +35,18 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
 
     // record the start time in nano (current milli + nano delta)
     if (timestampMicro == 0L) {
-      this.startTimeMicro = TimeUnit.MILLISECONDS.toMicros(System.currentTimeMillis());
+      this.startTimeMicro = Clock.currentMicroTime();
     } else {
       this.startTimeMicro = timestampMicro;
     }
-    this.startTimeNano = Clock.nowNanos();
+    this.startTimeNano = Clock.currentNanoTicks();
 
     // track each span of the trace
     this.context.getTrace().add(this);
   }
 
   public final void finish() {
-    this.durationNano = Clock.nowNanos() - startTimeNano;
+    this.durationNano = Clock.currentNanoTicks() - startTimeNano;
     afterFinish();
   }
 

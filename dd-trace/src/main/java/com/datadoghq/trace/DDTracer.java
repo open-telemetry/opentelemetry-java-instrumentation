@@ -14,12 +14,7 @@ import io.opentracing.BaseSpan;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.ThreadLocalActiveSpanSource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing integration. */
@@ -290,7 +285,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     }
 
     private long generateNewId() {
-      return Clock.nowNanos();
+      return Clock.currentNanoTicks();
     }
 
     /**
