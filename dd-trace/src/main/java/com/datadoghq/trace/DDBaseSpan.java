@@ -1,5 +1,6 @@
 package com.datadoghq.trace;
 
+import com.datadoghq.trace.util.Clock;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.opentracing.BaseSpan;
@@ -13,14 +14,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
 
+  /** The context attached to the span */
+  protected final DDSpanContext context;
   /** StartTime stores the creation time of the span in milliseconds */
   protected long startTimeMicro;
   /** StartTimeNano stores the only the nanoseconds for more accuracy */
   protected long startTimeNano;
   /** The duration in nanoseconds computed using the startTimeMicro and startTimeNano */
   protected long durationNano;
-  /** The context attached to the span */
-  protected final DDSpanContext context;
 
   /**
    * A simple constructor. Currently, users have
@@ -38,14 +39,14 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
     } else {
       this.startTimeMicro = timestampMicro;
     }
-    this.startTimeNano = System.nanoTime();
+    this.startTimeNano = Clock.nowNanos();
 
     // track each span of the trace
     this.context.getTrace().add(this);
   }
 
   public final void finish() {
-    this.durationNano = System.nanoTime() - startTimeNano;
+    this.durationNano = Clock.nowNanos() - startTimeNano;
     afterFinish();
   }
 
