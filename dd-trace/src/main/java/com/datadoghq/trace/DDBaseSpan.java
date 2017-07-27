@@ -46,7 +46,7 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
   }
 
   public final void finish() {
-    finish(Clock.currentMicroTime() - startTimeMicro);
+    finish(Clock.currentMicroTime());
   }
 
   public final void finish(final long stoptimeMicros) {
