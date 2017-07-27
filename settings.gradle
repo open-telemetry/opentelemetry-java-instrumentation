@@ -6,6 +6,7 @@ include ':dd-java-agent-ittests'
 include ':dd-trace-examples:async-tracing'
 include ':dd-trace-examples:dropwizard-mongo-client'
 include ':dd-trace-examples:spring-boot-jdbc'
+include ':dd-trace-examples:rest-spark'
 include ':dd-trace-examples'
 include ':dd-trace-annotations'
 

@@ -1,0 +1,34 @@
+# Main service name for the app
+defaultServiceName: rest-spark
+
+# The writer to use.
+# Could be: LoggingWritter or DDAgentWriter (default)
+writer:
+  # LoggingWriter: Spans are logged using the application configuration
+  # DDAgentWriter: Spans are forwarding to a Datadog trace Agent
+  #  - Param 'host': the hostname where the DD trace Agent is running (default: localhost)
+  #  - Param 'port': the port to reach the DD trace Agent (default: 8126)
+  type: DDAgentWriter
+  host: localhost
+  port: 8126
+
+# The sampler to use.
+# Could be: AllSampler (default) or RateSampler
+sampler:
+  # AllSampler: all spans are reported to the writer
+  # RateSample: only a portion of spans are reported to the writer
+  #  - Param 'rate': the portion of spans to keep
+  type: AllSampler
+  # Skip some traces if the root span tag values matches some regexp patterns
+  # skipTagsPatterns: {"http.url": ".*/demo/add.*"}
+
+# Enable custom tracing (Custom annotations for now)
+# enableCustomAnnotationTracingOver: ["io","org","com"]
+
+# Disable some instrumentations
+# disabledInstrumentations: ["opentracing-apache-httpclient", "opentracing-mongo-driver", "opentracing-web-servlet-filter"]
+
+decorators:
+  - type: DBComponent
+    matchingValue: java-mongo
+    setValue: mongo-spark

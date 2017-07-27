@@ -1,0 +1,19 @@
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/jacoco.gradle"
+
+version = 'demo'
+description = 'rest-spark'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+
+//  compile fileTree(dir: 'libs', include: ['*.jar'])
+  compile project(':dd-trace')
+  compile 'com.sparkjava:spark-core:2.6.0'
+  compile 'org.mongodb:mongodb-driver:3.4.2'
+  compile 'io.opentracing:opentracing-api:0.30.0'
+  compile 'io.opentracing:opentracing-util:0.30.0'
+  compile 'io.opentracing.contrib:opentracing-mongo-driver:0.0.2'
+}
