@@ -1,12 +1,11 @@
+import static spark.Spark.get;
+
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.opentracing.ActiveSpan;
 import io.opentracing.Tracer;
-import org.bson.Document;
-
 import java.util.Arrays;
-
-import static spark.Spark.get;
+import org.bson.Document;
 
 public class Hello {
   private static MongoDatabase mDatabase;
