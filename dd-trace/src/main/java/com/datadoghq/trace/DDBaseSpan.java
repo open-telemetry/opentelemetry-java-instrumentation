@@ -46,8 +46,7 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
   }
 
   public final void finish() {
-    this.durationNano = Clock.currentNanoTicks() - startTimeNano;
-    afterFinish();
+    finish(Clock.currentMicroTime() - startTimeMicro);
   }
 
   public final void finish(final long stoptimeMicros) {
