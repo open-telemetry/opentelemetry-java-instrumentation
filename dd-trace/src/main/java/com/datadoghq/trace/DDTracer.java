@@ -5,6 +5,7 @@ import com.datadoghq.trace.propagation.Codec;
 import com.datadoghq.trace.propagation.HTTPCodec;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.Sampler;
+import com.datadoghq.trace.util.Clock;
 import com.datadoghq.trace.writer.LoggingWriter;
 import com.datadoghq.trace.writer.Writer;
 import io.opentracing.ActiveSpan;
@@ -13,12 +14,7 @@ import io.opentracing.BaseSpan;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.ThreadLocalActiveSpanSource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing integration. */
@@ -136,6 +132,24 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     writer.close();
   }
 
+  @Override
+  public String toString() {
+    return "DDTracer{" + "writer=" + writer + ", sampler=" + sampler + '}';
+  }
+
+  private static class CodecRegistry {
+
+    private final Map<Format<?>, Codec<?>> codecs = new HashMap<>();
+
+    <T> Codec<T> get(final Format<T> format) {
+      return (Codec<T>) codecs.get(format);
+    }
+
+    public <T> void register(final Format<T> format, final Codec<T> codec) {
+      codecs.put(format, codec);
+    }
+  }
+
   /** Spans are built using this builder */
   public class DDSpanBuilder implements SpanBuilder {
     private final ActiveSpanSource spanSource;
@@ -152,6 +166,11 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     private boolean errorFlag;
     private String spanType;
     private boolean ignoreActiveSpan = false;
+
+    public DDSpanBuilder(final String operationName, final ActiveSpanSource spanSource) {
+      this.operationName = operationName;
+      this.spanSource = spanSource;
+    }
 
     @Override
     public SpanBuilder ignoreActiveSpan() {
@@ -204,11 +223,6 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     @Override
     public DDSpanBuilder withTag(final String tag, final boolean bool) {
       return withTag(tag, (Object) bool);
-    }
-
-    public DDSpanBuilder(final String operationName, final ActiveSpanSource spanSource) {
-      this.operationName = operationName;
-      this.spanSource = spanSource;
     }
 
     @Override
@@ -271,7 +285,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     }
 
     private long generateNewId() {
-      return System.nanoTime();
+      return Clock.currentNanoTicks();
     }
 
     /**
@@ -343,23 +357,5 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
 
       return context;
     }
-  }
-
-  private static class CodecRegistry {
-
-    private final Map<Format<?>, Codec<?>> codecs = new HashMap<>();
-
-    <T> Codec<T> get(final Format<T> format) {
-      return (Codec<T>) codecs.get(format);
-    }
-
-    public <T> void register(final Format<T> format, final Codec<T> codec) {
-      codecs.put(format, codec);
-    }
-  }
-
-  @Override
-  public String toString() {
-    return "DDTracer{" + "writer=" + writer + ", sampler=" + sampler + '}';
   }
 }

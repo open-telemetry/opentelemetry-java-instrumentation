@@ -16,6 +16,7 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
   'com.datadoghq.trace.writer.ListWriter',
   'com.datadoghq.trace.DDTags',
   'com.datadoghq.trace.DDTraceInfo',
+  'com.datadoghq.trace.util.Clock',
 ]
 
 dependencies {
