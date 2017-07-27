@@ -3,7 +3,11 @@ package com.datadoghq.trace.agent.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
+import com.datadoghq.trace.DDTracer;
+import com.datadoghq.trace.writer.ListWriter;
+import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.Inet4Address;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,13 +29,15 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 @Ignore
-public class ElasticsearchIntegrationTest extends AAgentIntegration {
+public class ElasticsearchIntegrationTest {
 
   private static final int HTTP_PORT = 9205;
   private static final String HTTP_TRANSPORT_PORT = "9300";
   private static final String ES_WORKING_DIR = "build/es";
   private static String clusterName = "elasticsearch";
   private static Node node;
+  private final ListWriter writer = new ListWriter();
+  private final DDTracer tracer = new DDTracer(writer);
 
   @AfterClass
   public static void stopElasticsearch() throws Exception {
@@ -61,9 +67,16 @@ public class ElasticsearchIntegrationTest extends AAgentIntegration {
   }
 
   @Before
-  @Override
   public void beforeTest() throws Exception {
-    super.beforeTest();
+    try {
+      GlobalTracer.register(tracer);
+    } catch (final Exception e) {
+      // Force it anyway using reflexion
+      final Field field = GlobalTracer.class.getDeclaredField("tracer");
+      field.setAccessible(true);
+      field.set(null, tracer);
+    }
+    writer.start();
   }
 
   @Test

@@ -25,4 +25,9 @@ public class SayTracedHello {
     new StringTag(DDTags.SERVICE_NAME).set(GlobalTracer.get().activeSpan(), "test2");
     return sayHello() + sayHA();
   }
+
+  @Trace(operationName = "ERROR")
+  public static String sayERROR() {
+    throw new RuntimeException();
+  }
 }

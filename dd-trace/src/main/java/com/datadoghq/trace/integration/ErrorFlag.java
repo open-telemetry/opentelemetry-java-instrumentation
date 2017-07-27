@@ -4,10 +4,9 @@ import com.datadoghq.trace.DDSpanContext;
 import io.opentracing.tag.Tags;
 
 public class ErrorFlag extends DDSpanContextDecorator {
-
   public ErrorFlag() {
     super();
-    this.setMatchingTag(Tags.DB_STATEMENT.getKey());
+    this.setMatchingTag(Tags.ERROR.getKey());
   }
 
   @Override

@@ -11,12 +11,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javassist.ClassPool;
@@ -193,6 +188,16 @@ public class TraceAnnotationsManager {
                 EXIT_RULE);
         generatedScripts.append(script).append("\n");
 
+        // AT EXCEPTION EXIT
+        script =
+            createRuleScript(
+                "Close span in error ",
+                cc,
+                javassistMethod,
+                Location.create(LocationType.EXCEPTION_EXIT, ""),
+                EXCEPTION_EXIT_RULE);
+        generatedScripts.append(script).append("\n");
+
       } catch (final Exception e) {
         log.warn(
             "Could not create rule for method " + method + ". Proceed to next annoted method.", e);
@@ -268,6 +273,13 @@ public class TraceAnnotationsManager {
 
   private static final String EXIT_RULE =
       "IF getTracer().activeSpan() != null\n" + "DO\n" + "getTracer().activeSpan().deactivate();\n";
+
+  private static final String EXCEPTION_EXIT_RULE =
+      "BIND span:io.opentracing.ActiveSpan = getTracer().activeSpan()\n"
+          + "IF span != null\n"
+          + "DO\n"
+          + "span.setTag(io.opentracing.tag.Tags.ERROR.getKey(),\"true\");\n"
+          + "span.deactivate();\n";
 
   private static String buildSpan(final CtMethod javassistMethod) {
     try {
