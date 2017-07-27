@@ -5,15 +5,14 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentracing.Span;
 import io.opentracing.contrib.mongo.TracingCommandListener;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.jboss.byteman.rule.Rule;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 /** Patch the Mongo builder before constructing the final client */
 @Slf4j
