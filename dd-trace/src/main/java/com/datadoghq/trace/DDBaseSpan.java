@@ -4,12 +4,13 @@ import com.datadoghq.trace.util.Clock;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.opentracing.BaseSpan;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
