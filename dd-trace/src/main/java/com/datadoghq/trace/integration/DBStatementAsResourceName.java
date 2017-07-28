@@ -3,7 +3,7 @@ package com.datadoghq.trace.integration;
 import com.datadoghq.trace.DDTags;
 import io.opentracing.tag.Tags;
 
-public class DBStatementAsResourceName extends DDSpanContextDecorator {
+public class DBStatementAsResourceName extends AbstractDecorator {
 
   public DBStatementAsResourceName() {
     super();

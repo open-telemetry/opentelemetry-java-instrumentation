@@ -1,6 +1,6 @@
 package com.datadoghq.trace;
 
-import com.datadoghq.trace.integration.DDSpanContextDecorator;
+import com.datadoghq.trace.integration.AbstractDecorator;
 import com.datadoghq.trace.propagation.Codec;
 import com.datadoghq.trace.propagation.HTTPCodec;
 import com.datadoghq.trace.sampling.AllSampler;
@@ -39,7 +39,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
   private final String defaultServiceName;
 
   /** Span context decorators */
-  private final Map<String, List<DDSpanContextDecorator>> spanContextDecorators = new HashMap<>();
+  private final Map<String, List<AbstractDecorator>> spanContextDecorators = new HashMap<>();
 
   private final CodecRegistry registry;
 
@@ -70,18 +70,18 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
    *
    * @return the list of span context decorators
    */
-  public List<DDSpanContextDecorator> getSpanContextDecorators(final String tag) {
+  public List<AbstractDecorator> getSpanContextDecorators(final String tag) {
     return spanContextDecorators.get(tag);
   }
 
   /**
-   * Add a new decorator in the list ({@link DDSpanContextDecorator})
+   * Add a new decorator in the list ({@link AbstractDecorator})
    *
    * @param decorator The decorator in the list
    */
-  public void addDecorator(final DDSpanContextDecorator decorator) {
+  public void addDecorator(final AbstractDecorator decorator) {
 
-    List<DDSpanContextDecorator> list = spanContextDecorators.get(decorator.getMatchingTag());
+    List<AbstractDecorator> list = spanContextDecorators.get(decorator.getMatchingTag());
     if (list == null) {
       list = new ArrayList<>();
     }
