@@ -4,8 +4,9 @@ decorators:
   - type: HTTPComponent
     matchingValue: java-okhttp
     setValue: http-client
-  - type: BDTypeDecorator
   - type: HTTPComponent
     matchingValue: java-aws-sdk
     setValue: aws-client
   - type: ErrorFlag
+  - type: DBTypeDecorator
+  - type: OperationDecorator
