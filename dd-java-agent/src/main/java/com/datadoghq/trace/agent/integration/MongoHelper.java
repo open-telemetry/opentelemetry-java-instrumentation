@@ -50,9 +50,11 @@ public class MongoHelper extends DDAgentTracingHelper<MongoClientOptions.Builder
     try {
       final BsonDocument normalized = new BsonDocument();
       norm(event.getCommand(), normalized);
-      span.setTag(DDTags.RESOURCE_NAME, normalized.toJson());
+      span.setTag(DDTags.RESOURCE_NAME, normalized.toString());
+      span.setOperationName("mongo.cmd");
+
     } catch (final Throwable e) {
-      log.warn("Couldn't the mongo query: " + e.getMessage(), e);
+      log.warn("Couldn't decorate the mongo query: " + e.getMessage(), e);
     }
   }
 
