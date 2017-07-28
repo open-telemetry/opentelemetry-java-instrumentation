@@ -8,9 +8,9 @@ import io.opentracing.tag.Tags;
  * This span decorator leverages DB tags. It allows the dev to define a custom service name and
  * retrieves some DB meta such as the statement
  */
-public class DBComponent extends DDSpanContextDecorator {
+public class DBTypeDecorator extends AbstractDecorator {
 
-  public DBComponent() {
+  public DBTypeDecorator() {
     super();
     this.setMatchingTag(Tags.DB_TYPE.getKey());
     this.setSetTag(DDTags.SERVICE_NAME);
@@ -22,6 +22,8 @@ public class DBComponent extends DDSpanContextDecorator {
     if (super.afterSetTag(context, tag, value)) {
       //Assign span type to DB
       context.setSpanType("db");
+      // Works for: mongo, cassandra, jdbc
+      context.setOperationName(String.valueOf(value) + ".query");
       return true;
     }
     return false;
