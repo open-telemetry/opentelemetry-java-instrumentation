@@ -8,5 +8,5 @@ decorators:
   - type: HTTPComponent
     matchingValue: java-aws-sdk
     setValue: aws-client
-  - type: DBStatementAsResourceName
+#  - type: DBStatementAsResourceName
   - type: ErrorFlag

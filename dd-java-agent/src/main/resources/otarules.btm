@@ -20,6 +20,17 @@ DO
   patch($this);
 ENDRULE
 
+RULE mongo-decorator
+CLASS io.opentracing.contrib.mongo.TracingCommandListener
+METHOD decorate
+HELPER com.datadoghq.trace.agent.integration.MongoHelper
+AT EXIT
+IF TRUE
+DO
+  decorate($1, $2);
+ENDRULE
+
+
 
 # Instrument AWS SDK client
 # ==========================
