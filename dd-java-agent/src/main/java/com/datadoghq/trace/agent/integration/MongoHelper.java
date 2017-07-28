@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.BsonValue;
@@ -51,8 +52,6 @@ public class MongoHelper extends DDAgentTracingHelper<MongoClientOptions.Builder
       final BsonDocument normalized = new BsonDocument();
       norm(event.getCommand(), normalized);
       span.setTag(DDTags.RESOURCE_NAME, normalized.toString());
-      span.setOperationName("mongo.cmd");
-
     } catch (final Throwable e) {
       log.warn("Couldn't decorate the mongo query: " + e.getMessage(), e);
     }
@@ -60,13 +59,31 @@ public class MongoHelper extends DDAgentTracingHelper<MongoClientOptions.Builder
 
   private void norm(final BsonDocument origin, final BsonDocument normalized) {
     for (final Map.Entry<String, BsonValue> entry : origin.entrySet()) {
+
       if (WHILDCARD_FIELDS.contains(entry.getKey())) {
+        // Wildcard fields
         normalized.put(entry.getKey(), entry.getValue());
       } else if (entry.getValue().isDocument()) {
+        // Nested documents
         final BsonDocument child = new BsonDocument();
         normalized.put(entry.getKey(), child);
         norm(entry.getValue().asDocument(), child);
+      } else if (entry.getValue().isArray()) {
+        // Nested arrays (works only for 1-depth) TODO:recursive pattern?
+        for (final BsonValue subItemArray : entry.getValue().asArray()) {
+          final BsonArray array = new BsonArray();
+          normalized.put(entry.getKey(), array);
+          if (subItemArray.isDocument()) {
+            // Nested array elements are documents
+            final BsonDocument child = new BsonDocument();
+            array.add(child);
+            norm(subItemArray.asDocument(), child);
+          } else {
+            array.add(HIDDEN_CAR);
+          }
+        }
       } else {
+        // Hide the value
         normalized.put(entry.getKey(), HIDDEN_CAR);
       }
     }
