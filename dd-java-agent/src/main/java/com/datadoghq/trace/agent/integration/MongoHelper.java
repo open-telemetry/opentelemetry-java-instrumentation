@@ -19,7 +19,8 @@ import org.jboss.byteman.rule.Rule;
 @Slf4j
 public class MongoHelper extends DDAgentTracingHelper<MongoClientOptions.Builder> {
 
-  private static final List<String> WHILDCARD_FIELDS = Arrays.asList("ordered", "insert");
+  private static final List<String> WHILDCARD_FIELDS =
+      Arrays.asList("ordered", "insert", "count", "find");
   private static final BsonValue HIDDEN_CAR = new BsonString("?");
 
   public MongoHelper(final Rule rule) {
@@ -49,43 +50,45 @@ public class MongoHelper extends DDAgentTracingHelper<MongoClientOptions.Builder
 
   public void decorate(final Span span, final CommandStartedEvent event) {
     try {
-      final BsonDocument normalized = new BsonDocument();
-      norm(event.getCommand(), normalized);
+      final BsonDocument normalized = norm(event.getCommand());
       span.setTag(DDTags.RESOURCE_NAME, normalized.toString());
     } catch (final Throwable e) {
       log.warn("Couldn't decorate the mongo query: " + e.getMessage(), e);
     }
   }
 
-  private void norm(final BsonDocument origin, final BsonDocument normalized) {
+  private BsonDocument norm(final BsonDocument origin) {
+    final BsonDocument normalized = new BsonDocument();
     for (final Map.Entry<String, BsonValue> entry : origin.entrySet()) {
-
       if (WHILDCARD_FIELDS.contains(entry.getKey())) {
-        // Wildcard fields
         normalized.put(entry.getKey(), entry.getValue());
-      } else if (entry.getValue().isDocument()) {
-        // Nested documents
-        final BsonDocument child = new BsonDocument();
-        normalized.put(entry.getKey(), child);
-        norm(entry.getValue().asDocument(), child);
-      } else if (entry.getValue().isArray()) {
-        // Nested arrays (works only for 1-depth) TODO:recursive pattern?
-        for (final BsonValue subItemArray : entry.getValue().asArray()) {
-          final BsonArray array = new BsonArray();
-          normalized.put(entry.getKey(), array);
-          if (subItemArray.isDocument()) {
-            // Nested array elements are documents
-            final BsonDocument child = new BsonDocument();
-            array.add(child);
-            norm(subItemArray.asDocument(), child);
-          } else {
-            array.add(HIDDEN_CAR);
-          }
-        }
       } else {
-        // Hide the value
-        normalized.put(entry.getKey(), HIDDEN_CAR);
+        final BsonValue child = norm(entry.getValue());
+        normalized.put(entry.getKey(), child);
       }
     }
+    return normalized;
+  }
+
+  private BsonValue norm(final BsonArray origin) {
+    final BsonArray normalized = new BsonArray();
+    for (final BsonValue value : origin) {
+      final BsonValue child = norm(value);
+      normalized.add(child);
+    }
+    return normalized;
+  }
+
+  private BsonValue norm(final BsonValue origin) {
+
+    final BsonValue normalized;
+    if (origin.isDocument()) {
+      normalized = norm(origin.asDocument());
+    } else if (origin.isArray()) {
+      normalized = norm(origin.asArray());
+    } else {
+      normalized = HIDDEN_CAR;
+    }
+    return normalized;
   }
 }
