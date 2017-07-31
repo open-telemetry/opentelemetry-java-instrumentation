@@ -290,7 +290,8 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     }
 
     private long generateNewId() {
-      return ThreadLocalRandom.current().nextLong();
+      // Ensure the generated ID is in a valid range:
+      return ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
     }
 
     /**
@@ -324,7 +325,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
         if (this.serviceName == null) this.serviceName = ddsc.getServiceName();
         if (this.spanType == null) this.spanType = ddsc.getSpanType();
       } else {
-        traceId = spanId;
+        traceId = generateNewId();
         parentSpanId = 0L;
         baggage = null;
         parentTrace = null;
