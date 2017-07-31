@@ -1,12 +1,10 @@
-plugins {
-  id "com.github.johnrengelman.shadow" version "2.0.1"
-}
-
+apply plugin: 'application'
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/jacoco.gradle"
 
 version = 'demo'
 description = 'rest-spark'
+mainClassName = 'com.datadoghq.example.restspark.SparkApplication'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -23,16 +21,6 @@ dependencies {
 
   compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
   compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
-}
-
-jar {
-  manifest {
-    attributes 'Main-Class': 'com.datadoghq.example.restspark.SparkApplication'
-  }
-}
-
-shadowJar {
-  mergeServiceFiles()
 }
 
 task wrapper(type: Wrapper) {
