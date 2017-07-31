@@ -1,5 +1,6 @@
 package com.datadoghq.trace.resolver;
 
+import com.datadoghq.trace.writer.DDAgentWriter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,8 +13,8 @@ import java.util.Map;
 public class TracerConfig {
 
   private String defaultServiceName;
-  private WriterConfig writer;
-  private SamplerConfig sampler;
+  private WriterConfig writer = new WriterConfig();
+  private SamplerConfig sampler = new SamplerConfig();
   private List<DDSpanDecoratorConfig> decorators;
 
   public String getDefaultServiceName() {
@@ -62,7 +63,7 @@ public class TracerConfig {
 class SamplerConfig {
 
   private Double rate;
-  private String type;
+  private String type = "AllSampler";
   private Map<String, String> skipTagsPatterns;
 
   public String getType() {
@@ -88,9 +89,9 @@ class SamplerConfig {
 
 class WriterConfig {
 
-  private String host;
-  private Integer port;
-  private String type;
+  private String host = "localhost";
+  private Integer port = 8126;
+  private String type = DDAgentWriter.class.getSimpleName();
 
   public void setHost(final String host) {
     this.host = host;
