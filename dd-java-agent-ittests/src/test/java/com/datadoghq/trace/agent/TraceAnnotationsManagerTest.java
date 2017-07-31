@@ -45,7 +45,7 @@ public class TraceAnnotationsManagerTest {
     //Test new trace with 2 children spans
     SayTracedHello.sayHELLOsayHA();
     assertThat(writer.firstTrace().size()).isEqualTo(3);
-    final long parentId = writer.firstTrace().get(0).context().getTraceId();
+    final long parentId = writer.firstTrace().get(0).context().getSpanId();
 
     assertThat(writer.firstTrace().get(0).getOperationName()).isEqualTo("NEW_TRACE");
     assertThat(writer.firstTrace().get(0).getParentId()).isEqualTo(0); //ROOT / no parent

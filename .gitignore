@@ -1,6 +1,9 @@
 # Maven #
 #########
 target
+/target
+**/target/
+**/dependency-reduced-pom.xml
 
 # Gradle #
 #########
@@ -31,6 +34,8 @@ Thumbs.db
 #################
 /.idea
 *.iml
+*.ipr
+*.iws
 
 # Visual Studio Code #
 ######################
@@ -39,10 +44,5 @@ Thumbs.db
 # Others #
 ##########
 /logs/*
-
-
-
-/target
-**/target/
-**/dependency-reduced-pom.xml
 /bin
+/out

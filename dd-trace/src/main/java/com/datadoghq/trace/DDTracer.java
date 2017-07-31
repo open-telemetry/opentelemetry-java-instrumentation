@@ -5,7 +5,6 @@ import com.datadoghq.trace.propagation.Codec;
 import com.datadoghq.trace.propagation.HTTPCodec;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.Sampler;
-import com.datadoghq.trace.util.Clock;
 import com.datadoghq.trace.writer.LoggingWriter;
 import com.datadoghq.trace.writer.Writer;
 import io.opentracing.ActiveSpan;
@@ -14,7 +13,13 @@ import io.opentracing.BaseSpan;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.ThreadLocalActiveSpanSource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing integration. */
@@ -285,7 +290,8 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     }
 
     private long generateNewId() {
-      return Clock.currentNanoTicks();
+      // Ensure the generated ID is in a valid range:
+      return ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
     }
 
     /**
@@ -319,7 +325,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
         if (this.serviceName == null) this.serviceName = ddsc.getServiceName();
         if (this.spanType == null) this.spanType = ddsc.getSpanType();
       } else {
-        traceId = spanId;
+        traceId = generateNewId();
         parentSpanId = 0L;
         baggage = null;
         parentTrace = null;
