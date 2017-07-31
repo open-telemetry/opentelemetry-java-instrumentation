@@ -13,9 +13,9 @@ public class InstrumentationCheckerTest {
 
   @Before
   public void setup() {
-    Map<String, List<Map<String, String>>> rules =
-        FactoryUtils.loadConfigFromResource("supported-version-test.yaml", Map.class);
-    Map<String, String> frameworks =
+    final Map<String, List<Map<String, String>>> rules =
+        FactoryUtils.loadConfigFromResource("supported-version-test", Map.class);
+    final Map<String, String> frameworks =
         new HashMap<String, String>() {
           {
             put("artifact-1", "1.2.3.1232");
@@ -30,7 +30,7 @@ public class InstrumentationCheckerTest {
   @Test
   public void testRules() throws Exception {
 
-    List<String> rules = InstrumentationChecker.getUnsupportedRules();
+    final List<String> rules = InstrumentationChecker.getUnsupportedRules();
     assertThat(rules.size()).isEqualTo(3);
     assertThat(rules)
         .containsExactlyInAnyOrder(
