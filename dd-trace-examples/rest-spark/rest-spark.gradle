@@ -1,3 +1,7 @@
+plugins {
+  id "com.github.johnrengelman.shadow" version "2.0.1"
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/jacoco.gradle"
 
@@ -8,16 +12,29 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-
-//  compile fileTree(dir: 'libs', include: ['*.jar'])
   compile project(':dd-trace')
+
   compile 'com.sparkjava:spark-core:2.6.0'
   compile 'org.mongodb:mongodb-driver:3.4.2'
+
   compile 'io.opentracing:opentracing-api:0.30.0'
   compile 'io.opentracing:opentracing-util:0.30.0'
-  compile 'io.opentracing.contrib:opentracing-mongo-driver:0.0.2'
+  compile 'io.opentracing.contrib:opentracing-mongo-driver:0.0.3'
+
   compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
   compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+}
 
+jar {
+  manifest {
+    attributes 'Main-Class': 'com.datadoghq.example.restspark.SparkApplication'
+  }
+}
 
+shadowJar {
+  mergeServiceFiles()
+}
+
+task wrapper(type: Wrapper) {
+  gradleVersion = '4.0'
 }

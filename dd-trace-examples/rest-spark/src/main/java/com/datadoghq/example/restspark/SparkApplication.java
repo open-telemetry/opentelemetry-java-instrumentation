@@ -1,3 +1,5 @@
+package com.datadoghq.example.restspark;
+
 import static spark.Spark.get;
 
 import com.mongodb.client.MongoCollection;
@@ -7,7 +9,7 @@ import io.opentracing.Tracer;
 import java.util.Arrays;
 import org.bson.Document;
 
-public class Hello {
+public class SparkApplication {
   private static MongoDatabase mDatabase;
   private static Tracer mTracer;
 
