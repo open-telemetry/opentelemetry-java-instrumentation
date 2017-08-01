@@ -18,8 +18,8 @@ public class DBResource {
   private UserRepository userRepository;
 
   @GetMapping(path = "/add") // Map ONLY GET Requests
-  public @ResponseBody
-  String addNewUser(@RequestParam final String name, @RequestParam final String email) {
+  public @ResponseBody String addNewUser(
+      @RequestParam final String name, @RequestParam final String email) {
     // @ResponseBody means the returned String is the response, not a view name
     // @RequestParam means it is a parameter from the GET or POST request
 
@@ -37,8 +37,7 @@ public class DBResource {
   }
 
   @GetMapping(path = "/get")
-  public @ResponseBody
-  User getUser(@RequestParam final int id) {
+  public @ResponseBody User getUser(@RequestParam final int id) {
     // This returns a JSON or XML with the users
     return userRepository.findOne(id);
   }
