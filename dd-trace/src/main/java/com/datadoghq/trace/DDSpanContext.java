@@ -4,11 +4,9 @@ import com.datadoghq.trace.integration.AbstractDecorator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
 import io.opentracing.tag.Tags;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -19,6 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * across Span boundaries and (2) any Datadog fields that are needed to identify or contextualize
  * the associated Span instance
  */
+@Slf4j
 public class DDSpanContext implements io.opentracing.SpanContext {
 
   public static final String LANGUAGE_FIELDNAME = "lang";
@@ -140,7 +139,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   public void setBaggageItem(final String key, final String value) {
     if (this.baggageItems.isEmpty()) {
-      this.baggageItems = new HashMap<String, String>();
+      this.baggageItems = new HashMap<>();
     }
     this.baggageItems.put(key, value);
   }
@@ -190,7 +189,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     }
 
     if (this.tags.isEmpty()) {
-      this.tags = new HashMap<String, Object>();
+      this.tags = new HashMap<>();
     }
     this.tags.put(tag, value);
 
@@ -198,7 +197,14 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     final List<AbstractDecorator> decorators = tracer.getSpanContextDecorators(tag);
     if (decorators != null) {
       for (final AbstractDecorator decorator : decorators) {
-        decorator.afterSetTag(this, tag, value);
+        try {
+          decorator.afterSetTag(this, tag, value);
+        } catch (final Throwable ex) {
+          log.warn(
+            "Could not decorate the span decorator={}: {}",
+            decorator.getClass().getSimpleName(),
+            ex.getMessage());
+        }
       }
     }
     //Error management
