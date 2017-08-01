@@ -11,3 +11,5 @@ decorators:
   - type: DBTypeDecorator
   - type: DBStatementAsResourceName
   - type: OperationDecorator
+  - type: Status404Decorator
+  - type: URLAsResourceName

@@ -11,7 +11,7 @@ public abstract class AbstractDecorator {
 
   private String matchingTag;
 
-  private String matchingValue;
+  private Object matchingValue;
 
   private String setTag;
 
@@ -45,11 +45,11 @@ public abstract class AbstractDecorator {
     this.matchingTag = tag;
   }
 
-  public String getMatchingValue() {
+  public Object getMatchingValue() {
     return matchingValue;
   }
 
-  public void setMatchingValue(final String value) {
+  public void setMatchingValue(final Object value) {
     this.matchingValue = value;
   }
 
