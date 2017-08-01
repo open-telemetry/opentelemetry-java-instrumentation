@@ -12,7 +12,6 @@ public class DBStatementAsResourceName extends AbstractDecorator {
     this.setSetTag(DDTags.RESOURCE_NAME);
   }
 
-
   @Override
   public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
     //Assign service name

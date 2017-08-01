@@ -4,10 +4,9 @@ import com.datadoghq.trace.integration.AbstractDecorator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
 import io.opentracing.tag.Tags;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * SpanContext represents Span state that must propagate to descendant Spans and across process
@@ -201,9 +200,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
           decorator.afterSetTag(this, tag, value);
         } catch (final Throwable ex) {
           log.warn(
-            "Could not decorate the span decorator={}: {}",
-            decorator.getClass().getSimpleName(),
-            ex.getMessage());
+              "Could not decorate the span decorator={}: {}",
+              decorator.getClass().getSimpleName(),
+              ex.getMessage());
         }
       }
     }

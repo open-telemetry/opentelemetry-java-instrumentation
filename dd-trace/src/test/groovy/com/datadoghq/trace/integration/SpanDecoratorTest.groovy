@@ -66,7 +66,7 @@ class SpanDecoratorTest extends Specification {
 
     then:
     span.getOperationName() == type + ".query"
-    span.context().getSpanType() == "db"
+    span.context().getSpanType() == "sql"
 
     where:
     type = "foo"
