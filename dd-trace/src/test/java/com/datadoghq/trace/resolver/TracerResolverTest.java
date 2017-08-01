@@ -3,7 +3,7 @@ package com.datadoghq.trace.resolver;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.datadoghq.trace.DDTracer;
-import com.datadoghq.trace.integration.DDSpanContextDecorator;
+import com.datadoghq.trace.integration.AbstractDecorator;
 import com.datadoghq.trace.integration.HTTPComponent;
 import com.datadoghq.trace.integration.URLAsResourceName;
 import io.opentracing.NoopTracerFactory;
@@ -19,17 +19,16 @@ public class TracerResolverTest {
 
   @Test
   public void testResolve() {
-    DDTracerResolver tracerResolver = new DDTracerResolver();
-    DDTracer tracer = (DDTracer) tracerResolver.resolve();
+    final DDTracerResolver tracerResolver = new DDTracerResolver();
+    final DDTracer tracer = (DDTracer) tracerResolver.resolve();
 
     // for HTTP decorators
-    List<DDSpanContextDecorator> decorators =
-        tracer.getSpanContextDecorators(Tags.COMPONENT.getKey());
+    List<AbstractDecorator> decorators = tracer.getSpanContextDecorators(Tags.COMPONENT.getKey());
 
     assertThat(decorators.size()).isEqualTo(2);
-    DDSpanContextDecorator decorator = decorators.get(0);
+    AbstractDecorator decorator = decorators.get(0);
     assertThat(decorator.getClass()).isEqualTo(HTTPComponent.class);
-    HTTPComponent httpServiceDecorator = (HTTPComponent) decorator;
+    final HTTPComponent httpServiceDecorator = (HTTPComponent) decorator;
     assertThat(httpServiceDecorator.getMatchingTag()).isEqualTo("component");
     assertThat(httpServiceDecorator.getMatchingValue()).isEqualTo("hello");
     assertThat(httpServiceDecorator.getSetValue()).isEqualTo("world");
@@ -44,13 +43,13 @@ public class TracerResolverTest {
 
   @Test
   public void testResolveTracer() throws Exception {
-    Field tracerField = GlobalTracer.class.getDeclaredField("tracer");
+    final Field tracerField = GlobalTracer.class.getDeclaredField("tracer");
     tracerField.setAccessible(true);
     tracerField.set(null, NoopTracerFactory.create());
 
     assertThat(GlobalTracer.isRegistered()).isFalse();
 
-    Tracer tracer = TracerResolver.resolveTracer();
+    final Tracer tracer = TracerResolver.resolveTracer();
 
     assertThat(GlobalTracer.isRegistered()).isFalse();
     assertThat(tracer).isInstanceOf(DDTracer.class);
@@ -58,7 +57,7 @@ public class TracerResolverTest {
 
   @Test
   public void testRegisterTracer() throws Exception {
-    Field tracerField = GlobalTracer.class.getDeclaredField("tracer");
+    final Field tracerField = GlobalTracer.class.getDeclaredField("tracer");
     tracerField.setAccessible(true);
     tracerField.set(null, NoopTracerFactory.create());
 

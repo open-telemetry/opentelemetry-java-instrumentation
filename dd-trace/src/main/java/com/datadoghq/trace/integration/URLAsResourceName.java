@@ -5,7 +5,7 @@ import com.datadoghq.trace.DDTags;
 import io.opentracing.tag.Tags;
 import java.net.MalformedURLException;
 
-public class URLAsResourceName extends DDSpanContextDecorator {
+public class URLAsResourceName extends AbstractDecorator {
 
   public URLAsResourceName() {
     super();
@@ -14,12 +14,12 @@ public class URLAsResourceName extends DDSpanContextDecorator {
   }
 
   @Override
-  public boolean afterSetTag(DDSpanContext context, String tag, Object value) {
+  public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
     //Assign resource name
     try {
-      String path = new java.net.URL(String.valueOf(value)).getPath();
+      final String path = new java.net.URL(String.valueOf(value)).getPath();
       context.setResourceName(path);
-    } catch (MalformedURLException e) {
+    } catch (final MalformedURLException e) {
       context.setResourceName(String.valueOf(value));
     }
     return true;

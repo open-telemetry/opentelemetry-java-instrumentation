@@ -7,7 +7,7 @@ import com.datadoghq.trace.DDTags;
  * Span decorators are called when new tags are written and proceed to various remappings and
  * enrichments
  */
-public abstract class DDSpanContextDecorator {
+public abstract class AbstractDecorator {
 
   private String matchingTag;
 
@@ -17,10 +17,10 @@ public abstract class DDSpanContextDecorator {
 
   private String setValue;
 
-  public boolean afterSetTag(DDSpanContext context, String tag, Object value) {
+  public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
     if ((this.getMatchingValue() == null || value.equals(this.getMatchingValue()))) {
-      String targetTag = getSetTag() == null ? tag : getSetTag();
-      String targetValue = getSetValue() == null ? String.valueOf(value) : getSetValue();
+      final String targetTag = getSetTag() == null ? tag : getSetTag();
+      final String targetValue = getSetValue() == null ? String.valueOf(value) : getSetValue();
 
       if (targetTag.equals(DDTags.SERVICE_NAME)) {
         context.setServiceName(targetValue);
@@ -41,7 +41,7 @@ public abstract class DDSpanContextDecorator {
     return matchingTag;
   }
 
-  public void setMatchingTag(String tag) {
+  public void setMatchingTag(final String tag) {
     this.matchingTag = tag;
   }
 
@@ -49,7 +49,7 @@ public abstract class DDSpanContextDecorator {
     return matchingValue;
   }
 
-  public void setMatchingValue(String value) {
+  public void setMatchingValue(final String value) {
     this.matchingValue = value;
   }
 
@@ -57,7 +57,7 @@ public abstract class DDSpanContextDecorator {
     return setTag;
   }
 
-  public void setSetTag(String targetTag) {
+  public void setSetTag(final String targetTag) {
     this.setTag = targetTag;
   }
 
@@ -65,7 +65,7 @@ public abstract class DDSpanContextDecorator {
     return setValue;
   }
 
-  public void setSetValue(String targetValue) {
+  public void setSetValue(final String targetValue) {
     this.setValue = targetValue;
   }
 }

@@ -4,6 +4,7 @@ import com.datadoghq.trace.DDSpanContext
 import com.datadoghq.trace.DDTracer
 import com.datadoghq.trace.SpanFactory
 import io.opentracing.tag.StringTag
+import io.opentracing.tag.Tags
 import spock.lang.Specification
 
 class SpanDecoratorTest extends Specification {
@@ -11,7 +12,7 @@ class SpanDecoratorTest extends Specification {
   def "adding span personalisation using Decorators"() {
     setup:
     def tracer = new DDTracer()
-    def decorator = new DDSpanContextDecorator() {
+    def decorator = new AbstractDecorator() {
 
       @Override
       boolean afterSetTag(DDSpanContext context, String tag, Object value) {
@@ -31,5 +32,45 @@ class SpanDecoratorTest extends Specification {
     expect:
     span.getTags().containsKey("newFoo")
     span.getTags().get("newFoo") == "newBar"
+  }
+
+  def "override operation with OperationDecorator"() {
+
+    setup:
+    def tracer = new DDTracer()
+    def span = SpanFactory.newSpanOf(tracer)
+    tracer.addDecorator(new OperationDecorator())
+
+    when:
+    Tags.COMPONENT.set(span, component)
+
+    then:
+    span.getOperationName() == operationName
+
+    where:
+    component << OperationDecorator.MAPPINGS.keySet()
+    operationName << OperationDecorator.MAPPINGS.values()
+
+
+  }
+
+  def "override operation with DBTypeDecorator"() {
+
+    setup:
+    def tracer = new DDTracer()
+    def span = SpanFactory.newSpanOf(tracer)
+    tracer.addDecorator(new DBTypeDecorator())
+
+    when:
+    Tags.DB_TYPE.set(span, type)
+
+    then:
+    span.getOperationName() == type + ".query"
+    span.context().getSpanType() == "db"
+
+    where:
+    type = "foo"
+
+
   }
 }

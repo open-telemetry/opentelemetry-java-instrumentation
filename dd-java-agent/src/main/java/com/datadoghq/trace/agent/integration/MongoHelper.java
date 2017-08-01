@@ -5,6 +5,7 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentracing.Span;
 import io.opentracing.contrib.mongo.TracingCommandListener;
+import io.opentracing.tag.Tags;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +51,14 @@ public class MongoHelper extends DDAgentTracingHelper<MongoClientOptions.Builder
 
   public void decorate(final Span span, final CommandStartedEvent event) {
     try {
+      // normalize the Mongo command so that parameters are removed from the string
       final BsonDocument normalized = norm(event.getCommand());
-      span.setTag(DDTags.RESOURCE_NAME, normalized.toString());
+      final String mongoCmd = normalized.toString();
+
+      // add specific resource name and replace the `db.statement` OpenTracing
+      // tag with the quantized version of the Mongo command
+      span.setTag(DDTags.RESOURCE_NAME, mongoCmd);
+      span.setTag(Tags.DB_STATEMENT.getKey(), mongoCmd);
     } catch (final Throwable e) {
       log.warn("Couldn't decorate the mongo query: " + e.getMessage(), e);
     }

@@ -1,6 +1,6 @@
 package com.datadoghq.trace.resolver;
 
-import com.datadoghq.trace.integration.DDSpanContextDecorator;
+import com.datadoghq.trace.integration.AbstractDecorator;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -9,9 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DDDecoratorsFactory {
 
-  public static String DECORATORS_PACKAGE = "com.datadoghq.trace.integration.";
-
   public static final String CONFIG_PATH = "dd-trace-decorators";
+  public static String DECORATORS_PACKAGE = "com.datadoghq.trace.integration.";
 
   /**
    * Create decorators from configuration
@@ -19,9 +18,8 @@ public class DDDecoratorsFactory {
    * @param decoratorsConfig
    * @return the list of instanciated and configured decorators
    */
-  public static List<DDSpanContextDecorator> create(
-      final List<DDSpanDecoratorConfig> decoratorsConfig) {
-    final List<DDSpanContextDecorator> decorators = new ArrayList<>();
+  public static List<AbstractDecorator> create(final List<DDSpanDecoratorConfig> decoratorsConfig) {
+    final List<AbstractDecorator> decorators = new ArrayList<>();
     for (final DDSpanDecoratorConfig decoratorConfig : decoratorsConfig) {
       if (decoratorConfig.getType() == null) {
         log.warn("Cannot create decorator without type from configuration {}", decoratorConfig);
@@ -39,9 +37,9 @@ public class DDDecoratorsFactory {
         continue;
       }
 
-      DDSpanContextDecorator decorator = null;
+      AbstractDecorator decorator = null;
       try {
-        decorator = (DDSpanContextDecorator) decoratorClass.getConstructor().newInstance();
+        decorator = (AbstractDecorator) decoratorClass.getConstructor().newInstance();
       } catch (final Exception e) {
         log.warn(
             "Cannot create decorator as we could not invoke the default constructor. Provided configuration {}",
@@ -68,8 +66,8 @@ public class DDDecoratorsFactory {
     return decorators;
   }
 
-  public static List<DDSpanContextDecorator> createFromResources() {
-    List<DDSpanContextDecorator> result = new ArrayList<>();
+  public static List<AbstractDecorator> createFromResources() {
+    List<AbstractDecorator> result = new ArrayList<>();
     final TracerConfig config =
         FactoryUtils.loadConfigFromResource(CONFIG_PATH, TracerConfig.class);
     if (config != null) {

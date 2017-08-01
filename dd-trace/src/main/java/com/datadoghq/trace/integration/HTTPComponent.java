@@ -8,7 +8,7 @@ import io.opentracing.tag.Tags;
  * This span decorator leverages HTTP tags. It allows the dev to define a custom service name and
  * retrieves some HTTP meta such as the request path
  */
-public class HTTPComponent extends DDSpanContextDecorator {
+public class HTTPComponent extends AbstractDecorator {
 
   public HTTPComponent() {
     super();
@@ -17,7 +17,7 @@ public class HTTPComponent extends DDSpanContextDecorator {
   }
 
   @Override
-  public boolean afterSetTag(DDSpanContext context, String tag, Object value) {
+  public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
     //Assign service name
     if (super.afterSetTag(context, tag, value)) {
       //Assign span type to WEB
