@@ -7,7 +7,7 @@ target
 
 # Gradle #
 #########
-!/gradle/wrapper/*
+!**/gradle/wrapper/*
 /.gradle
 **/build/
 dd-trace-examples/**/build/

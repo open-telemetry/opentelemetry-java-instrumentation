@@ -1,8 +1,8 @@
-## Spring-boot + JDBC (MySQL) example
+## Spring-boot + JDBC example
 ### Purpose
 
 This project aims at demonstrating how to instrument legacy code based on the SpringBoot framework
-and a MySQL JDBC connection.
+and a JDBC connection.
 
 We are using the [opentracing contributions](https://github.com/opentracing-contrib) in order to trace:
  * All the JDBC queries and calls to the DB
@@ -15,7 +15,7 @@ at this time.
  
 ### Run the demo
 
-The demo consistes into a very simple backend backed by a MySQL db. The Spring Boot application exposes
+The demo consistes into a very simple backend backed by an in-memory db. The Spring Boot application exposes
 2 endpoints that can be reached via an HTTP request.
 
 #### Prerequisites
@@ -30,10 +30,8 @@ connection properties are okay.
 ```properties
 # file: src/resources/application.properties
 
-spring.datasource.driver-class-name= io.opentracing.contrib.jdbc.TracingDriver
-spring.datasource.url= jdbc:tracing:mysql://localhost:3306/springdb
-spring.datasource.username=root
-spring.datasource.password=root
+spring.datasource.driver-class-name=io.opentracing.contrib.jdbc.TracingDriver
+spring.datasource.url=jdbc:tracing:h2:mem:spring-test
 ```
 
 ```yaml
