@@ -16,6 +16,7 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
   'com.datadoghq.trace.agent.TraceAnnotationsManager',
   'com.datadoghq.trace.agent.InstrumentationChecker',
   'com.datadoghq.trace.agent.DDJavaAgentInfo',
+  'io.opentracing.contrib.mongo.TracingCommandListenerFactory',
 ]
 
 dependencies {
@@ -30,7 +31,7 @@ dependencies {
   compile(group: 'io.opentracing.contrib', name: 'opentracing-web-servlet-filter', version: '0.0.9') {
     exclude(group: 'org.eclipse.jetty', module: 'jetty-servlet')
   }
-  compile(group: 'io.opentracing.contrib', name: 'opentracing-mongo-driver', version: '0.0.2') {
+  compile(group: 'io.opentracing.contrib', name: 'opentracing-mongo-driver', version: '0.0.3') {
     exclude(group: 'org.mongodb', module: 'mongodb-driver-async')
     exclude(group: 'org.mongodb', module: 'mongo-java-driver')
   }

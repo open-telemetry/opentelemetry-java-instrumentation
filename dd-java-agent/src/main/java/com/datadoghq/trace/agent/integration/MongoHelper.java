@@ -5,6 +5,7 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentracing.Span;
 import io.opentracing.contrib.mongo.TracingCommandListener;
+import io.opentracing.contrib.mongo.TracingCommandListenerFactory;
 import io.opentracing.tag.Tags;
 import java.util.Arrays;
 import java.util.List;
@@ -41,7 +42,7 @@ public class MongoHelper extends DDAgentTracingHelper<MongoClientOptions.Builder
   protected MongoClientOptions.Builder doPatch(final MongoClientOptions.Builder builder)
       throws Exception {
 
-    final TracingCommandListener listener = new TracingCommandListener(tracer);
+    final TracingCommandListener listener = TracingCommandListenerFactory.create(tracer);
     builder.addCommandListener(listener);
 
     setState(builder, 1);
