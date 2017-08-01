@@ -21,7 +21,7 @@ public class DBTypeDecorator extends AbstractDecorator {
     //Assign service name
     if (super.afterSetTag(context, tag, value)) {
       //Assign span type to DB
-      context.setSpanType("db");
+      context.setSpanType("sql");
       // Works for: mongo, cassandra, jdbc
       context.setOperationName(String.valueOf(value) + ".query");
       return true;
