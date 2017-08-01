@@ -53,5 +53,6 @@ jobs:
                 -Psigning.secretKeyRingFile=/home/circleci/dd-trace-java/.circleci/secring.gpg \
                 -PbintrayUser=${BINTRAY_USER} \
                 -PbintrayApiKey=${BINTRAY_API_KEY} \
+                -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
                 artifactoryPublish
             fi

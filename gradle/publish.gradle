@@ -80,7 +80,6 @@ artifactoryPublish { task ->
       }
       defaults {
         publishConfigs('archives')
-        publishIvy = false
       }
     }
   }
