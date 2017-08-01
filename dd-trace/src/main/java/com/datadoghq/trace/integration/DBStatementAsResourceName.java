@@ -14,10 +14,22 @@ public class DBStatementAsResourceName extends AbstractDecorator {
 
   @Override
   public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
+
+    // Special case: Mongo
+    // Skip the decorators
+    if (context.getTags().containsKey(Tags.COMPONENT.getKey())
+        && "java-mongo".equals(context.getTags().get(Tags.COMPONENT.getKey()))) {
+      return true;
+    }
+
     //Assign service name
     if (super.afterSetTag(context, tag, value)) {
-      // Replace the OT db.statement by the DD sql.query
-      context.setTag(DDTags.DB_STATEMENT, value);
+      // TODO: remove properly the tag (immutable at this time)
+      // the `db.statement` tag must be removed because it will be set
+      // by the Datadog Trace Agent as `sql.query`; here we're removing
+      // a duplicate that will not be obfuscated with the current Datadog
+      // Trace Agent version.
+      context.setTag(Tags.DB_STATEMENT.getKey(), null);
       return true;
     }
     return false;

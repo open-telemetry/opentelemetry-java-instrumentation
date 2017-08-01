@@ -194,7 +194,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
     //Call decorators
     final List<AbstractDecorator> decorators = tracer.getSpanContextDecorators(tag);
-    if (decorators != null) {
+    if (decorators != null && value != null) {
       for (final AbstractDecorator decorator : decorators) {
         try {
           decorator.afterSetTag(this, tag, value);
@@ -209,6 +209,11 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     //Error management
     if (Tags.ERROR.getKey().equals(tag) && Boolean.TRUE.equals(value)) {
       this.errorFlag = true;
+    }
+
+    // Remove null values
+    if (value == null) {
+      this.tags.remove(tag);
     }
   }
 
