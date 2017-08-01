@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DDTracerFactory {
 
   public static final String SYSTEM_PROPERTY_CONFIG_PATH = "dd.trace.configurationFile";
-  public static final String CONFIG_PATH = "dd-trace.yaml";
+  public static final String CONFIG_PATH = "dd-trace";
 
   private static final String DD_AGENT_WRITER_TYPE = DDAgentWriter.class.getSimpleName();
   private static final String LOGGING_WRITER_TYPE = LoggingWriter.class.getSimpleName();

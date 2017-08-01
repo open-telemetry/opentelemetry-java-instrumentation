@@ -11,7 +11,7 @@ public class DDDecoratorsFactory {
 
   public static String DECORATORS_PACKAGE = "com.datadoghq.trace.integration.";
 
-  public static final String CONFIG_PATH = "dd-trace-decorators.yaml";
+  public static final String CONFIG_PATH = "dd-trace-decorators";
 
   /**
    * Create decorators from configuration

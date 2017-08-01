@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class InstrumentationChecker {
 
-  private static final String CONFIG_FILE = "dd-trace-supported-framework.yaml";
+  private static final String CONFIG_FILE = "dd-trace-supported-framework";
   private final Map<String, List<Map<String, String>>> rules;
   private final Map<String, String> frameworks;
 

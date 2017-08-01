@@ -5,7 +5,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Enumeration;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -31,14 +30,25 @@ public class FactoryUtils {
 
   public static <A> A loadConfigFromResource(
       final String resourceName, final Class<A> targetClass) {
-    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     A config = null;
+
+    // Try loading both suffixes
+    if (!resourceName.endsWith(".yaml") && !resourceName.endsWith(".yml")) {
+      config = loadConfigFromResource(resourceName + ".yaml", targetClass);
+      if (config == null) {
+        config = loadConfigFromResource(resourceName + ".yml", targetClass);
+      }
+      if (config != null) {
+        return config;
+      }
+    }
+
     try {
-      final Enumeration<URL> iter = classLoader.getResources(resourceName);
-      if (iter.hasMoreElements()) {
-        final URL url = iter.nextElement();
-        log.info("Loading config from resource " + url);
-        config = objectMapper.readValue(url.openStream(), targetClass);
+      final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+      final URL resource = classLoader.getResource(resourceName);
+      if (resource != null) {
+        log.info("Loading config from resource " + resource);
+        config = objectMapper.readValue(resource.openStream(), targetClass);
       }
     } catch (final IOException e) {
       log.warn("Could not load configuration file {}.", resourceName);

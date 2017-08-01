@@ -10,9 +10,24 @@ import org.junit.Test;
 public class DDTracerFactoryTest {
 
   @Test
+  public void testDefaults() throws Exception {
+    final TracerConfig tracerConfig =
+        FactoryUtils.loadConfigFromResource("dd-trace-default", TracerConfig.class);
+
+    assertThat(tracerConfig.getWriter()).isNotNull();
+    assertThat(tracerConfig.getSampler()).isNotNull();
+    assertThat(tracerConfig.getDefaultServiceName()).isEqualTo("java-app-default");
+    assertThat(tracerConfig.getWriter().getHost()).isEqualTo("localhost");
+    assertThat(tracerConfig.getWriter().getPort()).isEqualTo(8126);
+    assertThat(tracerConfig.getWriter().getType()).isEqualTo(DDAgentWriter.class.getSimpleName());
+    assertThat(tracerConfig.getSampler().getType()).isEqualTo(AllSampler.class.getSimpleName());
+    assertThat(tracerConfig.getSampler().getRate()).isNull();
+  }
+
+  @Test
   public void test() throws Exception {
     TracerConfig tracerConfig =
-        FactoryUtils.loadConfigFromResource("dd-trace-1.yaml", TracerConfig.class);
+        FactoryUtils.loadConfigFromResource("dd-trace-1", TracerConfig.class);
 
     assertThat(tracerConfig.getWriter()).isNotNull();
     assertThat(tracerConfig.getSampler()).isNotNull();
@@ -23,7 +38,7 @@ public class DDTracerFactoryTest {
     assertThat(tracerConfig.getSampler().getType()).isEqualTo(AllSampler.class.getSimpleName());
     assertThat(tracerConfig.getSampler().getRate()).isNull();
 
-    tracerConfig = FactoryUtils.loadConfigFromResource("dd-trace-2.yaml", TracerConfig.class);
+    tracerConfig = FactoryUtils.loadConfigFromResource("dd-trace-2", TracerConfig.class);
     assertThat(tracerConfig.getWriter()).isNotNull();
     assertThat(tracerConfig.getDefaultServiceName()).isEqualTo("java-app");
     assertThat(tracerConfig.getWriter().getHost("localhost")).isEqualTo("localhost");
