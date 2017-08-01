@@ -19,7 +19,6 @@ public class DBStatementAsResourceName extends AbstractDecorator {
     if (super.afterSetTag(context, tag, value)) {
       // Replace the OT db.statement by the DD sql.query
       context.setTag(DDTags.DB_STATEMENT, value);
-      context.getTags().remove(Tags.DB_STATEMENT.getKey());
       return true;
     }
     return false;
