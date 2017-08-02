@@ -60,6 +60,7 @@ public class MongoHelper extends DDAgentTracingHelper<MongoClientOptions.Builder
       // tag with the quantized version of the Mongo command
       span.setTag(DDTags.RESOURCE_NAME, mongoCmd);
       span.setTag(Tags.DB_STATEMENT.getKey(), mongoCmd);
+      span.setTag(DDTags.SPAN_TYPE, "mongodb");
     } catch (final Throwable e) {
       log.warn("Couldn't decorate the mongo query: " + e.getMessage(), e);
     }

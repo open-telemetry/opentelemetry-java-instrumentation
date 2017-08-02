@@ -24,6 +24,7 @@ public class DBTypeDecorator extends AbstractDecorator {
       //Assign span type to DB
       // Special case: Mongo, set to mongodb
       if ("mongo".equals(value)) {
+        //Todo: not sure it's used cos already in the agent mongo helper
         context.setSpanType("mongodb");
       } else {
         context.setSpanType("sql");
