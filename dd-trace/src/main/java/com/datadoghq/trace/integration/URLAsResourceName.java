@@ -54,7 +54,7 @@ public class URLAsResourceName extends AbstractDecorator {
       path = norm(path);
       final String verb = (String) context.getTags().get(Tags.HTTP_METHOD.getKey());
       if (verb != null && !verb.isEmpty()) {
-        path = verb + "-" + path;
+        path = verb + " " + path;
       }
       context.setResourceName(path);
     } catch (final Throwable e) {

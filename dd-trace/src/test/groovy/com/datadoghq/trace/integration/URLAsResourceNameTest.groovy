@@ -35,8 +35,8 @@ class URLAsResourceNameTest extends Specification {
     norm == output
 
     where:
-    input << ["http://sdsdfsdfdsfsd?dasdas?das"]
-    output << ["http://sdsdfsdfdsfsd"]
+    input << ["/aaaaa?bbb=111&ccc=foo"]
+    output << ["/aaaaa"]
 
 
   }
@@ -73,8 +73,8 @@ class URLAsResourceNameTest extends Specification {
     norm == output
 
     where:
-    input << ["http://www.example.com/users/guillaume/list_repository/"]
-    output << ["http://www.example.com/users/:id/list_repository/"]
+    input << ["/users/guillaume/list_repository/"]
+    output << ["/users/:id/list_repository/"]
 
 
   }
