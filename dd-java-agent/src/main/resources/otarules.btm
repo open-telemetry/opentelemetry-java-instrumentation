@@ -58,20 +58,6 @@ DO
 ENDRULE
 
 
-## Instrument Elasticsearch Transport Client
-## ==========================================
-#RULE opentracing-elasticsearch-client
-#INTERFACE org.elasticsearch.client.ElasticsearchClient
-#METHOD execute(org.elasticsearch.action.Action,org.elasticsearch.action.ActionRequest,org.elasticsearch.action.ActionListener)
-#HELPER com.datadoghq.trace.agent.integration.ElasticsearchHelper
-#AT ENTRY
-#IF $# == 3 AND NOT $3.getClass().getCanonicalName().equals("io.opentracing.contrib.elasticsearch.TracingResponseListener")
-#DO
-#  registerArgs($1);
-#  $3 = patch($3);
-#ENDRULE
-
-
 # Instrument Cassandra client
 # ===========================
 RULE opentracing-cassandra-driver
