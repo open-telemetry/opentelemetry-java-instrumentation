@@ -13,12 +13,7 @@ import io.opentracing.BaseSpan;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.ThreadLocalActiveSpanSource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 
@@ -355,11 +350,6 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
               this.tags,
               parentTrace,
               DDTracer.this);
-
-      // Force the lang meta
-      if (context.getBaggageItem(DDSpanContext.LANGUAGE_FIELDNAME) == null) {
-        context.setBaggageItem(DDSpanContext.LANGUAGE_FIELDNAME, "java");
-      }
 
       return context;
     }
