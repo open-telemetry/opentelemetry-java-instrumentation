@@ -48,9 +48,6 @@ dependencies {
   compile(group: 'io.opentracing.contrib', name: 'opentracing-cassandra-driver', version: '0.0.2') {
     exclude(group: 'com.datastax.cassandra', module: 'cassandra-driver-core')
   }
-  compile(group: 'io.opentracing.contrib', name: 'opentracing-elasticsearch-client', version: '0.0.2') {
-    exclude(group: 'org.elasticsearch.client', module: 'transport')
-  }
   compile(group: 'io.opentracing.contrib', name: 'opentracing-apache-httpclient', version: '0.0.2') {
     exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
   }
@@ -69,7 +66,6 @@ dependencies {
   compileOnly group: 'javax.jms', name: 'javax.jms-api', version: '2.0.1'
   compileOnly group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.119'
   compileOnly group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'
-  compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '5.4.1'
   compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3'
 }
 

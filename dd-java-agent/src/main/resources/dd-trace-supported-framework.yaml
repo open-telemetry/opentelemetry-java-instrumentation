@@ -19,11 +19,6 @@ opentracing-aws-sdk:
     artifact: aws-java-sdk
     supported_version: 1\.11\..*
 
-opentracing-elasticsearch-client:
-  - check:
-    artifact: transport
-    supported_version: 5\.4\..*
-
 opentracing-cassandra-driver:
   - check:
     artifact: cassandra-driver-core
@@ -58,13 +53,3 @@ opentracing-mongo-driver:
   - check:
     artifact: mongodb-driver-async
     supported_version: 3\..*
-
-# TODO, remove me, Issue NPE with the OT contrib v0.0.2, so disabling at this time
-#org.elasticsearch.client:
-#  - check:
-#    artifact: transport
-#    supported_version: none
-##    supported_version: 5\.4\..*
-
-
-
