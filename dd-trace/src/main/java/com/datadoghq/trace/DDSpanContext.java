@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DDSpanContext implements io.opentracing.SpanContext {
 
-  public static final String LANGUAGE_FIELDNAME = "lang";
   // Opentracing attributes
   private final long traceId;
   private final long spanId;

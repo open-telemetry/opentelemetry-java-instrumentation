@@ -92,16 +92,6 @@ public class DDSpanBuilderTest {
   }
 
   @Test
-  public void shouldAddLangMeta() {
-
-    final String expectedName = "fakeName";
-
-    final DDSpan span = tracer.buildSpan(expectedName).withServiceName("foo").startManual();
-
-    assertThat(span.getBaggageItem(DDSpanContext.LANGUAGE_FIELDNAME)).isEqualTo("java");
-  }
-
-  @Test
   public void shouldBuildSpanTimestampInNano() {
 
     // time in micro
