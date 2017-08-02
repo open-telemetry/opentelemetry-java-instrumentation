@@ -66,11 +66,47 @@ class SpanDecoratorTest extends Specification {
 
     then:
     span.getOperationName() == type + ".query"
-    span.context().getSpanType() == "db"
+    span.context().getSpanType() == "sql"
+
+
+    when:
+    Tags.DB_TYPE.set(span, "mongo")
+
+    then:
+    span.getOperationName() == "mongo.query"
+    span.context().getSpanType() == "mongodb"
+
 
     where:
     type = "foo"
 
 
+  }
+
+  def "DBStatementAsResource should not interact on Mongo queries"() {
+    setup:
+    def tracer = new DDTracer()
+    def span = SpanFactory.newSpanOf(tracer)
+    tracer.addDecorator(new DBStatementAsResourceName())
+
+    when:
+    span.setResourceName("not-change-me")
+    Tags.COMPONENT.set(span, "java-mongo")
+    Tags.DB_STATEMENT.set(span, something)
+
+    then:
+    span.getResourceName() == "not-change-me"
+
+
+    when:
+    span.setResourceName("change-me")
+    Tags.COMPONENT.set(span, "other-contrib")
+    Tags.DB_STATEMENT.set(span, something)
+
+    then:
+    span.getResourceName() == something
+
+    where:
+    something = "fake-query"
   }
 }

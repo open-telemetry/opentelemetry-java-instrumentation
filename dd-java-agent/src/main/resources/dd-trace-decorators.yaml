@@ -9,4 +9,5 @@ decorators:
     setValue: aws-client
   - type: ErrorFlag
   - type: DBTypeDecorator
+  - type: DBStatementAsResourceName
   - type: OperationDecorator
