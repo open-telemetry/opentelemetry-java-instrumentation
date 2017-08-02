@@ -16,12 +16,9 @@
 
 // Source: https://github.com/ratpack/ratpack/blob/master/gradle/publish.gradle
 
-apply plugin: 'maven'
+apply plugin: "maven"
 apply plugin: "com.jfrog.artifactory"
 apply plugin: "signing"
-
-apply from: "$rootDir/gradle/version.gradle"
-apply from: "${rootDir}/gradle/pom.gradle"
 
 afterEvaluate {
   assert description: "Project $project.path is published, must have a description"
@@ -33,23 +30,28 @@ tasks.withType(Upload).matching { it.name != "install" }.all {
   }
 }
 
-def isCI = Boolean.parseBoolean("$System.env.CI")
+if (project.rootProject != project) {
+  apply from: "$rootDir/gradle/version.gradle"
+  apply from: "${rootDir}/gradle/pom.gradle"
 
-signing {
-  required = isCI
-  sign configurations.archives
-}
+  def isCI = Boolean.parseBoolean("$System.env.CI")
 
-configurations {
+  signing {
+    required = isCI
+    sign configurations.archives
+  }
+
   configurations {
-    all {
-      incoming.afterResolve {
-        dependencies.withType(ModuleDependency) { dep ->
-          excludeRules.each {
-            if ([it.group, it.module].any { it == null }) {
-              throw new InvalidUserDataException(
-                "Partial exclude for dependency '$dep.group:$dep.name:$dep.version' of $project: [group: $it.group, module: $it.module]\n\nExcludes must specify both group and module and neither can be '*'."
-              )
+    configurations {
+      all {
+        incoming.afterResolve {
+          dependencies.withType(ModuleDependency) { dep ->
+            excludeRules.each {
+              if ([it.group, it.module].any { it == null }) {
+                throw new InvalidUserDataException(
+                  "Partial exclude for dependency '$dep.group:$dep.name:$dep.version' of $project: [group: $it.group, module: $it.module]\n\nExcludes must specify both group and module and neither can be '*'."
+                )
+              }
             }
           }
         }
@@ -63,6 +65,13 @@ def isSnapshot = version.endsWith("-SNAPSHOT")
 def forceLocal = project.hasProperty('forceLocal') && forceLocal
 
 artifactoryPublish { task ->
+  gradle.taskGraph.whenReady { taskGraph ->
+    def startParameter = project.gradle.startParameter
+    if (taskGraph.hasTask(task) && startParameter.parallelProjectExecutionEnabled && startParameter.maxWorkerCount > 1) {
+      throw new IllegalStateException("cannot run " + task + " with --parallel and --max-workers > 1")
+    }
+  }
+
   artifactory {
     publish {
       contextUrl = forceLocal ? 'http://localhost:8080/artifactory' : 'https://oss.jfrog.org'
