@@ -9,12 +9,14 @@ import io.opentracing.tag.Tags;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /** Decorator for servlet contrib */
 public class URLAsResourceName extends AbstractDecorator {
 
+  public static final Config.Rule RULE_QPARAM = new Config.Rule("\\?.*$", "");
+  public static final Config.Rule RULE_DIGIT = new Config.Rule("\\d+", "?");
   private List<Config.Rule> patterns = new ArrayList<>();
-  private boolean isConfigured = false;
 
   public URLAsResourceName() {
     this(DDDecoratorsFactory.CONFIG_PATH);
@@ -31,24 +33,32 @@ public class URLAsResourceName extends AbstractDecorator {
       for (final Config.Rule pattern : config.urlResourcePatterns) {
         patterns.add(pattern);
       }
-
-      isConfigured = true;
     } catch (final Throwable ex) {
-      isConfigured = false;
+      // do nothing
+    } finally {
+      patterns.add(RULE_QPARAM);
+      patterns.add(RULE_DIGIT);
     }
   }
 
   @Override
   public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
     //Assign resource name
-    if (context.getTags().containsKey(Tags.COMPONENT.getKey())
-        && "java-web-servlet".equals(context.getTags().get(Tags.COMPONENT.getKey()))) {
+    try {
+      String path = String.valueOf(value);
       try {
-        final String path = new java.net.URL(String.valueOf(value)).getPath();
-        context.setResourceName(path);
+        path = new java.net.URL(path).getPath();
       } catch (final MalformedURLException e) {
-        context.setResourceName(String.valueOf(value));
+        // do nothing
       }
+      path = norm(path);
+      final String verb = (String) context.getTags().get(Tags.HTTP_METHOD.getKey());
+      if (verb != null && !verb.isEmpty()) {
+        path = verb + "-" + path;
+      }
+      context.setResourceName(path);
+    } catch (final Throwable e) {
+      // do nothing
     }
     return true;
   }
@@ -57,14 +67,11 @@ public class URLAsResourceName extends AbstractDecorator {
   String norm(final String origin) {
 
     // Remove query params and replace integers
-    String norm = origin.replaceAll("\\?.*$", "");
-    norm = norm.replaceAll("\\d+", "<not-alpha>");
+    String norm = origin;
 
     // Apply custom rules
-    if (isConfigured) {
-      for (final Config.Rule p : patterns) {
-        norm = norm.replaceAll(p.regex, p.replacement);
-      }
+    for (final Config.Rule p : patterns) {
+      norm = norm.replaceAll(p.regex, p.replacement);
     }
 
     return norm;
@@ -76,7 +83,6 @@ public class URLAsResourceName extends AbstractDecorator {
   }
 
   void setPatterns(final List<Config.Rule> patterns) {
-    isConfigured = true;
     this.patterns = patterns;
   }
 
@@ -91,9 +97,22 @@ public class URLAsResourceName extends AbstractDecorator {
 
       public Rule() {}
 
-      public Rule(String regex, String replacement) {
+      public Rule(final String regex, final String replacement) {
         this.regex = regex;
         this.replacement = replacement;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Rule rule = (Rule) o;
+        return Objects.equals(regex, rule.regex) && Objects.equals(replacement, rule.replacement);
+      }
+
+      @Override
+      public int hashCode() {
+        return Objects.hash(regex, replacement);
       }
     }
   }
