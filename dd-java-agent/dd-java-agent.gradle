@@ -117,3 +117,8 @@ shadowJar {
     exclude(dependency('org.projectlombok:lombok:1.16.18'))
   }
 }
+
+// We don't want bundled dependencies to show up in the pom.
+modifyPom {
+  dependencies.removeAll { true }
+}
