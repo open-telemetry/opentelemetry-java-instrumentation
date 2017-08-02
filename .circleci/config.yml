@@ -54,5 +54,5 @@ jobs:
                 -PbintrayUser=${BINTRAY_USER} \
                 -PbintrayApiKey=${BINTRAY_API_KEY} \
                 -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
-                artifactoryPublish
+                artifactoryPublish --max-workers=1
             fi

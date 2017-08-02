@@ -24,17 +24,22 @@ dependencies {
   compile group: 'io.opentracing', name: 'opentracing-noop', version: '0.30.0'
   compile group: 'io.opentracing', name: 'opentracing-util', version: '0.30.0'
   compile group: 'io.opentracing.contrib', name: 'opentracing-tracerresolver', version: '0.1.0'
+
   compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.8'
   compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.8.8'
   compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
   compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
+  
+  testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
   testCompile group: 'junit', name: 'junit', version: '4.12'
   testCompile group: 'org.assertj', name: 'assertj-core', version: '3.6.2'
   testCompile group: 'org.mockito', name: 'mockito-core', version: '2.7.22'
-  testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
   testCompile group: 'org.spockframework', name: 'spock-core', version: '1.0-groovy-2.4'
   testCompile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.4'
   testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.6'
+
   jmh 'commons-io:commons-io:2.4'
 }
 
@@ -50,14 +55,16 @@ shadowJar {
   // Don't relocate slf4j or opentracing deps.
   relocate 'com.fasterxml', 'dd.deps.com.fasterxml'
   relocate 'com.google', 'dd.deps.com.google'
-  relocate 'javassist', 'dd.deps.javassist'
-  relocate 'org.jboss.byteman', 'dd.deps.org.jboss.byteman'
-  relocate 'org.reflections', 'dd.deps.org.reflections'
   relocate 'org.yaml', 'dd.deps.org.yaml'
 
   dependencies {
     exclude(dependency('org.projectlombok:lombok:1.16.18'))
   }
+}
+
+// We don't want bundled dependencies to show up in the pom.
+modifyPom {
+  dependencies.removeAll { true }
 }
 
 jmh {
