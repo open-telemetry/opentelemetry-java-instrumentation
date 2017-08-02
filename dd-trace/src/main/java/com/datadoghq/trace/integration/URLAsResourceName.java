@@ -2,10 +2,11 @@ package com.datadoghq.trace.integration;
 
 import com.datadoghq.trace.DDSpanContext;
 import com.datadoghq.trace.DDTags;
-import com.datadoghq.trace.resolver.DDDecoratorsFactory;
+import com.datadoghq.trace.resolver.DDTracerFactory;
 import com.datadoghq.trace.resolver.FactoryUtils;
 import com.datadoghq.trace.resolver.TracerConfig;
 import io.opentracing.tag.Tags;
+
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,7 @@ public class URLAsResourceName extends AbstractDecorator {
   private List<Config.Rule> patterns = new ArrayList<>();
 
   public URLAsResourceName() {
-    this(DDDecoratorsFactory.CONFIG_PATH);
+    this(DDTracerFactory.CONFIG_PATH);
   }
 
   public URLAsResourceName(final String configPath) {
@@ -103,10 +104,10 @@ public class URLAsResourceName extends AbstractDecorator {
       }
 
       @Override
-      public boolean equals(Object o) {
+      public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Rule rule = (Rule) o;
+        final Rule rule = (Rule) o;
         return Objects.equals(regex, rule.regex) && Objects.equals(replacement, rule.replacement);
       }
 
