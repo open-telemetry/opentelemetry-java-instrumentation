@@ -12,14 +12,19 @@ We also demonstrate user cross-process tracing through the `TracedClient` exampl
 
 #### Prerequisites
 
-1. Make sure that you have a local mongo database running (hostname: `localhost`, port: `27017`).
-2. No process holding the 8080 and the 8081 port, they are used by the Dropwizard server.
-
-If you're using Docker, you can run a mongo instance as follow:
-
+Be sure to build the project so that the latest version of ``dd-trace-java`` components are used. You can build
+all libraries and examples launching from the ``dd-trace-java`` root folder:
 ```bash
-docker run -it --rm -p 27017:27017 --name mongo -d mongo
+./gradlew clean shadowJar
 ```
+
+Then you can start all services via Docker:
+```bash
+cd dd-trace-examples/dropwizard-mongo-client
+DD_API_KEY=<your_datadog_api_key> docker-compose up -d
+```
+
+A valid ``DD_API_KEY`` is required to post collected traces to the Datadog backend.
 
 #### Run the application
 
@@ -33,7 +38,6 @@ First, get the latest version of the dd-java-agent:
 wget -O dd-java-agent.jar 'https://search.maven.org/remote_content?g=com.datadoghq&a=dd-java-agent&v=LATEST'
 ```
 
-
 Then, build the app add the agent to the JVM. That can be done as follow:
 ```
 cd path/to/dd-trace-examples/dropwizard-mongo-client
@@ -42,14 +46,15 @@ java -javaagent:/path/to/dd-java-agent.jar -jar build/libs/dropwizard-mongo-clie
 ```
 ### Generate traces
 
-
 #### With your web browser
 
 Once the application runs. Go to the following url:
 
-* [http://localhost:8080/demo/add?title=some-book-title&isbn=1234&page=42]()
-* [http://localhost:8080/demo/]()
+* [http://localhost:8080/demo/add?title=some-book-title&isbn=1234&page=42][1]
+* [http://localhost:8080/demo/][2]
 
+[1]: http://localhost:8080/demo/add?title=some-book-title&isbn=1234&page=42
+[2]: http://localhost:8080/demo/
 
 Then get back to Datadog and wait a bit to see a trace coming.
 

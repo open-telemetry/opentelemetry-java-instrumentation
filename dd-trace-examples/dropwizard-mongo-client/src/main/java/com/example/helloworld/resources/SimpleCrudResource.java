@@ -6,7 +6,7 @@ import com.google.common.base.Optional;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import io.opentracing.tag.StringTag;
+import io.opentracing.ActiveSpan;
 import io.opentracing.util.GlobalTracer;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,33 +91,38 @@ public class SimpleCrudResource {
     }
 
     // The methodDB is traced (see below), this will be produced a new child span
-    beforeDB();
+    afterDB();
 
     return books;
   }
 
   /**
-   * The beforeDB is traced using the annotation @trace with a custom operationName and a custom
+   * The beforeDB is traced using the annotation @Trace with a custom operationName and a custom
    * tag.
    *
    * @throws InterruptedException
    */
-  @Trace(operationName = "Before DB")
+  @Trace(operationName = "database.before")
   public void beforeDB() throws InterruptedException {
-    new StringTag("mytag").set(GlobalTracer.get().activeSpan(), "myvalue");
-    Thread.sleep(333);
+    ActiveSpan currentSpan = GlobalTracer.get().activeSpan();
+    if (currentSpan != null) {
+      currentSpan.setTag("status", "started");
+      Thread.sleep(10);
+    }
   }
 
   /**
-   * The beforeDB is traced using the annotation @trace with a custom operationName and a custom
-   * tag.
+   * The afterDB is traced using the annotation @Trace with a custom operationName and a custom tag.
    *
    * @throws InterruptedException
    */
-  @Trace(operationName = "After DB")
+  @Trace(operationName = "database.after")
   public void afterDB() throws InterruptedException {
-    new StringTag("mytag").set(GlobalTracer.get().activeSpan(), "myvalue");
-    Thread.sleep(111);
+    ActiveSpan currentSpan = GlobalTracer.get().activeSpan();
+    if (currentSpan != null) {
+      currentSpan.setTag("status", "started");
+      Thread.sleep(10);
+    }
   }
 
   /** Flush resources */

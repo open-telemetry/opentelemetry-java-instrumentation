@@ -1,8 +1,8 @@
 # Service name used if none is provided in the app
-defaultServiceName: java-app
+defaultServiceName: dropwizard-example
 
 # The writer to use.
-# Could be: LoggingWritter or DDAgentWriter (default)
+# Could be: LoggingWriter or DDAgentWriter (default)
 writer:
   # LoggingWriter: Spans are logged using the application configuration
   # DDAgentWriter: Spans are forwarding to a Datadog Agent
