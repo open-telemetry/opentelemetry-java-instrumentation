@@ -17,7 +17,7 @@ dependencies {
 
   compile 'io.opentracing:opentracing-api:0.30.0'
   compile 'io.opentracing:opentracing-util:0.30.0'
-  compile 'io.opentracing.contrib:opentracing-mongo-driver:0.0.2'
+  compile 'io.opentracing.contrib:opentracing-mongo-driver:0.0.3'
 
   compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
   compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
