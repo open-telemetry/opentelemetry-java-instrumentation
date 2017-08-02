@@ -6,7 +6,6 @@ import com.datadoghq.trace.resolver.DDTracerFactory;
 import com.datadoghq.trace.resolver.FactoryUtils;
 import com.datadoghq.trace.resolver.TracerConfig;
 import io.opentracing.tag.Tags;
-
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
