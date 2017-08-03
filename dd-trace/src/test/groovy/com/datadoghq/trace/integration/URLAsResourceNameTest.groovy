@@ -22,7 +22,6 @@ class URLAsResourceNameTest extends Specification {
 
   }
 
-
   def "remove query params"() {
 
     setup:
@@ -35,9 +34,8 @@ class URLAsResourceNameTest extends Specification {
     norm == output
 
     where:
-    input << ["/aaaaa?bbb=111&ccc=foo"]
-    output << ["/aaaaa"]
-
+    input << ["/search?id=100&status=true"]
+    output << ["/search"]
 
   }
 
@@ -53,9 +51,8 @@ class URLAsResourceNameTest extends Specification {
     norm == output
 
     where:
-    input << ["/aaaa/1111/bbbb/2222"]
-    output << ["/aaaa/?/bbbb/?"]
-
+    input << ["/user/100/repository/50"]
+    output << ["/user/?/repository/?"]
 
   }
 
@@ -76,27 +73,34 @@ class URLAsResourceNameTest extends Specification {
     input << ["/users/guillaume/list_repository/"]
     output << ["/users/:id/list_repository/"]
 
-
   }
 
   def "skip others rules if the current is set as final"() {
 
+    // Same test as above except we replace :id by :id_01
+    // And we want to stop the rule chain just after that.
+
     setup:
     def decorator = new URLAsResourceName()
-    def r1 = new URLAsResourceName.Config.Rule(/(\\/users\\/)([^\/]*)/, /$1:id1/)
+    def r1 = new URLAsResourceName.Config.Rule(/(\\/users\\/)([^\/]*)/, /$1:id_01/)
     decorator.setPatterns(Arrays.asList(r1, URLAsResourceName.RULE_DIGIT))
 
     when:
-    r1.setFinal(true)
+    r1.setFinal(false)
     def norm = decorator.norm(input)
 
     then:
-    norm == output
+    norm == "/users/:id_?/list_repository/"
+
+    when:
+    r1.setFinal(true)
+    norm = decorator.norm(input)
+
+    then:
+    norm == "/users/:id_01/list_repository/"
 
     where:
-    input << ["/users/guillaume/list_repository/"]
-    output << ["/users/:id1/list_repository/"]
-
+    input = "/users/guillaume/list_repository/"
 
   }
 }

@@ -46,6 +46,7 @@ public class URLAsResourceName extends AbstractDecorator {
     try {
       final String statusCode = (String) context.getTags().get(Tags.HTTP_STATUS.getKey());
       // do nothing if the status code is already set and equals to 404.
+      // TODO: it assumes that Status404Decorator is active. If it's not, it will lead to unexpected behaviors
       if (statusCode != null && statusCode.equals("404")) {
 
         // Get the path without host:port
