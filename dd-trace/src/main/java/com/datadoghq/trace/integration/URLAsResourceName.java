@@ -6,7 +6,6 @@ import com.datadoghq.trace.resolver.DDTracerFactory;
 import com.datadoghq.trace.resolver.FactoryUtils;
 import com.datadoghq.trace.resolver.TracerConfig;
 import io.opentracing.tag.Tags;
-
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,22 +43,35 @@ public class URLAsResourceName extends AbstractDecorator {
 
   @Override
   public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
-    //Assign resource name
     try {
-      String path = String.valueOf(value);
-      try {
-        path = new java.net.URL(path).getPath();
-      } catch (final MalformedURLException e) {
-        // do nothing
+      final String statusCode = (String) context.getTags().get(Tags.HTTP_STATUS.getKey());
+      // do nothing if the status code is already set and equals to 404.
+      if (statusCode != null && statusCode.equals("404")) {
+
+        // Get the path without host:port
+        String path = String.valueOf(value);
+
+        try {
+          path = new java.net.URL(path).getPath();
+        } catch (final MalformedURLException e) {
+          // do nothing, use the value instead of the path
+        }
+        // normalize the path
+        path = norm(path);
+
+        // if the verb (GET, POST ...) is present, add it
+        final String verb = (String) context.getTags().get(Tags.HTTP_METHOD.getKey());
+        if (verb != null && !verb.isEmpty()) {
+          path = verb + " " + path;
+        }
+
+        //Assign resource name
+        context.setResourceName(path);
       }
-      path = norm(path);
-      final String verb = (String) context.getTags().get(Tags.HTTP_METHOD.getKey());
-      if (verb != null && !verb.isEmpty()) {
-        path = verb + " " + path;
-      }
-      context.setResourceName(path);
+
     } catch (final Throwable e) {
-      // do nothing
+
+      return false;
     }
     return true;
   }
@@ -81,30 +93,64 @@ public class URLAsResourceName extends AbstractDecorator {
     return norm;
   }
 
-  // for tests
+  // For tests
   List<Config.Rule> getPatterns() {
     return patterns;
   }
 
+  // For tests
   void setPatterns(final List<Config.Rule> patterns) {
     this.patterns = patterns;
   }
 
+  /** Additional properties concerning the UrlAsResourceDecorator in the YAML config */
   public static class Config extends TracerConfig {
 
-    public List<Rule> urlResourcePatterns;
+    List<Rule> urlResourcePatterns;
+
+    public List<Rule> getUrlResourcePatterns() {
+      return urlResourcePatterns;
+    }
+
+    public void setUrlResourcePatterns(final List<Rule> urlResourcePatterns) {
+      this.urlResourcePatterns = urlResourcePatterns;
+    }
 
     public static class Rule {
 
-      public String regex;
-      public String replacement;
-      public boolean isFinal = false;
+      String regex;
+      String replacement;
+      boolean isFinal = false;
 
       public Rule() {}
 
       public Rule(final String regex, final String replacement) {
         this.regex = regex;
         this.replacement = replacement;
+      }
+
+      public String getRegex() {
+        return regex;
+      }
+
+      public void setRegex(final String regex) {
+        this.regex = regex;
+      }
+
+      public String getReplacement() {
+        return replacement;
+      }
+
+      public void setReplacement(final String replacement) {
+        this.replacement = replacement;
+      }
+
+      public boolean isFinal() {
+        return isFinal;
+      }
+
+      public void setFinal(final boolean isFinal) {
+        this.isFinal = isFinal;
       }
 
       @Override
@@ -117,7 +163,7 @@ public class URLAsResourceName extends AbstractDecorator {
 
       @Override
       public int hashCode() {
-        return Objects.hash(regex, replacement);
+        return Objects.hash(regex, replacement, isFinal);
       }
     }
   }
