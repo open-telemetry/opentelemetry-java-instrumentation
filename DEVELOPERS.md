@@ -12,6 +12,7 @@ Configure the `contextUrl` section in `publish.gradle` to point to `http://local
 Add/update your `~/.gradle/gradle.properties` with the following config block:
 
 ```properties
+forceLocal=true
 bintrayUser=admin
 bintrayApiKey=password
 ```
@@ -22,77 +23,28 @@ Upload artifacts to the local artifactory:
 ./gradlew artifactoryPublish
 ```
 
+## Interim method to publish to Maven Central
 
-## LEGACY BELOW PENDING UPDATE
-Perform the release process as described below.
+### Publish to Bintray and Sync with Maven Central
 
+Prerequisites:
+* A bintray account that is a member of the [Datadog org](https://bintray.com/datadog)
+* The bintray api key for your [account profile](https://bintray.com/profile/edit)
+* Sonatype credentials
 
-### How to release a new version
+Prepare the release:
+1. Checkout master: `git checkout master ; git pull --rebase`
+2. Update the version number in `dd-trace-java.gradle`, removing the `-SNAPSHOT`
+3. Commit with a message `Version x.x.x` (but don't push)
+4. Tag the commit with tag `vx.x.x` (but don't push)
+5. Ensure the build is clean: `./gradlew clean check --parallel`
 
-#### Setup the environment (Mac-based)
-
-```bash
-brew install gpg
-
-
-# Edit your m2 config (maven)
-vim ~/.m2/settings.xml
-
-<settings>
-  <servers>
-    <server>
-      <id>ossrh</id>
-      <username>datadog</username>
-      <password>*****</password>
-    </server>
-  </servers>
-</settings>
-
-# Get the password from 1password (search for 'sona' in the share-engineering vault)
-
-
-# Install the gpg key
-# Get the key from 1password (search for 'gpg maven key' in the share-engineering vault)
-
-gpg --import key.asc 
-
-# Try to sign something to test
-gpg -ab dd-trace-examples/README.md
-
-# Sometime you need to export the following prop
-export GPG_TTY=$(tty) # add this to your bashrc, zshrc ...
-
-```
-
-#### Perform the release
-
-1. Make sure all the project compile with the test
-2. Make sure you've committed all things before releasing
-3. Make sure you are on the dev branch
-
-The project use the release maven plugin to perform the release.
-The plugin push 2 commits to the repo.
-
-
-Let's release!, do it in a term session (not in the IDE)
-```bash
-
-cd <PARENT_PROJET_PATH>
-export GPG_TTY=$(tty
-
-# You have to answer to some question
-# -> version pattern for maven is x.y.z
-# -> version pattern for scm is vx.y.z (this will be push to github)
-# -> version pattern for the next release x.y.z-SNAPSHOT
-
-# At some point, maven will ask for the gpg key password
-# Get the password from 1password (search for 'gpg maven pass' in the share-engineering vault)
-
-mvn release:clean release:prepare
-mvn release:perform # This will push the release to maven
-
-# If it's okay, you should be able to see BUILD SUCCESS
-# Just way a couple of minutes (15minutes) before see the release to the maven repo
-
-curl http://central.maven.org/maven2/com/datadoghq/
-```
+Perform the release:
+1. `./gradlew bintrayUpload --max-workers=1 -PbintrayUser=<YOUR_USERNAME> -PbintrayApiKey=<YOUR_API_KEY>`
+2. If successful, go to [Bintray](https://bintray.com/datadog/datadog-maven/dd-trace-java) to verify artifacts.
+3. After artifacts are determined correct, sync with Sonatype.
+4. Enter Sonatype's credentials and press sync (leave "Close and Release" checked).
+5. After a few minutes, sync status should show success. Verify the new version shows up in [Sonatype](https://oss.sonatype.org/content/repositories/releases/com/datadoghq/).
+6. Push the release commit and tag to Github.
+7. Update the version number in `dd-trace-java.gradle` with the next version adding `-SNAPSHOT`.
+8. Commit with a message `Begin x.x.x` and push.

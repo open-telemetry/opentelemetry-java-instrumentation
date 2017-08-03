@@ -104,7 +104,8 @@ bintray {
 
 //  dryRun = true //[Default: false] Whether to run this as dry-run, without deploying
   publish = true //[Default: false] Whether version should be auto published after an upload
-  override = false //[Default: false] Whether to override version artifacts already published
+//  override = true //[Default: false] Whether to override version artifacts already published
+
   //Package configuration. The plugin will use the repo and name properties to check if the package already exists. In that case, there's no need to configure the other package properties (like userOrg, desc, etc).
   pkg {
     repo = 'datadog-maven'
