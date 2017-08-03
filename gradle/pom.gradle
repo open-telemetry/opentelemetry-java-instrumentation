@@ -40,13 +40,13 @@ modifyPom {
     name project.name
     description project.description
     url "https://github.com/datadog/dd-trace-java"
-//        licenses {
-//            license {
-//                name "The Apache Software License, Version 2.0"
-//                url "http://www.apache.org/licenses/LICENSE-2.0.txt"
-//                distribution "repo"
-//            }
-//        }
+    licenses {
+      license {
+        name "The Apache Software License, Version 2.0"
+        url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        distribution "repo"
+      }
+    }
     scm {
       connection "scm:https://datadog@github.com/datadog/dd-trace-java"
       developerConnection "scm:git@github.com:datadog/dd-trace-java.git"
