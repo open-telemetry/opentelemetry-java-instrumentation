@@ -6,6 +6,7 @@ import com.datadoghq.trace.resolver.DDTracerFactory;
 import com.datadoghq.trace.resolver.FactoryUtils;
 import com.datadoghq.trace.resolver.TracerConfig;
 import io.opentracing.tag.Tags;
+
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,12 +67,15 @@ public class URLAsResourceName extends AbstractDecorator {
   // Method to normalise the url string
   String norm(final String origin) {
 
-    // Remove query params and replace integers
     String norm = origin;
 
-    // Apply custom rules
+    // Apply rules
     for (final Config.Rule p : patterns) {
       norm = norm.replaceAll(p.regex, p.replacement);
+      // if the rule is final, so do not apply others functions
+      if (p.isFinal) {
+        break;
+      }
     }
 
     return norm;
@@ -94,6 +98,7 @@ public class URLAsResourceName extends AbstractDecorator {
 
       public String regex;
       public String replacement;
+      public boolean isFinal = false;
 
       public Rule() {}
 
