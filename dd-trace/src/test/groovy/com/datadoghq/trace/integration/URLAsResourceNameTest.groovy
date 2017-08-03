@@ -78,4 +78,25 @@ class URLAsResourceNameTest extends Specification {
 
 
   }
+
+  def "skip others rules if the current is set as final"() {
+
+    setup:
+    def decorator = new URLAsResourceName()
+    def r1 = new URLAsResourceName.Config.Rule(/(\\/users\\/)([^\/]*)/, /$1:id1/)
+    decorator.setPatterns(Arrays.asList(r1, URLAsResourceName.RULE_DIGIT))
+
+    when:
+    r1.setFinal(true)
+    def norm = decorator.norm(input)
+
+    then:
+    norm == output
+
+    where:
+    input << ["/users/guillaume/list_repository/"]
+    output << ["/users/:id1/list_repository/"]
+
+
+  }
 }
