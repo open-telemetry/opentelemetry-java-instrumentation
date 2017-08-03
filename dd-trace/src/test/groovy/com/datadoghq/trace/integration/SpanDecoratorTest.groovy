@@ -109,4 +109,18 @@ class SpanDecoratorTest extends Specification {
     where:
     something = "fake-query"
   }
+
+  def "set 404 as a resource on a 404 issue"() {
+    setup:
+    def tracer = new DDTracer()
+    def span = SpanFactory.newSpanOf(tracer)
+    tracer.addDecorator(new Status404Decorator())
+
+    when:
+    Tags.HTTP_STATUS.set(span, 404)
+
+    then:
+    span.getResourceName() == "404"
+
+  }
 }
