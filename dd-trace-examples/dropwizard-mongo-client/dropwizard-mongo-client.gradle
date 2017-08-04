@@ -10,6 +10,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
+  compile project(':dd-trace')
   compile project(':dd-trace-annotations')
 
   compile group: 'io.opentracing', name: 'opentracing-api', version: '0.30.0'
