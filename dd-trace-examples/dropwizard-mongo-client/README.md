@@ -1,12 +1,9 @@
-## Dropwizard-mongo-client example
+## Dropwizard
 
-### Purpose
+This project provides a simple [Dropwizard][1] example. This is a supported framework that uses
+auto-instrumentation for all endpoints. Manual instrumentation has been added as example.
 
-This project aims at demonstrating how to instrument legacy code based on:
-* the Dropwizard framework
-* a Mongo database.
-
-We also demonstrate user cross-process tracing through the `TracedClient` example.
+[1]: http://www.dropwizard.io/
 
 ### Run the demo
 
@@ -28,22 +25,13 @@ A valid ``DD_API_KEY`` is required to post collected traces to the Datadog backe
 
 #### Run the application
 
-If you want to enable tracing you have to launch the application with the Datadog java agent.
-First, get the latest version of the dd-java-agent: 
-
-*NOTE:* While in beta, the latest version is best found on the [Snapshot Repo](https://oss.jfrog.org/artifactory/oss-snapshot-local/com/datadoghq/). 
-
-```
-# download the latest published version:
-wget -O dd-java-agent.jar 'https://search.maven.org/remote_content?g=com.datadoghq&a=dd-java-agent&v=LATEST'
+Launch the application using the run wrapper you've built during the ``installDist`` step:
+```bash
+JAVA_OPTS=-javaagent:../../dd-java-agent/build/libs/dd-java-agent-{version}.jar build/install/dropwizard-mongo-client/bin/dropwizard-mongo-client server
 ```
 
-Then, build the app add the agent to the JVM. That can be done as follow:
-```
-cd path/to/dd-trace-examples/dropwizard-mongo-client
-./gradlew clean shadowJar
-java -javaagent:/path/to/dd-java-agent.jar -jar build/libs/dropwizard-mongo-client-demo-all.jar server
-```
+``0.2.0-SNAPSHOT`` is an example of what ``{version}`` looks like.
+
 ### Generate traces
 
 #### With your web browser
@@ -60,28 +48,20 @@ Then get back to Datadog and wait a bit to see a trace coming.
 
 #### Cross process tracing: with the provided `TracedClient` class
 
-Runs the `TracedClient` class with the java agent as explained above.
-
-In that case, we instrument the `OkHttpClient` and you then observe a similar trace as the example just above but with the client as the originating root span.
-
-Cross process tracing is working thanks to headers injected on the client side that are extracted on the server. If you want to understand more you can refer to the [opentracing documentation](http://opentracing.io/documentation/pages/api/cross-process-tracing.html).
-
-*A trace example*
-
-![](./apm.png)
+The ``TracedClient`` class includes an example of what you can use to do distributed tracing. The class must be
+auto-instrumented with the Java Agent as above, so that ``OkHttpClient`` adds the required headers to continue
+the tracing cross process.
 
 To run the distributed example, first start the dropwizard app, the mongo db and finally run the `main` from `com.example.helloworld.client.TracedClient` 
 
-### How did we instrument this project?
-
 #### Auto-instrumentation with the `dd-trace-agent`
 
-The instrumentation is entirely done by the datadog agent which embed a set of rules that automatically recognizes & instruments:
+The instrumentation is entirely done by the Java Agent which embed a set of rules that automatically recognizes & 
+instruments:
 
 - The Java servlet filters
 - The Mongo client
-- The OkHTTP client
 - The `@Trace` annotation
+- The OkHTTP client (in the ``TracedClient`` class)
 
-The Datadog agent embeds the [open tracing java agent](https://github.com/opentracing-contrib/java-agent).
-We strongly recommend you to refer to the [Datadog Agent documentation](../../dd-java-agent) if you want to dig deeper.
+The Java Agent embeds the [OpenTracing Java Agent](https://github.com/opentracing-contrib/java-agent).

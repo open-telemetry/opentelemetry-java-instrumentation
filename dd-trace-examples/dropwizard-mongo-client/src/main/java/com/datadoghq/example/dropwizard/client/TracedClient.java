@@ -1,7 +1,9 @@
-package com.example.helloworld.client;
+package com.datadoghq.example.dropwizard.client;
 
+import com.datadoghq.trace.DDTags;
 import com.datadoghq.trace.Trace;
-import io.opentracing.tag.StringTag;
+import io.opentracing.ActiveSpan;
+import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
 import okhttp3.OkHttpClient;
@@ -22,11 +24,12 @@ public class TracedClient {
 
   @Trace
   private static void executeCall() throws IOException {
-    new StringTag("service-name").set(GlobalTracer.get().activeSpan(), "TracedClient");
+    Tracer tracer = GlobalTracer.get();
+    ActiveSpan activeSpan = tracer.activeSpan();
+    activeSpan.setTag(DDTags.SERVICE_NAME, "http.client");
+
     OkHttpClient client = new OkHttpClient().newBuilder().build();
-
     Request request = new Request.Builder().url("http://localhost:8080/demo/").build();
-
     Response response = client.newCall(request).execute();
     if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
 

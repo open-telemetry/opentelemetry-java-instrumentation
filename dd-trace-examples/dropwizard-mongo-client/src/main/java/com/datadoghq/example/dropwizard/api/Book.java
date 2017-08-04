@@ -1,4 +1,4 @@
-package com.example.helloworld.api;
+package com.datadoghq.example.dropwizard.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.bson.Document;
