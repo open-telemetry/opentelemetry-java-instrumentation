@@ -44,34 +44,32 @@ public class URLAsResourceName extends AbstractDecorator {
   @Override
   public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
     try {
-      final String statusCode = (String) context.getTags().get(Tags.HTTP_STATUS.getKey());
+      final String statusCode = String.valueOf(context.getTags().get(Tags.HTTP_STATUS.getKey()));
       // do nothing if the status code is already set and equals to 404.
       // TODO: it assumes that Status404Decorator is active. If it's not, it will lead to unexpected behaviors
       if (statusCode != null && statusCode.equals("404")) {
-
-        // Get the path without host:port
-        String path = String.valueOf(value);
-
-        try {
-          path = new java.net.URL(path).getPath();
-        } catch (final MalformedURLException e) {
-          // do nothing, use the value instead of the path
-        }
-        // normalize the path
-        path = norm(path);
-
-        // if the verb (GET, POST ...) is present, add it
-        final String verb = (String) context.getTags().get(Tags.HTTP_METHOD.getKey());
-        if (verb != null && !verb.isEmpty()) {
-          path = verb + " " + path;
-        }
-
-        //Assign resource name
-        context.setResourceName(path);
+        return true;
       }
 
-    } catch (final Throwable e) {
+      // Get the path without host:port
+      String path = String.valueOf(value);
 
+      try {
+        path = new java.net.URL(path).getPath();
+      } catch (final MalformedURLException e) {
+        // do nothing, use the value instead of the path
+      }
+      // normalize the path
+      path = norm(path);
+
+      // if the verb (GET, POST ...) is present, add it
+      final String verb = (String) context.getTags().get(Tags.HTTP_METHOD.getKey());
+      if (verb != null && !verb.isEmpty()) {
+        path = verb + " " + path;
+      }
+
+      context.setResourceName(path);
+    } catch (final Throwable e) {
       return false;
     }
     return true;
