@@ -36,7 +36,7 @@ Launch the application using the run wrapper you've built during the ``installDi
 JAVA_OPTS=-javaagent:../../dd-java-agent/build/libs/dd-java-agent-{version}.jar build/install/rest-spark/bin/rest-spark
 ```
 
-``0.1.2-SNAPSHOT`` is an example of what ``{version}`` looks like.
+``0.2.0-SNAPSHOT`` is an example of what ``{version}`` looks like.
 
 ### Generate traces
 
