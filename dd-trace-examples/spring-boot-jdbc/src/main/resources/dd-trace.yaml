@@ -1,0 +1,9 @@
+defaultServiceName: example-spring-boot
+
+writer:
+  type: DDAgentWriter
+  host: localhost
+  port: 8126
+
+sampler:
+  type: AllSampler
