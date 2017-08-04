@@ -32,7 +32,7 @@ Before instrumenting your code, [install the Datadog Agent](https://app.datadogh
 Download the latest Datadog Java Agent:
 
 ```
-$ wget -O dd-java-agent.jar 'https://oss.jfrog.org/artifactory/oss-snapshot-local/com/datadoghq/dd-java-agent/0.1.2-SNAPSHOT/dd-java-agent-0.1.2-20170725.120841-20.jar'
+wget -O dd-java-agent.jar 'https://search.maven.org/remote_content?g=com.datadoghq&a=dd-java-agent&v=LATEST'
 ```
 
 Then create a file `dd-trace.yaml` anywhere in your application's classpath (or provide the file's path via `-Ddd.trace.configurationFile` when starting the application):
