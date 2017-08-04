@@ -1,4 +1,4 @@
-package com.example.helloworld.client;
+package com.datadoghq.example.dropwizard.client;
 
 import com.datadoghq.trace.Trace;
 import io.opentracing.tag.StringTag;

@@ -1,14 +1,14 @@
-package com.example.helloworld;
+package com.datadoghq.example.dropwizard;
 
-import com.example.helloworld.resources.SimpleCrudResource;
+import com.datadoghq.example.dropwizard.resources.SimpleCrudResource;
 import io.dropwizard.Application;
 import io.dropwizard.Configuration;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
-public class HelloWorldApplication extends Application<Configuration> {
+public class BookApplication extends Application<Configuration> {
   public static void main(String[] args) throws Exception {
-    new HelloWorldApplication().run(args);
+    new BookApplication().run(args);
   }
 
   @Override

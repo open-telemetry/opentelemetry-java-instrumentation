@@ -1,7 +1,7 @@
-package com.example.helloworld.resources;
+package com.datadoghq.example.dropwizard.resources;
 
 import com.datadoghq.trace.Trace;
-import com.example.helloworld.api.Book;
+import com.datadoghq.example.dropwizard.api.Book;
 import com.google.common.base.Optional;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCursor;
