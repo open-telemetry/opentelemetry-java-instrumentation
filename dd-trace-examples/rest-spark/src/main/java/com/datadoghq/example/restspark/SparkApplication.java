@@ -26,8 +26,6 @@ public class SparkApplication {
         "/key/:id",
         (req, res) -> {
           try (ActiveSpan activeSpan = mTracer.buildSpan("spark.request").startActive()) {
-            activeSpan.setTag("http.url", req.url());
-
             final String id = req.params(":id");
 
             // create a collection
@@ -44,8 +42,23 @@ public class SparkApplication {
             // write the count somewhere
             System.out.println(collection.count());
 
+            // add some metadata to the request Span
+            activeSpan.setTag("http.status_code", res.status());
+            activeSpan.setTag("http.url", req.url());
+
             return "Stored!";
           }
+        });
+    get(
+        "/users/:id",
+        (req, res) -> {
+          try (ActiveSpan activeSpan = mTracer.buildSpan("spark.request").startActive()) {
+            // this endpoint tests the 404 decorator
+            res.status(404);
+            activeSpan.setTag("http.status_code", res.status());
+            activeSpan.setTag("http.url", req.url());
+          }
+          return "404";
         });
   }
 }
