@@ -96,29 +96,34 @@ artifactoryPublish { task ->
   }
 }
 
-bintray {
-  user = bintrayUser
-  key = bintrayApiKey
+bintrayUpload { task ->
+  bintray {
+    gradle.taskGraph.whenReady { taskGraph ->
+      if (taskGraph.hasTask(task)) {
+        user = bintrayUser
+        key = bintrayApiKey
+      }
+    }
 
-  configurations = ['archives']
+    configurations = ['archives']
 
 //  dryRun = true //[Default: false] Whether to run this as dry-run, without deploying
-  publish = true //[Default: false] Whether version should be auto published after an upload
+    publish = true //[Default: false] Whether version should be auto published after an upload
 //  override = true //[Default: false] Whether to override version artifacts already published
 
-  //Package configuration. The plugin will use the repo and name properties to check if the package already exists. In that case, there's no need to configure the other package properties (like userOrg, desc, etc).
-  pkg {
-    repo = 'datadog-maven'
-    name = 'dd-trace-java'
-    userOrg = 'datadog' //An optional organization name when the repo belongs to one of the user's orgs
-    desc = 'Client libraries for Datadog APM'
-    websiteUrl = 'https://github.com/datadog/dd-trace-java'
-    issueTrackerUrl = 'https://github.com/datadog/dd-trace-java/issues'
-    vcsUrl = 'https://github.com/datadog/dd-trace-java.git'
-    licenses = ['Apache-2.0']
+    //Package configuration. The plugin will use the repo and name properties to check if the package already exists. In that case, there's no need to configure the other package properties (like userOrg, desc, etc).
+    pkg {
+      repo = 'datadog-maven'
+      name = 'dd-trace-java'
+      userOrg = 'datadog' //An optional organization name when the repo belongs to one of the user's orgs
+      desc = 'Client libraries for Datadog APM'
+      websiteUrl = 'https://github.com/datadog/dd-trace-java'
+      issueTrackerUrl = 'https://github.com/datadog/dd-trace-java/issues'
+      vcsUrl = 'https://github.com/datadog/dd-trace-java.git'
+      licenses = ['Apache-2.0']
 
-    githubRepo = 'datadog/dd-trace-java' //Optional Github repository
-    githubReleaseNotesFile = 'README.md' //Optional Github readme file
+      githubRepo = 'datadog/dd-trace-java' //Optional Github repository
+      githubReleaseNotesFile = 'README.md' //Optional Github readme file
 
 //    //Optional version descriptor
 //    version {
@@ -142,5 +147,6 @@ bintray {
 //        //Optional property. By default the staging repository is closed and artifacts are released to Maven Central. You can optionally turn this behaviour off (by puting 0 as value) and release the version manually.
 //      }
 //    }
+    }
   }
 }
