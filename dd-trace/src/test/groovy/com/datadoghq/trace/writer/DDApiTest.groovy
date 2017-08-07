@@ -1,5 +1,6 @@
 package com.datadoghq.trace.writer
 
+import com.datadoghq.trace.Service
 import com.datadoghq.trace.SpanFactory
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -76,7 +77,7 @@ class DDApiTest extends Specification {
     requestHeaders.get().get("Datadog-Meta-Lang") == "java"
     requestHeaders.get().get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown")
     requestHeaders.get().get("Datadog-Meta-Tracer-Version") == "unknown"
-    convert(requestBody.get()) == expectedRequestBody
+    convertList(requestBody.get()) == expectedRequestBody
 
     cleanup:
     agent.close()
@@ -113,7 +114,88 @@ class DDApiTest extends Specification {
     ])]
   }
 
-  static List<TreeMap<String, Object>> convert(String json) {
+  // Services endpoint
+  def "sending an empty map of services returns no errors"() {
+    setup:
+    def agent = ratpack {
+      handlers {
+        put("v0.3/services") {
+          response.status(200).send()
+        }
+      }
+    }
+    def client = new DDApi("localhost", agent.address.port)
+
+    expect:
+    client.sendServices()
+
+    cleanup:
+    agent.close()
+  }
+
+  def "non-200 response results in false returned for services endpoint"() {
+    setup:
+    def agent = ratpack {
+      handlers {
+        put("v0.3/services") {
+          response.status(404).send()
+        }
+      }
+    }
+    def client = new DDApi("localhost", agent.address.port)
+
+    expect:
+    !client.sendServices([:])
+
+    cleanup:
+    agent.close()
+  }
+
+  def "services content is sent as JSON"() {
+    setup:
+    def requestContentType = new AtomicReference<MediaType>()
+    def requestHeaders = new AtomicReference<Headers>()
+    def requestBody = new AtomicReference<String>()
+    def agent = ratpack {
+      handlers {
+        put("v0.3/services") {
+          requestContentType.set(request.contentType)
+          requestHeaders.set(request.headers)
+          request.body.then {
+            requestBody.set(it.text)
+            response.send()
+          }
+        }
+      }
+    }
+    def client = new DDApi("localhost", agent.address.port)
+
+    expect:
+    client.sendServices(services)
+    requestContentType.get().type == APPLICATION_JSON
+    requestHeaders.get().get("Datadog-Meta-Lang") == "java"
+    requestHeaders.get().get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown")
+    requestHeaders.get().get("Datadog-Meta-Tracer-Version") == "unknown"
+    convertMap(requestBody.get()) == expectedRequestBody
+
+    cleanup:
+    agent.close()
+
+    // Populate thread info dynamically as it is different when run via gradle vs idea.
+    where:
+    services                                                                          | expectedRequestBody
+    [:]                                                                               | [:]
+    ["service-name": new Service("service-name", "app-name", Service.AppType.CUSTOM)] | ["service-name": new TreeMap<>([
+      "app"     : "app-name",
+      "app_type": "custom"])
+    ]
+  }
+
+  static List<TreeMap<String, Object>> convertList(String json) {
     return mapper.readValue(json, new TypeReference<List<TreeMap<String, Object>>>() {})
+  }
+
+  static TreeMap<String, Object> convertMap(String json) {
+    return mapper.readValue(json, new TypeReference<TreeMap<String, Object>>() {})
   }
 }

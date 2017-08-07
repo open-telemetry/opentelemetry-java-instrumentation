@@ -2,6 +2,7 @@ package com.datadoghq.trace.writer;
 
 import com.datadoghq.trace.DDBaseSpan;
 import com.datadoghq.trace.DDTraceInfo;
+import com.datadoghq.trace.Service;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,6 +11,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 /** The API pointing to a DD agent */
@@ -17,14 +19,17 @@ import lombok.extern.slf4j.Slf4j;
 public class DDApi {
 
   private static final String TRACES_ENDPOINT = "/v0.3/traces";
+  private static final String SERVICES_ENDPOINT = "/v0.3/services";
 
   private final String tracesEndpoint;
+  private final String servicesEndpoint;
 
   private final ObjectMapper objectMapper = new ObjectMapper();
   private final JsonFactory jsonFactory = objectMapper.getFactory();
 
   public DDApi(final String host, final int port) {
     this.tracesEndpoint = "http://" + host + ":" + port + TRACES_ENDPOINT;
+    this.servicesEndpoint = "http://" + host + ":" + port + SERVICES_ENDPOINT;
   }
 
   /**
@@ -34,12 +39,32 @@ public class DDApi {
    * @return the staus code returned
    */
   public boolean sendTraces(final List<List<DDBaseSpan<?>>> traces) {
-    final int status = callPUT(traces);
+    final int status = callPUT(tracesEndpoint, traces);
     if (status == 200) {
       log.debug("Succesfully sent {} traces to the DD agent.", traces.size());
       return true;
     } else {
       log.warn("Error while sending {} traces to the DD agent. Status: {}", traces.size(), status);
+      return false;
+    }
+  }
+
+  /**
+   * Send service extra information to the services endpoint
+   *
+   * @param services the services to be sent
+   */
+  public boolean sendServices(final Map<String, Service> services) {
+    if (services == null) {
+      return true;
+    }
+    final int status = callPUT(servicesEndpoint, services);
+    if (status == 200) {
+      log.debug("Succesfully sent {} services to the DD agent.", services.size());
+      return true;
+    } else {
+      log.warn(
+          "Error while sending {} services to the DD agent. Status: {}", services.size(), status);
       return false;
     }
   }
@@ -51,10 +76,10 @@ public class DDApi {
    * @param content
    * @return the status code
    */
-  private int callPUT(final Object content) {
+  private int callPUT(final String endpoint, final Object content) {
     HttpURLConnection httpCon = null;
     try {
-      httpCon = getHttpURLConnection();
+      httpCon = getHttpURLConnection(endpoint);
     } catch (final Exception e) {
       log.warn("Error thrown before PUT call to the DD agent.", e);
       return -1;
@@ -82,9 +107,9 @@ public class DDApi {
     }
   }
 
-  private HttpURLConnection getHttpURLConnection() throws IOException {
+  private HttpURLConnection getHttpURLConnection(final String endpoint) throws IOException {
     final HttpURLConnection httpCon;
-    final URL url = new URL(tracesEndpoint);
+    final URL url = new URL(endpoint);
     httpCon = (HttpURLConnection) url.openConnection();
     httpCon.setDoOutput(true);
     httpCon.setRequestMethod("PUT");

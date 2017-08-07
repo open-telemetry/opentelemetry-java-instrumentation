@@ -1,6 +1,8 @@
 package com.datadoghq.trace;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 public class Service {
 
@@ -14,7 +16,7 @@ public class Service {
     this.appType = appType;
   }
 
-  @JsonProperty("service")
+  @JsonIgnore
   public String getName() {
     return name;
   }
@@ -29,6 +31,20 @@ public class Service {
     return appType;
   }
 
+  @Override
+  public String toString() {
+    return "Service{"
+        + "name='"
+        + name
+        + '\''
+        + ", appName='"
+        + appName
+        + '\''
+        + ", appType="
+        + appType
+        + '}';
+  }
+
   public enum AppType {
     WEB("web"),
     DB("db"),
@@ -40,6 +56,7 @@ public class Service {
       this.type = type;
     }
 
+    @JsonValue
     public String toString() {
       return type;
     }

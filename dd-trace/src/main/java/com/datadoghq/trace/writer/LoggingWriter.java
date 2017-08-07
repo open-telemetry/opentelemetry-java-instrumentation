@@ -4,6 +4,7 @@ import com.datadoghq.trace.DDBaseSpan;
 import com.datadoghq.trace.Service;
 import com.google.auto.service.AutoService;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -16,8 +17,8 @@ public class LoggingWriter implements Writer {
   }
 
   @Override
-  public void writeServices(final List<Service> services) {
-    log.info("additional service information: {}", services);
+  public void writeServices(final Map<String, Service> services) {
+    log.info("additional service information: {}", services.values());
   }
 
   @Override

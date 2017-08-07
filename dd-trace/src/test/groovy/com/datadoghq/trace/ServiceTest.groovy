@@ -41,7 +41,7 @@ class ServiceTest extends Specification {
 
     then:
     tracer.getServiceInfo().size() == 1
-    tracer.getServiceInfo().get(0) == service
+    tracer.getServiceInfo().get("service-name") == service
 
   }
 
@@ -56,7 +56,7 @@ class ServiceTest extends Specification {
     tracer.addServiceInfo(new Service("service-name", "app-name", Service.AppType.CUSTOM))
 
     then:
-    Mockito.verify(writer, Mockito.times(1)).writeServices(Mockito.any(List.class))
+    Mockito.verify(writer, Mockito.times(1)).writeServices(Mockito.any(Map.class))
 
   }
 

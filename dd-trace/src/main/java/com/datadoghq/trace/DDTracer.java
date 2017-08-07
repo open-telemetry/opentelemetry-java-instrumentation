@@ -43,7 +43,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
   private final Map<String, List<AbstractDecorator>> spanContextDecorators = new HashMap<>();
 
   private final CodecRegistry registry;
-  private final List<Service> services = new ArrayList<>();
+  private final Map<String, Service> services = new HashMap<>();
 
   /** Default constructor, trace/spans are logged, no trace/span dropped */
   public DDTracer() {
@@ -151,8 +151,8 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
    * @param service additional service information
    */
   public void addServiceInfo(final Service service) {
-    services.add(service);
-    // Update the write
+    services.put(service.getName(), service);
+    // Update the writer
     try {
       // We don't bother to send multiple times the list of services at this time
       writer.writeServices(services);
@@ -167,7 +167,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
    * @return the list of additional service information
    */
   @JsonIgnore
-  public List<Service> getServiceInfo() {
+  public Map<String, Service> getServiceInfo() {
     return services;
   }
 

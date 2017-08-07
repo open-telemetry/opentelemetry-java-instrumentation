@@ -5,6 +5,9 @@ import com.datadoghq.trace.Service;
 import com.google.auto.service.AutoService;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -44,6 +47,12 @@ public class DDAgentWriter implements Writer {
 
   /** Effective thread pool, where real logic is done */
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
+  /** In memory collection of services waiting for departure */
+  private final BlockingQueue<Map<String, Service>> services =
+      new ArrayBlockingQueue<>(MAX_QUEUE_SIZE);
+
+  /** Async worker that posts the spans to the DD agent */
+  private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
   /** The DD agent api */
   private final DDApi api;
@@ -81,14 +90,26 @@ public class DDAgentWriter implements Writer {
     queueFullReported = false;
   }
 
+  /* (non-Javadoc)
+   * @see com.datadoghq.trace.Writer#writeServices(java.util.List)
+   */
   @Override
-  public void writeServices(final List<Service> services) {}
+  public void writeServices(final Map<String, Service> services) {
+
+    if (!this.services.offer(services)) {
+      log.warn(
+          "Cannot add a service list to the async queue, queue is full. Queue max size: {}",
+          MAX_QUEUE_SIZE);
+    }
+  }
 
   /* (non-Javadoc)
    * @see com.datadoghq.trace.writer.Writer#start()
    */
   @Override
   public void start() {
+    executor.submit(new SpansSendingTask());
+    executor.submit(new ServicesSendingTask());
     scheduledExecutor.scheduleAtFixedRate(
         new TracesSendingTask(), 0, FLUSH_TIME_SECONDS, TimeUnit.SECONDS);
   }
@@ -154,6 +175,37 @@ public class DDAgentWriter implements Writer {
           return 0L;
         }
         return (long) payload.size();
+      }
+    }
+  }
+
+  /** Infinite tasks blocking until some spans come in the blocking queue. */
+  protected class ServicesSendingTask implements Runnable {
+
+    @Override
+    public void run() {
+      while (true) {
+        try {
+
+          //WAIT until a new service comes
+          final Map<String, Service> payload = DDAgentWriter.this.services.take();
+
+          //SEND the payload to the agent
+          log.debug("Async writer about to write {} services", payload.size());
+          if (api.sendServices(payload)) {
+            log.debug("Async writer just sent  {} services", payload.size());
+          } else {
+            log.warn("Failed for Async writer to send {} services", payload.size());
+          }
+
+        } catch (final InterruptedException e) {
+          log.info("Async writer (services) interrupted.");
+
+          //The thread was interrupted, we break the LOOP
+          break;
+        } catch (final Throwable e) {
+          log.error("Unexpected error! Some services may have been dropped.", e);
+        }
       }
     }
   }
