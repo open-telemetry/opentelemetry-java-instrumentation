@@ -9,12 +9,12 @@ public class ExampleWithLoggingWriter {
   public static void main(final String[] args) throws Exception {
 
     final DDTracer tracer = new DDTracer(new LoggingWriter(), new AllSampler());
-    tracer.addServiceInfo(new Service("service-foo", "mongo", Service.AppType.DB));
+    tracer.addServiceInfo(new Service("service-foo", "mongo", Service.AppType.WEB));
 
     final Span parent =
         tracer
             .buildSpan("hello-world")
-            .withServiceName("service-name")
+            .withServiceName("service-foo")
             .withSpanType("web")
             .startManual();
 
