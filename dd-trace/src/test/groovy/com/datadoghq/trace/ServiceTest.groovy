@@ -2,13 +2,15 @@ package com.datadoghq.trace
 
 import com.datadoghq.trace.sampling.AllSampler
 import com.datadoghq.trace.writer.DDAgentWriter
-import org.mockito.Mockito
 import spock.lang.Specification
+
+import static org.mockito.ArgumentMatchers.any
+import static org.mockito.Mockito.*
 
 class ServiceTest extends Specification {
 
 
-  def "getter/setter"() {
+  def "getter and setter"() {
 
     setup:
     def service = new Service("service-name", "app-name", Service.AppType.CUSTOM)
@@ -48,7 +50,7 @@ class ServiceTest extends Specification {
   def "add a extra info is reported to the writer"() {
 
     setup:
-    def writer = Mockito.spy(new DDAgentWriter())
+    def writer = spy(new DDAgentWriter())
     def tracer = new DDTracer(writer, new AllSampler())
 
 
@@ -56,7 +58,7 @@ class ServiceTest extends Specification {
     tracer.addServiceInfo(new Service("service-name", "app-name", Service.AppType.CUSTOM))
 
     then:
-    Mockito.verify(writer, Mockito.times(1)).writeServices(Mockito.any(Map.class))
+    verify(writer, times(1)).writeServices(any(Map))
 
   }
 
