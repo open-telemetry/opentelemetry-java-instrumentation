@@ -1,7 +1,7 @@
 ## What is Datadog APM?
 
 Datadog APM traces the path of each request through your application stack, recording the latency of each step along the way. It sends all tracing data to Datadog, where you can easily identify which services or calls are slowing down your application the most.
- 
+
 This repository contains what you need to trace Java applications. Two quick notes up front:
 
 - **Datadog Java APM is currently in Beta**
@@ -101,7 +101,7 @@ To disable tracing for any of these libraries, list them in `disabledInstrumenta
 disabledInstrumentations: ["opentracing-apache-httpclient", "opentracing-mongo-driver", "opentracing-web-servlet-filter"]
 ```
 
-See [this YAML file](src/main/resources/dd-trace-supported-framework.yaml) for the proper names of all supported libraries (i.e. the names as you must list them in `disabledInstrumentations`).
+See [this YAML file](dd-java-agent/src/main/resources/dd-trace-supported-framework.yaml) for the proper names of all supported libraries (i.e. the names as you must list them in `disabledInstrumentations`).
 
 #### JDBC
 
@@ -180,62 +180,62 @@ You can use the Datadog Tracer (`dd-trace`) library to measure execution times f
 For Maven, add this to pom.xml:
 
 ```xml
-        <!-- OpenTracing API -->
-        <dependency>
-            <groupId>io.opentracing</groupId>
-            <artifactId>io.opentracing:opentracing-api</artifactId>
-            <version>0.30.0</version>
-        </dependency>
+<!-- OpenTracing API -->
+<dependency>
+    <groupId>io.opentracing</groupId>
+    <artifactId>io.opentracing:opentracing-api</artifactId>
+    <version>0.30.0</version>
+</dependency>
 
-        <!-- OpenTracing Util -->
-        <dependency>
-            <groupId>io.opentracing</groupId>
-            <artifactId>io.opentracing:opentracing-util</artifactId>
-            <version>0.30.0</version>
-        </dependency>
-        
-        <!-- Datadog Tracer (only needed if you do not use dd-java-agent) -->
-        <dependency>
-            <groupId>com.datadoghq</groupId>
-            <artifactId>dd-trace</artifactId>
-            <version>${dd-trace-java.version}</version>
-        </dependency>
+<!-- OpenTracing Util -->
+<dependency>
+    <groupId>io.opentracing</groupId>
+    <artifactId>io.opentracing:opentracing-util</artifactId>
+    <version>0.30.0</version>
+</dependency>
+
+<!-- Datadog Tracer (only needed if you do not use dd-java-agent) -->
+<dependency>
+    <groupId>com.datadoghq</groupId>
+    <artifactId>dd-trace</artifactId>
+    <version>${dd-trace-java.version}</version>
+</dependency>
 ```
 
 For gradle, add:
 
 ```
-        compile group: 'io.opentracing', name: 'opentracing-api', version: "0.30.0"
-        compile group: 'io.opentracing', name: 'opentracing-util', version: "0.30.0"
-        compile group: 'com.datadoghq', name: 'dd-trace', version: "${dd-trace-java.version}"
+compile group: 'io.opentracing', name: 'opentracing-api', version: "0.30.0"
+compile group: 'io.opentracing', name: 'opentracing-util', version: "0.30.0"
+compile group: 'com.datadoghq', name: 'dd-trace', version: "${dd-trace-java.version}"
 ```
 
 #### Examples
 
 Rather than referencing classes directly from `dd-trace` (other than registering `DDTracer`), we strongly suggest using the [OpenTracing API](https://github.com/opentracing/opentracing-java).
-[Additional documentation on the api](docs/opentracing-api.md) is also available. 
+[Additional documentation on the api](docs/opentracing-api.md) is also available.
 
 Let's look at a simple example.
 
 ```java
 class InstrumentedClass {
-    
+
     void method0() {
         // 1. Make sure dd-trace.yaml is in your resources directory
         // 2. If using the Java Agent (-javaagent;/path/to/agent.jar), do not instantiate the GlobalTracer; the Agent instantiates it for you
         Tracer tracer = io.opentracing.util.GlobalTracer.get();
-        
+
         Span span = tracer.buildSpan("operation-name").startActive();
-        span.setTag(DDTags.SERVICE_NAME, "my-new-service"); 
-        
+        span.setTag(DDTags.SERVICE_NAME, "my-new-service");
+
         // The code you're tracing
         Thread.sleep(1000);
-        
+
         // If you don't call finish(), the span data will NOT make it to Datadog!
-        span.finish();   
+        span.finish();
     }
 }
-``` 
+```
 
 Alternatively, you can wrap the code you want to trace in a `try-with-resources` statement:
 
@@ -262,23 +262,23 @@ in the bootstrap method (i.e. `main`).
 public class Application {
 
     public static void main(String[] args) {
-	
-        // Initialize the tracer from the configuration file      
+
+        // Initialize the tracer from the configuration file
         Tracer tracer = DDTracerFactory.createFromConfigurationFile();
         io.opentracing.util.GlobalTracer.register(tracer);
-        
+
         // OR from the API
         Writer writer = new com.datadoghq.trace.writer.DDAgentWriter();
         Sampler sampler = new com.datadoghq.trace.sampling.AllSampler();
         Tracer tracer = new com.datadoghq.trace.DDTracer(writer, sampler);
         io.opentracing.util.GlobalTracer.register(tracer);
-        
+
         // ...
     }
 }
 ```
 
-`DDTracerFactory` looks for `dd-trace.yaml` in the classpath. 
+`DDTracerFactory` looks for `dd-trace.yaml` in the classpath.
 
 ## Further Reading
 
@@ -288,5 +288,5 @@ public class Application {
 - Read the [Datadog APM FAQ](https://docs.datadoghq.com/tracing/faq/)
 
 ## Get in touch
- 
+
 If you have questions or feedback, email us at tracehelp@datadoghq.com or chat with us in the datadoghq slack channel #apm-java.
