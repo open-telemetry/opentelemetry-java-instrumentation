@@ -110,7 +110,9 @@ bintray {
     key = bintrayApiKey
   }
 
-  configurations = ['archives']
+  if (!isRoot) {
+    configurations = ['archives']
+  }
 
 //  dryRun = true //[Default: false] Whether to run this as dry-run, without deploying
   publish = true //[Default: false] Whether version should be auto published after an upload
