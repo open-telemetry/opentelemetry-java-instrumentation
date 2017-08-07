@@ -1,6 +1,7 @@
 package com.datadoghq.trace.writer;
 
 import com.datadoghq.trace.DDBaseSpan;
+import com.datadoghq.trace.Service;
 import com.google.auto.service.AutoService;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -79,6 +80,9 @@ public class DDAgentWriter implements Writer {
     }
     queueFullReported = false;
   }
+
+  @Override
+  public void writeServices(final List<Service> services) {}
 
   /* (non-Javadoc)
    * @see com.datadoghq.trace.writer.Writer#start()

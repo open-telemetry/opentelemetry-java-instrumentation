@@ -1,6 +1,7 @@
 package com.datadoghq.trace.writer;
 
 import com.datadoghq.trace.DDBaseSpan;
+import com.datadoghq.trace.Service;
 import java.util.List;
 
 /** A writer is responsible to send collected spans to some place */
@@ -12,6 +13,13 @@ public interface Writer {
    * @param trace the list of spans to write
    */
   void write(List<DDBaseSpan<?>> trace);
+
+  /**
+   * Report additional service information to the endpoint
+   *
+   * @param services a list of extra information about services
+   */
+  void writeServices(List<Service> services);
 
   /** Start the writer */
   void start();

@@ -7,13 +7,19 @@ import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.Sampler;
 import com.datadoghq.trace.writer.LoggingWriter;
 import com.datadoghq.trace.writer.Writer;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.opentracing.ActiveSpan;
 import io.opentracing.ActiveSpanSource;
 import io.opentracing.BaseSpan;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.ThreadLocalActiveSpanSource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +43,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
   private final Map<String, List<AbstractDecorator>> spanContextDecorators = new HashMap<>();
 
   private final CodecRegistry registry;
+  private final List<Service> services = new ArrayList<>();
 
   /** Default constructor, trace/spans are logged, no trace/span dropped */
   public DDTracer() {
@@ -135,6 +142,33 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
   @Override
   public String toString() {
     return "DDTracer{" + "writer=" + writer + ", sampler=" + sampler + '}';
+  }
+
+  /**
+   * Register additional information about a service. Service additional information are a Datadog
+   * feature only. Services are reported through a specific Datadog endpoint.
+   *
+   * @param service additional service information
+   */
+  public void addServiceInfo(final Service service) {
+    services.add(service);
+    // Update the write
+    try {
+      // We don't bother to send multiple times the list of services at this time
+      writer.writeServices(services);
+    } catch (final Throwable ex) {
+      log.warn("Failed to report additional service information, reason: {}", ex.getMessage());
+    }
+  }
+
+  /**
+   * Return the list of additional service information registered
+   *
+   * @return the list of additional service information
+   */
+  @JsonIgnore
+  public List<Service> getServiceInfo() {
+    return services;
   }
 
   private static class CodecRegistry {
