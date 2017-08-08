@@ -6,6 +6,7 @@ apply from: "${rootDir}/gradle/java.gradle"
 description = 'dd-java-agent-ittests'
 dependencies {
   testCompile project(':dd-java-agent')
+
   testCompile group: 'io.opentracing', name: 'opentracing-mock', version: '0.30.0'
   testCompile group: 'junit', name: 'junit', version: '4.12'
   testCompile group: 'org.assertj', name: 'assertj-core', version: '3.6.2'
@@ -30,6 +31,12 @@ dependencies {
   testCompile group: 'javax.jms', name: 'javax.jms-api', version: '2.0.1'
   testCompile group: 'org.apache.activemq.tooling', name: 'activemq-junit', version: '5.14.5'
   testCompile group: 'org.apache.activemq', name: 'activemq-broker', version: '5.14.5'
+}
+
+configurations.all {
+  resolutionStrategy {
+    force 'com.google.guava:guava:18.0' // Force to test package renaming in agent jar. (see ShadowPackageRenamingTest)
+  }
 }
 
 test {
