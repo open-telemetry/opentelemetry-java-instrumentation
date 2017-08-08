@@ -9,24 +9,20 @@ public class ExampleWithLoggingWriter {
   public static void main(final String[] args) throws Exception {
 
     final DDTracer tracer = new DDTracer(new LoggingWriter(), new AllSampler());
-    tracer.addServiceInfo(new Service("service-foo", "mongo", Service.AppType.WEB));
+    tracer.addServiceInfo(new Service("api-intake", "spark", Service.AppType.CACHE));
 
     final Span parent =
-        tracer
-            .buildSpan("hello-world")
-            .withServiceName("service-foo")
-            .withSpanType("web")
-            .startManual();
+        tracer.buildSpan("fetch.backend").withServiceName("api-intake").startManual();
 
-    parent.setBaggageItem("a-baggage", "value");
+    parent.setBaggageItem("scope-id", "a-1337");
 
     Thread.sleep(100);
 
     final Span child =
         tracer
-            .buildSpan("hello-world")
+            .buildSpan("delete.resource")
             .asChildOf(parent)
-            .withResourceName("resource-name")
+            .withResourceName("delete")
             .startManual();
 
     Thread.sleep(100);
@@ -36,5 +32,6 @@ public class ExampleWithLoggingWriter {
     Thread.sleep(100);
 
     parent.finish();
+    tracer.close();
   }
 }

@@ -13,11 +13,11 @@ class ServiceTest extends Specification {
   def "getter and setter"() {
 
     setup:
-    def service = new Service("service-name", "app-name", Service.AppType.CUSTOM)
+    def service = new Service("api-intake", "kafka", Service.AppType.CUSTOM)
 
     expect:
-    service.getName() == "service-name"
-    service.getAppName() == "app-name"
+    service.getName() == "api-intake"
+    service.getAppName() == "kafka"
     service.getAppType() == Service.AppType.CUSTOM
 
   }
@@ -25,10 +25,12 @@ class ServiceTest extends Specification {
   def "enum"() {
 
     expect:
-    Service.AppType.values().size() == 3
+    Service.AppType.values().size() == 5
     Service.AppType.DB.toString() == "db"
     Service.AppType.WEB.toString() == "web"
     Service.AppType.CUSTOM.toString() == "custom"
+    Service.AppType.WORKER.toString() == "worker"
+    Service.AppType.CACHE.toString() == "cache"
 
   }
 
@@ -36,14 +38,14 @@ class ServiceTest extends Specification {
 
     setup:
     def tracer = new DDTracer()
-    def service = new Service("service-name", "app-name", Service.AppType.CUSTOM)
+    def service = new Service("api-intake", "kafka", Service.AppType.CUSTOM)
 
     when:
     tracer.addServiceInfo(service)
 
     then:
     tracer.getServiceInfo().size() == 1
-    tracer.getServiceInfo().get("service-name") == service
+    tracer.getServiceInfo().get("api-intake") == service
 
   }
 
@@ -55,7 +57,7 @@ class ServiceTest extends Specification {
 
 
     when:
-    tracer.addServiceInfo(new Service("service-name", "app-name", Service.AppType.CUSTOM))
+    tracer.addServiceInfo(new Service("api-intake", "kafka", Service.AppType.CUSTOM))
 
     then:
     verify(writer, times(1)).writeServices(any(Map))

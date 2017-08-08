@@ -48,7 +48,9 @@ public class Service {
   public enum AppType {
     WEB("web"),
     DB("db"),
-    CUSTOM("custom");
+    CUSTOM("custom"),
+    CACHE("cache"),
+    WORKER("worker");
 
     private final String type;
 

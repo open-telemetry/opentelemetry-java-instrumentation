@@ -47,9 +47,6 @@ public class DDAgentWriter implements Writer {
 
   /** Effective thread pool, where real logic is done */
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
-  /** In memory collection of services waiting for departure */
-  private final BlockingQueue<Map<String, Service>> services =
-      new ArrayBlockingQueue<>(MAX_QUEUE_SIZE);
 
   /** Async worker that posts the spans to the DD agent */
   private final ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -96,11 +93,20 @@ public class DDAgentWriter implements Writer {
   @Override
   public void writeServices(final Map<String, Service> services) {
 
-    if (!this.services.offer(services)) {
-      log.warn(
-          "Cannot add a service list to the async queue, queue is full. Queue max size: {}",
-          MAX_QUEUE_SIZE);
-    }
+    final Runnable task =
+        new Runnable() {
+          @Override
+          public void run() {
+            //SEND the payload to the agent
+            log.debug("Async writer about to write {} services", services.size());
+            if (api.sendServices(services)) {
+              log.debug("Async writer just sent  {} services", services.size());
+            } else {
+              log.warn("Failed for Async writer to send {} services", services.size());
+            }
+          }
+        };
+    executor.submit(task);
   }
 
   /* (non-Javadoc)
@@ -108,8 +114,6 @@ public class DDAgentWriter implements Writer {
    */
   @Override
   public void start() {
-    executor.submit(new SpansSendingTask());
-    executor.submit(new ServicesSendingTask());
     scheduledExecutor.scheduleAtFixedRate(
         new TracesSendingTask(), 0, FLUSH_TIME_SECONDS, TimeUnit.SECONDS);
   }
@@ -175,37 +179,6 @@ public class DDAgentWriter implements Writer {
           return 0L;
         }
         return (long) payload.size();
-      }
-    }
-  }
-
-  /** Infinite tasks blocking until some spans come in the blocking queue. */
-  protected class ServicesSendingTask implements Runnable {
-
-    @Override
-    public void run() {
-      while (true) {
-        try {
-
-          //WAIT until a new service comes
-          final Map<String, Service> payload = DDAgentWriter.this.services.take();
-
-          //SEND the payload to the agent
-          log.debug("Async writer about to write {} services", payload.size());
-          if (api.sendServices(payload)) {
-            log.debug("Async writer just sent  {} services", payload.size());
-          } else {
-            log.warn("Failed for Async writer to send {} services", payload.size());
-          }
-
-        } catch (final InterruptedException e) {
-          log.info("Async writer (services) interrupted.");
-
-          //The thread was interrupted, we break the LOOP
-          break;
-        } catch (final Throwable e) {
-          log.error("Unexpected error! Some services may have been dropped.", e);
-        }
       }
     }
   }
