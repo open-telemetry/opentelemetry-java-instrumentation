@@ -12,7 +12,7 @@ public class ExampleWithLoggingWriter {
     tracer.addServiceInfo(new Service("api-intake", "spark", Service.AppType.CACHE));
 
     final Span parent =
-        tracer.buildSpan("fetch.backend").withServiceName("api-intake").startManual();
+      tracer.buildSpan("fetch.backend").withServiceName("api-intake").startManual();
 
     parent.setBaggageItem("scope-id", "a-1337");
 
@@ -20,9 +20,9 @@ public class ExampleWithLoggingWriter {
 
     final Span child =
         tracer
-            .buildSpan("delete.resource")
+          .buildSpan("delete.resource")
             .asChildOf(parent)
-            .withResourceName("delete")
+          .withResourceName("delete")
             .startManual();
 
     Thread.sleep(100);
