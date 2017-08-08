@@ -1,0 +1,7 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "org.apache.httpcomponents"
+  module = "httpclient"
+  versions = "[4.3,)"
+}
