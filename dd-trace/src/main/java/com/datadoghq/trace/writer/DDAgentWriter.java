@@ -3,13 +3,14 @@ package com.datadoghq.trace.writer;
 import com.datadoghq.trace.DDBaseSpan;
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -38,18 +39,11 @@ public class DDAgentWriter implements Writer {
   private static final int DEFAULT_MAX_TRACES = 1000;
 
   /** Timeout for the API in seconds */
-  private static final long TIMEOUT = 2;
+  private static final long API_TIMEOUT_SECONDS = 2;
 
   /** Flush interval for the API in seconds */
-  private static final long FLUSH_TIME = 5;
+  private static final long FLUSH_TIME_SECONDS = 5;
 
-  /**
-   * Used to ensure that we don't keep too many spans (while the blocking queue collect traces...)
-   */
-  private final Semaphore tokens;
-
-  /** Used to protect the traces during the drop */
-  private final Lock lock;
   /** Scheduled thread pool, it' acting like a cron */
   private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
   /** Effective thread pool, where real logic is done */
@@ -57,7 +51,7 @@ public class DDAgentWriter implements Writer {
   /** The DD agent api */
   private final DDApi api;
   /** In memory collection of traces waiting for departure */
-  private ArrayList<List<DDBaseSpan<?>>> traces;
+  private final WriterQueue<List<DDBaseSpan<?>>> traces;
 
   public DDAgentWriter() {
     this(new DDApi(DEFAULT_HOSTNAME, DEFAULT_PORT));
@@ -66,10 +60,7 @@ public class DDAgentWriter implements Writer {
   public DDAgentWriter(final DDApi api) {
     super();
     this.api = api;
-
-    lock = new ReentrantLock();
-    tokens = new Semaphore(DEFAULT_MAX_TRACES);
-    traces = new ArrayList<>(DEFAULT_MAX_TRACES);
+    traces = new WriterQueue<>(DEFAULT_MAX_TRACES);
   }
 
   /* (non-Javadoc)
@@ -78,20 +69,10 @@ public class DDAgentWriter implements Writer {
   @Override
   public void write(final List<DDBaseSpan<?>> trace) {
 
-    lock.lock();
-    //Try to add a new span in the queue
-    final boolean proceed = tokens.tryAcquire(1);
-
-    if (proceed) {
-      traces.add(trace);
-    } else {
-
-      final int index = ThreadLocalRandom.current().nextInt(0, DEFAULT_MAX_TRACES);
-      traces.remove(index);
-      traces.add(trace);
-      log.warn("Queue is full, dropping an element, queue size: {}", DEFAULT_MAX_TRACES);
+    final List<DDBaseSpan<?>> removed = traces.add(trace);
+    if (removed != null) {
+      log.warn("Queue is full, dropping one trace, queue size: {}", DEFAULT_MAX_TRACES);
     }
-    lock.unlock();
   }
 
   /* (non-Javadoc)
@@ -99,7 +80,8 @@ public class DDAgentWriter implements Writer {
    */
   @Override
   public void start() {
-    scheduledExecutor.scheduleAtFixedRate(new TracesSendingTask(), 0, FLUSH_TIME, TimeUnit.SECONDS);
+    scheduledExecutor.scheduleAtFixedRate(
+        new TracesSendingTask(), 0, FLUSH_TIME_SECONDS, TimeUnit.SECONDS);
   }
 
   /* (non-Javadoc)
@@ -122,6 +104,77 @@ public class DDAgentWriter implements Writer {
     }
   }
 
+  static class WriterQueue<T> {
+
+    private final LinkedList<T> list;
+    private final int capacity;
+    private final Lock lock = new ReentrantLock();
+    private int nbElements = 0;
+
+    public WriterQueue(final int capacity) {
+      if (capacity < 1) {
+        throw new IllegalArgumentException("Capacity couldn't be 0");
+      }
+      list = new LinkedList<>();
+      this.capacity = capacity;
+    }
+
+    public int size() {
+      return nbElements;
+    }
+
+    public int drainTo(final Collection<T> c) {
+      lock.lock();
+      int i = 0;
+      final int n = nbElements;
+      try {
+        while (i < n) {
+          final T element = list.getLast();
+          c.add(element); // things can go wrong here
+          list.removeLast();
+          ++i;
+          --nbElements;
+        }
+      } catch (final Throwable ex) {
+        log.warn("Unexpected error while draining the queue: {}", ex.getMessage());
+        throw ex;
+      } finally {
+        // Recover the nominal state
+        nbElements = list.size();
+        lock.unlock();
+      }
+      return i;
+    }
+
+    public T add(final T element) {
+
+      lock.lock();
+      T removed = null;
+      try {
+        if (nbElements < capacity) {
+          list.addFirst(element);
+          ++nbElements;
+        } else {
+          removed = removeAndAdd(element);
+        }
+      } finally {
+        lock.unlock();
+      }
+      return removed;
+    }
+
+    public boolean isEmpty() {
+      return nbElements == 0;
+    }
+
+    private T removeAndAdd(final T element) {
+      final int index = ThreadLocalRandom.current().nextInt(0, nbElements);
+      final T removed = list.remove(index);
+      list.addFirst(element);
+      return removed;
+    }
+  }
+
   /** Infinite tasks blocking until some spans come in the blocking queue. */
   private class TracesSendingTask implements Runnable {
 
@@ -129,7 +182,7 @@ public class DDAgentWriter implements Writer {
     public void run() {
       final Future<Long> future = executor.submit(new SendingTask());
       try {
-        final long nbTraces = future.get(TIMEOUT, TimeUnit.SECONDS);
+        final long nbTraces = future.get(API_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         log.debug("Successfully sending {} traces to the API", nbTraces);
       } catch (final TimeoutException e) {
         log.debug("Timeout! Fail to send traces to the API: {}", e.getMessage());
@@ -137,6 +190,8 @@ public class DDAgentWriter implements Writer {
         log.debug("Fail to send traces to the API: {}", e.getMessage());
       }
     }
+
+    public void size() {}
 
     class SendingTask implements Callable<Long> {
 
@@ -146,20 +201,14 @@ public class DDAgentWriter implements Writer {
           return 0L;
         }
 
-        lock.lock();
-        final List<List<DDBaseSpan<?>>> payload = traces;
-        traces = new ArrayList<>(DEFAULT_MAX_TRACES);
-        lock.unlock();
+        final List<List<DDBaseSpan<?>>> payload = new ArrayList<>();
+        int nbTraces = traces.drainTo(payload);
 
         int nbSpans = 0;
-        int nbTraces = 0;
         for (final List<?> trace : payload) {
           nbTraces++;
           nbSpans += trace.size();
         }
-
-        // release the lock
-        tokens.release(nbTraces);
 
         log.debug("Sending {} traces ({} spans) to the API (async)", nbTraces, nbSpans);
         final boolean isSent = api.sendTraces(payload);
