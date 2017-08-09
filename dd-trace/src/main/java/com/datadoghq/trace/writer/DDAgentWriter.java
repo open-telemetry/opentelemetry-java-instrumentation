@@ -3,8 +3,7 @@ package com.datadoghq.trace.writer;
 import com.datadoghq.trace.DDBaseSpan;
 import com.google.auto.service.AutoService;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -106,16 +105,16 @@ public class DDAgentWriter implements Writer {
 
   static class WriterQueue<T> {
 
-    private final LinkedList<T> list;
     private final int capacity;
     private final Lock lock = new ReentrantLock();
+    private ArrayList<T> list;
     private int nbElements = 0;
 
     public WriterQueue(final int capacity) {
       if (capacity < 1) {
         throw new IllegalArgumentException("Capacity couldn't be 0");
       }
-      list = new LinkedList<>();
+      list = new ArrayList<>(capacity);
       this.capacity = capacity;
     }
 
@@ -123,27 +122,17 @@ public class DDAgentWriter implements Writer {
       return nbElements;
     }
 
-    public int drainTo(final Collection<T> c) {
+    public List<T> getAll() {
+      List<T> all = Collections.emptyList();
       lock.lock();
-      int i = 0;
-      final int n = nbElements;
       try {
-        while (i < n) {
-          final T element = list.getLast();
-          c.add(element); // things can go wrong here
-          list.removeLast();
-          ++i;
-          --nbElements;
-        }
-      } catch (final Throwable ex) {
-        log.warn("Unexpected error while draining the queue: {}", ex.getMessage());
-        throw ex;
+        all = list;
+        list = new ArrayList<>(capacity);
+        nbElements = 0;
       } finally {
-        // Recover the nominal state
-        nbElements = list.size();
         lock.unlock();
       }
-      return i;
+      return all;
     }
 
     public T add(final T element) {
@@ -152,10 +141,10 @@ public class DDAgentWriter implements Writer {
       T removed = null;
       try {
         if (nbElements < capacity) {
-          list.addFirst(element);
+          list.add(element);
           ++nbElements;
         } else {
-          removed = removeAndAdd(element);
+          removed = set(element);
         }
       } finally {
         lock.unlock();
@@ -167,11 +156,9 @@ public class DDAgentWriter implements Writer {
       return nbElements == 0;
     }
 
-    private T removeAndAdd(final T element) {
+    private T set(final T element) {
       final int index = ThreadLocalRandom.current().nextInt(0, nbElements);
-      final T removed = list.remove(index);
-      list.addFirst(element);
-      return removed;
+      return list.set(index, element);
     }
   }
 
@@ -201,23 +188,21 @@ public class DDAgentWriter implements Writer {
           return 0L;
         }
 
-        final List<List<DDBaseSpan<?>>> payload = new ArrayList<>();
-        int nbTraces = traces.drainTo(payload);
+        final List<List<DDBaseSpan<?>>> payload = traces.getAll();
 
         int nbSpans = 0;
         for (final List<?> trace : payload) {
-          nbTraces++;
           nbSpans += trace.size();
         }
 
-        log.debug("Sending {} traces ({} spans) to the API (async)", nbTraces, nbSpans);
+        log.debug("Sending {} traces ({} spans) to the API (async)", payload.size(), nbSpans);
         final boolean isSent = api.sendTraces(payload);
 
         if (!isSent) {
-          log.warn("Failing to send {} traces to the API", nbTraces);
+          log.warn("Failing to send {} traces to the API", payload.size());
           return 0L;
         }
-        return (long) nbTraces;
+        return (long) payload.size();
       }
     }
   }
