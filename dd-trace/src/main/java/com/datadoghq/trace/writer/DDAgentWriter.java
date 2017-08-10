@@ -2,19 +2,14 @@ package com.datadoghq.trace.writer;
 
 import com.datadoghq.trace.DDBaseSpan;
 import com.google.auto.service.AutoService;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -38,19 +33,24 @@ public class DDAgentWriter implements Writer {
   private static final int DEFAULT_MAX_TRACES = 1000;
 
   /** Timeout for the API in seconds */
-  private static final long API_TIMEOUT_SECONDS = 2;
+  private static final long API_TIMEOUT_SECONDS = 1;
 
   /** Flush interval for the API in seconds */
-  private static final long FLUSH_TIME_SECONDS = 5;
+  private static final long FLUSH_TIME_SECONDS = 1;
 
   /** Scheduled thread pool, it' acting like a cron */
   private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
+
   /** Effective thread pool, where real logic is done */
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
   /** The DD agent api */
   private final DDApi api;
+
   /** In memory collection of traces waiting for departure */
   private final WriterQueue<List<DDBaseSpan<?>>> traces;
+
+  private boolean queueFullReported = false;
 
   public DDAgentWriter() {
     this(new DDApi(DEFAULT_HOSTNAME, DEFAULT_PORT));
@@ -69,9 +69,12 @@ public class DDAgentWriter implements Writer {
   public void write(final List<DDBaseSpan<?>> trace) {
 
     final List<DDBaseSpan<?>> removed = traces.add(trace);
-    if (removed != null) {
+    if (removed != null && !queueFullReported) {
       log.warn("Queue is full, dropping one trace, queue size: {}", DEFAULT_MAX_TRACES);
+      queueFullReported = true;
+      return;
     }
+    queueFullReported = false;
   }
 
   /* (non-Javadoc)
@@ -103,65 +106,6 @@ public class DDAgentWriter implements Writer {
     }
   }
 
-  static class WriterQueue<T> {
-
-    private final int capacity;
-    private final Lock lock = new ReentrantLock();
-    private ArrayList<T> list;
-    private int nbElements = 0;
-
-    public WriterQueue(final int capacity) {
-      if (capacity < 1) {
-        throw new IllegalArgumentException("Capacity couldn't be 0");
-      }
-      list = new ArrayList<>(capacity);
-      this.capacity = capacity;
-    }
-
-    public int size() {
-      return nbElements;
-    }
-
-    public List<T> getAll() {
-      List<T> all = Collections.emptyList();
-      lock.lock();
-      try {
-        all = list;
-        list = new ArrayList<>(capacity);
-        nbElements = 0;
-      } finally {
-        lock.unlock();
-      }
-      return all;
-    }
-
-    public T add(final T element) {
-
-      lock.lock();
-      T removed = null;
-      try {
-        if (nbElements < capacity) {
-          list.add(element);
-          ++nbElements;
-        } else {
-          removed = set(element);
-        }
-      } finally {
-        lock.unlock();
-      }
-      return removed;
-    }
-
-    public boolean isEmpty() {
-      return nbElements == 0;
-    }
-
-    private T set(final T element) {
-      final int index = ThreadLocalRandom.current().nextInt(0, nbElements);
-      return list.set(index, element);
-    }
-  }
-
   /** Infinite tasks blocking until some spans come in the blocking queue. */
   private class TracesSendingTask implements Runnable {
 
@@ -190,12 +134,14 @@ public class DDAgentWriter implements Writer {
 
         final List<List<DDBaseSpan<?>>> payload = traces.getAll();
 
-        int nbSpans = 0;
-        for (final List<?> trace : payload) {
-          nbSpans += trace.size();
-        }
+        if (log.isDebugEnabled()) {
+          int nbSpans = 0;
+          for (final List<?> trace : payload) {
+            nbSpans += trace.size();
+          }
 
-        log.debug("Sending {} traces ({} spans) to the API (async)", payload.size(), nbSpans);
+          log.debug("Sending {} traces ({} spans) to the API (async)", payload.size(), nbSpans);
+        }
         final boolean isSent = api.sendTraces(payload);
 
         if (!isSent) {

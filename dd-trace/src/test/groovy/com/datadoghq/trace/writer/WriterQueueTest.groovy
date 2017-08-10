@@ -6,13 +6,13 @@ class WriterQueueTest extends Specification {
 
   def "instantiate a empty queue throws an exception"() {
     when:
-    new DDAgentWriter.WriterQueue<Integer>(0)
+    new WriterQueue<Integer>(0)
 
     then:
     thrown IllegalArgumentException
 
     when:
-    new DDAgentWriter.WriterQueue<Integer>(-1)
+    new WriterQueue<Integer>(-1)
 
     then:
     thrown IllegalArgumentException
@@ -21,7 +21,7 @@ class WriterQueueTest extends Specification {
   def "full the queue without forcing"() {
 
     setup:
-    def queue = new DDAgentWriter.WriterQueue<Integer>(capacity)
+    def queue = new WriterQueue<Integer>(capacity)
     def removed = false
 
     when:
@@ -40,7 +40,7 @@ class WriterQueueTest extends Specification {
   def "force element add to a full queue"() {
 
     setup:
-    def queue = new DDAgentWriter.WriterQueue<Integer>(capacity)
+    def queue = new WriterQueue<Integer>(capacity)
     for (def i = 0; i < capacity; i++) {
       queue.add(i)
     }
@@ -60,7 +60,7 @@ class WriterQueueTest extends Specification {
   def "drain the queue into another collection"() {
 
     setup:
-    def queue = new DDAgentWriter.WriterQueue<Integer>(capacity)
+    def queue = new WriterQueue<Integer>(capacity)
     for (def i = 0; i < capacity; i++) {
       queue.add(i)
     }
