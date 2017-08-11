@@ -16,7 +16,6 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
   'com.datadoghq.trace.DDTags',
   'com.datadoghq.trace.DDTraceInfo',
   'com.datadoghq.trace.util.Clock',
-
 ]
 
 dependencies {
@@ -29,6 +28,7 @@ dependencies {
   compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.8.8'
   compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
   compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
+  compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.13'
 
   testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
 

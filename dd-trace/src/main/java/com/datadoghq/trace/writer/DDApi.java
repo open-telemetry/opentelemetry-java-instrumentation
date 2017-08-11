@@ -3,16 +3,15 @@ package com.datadoghq.trace.writer;
 import com.datadoghq.trace.DDBaseSpan;
 import com.datadoghq.trace.DDTraceInfo;
 import com.datadoghq.trace.Service;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.msgpack.jackson.dataformat.MessagePackFactory;
 
 /** The API pointing to a DD agent */
 @Slf4j
@@ -24,8 +23,7 @@ public class DDApi {
   private final String tracesEndpoint;
   private final String servicesEndpoint;
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
-  private final JsonFactory jsonFactory = objectMapper.getFactory();
+  private final ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory());
 
   public DDApi(final String host, final int port) {
     this.tracesEndpoint = "http://" + host + ":" + port + TRACES_ENDPOINT;
@@ -72,7 +70,6 @@ public class DDApi {
   /**
    * PUT to an endpoint the provided JSON content
    *
-   * @param endpoint
    * @param content
    * @return the status code
    */
@@ -86,11 +83,10 @@ public class DDApi {
     }
 
     try {
-      final OutputStreamWriter out = new OutputStreamWriter(httpCon.getOutputStream());
-      final JsonGenerator jsonGen = jsonFactory.createGenerator(out);
-      objectMapper.writeValue(jsonGen, content);
-      jsonGen.flush();
-      jsonGen.close();
+      final OutputStream out = httpCon.getOutputStream();
+      objectMapper.writeValue(out, content);
+      out.flush();
+      out.close();
       final int responseCode = httpCon.getResponseCode();
       if (responseCode == 200) {
         log.debug("Sent the payload to the DD agent.");
@@ -113,7 +109,7 @@ public class DDApi {
     httpCon = (HttpURLConnection) url.openConnection();
     httpCon.setDoOutput(true);
     httpCon.setRequestMethod("PUT");
-    httpCon.setRequestProperty("Content-Type", "application/json");
+    httpCon.setRequestProperty("Content-Type", "application/msgpack");
     httpCon.setRequestProperty("Datadog-Meta-Lang", "java");
     httpCon.setRequestProperty("Datadog-Meta-Lang-Version", DDTraceInfo.JAVA_VERSION);
     httpCon.setRequestProperty("Datadog-Meta-Lang-Interpreter", DDTraceInfo.JAVA_VM_NAME);
