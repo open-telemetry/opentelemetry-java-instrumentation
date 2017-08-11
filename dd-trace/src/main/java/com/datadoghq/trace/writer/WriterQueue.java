@@ -1,7 +1,6 @@
 package com.datadoghq.trace.writer;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -21,7 +20,6 @@ class WriterQueue<T> {
 
   private final int capacity;
   private volatile ArrayList<T> list;
-  private volatile int elementCount = 0;
 
   /**
    * Default construct, a capacity must be provided
@@ -32,7 +30,7 @@ class WriterQueue<T> {
     if (capacity < 1) {
       throw new IllegalArgumentException("Capacity couldn't be 0");
     }
-    list = new ArrayList<>(capacity);
+    this.list = emptyList(capacity);
     this.capacity = capacity;
   }
 
@@ -43,10 +41,8 @@ class WriterQueue<T> {
    * @return a list contain all elements
    */
   public synchronized List<T> getAll() {
-    List<T> all = Collections.emptyList();
-    all = list;
-    list = new ArrayList<>(capacity);
-    elementCount = 0;
+    final List<T> all = list;
+    list = emptyList(capacity);
     return all;
   }
 
@@ -60,11 +56,10 @@ class WriterQueue<T> {
   public synchronized T add(final T element) {
 
     T removed = null;
-    if (elementCount < capacity) {
+    if (list.size() < capacity) {
       list.add(element);
-      ++elementCount;
     } else {
-      final int index = ThreadLocalRandom.current().nextInt(0, elementCount);
+      final int index = ThreadLocalRandom.current().nextInt(0, list.size());
       removed = list.set(index, element);
     }
     return removed;
@@ -78,7 +73,7 @@ class WriterQueue<T> {
    * @return the current size of the queue
    */
   public int size() {
-    return elementCount;
+    return list.size();
   }
 
   /**
@@ -87,6 +82,10 @@ class WriterQueue<T> {
    * @return true if the queue is empty
    */
   public boolean isEmpty() {
-    return elementCount == 0;
+    return list.isEmpty();
+  }
+
+  private ArrayList<T> emptyList(final int capacity) {
+    return new ArrayList<>(capacity);
   }
 }

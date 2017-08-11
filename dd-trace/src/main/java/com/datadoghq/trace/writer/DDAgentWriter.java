@@ -38,7 +38,7 @@ public class DDAgentWriter implements Writer {
   /** Flush interval for the API in seconds */
   private static final long FLUSH_TIME_SECONDS = 1;
 
-  /** Scheduled thread pool, it' acting like a cron */
+  /** Scheduled thread pool, acting like a cron */
   private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
 
   /** Effective thread pool, where real logic is done */
@@ -70,7 +70,7 @@ public class DDAgentWriter implements Writer {
 
     final List<DDBaseSpan<?>> removed = traces.add(trace);
     if (removed != null && !queueFullReported) {
-      log.warn("Queue is full, dropping one trace, queue size: {}", DEFAULT_MAX_TRACES);
+      log.debug("Queue is full, traces will be discarded, queue size: {}", DEFAULT_MAX_TRACES);
       queueFullReported = true;
       return;
     }
@@ -107,7 +107,7 @@ public class DDAgentWriter implements Writer {
   }
 
   /** Infinite tasks blocking until some spans come in the blocking queue. */
-  private class TracesSendingTask implements Runnable {
+  class TracesSendingTask implements Runnable {
 
     @Override
     public void run() {
@@ -121,8 +121,6 @@ public class DDAgentWriter implements Writer {
         log.debug("Fail to send traces to the API: {}", e.getMessage());
       }
     }
-
-    public void size() {}
 
     class SendingTask implements Callable<Long> {
 
