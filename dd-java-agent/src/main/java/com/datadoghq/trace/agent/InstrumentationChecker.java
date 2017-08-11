@@ -1,6 +1,7 @@
 package com.datadoghq.trace.agent;
 
 import com.datadoghq.trace.resolver.FactoryUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +33,9 @@ public class InstrumentationChecker {
   }
 
   private InstrumentationChecker() {
-    rules = FactoryUtils.loadConfigFromResource(CONFIG_FILE, Map.class);
+    rules =
+        FactoryUtils.loadConfigFromResource(
+            CONFIG_FILE, new TypeReference<Map<String, List<Map<String, String>>>>() {});
     frameworks = scanLoadedLibraries();
   }
 
