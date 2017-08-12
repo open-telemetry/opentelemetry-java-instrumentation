@@ -1,55 +1,56 @@
 ### This file define all supported libraries
 ### Syntax:
-###   <rulename>:                   # the rule name defined in the otarules.btm
-###     - check:                    # a list of tests, if one not matched, thus the rule is removed
-###       articfact: <artifactId>   # the artifact name to be tested
-###       supported_version:        # a regex expression to express the version required by the rule
-###     - check: ...
+###   <rulename>:                         # the rule name defined in the otarules.btm
+###     - artifact: <artifactId>          # the artifact name to be tested
+###       supported_version:              # a regex expression to express the version required by the rule
+###       identifying_present_classes:    # a list of classes that distinctly identify the range of supported libraries
+###       - some.key.FrameworkClass       #    only if missing, supported_version regex is used.
+###     - ...
 
 opentracing-apache-httpclient:
-  - check:
-    artifact: httpclient
+  - artifact: httpclient
     supported_version: 4\.[3|4|5]\..*
-  - check:
-    artifact: commons-httpclient
+
+  - artifact: commons-httpclient
     supported_version: none
 
 opentracing-aws-sdk:
-  - check:
-    artifact: aws-java-sdk
+  - artifact: aws-java-sdk
     supported_version: 1\.11\..*
 
 opentracing-cassandra-driver:
-  - check:
-    artifact: cassandra-driver-core
+  - artifact: cassandra-driver-core
     supported_version: 3\.2.*
 
 opentracing-web-servlet-filter:
-  - check:
-    artifact: jetty-server
+  - artifact: jetty-server
     supported_version: (8\.|9\.).*
-  - check:
-    artifact: tomcat_catalina
+
+  - artifact: tomcat_catalina
     supported_version: (8\.|9\.).*
-  - check:
-    artifact: tomcat-embed-core
+
+  - artifact: tomcat-embed-core
     supported_version: (8\.|9\.).*
 
 opentracing-okhttp3:
-  - check:
-    artifact: okhttp
+  - artifact: okhttp
     supported_version: 3\..*
 
 # For rules opentracing-jms-2_{consumer,producer}
 opentracing-jms-2:
-  - check:
-    artifact: javax.jms-api
+  - artifact: javax.jms-api
     supported_version: 2\..*
 
 opentracing-mongo-driver:
-  - check:
-    artifact: mongo-java-driver
+  - artifact: mongo-java-driver
     supported_version: 3\..*
+    identifying_present_classes:
+      - com.mongodb.operation.AsyncReadOperation.class
+      - com.mongodb.client.model.MapReduceAction.class
+
   - check:
     artifact: mongodb-driver-async
     supported_version: 3\..*
+    identifying_present_classes:
+      - com.mongodb.operation.AsyncReadOperation.class
+      - com.mongodb.client.model.MapReduceAction.class

@@ -1,14 +1,18 @@
 package com.datadoghq.trace.agent;
 
 import com.datadoghq.trace.resolver.FactoryUtils;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -19,20 +23,23 @@ import lombok.extern.slf4j.Slf4j;
 public class InstrumentationChecker {
 
   private static final String CONFIG_FILE = "dd-trace-supported-framework";
-  private final Map<String, List<Map<String, String>>> rules;
+  private final Map<String, List<ArtifactSupport>> rules;
   private final Map<String, String> frameworks;
 
   private static InstrumentationChecker INSTANCE;
+  private final ClassLoader classLoader;
 
   /* For testing purpose */
   InstrumentationChecker(
-      final Map<String, List<Map<String, String>>> rules, final Map<String, String> frameworks) {
+      final Map<String, List<ArtifactSupport>> rules, final Map<String, String> frameworks) {
     this.rules = rules;
     this.frameworks = frameworks;
+    this.classLoader = ClassLoader.getSystemClassLoader();
     INSTANCE = this;
   }
 
-  private InstrumentationChecker() {
+  private InstrumentationChecker(final ClassLoader classLoader) {
+    this.classLoader = classLoader;
     rules =
         FactoryUtils.loadConfigFromResource(
             CONFIG_FILE, new TypeReference<Map<String, List<Map<String, String>>>>() {});
@@ -43,11 +50,12 @@ public class InstrumentationChecker {
    * Return a list of unsupported rules regarding loading deps
    *
    * @return the list of unsupported rules
+   * @param classLoader
    */
-  public static synchronized List<String> getUnsupportedRules() {
+  public static synchronized List<String> getUnsupportedRules(final ClassLoader classLoader) {
 
     if (INSTANCE == null) {
-      INSTANCE = new InstrumentationChecker();
+      INSTANCE = new InstrumentationChecker(classLoader);
     }
 
     return INSTANCE.doGetUnsupportedRules();
@@ -60,16 +68,24 @@ public class InstrumentationChecker {
 
       // Check rules
       boolean supported = false;
-      for (final Map<String, String> check : rules.get(rule)) {
-        if (frameworks.containsKey(check.get("artifact"))) {
-          final boolean matched =
-              Pattern.matches(
-                  check.get("supported_version"), frameworks.get(check.get("artifact")));
+      for (final ArtifactSupport check : rules.get(rule)) {
+        if (frameworks.containsKey(check.artifact)) {
+          // If no classes to scan, fall back on version regex.
+          boolean matched =
+              check.identifyingPresentClasses.isEmpty() && check.identifyingMissingClasses.isEmpty()
+                  ? Pattern.matches(check.supportedVersion, frameworks.get(check.artifact))
+                  : true;
+          for (final String identifyingClass : check.identifyingPresentClasses) {
+            matched &= isClassPresent(identifyingClass);
+          }
+          for (final String identifyingClass : check.identifyingMissingClasses) {
+            matched &= !isClassPresent(identifyingClass);
+          }
           if (!matched) {
             log.debug(
                 "Library conflict: supported_version={}, actual_version={}",
-                check.get("supported_version"),
-                frameworks.get(check.get("artifact")));
+                check.supportedVersion,
+                frameworks.get(check.artifact));
             supported = false;
             break;
           }
@@ -85,6 +101,15 @@ public class InstrumentationChecker {
     }
 
     return unsupportedRules;
+  }
+
+  private boolean isClassPresent(final String identifyingPresentClass) {
+    try {
+      return identifyingPresentClass != null
+          && Class.forName(identifyingPresentClass, false, classLoader) != null;
+    } catch (final ClassNotFoundException e) {
+      return false;
+    }
   }
 
   private static Map<String, String> scanLoadedLibraries() {
@@ -142,5 +167,20 @@ public class InstrumentationChecker {
     } else {
       return null;
     }
+  }
+
+  @Data
+  @JsonIgnoreProperties("check")
+  static class ArtifactSupport {
+    private String artifact;
+
+    @JsonProperty("supported_version")
+    private String supportedVersion;
+
+    @JsonProperty("identifying_present_classes")
+    private List<String> identifyingPresentClasses = Collections.emptyList();
+
+    @JsonProperty("identifying_missing_classes")
+    private List<String> identifyingMissingClasses = Collections.emptyList();
   }
 }

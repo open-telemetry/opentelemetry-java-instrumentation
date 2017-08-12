@@ -11,7 +11,12 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javassist.ClassPool;
@@ -58,7 +63,8 @@ public class TraceAnnotationsManager {
     final List<String> loadedScripts = loadRules(ClassLoader.getSystemClassLoader());
 
     //Check if some rules have to be uninstalled
-    final List<String> uninstallScripts = InstrumentationChecker.getUnsupportedRules();
+    final List<String> uninstallScripts =
+        InstrumentationChecker.getUnsupportedRules(ClassLoader.getSystemClassLoader());
     if (agentTracerConfig != null) {
       final List<String> disabledInstrumentations = agentTracerConfig.getDisabledInstrumentations();
       if (disabledInstrumentations != null && !disabledInstrumentations.isEmpty()) {

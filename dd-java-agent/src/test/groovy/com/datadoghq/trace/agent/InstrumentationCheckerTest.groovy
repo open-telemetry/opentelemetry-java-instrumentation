@@ -6,7 +6,7 @@ import spock.lang.Specification
 
 class InstrumentationCheckerTest extends Specification {
   Map<String, List<Map<String, String>>> rules =
-    FactoryUtils.loadConfigFromResource("supported-version-test", new TypeReference<Map<String, List<Map<String, String>>>>() {
+    FactoryUtils.loadConfigFromResource("supported-version-test", new TypeReference<Map<String, List<InstrumentationChecker.ArtifactSupport>>>() {
     });
   Map<String, String> frameworks = [
     "artifact-1": "1.2.3.1232",
@@ -18,10 +18,16 @@ class InstrumentationCheckerTest extends Specification {
 
   def "test rules"() {
     setup:
-    def rules = InstrumentationChecker.getUnsupportedRules();
+    def rules = InstrumentationChecker.getUnsupportedRules(java.lang.ClassLoader.getSystemClassLoader());
 
     expect:
     rules.size() == 3
     rules.sort() == ["unsupportedRuleOne", "unsupportedRuleThree", "unsupportedRuleTwo"]
   }
+
+  static class DemoClass1 {}
+
+  static class DemoClass2 {}
+
+  static class DemoClass3 {}
 }
