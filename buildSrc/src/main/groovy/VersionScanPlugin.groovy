@@ -55,9 +55,9 @@ class VersionScanPlugin implements Plugin<Project> {
         def exclusiveMissing = keyMissing.get().size()
 
         if (project.hasProperty("showClasses")) {
-          println "keyPresent: $inCommonPresent->$exclusivePresent - ${keyPresent.get()}"
+          println "keyPresent: ${allInclude.size()}->$inCommonPresent->$exclusivePresent - ${keyPresent.get()}"
           println "+++++++++++++++++++++"
-          println "keyMissing: $inCommonMissing->$exclusiveMissing - ${keyMissing.get()}"
+          println "keyMissing: ${allExclude.size()}->$inCommonMissing->$exclusiveMissing - ${keyMissing.get()}"
         } else {
           println "keyPresent: $inCommonPresent->$exclusivePresent"
           println "keyMissing: $inCommonMissing->$exclusiveMissing"
@@ -105,18 +105,26 @@ class VersionScanPlugin implements Plugin<Project> {
 
         def task = project.task(name) {
           doLast {
+            Set<String> contentSet = Sets.newConcurrentHashSet()
             project.configurations.getByName(name).resolvedConfiguration.files.each { jarFile ->
               def jar = new JarFile(jarFile)
-              Set<String> contentSet = Sets.newConcurrentHashSet()
               for (jarEntry in jar.entries()) {
-                contentSet.add(jarEntry.toString())
+                if (jarEntry.name.endsWith(".class")) {
+                  if (project.versionScan.scanMethods) {
+                    ClassAnalyzer.findMethodNames(jar, jarEntry).each {
+                      contentSet.add("$jarEntry.name|$it")
+                    }
+                  } else {
+                    contentSet.add("$jarEntry.name")
+                  }
+                }
               }
-              allInclude.addAll(contentSet)
+            }
+            allInclude.addAll(contentSet)
 
-              if (!keyPresent.compareAndSet(Collections.emptySet(), contentSet)) {
-                def intersection = Sets.intersection(keyPresent.get(), contentSet)
-                keyPresent.get().retainAll(intersection)
-              }
+            if (!keyPresent.compareAndSet(Collections.emptySet(), contentSet)) {
+              def intersection = Sets.intersection(keyPresent.get(), contentSet)
+              keyPresent.get().retainAll(intersection)
             }
           }
         }
@@ -131,18 +139,26 @@ class VersionScanPlugin implements Plugin<Project> {
 
         def task = project.task(name) {
           doLast {
+            Set<String> contentSet = Sets.newConcurrentHashSet()
             project.configurations.getByName(name).resolvedConfiguration.files.each { jarFile ->
               def jar = new JarFile(jarFile)
-              Set<String> contentSet = Sets.newConcurrentHashSet()
               for (jarEntry in jar.entries()) {
-                contentSet.add(jarEntry.toString())
+                if (jarEntry.name.endsWith(".class")) {
+                  if (project.versionScan.scanMethods) {
+                    ClassAnalyzer.findMethodNames(jar, jarEntry).each {
+                      contentSet.add("$jarEntry.name|$it")
+                    }
+                  } else {
+                    contentSet.add("$jarEntry.name")
+                  }
+                }
               }
-              allExclude.addAll(contentSet)
+            }
+            allExclude.addAll(contentSet)
 
-              if (!keyMissing.compareAndSet(Collections.emptySet(), contentSet)) {
-                def intersection = Sets.intersection(keyMissing.get(), contentSet)
-                keyMissing.get().retainAll(intersection)
-              }
+            if (!keyMissing.compareAndSet(Collections.emptySet(), contentSet)) {
+              def intersection = Sets.intersection(keyMissing.get(), contentSet)
+              keyMissing.get().retainAll(intersection)
             }
           }
         }
@@ -155,7 +171,7 @@ class VersionScanPlugin implements Plugin<Project> {
   def filter(List<Version> list) {
     list.removeIf {
       def version = it.toString().toLowerCase()
-      return version.contains("rc") || version.contains("alpha") || version.contains("beta")
+      return version.contains("rc") || version.contains("alpha") || version.contains("beta") || version.contains("-b")
     }
     return list
   }
