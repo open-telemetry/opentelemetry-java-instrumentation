@@ -30,13 +30,13 @@ public class DDAgentWriter implements Writer {
   public static final int DEFAULT_PORT = 8126;
 
   /** Maximum number of traces kept in memory */
-  private static final int DEFAULT_MAX_TRACES = 1000;
+  static final int DEFAULT_MAX_TRACES = 1000;
 
   /** Timeout for the API in seconds */
-  private static final long API_TIMEOUT_SECONDS = 1;
+  static final long API_TIMEOUT_SECONDS = 1;
 
   /** Flush interval for the API in seconds */
-  private static final long FLUSH_TIME_SECONDS = 1;
+  static final long FLUSH_TIME_SECONDS = 1;
 
   /** Scheduled thread pool, acting like a cron */
   private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
@@ -57,9 +57,13 @@ public class DDAgentWriter implements Writer {
   }
 
   public DDAgentWriter(final DDApi api) {
+    this(api, new WriterQueue<List<DDBaseSpan<?>>>(DEFAULT_MAX_TRACES));
+  }
+
+  public DDAgentWriter(final DDApi api, final WriterQueue<List<DDBaseSpan<?>>> queue) {
     super();
     this.api = api;
-    traces = new WriterQueue<>(DEFAULT_MAX_TRACES);
+    traces = queue;
   }
 
   /* (non-Javadoc)
@@ -67,7 +71,6 @@ public class DDAgentWriter implements Writer {
    */
   @Override
   public void write(final List<DDBaseSpan<?>> trace) {
-
     final List<DDBaseSpan<?>> removed = traces.add(trace);
     if (removed != null && !queueFullReported) {
       log.debug("Queue is full, traces will be discarded, queue size: {}", DEFAULT_MAX_TRACES);
