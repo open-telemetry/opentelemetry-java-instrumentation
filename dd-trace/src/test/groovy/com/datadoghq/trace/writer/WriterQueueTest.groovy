@@ -84,30 +84,30 @@ class WriterQueueTest extends Specification {
   def "check concurrency on writes"() {
     setup:
 
-    def phaser_1 = new Phaser()
-    def phaser_2 = new Phaser()
+    def phaser1 = new Phaser()
+    def phaser2 = new Phaser()
     def queue = new WriterQueue<Integer>(capacity)
     def insertionCount = new AtomicInteger(0)
 
-    phaser_1.register() // global start
-    phaser_2.register() // global stop
+    phaser1.register() // global start
+    phaser2.register() // global stop
 
     numberThreads.times {
-      phaser_1.register()
+      phaser1.register()
       Thread.start {
-        phaser_2.register()
-        phaser_1.arriveAndAwaitAdvance()
+        phaser2.register()
+        phaser1.arriveAndAwaitAdvance()
         numberInsertionsPerThread.times {
           queue.add(1)
           insertionCount.getAndIncrement()
         }
-        phaser_2.arriveAndAwaitAdvance()
+        phaser2.arriveAndAwaitAdvance()
       }
     }
 
     when:
-    phaser_1.arriveAndAwaitAdvance() // allow threads to start
-    phaser_2.arriveAndAwaitAdvance() // wait till the job is not finished
+    phaser1.arriveAndAwaitAdvance() // allow threads to start
+    phaser2.arriveAndAwaitAdvance() // wait till the job is not finished
 
     then:
     queue.size() == capacity
@@ -123,48 +123,48 @@ class WriterQueueTest extends Specification {
 
   def "check concurrency on writes and reads"() {
     setup:
-    def phaser_1 = new Phaser()
-    def phaser_2 = new Phaser()
+    def phaser1 = new Phaser()
+    def phaser2 = new Phaser()
     def queue = new WriterQueue<Integer>(capacity)
     def insertionCount = new AtomicInteger(0)
     def droppedCount = new AtomicInteger(0)
     def getCount = new AtomicInteger(0)
     def numberElements = new AtomicInteger(0)
 
-    phaser_1.register() // global start
-    phaser_2.register() // global stop
+    phaser1.register() // global start
+    phaser2.register() // global stop
 
     // writes
     numberThreadsWrites.times {
-      phaser_1.register()
+      phaser1.register()
       Thread.start {
-        phaser_2.register()
-        phaser_1.arriveAndAwaitAdvance()
+        phaser2.register()
+        phaser1.arriveAndAwaitAdvance()
         numberInsertionsPerThread.times {
           queue.add(1) != null ? droppedCount.getAndIncrement() : null
           insertionCount.getAndIncrement()
         }
-        phaser_2.arriveAndAwaitAdvance()
+        phaser2.arriveAndAwaitAdvance()
       }
     }
 
     // reads
     numberThreadsReads.times {
-      phaser_1.register()
+      phaser1.register()
       Thread.start {
-        phaser_2.register()
-        phaser_1.arriveAndAwaitAdvance()
+        phaser2.register()
+        phaser1.arriveAndAwaitAdvance()
         numberGetsPerThread.times {
           numberElements.getAndAdd(queue.getAll().size())
           getCount.getAndIncrement()
         }
-        phaser_2.arriveAndAwaitAdvance()
+        phaser2.arriveAndAwaitAdvance()
       }
     }
 
     when:
-    phaser_1.arriveAndAwaitAdvance() // allow threads to start
-    phaser_2.arriveAndAwaitAdvance() // wait till the job is not finished
+    phaser1.arriveAndAwaitAdvance() // allow threads to start
+    phaser2.arriveAndAwaitAdvance() // wait till the job is not finished
 
     then:
     insertionCount.get() == numberInsertionsPerThread * numberThreadsWrites
