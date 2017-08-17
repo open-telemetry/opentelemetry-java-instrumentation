@@ -4,10 +4,8 @@ import com.datadoghq.trace.DDBaseSpan;
 import com.datadoghq.trace.Service;
 import com.google.auto.service.AutoService;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -47,9 +45,6 @@ public class DDAgentWriter implements Writer {
 
   /** Effective thread pool, where real logic is done */
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
-
-  /** Async worker that posts the spans to the DD agent */
-  private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
   /** The DD agent api */
   private final DDApi api;
