@@ -87,8 +87,6 @@ jar {
 }
 
 shadowJar {
-  append 'otarules.btm'
-
   classifier null
 
 //    mergeServiceFiles()
