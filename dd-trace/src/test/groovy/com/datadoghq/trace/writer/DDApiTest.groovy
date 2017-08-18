@@ -4,6 +4,7 @@ import com.datadoghq.trace.Service
 import com.datadoghq.trace.SpanFactory
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.msgpack.jackson.dataformat.MessagePackFactory
 import ratpack.http.Headers
 import ratpack.http.MediaType
 import spock.lang.Specification
@@ -11,10 +12,9 @@ import spock.lang.Specification
 import java.util.concurrent.atomic.AtomicReference
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
-import static ratpack.http.MediaType.APPLICATION_JSON
 
 class DDApiTest extends Specification {
-  static mapper = new ObjectMapper()
+  static mapper = new ObjectMapper(new MessagePackFactory())
 
   def "sending an empty list of traces returns no errors"() {
     setup:
@@ -52,18 +52,18 @@ class DDApiTest extends Specification {
     agent.close()
   }
 
-  def "content is sent as JSON"() {
+  def "content is sent as MSGPACK"() {
     setup:
     def requestContentType = new AtomicReference<MediaType>()
     def requestHeaders = new AtomicReference<Headers>()
-    def requestBody = new AtomicReference<String>()
+    def requestBody = new AtomicReference<byte[]>()
     def agent = ratpack {
       handlers {
         put("v0.3/traces") {
           requestContentType.set(request.contentType)
           requestHeaders.set(request.headers)
           request.body.then {
-            requestBody.set(it.text)
+            requestBody.set(it.bytes)
             response.send()
           }
         }
@@ -73,7 +73,7 @@ class DDApiTest extends Specification {
 
     expect:
     client.sendTraces(traces)
-    requestContentType.get().type == APPLICATION_JSON
+    requestContentType.get().type == "application/msgpack"
     requestHeaders.get().get("Datadog-Meta-Lang") == "java"
     requestHeaders.get().get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown")
     requestHeaders.get().get("Datadog-Meta-Tracer-Version") == "unknown"
@@ -151,18 +151,18 @@ class DDApiTest extends Specification {
     agent.close()
   }
 
-  def "services content is sent as JSON"() {
+  def "services content is sent as MSGPACK"() {
     setup:
     def requestContentType = new AtomicReference<MediaType>()
     def requestHeaders = new AtomicReference<Headers>()
-    def requestBody = new AtomicReference<String>()
+    def requestBody = new AtomicReference<byte[]>()
     def agent = ratpack {
       handlers {
         put("v0.3/services") {
           requestContentType.set(request.contentType)
           requestHeaders.set(request.headers)
           request.body.then {
-            requestBody.set(it.text)
+            requestBody.set(it.bytes)
             response.send()
           }
         }
@@ -172,7 +172,7 @@ class DDApiTest extends Specification {
 
     expect:
     client.sendServices(services)
-    requestContentType.get().type == APPLICATION_JSON
+    requestContentType.get().type == "application/msgpack"
     requestHeaders.get().get("Datadog-Meta-Lang") == "java"
     requestHeaders.get().get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown")
     requestHeaders.get().get("Datadog-Meta-Tracer-Version") == "unknown"
@@ -191,11 +191,11 @@ class DDApiTest extends Specification {
     ]
   }
 
-  static List<TreeMap<String, Object>> convertList(String json) {
-    return mapper.readValue(json, new TypeReference<List<TreeMap<String, Object>>>() {})
+  static List<TreeMap<String, Object>> convertList(byte[] bytes) {
+    return mapper.readValue(bytes, new TypeReference<List<TreeMap<String, Object>>>() {})
   }
 
-  static TreeMap<String, Object> convertMap(String json) {
-    return mapper.readValue(json, new TypeReference<TreeMap<String, Object>>() {})
+  static TreeMap<String, Object> convertMap(byte[] bytes) {
+    return mapper.readValue(bytes, new TypeReference<TreeMap<String, Object>>() {})
   }
 }
