@@ -38,9 +38,10 @@ class VersionScanPlugin implements Plugin<Project> {
       description = "Queries for all versions of configured modules and finds key classes"
     }
 
-    if (!project.gradle.startParameter.taskNames.each { it.endsWith('scanVersions') }.any()) {
+    if (!project.gradle.startParameter.taskNames.contains('scanVersions')) {
       return
     }
+    println "Adding scan tasks for $project"
 
     Set<String> allInclude = Sets.newConcurrentHashSet()
     Set<String> allExclude = Sets.newConcurrentHashSet()

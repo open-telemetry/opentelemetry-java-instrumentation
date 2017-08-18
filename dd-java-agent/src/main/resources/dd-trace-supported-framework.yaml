@@ -11,9 +11,9 @@ opentracing-apache-httpclient:
   - artifact: httpclient
     supported_version: 4\.[3|4|5]\..*
     identifying_present_classes:
-    - org.apache.http.conn.SchemePortResolver
-    - org.apache.http.config.Lookup
-    - org.apache.http.conn.ssl.SSLContexts
+      - org.apache.http.conn.SchemePortResolver
+      - org.apache.http.config.Lookup
+      - org.apache.http.conn.ssl.SSLContexts
 
   - artifact: commons-httpclient
     supported_version: none
@@ -22,52 +22,52 @@ opentracing-aws-sdk:
   - artifact: aws-java-sdk
     supported_version: 1\.11\..*
     identifying_present_classes:
-    - com.amazonaws.http.client.HttpClientFactory
-    - com.amazonaws.http.apache.utils.ApacheUtils
-    - com.amazonaws.http.request.HttpRequestFactory
+      - com.amazonaws.http.client.HttpClientFactory
+      - com.amazonaws.http.apache.utils.ApacheUtils
+      - com.amazonaws.http.request.HttpRequestFactory
 
 opentracing-cassandra-driver:
   - artifact: cassandra-driver-core
     supported_version: 3\.2.*
     identifying_present_classes:
-    - com.datastax.driver.core.utils.MoreObjects
-    - com.datastax.driver.core.RemoteEndpointAwareNettySSLOptions
-    - com.datastax.driver.core.GuavaCompatibility
+      - com.datastax.driver.core.utils.MoreObjects
+      - com.datastax.driver.core.RemoteEndpointAwareNettySSLOptions
+      - com.datastax.driver.core.GuavaCompatibility
 
 opentracing-web-servlet-filter:
   - artifact: jetty-server
     supported_version: (8\.|9\.).*
-    identifying_present_classes:
+#    identifying_present_classes:
 
   - artifact: tomcat_catalina
     supported_version: (8\.|9\.).*
     identifying_present_classes:
-    - org.apache.catalina.WebResource
-    - org.apache.catalina.webresources.TrackedInputStream
-    - org.apache.catalina.webresources.AbstractArchiveResource
+      - org.apache.catalina.WebResource
+      - org.apache.catalina.webresources.TrackedInputStream
+      - org.apache.catalina.webresources.AbstractArchiveResource
 
   - artifact: tomcat-embed-core
     supported_version: (8\.|9\.).*
     identifying_present_classes:
-    - org.apache.catalina.WebResource
-    - org.apache.catalina.webresources.TrackedInputStream
-    - org.apache.catalina.webresources.AbstractArchiveResource
+      - org.apache.catalina.WebResource
+      - org.apache.catalina.webresources.TrackedInputStream
+      - org.apache.catalina.webresources.AbstractArchiveResource
 
 opentracing-okhttp3:
   - artifact: okhttp
     supported_version: 3\..*
     identifying_present_classes:
-    - okhttp3.Cookie
-    - okhttp3.ConnectionPool
-    - okhttp3.Headers
+      - okhttp3.Cookie
+      - okhttp3.ConnectionPool
+      - okhttp3.Headers
 
 # For rules opentracing-jms-2_{consumer,producer}
 opentracing-jms-2:
   - artifact: javax.jms-api
     supported_version: 2\..*
-    identifying_present_classes
-    - javax.jms.JMSContext
-    - javax.jms.CompletionListener
+    identifying_present_classes:
+      - javax.jms.JMSContext
+      - javax.jms.CompletionListener
 
 opentracing-mongo-driver:
   - artifact: mongo-java-driver

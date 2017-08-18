@@ -7,7 +7,7 @@ import spock.lang.Specification
 class InstrumentationCheckerTest extends Specification {
   Map<String, List<Map<String, String>>> rules =
     FactoryUtils.loadConfigFromResource("supported-version-test", new TypeReference<Map<String, List<InstrumentationChecker.ArtifactSupport>>>() {
-    });
+    })
   Map<String, String> frameworks = [
     "artifact-1": "1.2.3.1232",
     "artifact-2": "4.y.z",
@@ -18,7 +18,7 @@ class InstrumentationCheckerTest extends Specification {
 
   def "test rules"() {
     setup:
-    def rules = InstrumentationChecker.getUnsupportedRules(java.lang.ClassLoader.getSystemClassLoader());
+    def rules = InstrumentationChecker.getUnsupportedRules(java.lang.ClassLoader.getSystemClassLoader())
 
     expect:
     rules.size() == 3

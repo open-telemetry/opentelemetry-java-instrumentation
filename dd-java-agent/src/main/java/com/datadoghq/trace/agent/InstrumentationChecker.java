@@ -42,7 +42,7 @@ public class InstrumentationChecker {
     this.classLoader = classLoader;
     rules =
         FactoryUtils.loadConfigFromResource(
-            CONFIG_FILE, new TypeReference<Map<String, List<Map<String, String>>>>() {});
+            CONFIG_FILE, new TypeReference<Map<String, List<ArtifactSupport>>>() {});
     frameworks = scanLoadedLibraries();
   }
 
