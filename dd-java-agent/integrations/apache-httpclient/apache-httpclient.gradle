@@ -4,4 +4,6 @@ versionScan {
   group = "org.apache.httpcomponents"
   module = "httpclient"
   versions = "[4.3,)"
+  legacyGroup = "commons-httpclient"
+  legacyModule = "commons-httpclient"
 }

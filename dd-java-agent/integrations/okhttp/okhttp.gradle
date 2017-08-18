@@ -4,4 +4,5 @@ versionScan {
   group = "com.squareup.okhttp3"
   module = "okhttp"
   versions = "[3.0,)"
+  legacyGroup = "com.squareup.okhttp"
 }

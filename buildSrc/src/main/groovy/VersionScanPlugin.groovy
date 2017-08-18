@@ -13,13 +13,15 @@ import org.eclipse.aether.resolution.VersionRangeRequest
 import org.eclipse.aether.resolution.VersionRangeResult
 import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
-import org.eclipse.aether.transport.file.FileTransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.version.Version
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.tree.ClassNode
 
 import java.util.concurrent.atomic.AtomicReference
+import java.util.jar.JarEntry
 import java.util.jar.JarFile
 
 /**
@@ -36,7 +38,7 @@ class VersionScanPlugin implements Plugin<Project> {
       description = "Queries for all versions of configured modules and finds key classes"
     }
 
-    if (!project.gradle.startParameter.taskNames.contains('scanVersions')) {
+    if (!project.gradle.startParameter.taskNames.each { it.endsWith('scanVersions') }.any()) {
       return
     }
 
@@ -78,6 +80,10 @@ class VersionScanPlugin implements Plugin<Project> {
       Artifact artifact = new DefaultArtifact(group, module, "jar", versions)
       Artifact allVersions = new DefaultArtifact(group, module, "jar", "(,)")
 
+      String legacyGroup = project.versionScan.legacyGroup == null ? group : project.versionScan.legacyGroup
+      String legacyModule = project.versionScan.legacyModule == null ? module : project.versionScan.legacyModule
+      Artifact allLegacyVersions = new DefaultArtifact(legacyGroup, legacyModule, "jar", "(,)")
+
       VersionRangeRequest rangeRequest = new VersionRangeRequest()
       rangeRequest.setRepositories(newRepositories(system, session))
 
@@ -86,9 +92,24 @@ class VersionScanPlugin implements Plugin<Project> {
       rangeRequest.setArtifact(allVersions)
       VersionRangeResult allResult = system.resolveVersionRange(session, rangeRequest)
 
-      def includeVersionSet = Sets.newHashSet(filter(rangeResult.versions))
-      def excludeVersionSet = Sets.newHashSet(filter(allResult.versions))
+      def includeVersionSet = Sets.newHashSet(filter(rangeResult.versions).collect {
+        new DefaultArtifact(group, module, "jar", it.toString())
+      })
+      def excludeVersionSet = Sets.newHashSet(filter(allResult.versions).collect {
+        new DefaultArtifact(group, module, "jar", it.toString())
+      })
       excludeVersionSet.removeAll(includeVersionSet)
+
+      if (allVersions != allLegacyVersions) {
+//        println "Adding legacy versions $allLegacyVersions"
+        rangeRequest.setArtifact(allLegacyVersions)
+        VersionRangeResult allLegacyResult = system.resolveVersionRange(session, rangeRequest)
+        def legacyVersions = filter(allLegacyResult.versions)
+//        println "Found ${legacyVersions.size()} legacy versions for $legacyGroup:$legacyModule"
+        excludeVersionSet.addAll(legacyVersions.collect {
+          new DefaultArtifact(legacyGroup, legacyModule, "jar", it.toString())
+        })
+      }
 
       if (excludeVersionSet.empty) {
         println "Found ${includeVersionSet.size()} versions, but none to exclude. Skipping..."
@@ -96,90 +117,80 @@ class VersionScanPlugin implements Plugin<Project> {
         return
       }
 
-      println "Scanning ${includeVersionSet.size()} included and ${excludeVersionSet.size()} excluded versions.  Included: $includeVersionSet"
+//      println "Scanning ${includeVersionSet.size()} included and ${excludeVersionSet.size()} excluded versions.  Included: ${includeVersionSet.collect { it.version }}}"
 
       includeVersionSet.each { version ->
-        def name = "scanVersionInclude-$group-$module-$version"
-        def config = project.configurations.create(name)
-        config.dependencies.add(project.dependencies.create("$group:$module:$version"))
-
-        def task = project.task(name) {
-          doLast {
-            Set<String> contentSet = Sets.newConcurrentHashSet()
-            project.configurations.getByName(name).resolvedConfiguration.files.each { jarFile ->
-              def jar = new JarFile(jarFile)
-              for (jarEntry in jar.entries()) {
-                if (jarEntry.name.endsWith(".class")) {
-                  if (project.versionScan.scanMethods) {
-                    ClassAnalyzer.findMethodNames(jar, jarEntry).each {
-                      contentSet.add("$jarEntry.name|$it")
-                    }
-                  } else {
-                    contentSet.add("$jarEntry.name")
-                  }
-                }
-              }
-            }
-            allInclude.addAll(contentSet)
-
-            if (!keyPresent.compareAndSet(Collections.emptySet(), contentSet)) {
-              def intersection = Sets.intersection(keyPresent.get(), contentSet)
-              keyPresent.get().retainAll(intersection)
-            }
-          }
-        }
-        project.tasks.scanVersions.finalizedBy(task)
-        project.tasks.scanVersionsReport.mustRunAfter(task)
+        addScanTask("Include", new DefaultArtifact(version.groupId, version.artifactId, "jar", version.version), keyPresent, allInclude, project)
       }
 
       excludeVersionSet.each { version ->
-        def name = "scanVersionExclude-$group-$module-$version"
-        def config = project.configurations.create(name)
-        config.dependencies.add(project.dependencies.create("$group:$module:$version"))
+        addScanTask("Exclude", new DefaultArtifact(version.groupId, version.artifactId, "jar", version.version), keyMissing, allExclude, project)
+      }
+    }
+  }
 
-        def task = project.task(name) {
-          doLast {
-            Set<String> contentSet = Sets.newConcurrentHashSet()
-            project.configurations.getByName(name).resolvedConfiguration.files.each { jarFile ->
-              def jar = new JarFile(jarFile)
-              for (jarEntry in jar.entries()) {
-                if (jarEntry.name.endsWith(".class")) {
-                  if (project.versionScan.scanMethods) {
-                    ClassAnalyzer.findMethodNames(jar, jarEntry).each {
-                      contentSet.add("$jarEntry.name|$it")
-                    }
-                  } else {
-                    contentSet.add("$jarEntry.name")
-                  }
+  def addScanTask(String label, Artifact artifact, AtomicReference<Set<String>> keyIdentifiers, Set<String> allIdentifiers, Project project) {
+    def name = "scanVersion$label-$artifact.groupId-$artifact.artifactId-$artifact.version"
+    def config = project.configurations.create(name)
+    config.dependencies.add(project.dependencies.create("$artifact.groupId:$artifact.artifactId:$artifact.version") {
+      transitive = project.versionScan.scanDependencies
+    })
+
+    def task = project.task(name) {
+      doLast {
+        Set<String> contentSet = Sets.newConcurrentHashSet()
+        project.configurations.getByName(name).resolvedConfiguration.files.each { jarFile ->
+          def jar = new JarFile(jarFile)
+          for (jarEntry in jar.entries()) {
+            if (jarEntry.name.endsWith(".class")) {
+              if (project.versionScan.scanMethods) {
+                findMethodNames(jar, jarEntry).each {
+                  contentSet.add("$jarEntry.name|$it")
                 }
+              } else {
+                contentSet.add("$jarEntry.name")
               }
-            }
-            allExclude.addAll(contentSet)
-
-            if (!keyMissing.compareAndSet(Collections.emptySet(), contentSet)) {
-              def intersection = Sets.intersection(keyMissing.get(), contentSet)
-              keyMissing.get().retainAll(intersection)
             }
           }
         }
-        project.tasks.scanVersions.finalizedBy(task)
-        project.tasks.scanVersionsReport.mustRunAfter(task)
+        allIdentifiers.addAll(contentSet)
+
+        if (!keyIdentifiers.compareAndSet(Collections.emptySet(), contentSet)) {
+          def intersection = Sets.intersection(keyIdentifiers.get(), contentSet)
+          keyIdentifiers.get().retainAll(intersection)
+        }
       }
     }
+    project.tasks.scanVersions.finalizedBy(task)
+    project.tasks.scanVersionsReport.mustRunAfter(task)
   }
 
   def filter(List<Version> list) {
     list.removeIf {
       def version = it.toString().toLowerCase()
-      return version.contains("rc") || version.contains("alpha") || version.contains("beta") || version.contains("-b")
+      return version.contains("rc") ||
+        version.contains("alpha") ||
+        version.contains("beta") ||
+        version.contains("-b") ||
+        version.contains(".m") ||
+        version.contains("-dev")
     }
     return list
+  }
+
+  def findMethodNames(JarFile jar, JarEntry entry) {
+    def stream = jar.getInputStream(entry)
+
+    def classNode = new ClassNode()
+    def cr = new ClassReader(stream)
+    cr.accept(classNode, 0)
+
+    return classNode.methods.collect { it.name }
   }
 
   RepositorySystem newRepositorySystem() {
     DefaultServiceLocator locator = MavenRepositorySystemUtils.newServiceLocator()
     locator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class)
-    locator.addService(TransporterFactory.class, FileTransporterFactory.class)
     locator.addService(TransporterFactory.class, HttpTransporterFactory.class)
 
     return locator.getService(RepositorySystem.class)

@@ -16,7 +16,10 @@ include ':dd-java-agent:integrations:aws-sdk'
 include ':dd-java-agent:integrations:cassandra'
 include ':dd-java-agent:integrations:jms'
 include ':dd-java-agent:integrations:mongo'
+include ':dd-java-agent:integrations:mongo-async'
 include ':dd-java-agent:integrations:okhttp'
+include ':dd-java-agent:integrations:tomcat'
+include ':dd-java-agent:integrations:tomcat-embedded'
 
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"

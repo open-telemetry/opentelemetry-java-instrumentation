@@ -4,4 +4,5 @@ versionScan {
   group = "javax.jms"
   module = "javax.jms-api"
   versions = "[2,)"
+  legacyModule = "jms-api"
 }
