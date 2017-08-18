@@ -1,8 +1,10 @@
 package com.datadoghq.trace.writer;
 
 import com.datadoghq.trace.DDBaseSpan;
+import com.datadoghq.trace.Service;
 import com.google.auto.service.AutoService;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -78,6 +80,28 @@ public class DDAgentWriter implements Writer {
       return;
     }
     queueFullReported = false;
+  }
+
+  /* (non-Javadoc)
+   * @see com.datadoghq.trace.Writer#writeServices(java.util.List)
+   */
+  @Override
+  public void writeServices(final Map<String, Service> services) {
+
+    final Runnable task =
+        new Runnable() {
+          @Override
+          public void run() {
+            //SEND the payload to the agent
+            log.debug("Async writer about to write {} services", services.size());
+            if (api.sendServices(services)) {
+              log.debug("Async writer just sent  {} services", services.size());
+            } else {
+              log.warn("Failed for Async writer to send {} services", services.size());
+            }
+          }
+        };
+    executor.submit(task);
   }
 
   /* (non-Javadoc)

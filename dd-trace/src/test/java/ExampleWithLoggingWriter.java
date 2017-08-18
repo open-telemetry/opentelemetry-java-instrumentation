@@ -1,30 +1,28 @@
 import com.datadoghq.trace.DDTracer;
+import com.datadoghq.trace.Service;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.writer.LoggingWriter;
 import io.opentracing.Span;
 
 public class ExampleWithLoggingWriter {
 
-  public static void main(String[] args) throws Exception {
+  public static void main(final String[] args) throws Exception {
 
-    DDTracer tracer = new DDTracer(new LoggingWriter(), new AllSampler());
+    final DDTracer tracer = new DDTracer(new LoggingWriter(), new AllSampler());
+    tracer.addServiceInfo(new Service("api-intake", "spark", Service.AppType.CACHE));
 
-    Span parent =
-        tracer
-            .buildSpan("hello-world")
-            .withServiceName("service-name")
-            .withSpanType("web")
-            .startManual();
+    final Span parent =
+        tracer.buildSpan("fetch.backend").withServiceName("api-intake").startManual();
 
-    parent.setBaggageItem("a-baggage", "value");
+    parent.setBaggageItem("scope-id", "a-1337");
 
     Thread.sleep(100);
 
-    Span child =
+    final Span child =
         tracer
-            .buildSpan("hello-world")
+            .buildSpan("delete.resource")
             .asChildOf(parent)
-            .withResourceName("resource-name")
+            .withResourceName("delete")
             .startManual();
 
     Thread.sleep(100);
@@ -34,5 +32,6 @@ public class ExampleWithLoggingWriter {
     Thread.sleep(100);
 
     parent.finish();
+    tracer.close();
   }
 }

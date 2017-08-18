@@ -1,7 +1,9 @@
 package com.datadoghq.trace.writer;
 
 import com.datadoghq.trace.DDBaseSpan;
+import com.datadoghq.trace.Service;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /** List writer used by tests mostly */
@@ -18,6 +20,11 @@ public class ListWriter extends CopyOnWriteArrayList<List<DDBaseSpan<?>>> implem
   @Override
   public void write(final List<DDBaseSpan<?>> trace) {
     add(trace);
+  }
+
+  @Override
+  public void writeServices(final Map<String, Service> services) {
+    throw new UnsupportedOperationException();
   }
 
   @Override
