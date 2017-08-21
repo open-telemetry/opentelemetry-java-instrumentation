@@ -94,16 +94,20 @@ public class DDTracerFactory {
             SYSTEM_PROPERTY_CONFIG_PATH, CONFIG_PATH, TracerConfig.class);
 
     DDTracer tracer = null;
+    log.trace("Tracer configuration: \n{}", tracerConfig);
     if (tracerConfig == null) {
       log.info("No valid configuration file {} found. Loading default tracer.", CONFIG_PATH);
       tracer = new DDTracer();
     } else {
+      log.debug("Create a tracer instance from the configuration");
+
       tracer = DDTracerFactory.create(tracerConfig);
     }
 
     //Create decorators from resource files
     final List<AbstractDecorator> decorators = DDDecoratorsFactory.createFromResources();
     for (final AbstractDecorator decorator : decorators) {
+      log.debug("Loading decorator: {}", decorator.getClass().getSimpleName());
       tracer.addDecorator(decorator);
     }
 

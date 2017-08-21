@@ -2,7 +2,9 @@ package com.datadoghq.trace.agent;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class DDJavaAgentInfo {
   public static final String VERSION;
 
@@ -22,5 +24,6 @@ public class DDJavaAgentInfo {
       v = "unknown";
     }
     VERSION = v;
+    log.debug("dd-java-agent - version: {}", v);
   }
 }

@@ -18,22 +18,24 @@ package com.datadoghq.trace.agent;
 
 import io.opentracing.contrib.agent.OpenTracingAgent;
 import java.lang.instrument.Instrumentation;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * This class provides a wrapper around the ByteMan agent, to establish required system properties
  * and the manager class.
  */
+@Slf4j
 public class AnnotationsTracingAgent extends OpenTracingAgent {
 
-  public static void premain(String agentArgs, Instrumentation inst) throws Exception {
+  public static void premain(String agentArgs, final Instrumentation inst) throws Exception {
     agentArgs = addManager(agentArgs);
-
+    log.debug("Using premain for loading {}", AnnotationsTracingAgent.class.getSimpleName());
     org.jboss.byteman.agent.Main.premain(agentArgs, inst);
   }
 
-  public static void agentmain(String agentArgs, Instrumentation inst) throws Exception {
+  public static void agentmain(String agentArgs, final Instrumentation inst) throws Exception {
     agentArgs = addManager(agentArgs);
-
+    log.debug("Using agentmain for loading {}", AnnotationsTracingAgent.class.getSimpleName());
     org.jboss.byteman.agent.Main.agentmain(agentArgs, inst);
   }
 
@@ -44,7 +46,7 @@ public class AnnotationsTracingAgent extends OpenTracingAgent {
       agentArgs += ",";
     }
     agentArgs += "manager:" + TraceAnnotationsManager.class.getName();
-
+    log.debug("Agent args=: {}", agentArgs);
     return agentArgs;
   }
 }

@@ -11,7 +11,12 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javassist.ClassPool;
@@ -37,9 +42,20 @@ import org.reflections.util.FilterBuilder;
 @Slf4j
 public class TraceAnnotationsManager {
 
-  private static Retransformer transformer;
-
   private static final String AGENT_RULES = "otarules.btm";
+  private static final String CURRENT_SPAN_EXISTS = "IF TRUE\n";
+  private static final String BUILD_SPAN = "DO\n" + "getTracer().buildSpan(\"";
+  private static final String CLOSE_PARENTHESIS = "\")";
+  private static final String START = ".startActive();";
+  private static final String EXIT_RULE =
+      "IF getTracer().activeSpan() != null\n" + "DO\n" + "getTracer().activeSpan().deactivate();\n";
+  private static final String EXCEPTION_EXIT_RULE =
+      "BIND span:io.opentracing.ActiveSpan = getTracer().activeSpan()\n"
+          + "IF span != null\n"
+          + "DO\n"
+          + "span.setTag(io.opentracing.tag.Tags.ERROR.getKey(),\"true\");\n"
+          + "span.deactivate();\n";
+  private static Retransformer transformer;
 
   /**
    * This method initializes the manager.
@@ -47,6 +63,7 @@ public class TraceAnnotationsManager {
    * @param trans The ByteMan retransformer
    */
   public static void initialize(final Retransformer trans) throws Exception {
+    log.debug("Initializing {}", TraceAnnotationsManager.class.getSimpleName());
     transformer = trans;
     //Load configuration
     final AgentTracerConfig agentTracerConfig =
@@ -54,6 +71,8 @@ public class TraceAnnotationsManager {
             DDTracerFactory.SYSTEM_PROPERTY_CONFIG_PATH,
             DDTracerFactory.CONFIG_PATH,
             AgentTracerConfig.class);
+
+    log.debug("Configuration: {}", agentTracerConfig.toString());
 
     final List<String> loadedScripts = loadRules(ClassLoader.getSystemClassLoader());
 
@@ -100,7 +119,7 @@ public class TraceAnnotationsManager {
       try (PrintWriter pr = new PrintWriter(sw)) {
         transformer.removeScripts(new ArrayList<>(rulesToRemove), pr);
       }
-      log.info(sw.toString());
+      log.info("Uninstall rule scripts: {}", rulesToRemove.toString());
     }
   }
 
@@ -140,6 +159,11 @@ public class TraceAnnotationsManager {
     }
 
     log.debug("OpenTracing Agent rules loaded");
+    if (log.isTraceEnabled()) {
+      for (final String rule : scripts) {
+        log.trace("Loading rule: {}", rule);
+      }
+    }
     return scripts;
   }
 
@@ -202,6 +226,7 @@ public class TraceAnnotationsManager {
         log.warn(
             "Could not create rule for method " + method + ". Proceed to next annoted method.", e);
       }
+      log.trace("Instrumenting annotated method: {}", method.getName());
     }
     try {
       final StringWriter sw = new StringWriter();
@@ -209,7 +234,7 @@ public class TraceAnnotationsManager {
         transformer.installScript(
             Arrays.asList(generatedScripts.toString()), Arrays.asList("@Trace annotations"), pr);
       }
-      log.debug(sw.toString());
+      log.trace("Install new rules: \n{}", sw.toString());
     } catch (final Exception e) {
       log.warn("Could not install annotation scripts.", e);
     }
@@ -263,23 +288,6 @@ public class TraceAnnotationsManager {
     scripts.add(str.toString());
     scriptNames.add(uri.toString());
   }
-
-  private static final String CURRENT_SPAN_EXISTS = "IF TRUE\n";
-
-  private static final String BUILD_SPAN = "DO\n" + "getTracer().buildSpan(\"";
-  private static final String CLOSE_PARENTHESIS = "\")";
-
-  private static final String START = ".startActive();";
-
-  private static final String EXIT_RULE =
-      "IF getTracer().activeSpan() != null\n" + "DO\n" + "getTracer().activeSpan().deactivate();\n";
-
-  private static final String EXCEPTION_EXIT_RULE =
-      "BIND span:io.opentracing.ActiveSpan = getTracer().activeSpan()\n"
-          + "IF span != null\n"
-          + "DO\n"
-          + "span.setTag(io.opentracing.tag.Tags.ERROR.getKey(),\"true\");\n"
-          + "span.deactivate();\n";
 
   private static String buildSpan(final CtMethod javassistMethod) {
     try {

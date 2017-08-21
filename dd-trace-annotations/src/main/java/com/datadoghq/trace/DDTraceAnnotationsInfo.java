@@ -2,7 +2,9 @@ package com.datadoghq.trace;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class DDTraceAnnotationsInfo {
   public static final String VERSION;
 
@@ -23,5 +25,6 @@ public class DDTraceAnnotationsInfo {
       v = "unknown";
     }
     VERSION = v;
+    log.debug("dd-trace-annotations - version: {}", v);
   }
 }
