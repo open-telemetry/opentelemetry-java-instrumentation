@@ -18,10 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 public class InstrumentationChecker {
 
   private static final String CONFIG_FILE = "dd-trace-supported-framework";
+  private static InstrumentationChecker INSTANCE;
   private final Map<String, List<Map<String, String>>> rules;
   private final Map<String, String> frameworks;
-
-  private static InstrumentationChecker INSTANCE;
 
   /* For testing purpose */
   InstrumentationChecker(
@@ -48,6 +47,65 @@ public class InstrumentationChecker {
     }
 
     return INSTANCE.doGetUnsupportedRules();
+  }
+
+  private static Map<String, String> scanLoadedLibraries() {
+
+    final Map<String, String> frameworks = new HashMap<>();
+
+    // Scan classpath provided jars
+    final List<File> jars = getJarFiles(System.getProperty("java.class.path"));
+    for (final File file : jars) {
+
+      final String jarName = file.getName();
+      final String version = extractJarVersion(jarName);
+
+      if (version != null) {
+
+        // Extract artifactId
+        final String artifactId = file.getName().substring(0, jarName.indexOf(version) - 1);
+
+        // Store it
+        frameworks.put(artifactId, version);
+      }
+    }
+    log.debug("{} libraries found in the class-path", frameworks.size());
+
+    return frameworks;
+  }
+
+  private static List<File> getJarFiles(final String paths) {
+    final List<File> filesList = new ArrayList<>();
+    for (final String path : paths.split(File.pathSeparator)) {
+      final File file = new File(path);
+      if (file.isDirectory()) {
+        recurse(filesList, file);
+      } else {
+        if (file.getName().endsWith(".jar")) {
+          log.trace("{} found in the classpath", file.getName());
+          filesList.add(file);
+        }
+      }
+    }
+    return filesList;
+  }
+
+  private static void recurse(final List<File> filesList, final File f) {
+    final File[] list = f.listFiles();
+    for (final File file : list) {
+      getJarFiles(file.getPath());
+    }
+  }
+
+  private static String extractJarVersion(final String jarName) {
+
+    final Pattern versionPattern = Pattern.compile("-(\\d+\\..+)\\.jar");
+    final Matcher matcher = versionPattern.matcher(jarName);
+    if (matcher.find()) {
+      return matcher.group(1);
+    } else {
+      return null;
+    }
   }
 
   private List<String> doGetUnsupportedRules() {
@@ -82,62 +140,5 @@ public class InstrumentationChecker {
     }
 
     return unsupportedRules;
-  }
-
-  private static Map<String, String> scanLoadedLibraries() {
-
-    final Map<String, String> frameworks = new HashMap<>();
-
-    // Scan classpath provided jars
-    final List<File> jars = getJarFiles(System.getProperty("java.class.path"));
-    for (final File file : jars) {
-
-      final String jarName = file.getName();
-      final String version = extractJarVersion(jarName);
-
-      if (version != null) {
-
-        // Extract artifactId
-        final String artifactId = file.getName().substring(0, jarName.indexOf(version) - 1);
-
-        // Store it
-        frameworks.put(artifactId, version);
-      }
-    }
-
-    return frameworks;
-  }
-
-  private static List<File> getJarFiles(final String paths) {
-    final List<File> filesList = new ArrayList<>();
-    for (final String path : paths.split(File.pathSeparator)) {
-      final File file = new File(path);
-      if (file.isDirectory()) {
-        recurse(filesList, file);
-      } else {
-        if (file.getName().endsWith(".jar")) {
-          filesList.add(file);
-        }
-      }
-    }
-    return filesList;
-  }
-
-  private static void recurse(final List<File> filesList, final File f) {
-    final File[] list = f.listFiles();
-    for (final File file : list) {
-      getJarFiles(file.getPath());
-    }
-  }
-
-  private static String extractJarVersion(final String jarName) {
-
-    final Pattern versionPattern = Pattern.compile("-(\\d+\\..+)\\.jar");
-    final Matcher matcher = versionPattern.matcher(jarName);
-    if (matcher.find()) {
-      return matcher.group(1);
-    } else {
-      return null;
-    }
   }
 }
