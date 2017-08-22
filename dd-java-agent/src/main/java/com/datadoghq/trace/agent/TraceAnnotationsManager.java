@@ -123,6 +123,8 @@ public class TraceAnnotationsManager {
       return scripts;
     }
 
+    log.debug("Loading rules with classloader {}", classLoader == null ? "bootstrap" : classLoader);
+
     final List<String> scriptNames = new ArrayList<>();
 
     // Load default and custom rules
@@ -140,7 +142,7 @@ public class TraceAnnotationsManager {
           log.warn("Failed to install scripts", e);
         }
       }
-      log.trace(sw.toString());
+      log.debug(sw.toString());
     } catch (IOException | URISyntaxException e) {
       log.warn("Failed to load OpenTracing agent rules", e);
     }
