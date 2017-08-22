@@ -25,6 +25,6 @@ public class DDTraceAnnotationsInfo {
       v = "unknown";
     }
     VERSION = v;
-    log.debug("dd-trace-annotations - version: {}", v);
+    log.info("dd-trace-annotations - version: {}", v);
   }
 }

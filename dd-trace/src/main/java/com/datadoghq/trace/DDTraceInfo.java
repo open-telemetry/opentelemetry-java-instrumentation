@@ -28,6 +28,6 @@ public class DDTraceInfo {
       v = "unknown";
     }
     VERSION = v;
-    log.debug("dd-trace - version: {}", v);
+    log.info("dd-trace - version: {}", v);
   }
 }

@@ -24,6 +24,6 @@ public class DDJavaAgentInfo {
       v = "unknown";
     }
     VERSION = v;
-    log.debug("dd-java-agent - version: {}", v);
+    log.info("dd-java-agent - version: {}", v);
   }
 }
