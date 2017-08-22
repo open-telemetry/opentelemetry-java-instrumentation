@@ -69,28 +69,44 @@ public class InstrumentationChecker {
       // Check rules
       boolean supported = false;
       for (final ArtifactSupport check : rules.get(rule)) {
-        if (frameworks.containsKey(check.artifact)) {
+        log.debug("Checking rule {}", check);
+
+        boolean matched = true;
+        for (final String identifyingClass : check.identifyingPresentClasses) {
+          final boolean classPresent = isClassPresent(identifyingClass);
+          if (!classPresent) {
+            log.debug(
+                "Instrumentation {} not applied due to missing class {}.", rule, identifyingClass);
+          }
+          matched &= classPresent;
+        }
+        for (final String identifyingClass : check.identifyingMissingClasses) {
+          final boolean classMissing = !isClassPresent(identifyingClass);
+          if (!classMissing) {
+            log.debug(
+                "Instrumentation {} not applied due to present class {}.", rule, identifyingClass);
+          }
+          matched &= classMissing;
+        }
+
+        final boolean useVersionMatching =
+            frameworks.containsKey(check.artifact)
+                && check.identifyingMissingClasses.isEmpty()
+                && check.identifyingPresentClasses.isEmpty();
+        if (useVersionMatching) {
           // If no classes to scan, fall back on version regex.
-          boolean matched =
-              check.identifyingPresentClasses.isEmpty() && check.identifyingMissingClasses.isEmpty()
-                  ? Pattern.matches(check.supportedVersion, frameworks.get(check.artifact))
-                  : true;
-          for (final String identifyingClass : check.identifyingPresentClasses) {
-            matched &= isClassPresent(identifyingClass);
-          }
-          for (final String identifyingClass : check.identifyingMissingClasses) {
-            matched &= !isClassPresent(identifyingClass);
-          }
+          matched = Pattern.matches(check.supportedVersion, frameworks.get(check.artifact));
           if (!matched) {
             log.debug(
                 "Library conflict: supported_version={}, actual_version={}",
                 check.supportedVersion,
                 frameworks.get(check.artifact));
-            supported = false;
-            break;
           }
-          supported = true;
-          log.trace("Instrumentation rule={} is supported", rule);
+        }
+
+        supported |= matched;
+        if (supported) {
+          break;
         }
       }
 

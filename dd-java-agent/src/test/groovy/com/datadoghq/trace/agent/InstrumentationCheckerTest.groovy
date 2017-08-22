@@ -21,7 +21,6 @@ class InstrumentationCheckerTest extends Specification {
     def rules = InstrumentationChecker.getUnsupportedRules(java.lang.ClassLoader.getSystemClassLoader())
 
     expect:
-    rules.size() == 3
     rules.sort() == ["unsupportedRuleOne", "unsupportedRuleThree", "unsupportedRuleTwo"]
   }
 

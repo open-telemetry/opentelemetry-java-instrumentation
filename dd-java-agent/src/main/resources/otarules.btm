@@ -91,6 +91,7 @@ ENDRULE
 RULE opentracing-web-servlet-filter_tomcat
 CLASS org.apache.catalina.core.ApplicationContext
 METHOD <init>
+IMPORT javax.servlet.Filter
 HELPER com.datadoghq.trace.agent.integration.TomcatServletHelper
 AT EXIT
 IF TRUE
