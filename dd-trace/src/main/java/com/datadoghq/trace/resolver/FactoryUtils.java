@@ -30,7 +30,7 @@ public class FactoryUtils {
   }
 
   public static <A> A loadConfigFromFilePropertyOrResource(
-      final String systemProperty, final String resourceName, final TypeReference type) {
+      final String systemProperty, final String resourceName, final TypeReference<A> type) {
     final String filePath = System.getProperty(systemProperty);
     if (filePath != null) {
       try {
@@ -74,7 +74,8 @@ public class FactoryUtils {
     return config;
   }
 
-  public static <A> A loadConfigFromResource(final String resourceName, final TypeReference type) {
+  public static <A> A loadConfigFromResource(
+      final String resourceName, final TypeReference<A> type) {
     A config = null;
 
     // Try loading both suffixes

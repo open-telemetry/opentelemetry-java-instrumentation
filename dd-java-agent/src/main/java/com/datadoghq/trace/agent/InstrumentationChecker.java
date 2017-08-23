@@ -1,7 +1,6 @@
 package com.datadoghq.trace.agent;
 
 import com.datadoghq.trace.resolver.FactoryUtils;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.File;
@@ -193,7 +192,6 @@ public class InstrumentationChecker {
   }
 
   @Data
-  @JsonIgnoreProperties("check")
   static class ArtifactSupport {
     private String artifact;
 

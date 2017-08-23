@@ -12,7 +12,7 @@ to trace the endpoints.
 Be sure to build the project so that the latest version of ``dd-trace-java`` components are used. You can build
 all libraries and examples launching from the ``dd-trace-java`` root folder:
 ```bash
-./gradlew clean shadowJar
+./gradlew clean shadowJar bootRepackage
 ```
 
 Then you can launch the Datadog agent as follows:
@@ -30,9 +30,14 @@ To launch the application, just:
 ./gradlew bootRun
 ```
 
-The ``bootRun`` Gradle command appends automatically the ``-javaagent`` argument, so that you don't need to specify
+*Note: The ``bootRun`` Gradle command appends automatically the ``-javaagent`` argument, so that you don't need to specify
 the path of the Java Agent. Gradle executes the ``:dd-trace-examples:spring-boot-jdbc:bootRun`` task until you
-stop it.
+stop it.*
+
+Or as an executable jar:
+```bash
+java -javaagent:../../dd-java-agent/build/libs/dd-java-agent-{version}.jar -jar build/libs/spring-boot-jdbc-demo.jar
+```
 
 ### Generate traces
 

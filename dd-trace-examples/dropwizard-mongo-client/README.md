@@ -12,7 +12,7 @@ auto-instrumentation for all endpoints. Manual instrumentation has been added as
 Be sure to build the project so that the latest version of ``dd-trace-java`` components are used. You can build
 all libraries and examples launching from the ``dd-trace-java`` root folder:
 ```bash
-./gradlew clean shadowJar
+./gradlew clean shadowJar installDist
 ```
 
 Then you can start all services via Docker:
@@ -28,6 +28,11 @@ A valid ``DD_API_KEY`` is required to post collected traces to the Datadog backe
 Launch the application using the run wrapper you've built during the ``installDist`` step:
 ```bash
 JAVA_OPTS=-javaagent:../../dd-java-agent/build/libs/dd-java-agent-{version}.jar build/install/dropwizard-mongo-client/bin/dropwizard-mongo-client server
+```
+
+Or as an executable jar:
+```bash
+java -javaagent:../../dd-java-agent/build/libs/dd-java-agent-{version}.jar -jar build/libs/dropwizard-mongo-client-demo-all.jar server
 ```
 
 ``0.2.0-SNAPSHOT`` is an example of what ``{version}`` looks like.
