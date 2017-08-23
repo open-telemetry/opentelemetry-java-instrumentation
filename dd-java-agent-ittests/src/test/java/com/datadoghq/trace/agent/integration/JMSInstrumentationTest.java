@@ -2,8 +2,6 @@ package com.datadoghq.trace.agent.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentracing.contrib.jms.TracingMessageProducer;
-import io.opentracing.contrib.jms.common.TracingMessageConsumer;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
@@ -40,7 +38,7 @@ public class JMSInstrumentationTest {
     MessageProducer producer = session.createProducer(destination);
     MessageConsumer consumer = session.createConsumer(destination);
 
-    assertThat(producer).isInstanceOf(TracingMessageProducer.class);
-    assertThat(consumer).isInstanceOf(TracingMessageConsumer.class);
+    assertThat(producer.getClass().getSimpleName()).isEqualTo("TracingMessageProducer");
+    assertThat(consumer.getClass().getSimpleName()).isEqualTo("TracingMessageConsumer");
   }
 }
