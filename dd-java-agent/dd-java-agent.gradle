@@ -37,7 +37,6 @@ dependencies {
     exclude(group: 'org.mongodb', module: 'mongodb-driver-async')
     exclude(group: 'org.mongodb', module: 'mongo-java-driver')
   }
-  compile group: 'io.opentracing.contrib', name: 'opentracing-jdbc', version: '0.0.2'
   compile(group: 'io.opentracing.contrib', name: 'opentracing-okhttp3', version: '0.0.5') {
     exclude(group: 'com.squareup.okhttp3', module: 'okhttp')
   }
@@ -69,6 +68,9 @@ dependencies {
   compileOnly group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.119'
   compileOnly group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'
   compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3'
+
+  // Not bundled in with the agent.  Usage requires being on the app's classpath (eg. Spring Boot's executable jar)
+  compileOnly group: 'io.opentracing.contrib', name: 'opentracing-jdbc', version: '0.0.3'
 }
 
 jar {

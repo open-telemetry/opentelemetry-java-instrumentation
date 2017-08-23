@@ -180,6 +180,10 @@ public class InstrumentationChecker {
   }
 
   private boolean isClassPresent(final String identifyingPresentClass) {
+    return isClassPresent(identifyingPresentClass, classLoader);
+  }
+
+  static boolean isClassPresent(final String identifyingPresentClass, ClassLoader classLoader) {
     try {
       return identifyingPresentClass != null
           && Class.forName(identifyingPresentClass, false, classLoader) != null;
