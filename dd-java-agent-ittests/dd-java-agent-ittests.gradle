@@ -43,6 +43,10 @@ test {
   jvmArgs "-Ddd.trace.configurationFile=${project.buildDir}/resources/test/dd-trace.yaml"
   jvmArgs "-javaagent:${project(':dd-java-agent').buildDir}/libs/dd-java-agent-${project.version}.jar"
   jvmArgs "-Dorg.jboss.byteman.verbose=true"
+
+  if (project.hasProperty("disableShadowRelocate") && disableShadowRelocate) {
+    exclude 'com/datadoghq/trace/agent/ShadowPackageRenamingTest.class'
+  }
 }
 
 test.dependsOn project(':dd-java-agent').shadowJar

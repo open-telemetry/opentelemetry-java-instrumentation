@@ -91,20 +91,22 @@ shadowJar {
 
 //    mergeServiceFiles()
 
-  // Don't relocate slf4j or opentracing deps.
-  relocate 'com.fasterxml', 'dd.deps.com.fasterxml'
-  relocate 'javassist', 'dd.deps.javassist'
-  relocate 'org.reflections', 'dd.deps.org.reflections'
-  relocate 'org.yaml', 'dd.deps.org.yaml'
+  if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
+    // Don't relocate slf4j or opentracing deps.
+    relocate 'com.fasterxml', 'dd.deps.com.fasterxml'
+    relocate 'javassist', 'dd.deps.javassist'
+    relocate 'org.reflections', 'dd.deps.org.reflections'
+    relocate 'org.yaml', 'dd.deps.org.yaml'
 
-  relocate('org.jboss.byteman', 'dd.deps.org.jboss.byteman') {
-    // Renaming these causes a verify error in the tests.
-    exclude 'org.jboss.byteman.rule.*'
-    exclude 'org.jboss.byteman.rule.helper.*'
-  }
-  relocate('com.google', 'dd.deps.com.google') {
-    // This is used in the Cassandra Cluster.connectAsync signature so we can't relocate it. :fingers_crossed:
-    exclude 'com.google.common.util.concurrent.ListenableFuture'
+    relocate('org.jboss.byteman', 'dd.deps.org.jboss.byteman') {
+      // Renaming these causes a verify error in the tests.
+      exclude 'org.jboss.byteman.rule.*'
+      exclude 'org.jboss.byteman.rule.helper.*'
+    }
+    relocate('com.google', 'dd.deps.com.google') {
+      // This is used in the Cassandra Cluster.connectAsync signature so we can't relocate it. :fingers_crossed:
+      exclude 'com.google.common.util.concurrent.ListenableFuture'
+    }
   }
 
   //Exclude Java 9 compiled classes:
