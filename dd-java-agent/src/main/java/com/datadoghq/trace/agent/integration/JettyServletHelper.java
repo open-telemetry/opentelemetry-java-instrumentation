@@ -3,6 +3,7 @@ package com.datadoghq.trace.agent.integration;
 import io.opentracing.contrib.web.servlet.filter.TracingFilter;
 import java.util.EnumSet;
 import javax.servlet.Filter;
+import javax.servlet.FilterRegistration;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.jboss.byteman.rule.Rule;
 
@@ -25,11 +26,11 @@ public class JettyServletHelper extends DDAgentTracingHelper<ServletContextHandl
     String[] patterns = {"/*"};
 
     Filter filter = new TracingFilter(tracer);
-    contextHandler
-        .getServletContext()
-        .addFilter("tracingFilter", filter)
-        .addMappingForUrlPatterns(
-            EnumSet.allOf(javax.servlet.DispatcherType.class), true, patterns);
+    FilterRegistration.Dynamic registration =
+        contextHandler.getServletContext().addFilter("tracingFilter", filter);
+    registration.setAsyncSupported(true);
+    registration.addMappingForUrlPatterns(
+        EnumSet.allOf(javax.servlet.DispatcherType.class), true, patterns);
 
     setState(contextHandler.getServletContext(), 1);
     return contextHandler;

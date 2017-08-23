@@ -3,6 +3,7 @@ package com.datadoghq.trace.agent.integration;
 import io.opentracing.contrib.web.servlet.filter.TracingFilter;
 import java.util.EnumSet;
 import javax.servlet.Filter;
+import javax.servlet.FilterRegistration;
 import org.apache.catalina.core.ApplicationContext;
 import org.jboss.byteman.rule.Rule;
 
@@ -25,10 +26,10 @@ public class TomcatServletHelper extends DDAgentTracingHelper<ApplicationContext
     String[] patterns = {"/*"};
 
     Filter filter = new TracingFilter(tracer);
-    contextHandler
-        .addFilter("tracingFilter", filter)
-        .addMappingForUrlPatterns(
-            EnumSet.allOf(javax.servlet.DispatcherType.class), true, patterns);
+    FilterRegistration.Dynamic registration = contextHandler.addFilter("tracingFilter", filter);
+    registration.setAsyncSupported(true);
+    registration.addMappingForUrlPatterns(
+        EnumSet.allOf(javax.servlet.DispatcherType.class), true, patterns);
 
     return contextHandler;
   }
