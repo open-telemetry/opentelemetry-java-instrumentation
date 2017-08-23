@@ -17,6 +17,8 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
   'com.datadoghq.trace.agent.InstrumentationChecker',
   'com.datadoghq.trace.agent.DDJavaAgentInfo',
   'io.opentracing.contrib.mongo.TracingCommandListenerFactory',
+  'com.datadoghq.trace.agent.InstrumentationChecker.1',
+  'com.datadoghq.trace.agent.InstrumentationChecker.ArtifactSupport',
 ]
 
 dependencies {

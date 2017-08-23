@@ -9,6 +9,7 @@ target
 #########
 !**/gradle/wrapper/*
 /.gradle
+*/.gradle
 **/build/
 dd-trace-examples/**/build/
 
@@ -47,3 +48,4 @@ Thumbs.db
 /bin
 /out
 */out
+dd-trace-examples/*/out

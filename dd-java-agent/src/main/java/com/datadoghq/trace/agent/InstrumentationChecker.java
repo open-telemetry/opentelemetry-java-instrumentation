@@ -1,13 +1,18 @@
 package com.datadoghq.trace.agent;
 
 import com.datadoghq.trace.resolver.FactoryUtils;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -19,19 +24,26 @@ public class InstrumentationChecker {
 
   private static final String CONFIG_FILE = "dd-trace-supported-framework";
   private static InstrumentationChecker INSTANCE;
-  private final Map<String, List<Map<String, String>>> rules;
+
+  private final Map<String, List<ArtifactSupport>> rules;
   private final Map<String, String> frameworks;
+
+  private final ClassLoader classLoader;
 
   /* For testing purpose */
   InstrumentationChecker(
-      final Map<String, List<Map<String, String>>> rules, final Map<String, String> frameworks) {
+      final Map<String, List<ArtifactSupport>> rules, final Map<String, String> frameworks) {
     this.rules = rules;
     this.frameworks = frameworks;
+    this.classLoader = ClassLoader.getSystemClassLoader();
     INSTANCE = this;
   }
 
-  private InstrumentationChecker() {
-    rules = FactoryUtils.loadConfigFromResource(CONFIG_FILE, Map.class);
+  private InstrumentationChecker(final ClassLoader classLoader) {
+    this.classLoader = classLoader;
+    rules =
+        FactoryUtils.loadConfigFromResource(
+            CONFIG_FILE, new TypeReference<Map<String, List<ArtifactSupport>>>() {});
     frameworks = scanLoadedLibraries();
   }
 
@@ -39,11 +51,12 @@ public class InstrumentationChecker {
    * Return a list of unsupported rules regarding loading deps
    *
    * @return the list of unsupported rules
+   * @param classLoader
    */
-  public static synchronized List<String> getUnsupportedRules() {
+  public static synchronized List<String> getUnsupportedRules(final ClassLoader classLoader) {
 
     if (INSTANCE == null) {
-      INSTANCE = new InstrumentationChecker();
+      INSTANCE = new InstrumentationChecker(classLoader);
     }
 
     return INSTANCE.doGetUnsupportedRules();
@@ -115,21 +128,45 @@ public class InstrumentationChecker {
 
       // Check rules
       boolean supported = false;
-      for (final Map<String, String> check : rules.get(rule)) {
-        if (frameworks.containsKey(check.get("artifact"))) {
-          final boolean matched =
-              Pattern.matches(
-                  check.get("supported_version"), frameworks.get(check.get("artifact")));
+      for (final ArtifactSupport check : rules.get(rule)) {
+        log.debug("Checking rule {}", check);
+
+        boolean matched = true;
+        for (final String identifyingClass : check.identifyingPresentClasses) {
+          final boolean classPresent = isClassPresent(identifyingClass);
+          if (!classPresent) {
+            log.debug(
+                "Instrumentation {} not applied due to missing class {}.", rule, identifyingClass);
+          }
+          matched &= classPresent;
+        }
+        for (final String identifyingClass : check.identifyingMissingClasses) {
+          final boolean classMissing = !isClassPresent(identifyingClass);
+          if (!classMissing) {
+            log.debug(
+                "Instrumentation {} not applied due to present class {}.", rule, identifyingClass);
+          }
+          matched &= classMissing;
+        }
+
+        final boolean useVersionMatching =
+            frameworks.containsKey(check.artifact)
+                && check.identifyingMissingClasses.isEmpty()
+                && check.identifyingPresentClasses.isEmpty();
+        if (useVersionMatching) {
+          // If no classes to scan, fall back on version regex.
+          matched = Pattern.matches(check.supportedVersion, frameworks.get(check.artifact));
           if (!matched) {
             log.debug(
                 "Library conflict: supported_version={}, actual_version={}",
-                check.get("supported_version"),
-                frameworks.get(check.get("artifact")));
-            supported = false;
-            break;
+                check.supportedVersion,
+                frameworks.get(check.artifact));
           }
-          supported = true;
-          log.trace("Instrumentation rule={} is supported", rule);
+        }
+
+        supported |= matched;
+        if (supported) {
+          break;
         }
       }
 
@@ -140,5 +177,29 @@ public class InstrumentationChecker {
     }
 
     return unsupportedRules;
+  }
+
+  private boolean isClassPresent(final String identifyingPresentClass) {
+    try {
+      return identifyingPresentClass != null
+          && Class.forName(identifyingPresentClass, false, classLoader) != null;
+    } catch (final ClassNotFoundException e) {
+      return false;
+    }
+  }
+
+  @Data
+  @JsonIgnoreProperties("check")
+  static class ArtifactSupport {
+    private String artifact;
+
+    @JsonProperty("supported_version")
+    private String supportedVersion;
+
+    @JsonProperty("identifying_present_classes")
+    private List<String> identifyingPresentClasses = Collections.emptyList();
+
+    @JsonProperty("identifying_missing_classes")
+    private List<String> identifyingMissingClasses = Collections.emptyList();
   }
 }

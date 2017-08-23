@@ -8,26 +8,16 @@
 ###
 
 
-# Instrument Mongo client
-# ========================
-RULE opentracing-mongo-driver
-CLASS com.mongodb.MongoClientOptions$Builder
-METHOD build
-HELPER com.datadoghq.trace.agent.integration.MongoHelper
-AT ENTRY
-IF getState($0) == 0
-DO
-  patch($this);
-ENDRULE
-
-RULE mongo-decorator
-CLASS io.opentracing.contrib.mongo.TracingCommandListener
-METHOD decorate
-HELPER com.datadoghq.trace.agent.integration.MongoHelper
+# Instrument Apache HTTP Client
+# =============================
+RULE opentracing-apache-httpclient
+CLASS org.apache.http.impl.client.HttpClientBuilder
+METHOD create()
+HELPER com.datadoghq.trace.agent.integration.ApacheHTTPClientHelper
 AT EXIT
 IF TRUE
 DO
-  decorate($1, $2);
+  $! = patch($!);
 ENDRULE
 
 
@@ -45,19 +35,6 @@ DO
 ENDRULE
 
 
-# Instrument Apache HTTP Client
-# =============================
-RULE opentracing-apache-httpclient
-CLASS org.apache.http.impl.client.HttpClientBuilder
-METHOD create()
-HELPER com.datadoghq.trace.agent.integration.ApacheHTTPClientHelper
-AT EXIT
-IF TRUE
-DO
-  $! = patch($!);
-ENDRULE
-
-
 # Instrument Cassandra client
 # ===========================
 RULE opentracing-cassandra-driver
@@ -68,47 +45,6 @@ AT EXIT
 IF TRUE
 DO
    $! = patch($!);
-ENDRULE
-
-
-# Instrument Jetty
-# ===========================
-# State 0 - no filter installed
-# State 1 - filter installed
-RULE opentracing-web-servlet-filter_jetty
-CLASS org.eclipse.jetty.servlet.ServletContextHandler
-METHOD <init>
-HELPER com.datadoghq.trace.agent.integration.JettyServletHelper
-AT EXIT
-IF getState($0.getServletContext()) == 0
-DO
-    patch($this)
-ENDRULE
-
-
-# Instrument Tomcat
-# ===========================
-RULE opentracing-web-servlet-filter_tomcat
-CLASS org.apache.catalina.core.ApplicationContext
-METHOD <init>
-HELPER com.datadoghq.trace.agent.integration.TomcatServletHelper
-AT EXIT
-IF TRUE
-DO
-    patch($this)
-ENDRULE
-
-
-# Instrument OkHttp
-# ===========================
-RULE opentracing-okhttp3
-CLASS okhttp3.OkHttpClient$Builder
-METHOD build()
-HELPER com.datadoghq.trace.agent.integration.OkHttpHelper
-AT ENTRY
-IF TRUE
-DO
-    patch($this)
 ENDRULE
 
 
@@ -133,5 +69,69 @@ AT EXIT
 IF TRUE
 DO
    $! = patch($!);
+ENDRULE
+
+
+# Instrument Mongo client
+# ========================
+RULE opentracing-mongo-driver
+CLASS com.mongodb.MongoClientOptions$Builder
+METHOD build
+HELPER com.datadoghq.trace.agent.integration.MongoHelper
+AT ENTRY
+IF getState($0) == 0
+DO
+  patch($this);
+ENDRULE
+
+RULE opentracing-mongo-driver-helper
+CLASS io.opentracing.contrib.mongo.TracingCommandListener
+METHOD decorate
+HELPER com.datadoghq.trace.agent.integration.MongoHelper
+AT EXIT
+IF TRUE
+DO
+  decorate($1, $2);
+ENDRULE
+
+
+# Instrument OkHttp
+# ===========================
+RULE opentracing-okhttp3
+CLASS okhttp3.OkHttpClient$Builder
+METHOD build()
+HELPER com.datadoghq.trace.agent.integration.OkHttpHelper
+AT ENTRY
+IF TRUE
+DO
+    patch($this)
+ENDRULE
+
+
+# Instrument Servlet - Jetty
+# ===========================
+# State 0 - no filter installed
+# State 1 - filter installed
+RULE opentracing-web-servlet-filter_jetty
+CLASS org.eclipse.jetty.servlet.ServletContextHandler
+METHOD <init>
+HELPER com.datadoghq.trace.agent.integration.JettyServletHelper
+AT EXIT
+IF getState($0.getServletContext()) == 0
+DO
+    patch($this)
+ENDRULE
+
+
+# Instrument Servlet - Tomcat
+# ===========================
+RULE opentracing-web-servlet-filter_tomcat
+CLASS org.apache.catalina.core.ApplicationContext
+METHOD <init>
+HELPER com.datadoghq.trace.agent.integration.TomcatServletHelper
+AT EXIT
+IF TRUE
+DO
+    patch($this)
 ENDRULE
 
