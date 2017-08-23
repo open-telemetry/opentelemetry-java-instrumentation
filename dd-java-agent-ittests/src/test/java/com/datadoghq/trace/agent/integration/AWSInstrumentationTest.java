@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import io.opentracing.contrib.aws.TracingRequestHandler;
 import org.junit.Test;
 
 public class AWSInstrumentationTest {
@@ -19,7 +18,7 @@ public class AWSInstrumentationTest {
 
     assertThat(builder.getRequestHandlers()).isNotNull();
     assertThat(builder.getRequestHandlers().size()).isEqualTo(1);
-    assertThat(builder.getRequestHandlers().get(0).getClass())
-        .isEqualTo(TracingRequestHandler.class);
+    assertThat(builder.getRequestHandlers().get(0).getClass().getSimpleName())
+        .isEqualTo("TracingRequestHandler");
   }
 }
