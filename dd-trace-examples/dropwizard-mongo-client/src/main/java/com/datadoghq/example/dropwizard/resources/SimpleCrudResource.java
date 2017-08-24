@@ -14,6 +14,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import org.bson.Document;
 
@@ -94,6 +96,13 @@ public class SimpleCrudResource {
     afterDB();
 
     return books;
+  }
+
+  @GET
+  @Path("/async")
+  public void async(@Suspended AsyncResponse response) {
+    // not actually async, but useful for testing that codepath.
+    response.resume("Returned from async");
   }
 
   /**
