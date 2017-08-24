@@ -139,6 +139,12 @@ class VersionScanPlugin implements Plugin<Project> {
 
             def errors = []
             for (String className : verifyPresent.keySet()) {
+              if (project.versionScan.scanMethods && verifyPresent.get(className) == null) {
+                throw new AssertionError("When 'scanMethods' is enabled, a method must be configured for '$className'")
+              } else if (!project.versionScan.scanMethods && verifyPresent.get(className) != null) {
+                throw new AssertionError("When 'scanMethods' is not enabled, configured method must be null for '$className'")
+              }
+
               String identifier = project.versionScan.scanMethods ? "$className|${verifyPresent.get(className)}" : className
               if (!keyPresent.get().contains(identifier)) {
                 errors << "not a 'keyPresent' identifier: $identifier"

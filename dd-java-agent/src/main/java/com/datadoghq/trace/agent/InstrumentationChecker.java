@@ -4,6 +4,7 @@ import com.datadoghq.trace.resolver.FactoryUtils;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.File;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -131,11 +132,33 @@ public class InstrumentationChecker {
         log.debug("Checking rule {}", check);
 
         boolean matched = true;
-        for (final String identifyingClass : check.identifyingPresentClasses) {
-          final boolean classPresent = isClassPresent(identifyingClass);
+        for (final Map.Entry<String, String> identifier :
+            check.identifyingPresentClasses.entrySet()) {
+          final boolean classPresent = isClassPresent(identifier.getKey());
           if (!classPresent) {
-            log.debug(
-                "Instrumentation {} not applied due to missing class {}.", rule, identifyingClass);
+            log.debug("Instrumentation {} not applied due to missing class {}.", rule, identifier);
+          } else {
+            String identifyingMethod = identifier.getValue();
+            if (identifyingMethod != null && !identifyingMethod.isEmpty()) {
+              Class clazz = getClassIfPresent(identifier.getKey(), classLoader);
+              // already confirmed above the class is there.
+              Method[] declaredMethods = clazz.getDeclaredMethods();
+              boolean methodFound = false;
+              for (Method m : declaredMethods) {
+                if (m.getName().equals(identifyingMethod)) {
+                  methodFound = true;
+                  break;
+                }
+              }
+              if (!methodFound) {
+                log.debug(
+                    "Instrumentation {} not applied due to missing method {}.{}",
+                    rule,
+                    identifier.getKey(),
+                    identifyingMethod);
+                matched = false;
+              }
+            }
           }
           matched &= classPresent;
         }
@@ -183,11 +206,14 @@ public class InstrumentationChecker {
   }
 
   static boolean isClassPresent(final String identifyingPresentClass, ClassLoader classLoader) {
+    return getClassIfPresent(identifyingPresentClass, classLoader) != null;
+  }
+
+  static Class getClassIfPresent(final String identifyingPresentClass, ClassLoader classLoader) {
     try {
-      return identifyingPresentClass != null
-          && Class.forName(identifyingPresentClass, false, classLoader) != null;
-    } catch (final ClassNotFoundException e) {
-      return false;
+      return Class.forName(identifyingPresentClass, false, classLoader);
+    } catch (final Exception e) {
+      return null;
     }
   }
 
@@ -199,7 +225,7 @@ public class InstrumentationChecker {
     private String supportedVersion;
 
     @JsonProperty("identifying_present_classes")
-    private List<String> identifyingPresentClasses = Collections.emptyList();
+    private Map<String, String> identifyingPresentClasses = Collections.emptyMap();
 
     @JsonProperty("identifying_missing_classes")
     private List<String> identifyingMissingClasses = Collections.emptyList();
