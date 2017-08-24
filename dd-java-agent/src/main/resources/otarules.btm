@@ -44,7 +44,7 @@ HELPER com.datadoghq.trace.agent.integration.CassandraHelper
 AT EXIT
 IF TRUE
 DO
-   $! = patch($!);
+  $! = patch($!);
 ENDRULE
 
 
@@ -57,7 +57,7 @@ HELPER com.datadoghq.trace.agent.integration.JMSMessageProducerHelper
 AT EXIT
 IF TRUE
 DO
-   $! = patch($!);
+  $! = patch($!);
 ENDRULE
 
 
@@ -68,7 +68,7 @@ HELPER com.datadoghq.trace.agent.integration.JMSMessageConsumerHelper
 AT EXIT
 IF TRUE
 DO
-   $! = patch($!);
+  $! = patch($!);
 ENDRULE
 
 
@@ -104,7 +104,7 @@ HELPER com.datadoghq.trace.agent.integration.OkHttpHelper
 AT ENTRY
 IF TRUE
 DO
-    patch($this)
+  patch($this)
 ENDRULE
 
 
@@ -119,7 +119,7 @@ HELPER com.datadoghq.trace.agent.integration.JettyServletHelper
 AT EXIT
 IF getState($0.getServletContext()) == 0
 DO
-    patch($this)
+  patch($this)
 ENDRULE
 
 
@@ -128,10 +128,10 @@ ENDRULE
 RULE opentracing-web-servlet-filter_tomcat
 CLASS org.apache.catalina.core.ApplicationContext
 METHOD <init>
+COMPILE
 HELPER com.datadoghq.trace.agent.integration.TomcatServletHelper
 AT EXIT
 IF TRUE
 DO
-    patch($this)
+  patch($this)
 ENDRULE
-

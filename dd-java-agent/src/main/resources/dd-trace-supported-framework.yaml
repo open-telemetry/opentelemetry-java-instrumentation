@@ -55,8 +55,7 @@ opentracing-mongo-driver:
       - com.mongodb.operation.AsyncReadOperation
       - com.mongodb.client.model.MapReduceAction
 
-  - check:
-    artifact: mongodb-driver-async
+  - artifact: mongodb-driver-async
     supported_version: 3\..*
     identifying_present_classes:
       - com.mongodb.operation.AsyncReadOperation
@@ -69,8 +68,7 @@ opentracing-mongo-driver-helper:
       - com.mongodb.operation.AsyncReadOperation
       - com.mongodb.client.model.MapReduceAction
 
-  - check:
-    artifact: mongodb-driver-async
+  - artifact: mongodb-driver-async
     supported_version: 3\..*
     identifying_present_classes:
       - com.mongodb.operation.AsyncReadOperation

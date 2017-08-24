@@ -56,17 +56,18 @@ public class TraceAnnotationsManager {
           + "span.setTag(io.opentracing.tag.Tags.ERROR.getKey(),\"true\");\n"
           + "span.deactivate();\n";
   private static Retransformer transformer;
+  private static AgentTracerConfig agentTracerConfig;
 
   /**
    * This method initializes the manager.
    *
    * @param trans The ByteMan retransformer
    */
-  public static void initialize(final Retransformer trans) throws Exception {
+  public static void initialize(final Retransformer trans) {
     log.debug("Initializing {}", TraceAnnotationsManager.class.getSimpleName());
     transformer = trans;
     //Load configuration
-    final AgentTracerConfig agentTracerConfig =
+    agentTracerConfig =
         FactoryUtils.loadConfigFromFilePropertyOrResource(
             DDTracerFactory.SYSTEM_PROPERTY_CONFIG_PATH,
             DDTracerFactory.CONFIG_PATH,
@@ -74,7 +75,25 @@ public class TraceAnnotationsManager {
 
     log.debug("Configuration: {}", agentTracerConfig.toString());
 
-    final List<String> loadedScripts = loadRules(ClassLoader.getSystemClassLoader());
+    if (InstrumentationChecker.isClassPresent(
+        "org.springframework.boot.loader.LaunchedURLClassLoader",
+        ClassLoader.getSystemClassLoader())) {
+      log.info(
+          "Running in the context of a Spring Boot executable jar.  Deferring rule loading to run in the LaunchedURLClassLoader.");
+      loadRules("spring-boot-rule.btm", ClassLoader.getSystemClassLoader());
+    } else {
+      finishInitialization(ClassLoader.getSystemClassLoader());
+    }
+  }
+
+  /**
+   * This method is separated out from initialize to allow Spring Boot's LaunchedURLClassLoader to
+   * call it once it is loaded.
+   *
+   * @param classLoader
+   */
+  public static void finishInitialization(ClassLoader classLoader) {
+    final List<String> loadedScripts = loadRules(AGENT_RULES, classLoader);
 
     //Check if some rules have to be uninstalled
     final List<String> uninstallScripts =
@@ -85,7 +104,12 @@ public class TraceAnnotationsManager {
         uninstallScripts.addAll(disabledInstrumentations);
       }
     }
-    uninstallScripts(loadedScripts, uninstallScripts);
+
+    try {
+      uninstallScripts(loadedScripts, uninstallScripts);
+    } catch (Exception e) {
+      log.warn("Error uninstalling scripts", e);
+    }
 
     //Check if annotations are enabled
     if (agentTracerConfig != null
@@ -130,10 +154,13 @@ public class TraceAnnotationsManager {
    *
    * @param classLoader The classloader
    */
-  public static List<String> loadRules(final ClassLoader classLoader) {
+  public static List<String> loadRules(String rulesFileName, final ClassLoader classLoader) {
     final List<String> scripts = new ArrayList<>();
     if (transformer == null) {
-      log.warn("Attempt to load OpenTracing agent rules before transformer initialized");
+      log.warn(
+          "Attempt to load rules file {} on classloader {} before transformer initialized",
+          rulesFileName,
+          classLoader == null ? "bootstrap" : classLoader);
       return scripts;
     }
 
@@ -143,7 +170,7 @@ public class TraceAnnotationsManager {
 
     // Load default and custom rules
     try {
-      final Enumeration<URL> iter = classLoader.getResources(AGENT_RULES);
+      final Enumeration<URL> iter = classLoader.getResources(rulesFileName);
       while (iter.hasMoreElements()) {
         loadRules(iter.nextElement().toURI(), scriptNames, scripts);
       }
@@ -158,10 +185,10 @@ public class TraceAnnotationsManager {
       }
       log.debug(sw.toString());
     } catch (IOException | URISyntaxException e) {
-      log.warn("Failed to load OpenTracing agent rules", e);
+      log.warn("Failed to load rules", e);
     }
 
-    log.debug("OpenTracing Agent rules loaded");
+    log.debug("Rules loaded from {} on classloader {}", rulesFileName, classLoader);
     if (log.isTraceEnabled()) {
       for (final String rule : scripts) {
         log.trace("Loading rule: {}", rule);
