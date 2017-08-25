@@ -41,9 +41,17 @@ class VersionScanPlugin implements Plugin<Project> {
     def hasRelevantTask = project.gradle.startParameter.taskNames.contains('scanVersions')
     hasRelevantTask |= project.gradle.startParameter.taskNames.contains('scanVersionsReport')
     hasRelevantTask |= project.gradle.startParameter.taskNames.contains('verifyVersionScan')
+
     if (!hasRelevantTask) {
       return
     }
+
+    if (!project.rootProject.version.toString().endsWith("-SNAPSHOT")) {
+      println "Skipping verifyVersionScan for release build."
+      project.task('verifyVersionScan').onlyIf { false }
+      return
+    }
+    
 //    println "Adding scan tasks for $project"
 
     Set<String> allInclude = Sets.newConcurrentHashSet()
