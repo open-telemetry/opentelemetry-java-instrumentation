@@ -14,7 +14,11 @@ jobs:
 
       - run:
           name: Run Tests
-          command: ./gradlew clean check verifyVersionScan --parallel
+          command: ./gradlew clean check --parallel
+
+      - run:
+          name: Verify Version Scan
+          command: ./gradlew verifyVersionScan --parallel
 
       - save_cache:
           paths:
