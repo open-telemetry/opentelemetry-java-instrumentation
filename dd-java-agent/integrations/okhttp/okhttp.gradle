@@ -5,4 +5,9 @@ versionScan {
   module = "okhttp"
   versions = "[3.0,)"
   legacyGroup = "com.squareup.okhttp"
+  verifyPresent = [
+    "okhttp3.Cookie"        : null,
+    "okhttp3.ConnectionPool": null,
+    "okhttp3.Headers"       : null,
+  ]
 }

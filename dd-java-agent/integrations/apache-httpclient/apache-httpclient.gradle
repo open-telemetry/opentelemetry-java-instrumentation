@@ -6,4 +6,8 @@ versionScan {
   versions = "[4.3,)"
   legacyGroup = "commons-httpclient"
   legacyModule = "commons-httpclient"
+  verifyPresent = [
+    "org.apache.http.conn.SchemePortResolver": null,
+    "org.apache.http.conn.ssl.SSLContexts"   : null,
+  ]
 }

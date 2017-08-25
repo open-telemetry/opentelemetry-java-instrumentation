@@ -6,4 +6,9 @@ versionScan {
   group = "com.amazonaws"
   module = "aws-java-sdk-core"
   versions = "[1.11.0,)"
+  verifyPresent = [
+    "com.amazonaws.http.client.HttpClientFactory"  : null,
+    "com.amazonaws.http.apache.utils.ApacheUtils"  : null,
+    "com.amazonaws.http.request.HttpRequestFactory": null,
+  ]
 }

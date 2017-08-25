@@ -4,4 +4,9 @@ versionScan {
   group = "com.datastax.cassandra"
   module = "cassandra-driver-core"
   versions = "[3.2,)"
+  verifyPresent = [
+    "com.datastax.driver.core.utils.MoreObjects"                 : null,
+    "com.datastax.driver.core.RemoteEndpointAwareNettySSLOptions": null,
+    "com.datastax.driver.core.GuavaCompatibility"                : null,
+  ]
 }

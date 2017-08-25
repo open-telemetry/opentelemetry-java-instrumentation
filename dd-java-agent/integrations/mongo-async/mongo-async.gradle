@@ -4,4 +4,8 @@ versionScan {
   group = "org.mongodb"
   module = "mongodb-driver-async"
   versions = "[3.0,)"
+  verifyPresent = [
+    "com.mongodb.operation.AsyncReadOperation": null,
+    "com.mongodb.client.model.MapReduceAction": null,
+  ]
 }
