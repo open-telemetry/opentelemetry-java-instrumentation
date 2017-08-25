@@ -12,7 +12,6 @@ opentracing-apache-httpclient:
     supported_version: 4\.[3|4|5]\..*
     identifying_present_classes:
       - org.apache.http.conn.SchemePortResolver
-      - org.apache.http.config.Lookup
       - org.apache.http.conn.ssl.SSLContexts
 
   - artifact: commons-httpclient

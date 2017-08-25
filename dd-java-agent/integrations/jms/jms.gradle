@@ -5,4 +5,8 @@ versionScan {
   module = "javax.jms-api"
   versions = "[2,)"
   legacyModule = "jms-api"
+  verifyPresent = [
+    "javax.jms.JMSContext"        : null,
+    "javax.jms.CompletionListener": null,
+  ]
 }

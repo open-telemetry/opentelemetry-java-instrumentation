@@ -34,19 +34,23 @@ class VersionScanPlugin implements Plugin<Project> {
     RepositorySystemSession session = newRepositorySystemSession(system)
 
     project.extensions.create("versionScan", VersionScanExtension)
-    project.task('scanVersions') {
+    def scanVersions = project.task('scanVersions') {
       description = "Queries for all versions of configured modules and finds key classes"
     }
 
-    if (!project.gradle.startParameter.taskNames.contains('scanVersions')) {
+    def hasRelevantTask = project.gradle.startParameter.taskNames.contains('scanVersions')
+    hasRelevantTask |= project.gradle.startParameter.taskNames.contains('scanVersionsReport')
+    hasRelevantTask |= project.gradle.startParameter.taskNames.contains('verifyVersionScan')
+    if (!hasRelevantTask) {
       return
     }
-    println "Adding scan tasks for $project"
+//    println "Adding scan tasks for $project"
 
     Set<String> allInclude = Sets.newConcurrentHashSet()
     Set<String> allExclude = Sets.newConcurrentHashSet()
     AtomicReference<Set<String>> keyPresent = new AtomicReference(Collections.emptySet())
     AtomicReference<Set<String>> keyMissing = new AtomicReference(Collections.emptySet())
+
     def scanVersionsReport = project.task('scanVersionsReport') {
       description = "Prints the result of the scanVersions task"
       doLast {
@@ -67,7 +71,9 @@ class VersionScanPlugin implements Plugin<Project> {
         }
       }
     }
-    project.tasks.scanVersions.finalizedBy(scanVersionsReport)
+    if (project.gradle.startParameter.taskNames.contains('scanVersions')) {
+      scanVersions.finalizedBy(scanVersionsReport)
+    }
 
     project.repositories {
       mavenCentral()
@@ -118,6 +124,48 @@ class VersionScanPlugin implements Plugin<Project> {
         return
       }
 
+      Map<String, String> verifyPresent = project.versionScan.verifyPresent
+      List<String> verifyMissing = project.versionScan.verifyMissing
+
+      if (!verifyPresent.isEmpty() || !verifyMissing.isEmpty()) {
+        def verifyVersionScan = project.task('verifyVersionScan') {
+          description = "Validates that the configured classes and methods are only present where expected."
+          doLast {
+            // This may already be done by the report task, but repeating for good measure.
+            keyPresent.get().removeAll(allExclude)
+            keyMissing.get().removeAll(allInclude)
+
+            assert keyPresent.get() != [] || keyMissing.get() != []
+
+            def errors = []
+            for (String className : verifyPresent.keySet()) {
+              String identifier = project.versionScan.scanMethods ? "$className|${verifyPresent.get(className)}" : className
+              if (!keyPresent.get().contains(identifier)) {
+                errors << "not a 'keyPresent' identifier: $identifier"
+              }
+            }
+            for (String className : verifyMissing) {
+              if (!keyMissing.get().contains(className)) {
+                errors << "not a 'keyMissing' identifier: $className"
+              }
+            }
+            errors.each {
+              System.err.println "Error for $group:$module - $it"
+            }
+            if (!errors.isEmpty()) {
+              throw new AssertionError("Version scan verification failed.\n" +
+                "Errors listed above are likely the result of a new module " +
+                "being published to Maven, not a code change in this repo.\n" +
+                "This does mean a fix should be made though to 'dd-trace-supported-framework.yaml'.")
+            }
+          }
+        }
+
+        if (project.gradle.startParameter.taskNames.contains('scanVersions')) {
+          scanVersions.finalizedBy(verifyVersionScan)
+        }
+      }
+
 //      println "Scanning ${includeVersionSet.size()} included and ${excludeVersionSet.size()} excluded versions.  Included: ${includeVersionSet.collect { it.version }}}"
 
       includeVersionSet.each { version ->
@@ -144,12 +192,15 @@ class VersionScanPlugin implements Plugin<Project> {
           def jar = new JarFile(jarFile)
           for (jarEntry in jar.entries()) {
             if (jarEntry.name.endsWith(".class")) {
+              def className = jarEntry.name
+              className = className.replaceAll("/", ".")
+              className = className.replace(".class", "")
               if (project.versionScan.scanMethods) {
                 findMethodNames(jar, jarEntry).each {
-                  contentSet.add("$jarEntry.name|$it")
+                  contentSet.add("$className|$it".toString())
                 }
               } else {
-                contentSet.add("$jarEntry.name")
+                contentSet.add(className)
               }
             }
           }
@@ -163,7 +214,10 @@ class VersionScanPlugin implements Plugin<Project> {
       }
     }
     project.tasks.scanVersions.finalizedBy(task)
-    project.tasks.scanVersionsReport.mustRunAfter(task)
+    project.tasks.scanVersionsReport.dependsOn(task)
+    if (project.tasks.hasProperty("verifyVersionScan")) {
+      project.tasks.verifyVersionScan.dependsOn(task)
+    }
   }
 
   def filter(List<Version> list) {
