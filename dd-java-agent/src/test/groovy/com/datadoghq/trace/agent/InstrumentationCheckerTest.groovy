@@ -24,7 +24,9 @@ class InstrumentationCheckerTest extends Specification {
     rules.sort() == ["unsupportedRuleOne", "unsupportedRuleThree", "unsupportedRuleTwo"]
   }
 
-  static class DemoClass1 {}
+  static class DemoClass1 {
+    void testMethod(String arg) {}
+  }
 
   static class DemoClass2 {}
 

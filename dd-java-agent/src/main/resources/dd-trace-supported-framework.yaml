@@ -1,18 +1,18 @@
 ### This file define all supported libraries
 ### Syntax:
-###   <rulename>:                         # the rule name defined in the otarules.btm
-###     - artifact: <artifactId>          # the artifact name to be tested
-###       supported_version:              # a regex expression to express the version required by the rule
-###       identifying_present_classes:    # a list of classes that distinctly identify the range of supported libraries
-###       - some.key.FrameworkClass       #    only if missing, supported_version regex is used.
+###   <rulename>:                               # the rule name defined in the otarules.btm
+###     - artifact: <artifactId>                # the artifact name to be tested
+###       supported_version:                    # a regex expression to express the version required by the rule
+###       identifying_present_classes:          # a list of classes that distinctly identify the range of supported libraries
+###         some.key.FrameworkClass: orMethod   # only if missing, supported_version regex is used.
 ###     - ...
 
 opentracing-apache-httpclient:
   - artifact: httpclient
     supported_version: 4\.[3|4|5]\..*
     identifying_present_classes:
-      - org.apache.http.conn.SchemePortResolver
-      - org.apache.http.conn.ssl.SSLContexts
+      org.apache.http.conn.SchemePortResolver:
+      org.apache.http.conn.ssl.SSLContexts:
 
   - artifact: commons-httpclient
     supported_version: none
@@ -21,82 +21,83 @@ opentracing-aws-sdk:
   - artifact: aws-java-sdk
     supported_version: 1\.11\..*
     identifying_present_classes:
-      - com.amazonaws.http.client.HttpClientFactory
-      - com.amazonaws.http.apache.utils.ApacheUtils
-      - com.amazonaws.http.request.HttpRequestFactory
+      com.amazonaws.http.client.HttpClientFactory:
+      com.amazonaws.http.apache.utils.ApacheUtils:
+      com.amazonaws.http.request.HttpRequestFactory:
 
 opentracing-cassandra-driver:
   - artifact: cassandra-driver-core
     supported_version: 3\.2.*
     identifying_present_classes:
-      - com.datastax.driver.core.utils.MoreObjects
-      - com.datastax.driver.core.RemoteEndpointAwareNettySSLOptions
-      - com.datastax.driver.core.GuavaCompatibility
+      com.datastax.driver.core.utils.MoreObjects:
+      com.datastax.driver.core.RemoteEndpointAwareNettySSLOptions:
+      com.datastax.driver.core.GuavaCompatibility:
 
 opentracing-jms-2_producer:
   - artifact: javax.jms-api
     supported_version: 2\..*
     identifying_present_classes:
-      - javax.jms.JMSContext
-      - javax.jms.CompletionListener
+      javax.jms.JMSContext:
+      javax.jms.CompletionListener:
 
 opentracing-jms-2_consumer:
   - artifact: javax.jms-api
     supported_version: 2\..*
     identifying_present_classes:
-      - javax.jms.JMSContext
-      - javax.jms.CompletionListener
+      javax.jms.JMSContext:
+      javax.jms.CompletionListener:
 
 opentracing-mongo-driver:
   - artifact: mongo-java-driver
     supported_version: 3\..*
     identifying_present_classes:
-      - com.mongodb.operation.AsyncReadOperation
-      - com.mongodb.client.model.MapReduceAction
+      com.mongodb.operation.AsyncReadOperation:
+      com.mongodb.client.model.MapReduceAction:
 
   - artifact: mongodb-driver-async
     supported_version: 3\..*
     identifying_present_classes:
-      - com.mongodb.operation.AsyncReadOperation
-      - com.mongodb.client.model.MapReduceAction
+      com.mongodb.operation.AsyncReadOperation:
+      com.mongodb.client.model.MapReduceAction:
 
 opentracing-mongo-driver-helper:
   - artifact: mongo-java-driver
     supported_version: 3\..*
     identifying_present_classes:
-      - com.mongodb.operation.AsyncReadOperation
-      - com.mongodb.client.model.MapReduceAction
+      com.mongodb.operation.AsyncReadOperation:
+      com.mongodb.client.model.MapReduceAction:
 
   - artifact: mongodb-driver-async
     supported_version: 3\..*
     identifying_present_classes:
-      - com.mongodb.operation.AsyncReadOperation
-      - com.mongodb.client.model.MapReduceAction
+      com.mongodb.operation.AsyncReadOperation:
+      com.mongodb.client.model.MapReduceAction:
 
 opentracing-okhttp3:
   - artifact: okhttp
     supported_version: 3\..*
     identifying_present_classes:
-      - okhttp3.Cookie
-      - okhttp3.ConnectionPool
-      - okhttp3.Headers
+      okhttp3.Cookie:
+      okhttp3.ConnectionPool:
+      okhttp3.Headers:
 
 opentracing-web-servlet-filter_jetty:
   - artifact: jetty-server
     supported_version: (8\.|9\.).*
-#    identifying_present_classes:
+    identifying_present_classes:
+      org.eclipse.jetty.server.ServletRequestHttpWrapper: getPart
 
 opentracing-web-servlet-filter_tomcat:
   - artifact: opentracing-web-servlet-filter_tomcat
     supported_version: (8\.|9\.).*
     identifying_present_classes:
-      - org.apache.catalina.WebResource
-      - org.apache.catalina.webresources.TrackedInputStream
-      - org.apache.catalina.webresources.AbstractArchiveResource
+      org.apache.catalina.WebResource:
+      org.apache.catalina.webresources.TrackedInputStream:
+      org.apache.catalina.webresources.AbstractArchiveResource:
 
   - artifact: opentracing-web-servlet-filter_tomcat
     supported_version: (8\.|9\.).*
     identifying_present_classes:
-      - org.apache.catalina.WebResource
-      - org.apache.catalina.webresources.TrackedInputStream
-      - org.apache.catalina.webresources.AbstractArchiveResource
+      org.apache.catalina.WebResource:
+      org.apache.catalina.webresources.TrackedInputStream:
+      org.apache.catalina.webresources.AbstractArchiveResource:
