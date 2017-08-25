@@ -20,7 +20,7 @@ public class DDTraceInfo {
       final BufferedReader br =
           new BufferedReader(
               new InputStreamReader(
-                  DDTraceInfo.class.getResourceAsStream("dd-trace.version"), "UTF-8"));
+                  DDTraceInfo.class.getResourceAsStream("/dd-trace.version"), "UTF-8"));
       for (int c = br.read(); c != -1; c = br.read()) sb.append((char) c);
 
       v = sb.toString().trim();
@@ -29,5 +29,9 @@ public class DDTraceInfo {
     }
     VERSION = v;
     log.info("dd-trace - version: {}", v);
+  }
+
+  public static void main(String... args) {
+    System.out.println(VERSION);
   }
 }

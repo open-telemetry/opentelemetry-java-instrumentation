@@ -16,14 +16,19 @@ public class DDJavaAgentInfo {
       final BufferedReader br =
           new BufferedReader(
               new InputStreamReader(
-                  DDJavaAgentInfo.class.getResourceAsStream("dd-java-agent.version"), "UTF-8"));
+                  DDJavaAgentInfo.class.getResourceAsStream("/dd-java-agent.version"), "UTF-8"));
       for (int c = br.read(); c != -1; c = br.read()) sb.append((char) c);
 
       v = sb.toString().trim();
     } catch (final Exception e) {
+      e.printStackTrace();
       v = "unknown";
     }
     VERSION = v;
     log.info("dd-java-agent - version: {}", v);
+  }
+
+  public static void main(String... args) {
+    System.out.println(VERSION);
   }
 }

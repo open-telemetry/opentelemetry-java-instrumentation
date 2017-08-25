@@ -76,7 +76,7 @@ class DDApiTest extends Specification {
     requestContentType.get().type == "application/msgpack"
     requestHeaders.get().get("Datadog-Meta-Lang") == "java"
     requestHeaders.get().get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown")
-    requestHeaders.get().get("Datadog-Meta-Tracer-Version") == "unknown"
+    requestHeaders.get().get("Datadog-Meta-Tracer-Version") == "Stubbed-Test-Version"
     convertList(requestBody.get()) == expectedRequestBody
 
     cleanup:
@@ -175,7 +175,7 @@ class DDApiTest extends Specification {
     requestContentType.get().type == "application/msgpack"
     requestHeaders.get().get("Datadog-Meta-Lang") == "java"
     requestHeaders.get().get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown")
-    requestHeaders.get().get("Datadog-Meta-Tracer-Version") == "unknown"
+    requestHeaders.get().get("Datadog-Meta-Tracer-Version") == "Stubbed-Test-Version"
     convertMap(requestBody.get()) == expectedRequestBody
 
     cleanup:

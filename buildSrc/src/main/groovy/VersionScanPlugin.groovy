@@ -15,6 +15,7 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory
 import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.version.Version
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.objectweb.asm.ClassReader
@@ -138,40 +139,40 @@ class VersionScanPlugin implements Plugin<Project> {
       if (!verifyPresent.isEmpty() || !verifyMissing.isEmpty()) {
         def verifyVersionScan = project.task('verifyVersionScan') {
           description = "Validates that the configured classes and methods are only present where expected."
-          doLast {
-            // This may already be done by the report task, but repeating for good measure.
-            keyPresent.get().removeAll(allExclude)
-            keyMissing.get().removeAll(allInclude)
+        }
+        verifyVersionScan.doLast {
+          // This may already be done by the report task, but repeating for good measure.
+          keyPresent.get().removeAll(allExclude)
+          keyMissing.get().removeAll(allInclude)
 
-            assert keyPresent.get() != [] || keyMissing.get() != []
+          assert keyPresent.get() != [] || keyMissing.get() != []
 
-            def errors = []
-            for (String className : verifyPresent.keySet()) {
-              if (project.versionScan.scanMethods && verifyPresent.get(className) == null) {
-                throw new AssertionError("When 'scanMethods' is enabled, a method must be configured for '$className'")
-              } else if (!project.versionScan.scanMethods && verifyPresent.get(className) != null) {
-                throw new AssertionError("When 'scanMethods' is not enabled, configured method must be null for '$className'")
-              }
+          def errors = []
+          for (String className : verifyPresent.keySet()) {
+            if (project.versionScan.scanMethods && verifyPresent.get(className) == null) {
+              throw new AssertionError("When 'scanMethods' is enabled, a method must be configured for '$className'")
+            } else if (!project.versionScan.scanMethods && verifyPresent.get(className) != null) {
+              throw new AssertionError("When 'scanMethods' is not enabled, configured method must be null for '$className'")
+            }
 
-              String identifier = project.versionScan.scanMethods ? "$className|${verifyPresent.get(className)}" : className
-              if (!keyPresent.get().contains(identifier)) {
-                errors << "not a 'keyPresent' identifier: $identifier"
-              }
+            String identifier = project.versionScan.scanMethods ? "$className|${verifyPresent.get(className)}" : className
+            if (!keyPresent.get().contains(identifier)) {
+              errors << "not a 'keyPresent' identifier: $identifier"
             }
-            for (String className : verifyMissing) {
-              if (!keyMissing.get().contains(className)) {
-                errors << "not a 'keyMissing' identifier: $className"
-              }
+          }
+          for (String className : verifyMissing) {
+            if (!keyMissing.get().contains(className)) {
+              errors << "not a 'keyMissing' identifier: $className"
             }
-            errors.each {
-              System.err.println "Error for $group:$module - $it"
-            }
-            if (!errors.isEmpty()) {
-              throw new AssertionError("Version scan verification failed.\n" +
-                "Errors listed above are likely the result of a new module " +
-                "being published to Maven, not a code change in this repo.\n" +
-                "This does mean a fix should be made though to 'dd-trace-supported-framework.yaml'.")
-            }
+          }
+          errors.each {
+            logger.error "Error for $group:$module - $it"
+          }
+          if (!errors.isEmpty()) {
+            throw new GradleException("Version scan verification failed.\n" +
+              "Errors listed above are likely the result of a new module " +
+              "being published to Maven, not a code change in this repo.\n" +
+              "This does mean a fix should be made though to 'dd-trace-supported-framework.yaml'.")
           }
         }
 
