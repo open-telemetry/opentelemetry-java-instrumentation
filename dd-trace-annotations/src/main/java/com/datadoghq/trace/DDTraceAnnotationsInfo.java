@@ -16,7 +16,7 @@ public class DDTraceAnnotationsInfo {
       final BufferedReader br =
           new BufferedReader(
               new InputStreamReader(
-                  DDTraceAnnotationsInfo.class.getResourceAsStream("dd-trace-annotations.version"),
+                  DDTraceAnnotationsInfo.class.getResourceAsStream("/dd-trace-annotations.version"),
                   "UTF-8"));
       for (int c = br.read(); c != -1; c = br.read()) sb.append((char) c);
 
@@ -26,5 +26,9 @@ public class DDTraceAnnotationsInfo {
     }
     VERSION = v;
     log.info("dd-trace-annotations - version: {}", v);
+  }
+
+  public static void main(String... args) {
+    System.out.println(VERSION);
   }
 }
