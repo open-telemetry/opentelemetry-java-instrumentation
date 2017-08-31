@@ -18,7 +18,7 @@ class InstrumentationCheckerTest extends Specification {
 
   def "test rules"() {
     setup:
-    def rules = InstrumentationChecker.getUnsupportedRules(java.lang.ClassLoader.getSystemClassLoader())
+    def rules = checker.getUnsupportedRules(getClass().getClassLoader())
 
     expect:
     rules.sort() == ["unsupportedRuleOne", "unsupportedRuleThree", "unsupportedRuleTwo"]

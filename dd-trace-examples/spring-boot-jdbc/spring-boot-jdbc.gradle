@@ -9,6 +9,8 @@ version = 'demo'
 description = 'spring-boot-jdbc'
 
 dependencies {
+  compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3'
+
   compile group: 'io.opentracing.contrib', name: 'opentracing-jdbc', version: '0.0.3'
   compile group: 'com.h2database', name: 'h2', version: '1.4.196'
   compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.4.RELEASE'

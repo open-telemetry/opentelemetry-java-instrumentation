@@ -1,9 +1,9 @@
 unsupportedRuleOne:
   - artifact: artifact-1
-    supported_version: 1\.2\.5\..*
 
   - artifact: artifact-2
-    supported_version: none
+    identifying_present_classes:
+    identifying_missing_classes:
 
 unsupportedRuleTwo:
   - artifact: artifact-1

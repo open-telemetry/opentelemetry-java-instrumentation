@@ -1,0 +1,106 @@
+
+
+# Instrument Apache HTTP Client
+# This rule isn't working because HttpClientBuilder doesn't have any static fields, thus no static initializer.
+# =============================
+#RULE HttpClientBuilder-clinit
+#CLASS org.apache.http.impl.client.HttpClientBuilder
+#METHOD <clinit>
+#AT EXIT
+#IF TRUE
+#DO
+#  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+#ENDRULE
+
+
+# Instrument AWS SDK client
+# ==========================
+RULE AwsClientBuilder-init
+CLASS ^com.amazonaws.client.builder.AwsClientBuilder
+METHOD <init>
+AT EXIT
+IF TRUE
+DO
+  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+ENDRULE
+
+
+# Instrument Cassandra client
+# ===========================
+RULE Cluster$Manager-init
+CLASS com.datastax.driver.core.Cluster$Manager
+METHOD <init>
+AT EXIT
+IF TRUE
+DO
+  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+ENDRULE
+
+
+# Instrument JMS
+# ===========================
+RULE Session-init
+INTERFACE javax.jms.Session
+METHOD <init>
+AT EXIT
+IF TRUE
+DO
+  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+ENDRULE
+
+
+# Instrument Mongo client
+# ========================
+RULE MongoClientOptions$Builder-init
+CLASS com.mongodb.MongoClientOptions$Builder
+METHOD <init>
+AT EXIT
+IF TRUE
+DO
+  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+ENDRULE
+
+RULE TracingCommandListener-init
+CLASS io.opentracing.contrib.mongo.TracingCommandListener
+METHOD <init>
+AT EXIT
+IF TRUE
+DO
+  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+ENDRULE
+
+
+# Instrument OkHttp
+# ===========================
+RULE OkHttpClient$Builder-init
+CLASS okhttp3.OkHttpClient$Builder
+METHOD <init>
+AT EXIT
+IF TRUE
+DO
+  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+ENDRULE
+
+
+# Instrument Servlet - Jetty
+# ===========================
+RULE ServletContextHandler-clinit
+CLASS org.eclipse.jetty.servlet.ServletContextHandler
+METHOD <clinit>
+AT EXIT
+IF TRUE
+DO
+  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad();
+ENDRULE
+
+
+# Instrument Servlet - Tomcat
+# ===========================
+RULE ApplicationContext-clinit
+CLASS org.apache.catalina.core.ApplicationContext
+METHOD <clinit>
+AT EXIT
+IF TRUE
+DO
+  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad();
+ENDRULE
