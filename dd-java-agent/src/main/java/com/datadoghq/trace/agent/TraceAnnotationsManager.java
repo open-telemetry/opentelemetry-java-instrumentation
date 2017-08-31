@@ -1,5 +1,7 @@
 package com.datadoghq.trace.agent;
 
+import com.datadoghq.trace.DDTraceAnnotationsInfo;
+import com.datadoghq.trace.DDTraceInfo;
 import com.datadoghq.trace.Trace;
 import com.datadoghq.trace.resolver.DDTracerFactory;
 import com.datadoghq.trace.resolver.FactoryUtils;
@@ -41,6 +43,11 @@ import org.reflections.util.FilterBuilder;
  */
 @Slf4j
 public class TraceAnnotationsManager {
+
+  // Initialize the info classes so they print out their version info:
+  private static final String ddJavaAgentVersion = DDJavaAgentInfo.VERSION;
+  private static final String ddTraceVersion = DDTraceInfo.VERSION;
+  private static final String ddTraceAnnotationsVersion = DDTraceAnnotationsInfo.VERSION;
 
   private static final String AGENT_RULES = "otarules.btm";
   private static final String CURRENT_SPAN_EXISTS = "IF TRUE\n";
