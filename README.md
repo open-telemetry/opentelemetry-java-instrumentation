@@ -190,7 +190,7 @@ For Maven, add this to pom.xml:
 <!-- OpenTracing Util -->
 <dependency>
     <groupId>io.opentracing</groupId>
-    <artifactId>io.opentracing:opentracing-util</artifactId>
+    <artifactId>opentracing-util</artifactId>
     <version>0.30.0</version>
 </dependency>
 
