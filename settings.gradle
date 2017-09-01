@@ -11,6 +11,7 @@ include ':dd-trace-examples'
 include ':dd-trace-annotations'
 
 // integrations:
+include ':dd-java-agent:integrations:helpers'
 include ':dd-java-agent:integrations:apache-httpclient'
 include ':dd-java-agent:integrations:aws-sdk'
 include ':dd-java-agent:integrations:cassandra'
