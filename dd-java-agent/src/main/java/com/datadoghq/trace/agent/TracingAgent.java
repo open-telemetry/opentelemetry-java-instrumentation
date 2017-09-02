@@ -25,17 +25,17 @@ import lombok.extern.slf4j.Slf4j;
  * and the manager class.
  */
 @Slf4j
-public class AnnotationsTracingAgent extends OpenTracingAgent {
+public class TracingAgent extends OpenTracingAgent {
 
   public static void premain(String agentArgs, final Instrumentation inst) throws Exception {
     agentArgs = addManager(agentArgs);
-    log.debug("Using premain for loading {}", AnnotationsTracingAgent.class.getSimpleName());
+    log.debug("Using premain for loading {}", TracingAgent.class.getSimpleName());
     org.jboss.byteman.agent.Main.premain(agentArgs, inst);
   }
 
   public static void agentmain(String agentArgs, final Instrumentation inst) throws Exception {
     agentArgs = addManager(agentArgs);
-    log.debug("Using agentmain for loading {}", AnnotationsTracingAgent.class.getSimpleName());
+    log.debug("Using agentmain for loading {}", TracingAgent.class.getSimpleName());
     org.jboss.byteman.agent.Main.agentmain(agentArgs, inst);
   }
 
@@ -45,7 +45,7 @@ public class AnnotationsTracingAgent extends OpenTracingAgent {
     } else {
       agentArgs += ",";
     }
-    agentArgs += "manager:" + TraceAnnotationsManager.class.getName();
+    agentArgs += "manager:" + AgentRulesManager.class.getName();
     log.debug("Agent args=: {}", agentArgs);
     return agentArgs;
   }

@@ -1,6 +1,6 @@
 ### This file define all supported libraries
 ### Syntax:
-###   <rulename>:                               # the rule name defined in the otarules.btm
+###   <rulename>:                               # the rule name defined in the integration-rules.btm
 ###     - artifact: <artifactId>                # the artifact name to be tested
 ###       supported_version:                    # a regex expression to express the version required by the rule
 ###       identifying_present_classes:          # a list of classes that distinctly identify the range of supported libraries
