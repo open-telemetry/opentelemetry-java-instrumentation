@@ -1,4 +1,4 @@
-package com.datadoghq.trace.agent;
+package com.datadoghq.trace.agent.test;
 
 import com.google.common.collect.MapMaker;
 import org.junit.Assert;

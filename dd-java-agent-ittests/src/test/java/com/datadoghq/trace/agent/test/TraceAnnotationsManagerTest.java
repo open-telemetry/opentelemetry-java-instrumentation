@@ -1,4 +1,4 @@
-package com.datadoghq.trace.agent;
+package com.datadoghq.trace.agent.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
