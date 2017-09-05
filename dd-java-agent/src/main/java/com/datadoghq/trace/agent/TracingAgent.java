@@ -16,7 +16,6 @@
  */
 package com.datadoghq.trace.agent;
 
-import io.opentracing.contrib.agent.OpenTracingAgent;
 import java.lang.instrument.Instrumentation;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * and the manager class.
  */
 @Slf4j
-public class TracingAgent extends OpenTracingAgent {
+public class TracingAgent {
 
   public static void premain(String agentArgs, final Instrumentation inst) throws Exception {
     agentArgs = addManager(agentArgs);

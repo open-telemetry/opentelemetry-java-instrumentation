@@ -11,7 +11,7 @@ dependencies {
   compileOnly project(':dd-trace-annotations')
   compileOnly group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
 
-  compileOnly group: 'io.opentracing.contrib', name: 'opentracing-agent', version: '0.1.0'
+  compileOnly group: 'org.jboss.byteman', name: 'byteman', version: '4.0.0-BETA5'
 
   compile group: 'io.opentracing.contrib', name: 'opentracing-web-servlet-filter', version: '0.0.9'
   compile group: 'io.opentracing.contrib', name: 'opentracing-mongo-driver', version: '0.0.3'
