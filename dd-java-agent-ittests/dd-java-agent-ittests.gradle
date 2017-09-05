@@ -1,8 +1,5 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
-// Not adding jacoco here as it inexplicably breaks our tests.
-// apply from: "${rootDir}/gradle/jacoco.gradle"
-
 description = 'dd-java-agent-ittests'
 dependencies {
   testCompile project(':dd-trace-annotations')
@@ -42,8 +39,15 @@ configurations.all {
 
 test {
   jvmArgs "-Ddd.trace.configurationFile=${project.buildDir}/resources/test/dd-trace.yaml"
-  jvmArgs "-javaagent:${project(':dd-java-agent').buildDir}/libs/dd-java-agent-${project.version}.jar"
+  jvmArgs "-Ddd.slf4j.simpleLogger.defaultLogLevel=debug"
+  jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
+  jvmArgs "-Ddd.deps.org.jboss.byteman.verbose=true"
   jvmArgs "-Dorg.jboss.byteman.verbose=true"
+
+  doFirst {
+    // Defining here to allow jacoco to be first on the command line.
+    jvmArgs "-javaagent:${project(':dd-java-agent').buildDir}/libs/dd-java-agent-${project.version}.jar"
+  }
 
   if (project.hasProperty("disableShadowRelocate") && disableShadowRelocate) {
     exclude 'com/datadoghq/trace/agent/ShadowPackageRenamingTest.class'
@@ -55,3 +59,7 @@ test.dependsOn project(':dd-java-agent').shadowJar
 parent.subprojects.collect { it.tasks.withType(Test) } each {
   test.shouldRunAfter it
 }
+
+// Jacoco must be applied after the test javaagent config block above,
+// otherwise the javaagent args conflict. (It's order dependent and added LIFO)
+apply from: "${rootDir}/gradle/jacoco.gradle"

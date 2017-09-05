@@ -100,7 +100,7 @@ shadowJar {
 
 //    mergeServiceFiles()
 
-  relocate 'org.slf4j', 'dd.deps.org.slf4j'  // Prevents conflict with other SLF4J instances. Important for premain.
+  relocate 'org.slf4j', 'dd.slf4j'  // Prevents conflict with other SLF4J instances. Important for premain.
 
   if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
     // Don't relocate opentracing deps.
