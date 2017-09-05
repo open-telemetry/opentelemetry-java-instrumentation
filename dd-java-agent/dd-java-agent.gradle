@@ -24,6 +24,9 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
 dependencies {
   compile project(':dd-trace')
   compile project(':dd-trace-annotations')
+  compile(project(path: ':dd-java-agent:integrations:helpers', configuration: "shadow")) {
+    transitive = false
+  }
 
   compile group: 'io.opentracing.contrib', name: 'opentracing-agent', version: '0.1.0'
   compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
@@ -33,48 +36,16 @@ dependencies {
   compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
   // ^ Generally a bad idea for libraries, but we're shadowing.
 
-
-  compile(group: 'io.opentracing.contrib', name: 'opentracing-web-servlet-filter', version: '0.0.9') {
-    exclude(group: 'org.eclipse.jetty', module: 'jetty-servlet')
-  }
-  compile(group: 'io.opentracing.contrib', name: 'opentracing-mongo-driver', version: '0.0.3') {
-    exclude(group: 'org.mongodb', module: 'mongodb-driver-async')
-    exclude(group: 'org.mongodb', module: 'mongo-java-driver')
-  }
-  compile(group: 'io.opentracing.contrib', name: 'opentracing-okhttp3', version: '0.0.5') {
-    exclude(group: 'com.squareup.okhttp3', module: 'okhttp')
-  }
-  compile(group: 'io.opentracing.contrib', name: 'opentracing-jms-2', version: '0.0.3') {
-    exclude(group: 'javax.jms', module: 'javax.jms-api')
-  }
-  compile(group: 'io.opentracing.contrib', name: 'opentracing-aws-sdk', version: '0.0.2') {
-    exclude(group: 'com.amazonaws', module: 'aws-java-sdk')
-  }
-  compile(group: 'io.opentracing.contrib', name: 'opentracing-cassandra-driver', version: '0.0.2') {
-    exclude(group: 'com.datastax.cassandra', module: 'cassandra-driver-core')
-  }
-  compile(group: 'io.opentracing.contrib', name: 'opentracing-apache-httpclient', version: '0.0.2') {
-    exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
-  }
-
+  testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
   testCompile group: 'io.opentracing', name: 'opentracing-mock', version: '0.30.0'
-  testCompile group: 'junit', name: 'junit', version: '4.12'
-  testCompile group: 'org.assertj', name: 'assertj-core', version: '3.6.2'
-  testCompile group: 'org.mockito', name: 'mockito-core', version: '2.7.22'
-  testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-  compileOnly group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.3.6.v20151106'
-  compileOnly group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '9.0.0.M1'
-  compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
-  compileOnly group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
-  compileOnly group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
-  compileOnly group: 'javax.jms', name: 'javax.jms-api', version: '2.0.1'
-  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.119'
-  compileOnly group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'
-  compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3'
 
   // Not bundled in with the agent.  Usage requires being on the app's classpath (eg. Spring Boot's executable jar)
   compileOnly group: 'io.opentracing.contrib', name: 'opentracing-jdbc', version: '0.0.3'
+}
+
+project(':dd-java-agent:integrations:helpers').afterEvaluate { helperProject ->
+  project.compileJava.dependsOn helperProject.tasks.shadowJar
 }
 
 jar {
