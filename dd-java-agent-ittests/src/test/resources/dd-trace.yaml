@@ -21,7 +21,7 @@ sampler:
   # skipTagsPatterns: {"http.url": ".*/demo/add.*"}
   
 # Enable custom annotation tracing over a selected set of packages
-enableCustomAnnotationTracingOver: ["com.datadoghq.trace.agent"]
+enableCustomAnnotationTracingOver: ["com.datadoghq.trace.agent.test"]
 
 # Disable some instrumentations
 # disabledInstrumentations: ["apache http", "mongo", "jetty", "tomcat", ...]

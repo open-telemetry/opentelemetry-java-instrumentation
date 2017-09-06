@@ -1,4 +1,4 @@
-package com.datadoghq.trace.agent;
+package com.datadoghq.trace.agent.test;
 
 import com.datadoghq.trace.DDTags;
 import com.datadoghq.trace.Trace;
