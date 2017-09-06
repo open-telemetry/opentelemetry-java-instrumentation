@@ -223,15 +223,16 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
 
     @Override
     public ActiveSpan startActive() {
-      final ActiveSpan activeSpan = spanSource.makeActive(startSpan());
-      log.debug("{} - Starting a new active span.", activeSpan);
+      final DDSpan span = startSpan();
+      final ActiveSpan activeSpan = spanSource.makeActive(span);
+      log.debug("Starting a new active span: {}", span);
       return activeSpan;
     }
 
     @Override
     public DDSpan startManual() {
       final DDSpan span = startSpan();
-      log.debug("{} - Starting a new manuel span.", span);
+      log.debug("Starting a new manual span: {}", span);
       return span;
     }
 
