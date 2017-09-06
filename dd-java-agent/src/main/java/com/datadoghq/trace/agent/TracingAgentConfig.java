@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Configuration POJO for the agent */
-public class AgentTracerConfig extends TracerConfig {
+public class TracingAgentConfig extends TracerConfig {
 
   private List<String> disabledInstrumentations = new ArrayList<String>();
 

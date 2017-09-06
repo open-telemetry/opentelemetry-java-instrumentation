@@ -48,6 +48,10 @@ test {
     // Defining here to allow jacoco to be first on the command line.
     jvmArgs "-javaagent:${project(':dd-java-agent').buildDir}/libs/dd-java-agent-${project.version}.jar"
   }
+  
+  testLogging {
+    events "started"
+  }
 
   if (project.hasProperty("disableShadowRelocate") && disableShadowRelocate) {
     exclude 'com/datadoghq/trace/agent/ShadowPackageRenamingTest.class'

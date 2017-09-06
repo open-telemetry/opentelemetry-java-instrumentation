@@ -9,5 +9,5 @@ METHOD <init>
 AT EXIT
 IF TRUE
 DO
-  com.datadoghq.trace.agent.TraceAnnotationsManager.finishInitialization($0);
+  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
 ENDRULE

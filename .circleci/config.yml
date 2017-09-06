@@ -14,11 +14,11 @@ jobs:
 
       - run:
           name: Run Tests
-          command: ./gradlew clean check --parallel
+          command: ./gradlew clean check --parallel --stacktrace
 
       - run:
           name: Verify Version Scan
-          command: ./gradlew verifyVersionScan --parallel
+          command: ./gradlew verifyVersionScan --parallel --stacktrace
 
       - save_cache:
           paths:
@@ -58,5 +58,5 @@ jobs:
                 -PbintrayUser=${BINTRAY_USER} \
                 -PbintrayApiKey=${BINTRAY_API_KEY} \
                 -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
-                artifactoryPublish --max-workers=1
+                artifactoryPublish --max-workers=1 --stacktrace
             fi
