@@ -22,7 +22,8 @@ dependencies {
     transitive = false
   }
 
-  compile group: 'io.opentracing.contrib', name: 'opentracing-agent', version: '0.1.0'
+  compile group: 'org.jboss.byteman', name: 'byteman', version: '4.0.0-BETA5'
+
   compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
   compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
   compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
@@ -53,9 +54,6 @@ jar {
       "Premain-Class": "com.datadoghq.trace.agent.TracingAgent",
       "Can-Redefine-Classes": true,
       "Can-Retransform-Classes": true,
-      // It is dangerous putting everything on the bootstrap classpath,
-      // but kept for consistency with previous versions.
-      "Boot-Class-Path": "./${jar.archiveName}.jar"
     )
   }
 }

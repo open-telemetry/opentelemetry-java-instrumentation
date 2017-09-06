@@ -2,7 +2,6 @@ package com.datadoghq.trace.agent.integration;
 
 import io.opentracing.NoopTracerFactory;
 import io.opentracing.Tracer;
-import io.opentracing.contrib.agent.OpenTracingHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.byteman.rule.Rule;
 

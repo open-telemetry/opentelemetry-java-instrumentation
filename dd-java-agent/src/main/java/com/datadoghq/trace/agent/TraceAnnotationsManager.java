@@ -126,7 +126,7 @@ public class TraceAnnotationsManager {
         transformer.installScript(
             Arrays.asList(generatedScripts.toString()), Arrays.asList("@Trace annotations"), pr);
       }
-      log.trace("Install new rules: \n{}", sw.toString());
+      log.debug("Install new rules: \n{}", sw.toString());
     } catch (final Exception e) {
       log.warn("Could not install annotation scripts.", e);
     }
@@ -153,7 +153,7 @@ public class TraceAnnotationsManager {
             false,
             false,
             javassistMethod.getName() + Descriptor.toString(javassistMethod.getSignature()),
-            "io.opentracing.contrib.agent.OpenTracingHelper",
+            OpenTracingHelper.class.getName(),
             imports,
             loc,
             ruleText,
