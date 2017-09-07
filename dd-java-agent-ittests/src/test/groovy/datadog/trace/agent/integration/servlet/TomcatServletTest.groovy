@@ -45,7 +45,7 @@ class TomcatServletTest extends Specification {
     }
     appContext = tomcatServer.addWebapp("", applicationDir.getAbsolutePath())
     // Speed up startup by disabling jar scanning:
-    appContext.getJarScanner().setJarScanFilter(new JarScanFilter(){
+    appContext.getJarScanner().setJarScanFilter(new JarScanFilter() {
       @Override
       boolean check(JarScanType jarScanType, String jarName) {
         return false
@@ -147,9 +147,9 @@ class TomcatServletTest extends Specification {
     span.context().tags.size() == 11
 
     where:
-    path    | expectedResponse
+    path   | expectedResponse
     //"async" | "Hello Async" // FIXME: I can't seem get the async error handler to trigger
-    "sync"  | "Hello Sync"
+    "sync" | "Hello Sync"
   }
 
   private static int randomOpenPort() {

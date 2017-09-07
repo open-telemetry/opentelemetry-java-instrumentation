@@ -2,7 +2,7 @@ package datadog.trace.common.writer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.RateLimiter;
-import datadog.opentracing.DDBaseSpan;
+import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTraceOTInfo;
 import datadog.trace.common.Service;
 import java.io.IOException;
@@ -42,7 +42,7 @@ public class DDApi {
    * @param traces the traces to be sent
    * @return the staus code returned
    */
-  public boolean sendTraces(final List<List<DDBaseSpan<?>>> traces) {
+  public boolean sendTraces(final List<List<DDSpan>> traces) {
     return putContent("traces", tracesEndpoint, traces, traces.size());
   }
 

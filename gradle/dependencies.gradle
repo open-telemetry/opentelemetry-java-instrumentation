@@ -3,7 +3,7 @@ def spockGroovyVer = GroovySystem.version.replaceAll(/\.\d+$/, '')
 
 ext {
   version = [
-    opentracing: '0.30.0',
+    opentracing: '0.31.0',
 
     slf4j      : "1.7.25",
     guava      : "23.0",

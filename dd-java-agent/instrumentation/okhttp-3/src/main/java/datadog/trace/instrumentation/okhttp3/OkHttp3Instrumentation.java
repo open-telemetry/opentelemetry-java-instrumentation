@@ -36,10 +36,7 @@ public class OkHttp3Instrumentation implements Instrumenter {
                 "io.opentracing.contrib.okhttp3.RequestBuilderInjectAdapter",
                 "io.opentracing.contrib.okhttp3.TracingCallFactory",
                 "io.opentracing.contrib.okhttp3.TracingCallFactory$NetworkInterceptor",
-                "io.opentracing.contrib.okhttp3.TracingCallFactory$1",
-                "io.opentracing.contrib.okhttp3.concurrent.TracingExecutorService",
-                "io.opentracing.contrib.okhttp3.concurrent.TracedCallable",
-                "io.opentracing.contrib.okhttp3.concurrent.TracedRunnable"))
+                "io.opentracing.contrib.okhttp3.TracingCallFactory$1"))
         .transform(
             DDAdvice.create()
                 .advice(

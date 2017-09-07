@@ -1,6 +1,6 @@
 package datadog.trace.agent.integration.servlet
 
-import datadog.opentracing.DDBaseSpan
+import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.util.GlobalTracer
@@ -43,7 +43,7 @@ class JettyServletTest extends Specification {
 
   ListWriter writer = new ListWriter() {
     @Override
-    void write(final List<DDBaseSpan<?>> trace) {
+    void write(final List<DDSpan> trace) {
       add(trace)
       JettyServletTest.latch.countDown()
     }

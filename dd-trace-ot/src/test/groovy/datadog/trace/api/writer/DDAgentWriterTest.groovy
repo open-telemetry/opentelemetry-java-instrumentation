@@ -1,6 +1,6 @@
 package datadog.trace.api.writer
 
-import datadog.opentracing.DDBaseSpan
+import datadog.opentracing.DDSpan
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.WriterQueue
@@ -46,7 +46,7 @@ class DDAgentWriterTest extends Specification {
   def "check if trace has been added by force"() {
 
     setup:
-    def traces = new WriterQueue<List<DDBaseSpan<?>>>(capacity)
+    def traces = new WriterQueue<List<DDSpan>>(capacity)
     def writer = new DDAgentWriter(Mock(DDApi), traces)
 
     when:

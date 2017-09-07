@@ -9,20 +9,23 @@ public class SayTracedHello {
 
   @Trace
   public static String sayHello() {
-    new StringTag(DDTags.SERVICE_NAME).set(GlobalTracer.get().activeSpan(), "test");
+    new StringTag(DDTags.SERVICE_NAME)
+        .set(GlobalTracer.get().scopeManager().active().span(), "test");
     return "hello!";
   }
 
   @Trace(operationName = "SAY_HA")
   public static String sayHA() {
-    new StringTag(DDTags.SERVICE_NAME).set(GlobalTracer.get().activeSpan(), "test");
-    new StringTag(DDTags.SPAN_TYPE).set(GlobalTracer.get().activeSpan(), "DB");
+    new StringTag(DDTags.SERVICE_NAME)
+        .set(GlobalTracer.get().scopeManager().active().span(), "test");
+    new StringTag(DDTags.SPAN_TYPE).set(GlobalTracer.get().scopeManager().active().span(), "DB");
     return "HA!!";
   }
 
   @Trace(operationName = "NEW_TRACE")
   public static String sayHELLOsayHA() {
-    new StringTag(DDTags.SERVICE_NAME).set(GlobalTracer.get().activeSpan(), "test2");
+    new StringTag(DDTags.SERVICE_NAME)
+        .set(GlobalTracer.get().scopeManager().active().span(), "test2");
     return sayHello() + sayHA();
   }
 

@@ -11,12 +11,12 @@ import datadog.trace.common.Service;
 import datadog.trace.common.sampling.AllSampler;
 import datadog.trace.common.sampling.Sampler;
 import datadog.trace.common.writer.Writer;
-import io.opentracing.ActiveSpan;
-import io.opentracing.ActiveSpanSource;
-import io.opentracing.BaseSpan;
+import io.opentracing.Scope;
+import io.opentracing.ScopeManager;
+import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
-import io.opentracing.util.ThreadLocalActiveSpanSource;
+import io.opentracing.util.ThreadLocalScopeManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing API. */
 @Slf4j
-public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentracing.Tracer {
+public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.Tracer {
 
   public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
@@ -111,6 +111,17 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
   }
 
   @Override
+  public ScopeManager scopeManager() {
+    return this;
+  }
+
+  @Override
+  public Span activeSpan() {
+    final Scope active = active();
+    return active == null ? null : active.span();
+  }
+
+  @Override
   public DDSpanBuilder buildSpan(final String operationName) {
     return new DDSpanBuilder(operationName, this);
   }
@@ -144,7 +155,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
    *
    * @param trace a list of the spans related to the same trace
    */
-  public void write(final Queue<DDBaseSpan<?>> trace) {
+  public void write(final Queue<DDSpan> trace) {
     if (trace.isEmpty()) {
       return;
     }
@@ -212,7 +223,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
 
   /** Spans are built using this builder */
   public class DDSpanBuilder implements SpanBuilder {
-    private final ActiveSpanSource spanSource;
+    private final ScopeManager scopeManager;
 
     /** Each span must have an operationName according to the opentracing specification */
     private final String operationName;
@@ -225,16 +236,16 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     private String resourceName;
     private boolean errorFlag;
     private String spanType;
-    private boolean ignoreActiveSpan = false;
+    private boolean ignoreScope = false;
 
-    public DDSpanBuilder(final String operationName, final ActiveSpanSource spanSource) {
+    public DDSpanBuilder(final String operationName, final ScopeManager scopeManager) {
       this.operationName = operationName;
-      this.spanSource = spanSource;
+      this.scopeManager = scopeManager;
     }
 
     @Override
     public SpanBuilder ignoreActiveSpan() {
-      this.ignoreActiveSpan = true;
+      this.ignoreScope = true;
       return this;
     }
 
@@ -243,11 +254,11 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     }
 
     @Override
-    public ActiveSpan startActive() {
+    public Scope startActive(final boolean finishSpanOnClose) {
       final DDSpan span = startSpan();
-      final ActiveSpan activeSpan = spanSource.makeActive(span);
+      final Scope scope = scopeManager.activate(span, finishSpanOnClose);
       log.debug("Starting a new active span: {}", span);
-      return activeSpan;
+      return scope;
     }
 
     @Override
@@ -320,7 +331,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     }
 
     @Override
-    public DDSpanBuilder asChildOf(final BaseSpan<?> span) {
+    public DDSpanBuilder asChildOf(final Span span) {
       return asChildOf(span == null ? null : span.context());
     }
 
@@ -361,14 +372,14 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
       final long spanId = generateNewId();
       final long parentSpanId;
       final Map<String, String> baggage;
-      final Queue<DDBaseSpan<?>> parentTrace;
+      final Queue<DDSpan> parentTrace;
 
       final DDSpanContext context;
       SpanContext parentContext = this.parent;
-      if (parentContext == null && !ignoreActiveSpan) {
-        // use the ActiveSpan as parent unless overridden or ignored.
-        final ActiveSpan activeSpan = activeSpan();
-        if (activeSpan != null) parentContext = activeSpan.context();
+      if (parentContext == null && !ignoreScope) {
+        // use the Scope as parent unless overridden or ignored.
+        final Scope scope = active();
+        if (scope != null) parentContext = scope.span().context();
       }
 
       if (parentContext instanceof DDSpanContext) {

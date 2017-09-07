@@ -1,7 +1,7 @@
 package datadog.trace.agent.test;
 
 import datadog.trace.agent.tooling.Utils;
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import java.io.File;
@@ -55,15 +55,13 @@ public class TestUtils {
 
   public static <T extends Object> Object runUnderTrace(
       final String rootOperationName, final Callable<T> r) {
-    final ActiveSpan rootSpan = GlobalTracer.get().buildSpan(rootOperationName).startActive();
+    final Scope scope = GlobalTracer.get().buildSpan(rootOperationName).startActive(true);
     try {
-      try {
-        return r.call();
-      } catch (final Exception e) {
-        throw new IllegalStateException(e);
-      }
+      return r.call();
+    } catch (final Exception e) {
+      throw new IllegalStateException(e);
     } finally {
-      rootSpan.deactivate();
+      scope.close();
     }
   }
 

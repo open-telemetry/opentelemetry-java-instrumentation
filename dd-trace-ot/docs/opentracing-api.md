@@ -48,7 +48,7 @@ accessible through the method `buildSpan(String operationName)` to serve this pu
 
 ```java
   // Create a new Span with the operation name "componentTracking"
-  ActiveSpan current = tracer.buildSpan("componentTracking").startActive();
+  ActiveSpan current = tracer.buildSpan("componentTracking").startActive(true);
 ```
 
 This example creates a simple span referenced "componentTracking". The `startActive()` method starts a new span and sets it
@@ -94,7 +94,7 @@ OpenTracing defines a [standard set of tags](https://github.com/opentracing/spec
       buildSpan("componentTracking")
       .withTag("custom-meta", "some-useful-value")
       .withTag(Tags.COMPONENT, "my-component-mysql")
-      .startActive();
+      .startActive(true);
 
 
   // Somewhere further in the code
@@ -154,7 +154,7 @@ Spans are associated across processes in a trace via the `Tracer.extract` and `T
 ```java
   // On the start of a new trace in an application, associate incoming request with existing traces.
   SpanContext spanCtx = tracer.extract(Format.Builtin.HTTP_HEADERS, someTextMapInstance);
-  ActiveSpan currentSpan = tracer.buildSpan("componentTracking").asChildOf(spanCtx).startActive();
+  ActiveSpan currentSpan = tracer.buildSpan("componentTracking").asChildOf(spanCtx).startActive(true);
 ```
 
 ```java

@@ -2,7 +2,7 @@ package datadog.trace.common.writer;
 
 import com.google.auto.service.AutoService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import datadog.opentracing.DDBaseSpan;
+import datadog.opentracing.DDSpan;
 import datadog.trace.common.Service;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +59,7 @@ public class DDAgentWriter implements Writer {
   private final DDApi api;
 
   /** In memory collection of traces waiting for departure */
-  private final WriterQueue<List<DDBaseSpan<?>>> traces;
+  private final WriterQueue<List<DDSpan>> traces;
 
   private boolean queueFullReported = false;
 
@@ -68,10 +68,10 @@ public class DDAgentWriter implements Writer {
   }
 
   public DDAgentWriter(final DDApi api) {
-    this(api, new WriterQueue<List<DDBaseSpan<?>>>(DEFAULT_MAX_TRACES));
+    this(api, new WriterQueue<List<DDSpan>>(DEFAULT_MAX_TRACES));
   }
 
-  public DDAgentWriter(final DDApi api, final WriterQueue<List<DDBaseSpan<?>>> queue) {
+  public DDAgentWriter(final DDApi api, final WriterQueue<List<DDSpan>> queue) {
     super();
     this.api = api;
     traces = queue;
@@ -81,8 +81,8 @@ public class DDAgentWriter implements Writer {
    * @see datadog.trace.Writer#write(java.util.List)
    */
   @Override
-  public void write(final List<DDBaseSpan<?>> trace) {
-    final List<DDBaseSpan<?>> removed = traces.add(trace);
+  public void write(final List<DDSpan> trace) {
+    final List<DDSpan> removed = traces.add(trace);
     if (removed != null && !queueFullReported) {
       log.debug("Queue is full, traces will be discarded, queue size: {}", DEFAULT_MAX_TRACES);
       queueFullReported = true;
@@ -173,7 +173,7 @@ public class DDAgentWriter implements Writer {
           return 0L;
         }
 
-        final List<List<DDBaseSpan<?>>> payload = traces.getAll();
+        final List<List<DDSpan>> payload = traces.getAll();
 
         if (log.isDebugEnabled()) {
           int nbSpans = 0;

@@ -14,7 +14,7 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
 import java.sql.PreparedStatement;
 import java.util.Map;
@@ -52,13 +52,13 @@ public final class SpringWebInstrumentation implements Instrumenter {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResource(@Advice.Argument(0) final HttpServletRequest request) {
-      final ActiveSpan span = GlobalTracer.get().activeSpan();
-      if (span != null) {
+      final Scope scope = GlobalTracer.get().scopeManager().active();
+      if (scope != null) {
         final String method = request.getMethod();
         final String bestMatchingPattern =
             request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE).toString();
         final String resourceName = method + " " + bestMatchingPattern;
-        span.setTag(DDTags.RESOURCE_NAME, resourceName);
+        scope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
       }
     }
   }

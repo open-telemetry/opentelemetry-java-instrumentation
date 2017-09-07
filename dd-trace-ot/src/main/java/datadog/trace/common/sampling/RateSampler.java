@@ -1,13 +1,11 @@
 package datadog.trace.common.sampling;
 
 import com.google.auto.service.AutoService;
-import datadog.opentracing.DDBaseSpan;
+import datadog.opentracing.DDSpan;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * This sampler sample the traces at a predefined rate.
- *
- * <p>
  *
  * <p>Keep (100 * `sample_rate`)% of the traces. It samples randomly, its main purpose is to reduce
  * the integration footprint.
@@ -42,7 +40,7 @@ public class RateSampler extends AbstractSampler {
   }
 
   @Override
-  public boolean doSample(final DDBaseSpan<?> span) {
+  public boolean doSample(final DDSpan span) {
     final boolean sample = Math.random() <= this.sampleRate;
     log.debug("{} - Span is sampled: {}", span, sample);
     return sample;

@@ -1,6 +1,6 @@
 package datadog.trace.common.writer;
 
-import datadog.opentracing.DDBaseSpan;
+import datadog.opentracing.DDSpan;
 import datadog.trace.common.DDTraceConfig;
 import datadog.trace.common.Service;
 import java.util.List;
@@ -18,7 +18,7 @@ public interface Writer {
    *
    * @param trace the list of spans to write
    */
-  void write(List<DDBaseSpan<?>> trace);
+  void write(List<DDSpan> trace);
 
   /**
    * Report additional service information to the endpoint

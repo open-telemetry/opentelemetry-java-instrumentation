@@ -16,7 +16,7 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   compileOnly group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'
-  compile('io.opentracing.contrib:opentracing-okhttp3:0.0.5') {
+  compile('io.opentracing.contrib:opentracing-okhttp3:0.1.0-RC1') {
     transitive = false
   }
 

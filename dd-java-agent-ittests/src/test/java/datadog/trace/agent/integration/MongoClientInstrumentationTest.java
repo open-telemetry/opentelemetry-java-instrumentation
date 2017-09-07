@@ -3,7 +3,7 @@ package datadog.trace.agent.integration;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import datadog.opentracing.DDBaseSpan;
+import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
 import datadog.trace.agent.test.TestUtils;
 import datadog.trace.common.writer.ListWriter;
@@ -100,7 +100,7 @@ public class MongoClientInstrumentationTest {
 
     final String createCollectionQuery =
         "{ \"create\" : \"testCollection\", \"autoIndexId\" : \"?\", \"capped\" : \"?\" }";
-    final DDBaseSpan<?> trace0 = writer.get(0).get(0);
+    final DDSpan trace0 = writer.get(0).get(0);
     Assert.assertEquals("mongo.query", trace0.getOperationName());
     Assert.assertEquals(createCollectionQuery, trace0.getResourceName());
     Assert.assertEquals("mongodb", trace0.getType());

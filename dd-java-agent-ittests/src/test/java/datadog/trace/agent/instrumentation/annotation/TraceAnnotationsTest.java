@@ -2,7 +2,7 @@ package datadog.trace.agent.instrumentation.annotation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import datadog.opentracing.DDBaseSpan;
+import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
 import datadog.opentracing.decorators.ErrorFlag;
 import datadog.trace.agent.test.SayTracedHello;
@@ -73,7 +73,7 @@ public class TraceAnnotationsTest {
     final StringWriter errorString = new StringWriter();
     error.printStackTrace(new PrintWriter(errorString));
 
-    final DDBaseSpan<?> span = writer.firstTrace().get(0);
+    final DDSpan span = writer.firstTrace().get(0);
     assertThat(span.getOperationName()).isEqualTo("ERROR");
     assertThat(span.getTags().get("error")).isEqualTo(true);
     assertThat(span.getTags().get("error.msg")).isEqualTo(error.getMessage());
