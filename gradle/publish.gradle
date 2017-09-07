@@ -76,6 +76,14 @@ artifactoryPublish { task ->
 }
 
 artifactory {
+  gradle.taskGraph.whenReady { taskGraph ->
+    if (taskGraph.hasTask(artifactoryPublish)) {
+      // trigger error if missing
+      bintrayUser
+      bintrayApiKey
+    }
+  }
+
   publish {
     contextUrl = forceLocal ? 'http://localhost:8080/artifactory' : 'https://oss.jfrog.org'
     repository {
@@ -83,13 +91,10 @@ artifactory {
         repoKey = isSnapshot ? 'libs-snapshot-local' : 'libs-release-local'
       else
         repoKey = isSnapshot ? 'oss-snapshot-local' : 'oss-release-local'
-      gradle.taskGraph.whenReady { taskGraph ->
-        artifactoryPublish { task ->
-          if (taskGraph.hasTask(task)) {
-            username = bintrayUser
-            password = bintrayApiKey
-          }
-        }
+
+      if (project.hasProperty("bintrayUser") && project.hasProperty("bintrayApiKey")) {
+        username = bintrayUser
+        password = bintrayApiKey
       }
     }
     defaults {
