@@ -19,8 +19,7 @@ dependencies {
   compile 'com.sparkjava:spark-core:2.6.0'
   compile 'org.mongodb:mongodb-driver:3.4.2'
 
-  compile 'io.opentracing:opentracing-api:0.30.0'
-  compile 'io.opentracing:opentracing-util:0.30.0'
+  compile deps.opentracing
   compile 'io.opentracing.contrib:opentracing-mongo-driver:0.0.3'
 
   compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'

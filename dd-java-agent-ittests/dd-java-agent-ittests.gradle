@@ -5,10 +5,9 @@ dependencies {
   testCompile project(':dd-trace-annotations')
   testCompile project(':dd-trace')
 
-  testCompile group: 'io.opentracing', name: 'opentracing-mock', version: '0.30.0'
-  testCompile group: 'org.assertj', name: 'assertj-core', version: '3.6.2'
+  testCompile deps.opentracingMock
 
-  testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+  testCompile deps.testLogging
 
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
   testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.1.v20170120'
