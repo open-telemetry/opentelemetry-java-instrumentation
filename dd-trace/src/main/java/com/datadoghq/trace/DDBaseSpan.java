@@ -50,7 +50,9 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
   }
 
   public final void finish(final long stoptimeMicros) {
-    this.durationNano = TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - this.startTimeMicro);
+    // Ensure that duration is at least 1.  Less than 1 is possible due to our use of system clock instead of nano time.
+    this.durationNano =
+        Math.max(1, TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - this.startTimeMicro));
     afterFinish();
   }
 

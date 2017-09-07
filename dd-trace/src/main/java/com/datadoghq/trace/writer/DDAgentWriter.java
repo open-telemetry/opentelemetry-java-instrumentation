@@ -141,11 +141,13 @@ public class DDAgentWriter implements Writer {
       final Future<Long> future = executor.submit(new SendingTask());
       try {
         final long nbTraces = future.get(API_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        log.debug("Successfully sending {} traces to the API", nbTraces);
+        if (nbTraces > 0) {
+          log.debug("Successfully sent {} traces to the API", nbTraces);
+        }
       } catch (final TimeoutException e) {
-        log.debug("Timeout! Fail to send traces to the API: {}", e.getMessage());
+        log.debug("Timeout! Failed to send traces to the API: {}", e.getMessage());
       } catch (final Throwable e) {
-        log.debug("Fail to send traces to the API: {}", e.getMessage());
+        log.debug("Failed to send traces to the API: {}", e.getMessage());
       }
     }
 
