@@ -13,14 +13,12 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
   'com.datadoghq.trace.agent.*',
   'com.datadoghq.trace.agent.integration.*',
   'io.opentracing.contrib.mongo.TracingCommandListenerFactory',
+  'io.opentracing.contrib.*',
 ]
 
 dependencies {
   compile project(':dd-trace')
   compile project(':dd-trace-annotations')
-  compile(project(path: ':dd-java-agent:integrations:helpers', configuration: "shadow")) {
-    transitive = false
-  }
 
   compile group: 'org.jboss.byteman', name: 'byteman', version: '4.0.0-BETA5'
 
@@ -35,12 +33,24 @@ dependencies {
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
   testCompile group: 'io.opentracing', name: 'opentracing-mock', version: '0.30.0'
 
+  testCompile(project(path: ':dd-java-agent:integrations:helpers', configuration: "shadow")) {
+    transitive = false
+  }
+
   // Not bundled in with the agent.  Usage requires being on the app's classpath (eg. Spring Boot's executable jar)
   compileOnly group: 'io.opentracing.contrib', name: 'opentracing-jdbc', version: '0.0.3'
 }
 
 project(':dd-java-agent:integrations:helpers').afterEvaluate { helperProject ->
-  project.compileJava.dependsOn helperProject.tasks.shadowJar
+  project.processResources {
+    from(helperProject.tasks.shadowJar)
+    rename {
+      it.startsWith("helpers") && it.endsWith(".jar") ?
+        "helpers.jar.zip" :
+        it
+    }
+  }
+  project.processResources.dependsOn helperProject.tasks.shadowJar
 }
 
 jar {

@@ -25,7 +25,7 @@ public class AgentRulesManager {
   private static final String ddTraceVersion = DDTraceInfo.VERSION;
   private static final String ddTraceAnnotationsVersion = DDTraceAnnotationsInfo.VERSION;
 
-  private static final String SPRING_BOOT_RULE = "spring-boot-rule.btm";
+  private static final String INITIALIZER_RULES = "initializer-rules.btm";
 
   protected static volatile AgentRulesManager INSTANCE;
 
@@ -61,7 +61,7 @@ public class AgentRulesManager {
 
     INSTANCE = manager;
 
-    manager.loadRules(SPRING_BOOT_RULE, ClassLoader.getSystemClassLoader());
+    manager.loadRules(INITIALIZER_RULES, ClassLoader.getSystemClassLoader());
     manager.traceAnnotationsManager.initialize();
   }
 
