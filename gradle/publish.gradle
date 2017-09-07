@@ -73,25 +73,36 @@ artifactoryPublish { task ->
       throw new IllegalStateException("cannot run " + task + " with --parallel and --max-workers > 1")
     }
   }
+}
 
-  artifactory {
-    publish {
-      contextUrl = forceLocal ? 'http://localhost:8080/artifactory' : 'https://oss.jfrog.org'
-      repository {
-        if (forceLocal)
-          repoKey = isSnapshot ? 'libs-snapshot-local' : 'libs-release-local'
-        else
-          repoKey = isSnapshot ? 'oss-snapshot-local' : 'oss-release-local'
-        gradle.taskGraph.whenReady { taskGraph ->
+artifactory {
+  publish {
+    contextUrl = forceLocal ? 'http://localhost:8080/artifactory' : 'https://oss.jfrog.org'
+    repository {
+      if (forceLocal)
+        repoKey = isSnapshot ? 'libs-snapshot-local' : 'libs-release-local'
+      else
+        repoKey = isSnapshot ? 'oss-snapshot-local' : 'oss-release-local'
+      gradle.taskGraph.whenReady { taskGraph ->
+        artifactoryPublish { task ->
           if (taskGraph.hasTask(task)) {
             username = bintrayUser
             password = bintrayApiKey
           }
         }
       }
-      defaults {
-        if (!isRoot) publishConfigs('archives')
-      }
+    }
+    defaults {
+      if (!isRoot) publishConfigs('archives')
+    }
+  }
+}
+
+bintrayUpload { task ->
+  gradle.taskGraph.whenReady { taskGraph ->
+    def startParameter = project.gradle.startParameter
+    if (taskGraph.hasTask(task) && startParameter.parallelProjectExecutionEnabled && startParameter.maxWorkerCount > 1) {
+      throw new IllegalStateException("cannot run " + task + " with --parallel and --max-workers > 1")
     }
   }
 }
@@ -155,4 +166,8 @@ bintray {
 //      }
 //    }
   }
+}
+
+if(!isSnapshot) {
+  artifactoryPublish.finalizedBy bintrayUpload
 }

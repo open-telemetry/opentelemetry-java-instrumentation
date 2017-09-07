@@ -27,28 +27,6 @@ description = 'dd-trace-java'
 // Applied here to allow publishing of artifactory build info
 apply from: "${rootDir}/gradle/publish.gradle"
 
-// Source: https://github.com/ratpack/ratpack/blob/master/ratpack.gradle#L101
-task bintrayPublish() {
-  doLast {
-    if (!project.hasProperty("bintrayApiKey") || bintrayApiKey.length() < 20) {
-      throw new InvalidUserDataException("You must provide a valid bintrayApiKey")
-    }
-
-    if (!project.hasProperty('buildNumber') || !"$buildNumber".isInteger()) {
-      throw new TaskExecutionException("Must provide buildNumber of a release from https://oss.jfrog.org/artifactory/webapp/#/builds/dd-trace-java")
-    }
-
-    def curl = [
-      'curl',
-      '-X', 'POST',
-      '-u', "${bintrayUser}:${bintrayApiKey}",
-      '-d', '',
-      "http://oss.jfrog.org/api/plugins/build/promote/snapshotsToBintray/dd-trace-java/$project.buildNumber"
-    ].execute()
-    logger.info("Received response: ${curl.text}")
-  }
-}
-
 task wrapper(type: Wrapper) {
   gradleVersion = '4.0'
 }
