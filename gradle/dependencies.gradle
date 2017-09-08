@@ -1,0 +1,46 @@
+ext {
+  version = [
+    opentracing: '0.30.0',
+
+    slf4j      : "1.7.25",
+    guava      : "21.0",
+    jackson    : "2.8.7",
+
+    spock      : "1.0-groovy-2.4",
+    groovy     : "2.4.11",
+    junit      : "4.12",
+    logback    : "1.2.3",
+  ]
+
+  deps = [
+    // OpenTracing
+    opentracingApi : dependencies.create(group: 'io.opentracing', name: 'opentracing-api', version: version.opentracing),
+    opentracing    : [
+      dependencies.create(group: 'io.opentracing', name: 'opentracing-api', version: version.opentracing),
+      dependencies.create(group: 'io.opentracing', name: 'opentracing-noop', version: version.opentracing),
+      dependencies.create(group: 'io.opentracing', name: 'opentracing-util', version: version.opentracing),
+    ],
+    opentracingMock: dependencies.create(group: 'io.opentracing', name: 'opentracing-mock', version: version.opentracing),
+
+    // General
+    slf4j          : "org.slf4j:slf4j-api:${version.slf4j}",
+    guava          : "com.google.guava:guava:$version.guava",
+    jackson        : [
+      dependencies.create(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version.jackson),
+      dependencies.create(group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: version.jackson),
+    ],
+
+    // Testing
+    spock          : dependencies.create("org.spockframework:spock-core:${version.spock}", {
+      exclude group: "org.codehaus.groovy", module: "groovy-all"
+    }),
+    groovy         : "org.codehaus.groovy:groovy-all:${version.groovy}",
+    junit          : "junit:junit:${version.junit}",
+    testLogging    : [
+      dependencies.create(group: 'ch.qos.logback', name: 'logback-classic', version: version.logback),
+      dependencies.create(group: 'org.slf4j', name: 'log4j-over-slf4j', version: version.slf4j),
+      dependencies.create(group: 'org.slf4j', name: 'jcl-over-slf4j', version: version.slf4j),
+      dependencies.create(group: 'org.slf4j', name: 'jul-to-slf4j', version: version.slf4j),
+    ],
+  ]
+}

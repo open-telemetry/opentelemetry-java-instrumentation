@@ -16,19 +16,20 @@ task packageSources(type: Jar) {
   from sourceSets.main.allSource
 }
 artifacts.archives packageSources
+
 repositories {
   mavenLocal()
-
-  maven { url "http://repo.maven.apache.org/maven2" }
+  jcenter()
+  mavenCentral()
 }
 
 dependencies {
-  testCompile group: 'junit', name: 'junit', version: '4.12'
+  testCompile deps.junit
   testCompile group: 'org.assertj', name: 'assertj-core', version: '3.6.2'
   testCompile group: 'org.mockito', name: 'mockito-core', version: '2.7.22'
 
-  testCompile group: 'org.spockframework', name: 'spock-core', version: '1.0-groovy-2.4'
-  testCompile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.4'
+  testCompile deps.spock
+  testCompile deps.groovy
   testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.6'
 }
 

@@ -24,14 +24,14 @@ dependencies {
 
   compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
   compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
-  compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+  compile deps.slf4j
 
   compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
   // ^ Generally a bad idea for libraries, but we're shadowing.
 
-  testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+  testCompile deps.testLogging
+  testCompile deps.opentracingMock
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
-  testCompile group: 'io.opentracing', name: 'opentracing-mock', version: '0.30.0'
 
   testCompile(project(path: ':dd-java-agent:integrations:helpers', configuration: "shadow")) {
     transitive = false

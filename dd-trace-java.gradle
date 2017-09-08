@@ -16,10 +16,13 @@ plugins {
 allprojects {
   group = 'com.datadoghq'
   version = '0.2.3-SNAPSHOT'
+
+  apply from: "${rootDir}/gradle/dependencies.gradle"
 }
 
 repositories {
   jcenter()
+  mavenCentral()
 }
 
 description = 'dd-trace-java'

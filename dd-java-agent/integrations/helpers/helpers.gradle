@@ -9,7 +9,7 @@ configurations.compile {
 dependencies {
   compileOnly project(':dd-trace')
   compileOnly project(':dd-trace-annotations')
-  compileOnly group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+  compileOnly deps.slf4j
 
   compileOnly group: 'org.jboss.byteman', name: 'byteman', version: '4.0.0-BETA5'
 

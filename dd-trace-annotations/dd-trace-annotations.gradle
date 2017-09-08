@@ -4,6 +4,6 @@ apply from: "${rootDir}/gradle/jacoco.gradle"
 
 description = 'dd-trace-annotations'
 dependencies {
-  compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
-  testCompile group: 'junit', name: 'junit', version: '3.8.1'
+  compile deps.slf4j
+  testCompile deps.junit
 }
