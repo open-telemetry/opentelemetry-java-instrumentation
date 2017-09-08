@@ -9,7 +9,7 @@
 #AT EXIT
 #IF TRUE
 #DO
-#  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+#  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
 #ENDRULE
 
 
@@ -21,7 +21,7 @@ METHOD <init>
 AT EXIT
 IF TRUE
 DO
-  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
 ENDRULE
 
 
@@ -33,7 +33,7 @@ METHOD <init>
 AT EXIT
 IF TRUE
 DO
-  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
 ENDRULE
 
 
@@ -45,7 +45,7 @@ METHOD <init>
 AT EXIT
 IF TRUE
 DO
-  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
 ENDRULE
 
 
@@ -57,7 +57,7 @@ METHOD <init>
 AT EXIT
 IF TRUE
 DO
-  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
 ENDRULE
 
 RULE TracingCommandListener-init
@@ -66,7 +66,7 @@ METHOD <init>
 AT EXIT
 IF TRUE
 DO
-  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
 ENDRULE
 
 
@@ -78,7 +78,7 @@ METHOD <init>
 AT EXIT
 IF TRUE
 DO
-  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad($0);
+  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
 ENDRULE
 
 
@@ -90,7 +90,7 @@ METHOD <clinit>
 AT EXIT
 IF TRUE
 DO
-  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad();
+  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad();
 ENDRULE
 
 
@@ -102,5 +102,5 @@ METHOD <clinit>
 AT EXIT
 IF TRUE
 DO
-  com.datadoghq.trace.agent.InstrumentationRulesManager.registerClassLoad();
+  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad();
 ENDRULE
