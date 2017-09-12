@@ -84,5 +84,11 @@ if (project.plugins.hasPlugin('com.github.johnrengelman.shadow')) {
   }
 }
 
+if(project.hasProperty("removeJarVersionNumbers") && removeJarVersionNumbers) {
+  tasks.withType(AbstractArchiveTask) {
+    version = null
+  }
+}
+
 apply from: "$rootDir/gradle/checkstyle.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
