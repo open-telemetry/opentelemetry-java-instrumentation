@@ -53,7 +53,7 @@ test {
   }
 
   if (project.hasProperty("disableShadowRelocate") && disableShadowRelocate) {
-    exclude 'com/datadoghq/trace/agent/test/ShadowPackageRenamingTest.class'
+    exclude 'com/datadoghq/agent/ShadowPackageRenamingTest.class'
   }
 }
 

@@ -43,6 +43,11 @@ shadowJar {
   classifier null
   configurations = [project.configurations.compile]
 
+  if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
+    // This is needed to align with the relocation of TraceResolver in dd-java-agent.
+    relocate 'io.opentracing.contrib', 'dd.opentracing.contrib'
+  }
+
   dependencies {
     exclude(dependency('org.projectlombok:lombok:1.16.18'))
   }
