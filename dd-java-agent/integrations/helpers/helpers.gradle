@@ -43,6 +43,8 @@ shadowJar {
   classifier null
   configurations = [project.configurations.compile]
 
+  relocate 'org.slf4j', 'dd.slf4j'  // Prevents conflict with other SLF4J instances. Important for premain.
+
   if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
     // This is needed to align with the relocation of TraceResolver in dd-java-agent.
     relocate 'io.opentracing.contrib', 'dd.opentracing.contrib'
