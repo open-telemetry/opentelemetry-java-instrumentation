@@ -45,9 +45,9 @@ test {
 
   doFirst {
     // Defining here to allow jacoco to be first on the command line.
-    jvmArgs "-javaagent:${project(':dd-java-agent').buildDir}/libs/dd-java-agent-${project.version}.jar"
+    jvmArgs "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
   }
-  
+
   testLogging {
     events "started"
   }
