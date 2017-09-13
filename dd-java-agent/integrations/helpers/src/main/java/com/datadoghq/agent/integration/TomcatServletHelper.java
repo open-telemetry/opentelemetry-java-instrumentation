@@ -7,10 +7,12 @@ import javax.servlet.FilterRegistration;
 import org.apache.catalina.core.ApplicationContext;
 import org.jboss.byteman.rule.Rule;
 
-/** Patch the Jetty Servlet during the init steps */
+/** Patch the Tomcat Servlet during the init steps */
 public class TomcatServletHelper extends DDAgentTracingHelper<ApplicationContext> {
 
-  public TomcatServletHelper(Rule rule) {
+  private static final String pattern = "/*";
+
+  public TomcatServletHelper(final Rule rule) {
     super(rule);
   }
 
@@ -21,16 +23,18 @@ public class TomcatServletHelper extends DDAgentTracingHelper<ApplicationContext
    * @return The same current contextHandler but patched
    * @throws Exception
    */
-  protected ApplicationContext doPatch(ApplicationContext contextHandler) throws Exception {
-
-    String[] patterns = {"/*"};
-
-    Filter filter = new TracingFilter(tracer);
-    FilterRegistration.Dynamic registration = contextHandler.addFilter("tracingFilter", filter);
-    registration.setAsyncSupported(true);
-    registration.addMappingForUrlPatterns(
-        EnumSet.allOf(javax.servlet.DispatcherType.class), true, patterns);
-
+  @Override
+  protected ApplicationContext doPatch(final ApplicationContext contextHandler) throws Exception {
+    if (contextHandler.getFilterRegistration("tracingFilter") == null) {
+      final Filter filter = new TracingFilter(tracer);
+      final FilterRegistration.Dynamic registration =
+          contextHandler.addFilter("tracingFilter", filter);
+      if (registration != null) { // filter of that name must already be registered.
+        registration.setAsyncSupported(true);
+        registration.addMappingForUrlPatterns(
+            EnumSet.allOf(javax.servlet.DispatcherType.class), true, pattern);
+      }
+    }
     return contextHandler;
   }
 }
