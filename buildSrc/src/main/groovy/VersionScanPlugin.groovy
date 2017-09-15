@@ -52,7 +52,7 @@ class VersionScanPlugin implements Plugin<Project> {
       project.task('verifyVersionScan').onlyIf { false }
       return
     }
-    
+
 //    println "Adding scan tasks for $project"
 
     Set<String> allInclude = Sets.newConcurrentHashSet()

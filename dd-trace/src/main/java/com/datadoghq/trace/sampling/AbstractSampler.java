@@ -14,7 +14,7 @@ public abstract class AbstractSampler implements Sampler {
   @Override
   public boolean sample(final DDBaseSpan<?> span) {
 
-    //Filter by tag values
+    // Filter by tag values
     for (final Entry<String, Pattern> entry : skipTagsPatterns.entrySet()) {
       final Object value = span.getTags().get(entry.getKey());
       if (value != null) {

@@ -19,12 +19,12 @@ public class DBTypeDecorator extends AbstractDecorator {
   @Override
   public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
 
-    //Assign service name
+    // Assign service name
     if (super.afterSetTag(context, tag, value)) {
-      //Assign span type to DB
+      // Assign span type to DB
       // Special case: Mongo, set to mongodb
       if ("mongo".equals(value)) {
-        //Todo: not sure it's used cos already in the agent mongo helper
+        // Todo: not sure it's used cos already in the agent mongo helper
         context.setSpanType("mongodb");
       } else {
         context.setSpanType("sql");

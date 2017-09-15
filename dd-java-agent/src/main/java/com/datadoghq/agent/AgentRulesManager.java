@@ -34,7 +34,7 @@ public class AgentRulesManager {
   protected final InstrumentationRulesManager instrumentationRulesManager;
   protected final TraceAnnotationsManager traceAnnotationsManager;
 
-  public AgentRulesManager(Retransformer trans, TracingAgentConfig config) {
+  public AgentRulesManager(final Retransformer trans, final TracingAgentConfig config) {
     transformer = trans;
     agentTracerConfig = config;
     traceAnnotationsManager = new TraceAnnotationsManager(trans, config);
@@ -49,7 +49,7 @@ public class AgentRulesManager {
   public static void initialize(final Retransformer trans) {
     log.debug("Initializing {}", AgentRulesManager.class.getSimpleName());
 
-    TracingAgentConfig config =
+    final TracingAgentConfig config =
         FactoryUtils.loadConfigFromFilePropertyOrResource(
             DDTracerFactory.SYSTEM_PROPERTY_CONFIG_PATH,
             DDTracerFactory.CONFIG_PATH,
@@ -57,7 +57,7 @@ public class AgentRulesManager {
 
     log.debug("Configuration: {}", config.toString());
 
-    AgentRulesManager manager = new AgentRulesManager(trans, config);
+    final AgentRulesManager manager = new AgentRulesManager(trans, config);
 
     INSTANCE = manager;
 
@@ -71,7 +71,7 @@ public class AgentRulesManager {
    *
    * @param classLoader The classloader
    */
-  protected List<String> loadRules(String rulesFileName, final ClassLoader classLoader) {
+  protected List<String> loadRules(final String rulesFileName, final ClassLoader classLoader) {
     final List<String> scripts = new ArrayList<>();
     if (transformer == null) {
       log.warn(

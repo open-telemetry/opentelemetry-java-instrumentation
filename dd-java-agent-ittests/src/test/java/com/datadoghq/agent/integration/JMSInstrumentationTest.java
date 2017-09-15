@@ -24,10 +24,10 @@ public class JMSInstrumentationTest {
   public static void start() throws JMSException {
 
     broker.start();
-    ActiveMQConnectionFactory connectionFactory = broker.createConnectionFactory();
+    final ActiveMQConnectionFactory connectionFactory = broker.createConnectionFactory();
 
     destination = new ActiveMQQueue("someQueue");
-    Connection connection = connectionFactory.createConnection();
+    final Connection connection = connectionFactory.createConnection();
     connection.start();
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
   }
@@ -35,8 +35,8 @@ public class JMSInstrumentationTest {
   @Test
   public void test() throws Exception {
 
-    MessageProducer producer = session.createProducer(destination);
-    MessageConsumer consumer = session.createConsumer(destination);
+    final MessageProducer producer = session.createProducer(destination);
+    final MessageConsumer consumer = session.createConsumer(destination);
 
     assertThat(producer.getClass().getSimpleName()).isEqualTo("TracingMessageProducer");
     assertThat(consumer.getClass().getSimpleName()).isEqualTo("TracingMessageConsumer");

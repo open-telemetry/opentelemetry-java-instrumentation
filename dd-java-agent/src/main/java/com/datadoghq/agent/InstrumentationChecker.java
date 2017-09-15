@@ -34,7 +34,7 @@ public class InstrumentationChecker {
             CONFIG_FILE, new TypeReference<Map<String, List<ArtifactSupport>>>() {});
   }
 
-  public List<String> getUnsupportedRules(ClassLoader classLoader) {
+  public List<String> getUnsupportedRules(final ClassLoader classLoader) {
     log.debug("Checking rule compatibility on classloader {}", classLoader);
 
     final List<String> unsupportedRules = new ArrayList<>();
@@ -58,13 +58,13 @@ public class InstrumentationChecker {
               log.debug(
                   "Instrumentation {} not applied due to missing class {}.", rule, identifier);
             } else {
-              String identifyingMethod = identifier.getValue();
+              final String identifyingMethod = identifier.getValue();
               if (identifyingMethod != null && !identifyingMethod.isEmpty()) {
-                Class clazz = getClassIfPresent(identifier.getKey(), classLoader);
+                final Class clazz = getClassIfPresent(identifier.getKey(), classLoader);
                 // already confirmed above the class is there.
-                Method[] declaredMethods = clazz.getDeclaredMethods();
+                final Method[] declaredMethods = clazz.getDeclaredMethods();
                 boolean methodFound = false;
-                for (Method m : declaredMethods) {
+                for (final Method m : declaredMethods) {
                   if (m.getName().equals(identifyingMethod)) {
                     methodFound = true;
                     break;
@@ -111,11 +111,13 @@ public class InstrumentationChecker {
     return unsupportedRules;
   }
 
-  static boolean isClassPresent(final String identifyingPresentClass, ClassLoader classLoader) {
+  static boolean isClassPresent(
+      final String identifyingPresentClass, final ClassLoader classLoader) {
     return getClassIfPresent(identifyingPresentClass, classLoader) != null;
   }
 
-  static Class getClassIfPresent(final String identifyingPresentClass, ClassLoader classLoader) {
+  static Class getClassIfPresent(
+      final String identifyingPresentClass, final ClassLoader classLoader) {
     try {
       return Class.forName(identifyingPresentClass, false, classLoader);
     } catch (final Exception e) {

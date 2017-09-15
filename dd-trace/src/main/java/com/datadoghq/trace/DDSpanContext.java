@@ -4,7 +4,11 @@ import com.datadoghq.trace.integration.AbstractDecorator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
 import io.opentracing.tag.Tags;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.extern.slf4j.Slf4j;
 
@@ -191,7 +195,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     }
     this.tags.put(tag, value);
 
-    //Call decorators
+    // Call decorators
     final List<AbstractDecorator> decorators = tracer.getSpanContextDecorators(tag);
     if (decorators != null && value != null) {
       for (final AbstractDecorator decorator : decorators) {
@@ -205,7 +209,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         }
       }
     }
-    //Error management
+    // Error management
     if (Tags.ERROR.getKey().equals(tag) && Boolean.TRUE.equals(value)) {
       this.errorFlag = true;
     }

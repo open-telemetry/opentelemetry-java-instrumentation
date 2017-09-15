@@ -58,7 +58,7 @@ public class TraceAnnotationsManager {
   public void initialize() {
     log.debug("Initializing {}", TraceAnnotationsManager.class.getSimpleName());
 
-    //Check if annotations are enabled
+    // Check if annotations are enabled
     if (agentTracerConfig != null
         && agentTracerConfig.getEnableCustomAnnotationTracingOver() != null
         && agentTracerConfig.getEnableCustomAnnotationTracingOver().length > 0) {
@@ -90,7 +90,7 @@ public class TraceAnnotationsManager {
         final CtClass cc = pool.get(method.getDeclaringClass().getCanonicalName());
         final CtMethod javassistMethod = cc.getDeclaredMethod(method.getName());
 
-        //AT ENTRY: child of current case
+        // AT ENTRY: child of current case
         final String ruleText = CURRENT_SPAN_EXISTS + buildSpan(javassistMethod) + START;
         RuleScript script =
             createRuleScript(
@@ -101,7 +101,7 @@ public class TraceAnnotationsManager {
                 ruleText);
         generatedScripts.append(script).append("\n");
 
-        //AT EXIT
+        // AT EXIT
         script =
             createRuleScript(
                 "Close span ",

@@ -33,7 +33,7 @@ public class TraceAnnotationsManagerTest {
 
   @Test
   public void testSimpleCaseAnnotations() {
-    //Test single span in new trace
+    // Test single span in new trace
     SayTracedHello.sayHello();
 
     assertThat(writer.firstTrace().size()).isEqualTo(1);
@@ -44,13 +44,13 @@ public class TraceAnnotationsManagerTest {
   @Test
   public void testComplexCaseAnnotations() {
 
-    //Test new trace with 2 children spans
+    // Test new trace with 2 children spans
     SayTracedHello.sayHELLOsayHA();
     assertThat(writer.firstTrace().size()).isEqualTo(3);
     final long parentId = writer.firstTrace().get(0).context().getSpanId();
 
     assertThat(writer.firstTrace().get(0).getOperationName()).isEqualTo("NEW_TRACE");
-    assertThat(writer.firstTrace().get(0).getParentId()).isEqualTo(0); //ROOT / no parent
+    assertThat(writer.firstTrace().get(0).getParentId()).isEqualTo(0); // ROOT / no parent
     assertThat(writer.firstTrace().get(0).context().getParentId()).isEqualTo(0);
     assertThat(writer.firstTrace().get(0).getServiceName()).isEqualTo("test2");
 

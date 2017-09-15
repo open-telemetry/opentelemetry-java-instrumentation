@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class TomcatServletInstrumentationTest {
 
-  private int serverPort = 9786;
+  private final int serverPort = 9786;
 
   protected Tomcat tomcatServer;
   Context appContext;
@@ -21,10 +21,10 @@ public class TomcatServletInstrumentationTest {
     tomcatServer = new Tomcat();
     tomcatServer.setPort(serverPort);
 
-    File baseDir = new File("tomcat");
+    final File baseDir = new File("tomcat");
     tomcatServer.setBaseDir(baseDir.getAbsolutePath());
 
-    File applicationDir = new File(baseDir + "/webapps", "/ROOT");
+    final File applicationDir = new File(baseDir + "/webapps", "/ROOT");
     if (!applicationDir.exists()) {
       applicationDir.mkdirs();
     }

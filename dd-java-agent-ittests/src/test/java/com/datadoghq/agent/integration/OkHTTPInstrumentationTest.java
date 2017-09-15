@@ -9,7 +9,7 @@ public class OkHTTPInstrumentationTest {
 
   @Test
   public void test() {
-    OkHttpClient client = new OkHttpClient().newBuilder().build();
+    final OkHttpClient client = new OkHttpClient().newBuilder().build();
 
     assertThat(client.interceptors().size()).isEqualTo(1);
     assertThat(client.interceptors().get(0).getClass().getSimpleName())

@@ -22,7 +22,7 @@ public class DBStatementAsResourceName extends AbstractDecorator {
       return true;
     }
 
-    //Assign service name
+    // Assign service name
     if (super.afterSetTag(context, tag, value)) {
       // TODO: remove properly the tag (immutable at this time)
       // the `db.statement` tag must be removed because it will be set
