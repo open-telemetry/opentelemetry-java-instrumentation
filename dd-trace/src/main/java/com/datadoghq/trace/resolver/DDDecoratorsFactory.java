@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
-/** Create DDSpaDecorators from a valid configuration */
+/** Create DDSpanDecorators from a valid configuration */
 @Slf4j
 public class DDDecoratorsFactory {
 

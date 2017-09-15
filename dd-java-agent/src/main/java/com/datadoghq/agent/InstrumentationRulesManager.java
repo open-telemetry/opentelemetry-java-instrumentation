@@ -75,12 +75,13 @@ public class InstrumentationRulesManager {
   }
 
   public static void registerClassLoad(Object obj) {
-    log.info("Calling initialize with {}", obj);
     ClassLoader cl;
     if (obj instanceof ClassLoader) {
       cl = (ClassLoader) obj;
+      log.info("Calling initialize with {}", cl);
     } else {
       cl = obj.getClass().getClassLoader();
+      log.info("Calling initialize with {} and classloader ", obj, cl);
     }
 
     AgentRulesManager.INSTANCE.instrumentationRulesManager.initialize(cl);
@@ -99,6 +100,7 @@ public class InstrumentationRulesManager {
       }
       initializedClassloaders.add(classLoader);
     }
+    log.info("Initializing on classloader ", classLoader);
 
     injector.inject(classLoader);
 
