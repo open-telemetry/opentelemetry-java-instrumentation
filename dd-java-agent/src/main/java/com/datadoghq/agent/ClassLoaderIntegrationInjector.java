@@ -35,8 +35,13 @@ public class ClassLoaderIntegrationInjector {
             inovcationPoint.invoke(cl, bytes, 0, bytes.length);
             injectedEntries.put(entry.getKey(), entry.getValue());
             successfulyAdded = true;
-          } catch (InvocationTargetException e) {
-            log.debug("Error calling 'defineClass' method on {} for entry {}", cl, entry);
+          } catch (final InvocationTargetException e) {
+            log.debug(
+                "Error calling 'defineClass' method on {} for entry {}: {}",
+                cl,
+                entry,
+                e.getMessage());
+            log.debug("Error Details", e);
           }
         }
         toInject.keySet().removeAll(injectedEntries.keySet());
