@@ -102,7 +102,7 @@ public class InstrumentationRulesManager {
       }
       initializedClassloaders.add(classLoader);
     }
-    log.info("Initializing on classloader ", classLoader);
+    log.info("Initializing on classloader {}", classLoader);
 
     injector.inject(classLoader);
 
