@@ -39,7 +39,7 @@ public class DDTracerFactory {
             ? config.getDefaultServiceName()
             : DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME;
 
-    //Create writer
+    // Create writer
     final Writer writer;
 
     if (config.getWriter() != null) {
@@ -59,7 +59,7 @@ public class DDTracerFactory {
       writer = DDTracer.UNASSIGNED_WRITER;
     }
 
-    //Create sampler
+    // Create sampler
     final Sampler sampler;
 
     if (config.getSampler() != null) {
@@ -75,7 +75,7 @@ public class DDTracerFactory {
       sampler = DDTracer.UNASSIGNED_SAMPLER;
     }
 
-    //Add sampled tags
+    // Add sampled tags
     final Map<String, String> skipTagsPatterns = config.getSampler().getSkipTagsPatterns();
     if (skipTagsPatterns != null && sampler instanceof AbstractSampler) {
       final AbstractSampler aSampler = (AbstractSampler) sampler;
@@ -84,7 +84,7 @@ public class DDTracerFactory {
       }
     }
 
-    //Create tracer
+    // Create tracer
     return new DDTracer(defaultServiceName, writer, sampler);
   }
 
@@ -104,7 +104,7 @@ public class DDTracerFactory {
       tracer = DDTracerFactory.create(tracerConfig);
     }
 
-    //Create decorators from resource files
+    // Create decorators from resource files
     final List<AbstractDecorator> decorators = DDDecoratorsFactory.createFromResources();
     for (final AbstractDecorator decorator : decorators) {
       log.debug("Loading decorator: {}", decorator.getClass().getSimpleName());

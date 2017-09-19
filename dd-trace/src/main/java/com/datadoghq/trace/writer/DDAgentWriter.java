@@ -92,7 +92,7 @@ public class DDAgentWriter implements Writer {
         new Runnable() {
           @Override
           public void run() {
-            //SEND the payload to the agent
+            // SEND the payload to the agent
             log.debug("Async writer about to write {} services", services.size());
             if (api.sendServices(services)) {
               log.debug("Async writer just sent  {} services", services.size());

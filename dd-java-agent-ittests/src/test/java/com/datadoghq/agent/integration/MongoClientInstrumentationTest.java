@@ -9,7 +9,7 @@ public class MongoClientInstrumentationTest {
 
   @Test
   public void test() {
-    MongoClient mongoClient = new MongoClient();
+    final MongoClient mongoClient = new MongoClient();
 
     assertThat(mongoClient.getMongoClientOptions().getCommandListeners().size()).isEqualTo(1);
     assertThat(

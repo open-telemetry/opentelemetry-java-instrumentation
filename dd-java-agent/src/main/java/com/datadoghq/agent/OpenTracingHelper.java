@@ -51,7 +51,7 @@ public class OpenTracingHelper extends Helper {
 
   private static final Object SYNC = new Object();
 
-  public OpenTracingHelper(Rule rule) {
+  public OpenTracingHelper(final Rule rule) {
     super(rule);
   }
 
@@ -73,11 +73,11 @@ public class OpenTracingHelper extends Helper {
       if (tracer == null) {
         if (!GlobalTracer.isRegistered()) {
           // Try to obtain a tracer using the TracerResolver
-          Tracer resolved = TracerResolver.resolveTracer();
+          final Tracer resolved = TracerResolver.resolveTracer();
           if (resolved != null) {
             try {
               GlobalTracer.register(resolved);
-            } catch (RuntimeException re) {
+            } catch (final RuntimeException re) {
               log.log(Level.WARNING, "Failed to register tracer '" + resolved + "'", re);
             }
           }
@@ -97,7 +97,7 @@ public class OpenTracingHelper extends Helper {
    * @param obj The application object to be associated with the span
    * @param span The span
    */
-  public void associateSpan(Object obj, Span span) {
+  public void associateSpan(final Object obj, final Span span) {
     spanAssociations.put(obj, span);
   }
 
@@ -107,17 +107,17 @@ public class OpenTracingHelper extends Helper {
    * @param obj The application object
    * @return The span, or null if no associated span exists
    */
-  public Span retrieveSpan(Object obj) {
+  public Span retrieveSpan(final Object obj) {
     return spanAssociations.get(obj);
   }
 
   /** ******************************************* */
   /** Needs to be replaced by span.isFinished() */
-  public void finishedSpan(Object key, Span span) {
+  public void finishedSpan(final Object key, final Span span) {
     finished.put(key, span);
   }
 
-  public boolean isFinished(Object key) {
+  public boolean isFinished(final Object key) {
     return finished.containsKey(key);
   }
   /** ******************************************* */
@@ -134,7 +134,7 @@ public class OpenTracingHelper extends Helper {
    * @param obj The application object
    * @param value The state value
    */
-  public void setState(Object obj, int value) {
+  public void setState(final Object obj, final int value) {
     state.put(obj, new Integer(value));
   }
 
@@ -145,8 +145,8 @@ public class OpenTracingHelper extends Helper {
    * @param obj The application object
    * @return The state, or 0 if no state currently exists
    */
-  public int getState(Object obj) {
-    Integer value = state.get(obj);
+  public int getState(final Object obj) {
+    final Integer value = state.get(obj);
     return value == null ? 0 : value.intValue();
   }
 
@@ -157,11 +157,11 @@ public class OpenTracingHelper extends Helper {
    * @param obj The instrumentation target
    * @return Whether the instrumentation point should be ignored
    */
-  public boolean ignore(Object obj) {
+  public boolean ignore(final Object obj) {
     boolean ignore = false;
 
     if (obj instanceof HttpURLConnection) {
-      String value = ((HttpURLConnection) obj).getRequestProperty("opentracing.ignore");
+      final String value = ((HttpURLConnection) obj).getRequestProperty("opentracing.ignore");
       ignore = value != null && value.equalsIgnoreCase("true");
     }
 
@@ -184,24 +184,24 @@ public class OpenTracingHelper extends Helper {
    */
   public static class AgentTracer implements Tracer {
 
-    private Tracer tracer;
+    private final Tracer tracer;
 
-    public AgentTracer(Tracer tracer) {
+    public AgentTracer(final Tracer tracer) {
       this.tracer = tracer;
     }
 
     @Override
-    public SpanBuilder buildSpan(String operation) {
+    public SpanBuilder buildSpan(final String operation) {
       return new AgentSpanBuilder(tracer.buildSpan(operation));
     }
 
     @Override
-    public <C> SpanContext extract(Format<C> format, C carrier) {
+    public <C> SpanContext extract(final Format<C> format, final C carrier) {
       return tracer.extract(format, carrier);
     }
 
     @Override
-    public <C> void inject(SpanContext ctx, Format<C> format, C carrier) {
+    public <C> void inject(final SpanContext ctx, final Format<C> format, final C carrier) {
       tracer.inject(ctx, format, carrier);
     }
 
@@ -211,21 +211,21 @@ public class OpenTracingHelper extends Helper {
     }
 
     @Override
-    public ActiveSpan makeActive(Span span) {
+    public ActiveSpan makeActive(final Span span) {
       return tracer.makeActive(span);
     }
   }
 
   public static class AgentSpanBuilder implements SpanBuilder {
 
-    private SpanBuilder spanBuilder;
+    private final SpanBuilder spanBuilder;
 
-    public AgentSpanBuilder(SpanBuilder spanBuilder) {
+    public AgentSpanBuilder(final SpanBuilder spanBuilder) {
       this.spanBuilder = spanBuilder;
     }
 
     @Override
-    public SpanBuilder addReference(String type, SpanContext ctx) {
+    public SpanBuilder addReference(final String type, final SpanContext ctx) {
       if (ctx != null) {
         spanBuilder.addReference(type, ctx);
       }
@@ -233,7 +233,7 @@ public class OpenTracingHelper extends Helper {
     }
 
     @Override
-    public SpanBuilder asChildOf(SpanContext ctx) {
+    public SpanBuilder asChildOf(final SpanContext ctx) {
       if (ctx != null) {
         spanBuilder.asChildOf(ctx);
       }
@@ -241,7 +241,7 @@ public class OpenTracingHelper extends Helper {
     }
 
     @Override
-    public SpanBuilder asChildOf(BaseSpan<?> span) {
+    public SpanBuilder asChildOf(final BaseSpan<?> span) {
       if (span != null) {
         spanBuilder.asChildOf(span);
       }
@@ -254,25 +254,25 @@ public class OpenTracingHelper extends Helper {
     }
 
     @Override
-    public SpanBuilder withStartTimestamp(long ts) {
+    public SpanBuilder withStartTimestamp(final long ts) {
       spanBuilder.withStartTimestamp(ts);
       return this;
     }
 
     @Override
-    public SpanBuilder withTag(String name, String value) {
+    public SpanBuilder withTag(final String name, final String value) {
       spanBuilder.withTag(name, value);
       return this;
     }
 
     @Override
-    public SpanBuilder withTag(String name, boolean value) {
+    public SpanBuilder withTag(final String name, final boolean value) {
       spanBuilder.withTag(name, value);
       return this;
     }
 
     @Override
-    public SpanBuilder withTag(String name, Number value) {
+    public SpanBuilder withTag(final String name, final Number value) {
       spanBuilder.withTag(name, value);
       return this;
     }

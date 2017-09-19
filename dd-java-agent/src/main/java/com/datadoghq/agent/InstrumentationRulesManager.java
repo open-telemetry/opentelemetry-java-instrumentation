@@ -38,13 +38,15 @@ public class InstrumentationRulesManager {
   private final Set<ClassLoader> initializedClassloaders = Sets.newConcurrentHashSet();
 
   public InstrumentationRulesManager(
-      Retransformer trans, TracingAgentConfig config, AgentRulesManager agentRulesManager) {
+      final Retransformer trans,
+      final TracingAgentConfig config,
+      final AgentRulesManager agentRulesManager) {
     this.transformer = trans;
     this.config = config;
     this.agentRulesManager = agentRulesManager;
-    InputStream helpersStream = this.getClass().getResourceAsStream(HELPERS_NAME);
-    ZipInputStream stream = new ZipInputStream(helpersStream);
-    Map<ZipEntry, byte[]> helperEntries = Maps.newHashMap();
+    final InputStream helpersStream = this.getClass().getResourceAsStream(HELPERS_NAME);
+    final ZipInputStream stream = new ZipInputStream(helpersStream);
+    final Map<ZipEntry, byte[]> helperEntries = Maps.newHashMap();
     try {
       ZipEntry entry = stream.getNextEntry();
       while (entry != null) {
@@ -53,17 +55,17 @@ public class InstrumentationRulesManager {
           continue;
         }
         // this is a buffer, so the long->int truncation is not an issue.
-        ByteArrayOutputStream os = new ByteArrayOutputStream((int) entry.getSize());
+        final ByteArrayOutputStream os = new ByteArrayOutputStream((int) entry.getSize());
 
         int n;
-        byte[] buf = new byte[1024];
+        final byte[] buf = new byte[1024];
         while ((n = stream.read(buf, 0, 1024)) > -1) {
           os.write(buf, 0, n);
         }
         helperEntries.put(entry, os.toByteArray());
         entry = stream.getNextEntry();
       }
-    } catch (IOException e) {
+    } catch (final IOException e) {
       log.error("Error extracting helpers", e);
     }
     injector = new ClassLoaderIntegrationInjector(helperEntries);
@@ -74,8 +76,8 @@ public class InstrumentationRulesManager {
     registerClassLoad(Thread.currentThread().getContextClassLoader());
   }
 
-  public static void registerClassLoad(Object obj) {
-    ClassLoader cl;
+  public static void registerClassLoad(final Object obj) {
+    final ClassLoader cl;
     if (obj instanceof ClassLoader) {
       cl = (ClassLoader) obj;
       log.info("Calling initialize with {}", cl);
@@ -93,7 +95,7 @@ public class InstrumentationRulesManager {
    *
    * @param classLoader
    */
-  public void initialize(ClassLoader classLoader) {
+  public void initialize(final ClassLoader classLoader) {
     synchronized (classLoader) {
       if (initializedClassloaders.contains(classLoader)) {
         return;
@@ -106,7 +108,7 @@ public class InstrumentationRulesManager {
 
     final List<String> loadedScripts = agentRulesManager.loadRules(INTEGRATION_RULES, classLoader);
 
-    //Check if some rules have to be uninstalled
+    // Check if some rules have to be uninstalled
     final List<String> uninstallScripts = checker.getUnsupportedRules(classLoader);
     if (config != null) {
       final List<String> disabledInstrumentations = config.getDisabledInstrumentations();
@@ -117,7 +119,7 @@ public class InstrumentationRulesManager {
 
     try {
       uninstallScripts(loadedScripts, uninstallScripts);
-    } catch (Exception e) {
+    } catch (final Exception e) {
       log.warn("Error uninstalling scripts", e);
     }
   }

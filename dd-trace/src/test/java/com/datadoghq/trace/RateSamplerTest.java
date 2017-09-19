@@ -25,8 +25,8 @@ public class RateSamplerTest {
         kept++;
       }
     }
-    //FIXME test has to be more predictable
-    //assertThat(((double) kept / iterations)).isBetween(sampleRate - 0.02, sampleRate + 0.02);
+    // FIXME test has to be more predictable
+    // assertThat(((double) kept / iterations)).isBetween(sampleRate - 0.02, sampleRate + 0.02);
 
   }
 

@@ -11,11 +11,11 @@ public class ErrorFlag extends AbstractDecorator {
 
   @Override
   public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
-    //Assign resource name
+    // Assign resource name
     try {
       context.setErrorFlag(Boolean.parseBoolean(String.valueOf(value)));
     } catch (final Throwable t) {
-      //DO NOTHING
+      // DO NOTHING
     }
     return true;
   }

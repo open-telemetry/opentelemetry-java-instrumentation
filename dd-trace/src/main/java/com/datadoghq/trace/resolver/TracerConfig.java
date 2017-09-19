@@ -54,7 +54,7 @@ public class TracerConfig {
     try {
       return new ObjectMapper(new YAMLFactory()).writeValueAsString(this);
     } catch (final JsonProcessingException e) {
-      //FIXME better toString() while config object stabilized
+      // FIXME better toString() while config object stabilized
       return null;
     }
   }

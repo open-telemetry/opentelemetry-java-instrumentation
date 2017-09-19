@@ -175,6 +175,6 @@ bintray {
   }
 }
 
-if(!isSnapshot) {
+if (!isSnapshot) {
   artifactoryPublish.finalizedBy bintrayUpload
 }

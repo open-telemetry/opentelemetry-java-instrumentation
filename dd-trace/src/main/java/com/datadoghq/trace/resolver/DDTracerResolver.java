@@ -29,9 +29,9 @@ public class DDTracerResolver extends TracerResolver {
   protected Tracer resolve() {
     log.info("Creating the Datadog Tracer from the resolver");
 
-    //Find a resource file named dd-trace.yml
+    // Find a resource file named dd-trace.yml
     DDTracer tracer = null;
-    //Create tracer from resource files
+    // Create tracer from resource files
     tracer = DDTracerFactory.createFromConfigurationFile();
 
     return tracer;

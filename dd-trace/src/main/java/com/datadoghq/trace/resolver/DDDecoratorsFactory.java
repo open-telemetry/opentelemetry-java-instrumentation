@@ -26,7 +26,7 @@ public class DDDecoratorsFactory {
         continue;
       }
 
-      //Find class and create
+      // Find class and create
       final Class<?> decoratorClass;
       try {
         decoratorClass = Class.forName(DECORATORS_PACKAGE + decoratorConfig.getType());
@@ -47,7 +47,7 @@ public class DDDecoratorsFactory {
         continue;
       }
 
-      //Fill with config values
+      // Fill with config values
       if (decoratorConfig.getMatchingTag() != null) {
         decorator.setMatchingTag(decoratorConfig.getMatchingTag());
       }

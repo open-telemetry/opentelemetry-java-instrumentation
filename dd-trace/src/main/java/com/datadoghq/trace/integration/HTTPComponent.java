@@ -18,9 +18,9 @@ public class HTTPComponent extends AbstractDecorator {
 
   @Override
   public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
-    //Assign service name
+    // Assign service name
     if (super.afterSetTag(context, tag, value)) {
-      //Assign span type to WEB
+      // Assign span type to WEB
       context.setSpanType("web");
       return true;
     } else {

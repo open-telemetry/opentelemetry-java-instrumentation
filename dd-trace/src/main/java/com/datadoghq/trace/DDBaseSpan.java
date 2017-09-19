@@ -227,7 +227,7 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
 
   protected abstract S thisInstance();
 
-  //Getters and JSON serialisation instructions
+  // Getters and JSON serialisation instructions
 
   /**
    * Meta merges baggage and tags (stringified values)

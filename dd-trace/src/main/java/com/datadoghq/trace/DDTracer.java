@@ -373,7 +373,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
       final String operationName =
           this.operationName != null ? this.operationName : this.resourceName;
 
-      //this.operationName, this.tags,
+      // this.operationName, this.tags,
 
       // some attributes are inherited from the parent
       context =

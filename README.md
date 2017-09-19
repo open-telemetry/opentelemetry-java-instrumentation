@@ -70,7 +70,7 @@ The Java Agent—once passed to your application—automatically traces requests
 | ------------- |:-------------:| ----- |
 | [OkHTTP](https://github.com/opentracing-contrib/java-okhttp) | 3.x | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers |
 | [Apache HTTP Client](https://github.com/opentracing-contrib/java-apache-httpclient) | 4.3 + | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers|
-| [AWS SDK](https://github.com/opentracing-contrib/java-aws-sdk) | 1.11.119+ | Trace all client calls to any AWS service |
+| [AWS SDK](https://github.com/opentracing-contrib/java-aws-sdk) | 1.11.0+ | Trace all client calls to any AWS service |
 | [Web Servlet Filters](https://github.com/opentracing-contrib/java-web-servlet-filter) | Depends on web server | See [Application Servers](#application-servers) |
 | [JMS 2](https://github.com/opentracing-contrib/java-jms) | 2.x | Trace calls to message brokers; distributed trace propagation not yet supported |
 

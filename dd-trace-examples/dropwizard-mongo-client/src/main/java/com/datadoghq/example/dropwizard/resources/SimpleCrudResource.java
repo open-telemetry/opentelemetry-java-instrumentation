@@ -37,7 +37,7 @@ public class SimpleCrudResource {
     // For this example, start from a fresh DB
     try {
       client.dropDatabase(DATABASE);
-    } catch (Exception e) {
+    } catch (final Exception e) {
       // do nothing here
     }
 
@@ -55,9 +55,9 @@ public class SimpleCrudResource {
   @GET
   @Path("/add")
   public String addBook(
-      @QueryParam("isbn") Optional<String> isbn,
-      @QueryParam("title") Optional<String> title,
-      @QueryParam("page") Optional<Integer> page)
+      @QueryParam("isbn") final Optional<String> isbn,
+      @QueryParam("title") final Optional<String> title,
+      @QueryParam("page") final Optional<Integer> page)
       throws InterruptedException {
 
     // The methodDB is traced (see below), this will be produced a new child span
@@ -67,7 +67,7 @@ public class SimpleCrudResource {
       throw new IllegalArgumentException("ISBN should not be null");
     }
 
-    Book book = new Book(isbn.get(), title.or("Missing title"), page.or(0));
+    final Book book = new Book(isbn.get(), title.or("Missing title"), page.or(0));
 
     db.getCollection(COLLECTION).insertOne(book.toDocument());
     return "Book saved!";
@@ -85,8 +85,8 @@ public class SimpleCrudResource {
     // The methodDB is traced (see below), this will be produced a new childre span
     beforeDB();
 
-    List<Book> books = new ArrayList<>();
-    try (MongoCursor<Document> cursor = db.getCollection(COLLECTION).find().iterator(); ) {
+    final List<Book> books = new ArrayList<>();
+    try (MongoCursor<Document> cursor = db.getCollection(COLLECTION).find().iterator()) {
       while (cursor.hasNext()) {
         books.add(new Book(cursor.next()));
       }
@@ -100,7 +100,7 @@ public class SimpleCrudResource {
 
   @GET
   @Path("/async")
-  public void async(@Suspended AsyncResponse response) {
+  public void async(@Suspended final AsyncResponse response) {
     // not actually async, but useful for testing that codepath.
     response.resume("Returned from async");
   }
@@ -113,7 +113,7 @@ public class SimpleCrudResource {
    */
   @Trace(operationName = "database.before")
   public void beforeDB() throws InterruptedException {
-    ActiveSpan currentSpan = GlobalTracer.get().activeSpan();
+    final ActiveSpan currentSpan = GlobalTracer.get().activeSpan();
     if (currentSpan != null) {
       currentSpan.setTag("status", "started");
       Thread.sleep(10);
@@ -127,7 +127,7 @@ public class SimpleCrudResource {
    */
   @Trace(operationName = "database.after")
   public void afterDB() throws InterruptedException {
-    ActiveSpan currentSpan = GlobalTracer.get().activeSpan();
+    final ActiveSpan currentSpan = GlobalTracer.get().activeSpan();
     if (currentSpan != null) {
       currentSpan.setTag("status", "started");
       Thread.sleep(10);
