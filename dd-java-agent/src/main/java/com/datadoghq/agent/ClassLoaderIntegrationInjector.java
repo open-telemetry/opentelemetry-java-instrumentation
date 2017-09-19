@@ -3,6 +3,9 @@ package com.datadoghq.agent;
 import com.google.common.collect.Maps;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +16,16 @@ public class ClassLoaderIntegrationInjector {
   private final Map<ClassLoader, Method> invocationPoints = Maps.newConcurrentMap();
 
   public ClassLoaderIntegrationInjector(final Map<ZipEntry, byte[]> entries) {
-    this.entries = entries;
+    this.entries = Maps.newHashMap(entries);
+    for (final Iterator<Map.Entry<ZipEntry, byte[]>> it = entries.entrySet().iterator();
+        it.hasNext();
+        ) {
+      final Map.Entry<ZipEntry, byte[]> entry = it.next();
+      if (!entry.getKey().getName().endsWith(".class")) {
+        // remove all non-class files
+        it.remove();
+      }
+    }
   }
 
   public void inject(final ClassLoader cl) {
@@ -21,30 +33,30 @@ public class ClassLoaderIntegrationInjector {
       final Method inovcationPoint = getInovcationPoint(cl);
       final Map<ZipEntry, byte[]> toInject = Maps.newHashMap(entries);
       final Map<ZipEntry, byte[]> injectedEntries = Maps.newHashMap();
+      final List<Throwable> lastErrors = new LinkedList<>();
       boolean successfulyAdded = true;
       while (!toInject.isEmpty() && successfulyAdded) {
         log.debug("Attempting to inject {} entries into {}", toInject.size(), cl);
         successfulyAdded = false;
+        lastErrors.clear();
         for (final Map.Entry<ZipEntry, byte[]> entry : toInject.entrySet()) {
-          final String name = entry.getKey().getName();
-          if (!name.endsWith(".class")) {
-            continue;
-          }
           final byte[] bytes = entry.getValue();
           try {
             inovcationPoint.invoke(cl, bytes, 0, bytes.length);
             injectedEntries.put(entry.getKey(), entry.getValue());
             successfulyAdded = true;
           } catch (final InvocationTargetException e) {
-            log.debug(
-                "Error calling 'defineClass' method on {} for entry {}: {}",
-                cl,
-                entry,
-                e.getMessage());
-            log.debug("Error Details", e);
+            lastErrors.add(e);
           }
         }
         toInject.keySet().removeAll(injectedEntries.keySet());
+      }
+      log.info("Successfully injected {} classes into {}", injectedEntries.size(), cl);
+      log.info("Failed injecting {} classes into {}", toInject.size(), cl);
+      log.debug("\nSuccesses: {}", injectedEntries);
+      log.debug("\nFailures: {}", toInject);
+      for (final Throwable error : lastErrors) {
+        log.debug("Injection error", error.getCause());
       }
 
     } catch (final NoSuchMethodException e) {
