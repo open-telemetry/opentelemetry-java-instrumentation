@@ -22,7 +22,7 @@ public class TraceAnnotationsManagerTest {
     try {
       GlobalTracer.register(tracer);
     } catch (final Exception e) {
-      // Force it anyway using reflexion
+      // Force it anyway using reflection
       final Field field = GlobalTracer.class.getDeclaredField("tracer");
       field.setAccessible(true);
       field.set(null, tracer);

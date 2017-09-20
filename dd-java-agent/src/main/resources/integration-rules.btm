@@ -107,31 +107,72 @@ DO
   patch($0)
 ENDRULE
 
-
-# Instrument Servlet - Jetty
+# Instrument Servlet 2
 # ===========================
-# State 0 - no filter installed
-# State 1 - filter installed
-RULE opentracing-web-servlet-filter_jetty
-CLASS org.eclipse.jetty.servlet.ServletContextHandler
-METHOD <init>
-HELPER com.datadoghq.agent.integration.JettyServletHelper
-AT EXIT
-IF getState($0.getServletContext()) == 0
+RULE HttpServlet-2.service-entry
+CLASS ^javax.servlet.http.HttpServlet
+METHOD service(HttpServletRequest, HttpServletResponse)
+HELPER com.datadoghq.agent.integration.Servlet2Helper
+COMPILE
+AT ENTRY
+IF TRUE
 DO
-  patch($0)
+  onRequest($1, $2)
 ENDRULE
 
-
-# Instrument Servlet - Tomcat
-# ===========================
-RULE opentracing-web-servlet-filter_tomcat
-CLASS org.apache.catalina.core.ApplicationContext
-METHOD <init>
+RULE HttpServlet-2.service-exit
+CLASS ^javax.servlet.http.HttpServlet
+METHOD service(HttpServletRequest, HttpServletResponse)
+HELPER com.datadoghq.agent.integration.Servlet2Helper
 COMPILE
-HELPER com.datadoghq.agent.integration.TomcatServletHelper
 AT EXIT
 IF TRUE
 DO
-  patch($0)
+  onResponse($1, $2)
+ENDRULE
+
+RULE HttpServlet-2.service-error
+CLASS ^javax.servlet.http.HttpServlet
+METHOD service(HttpServletRequest, HttpServletResponse)
+HELPER com.datadoghq.agent.integration.Servlet2Helper
+COMPILE
+AT EXCEPTION EXIT
+IF TRUE
+DO
+  onError($1, $2, $^)
+ENDRULE
+
+# Instrument Servlet 3
+# ===========================
+RULE HttpServlet-3.service-entry
+CLASS ^javax.servlet.http.HttpServlet
+METHOD service(HttpServletRequest, HttpServletResponse)
+HELPER com.datadoghq.agent.integration.Servlet3Helper
+COMPILE
+AT ENTRY
+IF TRUE
+DO
+  onRequest($1, $2)
+ENDRULE
+
+RULE HttpServlet-3.service-exit
+CLASS ^javax.servlet.http.HttpServlet
+METHOD service(HttpServletRequest, HttpServletResponse)
+HELPER com.datadoghq.agent.integration.Servlet3Helper
+COMPILE
+AT EXIT
+IF TRUE
+DO
+  onResponse($1, $2)
+ENDRULE
+
+RULE HttpServlet-3.service-error
+CLASS ^javax.servlet.http.HttpServlet
+METHOD service(HttpServletRequest, HttpServletResponse)
+HELPER com.datadoghq.agent.integration.Servlet3Helper
+COMPILE
+AT EXCEPTION EXIT
+IF TRUE
+DO
+  onError($1, $2, $^)
 ENDRULE
