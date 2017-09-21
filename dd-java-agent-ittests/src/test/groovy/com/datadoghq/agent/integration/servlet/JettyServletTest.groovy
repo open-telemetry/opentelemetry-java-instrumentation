@@ -1,23 +1,38 @@
 package com.datadoghq.agent.integration.servlet
 
+import com.datadoghq.trace.DDBaseSpan
 import com.datadoghq.trace.DDTags
 import com.datadoghq.trace.DDTracer
 import com.datadoghq.trace.writer.ListWriter
 import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.lang.reflect.Field
+import java.util.concurrent.CountDownLatch
 
 class JettyServletTest extends Specification {
 
   static final int PORT = randomOpenPort()
+
+  // Jetty needs this to ensure consistent ordering for async.
+  static CountDownLatch latch
   OkHttpClient client = new OkHttpClient.Builder()
+  .addNetworkInterceptor(new Interceptor() {
+    @Override
+    Response intercept(Interceptor.Chain chain) throws IOException {
+      def response = chain.proceed(chain.request())
+      JettyServletTest.latch.await()
+      return response
+    }
+  })
   // Uncomment when debugging:
 //    .connectTimeout(1, TimeUnit.HOURS)
 //    .writeTimeout(1, TimeUnit.HOURS)
@@ -27,7 +42,13 @@ class JettyServletTest extends Specification {
   private Server jettyServer
   private ServletContextHandler servletContext
 
-  ListWriter writer = new ListWriter()
+  ListWriter writer = new ListWriter() {
+    @Override
+    void write(final List<DDBaseSpan<?>> trace) {
+      add(trace)
+      JettyServletTest.latch.countDown()
+    }
+  }
   DDTracer tracer = new DDTracer(writer)
 
   def setup() {
@@ -63,6 +84,7 @@ class JettyServletTest extends Specification {
   @Unroll
   def "test #path servlet call"() {
     setup:
+    latch = new CountDownLatch(1)
     def request = new Request.Builder()
       .url("http://localhost:$PORT/$path")
       .get()

@@ -80,10 +80,10 @@ public class InstrumentationRulesManager {
     final ClassLoader cl;
     if (obj instanceof ClassLoader) {
       cl = (ClassLoader) obj;
-      log.info("Calling initialize with {}", cl);
+      log.debug("Calling initialize with {}", cl);
     } else {
       cl = obj.getClass().getClassLoader();
-      log.info("Calling initialize with {} and classloader ", obj, cl);
+      log.debug("Calling initialize with {} and classloader {}", obj, cl);
     }
 
     AgentRulesManager.INSTANCE.instrumentationRulesManager.initialize(cl);
