@@ -98,7 +98,7 @@ class TomcatServletTest extends Specification {
     trace.size() == 1
     def span = trace[0]
 
-    span.context().operationName == "Servlet Request - GET"
+    span.context().operationName == "servlet.request"
     !span.context().getErrorFlag()
     span.context().parentId != 0 // parent should be the okhttp call.
     span.context().tags[Tags.HTTP_URL.key] == "http://localhost:$PORT/$path"

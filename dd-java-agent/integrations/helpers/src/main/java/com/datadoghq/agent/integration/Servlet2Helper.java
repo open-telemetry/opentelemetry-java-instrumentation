@@ -24,6 +24,8 @@ public class Servlet2Helper extends OpenTracingHelper {
   public static final String SERVER_SPAN_CONTEXT =
       Servlet2Helper.class.getName() + ".activeSpanContext";
 
+  public static final String SERVLET_OPERATION_NAME = "servlet.request";
+
   protected final Tracer tracer;
 
   public Servlet2Helper(final Rule rule) {
@@ -51,7 +53,7 @@ public class Servlet2Helper extends OpenTracingHelper {
 
     final ActiveSpan span =
         tracer
-            .buildSpan("Servlet Request - " + req.getMethod())
+            .buildSpan(SERVLET_OPERATION_NAME)
             .asChildOf(extractedContext)
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
             .startActive();
