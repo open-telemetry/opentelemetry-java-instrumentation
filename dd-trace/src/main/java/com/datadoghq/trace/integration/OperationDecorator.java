@@ -17,8 +17,6 @@ public class OperationDecorator extends AbstractDecorator {
           // Component name <> Operation name
           put("apache-httpclient", "apache.http");
           put("java-aws-sdk", "aws.http");
-          // Jetty + Tomcat (same integration used)
-          put("java-web-servlet", "servlet.request");
           // FIXME: JMS ops card is low (jms-send or jms-receive), may be this mapping is useless
           put("java-jms", "jms");
           put("okhttp", "okhttp.http");

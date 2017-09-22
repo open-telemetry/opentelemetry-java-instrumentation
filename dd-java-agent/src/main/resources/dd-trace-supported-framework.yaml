@@ -81,23 +81,43 @@ opentracing-okhttp3:
       okhttp3.ConnectionPool:
       okhttp3.Headers:
 
-opentracing-web-servlet-filter_jetty:
-  - artifact: jetty-server
-    supported_version: (8\.|9\.).*
+httpservlet-2:
+  - artifact: HttpServlet-2.service-entry
     identifying_present_classes:
-      org.eclipse.jetty.server.ServletRequestHttpWrapper: getPart
+      javax.servlet.ServletContextEvent:
+      javax.servlet.FilterChain:
+    identifying_missing_classes:
+      - javax.servlet.AsyncEvent
+      - javax.servlet.AsyncListener
 
-opentracing-web-servlet-filter_tomcat:
-  - artifact: opentracing-web-servlet-filter_tomcat
-    supported_version: (8\.|9\.).*
+  - artifact: HttpServlet-2.service-exit
     identifying_present_classes:
-      org.apache.catalina.WebResource:
-      org.apache.catalina.webresources.TrackedInputStream:
-      org.apache.catalina.webresources.AbstractArchiveResource:
+      javax.servlet.ServletContextEvent:
+      javax.servlet.FilterChain:
+    identifying_missing_classes:
+      - javax.servlet.AsyncEvent
+      - javax.servlet.AsyncListener
 
-  - artifact: opentracing-web-servlet-filter_tomcat
-    supported_version: (8\.|9\.).*
+  - artifact: HttpServlet-2.service-error
     identifying_present_classes:
-      org.apache.catalina.WebResource:
-      org.apache.catalina.webresources.TrackedInputStream:
-      org.apache.catalina.webresources.AbstractArchiveResource:
+      javax.servlet.ServletContextEvent:
+      javax.servlet.FilterChain:
+    identifying_missing_classes:
+      - javax.servlet.AsyncEvent
+      - javax.servlet.AsyncListener
+
+httpservlet-3:
+  - artifact: HttpServlet-3.service-entry
+    identifying_present_classes:
+      javax.servlet.AsyncEvent:
+      javax.servlet.AsyncListener:
+
+  - artifact: HttpServlet-3.service-exit
+    identifying_present_classes:
+      javax.servlet.AsyncEvent:
+      javax.servlet.AsyncListener:
+
+  - artifact: HttpServlet-3.service-error
+    identifying_present_classes:
+      javax.servlet.AsyncEvent:
+      javax.servlet.AsyncListener:

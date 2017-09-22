@@ -82,25 +82,13 @@ DO
 ENDRULE
 
 
-# Instrument Servlet - Jetty
+# Instrument Servlet
 # ===========================
-RULE ServletContextHandler-clinit
-CLASS org.eclipse.jetty.servlet.ServletContextHandler
-METHOD <clinit>
+RULE HttpServlet-init
+CLASS ^javax.servlet.http.HttpServlet
+METHOD <init>
 AT EXIT
 IF TRUE
 DO
-  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad();
-ENDRULE
-
-
-# Instrument Servlet - Tomcat
-# ===========================
-RULE ApplicationContext-clinit
-CLASS org.apache.catalina.core.ApplicationContext
-METHOD <clinit>
-AT EXIT
-IF TRUE
-DO
-  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad();
+  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
 ENDRULE

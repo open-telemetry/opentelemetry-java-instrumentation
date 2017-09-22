@@ -64,24 +64,24 @@ Finally, add the following JVM argument when starting your application—in your
 
 The Java Agent—once passed to your application—automatically traces requests to the frameworks, application servers, and databases shown below. It does this by using various libraries from [opentracing-contrib](https://github.com/opentracing-contrib). In most cases you don't need to install or configure anything; traces will automatically show up in your Datadog dashboards. The exception is [any database library that uses JDBC](#jdbc).
 
-#### Frameworks
-
-| Framework        | Versions           | Comments  |
-| ------------- |:-------------:| ----- |
-| [OkHTTP](https://github.com/opentracing-contrib/java-okhttp) | 3.x | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers |
-| [Apache HTTP Client](https://github.com/opentracing-contrib/java-apache-httpclient) | 4.3 + | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers|
-| [AWS SDK](https://github.com/opentracing-contrib/java-aws-sdk) | 1.11.0+ | Trace all client calls to any AWS service |
-| [Web Servlet Filters](https://github.com/opentracing-contrib/java-web-servlet-filter) | Depends on web server | See [Application Servers](#application-servers) |
-| [JMS 2](https://github.com/opentracing-contrib/java-jms) | 2.x | Trace calls to message brokers; distributed trace propagation not yet supported |
-
 #### Application Servers
 
 | Server | Versions | Comments |
 | ------------- |:-------------:| -----|
-| Jetty | 8.x, 9.x | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers |
-| Tomcat | 8.0.x, 8.5.x & 9.x | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers |
+| Java Servlet Compatible | 2.3+, 3.0+ | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers are linked |
 
-Requests to any web frameworks that use these application servers—Dropwizard and Spring Boot, for example—are automatically traced as well.
+*Note:* Many application servers are Servlet compatible such as Tomcat, Jetty, Websphere, Weblogic, etc.
+Also, frameworks like Spring Boot and Dropwizard inherently work because they use a Servlet compatible embedded application server.
+
+#### Frameworks
+
+| Framework        | Versions           | Comments  |
+| ------------- |:-------------:| ----- |
+| [OkHTTP](https://github.com/opentracing-contrib/java-okhttp) | 3.x | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers are linked |
+| [Apache HTTP Client](https://github.com/opentracing-contrib/java-apache-httpclient) | 4.3 + | HTTP client calls with [cross-process](http://opentracing.io/documentation/pages/api/cross-process-tracing.html) headers are linked|
+| [AWS SDK](https://github.com/opentracing-contrib/java-aws-sdk) | 1.11.0+ | Trace all client calls to any AWS service |
+| [Web Servlet Filters](https://github.com/opentracing-contrib/java-web-servlet-filter) | Depends on web server | See [Application Servers](#application-servers) |
+| [JMS 2](https://github.com/opentracing-contrib/java-jms) | 2.x | Trace calls to message brokers; distributed trace propagation not yet supported |
 
 #### Databases
 
