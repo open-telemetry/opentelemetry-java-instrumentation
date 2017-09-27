@@ -71,8 +71,10 @@ public class Servlet2Helper extends OpenTracingHelper {
     }
 
     final ActiveSpan span = tracer.activeSpan();
-    ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, ex, span);
-    span.deactivate();
+    if (span != null) {
+      ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, ex, span);
+      span.deactivate();
+    }
   }
 
   public void onResponse(final HttpServletRequest req, final HttpServletResponse resp) {
@@ -82,7 +84,9 @@ public class Servlet2Helper extends OpenTracingHelper {
     }
 
     final ActiveSpan span = tracer.activeSpan();
-    ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(req, resp, span);
-    span.deactivate();
+    if (span != null) {
+      ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(req, resp, span);
+      span.deactivate();
+    }
   }
 }

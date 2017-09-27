@@ -14,10 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HTTPCodec implements Codec<TextMap> {
 
-  private static final String OT_PREFIX = "ot-tracer-";
   private static final String OT_BAGGAGE_PREFIX = "ot-baggage-";
-  private static final String TRACE_ID_KEY = OT_PREFIX + "traceid";
-  private static final String SPAN_ID_KEY = OT_PREFIX + "spanid";
+  private static final String TRACE_ID_KEY = "x-datadog-trace-id";
+  private static final String SPAN_ID_KEY = "x-datadog-parent-id";
 
   @Override
   public void inject(final DDSpanContext context, final TextMap carrier) {

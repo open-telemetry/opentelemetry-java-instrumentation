@@ -12,15 +12,14 @@ import org.junit.Test;
 /** Created by gpolaert on 6/23/17. */
 public class HTTPCodecTest {
 
-  private static final String OT_PREFIX = "ot-tracer-";
   private static final String OT_BAGGAGE_PREFIX = "ot-baggage-";
-  private static final String TRACE_ID_KEY = OT_PREFIX + "traceid";
-  private static final String SPAN_ID_KEY = OT_PREFIX + "spanid";
+  private static final String TRACE_ID_KEY = "x-datadog-trace-id";
+  private static final String SPAN_ID_KEY = "x-datadog-parent-id";
 
   @Test
   public void shoudAddHttpHeaders() {
 
-    DDSpanContext mockedContext =
+    final DDSpanContext mockedContext =
         new DDSpanContext(
             1L,
             2L,
@@ -40,9 +39,9 @@ public class HTTPCodecTest {
             null,
             null);
 
-    Map<String, String> carrier = new HashMap<>();
+    final Map<String, String> carrier = new HashMap<>();
 
-    HTTPCodec codec = new HTTPCodec();
+    final HTTPCodec codec = new HTTPCodec();
     codec.inject(mockedContext, new TextMapInjectAdapter(carrier));
 
     assertThat(carrier.get(TRACE_ID_KEY)).isEqualTo("1");
@@ -54,7 +53,7 @@ public class HTTPCodecTest {
   @Test
   public void shoudReadHttpHeaders() {
 
-    Map<String, String> actual =
+    final Map<String, String> actual =
         new HashMap<String, String>() {
           {
             put(TRACE_ID_KEY, "1");
@@ -64,8 +63,8 @@ public class HTTPCodecTest {
           }
         };
 
-    HTTPCodec codec = new HTTPCodec();
-    DDSpanContext context = codec.extract(new TextMapExtractAdapter(actual));
+    final HTTPCodec codec = new HTTPCodec();
+    final DDSpanContext context = codec.extract(new TextMapExtractAdapter(actual));
 
     assertThat(context.getTraceId()).isEqualTo(1l);
     assertThat(context.getSpanId()).isEqualTo(2l);
