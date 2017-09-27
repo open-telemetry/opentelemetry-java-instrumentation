@@ -33,12 +33,14 @@ public class Servlet3Helper extends Servlet2Helper {
     }
 
     final ActiveSpan span = tracer.activeSpan();
-    if (req.isAsyncStarted()) {
-      addAsyncListeners(req, resp, span);
-    } else {
-      ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(req, resp, span);
+    if (span != null) {
+      if (req.isAsyncStarted()) {
+        addAsyncListeners(req, resp, span);
+      } else {
+        ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(req, resp, span);
+      }
+      span.deactivate();
     }
-    span.deactivate();
   }
 
   private void addAsyncListeners(
