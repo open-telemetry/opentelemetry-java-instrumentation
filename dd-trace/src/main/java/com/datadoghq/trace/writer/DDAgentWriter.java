@@ -42,6 +42,7 @@ public class DDAgentWriter implements Writer {
 
   /** Scheduled thread pool, acting like a cron */
   private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
+  // FIXME: Properly name these threads to better identify them as ours.
 
   /** Effective thread pool, where real logic is done */
   private final ExecutorService executor = Executors.newSingleThreadExecutor();

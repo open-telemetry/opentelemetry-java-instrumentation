@@ -19,7 +19,9 @@ public abstract class DDAgentTracingHelper<T> extends OpenTracingHelper {
    */
   protected final Tracer tracer;
 
-  DDAgentTracingHelper(final Rule rule) {
+  // This is intentionally protected scope to avoid IllegalAccessError if on separate classloaders:
+  // https://stackoverflow.com/a/10538366
+  protected DDAgentTracingHelper(final Rule rule) {
     super(rule);
     Tracer tracerResolved;
     try {
