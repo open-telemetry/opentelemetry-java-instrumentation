@@ -1,5 +1,6 @@
 package com.datadoghq.trace.writer
 
+import com.datadoghq.trace.DDTags
 import com.datadoghq.trace.Service
 import com.datadoghq.trace.SpanFactory
 import com.fasterxml.jackson.core.type.TypeReference
@@ -89,7 +90,7 @@ class DDApiTest extends Specification {
     [SpanFactory.newSpanOf(1L)]   | [new TreeMap<>([
       "duration" : 0,
       "error"    : 0,
-      "meta"     : ["thread-name": Thread.currentThread().getName(), "thread-id": "${Thread.currentThread().id}"],
+      "meta"     : [(DDTags.THREAD_NAME): Thread.currentThread().getName(), (DDTags.THREAD_ID): "${Thread.currentThread().id}"],
       "name"     : "fakeOperation",
       "parent_id": 0,
       "resource" : "fakeResource",
@@ -102,7 +103,7 @@ class DDApiTest extends Specification {
     [SpanFactory.newSpanOf(100L)] | [new TreeMap<>([
       "duration" : 0,
       "error"    : 0,
-      "meta"     : ["thread-name": Thread.currentThread().getName(), "thread-id": "${Thread.currentThread().id}"],
+      "meta"     : [(DDTags.THREAD_NAME): Thread.currentThread().getName(), (DDTags.THREAD_ID): "${Thread.currentThread().id}"],
       "name"     : "fakeOperation",
       "parent_id": 0,
       "resource" : "fakeResource",
