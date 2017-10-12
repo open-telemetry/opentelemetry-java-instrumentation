@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -43,7 +44,10 @@ public class TraceAnnotationsManager {
           + "DO\n"
           + "span.setTag("
           + Tags.class.getName()
-          + " .ERROR.getKey(),\"true\");\n"
+          + ".ERROR.getKey(),\"true\");\n"
+          + "span.log("
+          + Collections.class.getName()
+          + ".singletonMap(\"error.object\",$^));\n"
           + "span.deactivate();\n";
 
   private final Retransformer transformer;

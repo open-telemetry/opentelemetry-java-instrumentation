@@ -114,6 +114,44 @@ class JettyServletTest extends Specification {
     "sync"  | "Hello Sync"
   }
 
+  @Unroll
+  def "test #path error servlet call"() {
+    setup:
+    def request = new Request.Builder()
+      .url("http://localhost:$PORT/$path?error=true")
+      .get()
+      .build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.body().string().trim() != expectedResponse
+    writer.size() == 2 // second (parent) trace is the okhttp call above...
+    def trace = writer.firstTrace()
+    trace.size() == 1
+    def span = trace[0]
+
+    span.context().operationName == "servlet.request"
+    span.context().getErrorFlag()
+    span.context().parentId != 0 // parent should be the okhttp call.
+    span.context().tags[Tags.HTTP_URL.key] == "http://localhost:$PORT/$path"
+    span.context().tags[Tags.HTTP_METHOD.key] == "GET"
+    span.context().tags[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_SERVER
+    span.context().tags[Tags.COMPONENT.key] == "java-web-servlet"
+    span.context().tags[Tags.HTTP_STATUS.key] == 500
+    span.context().tags[DDTags.THREAD_NAME] != null
+    span.context().tags[DDTags.THREAD_ID] != null
+    span.context().tags[Tags.ERROR.key] == true
+    span.context().tags[DDTags.ERROR_MSG] == "some $path error"
+    span.context().tags[DDTags.ERROR_TYPE] == RuntimeException.getName()
+    span.context().tags[DDTags.ERROR_STACK] != null
+    span.context().tags.size() == 11
+
+    where:
+    path    | expectedResponse
+//    "async" | "Hello Async" // I can't seem get the async error handler to trigger
+    "sync"  | "Hello Sync"
+  }
+
   private static int randomOpenPort() {
     new ServerSocket(0).withCloseable {
       it.setReuseAddress(true)

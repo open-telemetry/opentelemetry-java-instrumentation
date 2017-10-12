@@ -3,6 +3,7 @@ package com.datadoghq.agent.integration;
 import io.opentracing.ActiveSpan;
 import io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
@@ -86,6 +87,7 @@ public class Servlet3Helper extends Servlet2Helper {
                         (HttpServletResponse) event.getSuppliedResponse(),
                         event.getThrowable(),
                         span);
+                    span.log(Collections.singletonMap("error.object", event.getThrowable()));
                   }
                 }
               }

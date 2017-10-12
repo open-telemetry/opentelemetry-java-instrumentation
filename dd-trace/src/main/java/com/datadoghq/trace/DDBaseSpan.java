@@ -4,6 +4,8 @@ import com.datadoghq.trace.util.Clock;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.opentracing.BaseSpan;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -95,6 +97,26 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
         && this.context.getTracer() != null;
   }
 
+  public void setErrorMeta(final Throwable error) {
+    context.setErrorFlag(true);
+
+    setTag(DDTags.ERROR_MSG, error.getMessage());
+    setTag(DDTags.ERROR_TYPE, error.getClass().getName());
+
+    final StringWriter errorString = new StringWriter();
+    error.printStackTrace(new PrintWriter(errorString));
+    setTag(DDTags.ERROR_STACK, errorString.toString());
+  }
+
+  private boolean extractError(final Map<String, ?> map) {
+    if (map.get("error.object") instanceof Throwable) {
+      final Throwable error = (Throwable) map.get("error.object");
+      setErrorMeta(error);
+      return true;
+    }
+    return false;
+  }
+
   /* (non-Javadoc)
    * @see io.opentracing.BaseSpan#setTag(java.lang.String, java.lang.String)
    */
@@ -161,7 +183,9 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
    */
   @Override
   public final S log(final Map<String, ?> map) {
-    log.debug("`log` method is not implemented. Doing nothing");
+    if (!extractError(map)) {
+      log.debug("`log` method is not implemented. Doing nothing");
+    }
     return thisInstance();
   }
 
@@ -170,7 +194,9 @@ public abstract class DDBaseSpan<S extends BaseSpan> implements BaseSpan<S> {
    */
   @Override
   public final S log(final long l, final Map<String, ?> map) {
-    log.debug("`log` method is not implemented. Doing nothing");
+    if (!extractError(map)) {
+      log.debug("`log` method is not implemented. Doing nothing");
+    }
     return thisInstance();
   }
 
