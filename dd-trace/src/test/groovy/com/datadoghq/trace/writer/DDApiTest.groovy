@@ -186,7 +186,7 @@ class DDApiTest extends Specification {
     where:
     services                                                                          | expectedRequestBody
     [:]                                                                               | [:]
-    ["service-name": new Service("service-name", "app-name", Service.AppType.CUSTOM)] | ["service-name": new TreeMap<>([
+    ["my-service-name": new Service("my-service-name", "app-name", Service.AppType.CUSTOM)] | ["my-service-name": new TreeMap<>([
       "app"     : "app-name",
       "app_type": "custom"])
     ]
