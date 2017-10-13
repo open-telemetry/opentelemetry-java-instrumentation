@@ -6,7 +6,6 @@ import com.datadoghq.agent.test.SayTracedHello;
 import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.integration.ErrorFlag;
 import com.datadoghq.trace.writer.ListWriter;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Field;
 import org.junit.Before;
@@ -74,7 +73,7 @@ public class TraceAnnotationsManagerTest {
       // DO NOTHING
     }
     assertThat(writer.firstTrace().get(0).getOperationName()).isEqualTo("ERROR");
-    assertThat(writer.firstTrace().get(0).getTags().get(Tags.ERROR.getKey())).isEqualTo("true");
+    assertThat(writer.firstTrace().get(0).getTags().get("error")).isEqualTo("true");
     assertThat(writer.firstTrace().get(0).getError()).isEqualTo(1);
   }
 }

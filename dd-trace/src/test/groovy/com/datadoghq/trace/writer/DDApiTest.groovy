@@ -84,28 +84,28 @@ class DDApiTest extends Specification {
 
     // Populate thread info dynamically as it is different when run via gradle vs idea.
     where:
-    traces                        | expectedRequestBody
-    []                            | []
-    [SpanFactory.newSpanOf(1L)]   | [new TreeMap<>([
+    traces                                                               | expectedRequestBody
+    []                                                                   | []
+    [SpanFactory.newSpanOf(1L).setTag("service.name", "my-service")]     | [new TreeMap<>([
       "duration" : 0,
       "error"    : 0,
-      "meta"     : ["thread-name": Thread.currentThread().getName(), "thread-id": "${Thread.currentThread().id}"],
+      "meta"     : ["thread.name": Thread.currentThread().getName(), "thread.id": "${Thread.currentThread().id}"],
       "name"     : "fakeOperation",
       "parent_id": 0,
       "resource" : "fakeResource",
-      "service"  : "fakeService",
+      "service"  : "my-service",
       "span_id"  : 1,
       "start"    : 1000,
       "trace_id" : 1,
       "type"     : "fakeType"
     ])]
-    [SpanFactory.newSpanOf(100L)] | [new TreeMap<>([
+    [SpanFactory.newSpanOf(100L).setTag("resource.name", "my-resource")] | [new TreeMap<>([
       "duration" : 0,
       "error"    : 0,
-      "meta"     : ["thread-name": Thread.currentThread().getName(), "thread-id": "${Thread.currentThread().id}"],
+      "meta"     : ["thread.name": Thread.currentThread().getName(), "thread.id": "${Thread.currentThread().id}"],
       "name"     : "fakeOperation",
       "parent_id": 0,
-      "resource" : "fakeResource",
+      "resource" : "my-resource",
       "service"  : "fakeService",
       "span_id"  : 1,
       "start"    : 100000,
@@ -183,10 +183,10 @@ class DDApiTest extends Specification {
 
     // Populate thread info dynamically as it is different when run via gradle vs idea.
     where:
-    services                                                                          | expectedRequestBody
-    [:]                                                                               | [:]
-    ["service-name": new Service("service-name", "app-name", Service.AppType.CUSTOM)] | ["service-name": new TreeMap<>([
-      "app"     : "app-name",
+    services                                                                                   | expectedRequestBody
+    [:]                                                                                        | [:]
+    ["my-service-name": new Service("my-service-name", "my-app-name", Service.AppType.CUSTOM)] | ["my-service-name": new TreeMap<>([
+      "app"     : "my-app-name",
       "app_type": "custom"])
     ]
   }
