@@ -3,10 +3,13 @@ package com.datadoghq.agent;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.datadoghq.agent.test.SayTracedHello;
+import com.datadoghq.trace.DDBaseSpan;
 import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.integration.ErrorFlag;
 import com.datadoghq.trace.writer.ListWriter;
 import io.opentracing.util.GlobalTracer;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,13 +70,22 @@ public class TraceAnnotationsManagerTest {
 
     tracer.addDecorator(new ErrorFlag());
 
+    Throwable error = null;
     try {
       SayTracedHello.sayERROR();
     } catch (final Throwable ex) {
-      // DO NOTHING
+      error = ex;
     }
-    assertThat(writer.firstTrace().get(0).getOperationName()).isEqualTo("ERROR");
-    assertThat(writer.firstTrace().get(0).getTags().get("error")).isEqualTo("true");
-    assertThat(writer.firstTrace().get(0).getError()).isEqualTo(1);
+
+    final StringWriter errorString = new StringWriter();
+    error.printStackTrace(new PrintWriter(errorString));
+
+    final DDBaseSpan<?> span = writer.firstTrace().get(0);
+    assertThat(span.getOperationName()).isEqualTo("ERROR");
+    assertThat(span.getTags().get("error")).isEqualTo("true");
+    assertThat(span.getTags().get("error.msg")).isEqualTo(error.getMessage());
+    assertThat(span.getTags().get("error.type")).isEqualTo(error.getClass().getName());
+    assertThat(span.getTags().get("error.stack")).isEqualTo(errorString.toString());
+    assertThat(span.getError()).isEqualTo(1);
   }
 }

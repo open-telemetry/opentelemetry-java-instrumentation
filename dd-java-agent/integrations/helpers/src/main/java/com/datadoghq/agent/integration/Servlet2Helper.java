@@ -8,6 +8,7 @@ import io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapte
 import io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
+import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -73,6 +74,7 @@ public class Servlet2Helper extends OpenTracingHelper {
     final ActiveSpan span = tracer.activeSpan();
     if (span != null) {
       ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, ex, span);
+      span.log(Collections.singletonMap("error.object", ex));
       span.deactivate();
     }
   }

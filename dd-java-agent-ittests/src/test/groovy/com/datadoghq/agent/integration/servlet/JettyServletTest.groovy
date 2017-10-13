@@ -114,6 +114,44 @@ class JettyServletTest extends Specification {
     "sync"  | "Hello Sync"
   }
 
+  @Unroll
+  def "test #path error servlet call"() {
+    setup:
+    def request = new Request.Builder()
+      .url("http://localhost:$PORT/$path?error=true")
+      .get()
+      .build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.body().string().trim() != expectedResponse
+    writer.size() == 2 // second (parent) trace is the okhttp call above...
+    def trace = writer.firstTrace()
+    trace.size() == 1
+    def span = trace[0]
+
+    span.context().operationName == "servlet.request"
+    span.context().getErrorFlag()
+    span.context().parentId != 0 // parent should be the okhttp call.
+    span.context().tags["http.url"] == "http://localhost:$PORT/$path"
+    span.context().tags["http.method"] == "GET"
+    span.context().tags["span.kind"] == "server"
+    span.context().tags["component"] == "java-web-servlet"
+    span.context().tags["http.status_code"] == 500
+    span.context().tags["thread.name"] != null
+    span.context().tags["thread.id"] != null
+    span.context().tags["error"] == true
+    span.context().tags["error.msg"] == "some $path error"
+    span.context().tags["error.type"] == RuntimeException.getName()
+    span.context().tags["error.stack"] != null
+    span.context().tags.size() == 11
+
+    where:
+    path    | expectedResponse
+    //"async" | "Hello Async" // FIXME: I can't seem get the async error handler to trigger
+    "sync"  | "Hello Sync"
+  }
+
   private static int randomOpenPort() {
     new ServerSocket(0).withCloseable {
       it.setReuseAddress(true)
