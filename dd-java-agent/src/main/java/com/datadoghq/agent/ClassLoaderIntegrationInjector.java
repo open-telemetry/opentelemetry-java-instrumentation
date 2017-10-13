@@ -15,8 +15,8 @@ public class ClassLoaderIntegrationInjector {
   private final Map<ZipEntry, byte[]> entries;
   private final Map<ClassLoader, Method> invocationPoints = Maps.newConcurrentMap();
 
-  public ClassLoaderIntegrationInjector(final Map<ZipEntry, byte[]> entries) {
-    this.entries = Maps.newHashMap(entries);
+  public ClassLoaderIntegrationInjector(final Map<ZipEntry, byte[]> allEntries) {
+    this.entries = Maps.newHashMap(allEntries);
     for (final Iterator<Map.Entry<ZipEntry, byte[]>> it = entries.entrySet().iterator();
         it.hasNext();
         ) {
