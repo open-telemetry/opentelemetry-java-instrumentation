@@ -133,22 +133,22 @@ class TomcatServletTest extends Specification {
     span.context().operationName == "servlet.request"
     span.context().getErrorFlag()
     span.context().parentId != 0 // parent should be the okhttp call.
-    span.context().tags[Tags.HTTP_URL.key] == "http://localhost:$PORT/$path"
-    span.context().tags[Tags.HTTP_METHOD.key] == "GET"
-    span.context().tags[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_SERVER
-    span.context().tags[Tags.COMPONENT.key] == "java-web-servlet"
-    span.context().tags[Tags.HTTP_STATUS.key] == 500
-    span.context().tags[DDTags.THREAD_NAME] != null
-    span.context().tags[DDTags.THREAD_ID] != null
-    span.context().tags[Tags.ERROR.key] == true
-    span.context().tags[DDTags.ERROR_MSG] == "some $path error"
-    span.context().tags[DDTags.ERROR_TYPE] == RuntimeException.getName()
-    span.context().tags[DDTags.ERROR_STACK] != null
+    span.context().tags["http.url"] == "http://localhost:$PORT/$path"
+    span.context().tags["http.method"] == "GET"
+    span.context().tags["span.kind"] == "server"
+    span.context().tags["component"] == "java-web-servlet"
+    span.context().tags["http.status_code"] == 500
+    span.context().tags["thread.name"] != null
+    span.context().tags["thread.id"] != null
+    span.context().tags["error"] == true
+    span.context().tags["error.msg"] == "some $path error"
+    span.context().tags["error.type"] == RuntimeException.getName()
+    span.context().tags["error.stack"] != null
     span.context().tags.size() == 11
 
     where:
     path    | expectedResponse
-//    "async" | "Hello Async" // I can't seem get the async error handler to trigger
+    //"async" | "Hello Async" // FIXME: I can't seem get the async error handler to trigger
     "sync"  | "Hello Sync"
   }
 
