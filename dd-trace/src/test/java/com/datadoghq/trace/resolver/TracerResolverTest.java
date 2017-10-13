@@ -9,7 +9,6 @@ import com.datadoghq.trace.integration.URLAsResourceName;
 import io.opentracing.NoopTracerFactory;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.tracerresolver.TracerResolver;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -23,7 +22,7 @@ public class TracerResolverTest {
     final DDTracer tracer = (DDTracer) tracerResolver.resolve();
 
     // for HTTP decorators
-    List<AbstractDecorator> decorators = tracer.getSpanContextDecorators(Tags.COMPONENT.getKey());
+    List<AbstractDecorator> decorators = tracer.getSpanContextDecorators("component");
 
     assertThat(decorators.size()).isEqualTo(2);
     AbstractDecorator decorator = decorators.get(0);
@@ -34,7 +33,7 @@ public class TracerResolverTest {
     assertThat(httpServiceDecorator.getSetValue()).isEqualTo("world");
 
     // for URL decorators
-    decorators = tracer.getSpanContextDecorators(Tags.HTTP_URL.getKey());
+    decorators = tracer.getSpanContextDecorators("http.url");
     assertThat(decorators.size()).isEqualTo(1);
 
     decorator = decorators.get(0);
