@@ -8,6 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.datadoghq.agent.instrumentation.Instrumenter;
+import com.datadoghq.trace.DDTags;
 import com.google.auto.service.AutoService;
 import io.opentracing.ActiveSpan;
 import io.opentracing.NoopActiveSpanSource;
@@ -39,38 +40,42 @@ public final class StatementInstrumentation implements Instrumenter {
     @Advice.OnMethodEnter
     public static ActiveSpan startSpan(
         @Advice.Argument(0) final String sql, @Advice.This final Statement statement) {
-      // TODO: Should this happen always instead of just inside an existing tracer?
-      if (GlobalTracer.get().activeSpan() == null) {
+      final Connection connection;
+      try {
+        connection = statement.getConnection();
+      } catch (final Throwable e) {
+        // Had some problem getting the connection.
         return NoopActiveSpanSource.NoopActiveSpan.INSTANCE;
       }
 
-      final ActiveSpan span = GlobalTracer.get().buildSpan("sql.statement").startActive();
-      Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
-      Tags.COMPONENT.set(span, "java-jdbc");
+      final DriverInstrumentation.DBInfo dbInfo =
+          DriverInstrumentation.connectionInfo.get(connection);
+
+      final ActiveSpan span =
+          GlobalTracer.get().buildSpan(dbInfo.getType() + ".query").startActive();
+      Tags.DB_TYPE.set(span, dbInfo.getType());
       Tags.DB_STATEMENT.set(span, sql);
+      Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
+      Tags.COMPONENT.set(span, "java-jdbc-statement");
+
+      span.setTag(DDTags.SERVICE_NAME, dbInfo.getType());
       span.setTag("span.origin.type", statement.getClass().getName());
-
+      span.setTag("db.jdbc.url", dbInfo.getUrl());
       try {
-        final Connection connection = statement.getConnection();
-        final DriverInstrumentation.DBInfo dbInfo =
-            DriverInstrumentation.connectionInfo.get(connection);
-
-        span.setTag("db.jdbc.url", dbInfo.getUrl());
         span.setTag("db.schema", connection.getSchema());
-
-        Tags.DB_TYPE.set(span, dbInfo.getType());
-        if (dbInfo.getUser() != null) {
-          Tags.DB_USER.set(span, dbInfo.getUser());
-        }
-      } finally {
-        return span;
+      } catch (final Throwable e) {
+        // Ignore...
       }
+
+      if (dbInfo.getUser() != null) {
+        Tags.DB_USER.set(span, dbInfo.getUser());
+      }
+      return span;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final ActiveSpan activeSpan,
-        @Advice.Thrown(readOnly = false) final Throwable throwable) {
+        @Advice.Enter final ActiveSpan activeSpan, @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
         Tags.ERROR.set(activeSpan, true);
         activeSpan.log(Collections.singletonMap("error.object", throwable));
