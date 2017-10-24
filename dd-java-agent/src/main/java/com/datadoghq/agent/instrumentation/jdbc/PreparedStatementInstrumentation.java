@@ -54,11 +54,12 @@ public final class PreparedStatementInstrumentation implements Instrumenter {
       final ActiveSpan span =
           GlobalTracer.get().buildSpan(dbInfo.getType() + ".query").startActive();
       Tags.DB_TYPE.set(span, dbInfo.getType());
-      Tags.DB_STATEMENT.set(span, sql);
       Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
       Tags.COMPONENT.set(span, "java-jdbc-prepared_statement");
 
       span.setTag(DDTags.SERVICE_NAME, dbInfo.getType());
+      span.setTag(DDTags.RESOURCE_NAME, sql);
+      span.setTag(DDTags.SPAN_TYPE, "sql");
       span.setTag("span.origin.type", statement.getClass().getName());
       span.setTag("db.jdbc.url", dbInfo.getUrl());
       try {
