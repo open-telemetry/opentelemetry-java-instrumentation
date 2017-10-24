@@ -20,7 +20,7 @@ dependencies {
   compile project(':dd-trace')
   compile project(':dd-trace-annotations')
 
-  compile group: 'org.jboss.byteman', name: 'byteman', version: '4.0.0-BETA5'
+  compile group: 'org.jboss.byteman', name: 'byteman', version: '3.0.10'
 
   compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
   compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
@@ -101,16 +101,6 @@ shadowJar {
       exclude 'com.google.common.util.concurrent.ListenableFuture'
     }
   }
-
-  //Exclude Java 9 compiled classes:
-  exclude 'org/jboss/byteman/agent/JigsawAccessEnablerGenerator.class'
-  exclude 'org/jboss/byteman/agent/JigsawAccessManager$1.class'
-  exclude 'org/jboss/byteman/agent/JigsawAccessManager.class'
-  exclude 'org/jboss/byteman/layer/LayerFactory.class'
-  exclude 'org/jboss/byteman/layer/LayerModuleFinder$1.class'
-  exclude 'org/jboss/byteman/layer/LayerModuleFinder.class'
-  exclude 'org/jboss/byteman/layer/LayerModuleReader.class'
-  exclude 'org/jboss/byteman/layer/LayerModuleReference.class'
 
   dependencies {
     exclude(dependency('org.projectlombok:lombok:1.16.18'))
