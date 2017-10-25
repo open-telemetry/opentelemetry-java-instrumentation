@@ -16,6 +16,11 @@
  */
 package com.datadoghq.agent;
 
+import static com.datadoghq.agent.utils.ClassLoaderNameMatcher.classLoaderWithName;
+import static com.datadoghq.agent.utils.ClassLoaderNameMatcher.isReflectionClassLoader;
+import static net.bytebuddy.matcher.ElementMatchers.any;
+import static net.bytebuddy.matcher.ElementMatchers.isBootstrapClassLoader;
+import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 
 import com.datadoghq.agent.instrumentation.Instrumenter;
@@ -60,13 +65,29 @@ public class TracingAgent {
   }
 
   public static void addByteBuddy(final Instrumentation inst) {
-
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(new Listener())
-            .ignore(nameStartsWith("com.datadoghq.agent.integration"));
+            .ignore(nameStartsWith("com.datadoghq.agent.integration"))
+            .or(nameStartsWith("java."))
+            .or(nameStartsWith("com.sun."))
+            .or(nameStartsWith("sun."))
+            .or(nameStartsWith("jdk."))
+            .or(nameStartsWith("org.aspectj."))
+            .or(nameStartsWith("org.groovy."))
+            .or(nameStartsWith("com.p6spy."))
+            .or(nameStartsWith("org.slf4j."))
+            .or(nameContains("javassist"))
+            .or(nameContains(".asm."))
+            .ignore(
+                any(),
+                isBootstrapClassLoader()
+                    .or(isReflectionClassLoader())
+                    .or(
+                        classLoaderWithName(
+                            "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader")));
 
     for (final Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class)) {
       agentBuilder = instrumenter.instrument(agentBuilder);
@@ -95,7 +116,7 @@ public class TracingAgent {
         final JavaModule module,
         final boolean loaded,
         final DynamicType dynamicType) {
-      log.debug("Transformed {0}", typeDescription);
+      log.debug("Transformed {}", typeDescription);
     }
 
     @Override
