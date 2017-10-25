@@ -28,6 +28,11 @@ dependencies {
   testCompile group: 'javax.jms', name: 'javax.jms-api', version: '2.0.1'
   testCompile group: 'org.apache.activemq.tooling', name: 'activemq-junit', version: '5.14.5'
   testCompile group: 'org.apache.activemq', name: 'activemq-broker', version: '5.14.5'
+
+  // JDBC tests:
+  testCompile group: 'com.h2database', name: 'h2', version: '1.4.196'
+  testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.4.0'
+  testCompile group: 'org.apache.derby', name: 'derby', version: '10.14.1.0'
 }
 
 configurations.all {

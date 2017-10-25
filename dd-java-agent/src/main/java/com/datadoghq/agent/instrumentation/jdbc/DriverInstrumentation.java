@@ -41,7 +41,7 @@ public final class DriverInstrumentation implements Instrumenter {
       // Remove end of url to prevent passwords from leaking:
       final String sanitizedURL = url.replaceAll("[?;].*", "");
       final String type = url.split(":")[1];
-      final String dbUser = info.getProperty("user");
+      final String dbUser = info == null ? null : info.getProperty("user");
       connectionInfo.put(connection, new DBInfo(sanitizedURL, type, dbUser));
     }
   }

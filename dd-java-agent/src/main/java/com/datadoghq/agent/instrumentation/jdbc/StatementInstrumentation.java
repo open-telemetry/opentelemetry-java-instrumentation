@@ -2,6 +2,7 @@ package com.datadoghq.agent.instrumentation.jdbc;
 
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -30,7 +31,7 @@ public final class StatementInstrumentation implements Instrumenter {
         .transform(
             new AgentBuilder.Transformer.ForAdvice()
                 .advice(
-                    nameStartsWith("execute").and(takesArgument(0, String.class)),
+                    nameStartsWith("execute").and(takesArgument(0, String.class)).and(isPublic()),
                     StatementAdvice.class.getName()))
         .asDecorator();
   }
@@ -62,11 +63,6 @@ public final class StatementInstrumentation implements Instrumenter {
       span.setTag(DDTags.SPAN_TYPE, "sql");
       span.setTag("span.origin.type", statement.getClass().getName());
       span.setTag("db.jdbc.url", dbInfo.getUrl());
-      try {
-        span.setTag("db.schema", connection.getSchema());
-      } catch (final Throwable e) {
-        // Ignore...
-      }
 
       if (dbInfo.getUser() != null) {
         Tags.DB_USER.set(span, dbInfo.getUser());
