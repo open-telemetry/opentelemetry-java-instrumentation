@@ -1,4 +1,4 @@
-package com.datadoghq.agent;
+package com.datadoghq.agent.instrumentation.annotation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,7 +14,7 @@ import java.lang.reflect.Field;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TraceAnnotationsManagerTest {
+public class TraceAnnotationsTest {
 
   private final ListWriter writer = new ListWriter();
   private final DDTracer tracer = new DDTracer(writer);
@@ -39,7 +39,8 @@ public class TraceAnnotationsManagerTest {
     SayTracedHello.sayHello();
 
     assertThat(writer.firstTrace().size()).isEqualTo(1);
-    assertThat(writer.firstTrace().get(0).getOperationName()).isEqualTo("SAY_HELLO");
+    assertThat(writer.firstTrace().get(0).getOperationName())
+        .isEqualTo("com.datadoghq.agent.test.SayTracedHello.sayHello");
     assertThat(writer.firstTrace().get(0).getServiceName()).isEqualTo("test");
   }
 
@@ -56,7 +57,8 @@ public class TraceAnnotationsManagerTest {
     assertThat(writer.firstTrace().get(0).context().getParentId()).isEqualTo(0);
     assertThat(writer.firstTrace().get(0).getServiceName()).isEqualTo("test2");
 
-    assertThat(writer.firstTrace().get(1).getOperationName()).isEqualTo("SAY_HELLO");
+    assertThat(writer.firstTrace().get(1).getOperationName())
+        .isEqualTo("com.datadoghq.agent.test.SayTracedHello.sayHello");
     assertThat(writer.firstTrace().get(1).getServiceName()).isEqualTo("test");
     assertThat(writer.firstTrace().get(1).getParentId()).isEqualTo(parentId);
 
@@ -82,7 +84,7 @@ public class TraceAnnotationsManagerTest {
 
     final DDBaseSpan<?> span = writer.firstTrace().get(0);
     assertThat(span.getOperationName()).isEqualTo("ERROR");
-    assertThat(span.getTags().get("error")).isEqualTo("true");
+    assertThat(span.getTags().get("error")).isEqualTo(true);
     assertThat(span.getTags().get("error.msg")).isEqualTo(error.getMessage());
     assertThat(span.getTags().get("error.type")).isEqualTo(error.getClass().getName());
     assertThat(span.getTags().get("error.stack")).isEqualTo(errorString.toString());
