@@ -1,4 +1,4 @@
-package com.datadoghq.agent.instrumentation;
+package dd.trace;
 
 import net.bytebuddy.agent.builder.AgentBuilder;
 

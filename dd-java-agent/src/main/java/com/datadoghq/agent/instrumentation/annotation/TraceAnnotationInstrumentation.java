@@ -4,9 +4,9 @@ import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 
-import com.datadoghq.agent.instrumentation.Instrumenter;
 import com.datadoghq.trace.Trace;
 import com.google.auto.service.AutoService;
+import dd.trace.Instrumenter;
 import io.opentracing.ActiveSpan;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;

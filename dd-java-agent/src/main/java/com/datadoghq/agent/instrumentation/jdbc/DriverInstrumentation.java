@@ -6,8 +6,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.datadoghq.agent.instrumentation.Instrumenter;
 import com.google.auto.service.AutoService;
+import dd.trace.Instrumenter;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.util.Map;

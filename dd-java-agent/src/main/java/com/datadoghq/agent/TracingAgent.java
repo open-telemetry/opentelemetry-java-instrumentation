@@ -23,7 +23,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isBootstrapClassLoader;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 
-import com.datadoghq.agent.instrumentation.Instrumenter;
+import dd.trace.Instrumenter;
 import java.lang.instrument.Instrumentation;
 import java.util.ServiceLoader;
 import lombok.extern.slf4j.Slf4j;
@@ -71,6 +71,9 @@ public class TracingAgent {
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(new Listener())
             .ignore(nameStartsWith("com.datadoghq.agent.integration"))
+            .or(nameStartsWith("dd.trace"))
+            .or(nameStartsWith("dd.inst"))
+            .or(nameStartsWith("dd.deps"))
             .or(nameStartsWith("java."))
             .or(nameStartsWith("com.sun."))
             .or(nameStartsWith("sun."))
