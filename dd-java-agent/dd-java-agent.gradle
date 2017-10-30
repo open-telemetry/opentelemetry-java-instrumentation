@@ -18,9 +18,13 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
 
 dependencies {
   compile project(':dd-trace')
+  compile project(':dd-java-agent:tooling')
   compile project(':dd-trace-annotations')
 
-  compile group: 'net.bytebuddy', name: 'byte-buddy', version: '1.7.6'
+
+  compile project(':dd-java-agent:integrations:spring-web')
+
+  compile deps.bytebuddy
   compile group: 'org.jboss.byteman', name: 'byteman', version: '3.0.10'
 
   compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'

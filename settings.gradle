@@ -2,6 +2,7 @@ rootProject.name = 'dd-trace-java'
 
 include ':dd-trace'
 include ':dd-java-agent'
+include ':dd-java-agent:tooling'
 include ':dd-java-agent-ittests'
 include ':dd-trace-examples:async-tracing'
 include ':dd-trace-examples:dropwizard-mongo-client'
@@ -21,6 +22,7 @@ include ':dd-java-agent:integrations:mongo-async'
 include ':dd-java-agent:integrations:okhttp'
 include ':dd-java-agent:integrations:servlet-2'
 include ':dd-java-agent:integrations:servlet-3'
+include ':dd-java-agent:integrations:spring-web'
 
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"

@@ -8,9 +8,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.datadoghq.agent.instrumentation.Instrumenter;
 import com.datadoghq.trace.DDTags;
 import com.google.auto.service.AutoService;
+import dd.trace.Instrumenter;
 import io.opentracing.ActiveSpan;
 import io.opentracing.NoopActiveSpanSource;
 import io.opentracing.tag.Tags;

@@ -60,7 +60,37 @@ test {
   if (project.hasProperty("disableShadowRelocate") && disableShadowRelocate) {
     exclude 'com/datadoghq/agent/ShadowPackageRenamingTest.class'
   }
+
+  useJUnit {
+    excludeCategories 'com.datadoghq.agent.integration.ExpensiveTest'
+  }
 }
+
+task expensiveTest(type: Test) {
+  jvmArgs "-Ddd.trace.configurationFile=${project.buildDir}/resources/test/dd-trace.yaml"
+  jvmArgs "-Ddd.slf4j.simpleLogger.defaultLogLevel=debug"
+  jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
+  jvmArgs "-Ddd.deps.org.jboss.byteman.verbose=true"
+  jvmArgs "-Dorg.jboss.byteman.verbose=true"
+
+  doFirst {
+    // Defining here to allow jacoco to be first on the command line.
+    jvmArgs "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
+  }
+
+  testLogging {
+    events "started"
+  }
+
+  if (project.hasProperty("disableShadowRelocate") && disableShadowRelocate) {
+    exclude 'com/datadoghq/agent/ShadowPackageRenamingTest.class'
+  }
+
+  useJUnit {
+    includeCategories 'com.datadoghq.agent.integration.ExpensiveTest'
+  }
+}
+test.finalizedBy expensiveTest
 
 test.dependsOn project(':dd-java-agent').shadowJar
 

@@ -12,8 +12,10 @@ import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /** Created by gpolaert on 6/2/17. */
+@Category(ExpensiveTest.class)
 public class CassandraIntegrationTest {
 
   @Before

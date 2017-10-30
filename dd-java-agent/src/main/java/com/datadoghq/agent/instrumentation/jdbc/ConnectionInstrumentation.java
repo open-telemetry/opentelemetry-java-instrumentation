@@ -8,8 +8,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.datadoghq.agent.instrumentation.Instrumenter;
 import com.google.auto.service.AutoService;
+import dd.trace.Instrumenter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Map;
