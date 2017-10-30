@@ -23,7 +23,6 @@ dependencies {
   compile group: 'net.bytebuddy', name: 'byte-buddy', version: '1.7.6'
   compile group: 'org.jboss.byteman', name: 'byteman', version: '3.0.10'
 
-  compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
   compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
   compile deps.slf4j
 
@@ -87,9 +86,7 @@ shadowJar {
     relocate 'org.msgpack', 'dd.deps.org.msgpack'
     relocate 'com.fasterxml', 'dd.deps.com.fasterxml'
 
-    relocate 'javassist', 'dd.deps.javassist'
     relocate 'net.bytebuddy', 'dd.deps.net.bytebuddy'
-    relocate 'org.reflections', 'dd.deps.org.reflections'
     relocate('org.jboss.byteman', 'dd.deps.org.jboss.byteman') {
       // Renaming these causes a verify error in the tests.
       exclude 'org.jboss.byteman.rule.*'

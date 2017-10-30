@@ -32,12 +32,10 @@ public class AgentRulesManager {
   protected final Retransformer transformer;
   protected final TracingAgentConfig agentTracerConfig;
   protected final InstrumentationRulesManager instrumentationRulesManager;
-  protected final TraceAnnotationsManager traceAnnotationsManager;
 
   public AgentRulesManager(final Retransformer trans, final TracingAgentConfig config) {
     transformer = trans;
     agentTracerConfig = config;
-    traceAnnotationsManager = new TraceAnnotationsManager(trans, config);
     instrumentationRulesManager = new InstrumentationRulesManager(trans, config, this);
   }
 
@@ -62,7 +60,6 @@ public class AgentRulesManager {
     INSTANCE = manager;
 
     manager.loadRules(INITIALIZER_RULES, ClassLoader.getSystemClassLoader());
-    manager.traceAnnotationsManager.initialize();
   }
 
   /**

@@ -7,7 +7,7 @@ import io.opentracing.util.GlobalTracer;
 
 public class SayTracedHello {
 
-  @Trace(operationName = "SAY_HELLO")
+  @Trace
   public static String sayHello() {
     new StringTag(DDTags.SERVICE_NAME).set(GlobalTracer.get().activeSpan(), "test");
     return "hello!";
