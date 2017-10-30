@@ -38,15 +38,16 @@ public class HTTPCodec implements Codec<TextMap> {
 
     for (final Map.Entry<String, String> entry : carrier) {
 
-      if (entry.getKey().equals(TRACE_ID_KEY)) {
+      final String key = entry.getKey().toLowerCase();
+      if (key.equalsIgnoreCase(TRACE_ID_KEY)) {
         traceId = Long.parseLong(entry.getValue());
-      } else if (entry.getKey().equals(SPAN_ID_KEY)) {
+      } else if (key.equalsIgnoreCase(SPAN_ID_KEY)) {
         spanId = Long.parseLong(entry.getValue());
-      } else if (entry.getKey().startsWith(OT_BAGGAGE_PREFIX)) {
+      } else if (key.startsWith(OT_BAGGAGE_PREFIX)) {
         if (baggage.isEmpty()) {
           baggage = new HashMap<>();
         }
-        baggage.put(entry.getKey().replace(OT_BAGGAGE_PREFIX, ""), decode(entry.getValue()));
+        baggage.put(key.replace(OT_BAGGAGE_PREFIX, ""), decode(entry.getValue()));
       }
     }
     DDSpanContext context = null;
