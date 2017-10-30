@@ -57,9 +57,3 @@ instruments:
 - The JDBC driver
 
 The Java Agent embeds the [OpenTracing Java Agent](https://github.com/opentracing-contrib/java-agent).
-
-#### Note for JDBC tracing configuration
-
-[JDBC is not automatically instrumented by the Java Agent](../../README.md#jdbc), so we changed the `application.properties`
-[file](src/main/resources/application.properties) to use the OpenTracing Driver and included it as a dependency in `spring-boot-jdbc.gradle`.
-Without these steps in your applications, the TracingDriver will not work.

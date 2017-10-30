@@ -16,8 +16,21 @@
  */
 package com.datadoghq.agent;
 
+import static com.datadoghq.agent.utils.ClassLoaderNameMatcher.classLoaderWithName;
+import static com.datadoghq.agent.utils.ClassLoaderNameMatcher.isReflectionClassLoader;
+import static net.bytebuddy.matcher.ElementMatchers.any;
+import static net.bytebuddy.matcher.ElementMatchers.isBootstrapClassLoader;
+import static net.bytebuddy.matcher.ElementMatchers.nameContains;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
+
+import com.datadoghq.agent.instrumentation.Instrumenter;
 import java.lang.instrument.Instrumentation;
+import java.util.ServiceLoader;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.utility.JavaModule;
 
 /**
  * This class provides a wrapper around the ByteMan agent, to establish required system properties
@@ -27,12 +40,14 @@ import lombok.extern.slf4j.Slf4j;
 public class TracingAgent {
 
   public static void premain(String agentArgs, final Instrumentation inst) throws Exception {
+    addByteBuddy(inst);
     agentArgs = addManager(agentArgs);
     log.debug("Using premain for loading {}", TracingAgent.class.getSimpleName());
     org.jboss.byteman.agent.Main.premain(agentArgs, inst);
   }
 
   public static void agentmain(String agentArgs, final Instrumentation inst) throws Exception {
+    addByteBuddy(inst);
     agentArgs = addManager(agentArgs);
     log.debug("Using agentmain for loading {}", TracingAgent.class.getSimpleName());
     org.jboss.byteman.agent.Main.agentmain(agentArgs, inst);
@@ -47,5 +62,82 @@ public class TracingAgent {
     agentArgs += "manager:" + AgentRulesManager.class.getName();
     log.debug("Agent args=: {}", agentArgs);
     return agentArgs;
+  }
+
+  public static void addByteBuddy(final Instrumentation inst) {
+    AgentBuilder agentBuilder =
+        new AgentBuilder.Default()
+            .disableClassFormatChanges()
+            .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+            .with(new Listener())
+            .ignore(nameStartsWith("com.datadoghq.agent.integration"))
+            .or(nameStartsWith("java."))
+            .or(nameStartsWith("com.sun."))
+            .or(nameStartsWith("sun."))
+            .or(nameStartsWith("jdk."))
+            .or(nameStartsWith("org.aspectj."))
+            .or(nameStartsWith("org.groovy."))
+            .or(nameStartsWith("com.p6spy."))
+            .or(nameStartsWith("org.slf4j."))
+            .or(nameContains("javassist"))
+            .or(nameContains(".asm."))
+            .ignore(
+                any(),
+                isBootstrapClassLoader()
+                    .or(isReflectionClassLoader())
+                    .or(
+                        classLoaderWithName(
+                            "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader")));
+
+    for (final Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class)) {
+      agentBuilder = instrumenter.instrument(agentBuilder);
+    }
+
+    agentBuilder.installOn(inst);
+  }
+
+  @Slf4j
+  static class Listener implements AgentBuilder.Listener {
+
+    @Override
+    public void onError(
+        final String typeName,
+        final ClassLoader classLoader,
+        final JavaModule module,
+        final boolean loaded,
+        final Throwable throwable) {
+      log.warn("Failed to handle " + typeName + " for transformation", throwable);
+    }
+
+    @Override
+    public void onTransformation(
+        final TypeDescription typeDescription,
+        final ClassLoader classLoader,
+        final JavaModule module,
+        final boolean loaded,
+        final DynamicType dynamicType) {
+      log.debug("Transformed {}", typeDescription);
+    }
+
+    @Override
+    public void onIgnored(
+        final TypeDescription typeDescription,
+        final ClassLoader classLoader,
+        final JavaModule module,
+        final boolean loaded) {}
+
+    @Override
+    public void onComplete(
+        final String typeName,
+        final ClassLoader classLoader,
+        final JavaModule module,
+        final boolean loaded) {}
+
+    @Override
+    public void onDiscovery(
+        final String typeName,
+        final ClassLoader classLoader,
+        final JavaModule module,
+        final boolean loaded) {}
   }
 }

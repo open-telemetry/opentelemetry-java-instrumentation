@@ -20,6 +20,7 @@ dependencies {
   compile project(':dd-trace')
   compile project(':dd-trace-annotations')
 
+  compile group: 'net.bytebuddy', name: 'byte-buddy', version: '1.7.6'
   compile group: 'org.jboss.byteman', name: 'byteman', version: '3.0.10'
 
   compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
@@ -36,9 +37,6 @@ dependencies {
   testCompile(project(path: ':dd-java-agent:integrations:helpers')) {
     transitive = false
   }
-
-  // Not bundled in with the agent.  Usage requires being on the app's classpath (eg. Spring Boot's executable jar)
-  compileOnly group: 'io.opentracing.contrib', name: 'opentracing-jdbc', version: '0.0.3'
 }
 
 project(':dd-java-agent:integrations:helpers').afterEvaluate { helperProject ->
@@ -90,6 +88,7 @@ shadowJar {
     relocate 'com.fasterxml', 'dd.deps.com.fasterxml'
 
     relocate 'javassist', 'dd.deps.javassist'
+    relocate 'net.bytebuddy', 'dd.deps.net.bytebuddy'
     relocate 'org.reflections', 'dd.deps.org.reflections'
     relocate('org.jboss.byteman', 'dd.deps.org.jboss.byteman') {
       // Renaming these causes a verify error in the tests.
