@@ -56,10 +56,10 @@ public class HTTPCodecTest {
     final Map<String, String> actual =
         new HashMap<String, String>() {
           {
-            put(TRACE_ID_KEY, "1");
-            put(SPAN_ID_KEY, "2");
-            put(OT_BAGGAGE_PREFIX + "k1", "v1");
-            put(OT_BAGGAGE_PREFIX + "k2", "v2");
+            put(TRACE_ID_KEY.toUpperCase(), "1");
+            put(SPAN_ID_KEY.toUpperCase(), "2");
+            put(OT_BAGGAGE_PREFIX.toUpperCase() + "k1", "v1");
+            put(OT_BAGGAGE_PREFIX.toUpperCase() + "k2", "v2");
           }
         };
 

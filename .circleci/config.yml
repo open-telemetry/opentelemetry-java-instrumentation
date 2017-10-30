@@ -14,11 +14,11 @@ jobs:
 
       - run:
           name: Run Tests
-          command: ./gradlew clean check --parallel --stacktrace
+          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1G -Xms512M" ./gradlew clean check --parallel --stacktrace --no-daemon --max-workers=3
 
       - run:
           name: Verify Version Scan
-          command: ./gradlew verifyVersionScan --parallel --stacktrace
+          command: ./gradlew verifyVersionScan --parallel --stacktrace --no-daemon
 
       - save_cache:
           paths:
@@ -58,5 +58,5 @@ jobs:
                 -PbintrayUser=${BINTRAY_USER} \
                 -PbintrayApiKey=${BINTRAY_API_KEY} \
                 -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
-                artifactoryPublish --max-workers=1 --stacktrace
+                artifactoryPublish --max-workers=1 --stacktrace --no-daemon
             fi
