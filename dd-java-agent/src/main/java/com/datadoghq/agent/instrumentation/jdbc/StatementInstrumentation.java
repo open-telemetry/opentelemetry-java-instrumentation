@@ -49,8 +49,10 @@ public final class StatementInstrumentation implements Instrumenter {
         return NoopActiveSpanSource.NoopActiveSpan.INSTANCE;
       }
 
-      final DriverInstrumentation.DBInfo dbInfo =
-          DriverInstrumentation.connectionInfo.get(connection);
+      DriverInstrumentation.DBInfo dbInfo = DriverInstrumentation.connectionInfo.get(connection);
+      if (dbInfo == null) {
+        dbInfo = DriverInstrumentation.DBInfo.UNKNOWN;
+      }
 
       final ActiveSpan span =
           GlobalTracer.get().buildSpan(dbInfo.getType() + ".query").startActive();

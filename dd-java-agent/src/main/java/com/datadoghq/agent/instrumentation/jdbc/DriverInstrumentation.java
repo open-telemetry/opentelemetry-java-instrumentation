@@ -38,16 +38,19 @@ public final class DriverInstrumentation implements Instrumenter {
         @Advice.Argument(0) final String url,
         @Advice.Argument(1) final Properties info,
         @Advice.Return final Connection connection) {
-      // Remove end of url to prevent passwords from leaking:
-      final String sanitizedURL = url.replaceAll("[?;].*", "");
-      final String type = url.split(":")[1];
-      final String dbUser = info == null ? null : info.getProperty("user");
-      connectionInfo.put(connection, new DBInfo(sanitizedURL, type, dbUser));
+      if (url != null) {
+        // Remove end of url to prevent passwords from leaking:
+        final String sanitizedURL = url.replaceAll("[?;].*", "");
+        final String type = url.split(":")[1];
+        final String dbUser = info == null ? null : info.getProperty("user");
+        connectionInfo.put(connection, new DBInfo(sanitizedURL, type, dbUser));
+      }
     }
   }
 
   @Data
   public static class DBInfo {
+    public static DBInfo UNKNOWN = new DBInfo("null", "unknown", null);
     private final String url;
     private final String type;
     private final String user;
