@@ -109,7 +109,7 @@ public class TracingAgent {
         final JavaModule module,
         final boolean loaded,
         final Throwable throwable) {
-      log.warn("Failed to handle " + typeName + " for transformation", throwable);
+      log.debug("Failed to handle " + typeName + " for transformation: " + throwable.getMessage());
     }
 
     @Override
