@@ -4,12 +4,14 @@ import com.datadoghq.trace.DDBaseSpan;
 import com.datadoghq.trace.DDTraceInfo;
 import com.datadoghq.trace.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.RateLimiter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 
@@ -19,9 +21,13 @@ public class DDApi {
 
   private static final String TRACES_ENDPOINT = "/v0.3/traces";
   private static final String SERVICES_ENDPOINT = "/v0.3/services";
+  private static final long SECONDS_BETWEEN_ERROR_LOG = TimeUnit.MINUTES.toSeconds(5);
 
   private final String tracesEndpoint;
   private final String servicesEndpoint;
+
+  private final RateLimiter loggingRateLimiter =
+      RateLimiter.create(1.0 / SECONDS_BETWEEN_ERROR_LOG);
 
   private final ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory());
 
@@ -37,14 +43,7 @@ public class DDApi {
    * @return the staus code returned
    */
   public boolean sendTraces(final List<List<DDBaseSpan<?>>> traces) {
-    final int status = callPUT(tracesEndpoint, traces);
-    if (status == 200) {
-      log.debug("Succesfully sent {} traces to the DD agent.", traces.size());
-      return true;
-    } else {
-      log.warn("Error while sending {} traces to the DD agent. Status: {}", traces.size(), status);
-      return false;
-    }
+    return putContent("traces", tracesEndpoint, traces, traces.size());
   }
 
   /**
@@ -56,15 +55,7 @@ public class DDApi {
     if (services == null) {
       return true;
     }
-    final int status = callPUT(servicesEndpoint, services);
-    if (status == 200) {
-      log.debug("Succesfully sent {} services to the DD agent.", services.size());
-      return true;
-    } else {
-      log.warn(
-          "Error while sending {} services to the DD agent. Status: {}", services.size(), status);
-      return false;
-    }
+    return putContent("services", servicesEndpoint, services, services.size());
   }
 
   /**
@@ -73,33 +64,52 @@ public class DDApi {
    * @param content
    * @return the status code
    */
-  private int callPUT(final String endpoint, final Object content) {
-    HttpURLConnection httpCon = null;
+  private boolean putContent(
+      final String type, final String endpoint, final Object content, final int size) {
     try {
-      httpCon = getHttpURLConnection(endpoint);
-    } catch (final Exception e) {
-      log.warn("Error thrown before PUT call to the DD agent.", e);
-      return -1;
-    }
+      final HttpURLConnection httpCon = getHttpURLConnection(endpoint);
 
-    try {
       final OutputStream out = httpCon.getOutputStream();
       objectMapper.writeValue(out, content);
       out.flush();
       out.close();
+
       final int responseCode = httpCon.getResponseCode();
-      if (responseCode == 200) {
-        log.debug("Sent the payload to the DD agent.");
-      } else {
-        log.warn(
-            "Could not send the payload to the DD agent. Status: {} ResponseMessage: {}",
-            httpCon.getResponseCode(),
-            httpCon.getResponseMessage());
+      if (responseCode != 200) {
+        if (log.isDebugEnabled()) {
+          log.debug(
+              "Error while sending {} {} to the DD agent. Status: {}, ResponseMessage: ",
+              size,
+              type,
+              responseCode,
+              httpCon.getResponseMessage());
+        } else if (loggingRateLimiter.tryAcquire()) {
+          log.warn(
+              "Error while sending {} {} to the DD agent. Status: {} (going silent for {} seconds)",
+              size,
+              type,
+              responseCode,
+              httpCon.getResponseMessage(),
+              SECONDS_BETWEEN_ERROR_LOG);
+        }
+        return false;
       }
-      return responseCode;
-    } catch (final Exception e) {
-      log.warn("Could not send the payload to the DD agent.", e);
-      return -1;
+
+      log.debug("Succesfully sent {} {} to the DD agent.", size, type);
+      return true;
+
+    } catch (final IOException e) {
+      if (log.isDebugEnabled()) {
+        log.debug("Error while sending " + size + " " + type + " to the DD agent.", e);
+      } else if (loggingRateLimiter.tryAcquire()) {
+        log.warn(
+            "Error while sending {} {} to the DD agent. Message: {} (going silent for {} seconds)",
+            size,
+            type,
+            e.getMessage(),
+            SECONDS_BETWEEN_ERROR_LOG);
+      }
+      return false;
     }
   }
 

@@ -173,7 +173,7 @@ public class DDAgentWriter implements Writer {
         final boolean isSent = api.sendTraces(payload);
 
         if (!isSent) {
-          log.warn("Failing to send {} traces to the API", payload.size());
+          log.debug("Failing to send {} traces to the API", payload.size());
           return 0L;
         }
         return (long) payload.size();
