@@ -21,7 +21,8 @@ dependencies {
   compile project(':dd-java-agent:tooling')
   compile project(':dd-trace-annotations')
 
-
+  compile project(':dd-java-agent:integrations:servlet-2')
+  compile project(':dd-java-agent:integrations:servlet-3')
   compile project(':dd-java-agent:integrations:spring-web')
 
   compile deps.bytebuddy

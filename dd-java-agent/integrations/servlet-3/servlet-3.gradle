@@ -10,3 +10,18 @@ versionScan {
     "javax.servlet.AsyncListener": null,
   ]
 }
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
+
+  compile project(':dd-trace')
+  compile project(':dd-java-agent:tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+
+  compile group: 'io.opentracing.contrib', name: 'opentracing-web-servlet-filter', version: '0.0.9'
+  compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
+}

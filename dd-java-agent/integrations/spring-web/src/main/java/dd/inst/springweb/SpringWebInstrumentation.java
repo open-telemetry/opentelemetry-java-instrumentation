@@ -1,5 +1,6 @@
 package dd.inst.springweb;
 
+import static dd.trace.ClassLoaderHasClassWithFieldMatcher.classLoaderHasClassWithField;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -31,7 +32,10 @@ public final class SpringWebInstrumentation implements Instrumenter {
     return agentBuilder
         .type(
             not(isInterface())
-                .and(hasSuperType(named("org.springframework.web.servlet.HandlerAdapter"))))
+                .and(hasSuperType(named("org.springframework.web.servlet.HandlerAdapter"))),
+            classLoaderHasClassWithField(
+                "org.springframework.web.servlet.HandlerMapping",
+                "BEST_MATCHING_PATTERN_ATTRIBUTE"))
         .transform(
             new AgentBuilder.Transformer.ForAdvice()
                 .advice(

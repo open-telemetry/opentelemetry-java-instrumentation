@@ -80,15 +80,3 @@ IF TRUE
 DO
   com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
 ENDRULE
-
-
-# Instrument Servlet
-# ===========================
-RULE HttpServlet-init
-CLASS ^javax.servlet.http.HttpServlet
-METHOD <init>
-AT EXIT
-IF TRUE
-DO
-  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
-ENDRULE
