@@ -13,18 +13,6 @@
 #ENDRULE
 
 
-# Instrument AWS SDK client
-# ==========================
-RULE AwsClientBuilder-init
-CLASS ^com.amazonaws.client.builder.AwsClientBuilder
-METHOD <init>
-AT EXIT
-IF TRUE
-DO
-  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
-ENDRULE
-
-
 # Instrument Cassandra client
 # ===========================
 RULE Cluster$Manager-init

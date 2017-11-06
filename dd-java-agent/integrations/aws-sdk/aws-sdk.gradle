@@ -12,3 +12,18 @@ versionScan {
     "com.amazonaws.http.request.HttpRequestFactory": null,
   ]
 }
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.119'
+
+  compile project(':dd-trace')
+  compile project(':dd-java-agent:tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+
+  compile group: 'io.opentracing.contrib', name: 'opentracing-aws-sdk', version: '0.0.2'
+  compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
+}

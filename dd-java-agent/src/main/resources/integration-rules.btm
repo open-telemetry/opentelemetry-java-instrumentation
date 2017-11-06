@@ -21,20 +21,6 @@ DO
 ENDRULE
 
 
-
-# Instrument AWS SDK client
-# ==========================
-RULE opentracing-aws-sdk
-CLASS ^com.amazonaws.client.builder.AwsClientBuilder
-METHOD build()
-HELPER com.datadoghq.agent.integration.AWSClientHelper
-AT ENTRY
-IF TRUE
-DO
-  patch($0);
-ENDRULE
-
-
 # Instrument Cassandra client
 # ===========================
 RULE opentracing-cassandra-driver
