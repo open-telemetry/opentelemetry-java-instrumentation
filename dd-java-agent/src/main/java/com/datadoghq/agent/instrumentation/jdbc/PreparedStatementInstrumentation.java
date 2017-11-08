@@ -23,6 +23,7 @@ import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
 public final class PreparedStatementInstrumentation implements Instrumenter {
+  private static final String UNKNOWN_QUERY = "Unknown Query";
 
   @Override
   public AgentBuilder instrument(final AgentBuilder agentBuilder) {
@@ -61,7 +62,7 @@ public final class PreparedStatementInstrumentation implements Instrumenter {
       Tags.COMPONENT.set(span, "java-jdbc-prepared_statement");
 
       span.setTag(DDTags.SERVICE_NAME, dbInfo.getType());
-      span.setTag(DDTags.RESOURCE_NAME, sql);
+      span.setTag(DDTags.RESOURCE_NAME, sql == null ? UNKNOWN_QUERY : sql);
       span.setTag(DDTags.SPAN_TYPE, "sql");
       span.setTag("span.origin.type", statement.getClass().getName());
       span.setTag("db.jdbc.url", dbInfo.getUrl());
