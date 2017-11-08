@@ -15,6 +15,7 @@ dd-trace-examples/**/build/
 
 # Eclipse #
 ###########
+bin/
 *.launch
 .settings
 .project
