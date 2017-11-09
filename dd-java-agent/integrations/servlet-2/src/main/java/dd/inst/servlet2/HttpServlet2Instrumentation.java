@@ -1,6 +1,7 @@
 package dd.inst.servlet2;
 
-import static dd.trace.ClassLoaderHasClassMatcher.classLoaderHasClasses;
+import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
+import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -41,13 +42,14 @@ public final class HttpServlet2Instrumentation implements Instrumenter {
                         .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
                         .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
                         .and(isProtected()),
-                    HttpServlet2Advice.class.getName()))
+                    HttpServlet2Advice.class.getName())
+                .withExceptionHandler(defaultExceptionHandler()))
         .asDecorator();
   }
 
   public static class HttpServlet2Advice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static ActiveSpan startSpan(@Advice.Argument(0) final HttpServletRequest req) {
 
       final SpanContext extractedContext =
@@ -65,7 +67,7 @@ public final class HttpServlet2Instrumentation implements Instrumenter {
       return span;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Argument(0) final HttpServletRequest req,
         @Advice.Argument(1) final HttpServletResponse resp,

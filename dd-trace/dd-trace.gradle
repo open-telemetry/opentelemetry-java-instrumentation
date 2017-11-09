@@ -31,8 +31,6 @@ dependencies {
 
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6'
   testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
-
-  jmh 'commons-io:commons-io:2.4'
 }
 
 jmh {

@@ -1,17 +1,21 @@
 package com.datadoghq.agent;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import io.opentracing.Tracer;
+import io.opentracing.contrib.tracerresolver.TracerResolver;
+import io.opentracing.util.GlobalTracer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -29,13 +33,16 @@ public class InstrumentationRulesManager {
   private static final String INTEGRATION_RULES = "integration-rules.btm";
   private static final String HELPERS_NAME = "/helpers.jar.zip";
 
+  private static final Object SYNC = new Object();
+
   private final Retransformer transformer;
   private final TracingAgentConfig config;
   private final AgentRulesManager agentRulesManager;
   private final ClassLoaderIntegrationInjector injector;
   private final InstrumentationChecker checker = new InstrumentationChecker();
 
-  private final Set<ClassLoader> initializedClassloaders = Sets.newConcurrentHashSet();
+  private final Set<ClassLoader> initializedClassloaders =
+      Collections.newSetFromMap(new WeakHashMap<ClassLoader, Boolean>());
 
   public InstrumentationRulesManager(
       final Retransformer trans,
@@ -77,6 +84,9 @@ public class InstrumentationRulesManager {
   }
 
   public static void registerClassLoad(final Object obj) {
+    if (AgentRulesManager.INSTANCE == null) {
+      return;
+    }
     final ClassLoader cl;
     if (obj instanceof ClassLoader) {
       cl = (ClassLoader) obj;
@@ -122,6 +132,8 @@ public class InstrumentationRulesManager {
     } catch (final Exception e) {
       log.warn("Error uninstalling scripts", e);
     }
+
+    initTracer();
   }
 
   /**
@@ -150,6 +162,22 @@ public class InstrumentationRulesManager {
         transformer.removeScripts(new ArrayList<>(rulesToRemove), pr);
       }
       log.info("Uninstall rule scripts: {}", rulesToRemove.toString());
+    }
+  }
+
+  private void initTracer() {
+    synchronized (SYNC) {
+      if (!GlobalTracer.isRegistered()) {
+        // Try to obtain a tracer using the TracerResolver
+        final Tracer resolved = TracerResolver.resolveTracer();
+        if (resolved != null) {
+          try {
+            GlobalTracer.register(resolved);
+          } catch (final RuntimeException re) {
+            log.warn("Failed to register tracer '" + resolved + "'", re);
+          }
+        }
+      }
     }
   }
 }

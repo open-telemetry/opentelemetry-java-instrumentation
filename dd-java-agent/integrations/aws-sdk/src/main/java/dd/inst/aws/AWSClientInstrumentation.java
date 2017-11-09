@@ -1,6 +1,7 @@
 package dd.inst.aws;
 
-import static dd.trace.ClassLoaderHasClassMatcher.classLoaderHasClasses;
+import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
+import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -32,13 +33,14 @@ public final class AWSClientInstrumentation implements Instrumenter {
             new AgentBuilder.Transformer.ForAdvice()
                 .advice(
                     named("build").and(takesArguments(0)).and(isPublic()),
-                    AWSClientAdvice.class.getName()))
+                    AWSClientAdvice.class.getName())
+                .withExceptionHandler(defaultExceptionHandler()))
         .asDecorator();
   }
 
   public static class AWSClientAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(@Advice.This final AwsClientBuilder builder) {
 
       final RequestHandler2 handler = new TracingRequestHandler(GlobalTracer.get());

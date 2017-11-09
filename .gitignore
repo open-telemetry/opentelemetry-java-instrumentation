@@ -48,4 +48,5 @@ Thumbs.db
 /bin
 /out
 */out
+dd-java-agent/integrations/*/out
 dd-trace-examples/*/out

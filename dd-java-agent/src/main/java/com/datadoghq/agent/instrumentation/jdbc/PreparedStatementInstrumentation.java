@@ -1,5 +1,6 @@
 package com.datadoghq.agent.instrumentation.jdbc;
 
+import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -32,13 +33,14 @@ public final class PreparedStatementInstrumentation implements Instrumenter {
             new AgentBuilder.Transformer.ForAdvice()
                 .advice(
                     nameStartsWith("execute").and(takesArguments(0)).and(isPublic()),
-                    PreparedStatementAdvice.class.getName()))
+                    PreparedStatementAdvice.class.getName())
+                .withExceptionHandler(defaultExceptionHandler()))
         .asDecorator();
   }
 
   public static class PreparedStatementAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static ActiveSpan startSpan(@Advice.This final PreparedStatement statement) {
       final String sql = ConnectionInstrumentation.preparedStatements.get(statement);
       final Connection connection;
@@ -72,7 +74,7 @@ public final class PreparedStatementInstrumentation implements Instrumenter {
       return span;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final ActiveSpan activeSpan, @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
