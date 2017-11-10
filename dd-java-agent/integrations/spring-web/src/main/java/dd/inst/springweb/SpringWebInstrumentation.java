@@ -1,5 +1,7 @@
 package dd.inst.springweb;
 
+import static dd.trace.ClassLoaderMatcher.classLoaderHasClassWithField;
+import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -31,7 +33,10 @@ public final class SpringWebInstrumentation implements Instrumenter {
     return agentBuilder
         .type(
             not(isInterface())
-                .and(hasSuperType(named("org.springframework.web.servlet.HandlerAdapter"))))
+                .and(hasSuperType(named("org.springframework.web.servlet.HandlerAdapter"))),
+            classLoaderHasClassWithField(
+                "org.springframework.web.servlet.HandlerMapping",
+                "BEST_MATCHING_PATTERN_ATTRIBUTE"))
         .transform(
             new AgentBuilder.Transformer.ForAdvice()
                 .advice(
@@ -39,12 +44,14 @@ public final class SpringWebInstrumentation implements Instrumenter {
                         .and(isPublic())
                         .and(nameStartsWith("handle"))
                         .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest"))),
-                    SpringWebAdvice.class.getName()));
+                    SpringWebAdvice.class.getName())
+                .withExceptionHandler(defaultExceptionHandler()))
+        .asDecorator();
   }
 
   public static class SpringWebAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResource(@Advice.Argument(0) final HttpServletRequest request) {
       final ActiveSpan span = GlobalTracer.get().activeSpan();
       if (span != null) {

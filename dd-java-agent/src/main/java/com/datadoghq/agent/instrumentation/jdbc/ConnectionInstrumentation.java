@@ -1,5 +1,6 @@
 package com.datadoghq.agent.instrumentation.jdbc;
 
+import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -31,11 +32,13 @@ public final class ConnectionInstrumentation implements Instrumenter {
                     nameStartsWith("prepare")
                         .and(takesArgument(0, String.class))
                         .and(returns(PreparedStatement.class)),
-                    ConnectionAdvice.class.getName()));
+                    ConnectionAdvice.class.getName())
+                .withExceptionHandler(defaultExceptionHandler()))
+        .asDecorator();
   }
 
   public static class ConnectionAdvice {
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDBInfo(
         @Advice.Argument(0) final String sql, @Advice.Return final PreparedStatement statement) {
       preparedStatements.put(statement, sql);

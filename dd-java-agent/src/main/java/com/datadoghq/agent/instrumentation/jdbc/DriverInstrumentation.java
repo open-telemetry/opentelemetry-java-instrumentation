@@ -1,5 +1,6 @@
 package com.datadoghq.agent.instrumentation.jdbc;
 
+import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -29,11 +30,13 @@ public final class DriverInstrumentation implements Instrumenter {
             new AgentBuilder.Transformer.ForAdvice()
                 .advice(
                     named("connect").and(takesArguments(String.class, Properties.class)),
-                    DriverAdvice.class.getName()));
+                    DriverAdvice.class.getName())
+                .withExceptionHandler(defaultExceptionHandler()))
+        .asDecorator();
   }
 
   public static class DriverAdvice {
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDBInfo(
         @Advice.Argument(0) final String url,
         @Advice.Argument(1) final Properties info,

@@ -1,5 +1,6 @@
 package com.datadoghq.agent.instrumentation.annotation;
 
+import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -28,12 +29,14 @@ public final class TraceAnnotationInstrumentation implements Instrumenter {
         .type(hasSuperType(declaresMethod(isAnnotatedWith(Trace.class))))
         .transform(
             new AgentBuilder.Transformer.ForAdvice()
-                .advice(isAnnotatedWith(Trace.class), TraceAdvice.class.getName()));
+                .advice(isAnnotatedWith(Trace.class), TraceAdvice.class.getName())
+                .withExceptionHandler(defaultExceptionHandler()))
+        .asDecorator();
   }
 
   public static class TraceAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static ActiveSpan startSpan(@Advice.Origin final Method method) {
       final Trace trace = method.getAnnotation(Trace.class);
       String operationName = trace.operationName();
@@ -44,7 +47,7 @@ public final class TraceAnnotationInstrumentation implements Instrumenter {
       return GlobalTracer.get().buildSpan(operationName).startActive();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final ActiveSpan activeSpan, @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {

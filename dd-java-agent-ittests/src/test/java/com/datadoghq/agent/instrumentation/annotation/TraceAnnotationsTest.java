@@ -21,6 +21,9 @@ public class TraceAnnotationsTest {
 
   @Before
   public void beforeTest() throws Exception {
+    Class.forName("com.datadoghq.agent.InstrumentationRulesManager")
+        .getMethod("registerClassLoad")
+        .invoke(null);
     try {
       GlobalTracer.register(tracer);
     } catch (final Exception e) {

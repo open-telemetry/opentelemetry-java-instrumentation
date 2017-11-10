@@ -16,8 +16,8 @@
  */
 package com.datadoghq.agent;
 
-import static com.datadoghq.agent.utils.ClassLoaderNameMatcher.classLoaderWithName;
-import static com.datadoghq.agent.utils.ClassLoaderNameMatcher.isReflectionClassLoader;
+import static dd.trace.ClassLoaderMatcher.classLoaderWithName;
+import static dd.trace.ClassLoaderMatcher.isReflectionClassLoader;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isBootstrapClassLoader;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
@@ -25,7 +25,11 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 
 import dd.trace.Instrumenter;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.WeakHashMap;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -40,17 +44,17 @@ import net.bytebuddy.utility.JavaModule;
 public class TracingAgent {
 
   public static void premain(String agentArgs, final Instrumentation inst) throws Exception {
-    addByteBuddy(inst);
     agentArgs = addManager(agentArgs);
     log.debug("Using premain for loading {}", TracingAgent.class.getSimpleName());
     org.jboss.byteman.agent.Main.premain(agentArgs, inst);
+    addByteBuddy(inst);
   }
 
   public static void agentmain(String agentArgs, final Instrumentation inst) throws Exception {
-    addByteBuddy(inst);
     agentArgs = addManager(agentArgs);
     log.debug("Using agentmain for loading {}", TracingAgent.class.getSimpleName());
     org.jboss.byteman.agent.Main.agentmain(agentArgs, inst);
+    addByteBuddy(inst);
   }
 
   protected static String addManager(String agentArgs) {
@@ -90,7 +94,8 @@ public class TracingAgent {
                     .or(isReflectionClassLoader())
                     .or(
                         classLoaderWithName(
-                            "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader")));
+                            "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader"))
+                    .or(classLoaderWithName("org.jboss.byteman.modules.ClassbyteClassLoader")));
 
     for (final Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class)) {
       agentBuilder = instrumenter.instrument(agentBuilder);
@@ -101,6 +106,9 @@ public class TracingAgent {
 
   @Slf4j
   static class Listener implements AgentBuilder.Listener {
+
+    private final Set<ClassLoader> initializedClassloaders =
+        Collections.newSetFromMap(new WeakHashMap<ClassLoader, Boolean>());
 
     @Override
     public void onError(
@@ -120,6 +128,26 @@ public class TracingAgent {
         final boolean loaded,
         final DynamicType dynamicType) {
       log.debug("Transformed {}", typeDescription);
+
+      if (classLoader == null) {
+        return;
+      }
+      synchronized (classLoader) {
+        if (initializedClassloaders.contains(classLoader)) {
+          return;
+        }
+        initializedClassloaders.add(classLoader);
+
+        try {
+          final Class<?> rulesManager =
+              Class.forName("com.datadoghq.agent.InstrumentationRulesManager", true, classLoader);
+          final Method registerClassLoad =
+              rulesManager.getDeclaredMethod("registerClassLoad", Object.class);
+          registerClassLoad.invoke(null, classLoader);
+        } catch (final Throwable e) {
+          log.info("ClassLoad Registration for target " + classLoader, e);
+        }
+      }
     }
 
     @Override

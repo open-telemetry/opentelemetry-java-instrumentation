@@ -11,6 +11,7 @@ import java.util.zip.ZipEntry;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+// TODO: consider augmenting with com.sun.xml.internal.bind.v2.runtime.reflect.opt.Injector
 public class ClassLoaderIntegrationInjector {
   private final Map<ZipEntry, byte[]> entries;
   private final Map<ClassLoader, Method> invocationPoints = Maps.newConcurrentMap();
