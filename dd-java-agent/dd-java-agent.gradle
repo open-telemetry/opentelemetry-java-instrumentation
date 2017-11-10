@@ -21,15 +21,23 @@ dependencies {
   compile project(':dd-java-agent:tooling')
   compile project(':dd-trace-annotations')
 
-  compile project(':dd-java-agent:integrations:aws-sdk')
-  compile project(':dd-java-agent:integrations:servlet-2')
-  compile project(':dd-java-agent:integrations:servlet-3')
-  compile project(':dd-java-agent:integrations:spring-web')
+  compile(project(':dd-java-agent:integrations:aws-sdk')) {
+    transitive = false
+  }
+  compile(project(':dd-java-agent:integrations:servlet-2')) {
+    transitive = false
+  }
+  compile(project(':dd-java-agent:integrations:servlet-3')) {
+    transitive = false
+  }
+  compile(project(':dd-java-agent:integrations:spring-web')) {
+    transitive = false
+  }
 
   compile deps.bytebuddy
   compile group: 'org.jboss.byteman', name: 'byteman', version: '3.0.10'
 
-  compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
+  compile deps.autoservice
   compile deps.slf4j
 
   compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
