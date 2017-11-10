@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.extern.slf4j.Slf4j;
 
@@ -176,9 +177,13 @@ public class DDSpanContext implements io.opentracing.SpanContext {
    * Add a tag to the span. Tags are not propagated to the children
    *
    * @param tag the tag-name
-   * @param value the value of the value
+   * @param value the value of the tag. tags with null values are ignored.
    */
   public synchronized void setTag(final String tag, final Object value) {
+    if (value == null) {
+      return;
+    }
+
     if (tag.equals(DDTags.SERVICE_NAME)) {
       setServiceName(value.toString());
       return;
@@ -210,13 +215,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       }
     }
     // Error management
-    if (Tags.ERROR.getKey().equals(tag) && Boolean.TRUE.equals(value)) {
+    if (Tags.ERROR.getKey().equals(tag)
+        && Boolean.TRUE.equals(value instanceof String ? Boolean.valueOf((String) value) : value)) {
       this.errorFlag = true;
-    }
-
-    // Remove null values
-    if (value == null) {
-      this.tags.remove(tag);
     }
   }
 
@@ -231,20 +232,25 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   @Override
   public String toString() {
-    return new StringBuilder()
-        .append("Span [ t_id=")
-        .append(traceId)
-        .append(", s_id=")
-        .append(spanId)
-        .append(", p_id=")
-        .append(parentId)
-        .append("] trace=")
-        .append(getServiceName())
-        .append("/")
-        .append(getOperationName())
-        .append("/")
-        .append(getResourceName())
-        .toString();
+    final StringBuilder s =
+        new StringBuilder()
+            .append("Span [ t_id=")
+            .append(traceId)
+            .append(", s_id=")
+            .append(spanId)
+            .append(", p_id=")
+            .append(parentId)
+            .append("] trace=")
+            .append(getServiceName())
+            .append("/")
+            .append(getOperationName())
+            .append("/")
+            .append(getResourceName());
+    if (errorFlag) {
+      s.append(" *errored*");
+    }
+    s.append(" tags=").append(new TreeMap(tags));
+    return s.toString();
   }
 
   public String getOperationName() {
