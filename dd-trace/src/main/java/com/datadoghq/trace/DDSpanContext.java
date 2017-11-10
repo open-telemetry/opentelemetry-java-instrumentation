@@ -181,6 +181,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
    */
   public synchronized void setTag(final String tag, final Object value) {
     if (value == null) {
+      tags.remove(tag);
       return;
     }
 
