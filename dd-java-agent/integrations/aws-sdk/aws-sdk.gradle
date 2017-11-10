@@ -23,7 +23,7 @@ dependencies {
 
   compile deps.bytebuddy
   compile deps.opentracing
+  compile deps.autoservice
 
   compile group: 'io.opentracing.contrib', name: 'opentracing-aws-sdk', version: '0.0.2'
-  compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
 }

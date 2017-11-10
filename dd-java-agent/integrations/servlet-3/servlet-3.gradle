@@ -22,6 +22,5 @@ dependencies {
 
   compile deps.bytebuddy
   compile deps.opentracing
-
-  compile group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'
+  compile deps.autoservice
 }
