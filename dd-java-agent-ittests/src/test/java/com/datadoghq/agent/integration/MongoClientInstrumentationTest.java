@@ -19,7 +19,7 @@ public class MongoClientInstrumentationTest {
                 .get(0)
                 .getClass()
                 .getSimpleName())
-        .isEqualTo("TracingCommandListener");
+        .isEqualTo("DDTracingCommandListener");
 
     mongoClient.close();
   }

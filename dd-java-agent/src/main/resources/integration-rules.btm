@@ -70,16 +70,6 @@ DO
   patch($0);
 ENDRULE
 
-RULE opentracing-mongo-driver-helper
-CLASS io.opentracing.contrib.mongo.TracingCommandListener
-METHOD decorate
-HELPER com.datadoghq.agent.integration.MongoHelper
-AT EXIT
-IF TRUE
-DO
-  decorate($1, $2);
-ENDRULE
-
 
 # Instrument OkHttp
 # ===========================
