@@ -14,7 +14,6 @@ dependencies {
   compileOnly group: 'org.jboss.byteman', name: 'byteman', version: '4.0.0-BETA5'
 
   compile group: 'io.opentracing.contrib', name: 'opentracing-web-servlet-filter', version: '0.0.9'
-  compile group: 'io.opentracing.contrib', name: 'opentracing-mongo-driver', version: '0.0.3'
   compile group: 'io.opentracing.contrib', name: 'opentracing-okhttp3', version: '0.0.5'
   compile group: 'io.opentracing.contrib', name: 'opentracing-jms-common', version: '0.0.3'
   compile group: 'io.opentracing.contrib', name: 'opentracing-jms-2', version: '0.0.3'

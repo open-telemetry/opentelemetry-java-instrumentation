@@ -48,15 +48,6 @@ DO
   com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
 ENDRULE
 
-RULE TracingCommandListener-init
-CLASS io.opentracing.contrib.mongo.TracingCommandListener
-METHOD <init>
-AT EXIT
-IF TRUE
-DO
-  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
-ENDRULE
-
 
 # Instrument OkHttp
 # ===========================
