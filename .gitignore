@@ -51,3 +51,4 @@ Thumbs.db
 */out
 dd-java-agent/integrations/*/out
 dd-trace-examples/*/out
+derby.log

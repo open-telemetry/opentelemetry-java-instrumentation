@@ -25,18 +25,6 @@ DO
 ENDRULE
 
 
-# Instrument Mongo client
-# ========================
-RULE MongoClientOptions$Builder-init
-CLASS com.mongodb.MongoClientOptions$Builder
-METHOD <init>
-AT EXIT
-IF TRUE
-DO
-  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
-ENDRULE
-
-
 # Instrument OkHttp
 # ===========================
 RULE OkHttpClient$Builder-init

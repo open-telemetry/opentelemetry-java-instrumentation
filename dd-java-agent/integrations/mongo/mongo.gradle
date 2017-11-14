@@ -9,3 +9,15 @@ versionScan {
     "com.mongodb.client.model.MapReduceAction": null,
   ]
 }
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
+
+  compile project(':dd-trace')
+  compile project(':dd-java-agent:tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+}

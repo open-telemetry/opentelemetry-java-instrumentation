@@ -1,14 +1,20 @@
-package com.datadoghq.agent.integration;
+package dd.inst.mongo;
+
+import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
+import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.datadoghq.trace.DDTags;
+import com.google.auto.service.AutoService;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
+import dd.trace.Instrumenter;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.tag.Tags;
+import io.opentracing.util.GlobalTracer;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
@@ -18,39 +24,40 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.asm.Advice;
 import org.bson.BsonArray;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.BsonValue;
-import org.jboss.byteman.rule.Rule;
 
-/** Patch the Mongo builder before constructing the final client */
 @Slf4j
-public class MongoHelper extends DDAgentTracingHelper<MongoClientOptions.Builder> {
+@AutoService(Instrumenter.class)
+public final class MongoClientInstrumentation implements Instrumenter {
 
-  public MongoHelper(final Rule rule) {
-    super(rule);
+  @Override
+  public AgentBuilder instrument(AgentBuilder agentBuilder) {
+    return agentBuilder
+        .type(named("com.mongodb.MongoClientOptions$Builder"))
+        .transform(
+            new AgentBuilder.Transformer.ForAdvice()
+                .advice(
+                    isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
+                    MongoClientAdvice.class.getName())
+                .withExceptionHandler(defaultExceptionHandler()))
+        .asDecorator();
   }
 
-  /**
-   * Strategy: Just before com.mongodb.MongoClientOptions$Builder.build() method is called, we add a
-   * new command listener in charge of the tracing.
-   *
-   * @param builder The builder instance
-   * @return The same builder instance with a new tracing command listener that will be use for the
-   *     client construction
-   * @throws Exception
-   */
-  @Override
-  protected MongoClientOptions.Builder doPatch(final MongoClientOptions.Builder builder)
-      throws Exception {
+  public static class MongoClientAdvice {
 
-    final DDTracingCommandListener listener = new DDTracingCommandListener(tracer);
-    builder.addCommandListener(listener);
-
-    setState(builder, 1);
-
-    return builder;
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void injectTraceListener(@Advice.This final Object dis) {
+      // referencing "this" in the method args causes the class to load under a transformer.
+      // This bypasses the Builder instrumentation. Casting as a workaround.
+      MongoClientOptions.Builder builder = (MongoClientOptions.Builder) dis;
+      final DDTracingCommandListener listener = new DDTracingCommandListener(GlobalTracer.get());
+      builder.addCommandListener(listener);
+    }
   }
 
   public static class DDTracingCommandListener implements CommandListener {
