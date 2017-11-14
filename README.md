@@ -166,7 +166,7 @@ For Maven, add this to pom.xml:
 <!-- OpenTracing API -->
 <dependency>
     <groupId>io.opentracing</groupId>
-    <artifactId>io.opentracing:opentracing-api</artifactId>
+    <artifactId>opentracing-api</artifactId>
     <version>0.30.0</version>
 </dependency>
 
