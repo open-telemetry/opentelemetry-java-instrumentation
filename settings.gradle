@@ -2,6 +2,7 @@ rootProject.name = 'dd-trace-java'
 
 include ':dd-trace'
 include ':dd-java-agent'
+include ':dd-java-agent:benchmark'
 include ':dd-java-agent:tooling'
 include ':dd-java-agent-ittests'
 include ':dd-trace-examples:async-tracing'

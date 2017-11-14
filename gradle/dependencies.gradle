@@ -1,3 +1,6 @@
+def groovyVer = GroovySystem.version
+def spockGroovyVer = GroovySystem.version.replaceAll(/\.\d+$/, '')
+
 ext {
   version = [
     opentracing: '0.30.0',
@@ -6,8 +9,8 @@ ext {
     guava      : "21.0",
     jackson    : "2.8.7",
 
-    spock      : "1.0-groovy-2.4",
-    groovy     : "2.4.11",
+    spock      : "1.0-groovy-$spockGroovyVer",
+    groovy     : groovyVer,
     junit      : "4.12",
     logback    : "1.2.3",
   ]
