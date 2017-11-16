@@ -2,6 +2,7 @@ package com.datadoghq.agent.instrumentation.annotation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.datadoghq.agent.integration.TestUtils;
 import com.datadoghq.agent.test.SayTracedHello;
 import com.datadoghq.trace.DDBaseSpan;
 import com.datadoghq.trace.DDTracer;
@@ -10,12 +11,10 @@ import com.datadoghq.trace.writer.ListWriter;
 import io.opentracing.util.GlobalTracer;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.Field;
 import org.junit.Before;
 import org.junit.Test;
 
 public class TraceAnnotationsTest {
-
   private final ListWriter writer = new ListWriter();
   private final DDTracer tracer = new DDTracer(writer);
 
@@ -24,14 +23,8 @@ public class TraceAnnotationsTest {
     Class.forName("com.datadoghq.agent.InstrumentationRulesManager")
         .getMethod("registerClassLoad")
         .invoke(null);
-    try {
-      GlobalTracer.register(tracer);
-    } catch (final Exception e) {
-      // Force it anyway using reflection
-      final Field field = GlobalTracer.class.getDeclaredField("tracer");
-      field.setAccessible(true);
-      field.set(null, tracer);
-    }
+    TestUtils.registerOrReplaceGlobalTracer(tracer);
+
     writer.start();
     assertThat(GlobalTracer.isRegistered()).isTrue();
   }

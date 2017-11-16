@@ -1,0 +1,24 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "org.mongodb"
+  module = "mongodb-driver-async"
+  scanMethods = true
+  versions = "[3.3,)"
+  verifyPresent = [
+   'com.mongodb.async.client.MongoClientSettings$Builder': 'addCommandListener'
+  ]
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
+
+  compile project(':dd-trace')
+  compile project(':dd-java-agent:integrations:helpers')
+  compile project(':dd-java-agent:tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+}

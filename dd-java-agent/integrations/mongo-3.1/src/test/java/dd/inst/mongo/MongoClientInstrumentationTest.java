@@ -2,6 +2,7 @@ package dd.inst.mongo;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
+import com.datadoghq.agent.integration.DDTracingCommandListener;
 import com.datadoghq.trace.DDSpan;
 import com.datadoghq.trace.DDTracer;
 import com.mongodb.ServerAddress;
@@ -9,7 +10,6 @@ import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
-import dd.inst.mongo.MongoClientInstrumentation.DDTracingCommandListener;
 import io.opentracing.tag.Tags;
 import java.util.Arrays;
 import java.util.List;

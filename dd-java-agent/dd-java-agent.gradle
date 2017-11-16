@@ -30,7 +30,10 @@ dependencies {
   compile(project(':dd-java-agent:integrations:jms-2')) {
     transitive = false
   }
-  compile(project(':dd-java-agent:integrations:mongo')) {
+  compile(project(':dd-java-agent:integrations:mongo-3.1')) {
+    transitive = false
+  }
+  compile(project(':dd-java-agent:integrations:mongo-async-3.3')) {
     transitive = false
   }
   compile(project(':dd-java-agent:integrations:servlet-2')) {

@@ -10,6 +10,10 @@ dependencies {
   testCompile deps.testLogging
 
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
+  testCompile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
+  // run embeded mongodb for integration testing
+  testCompile group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '2.0.0'
+
   testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.1.v20170120'
   testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.1.v20170120'
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.0.41'
