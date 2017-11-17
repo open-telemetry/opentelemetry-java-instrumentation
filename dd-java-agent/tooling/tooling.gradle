@@ -3,4 +3,6 @@ apply from: "${rootDir}/gradle/java.gradle"
 dependencies {
   compile deps.bytebuddy
   compile deps.slf4j
+
+  testCompile deps.opentracing
 }

@@ -25,9 +25,6 @@ dependencies {
   }
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
-  testCompile group: 'javax.jms', name: 'javax.jms-api', version: '2.0.1'
-  testCompile group: 'org.apache.activemq.tooling', name: 'activemq-junit', version: '5.14.5'
-  testCompile group: 'org.apache.activemq', name: 'activemq-broker', version: '5.14.5'
 
   // JDBC tests:
   testCompile group: 'com.h2database', name: 'h2', version: '1.4.196'
