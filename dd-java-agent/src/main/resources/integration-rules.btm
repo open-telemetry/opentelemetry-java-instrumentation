@@ -21,19 +21,6 @@ DO
 ENDRULE
 
 
-# Instrument Cassandra client
-# ===========================
-RULE opentracing-cassandra-driver
-CLASS com.datastax.driver.core.Cluster$Manager
-METHOD newSession()
-HELPER com.datadoghq.agent.integration.CassandraHelper
-AT EXIT
-IF TRUE
-DO
-  $! = patch($!);
-ENDRULE
-
-
 # Instrument OkHttp
 # ===========================
 RULE opentracing-okhttp3
