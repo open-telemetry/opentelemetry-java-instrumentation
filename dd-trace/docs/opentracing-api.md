@@ -114,6 +114,23 @@ Baggage is very similar to tags, but has important distinctions.  Baggage is:
   valuableSpan.setBaggageItem("username", "modernmajorgeneral");
 ```
 
+### Errors
+
+Errors are manually captured in a span by setting the error flag and logging the error attributes.
+
+```java
+  try {
+    // your code
+  } catch (Exception e) {
+    // capture error
+    ActiveSpan span = GlobalTracer.get().activeSpan();
+    Tags.ERROR.set(span, Boolean.TRUE);
+    span.log(Collections.singletonMap("error.object", e));
+
+    // recovery code
+  }
+```
+
 ## OpenTracing Asynchronous API
 
 An `ActiveSpan` can generate a `Continuation` as a way of propagating traces from across a thread boundary.
