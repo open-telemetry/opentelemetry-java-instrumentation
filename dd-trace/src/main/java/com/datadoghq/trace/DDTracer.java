@@ -65,6 +65,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
     this.sampler = sampler;
     registry = new CodecRegistry();
     registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
+    registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec());
     log.debug(
         "New tracer instance, default-service={}, writer={}, sampler={}",
         defaultServiceName,

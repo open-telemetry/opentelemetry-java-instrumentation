@@ -24,6 +24,12 @@ dependencies {
   compile(project(':dd-java-agent:integrations:aws-sdk')) {
     transitive = false
   }
+  compile(project(':dd-java-agent:integrations:jms-1')) {
+    transitive = false
+  }
+  compile(project(':dd-java-agent:integrations:jms-2')) {
+    transitive = false
+  }
   compile(project(':dd-java-agent:integrations:servlet-2')) {
     transitive = false
   }

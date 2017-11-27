@@ -25,18 +25,6 @@ DO
 ENDRULE
 
 
-# Instrument JMS
-# ===========================
-RULE Session-init
-INTERFACE javax.jms.Session
-METHOD <init>
-AT EXIT
-IF TRUE
-DO
-  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
-ENDRULE
-
-
 # Instrument Mongo client
 # ========================
 RULE MongoClientOptions$Builder-init

@@ -15,8 +15,6 @@ dependencies {
 
   compile group: 'io.opentracing.contrib', name: 'opentracing-web-servlet-filter', version: '0.0.9'
   compile group: 'io.opentracing.contrib', name: 'opentracing-okhttp3', version: '0.0.5'
-  compile group: 'io.opentracing.contrib', name: 'opentracing-jms-common', version: '0.0.3'
-  compile group: 'io.opentracing.contrib', name: 'opentracing-jms-2', version: '0.0.3'
   compile group: 'io.opentracing.contrib', name: 'opentracing-aws-sdk', version: '0.0.2'
   compile group: 'io.opentracing.contrib', name: 'opentracing-cassandra-driver', version: '0.0.2'
   compile group: 'io.opentracing.contrib', name: 'opentracing-apache-httpclient', version: '0.0.2'

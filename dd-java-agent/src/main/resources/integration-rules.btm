@@ -34,30 +34,6 @@ DO
 ENDRULE
 
 
-# Instrument JMS
-# ===========================
-RULE opentracing-jms-2_producer
-INTERFACE javax.jms.Session
-METHOD createProducer
-HELPER com.datadoghq.agent.integration.JMSMessageProducerHelper
-AT EXIT
-IF TRUE
-DO
-  $! = patch($!);
-ENDRULE
-
-
-RULE opentracing-jms-2_consumer
-INTERFACE javax.jms.Session
-METHOD createConsumer
-HELPER com.datadoghq.agent.integration.JMSMessageConsumerHelper
-AT EXIT
-IF TRUE
-DO
-  $! = patch($!);
-ENDRULE
-
-
 # Instrument Mongo client
 # ========================
 RULE opentracing-mongo-driver

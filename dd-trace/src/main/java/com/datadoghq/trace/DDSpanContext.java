@@ -250,7 +250,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     if (errorFlag) {
       s.append(" *errored*");
     }
-    s.append(" tags=").append(new TreeMap(tags));
+    if (tags != null) {
+      s.append(" tags=").append(new TreeMap(tags));
+    }
     return s.toString();
   }
 
