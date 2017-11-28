@@ -1,7 +1,8 @@
-package com.datadoghq.agent.integration;
+package dd.inst.mongo;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
+import com.datadoghq.agent.integration.DDTracingCommandListener;
 import com.datadoghq.trace.DDSpan;
 import com.datadoghq.trace.DDTracer;
 import com.mongodb.ServerAddress;
@@ -17,7 +18,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.junit.Test;
 
-public class MongoHelperTest {
+public class MongoClientInstrumentationTest {
 
   private static ConnectionDescription makeConnection() {
     return new ConnectionDescription(new ServerId(new ClusterId(), new ServerAddress()));
@@ -29,7 +30,7 @@ public class MongoHelperTest {
         new CommandStartedEvent(1, makeConnection(), "databasename", "query", new BsonDocument());
 
     final DDSpan span = new DDTracer().buildSpan("foo").startManual();
-    MongoHelper.DDTracingCommandListener.decorate(span, cmd);
+    DDTracingCommandListener.decorate(span, cmd);
 
     assertThat(span.context().getSpanType()).isEqualTo("mongodb");
     assertThat(span.context().getResourceName())
@@ -51,7 +52,7 @@ public class MongoHelperTest {
           new CommandStartedEvent(1, makeConnection(), "databasename", "query", query);
 
       final DDSpan span = new DDTracer().buildSpan("foo").startManual();
-      MongoHelper.DDTracingCommandListener.decorate(span, cmd);
+      DDTracingCommandListener.decorate(span, cmd);
 
       assertThat(span.getTags().get(Tags.DB_STATEMENT.getKey()))
           .isEqualTo(query.toString().replaceAll("secret", "?"));

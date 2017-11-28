@@ -47,32 +47,6 @@ opentracing-jms-2_consumer:
       javax.jms.JMSContext:
       javax.jms.CompletionListener:
 
-opentracing-mongo-driver:
-  - artifact: mongo-java-driver
-    supported_version: 3\..*
-    identifying_present_classes:
-      com.mongodb.operation.AsyncReadOperation:
-      com.mongodb.client.model.MapReduceAction:
-
-  - artifact: mongodb-driver-async
-    supported_version: 3\..*
-    identifying_present_classes:
-      com.mongodb.operation.AsyncReadOperation:
-      com.mongodb.client.model.MapReduceAction:
-
-opentracing-mongo-driver-helper:
-  - artifact: mongo-java-driver
-    supported_version: 3\..*
-    identifying_present_classes:
-      com.mongodb.operation.AsyncReadOperation:
-      com.mongodb.client.model.MapReduceAction:
-
-  - artifact: mongodb-driver-async
-    supported_version: 3\..*
-    identifying_present_classes:
-      com.mongodb.operation.AsyncReadOperation:
-      com.mongodb.client.model.MapReduceAction:
-
 opentracing-okhttp3:
   - artifact: okhttp
     supported_version: 3\..*

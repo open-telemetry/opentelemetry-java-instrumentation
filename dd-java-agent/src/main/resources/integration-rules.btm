@@ -34,19 +34,6 @@ DO
 ENDRULE
 
 
-# Instrument Mongo client
-# ========================
-RULE opentracing-mongo-driver
-CLASS com.mongodb.MongoClientOptions$Builder
-METHOD build
-HELPER com.datadoghq.agent.integration.MongoHelper
-AT ENTRY
-IF getState($0) == 0
-DO
-  patch($0);
-ENDRULE
-
-
 # Instrument OkHttp
 # ===========================
 RULE opentracing-okhttp3
