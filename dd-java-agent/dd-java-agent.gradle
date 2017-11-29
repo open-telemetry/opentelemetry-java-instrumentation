@@ -24,6 +24,9 @@ dependencies {
   compile(project(':dd-java-agent:integrations:aws-sdk')) {
     transitive = false
   }
+  compile(project(':dd-java-agent:integrations:datastax-cassandra-3.2')) {
+    transitive = false
+  }
   compile(project(':dd-java-agent:integrations:jms-1')) {
     transitive = false
   }

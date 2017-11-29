@@ -25,14 +25,6 @@ opentracing-aws-sdk:
       com.amazonaws.http.apache.utils.ApacheUtils:
       com.amazonaws.http.request.HttpRequestFactory:
 
-opentracing-cassandra-driver:
-  - artifact: cassandra-driver-core
-    supported_version: 3\.2.*
-    identifying_present_classes:
-      com.datastax.driver.core.utils.MoreObjects:
-      com.datastax.driver.core.RemoteEndpointAwareNettySSLOptions:
-      com.datastax.driver.core.GuavaCompatibility:
-
 opentracing-jms-2_producer:
   - artifact: javax.jms-api
     supported_version: 2\..*

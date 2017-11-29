@@ -39,9 +39,9 @@ class VersionScanPlugin implements Plugin<Project> {
       description = "Queries for all versions of configured modules and finds key classes"
     }
 
-    def hasRelevantTask = project.gradle.startParameter.taskNames.contains('scanVersions')
-    hasRelevantTask |= project.gradle.startParameter.taskNames.contains('scanVersionsReport')
-    hasRelevantTask |= project.gradle.startParameter.taskNames.contains('verifyVersionScan')
+    def hasRelevantTask = project.gradle.startParameter.taskNames.any { it.contains('scanVersions') }
+    hasRelevantTask |= project.gradle.startParameter.taskNames.any { it.contains('scanVersionsReport') }
+    hasRelevantTask |= project.gradle.startParameter.taskNames.any { it.contains('verifyVersionScan') }
 
     if (!hasRelevantTask) {
       return
@@ -80,7 +80,7 @@ class VersionScanPlugin implements Plugin<Project> {
         }
       }
     }
-    if (project.gradle.startParameter.taskNames.contains('scanVersions')) {
+    if (project.gradle.startParameter.taskNames.any { it.contains('scanVersions') }) {
       scanVersions.finalizedBy(scanVersionsReport)
     }
 
@@ -176,7 +176,7 @@ class VersionScanPlugin implements Plugin<Project> {
           }
         }
 
-        if (project.gradle.startParameter.taskNames.contains('scanVersions')) {
+        if (project.gradle.startParameter.taskNames.any { it.contains('scanVersions') }) {
           scanVersions.finalizedBy(verifyVersionScan)
         }
       }
