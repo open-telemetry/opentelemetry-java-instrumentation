@@ -13,8 +13,12 @@ jobs:
           key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
 
       - run:
+          name: Build Project
+          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew clean compileJava compileTestJava compileGroovy compileTestGroovy shadowJar --stacktrace --no-daemon
+
+      - run:
           name: Run Tests
-          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1G -Xms512M" ./gradlew clean check --parallel --stacktrace --no-daemon --max-workers=3
+          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew check --parallel --stacktrace --no-daemon --max-workers=3
 
       - run:
           name: Verify Version Scan
