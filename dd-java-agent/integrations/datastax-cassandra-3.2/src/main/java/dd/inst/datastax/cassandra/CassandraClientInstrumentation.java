@@ -1,5 +1,6 @@
 package dd.inst.datastax.cassandra;
 
+import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
 import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
@@ -17,7 +18,23 @@ public class CassandraClientInstrumentation implements Instrumenter {
   @Override
   public AgentBuilder instrument(AgentBuilder agentBuilder) {
     return agentBuilder
-        .type(named("com.datastax.driver.core.Cluster$Manager"))
+        .type(
+            named("com.datastax.driver.core.Cluster$Manager"),
+            classLoaderHasClasses(
+                "com.datastax.driver.core.BoundStatement",
+                "com.datastax.driver.core.BoundStatement",
+                "com.datastax.driver.core.CloseFuture",
+                "com.datastax.driver.core.Cluster",
+                "com.datastax.driver.core.Host",
+                "com.datastax.driver.core.PreparedStatement",
+                "com.datastax.driver.core.RegularStatement",
+                "com.datastax.driver.core.ResultSet",
+                "com.datastax.driver.core.ResultSetFuture",
+                "com.datastax.driver.core.Session",
+                "com.datastax.driver.core.Statement",
+                "com.google.common.base.Function",
+                "com.google.common.util.concurrent.Futures",
+                "com.google.common.util.concurrent.ListenableFuture"))
         .transform(
             new AgentBuilder.Transformer.ForAdvice()
                 .advice(
