@@ -1,32 +1,33 @@
 // TODO: VersionScan plugin does not report which version failed, which is making it hard to get meaningful results out of this block.
 // Once versionScan can report on which version failed, this can be enabled.
 // The desire is to apply the instrumentation to cassandra-datastax 2.3 and beyond.
-// apply plugin: 'version-scan'
 
-// versionScan {
-//   group = "com.datastax.cassandra"
-//   module = "cassandra-driver-core"
-//   versions = "[3.2.0,)"
-//   verifyPresent = [
-//     // class we're advising
-//     'com.datastax.driver.core.Cluster$Manager': null,
-//     // used by TracingSession
-//     'com.datastax.driver.core.BoundStatement' : null,
-//     'com.datastax.driver.core.BoundStatement' : null,
-//     'com.datastax.driver.core.CloseFuture' : null,
-//     'com.datastax.driver.core.Cluster' : null,
-//     'com.datastax.driver.core.Host' : null,
-//     'com.datastax.driver.core.PreparedStatement' : null,
-//     'com.datastax.driver.core.RegularStatement' : null,
-//     'com.datastax.driver.core.ResultSet' : null,
-//     'com.datastax.driver.core.ResultSetFuture' : null,
-//     'com.datastax.driver.core.Session' : null,
-//     'com.datastax.driver.core.Statement' : null,
-//     'com.google.common.base.Function' : null,
-//     'com.google.common.util.concurrent.Futures' : null,
-//     'com.google.common.util.concurrent.ListenableFuture' : null
-//   ]
-// }
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "com.datastax.cassandra"
+  module = "cassandra-driver-core"
+  versions = "[3.2.0,)"
+//  verifyPresent = [
+//    // class we're advising
+//    'com.datastax.driver.core.Cluster$Manager'          : null,
+//    // used by TracingSession
+//    'com.datastax.driver.core.BoundStatement'           : null,
+//    'com.datastax.driver.core.BoundStatement'           : null,
+//    'com.datastax.driver.core.CloseFuture'              : null,
+//    'com.datastax.driver.core.Cluster'                  : null,
+//    'com.datastax.driver.core.Host'                     : null,
+//    'com.datastax.driver.core.PreparedStatement'        : null,
+//    'com.datastax.driver.core.RegularStatement'         : null,
+//    'com.datastax.driver.core.ResultSet'                : null,
+//    'com.datastax.driver.core.ResultSetFuture'          : null,
+//    'com.datastax.driver.core.Session'                  : null,
+//    'com.datastax.driver.core.Statement'                : null,
+//    'com.google.common.base.Function'                   : null,
+//    'com.google.common.util.concurrent.Futures'         : null,
+//    'com.google.common.util.concurrent.ListenableFuture': null
+//  ]
+}
 
 apply from: "${rootDir}/gradle/java.gradle"
 
