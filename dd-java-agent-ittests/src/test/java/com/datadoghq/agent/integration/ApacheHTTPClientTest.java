@@ -6,14 +6,19 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.junit.Test;
 
 public class ApacheHTTPClientTest {
+  static {
+    try {
+      // Since the HttpClientBuilder initializer doesn't work, invoke manually.
+      Class.forName("com.datadoghq.agent.InstrumentationRulesManager")
+          .getMethod("registerClassLoad", Object.class)
+          .invoke(null, Thread.currentThread().getContextClassLoader());
+    } catch (Exception e) {
+      System.err.println("clinit error: " + e.getMessage());
+    }
+  }
 
   @Test
   public void test() throws Exception {
-    // Since the HttpClientBuilder initializer doesn't work, invoke manually.
-    Class.forName("com.datadoghq.agent.InstrumentationRulesManager")
-        .getMethod("registerClassLoad")
-        .invoke(null);
-
     final HttpClientBuilder builder = HttpClientBuilder.create();
     assertThat(builder.getClass().getSimpleName()).isEqualTo("TracingHttpClientBuilder");
   }
