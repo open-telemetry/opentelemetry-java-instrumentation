@@ -17,14 +17,13 @@ dependencies {
   compile group: 'io.opentracing.contrib', name: 'opentracing-okhttp3', version: '0.0.5'
   compile group: 'io.opentracing.contrib', name: 'opentracing-aws-sdk', version: '0.0.2'
   compile group: 'io.opentracing.contrib', name: 'opentracing-cassandra-driver', version: '0.0.2'
-  compile group: 'io.opentracing.contrib', name: 'opentracing-apache-httpclient', version: '0.0.2'
 
   compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
   compileOnly group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
   compileOnly group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
   compileOnly group: 'javax.jms', name: 'javax.jms-api', version: '2.0.1'
   compileOnly group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'
-  compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3'
+  compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3'
 }
 
 jar {

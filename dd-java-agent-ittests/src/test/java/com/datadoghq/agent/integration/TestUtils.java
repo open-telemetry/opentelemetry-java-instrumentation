@@ -1,5 +1,6 @@
 package com.datadoghq.agent.integration;
 
+import io.opentracing.ActiveSpan;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Field;
@@ -13,6 +14,15 @@ public class TestUtils {
       final Field field = GlobalTracer.class.getDeclaredField("tracer");
       field.setAccessible(true);
       field.set(null, tracer);
+    }
+  }
+
+  public static void runUnderTrace(final String rootOperationName, Runnable r) {
+    ActiveSpan rootSpan = GlobalTracer.get().buildSpan(rootOperationName).startActive();
+    try {
+      r.run();
+    } finally {
+      rootSpan.deactivate();
     }
   }
 }

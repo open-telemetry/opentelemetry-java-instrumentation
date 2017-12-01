@@ -21,6 +21,9 @@ dependencies {
   compile project(':dd-java-agent:tooling')
   compile project(':dd-trace-annotations')
 
+  compile(project(':dd-java-agent:integrations:apache-httpclient-4.3')) {
+    transitive = false
+  }
   compile(project(':dd-java-agent:integrations:aws-sdk')) {
     transitive = false
   }

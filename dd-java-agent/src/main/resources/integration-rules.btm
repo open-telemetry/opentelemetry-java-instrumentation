@@ -8,19 +8,6 @@
 ###
 
 
-# Instrument Apache HTTP Client
-# =============================
-RULE opentracing-apache-httpclient
-CLASS org.apache.http.impl.client.HttpClientBuilder
-METHOD create()
-HELPER com.datadoghq.agent.integration.ApacheHTTPClientHelper
-AT EXIT
-IF TRUE
-DO
-  $! = patch($!);
-ENDRULE
-
-
 # Instrument OkHttp
 # ===========================
 RULE opentracing-okhttp3

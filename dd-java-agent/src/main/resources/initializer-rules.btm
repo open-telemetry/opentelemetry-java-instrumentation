@@ -1,18 +1,5 @@
 
 
-# Instrument Apache HTTP Client
-# This rule isn't working because HttpClientBuilder doesn't have any static fields, thus no static initializer.
-# =============================
-#RULE HttpClientBuilder-clinit
-#CLASS org.apache.http.impl.client.HttpClientBuilder
-#METHOD <clinit>
-#AT EXIT
-#IF TRUE
-#DO
-#  com.datadoghq.agent.InstrumentationRulesManager.registerClassLoad($0);
-#ENDRULE
-
-
 # Instrument OkHttp
 # ===========================
 RULE OkHttpClient$Builder-init
