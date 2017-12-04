@@ -9,9 +9,6 @@ dependencies {
 
   testCompile deps.testLogging
 
-  // simple, lightweight http server for testing
-  testCompile group: 'org.nanohttpd', name: 'nanohttpd', version: '2.3.1'
-
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
   testCompile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
   // run embeded mongodb for integration testing

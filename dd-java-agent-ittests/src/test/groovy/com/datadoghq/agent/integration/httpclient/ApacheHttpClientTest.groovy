@@ -9,6 +9,7 @@ import io.opentracing.tag.Tags
 import java.net.URI
 import java.util.List
 import org.apache.http.HttpResponse
+import org.apache.http.message.BasicHeader
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClientBuilder
@@ -40,20 +41,20 @@ class ApacheHttpClientTest extends Specification {
 
     final HttpClient client = builder.build()
     TestUtils.runUnderTrace(
-        "someTrace",
-        new Runnable() {
-          @Override
-          public void run() {
-            try {
-              HttpResponse response =
-                  client.execute(new HttpGet(new URI("http://localhost:" + TestHttpServer.PORT)))
-              assert response.getStatusLine().getStatusCode() == 200
-            } catch (Exception e) {
-              e.printStackTrace()
-              throw new RuntimeException(e)
-            }
+      "someTrace",
+      new Runnable() {
+        @Override
+        public void run() {
+          try {
+            HttpResponse response =
+              client.execute(new HttpGet(new URI("http://localhost:" + TestHttpServer.getPort())))
+            assert response.getStatusLine().getStatusCode() == 200
+          } catch (Exception e) {
+            e.printStackTrace()
+            throw new RuntimeException(e)
           }
-        })
+        }
+      })
     expect:
     // one trace on the server, one trace on the client
     writer.size() == 2
@@ -72,9 +73,9 @@ class ApacheHttpClientTest extends Specification {
     clientSpan.getOperationName() == "GET"
     clientSpan.getTags()[Tags.HTTP_METHOD.getKey()] == "GET"
     clientSpan.getTags()[Tags.HTTP_STATUS.getKey()] == 200
-    clientSpan.getTags()[Tags.HTTP_URL.getKey()] == "http://localhost:8089"
+    clientSpan.getTags()[Tags.HTTP_URL.getKey()] == "http://localhost:" + TestHttpServer.getPort()
     clientSpan.getTags()[Tags.PEER_HOSTNAME.getKey()] == "localhost"
-    clientSpan.getTags()[Tags.PEER_PORT.getKey()] == 8089
+    clientSpan.getTags()[Tags.PEER_PORT.getKey()] == TestHttpServer.getPort()
     clientSpan.getTags()[Tags.SPAN_KIND.getKey()] == Tags.SPAN_KIND_CLIENT
 
     // client trace propagates to server
@@ -90,24 +91,22 @@ class ApacheHttpClientTest extends Specification {
 
     final HttpClient client = builder.build()
     TestUtils.runUnderTrace(
-        "someTrace",
-        new Runnable() {
-          @Override
-          public void run() {
-            try {
-              HttpResponse response =
-                  client.execute(new HttpGet(new URI("http://localhost:"
-                                                     + TestHttpServer.PORT
-                                                     + "?"
-                                                     + TestHttpServer.IS_DD_SERVER
-                                                     + "=false")))
-              assert response.getStatusLine().getStatusCode() == 200
-            } catch (Exception e) {
-              e.printStackTrace()
-              throw new RuntimeException(e)
-            }
+      "someTrace",
+      new Runnable() {
+        @Override
+        public void run() {
+          try {
+            HttpGet request = new HttpGet(new URI("http://localhost:"
+                                                 + TestHttpServer.getPort()))
+            request.addHeader(new BasicHeader(TestHttpServer.IS_DD_SERVER, "false"))
+            HttpResponse response = client.execute(request)
+            assert response.getStatusLine().getStatusCode() == 200
+          } catch (Exception e) {
+            e.printStackTrace()
+            throw new RuntimeException(e)
           }
-        })
+        }
+      })
     expect:
     // only one trace (client).
     writer.size() == 1
@@ -123,9 +122,9 @@ class ApacheHttpClientTest extends Specification {
     clientSpan.getOperationName() == "GET"
     clientSpan.getTags()[Tags.HTTP_METHOD.getKey()] == "GET"
     clientSpan.getTags()[Tags.HTTP_STATUS.getKey()] == 200
-    clientSpan.getTags()[Tags.HTTP_URL.getKey()] == "http://localhost:8089?is-dd-server=false"
+    clientSpan.getTags()[Tags.HTTP_URL.getKey()] == "http://localhost:" + TestHttpServer.getPort()
     clientSpan.getTags()[Tags.PEER_HOSTNAME.getKey()] == "localhost"
-    clientSpan.getTags()[Tags.PEER_PORT.getKey()] == 8089
+    clientSpan.getTags()[Tags.PEER_PORT.getKey()] == TestHttpServer.getPort()
     clientSpan.getTags()[Tags.SPAN_KIND.getKey()] == Tags.SPAN_KIND_CLIENT
   }
 
