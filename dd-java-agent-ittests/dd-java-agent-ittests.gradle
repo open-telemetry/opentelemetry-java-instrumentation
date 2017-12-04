@@ -38,12 +38,6 @@ dependencies {
   testCompile group: 'org.apache.derby', name: 'derby', version: '10.14.1.0'
 }
 
-configurations.all {
-  resolutionStrategy {
-    force 'com.google.guava:guava:18.0' // Force to test package renaming in agent jar. (see ShadowPackageRenamingTest)
-  }
-}
-
 test {
   jvmArgs "-Ddd.trace.configurationFile=${project.buildDir}/resources/test/dd-trace.yaml"
   jvmArgs "-Ddd.slf4j.simpleLogger.defaultLogLevel=debug"
