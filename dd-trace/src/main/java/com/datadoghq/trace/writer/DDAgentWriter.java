@@ -3,6 +3,7 @@ package com.datadoghq.trace.writer;
 import com.datadoghq.trace.DDBaseSpan;
 import com.datadoghq.trace.Service;
 import com.google.auto.service.AutoService;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -10,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
@@ -40,12 +42,16 @@ public class DDAgentWriter implements Writer {
   /** Flush interval for the API in seconds */
   static final long FLUSH_TIME_SECONDS = 1;
 
+  private final ThreadFactory agentWriterThreadFactory =
+      new ThreadFactoryBuilder().setNameFormat("dd-agent-writer-%d").setDaemon(true).build();
+
   /** Scheduled thread pool, acting like a cron */
-  private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
-  // FIXME: Properly name these threads to better identify them as ours.
+  private final ScheduledExecutorService scheduledExecutor =
+      Executors.newScheduledThreadPool(1, agentWriterThreadFactory);
 
   /** Effective thread pool, where real logic is done */
-  private final ExecutorService executor = Executors.newSingleThreadExecutor();
+  private final ExecutorService executor =
+      Executors.newSingleThreadExecutor(agentWriterThreadFactory);
 
   /** The DD agent api */
   private final DDApi api;
