@@ -13,7 +13,7 @@ include ':dd-trace-annotations'
 
 // integrations:
 include ':dd-java-agent:integrations:helpers'
-include ':dd-java-agent:integrations:apache-httpclient'
+include ':dd-java-agent:integrations:apache-httpclient-4.3'
 include ':dd-java-agent:integrations:aws-sdk'
 include ':dd-java-agent:integrations:datastax-cassandra-3.2'
 include ':dd-java-agent:integrations:jms-1'

@@ -5,13 +5,29 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class ShadowPackageRenamingTest {
-
   @Test
-  public void test() {
-    try {
-      (new MapMaker()).softValues(); // this method exists in 18.0 but was removed in 20.0
-    } catch (final NoSuchMethodError e) {
-      Assert.fail("wrong class was loaded");
-    }
+  public void agentDependenciesRenamed() throws Exception {
+    final Class<?> ddClass =
+        ClassLoader.getSystemClassLoader().loadClass("com.datadoghq.agent.TracingAgent");
+
+    final String userGuava =
+        MapMaker.class.getProtectionDomain().getCodeSource().getLocation().getFile();
+    final String agentGuavaDep =
+        ddClass
+            .getClassLoader()
+            .loadClass("dd.deps." + MapMaker.class.getName())
+            .getProtectionDomain()
+            .getCodeSource()
+            .getLocation()
+            .getFile();
+    final String agentSource =
+        ddClass.getProtectionDomain().getCodeSource().getLocation().getFile();
+
+    Assert.assertTrue(
+        "TracingAgent should reside in the -javaagent jar: " + agentSource,
+        agentSource.matches(".*/dd-java-agent[^/]*.jar"));
+    Assert.assertEquals("DD guava dep must be loaded from agent jar.", agentSource, agentGuavaDep);
+    Assert.assertNotEquals(
+        "User guava dep must not be loaded from agent jar.", agentSource, userGuava);
   }
 }
