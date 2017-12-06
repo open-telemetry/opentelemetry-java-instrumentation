@@ -1,13 +1,17 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
 description = 'dd-java-agent-ittests'
+
+evaluationDependsOn(':dd-java-agent:tooling')
+compileTestJava.dependsOn tasks.getByPath(':dd-java-agent:tooling:testClasses')
+
 dependencies {
   testCompile project(':dd-trace-annotations')
   testCompile project(':dd-trace')
 
   testCompile deps.opentracingMock
 
-  testCompile deps.testLogging
+  testCompile project(':dd-java-agent:tooling').sourceSets.test.output
 
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
   testCompile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'

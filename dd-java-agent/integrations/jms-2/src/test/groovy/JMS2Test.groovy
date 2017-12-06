@@ -35,7 +35,7 @@ class JMS2Test extends Specification {
 
   def setupSpec() {
     TestUtils.addByteBuddyAgent()
-    TestUtils.addTracer(tracer)
+    TestUtils.registerOrReplaceGlobalTracer(tracer)
     def tempDir = Files.createTempDir()
     tempDir.deleteOnExit()
 

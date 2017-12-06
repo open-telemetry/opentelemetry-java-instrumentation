@@ -1,14 +1,15 @@
 package dd.test
 
 import dd.trace.Instrumenter
+import io.opentracing.ActiveSpan
 import io.opentracing.Tracer
 import io.opentracing.util.GlobalTracer
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.agent.builder.AgentBuilder
 
 import java.lang.reflect.Field
+import java.util.concurrent.Callable
 
-import static net.bytebuddy.agent.builder.AgentBuilder.RedefinitionStrategy.Listener.StreamWriting.toSystemError
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith
 import static org.assertj.core.api.Assertions.assertThat
 
@@ -19,7 +20,7 @@ class TestUtils {
       new AgentBuilder.Default()
         .disableClassFormatChanges()
         .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-        .with(toSystemError())
+//        .with(AgentBuilder.Listener.StreamWriting.toSystemError())
         .ignore(nameStartsWith("dd.inst"))
 
     def instrumenters = ServiceLoader.load(Instrumenter)
@@ -30,7 +31,7 @@ class TestUtils {
     builder.installOn(ByteBuddyAgent.install())
   }
 
-  static addTracer(Tracer tracer) {
+  static registerOrReplaceGlobalTracer(Tracer tracer) {
     try {
       Class.forName("com.datadoghq.agent.InstrumentationRulesManager")
         .getMethod("registerClassLoad")
@@ -46,5 +47,14 @@ class TestUtils {
       field.set(null, tracer)
     }
     assertThat(GlobalTracer.isRegistered()).isTrue()
+  }
+
+  static runUnderTrace(final String rootOperationName, Callable r) {
+    ActiveSpan rootSpan = GlobalTracer.get().buildSpan(rootOperationName).startActive();
+    try {
+      return r.call();
+    } finally {
+      rootSpan.deactivate();
+    }
   }
 }

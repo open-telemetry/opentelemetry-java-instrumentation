@@ -6,7 +6,10 @@ import com.datadoghq.trace.writer.ListWriter;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import de.flapdoodle.embed.mongo.*;
+import dd.test.TestUtils;
+import de.flapdoodle.embed.mongo.MongodExecutable;
+import de.flapdoodle.embed.mongo.MongodProcess;
+import de.flapdoodle.embed.mongo.MongodStarter;
 import de.flapdoodle.embed.mongo.config.IMongodConfig;
 import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
@@ -34,9 +37,9 @@ public class MongoClientInstrumentationTest {
   private static final DDTracer tracer = new DDTracer(writer);
 
   public static void startLocalMongo() throws Exception {
-    MongodStarter starter = MongodStarter.getDefaultInstance();
+    final MongodStarter starter = MongodStarter.getDefaultInstance();
 
-    IMongodConfig mongodConfig =
+    final IMongodConfig mongodConfig =
         new MongodConfigBuilder()
             .version(Version.Main.PRODUCTION)
             .net(new Net(MONGO_HOST, MONGO_PORT, Network.localhostIsIPv6()))
@@ -84,10 +87,10 @@ public class MongoClientInstrumentationTest {
 
   @Test
   public void insertOperation() throws UnknownHostException {
-    MongoDatabase db = client.getDatabase(MONGO_DB_NAME);
+    final MongoDatabase db = client.getDatabase(MONGO_DB_NAME);
     final String collectionName = "testCollection";
     db.createCollection(collectionName);
-    MongoCollection<Document> collection = db.getCollection(collectionName);
+    final MongoCollection<Document> collection = db.getCollection(collectionName);
 
     collection.insertOne(new Document("foo", "bar"));
 

@@ -26,7 +26,6 @@ dependencies {
   testCompile project(':dd-java-agent:tooling').sourceSets.test.output
   testCompile project(':dd-java-agent:integrations:helpers')
 
-  testCompile deps.testLogging
   testCompile group: 'org.hornetq', name: 'hornetq-jms-client', version: '2.4.7.Final'
   testCompile group: 'org.hornetq', name: 'hornetq-jms-server', version: '2.4.7.Final'
 

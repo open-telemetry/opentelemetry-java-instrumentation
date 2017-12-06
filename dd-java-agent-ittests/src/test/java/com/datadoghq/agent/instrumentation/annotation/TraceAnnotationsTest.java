@@ -2,12 +2,12 @@ package com.datadoghq.agent.instrumentation.annotation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.datadoghq.agent.integration.TestUtils;
 import com.datadoghq.agent.test.SayTracedHello;
 import com.datadoghq.trace.DDBaseSpan;
 import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.integration.ErrorFlag;
 import com.datadoghq.trace.writer.ListWriter;
+import dd.test.TestUtils;
 import io.opentracing.util.GlobalTracer;
 import java.io.PrintWriter;
 import java.io.StringWriter;

@@ -7,6 +7,7 @@ import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.writer.ListWriter;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
+import dd.test.TestUtils;
 import io.opentracing.Tracer;
 import io.opentracing.tag.Tags;
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
@@ -47,7 +48,7 @@ public class CassandraIntegrationTest {
     session.execute("SELECT * FROM sync_test.users where name = 'alice' ALLOW FILTERING");
 
     assertThat(writer.getList().size()).isEqualTo(origSize + 5);
-    DDBaseSpan<?> selectTrace = writer.get(writer.size() - 1).get(0);
+    final DDBaseSpan<?> selectTrace = writer.get(writer.size() - 1).get(0);
 
     assertThat(selectTrace.getServiceName()).isEqualTo(DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME);
     assertThat(selectTrace.getOperationName()).isEqualTo("execute");
@@ -89,7 +90,7 @@ public class CassandraIntegrationTest {
       }
       Thread.sleep(1);
     }
-    DDBaseSpan<?> selectTrace = writer.get(writer.size() - 1).get(0);
+    final DDBaseSpan<?> selectTrace = writer.get(writer.size() - 1).get(0);
 
     assertThat(selectTrace.getServiceName()).isEqualTo(DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME);
     assertThat(selectTrace.getOperationName()).isEqualTo("execute");

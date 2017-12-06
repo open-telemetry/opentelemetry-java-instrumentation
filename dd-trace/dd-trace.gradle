@@ -27,8 +27,6 @@ dependencies {
   compile deps.autoservice
   compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.13'
 
-  testCompile deps.testLogging
-
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6'
   testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
 
