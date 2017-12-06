@@ -4,6 +4,7 @@ jobs:
     working_directory: ~/dd-trace-java
     docker:
       - image: circleci/openjdk:8-jdk
+    resource_class: xlarge
 
     steps:
       - checkout
