@@ -1,13 +1,10 @@
 package com.datadoghq.agent.integration
 
-import io.opentracing.ActiveSpan;
-import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMap;
-import io.opentracing.util.GlobalTracer;
-
-import ratpack.http.MutableHeaders
-import ratpack.http.Response
+import io.opentracing.ActiveSpan
+import io.opentracing.SpanContext
+import io.opentracing.propagation.Format
+import io.opentracing.propagation.TextMap
+import io.opentracing.util.GlobalTracer
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.handling.Context
 
@@ -15,7 +12,7 @@ import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
 /**
  * A simple http server used for testing.<br>
- * Binds locally to {@link #PORT}.
+ * Binds locally to {@link #port}.
  *
  * <p>To start: {@link #startServer()}<br>
  * to stop: {@link #stopServer()}
@@ -27,14 +24,14 @@ class TestHttpServer {
    */
   public static final String IS_DD_SERVER = "is-dd-server"
 
-  private static GroovyEmbeddedApp INSTANCE = null
-  private static int PORT = 0
+  private static GroovyEmbeddedApp server = null
+  private static int port = 0
 
   static int getPort() {
-    if (PORT == 0) {
+    if (port == 0) {
       throw new RuntimeException("Server not started")
     }
-    return PORT;
+    return port
   }
 
   /**
@@ -42,9 +39,9 @@ class TestHttpServer {
    *
    * @throws IOException
    */
-  static synchronized def startServer() {
-    if (null == INSTANCE) {
-      INSTANCE = ratpack {
+  static synchronized startServer() {
+    if (null == server) {
+      server = ratpack {
         handlers {
           get {
             String msg = "<html><body><h1>Hello test.</h1>\n"
@@ -55,12 +52,12 @@ class TestHttpServer {
             if (isDDServer) {
               final SpanContext extractedContext =
                 GlobalTracer.get()
-                .extract(Format.Builtin.HTTP_HEADERS, new RatpackResponseAdapter(context))
+                  .extract(Format.Builtin.HTTP_HEADERS, new RatpackResponseAdapter(context))
               ActiveSpan span =
                 GlobalTracer.get()
-                .buildSpan("test-http-server")
-                .asChildOf(extractedContext)
-                .startActive()
+                  .buildSpan("test-http-server")
+                  .asChildOf(extractedContext)
+                  .startActive()
               span.deactivate()
             }
 
@@ -68,33 +65,33 @@ class TestHttpServer {
           }
         }
       }
-      PORT = INSTANCE.address.port
+      port = server.address.port
     }
   }
 
   /** Stop the server. Has no effect if already stopped. */
   static synchronized void stopServer() {
-    if (null != INSTANCE) {
-      INSTANCE.close()
-      INSTANCE = null
-      PORT = 0
+    if (null != server) {
+      server.close()
+      server = null
+      port = 0
     }
   }
 
   private static class RatpackResponseAdapter implements TextMap {
-    final Context context;
+    final Context context
 
-    public RatpackResponseAdapter(Context context) {
+    RatpackResponseAdapter(Context context) {
       this.context = context
     }
 
     @Override
-    public void put(String key, String value) {
+    void put(String key, String value) {
       context.response.set(key, value)
     }
 
     @Override
-    public Iterator<Map.Entry<String, String>> iterator() {
+    Iterator<Map.Entry<String, String>> iterator() {
       return context.request.getHeaders().asMultiValueMap().entrySet().iterator()
     }
   }

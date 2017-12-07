@@ -40,10 +40,10 @@ class OkHttp3Test extends Specification {
         }
       }
     }
-    def client = new OkHttpClient();
+    def client = new OkHttpClient()
     def request = new Request.Builder()
       .url("http://localhost:$server.address.port/ping")
-      .build();
+      .build()
 
     def response = client.newCall(request).execute()
 

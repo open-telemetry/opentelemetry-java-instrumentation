@@ -17,9 +17,9 @@ import spock.lang.Specification
 class ApacheHttpClientTest extends Specification {
 
   @Shared
-  def ListWriter writer = new ListWriter()
+  def writer = new ListWriter()
   @Shared
-  def DDTracer tracer = new DDTracer(writer)
+  def tracer = new DDTracer(writer)
 
   def setupSpec() {
     TestUtils.registerOrReplaceGlobalTracer(tracer)

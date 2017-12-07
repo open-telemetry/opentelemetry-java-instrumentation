@@ -14,6 +14,7 @@ import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 
 @AutoService(Instrumenter.class)
@@ -38,6 +39,11 @@ public class OkHttp3Instrumentation implements Instrumenter {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addTracingInterceptor(
         @Advice.Argument(0) final OkHttpClient.Builder builder) {
+      for (final Interceptor interceptor : builder.interceptors()) {
+        if (interceptor instanceof TracingInterceptor) {
+          return;
+        }
+      }
       final TracingInterceptor interceptor =
           new TracingInterceptor(GlobalTracer.get(), Collections.singletonList(STANDARD_TAGS));
       builder.addInterceptor(interceptor);

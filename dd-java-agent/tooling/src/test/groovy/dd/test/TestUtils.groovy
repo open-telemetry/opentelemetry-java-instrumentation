@@ -50,11 +50,11 @@ class TestUtils {
   }
 
   static runUnderTrace(final String rootOperationName, Callable r) {
-    ActiveSpan rootSpan = GlobalTracer.get().buildSpan(rootOperationName).startActive();
+    ActiveSpan rootSpan = GlobalTracer.get().buildSpan(rootOperationName).startActive()
     try {
-      return r.call();
+      return r.call()
     } finally {
-      rootSpan.deactivate();
+      rootSpan.deactivate()
     }
   }
 }
