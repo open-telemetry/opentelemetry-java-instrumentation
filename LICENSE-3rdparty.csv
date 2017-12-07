@@ -9,4 +9,3 @@ logback.xml,net.logstash.logback,Apache-2.0,
 import (test),org.junit,EPL-1.0,Copyright © 2002-2017 JUnit. All Rights Reserved.
 import (test),org.assertj,Apache-2.0,Copyright 2012-2017 the original author or authors.
 import (test),org.mockito,MIT,Copyright (c) 2007 Mockito contributors
-Byteman (JVM code injector),JBoss,LGPL-2.1,"Copyright 2008-12, Red Hat and individual contributors"

@@ -5,9 +5,6 @@ The OpenTracing Java Agent contribution is designed to inject code directly to t
 It provides to developers a way to instrument their code, without modifying it.
 The Java Agent is a compiled Jar and it is added to the JVM using the `-javaagent` option.
 
-This contribution uses the [Byteman project](http://byteman.jboss.org/). The contribution provides 
-a set of rules for instrumenting the code through a collection of `otarules.btm` files
-
 The contrib is basically able to serve 2 goals:
 - Instrumenting custom or legacy code without modifying it (extremely verbose and painful)
 - Inject the others OpenTracing contribution in your app (Spring Boot, JDBC wrapper, Jax-Rs, etc. )
@@ -76,7 +73,6 @@ If you want to instrument custom code, without using a contribution, you need 2 
 
 In this project, we show you an instrumentation. We inject some code via A rule file. 
 The BTM rule files describes when/where/how modify the legacy code.
-If you want to dig deeper, you have to refer to the [official documentation](http://byteman.jboss.org/docs.html)
 
 For instance, here is how to create a new span when the `method1` is called somewhere.
 Check the full class [code](src/main/java/org/javaagent/App.java).

@@ -4,18 +4,7 @@ import com.datadoghq.trace.DDTraceAnnotationsInfo;
 import com.datadoghq.trace.DDTraceInfo;
 import com.datadoghq.trace.resolver.DDTracerFactory;
 import com.datadoghq.trace.resolver.FactoryUtils;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.jboss.byteman.agent.Retransformer;
 
 @Slf4j
 public class AgentRulesManager {
@@ -29,22 +18,16 @@ public class AgentRulesManager {
 
   protected static volatile AgentRulesManager INSTANCE;
 
-  protected final Retransformer transformer;
   protected final TracingAgentConfig agentTracerConfig;
   protected final InstrumentationRulesManager instrumentationRulesManager;
 
-  public AgentRulesManager(final Retransformer trans, final TracingAgentConfig config) {
-    transformer = trans;
+  public AgentRulesManager(final TracingAgentConfig config) {
     agentTracerConfig = config;
-    instrumentationRulesManager = new InstrumentationRulesManager(trans, config, this);
+    instrumentationRulesManager = new InstrumentationRulesManager(config, this);
   }
 
-  /**
-   * This method initializes the manager.
-   *
-   * @param trans The ByteMan retransformer
-   */
-  public static void initialize(final Retransformer trans) {
+  /** This method initializes the manager. */
+  public static void initialize() {
     log.debug("Initializing {}", AgentRulesManager.class.getSimpleName());
 
     final TracingAgentConfig config =
@@ -55,77 +38,8 @@ public class AgentRulesManager {
 
     log.debug("Configuration: {}", config.toString());
 
-    final AgentRulesManager manager = new AgentRulesManager(trans, config);
+    final AgentRulesManager manager = new AgentRulesManager(config);
 
     INSTANCE = manager;
-
-    manager.loadRules(INITIALIZER_RULES, ClassLoader.getSystemClassLoader());
-  }
-
-  /**
-   * This method loads any OpenTracing Agent rules (integration-rules.btm) found as resources within
-   * the supplied classloader.
-   *
-   * @param classLoader The classloader
-   */
-  protected List<String> loadRules(final String rulesFileName, final ClassLoader classLoader) {
-    final List<String> scripts = new ArrayList<>();
-    if (transformer == null) {
-      log.warn(
-          "Attempt to load rules file {} on classloader {} before transformer initialized",
-          rulesFileName,
-          classLoader == null ? "bootstrap" : classLoader);
-      return scripts;
-    }
-
-    log.debug("Loading rules with classloader {}", classLoader == null ? "bootstrap" : classLoader);
-
-    final List<String> scriptNames = new ArrayList<>();
-
-    // Load default and custom rules
-    try {
-      final Enumeration<URL> iter = classLoader.getResources(rulesFileName);
-      while (iter.hasMoreElements()) {
-        loadRules(iter.nextElement().toURI(), scriptNames, scripts);
-      }
-
-      final StringWriter sw = new StringWriter();
-      try (PrintWriter writer = new PrintWriter(sw)) {
-        try {
-          transformer.installScript(scripts, scriptNames, writer);
-        } catch (final Exception e) {
-          log.warn("Failed to install scripts", e);
-        }
-      }
-      log.debug(sw.toString());
-    } catch (IOException | URISyntaxException e) {
-      log.warn("Failed to load rules", e);
-    }
-
-    log.debug("Rules loaded from {} on classloader {}", rulesFileName, classLoader);
-    if (log.isTraceEnabled()) {
-      for (final String rule : scripts) {
-        log.trace("Loading rule: {}", rule);
-      }
-    }
-    return scripts;
-  }
-
-  private static void loadRules(
-      final URI uri, final List<String> scriptNames, final List<String> scripts)
-      throws IOException {
-    log.debug("Load rules from URI uri={} ", uri);
-
-    final StringBuilder str = new StringBuilder();
-    try (InputStream is = uri.toURL().openStream()) {
-
-      final byte[] b = new byte[10240];
-      int len;
-      while ((len = is.read(b)) != -1) {
-        str.append(new String(b, 0, len));
-      }
-    }
-    scripts.add(str.toString());
-    scriptNames.add(uri.toString());
   }
 }
