@@ -1,11 +1,11 @@
 package dd.inst.apachehttpclient;
 
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.datadoghq.agent.integration.DDTracingClientExec;
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import io.opentracing.util.GlobalTracer;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -32,11 +32,10 @@ public class ApacheHttpClientInstrumentation implements Instrumenter {
                 "org.apache.http.conn.routing.HttpRoute",
                 "org.apache.http.impl.execchain.ClientExecChain"))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            DDAdvice.create()
                 .advice(
                     isMethod().and(named("decorateProtocolExec")),
-                    ApacheHttpClientAdvice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    ApacheHttpClientAdvice.class.getName()))
         .asDecorator();
   }
 

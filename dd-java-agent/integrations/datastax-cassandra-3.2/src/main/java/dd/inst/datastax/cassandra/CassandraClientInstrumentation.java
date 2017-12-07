@@ -1,11 +1,11 @@
 package dd.inst.datastax.cassandra;
 
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.datastax.driver.core.Session;
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
@@ -36,11 +36,10 @@ public class CassandraClientInstrumentation implements Instrumenter {
                 "com.google.common.util.concurrent.Futures",
                 "com.google.common.util.concurrent.ListenableFuture"))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            DDAdvice.create()
                 .advice(
                     isMethod().and(isPrivate()).and(named("newSession")).and(takesArguments(0)),
-                    CassandraClientAdvice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    CassandraClientAdvice.class.getName()))
         .asDecorator();
   }
 

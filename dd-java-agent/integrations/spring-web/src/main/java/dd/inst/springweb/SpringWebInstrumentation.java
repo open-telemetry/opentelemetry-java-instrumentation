@@ -1,7 +1,6 @@
 package dd.inst.springweb;
 
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClassWithField;
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -13,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.datadoghq.trace.DDTags;
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import io.opentracing.ActiveSpan;
 import io.opentracing.util.GlobalTracer;
@@ -38,14 +38,13 @@ public final class SpringWebInstrumentation implements Instrumenter {
                 "org.springframework.web.servlet.HandlerMapping",
                 "BEST_MATCHING_PATTERN_ATTRIBUTE"))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            DDAdvice.create()
                 .advice(
                     isMethod()
                         .and(isPublic())
                         .and(nameStartsWith("handle"))
                         .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest"))),
-                    SpringWebAdvice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    SpringWebAdvice.class.getName()))
         .asDecorator();
   }
 

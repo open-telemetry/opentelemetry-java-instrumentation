@@ -1,12 +1,12 @@
 package com.datadoghq.agent.instrumentation.annotation;
 
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 
 import com.datadoghq.trace.Trace;
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import io.opentracing.ActiveSpan;
 import io.opentracing.tag.Tags;
@@ -28,9 +28,7 @@ public final class TraceAnnotationInstrumentation implements Instrumenter {
     return agentBuilder
         .type(hasSuperType(declaresMethod(isAnnotatedWith(Trace.class))))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
-                .advice(isAnnotatedWith(Trace.class), TraceAdvice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+            DDAdvice.create().advice(isAnnotatedWith(Trace.class), TraceAdvice.class.getName()))
         .asDecorator();
   }
 

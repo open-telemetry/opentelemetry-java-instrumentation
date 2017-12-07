@@ -1,7 +1,6 @@
 package dd.inst.aws;
 
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -9,6 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import io.opentracing.contrib.aws.TracingRequestHandler;
 import io.opentracing.util.GlobalTracer;
@@ -30,11 +30,10 @@ public final class AWSClientInstrumentation implements Instrumenter {
                 "com.amazonaws.http.client.HttpClientFactory",
                 "com.amazonaws.http.apache.utils.ApacheUtils"))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            DDAdvice.create()
                 .advice(
                     named("build").and(takesArguments(0)).and(isPublic()),
-                    AWSClientAdvice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    AWSClientAdvice.class.getName()))
         .asDecorator();
   }
 

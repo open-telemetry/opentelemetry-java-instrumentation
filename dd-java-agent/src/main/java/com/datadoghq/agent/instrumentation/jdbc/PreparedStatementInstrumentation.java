@@ -1,6 +1,5 @@
 package com.datadoghq.agent.instrumentation.jdbc;
 
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -11,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.datadoghq.trace.DDTags;
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import io.opentracing.ActiveSpan;
 import io.opentracing.NoopActiveSpanSource;
@@ -31,11 +31,10 @@ public final class PreparedStatementInstrumentation implements Instrumenter {
     return agentBuilder
         .type(not(isInterface()).and(hasSuperType(named(PreparedStatement.class.getName()))))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            DDAdvice.create()
                 .advice(
                     nameStartsWith("execute").and(takesArguments(0)).and(isPublic()),
-                    PreparedStatementAdvice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    PreparedStatementAdvice.class.getName()))
         .asDecorator();
   }
 
