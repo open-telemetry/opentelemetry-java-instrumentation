@@ -87,6 +87,23 @@ public class InstrumentationRulesManager {
     AgentRulesManager.INSTANCE.instrumentationRulesManager.initialize(cl);
   }
 
+  /** True if this object's classload has been registered. */
+  public static boolean isRegistered(final Object obj) {
+    if (AgentRulesManager.INSTANCE == null) {
+      return false;
+    }
+    final ClassLoader cl;
+    if (obj instanceof ClassLoader) {
+      cl = (ClassLoader) obj;
+    } else {
+      cl = obj.getClass().getClassLoader();
+    }
+    synchronized (cl) {
+      return AgentRulesManager.INSTANCE.instrumentationRulesManager.initializedClassloaders
+          .contains(cl);
+    }
+  }
+
   /**
    * This method is separated out from initialize to allow Spring Boot's LaunchedURLClassLoader to
    * call it once it is loaded.
