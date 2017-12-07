@@ -26,7 +26,6 @@ dependencies {
   testCompile project(':dd-java-agent:tooling').sourceSets.test.output
   testCompile project(':dd-java-agent:integrations:helpers')
 
-  testCompile deps.testLogging
   testCompile group: 'org.apache.activemq.tooling', name: 'activemq-junit', version: '5.14.5'
   testCompile group: 'org.apache.activemq', name: 'activemq-pool', version: '5.14.5'
   testCompile group: 'org.apache.activemq', name: 'activemq-broker', version: '5.14.5'

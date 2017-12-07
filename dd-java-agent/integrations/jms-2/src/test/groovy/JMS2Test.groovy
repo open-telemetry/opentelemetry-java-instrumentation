@@ -35,7 +35,7 @@ class JMS2Test extends Specification {
 
   def setupSpec() {
     TestUtils.addByteBuddyAgent()
-    TestUtils.addTracer(tracer)
+    TestUtils.registerOrReplaceGlobalTracer(tracer)
     def tempDir = Files.createTempDir()
     tempDir.deleteOnExit()
 
@@ -156,7 +156,7 @@ class JMS2Test extends Specification {
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)
     consumer.setMessageListener { message ->
-      Thread.sleep(5) // Slow things down a bit.
+      Thread.sleep(10) // Slow things down a bit.
       messageRef.set(message)
     }
 

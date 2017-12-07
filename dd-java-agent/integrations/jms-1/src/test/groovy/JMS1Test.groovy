@@ -26,7 +26,7 @@ class JMS1Test extends Specification {
 
   def setupSpec() {
     TestUtils.addByteBuddyAgent()
-    TestUtils.addTracer(tracer)
+    TestUtils.registerOrReplaceGlobalTracer(tracer)
 
     EmbeddedActiveMQBroker broker = new EmbeddedActiveMQBroker()
     broker.start()

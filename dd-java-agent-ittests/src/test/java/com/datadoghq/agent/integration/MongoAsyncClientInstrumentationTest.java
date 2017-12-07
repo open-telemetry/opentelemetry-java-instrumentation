@@ -11,6 +11,7 @@ import com.mongodb.async.SingleResultCallback;
 import com.mongodb.async.client.MongoClient;
 import com.mongodb.async.client.MongoClients;
 import com.mongodb.async.client.MongoDatabase;
+import dd.test.TestUtils;
 import io.opentracing.tag.Tags;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
@@ -52,7 +53,7 @@ public class MongoAsyncClientInstrumentationTest {
 
   @Test
   public void insertOperation() throws InterruptedException, Exception {
-    MongoDatabase db = client.getDatabase(MONGO_DB_NAME);
+    final MongoDatabase db = client.getDatabase(MONGO_DB_NAME);
     final String collectionName = "asyncCollection";
     final AtomicBoolean done = new AtomicBoolean(false);
 
@@ -60,7 +61,7 @@ public class MongoAsyncClientInstrumentationTest {
         collectionName,
         new SingleResultCallback<Void>() {
           @Override
-          public void onResult(Void result, Throwable t) {
+          public void onResult(final Void result, final Throwable t) {
             done.set(true);
           }
         });
@@ -86,7 +87,7 @@ public class MongoAsyncClientInstrumentationTest {
         .count(
             new SingleResultCallback<Long>() {
               @Override
-              public void onResult(Long result, Throwable t) {
+              public void onResult(final Long result, final Throwable t) {
                 Assert.assertEquals(1, result.longValue());
                 done.set(true);
               }

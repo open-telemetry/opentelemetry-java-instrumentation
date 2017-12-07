@@ -42,6 +42,9 @@ dependencies {
   compile(project(':dd-java-agent:integrations:mongo-async-3.3')) {
     transitive = false
   }
+  compile(project(':dd-java-agent:integrations:okhttp-3')) {
+    transitive = false
+  }
   compile(project(':dd-java-agent:integrations:servlet-2')) {
     transitive = false
   }
@@ -61,7 +64,6 @@ dependencies {
   compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
   // ^ Generally a bad idea for libraries, but we're shadowing.
 
-  testCompile deps.testLogging
   testCompile deps.opentracingMock
 
   testCompile(project(path: ':dd-java-agent:integrations:helpers')) {

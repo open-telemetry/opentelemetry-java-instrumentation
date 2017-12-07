@@ -1,26 +1,25 @@
 package com.datadoghq.agent.integration.httpclient
 
-import com.datadoghq.agent.integration.TestUtils
 import com.datadoghq.agent.integration.TestHttpServer
 import com.datadoghq.trace.DDBaseSpan
 import com.datadoghq.trace.DDTracer
 import com.datadoghq.trace.writer.ListWriter
+import dd.test.TestUtils
 import io.opentracing.tag.Tags
-import java.net.URI
-import java.util.List
 import org.apache.http.HttpResponse
-import org.apache.http.message.BasicHeader
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClientBuilder
-import spock.lang.*
+import org.apache.http.message.BasicHeader
+import spock.lang.Shared
+import spock.lang.Specification
 
 class ApacheHttpClientTest extends Specification {
 
   @Shared
-  def ListWriter writer = new ListWriter()
+  def writer = new ListWriter()
   @Shared
-  def DDTracer tracer = new DDTracer(writer)
+  def tracer = new DDTracer(writer)
 
   def setupSpec() {
     TestUtils.registerOrReplaceGlobalTracer(tracer)
@@ -40,21 +39,17 @@ class ApacheHttpClientTest extends Specification {
     final HttpClientBuilder builder = HttpClientBuilder.create()
 
     final HttpClient client = builder.build()
-    TestUtils.runUnderTrace(
-      "someTrace",
-      new Runnable() {
-        @Override
-        public void run() {
-          try {
-            HttpResponse response =
-              client.execute(new HttpGet(new URI("http://localhost:" + TestHttpServer.getPort())))
-            assert response.getStatusLine().getStatusCode() == 200
-          } catch (Exception e) {
-            e.printStackTrace()
-            throw new RuntimeException(e)
-          }
-        }
-      })
+    TestUtils.runUnderTrace("someTrace") {
+      try {
+        HttpResponse response =
+          client.execute(new HttpGet(new URI("http://localhost:" + TestHttpServer.getPort())))
+        assert response.getStatusLine().getStatusCode() == 200
+      } catch (Exception e) {
+        e.printStackTrace()
+        throw new RuntimeException(e)
+      }
+    }
+
     expect:
     // one trace on the server, one trace on the client
     writer.size() == 2
@@ -90,23 +85,18 @@ class ApacheHttpClientTest extends Specification {
     final HttpClientBuilder builder = HttpClientBuilder.create()
 
     final HttpClient client = builder.build()
-    TestUtils.runUnderTrace(
-      "someTrace",
-      new Runnable() {
-        @Override
-        public void run() {
-          try {
-            HttpGet request = new HttpGet(new URI("http://localhost:"
-                                                 + TestHttpServer.getPort()))
-            request.addHeader(new BasicHeader(TestHttpServer.IS_DD_SERVER, "false"))
-            HttpResponse response = client.execute(request)
-            assert response.getStatusLine().getStatusCode() == 200
-          } catch (Exception e) {
-            e.printStackTrace()
-            throw new RuntimeException(e)
-          }
-        }
-      })
+    TestUtils.runUnderTrace("someTrace") {
+      try {
+        HttpGet request = new HttpGet(new URI("http://localhost:"
+          + TestHttpServer.getPort()))
+        request.addHeader(new BasicHeader(TestHttpServer.IS_DD_SERVER, "false"))
+        HttpResponse response = client.execute(request)
+        assert response.getStatusLine().getStatusCode() == 200
+      } catch (Exception e) {
+        e.printStackTrace()
+        throw new RuntimeException(e)
+      }
+    }
     expect:
     // only one trace (client).
     writer.size() == 1
