@@ -56,7 +56,6 @@ dependencies {
   }
 
   compile deps.bytebuddy
-  compile group: 'org.jboss.byteman', name: 'byteman', version: '3.0.10'
 
   compile deps.autoservice
   compile deps.slf4j
@@ -120,11 +119,6 @@ shadowJar {
     relocate 'com.fasterxml', 'dd.deps.com.fasterxml'
 
     relocate 'net.bytebuddy', 'dd.deps.net.bytebuddy'
-    relocate('org.jboss.byteman', 'dd.deps.org.jboss.byteman') {
-      // Renaming these causes a verify error in the tests.
-      exclude 'org.jboss.byteman.rule.*'
-      exclude 'org.jboss.byteman.rule.helper.*'
-    }
     relocate('com.google', 'dd.deps.com.google') {
       // This is used in the Cassandra Cluster.connectAsync signature so we can't relocate it. :fingers_crossed:
       exclude 'com.google.common.util.concurrent.ListenableFuture'

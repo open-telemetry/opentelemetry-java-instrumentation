@@ -36,36 +36,21 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.JavaModule;
 
-/**
- * This class provides a wrapper around the ByteMan agent, to establish required system properties
- * and the manager class.
- */
+/** Entry point for initializing the agent. */
 @Slf4j
 public class TracingAgent {
 
-  public static void premain(String agentArgs, final Instrumentation inst) throws Exception {
-    agentArgs = addManager(agentArgs);
+  public static void premain(final String agentArgs, final Instrumentation inst) throws Exception {
     log.debug("Using premain for loading {}", TracingAgent.class.getSimpleName());
-    org.jboss.byteman.agent.Main.premain(agentArgs, inst);
     addByteBuddy(inst);
+    AgentRulesManager.initialize();
   }
 
-  public static void agentmain(String agentArgs, final Instrumentation inst) throws Exception {
-    agentArgs = addManager(agentArgs);
+  public static void agentmain(final String agentArgs, final Instrumentation inst)
+      throws Exception {
     log.debug("Using agentmain for loading {}", TracingAgent.class.getSimpleName());
-    org.jboss.byteman.agent.Main.agentmain(agentArgs, inst);
     addByteBuddy(inst);
-  }
-
-  protected static String addManager(String agentArgs) {
-    if (agentArgs == null || agentArgs.trim().isEmpty()) {
-      agentArgs = "";
-    } else {
-      agentArgs += ",";
-    }
-    agentArgs += "manager:" + AgentRulesManager.class.getName();
-    log.debug("Agent args=: {}", agentArgs);
-    return agentArgs;
+    AgentRulesManager.initialize();
   }
 
   public static void addByteBuddy(final Instrumentation inst) {
@@ -94,8 +79,7 @@ public class TracingAgent {
                     .or(isReflectionClassLoader())
                     .or(
                         classLoaderWithName(
-                            "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader"))
-                    .or(classLoaderWithName("org.jboss.byteman.modules.ClassbyteClassLoader")));
+                            "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader")));
 
     for (final Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class)) {
       agentBuilder = instrumenter.instrument(agentBuilder);
