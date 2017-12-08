@@ -1,6 +1,5 @@
 package com.datadoghq.agent.instrumentation.jdbc;
 
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -8,6 +7,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -27,11 +27,10 @@ public final class DriverInstrumentation implements Instrumenter {
     return agentBuilder
         .type(not(isInterface()).and(hasSuperType(named(Driver.class.getName()))))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            DDAdvice.create()
                 .advice(
                     named("connect").and(takesArguments(String.class, Properties.class)),
-                    DriverAdvice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    DriverAdvice.class.getName()))
         .asDecorator();
   }
 

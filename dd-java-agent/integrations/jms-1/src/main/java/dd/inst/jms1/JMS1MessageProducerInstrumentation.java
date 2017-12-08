@@ -2,7 +2,6 @@ package dd.inst.jms1;
 
 import static com.datadoghq.agent.integration.JmsUtil.toResourceName;
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -13,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.datadoghq.agent.integration.MessagePropertyTextMap;
 import com.datadoghq.trace.DDTags;
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import io.opentracing.ActiveSpan;
 import io.opentracing.propagation.Format;
@@ -36,7 +36,7 @@ public final class JMS1MessageProducerInstrumentation implements Instrumenter {
             not(isInterface()).and(hasSuperType(named("javax.jms.MessageProducer"))),
             not(classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener")))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            DDAdvice.create()
                 .advice(
                     named("send").and(takesArgument(0, named("javax.jms.Message"))).and(isPublic()),
                     ProducerAdvice.class.getName())
@@ -45,8 +45,7 @@ public final class JMS1MessageProducerInstrumentation implements Instrumenter {
                         .and(takesArgument(0, named("javax.jms.Destination")))
                         .and(takesArgument(1, named("javax.jms.Message")))
                         .and(isPublic()),
-                    ProducerWithDestinationAdvice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    ProducerWithDestinationAdvice.class.getName()))
         .asDecorator();
   }
 

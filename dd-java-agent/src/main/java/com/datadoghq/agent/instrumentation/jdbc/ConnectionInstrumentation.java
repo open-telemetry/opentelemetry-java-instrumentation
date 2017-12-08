@@ -1,6 +1,5 @@
 package com.datadoghq.agent.instrumentation.jdbc;
 
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -10,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,13 +27,12 @@ public final class ConnectionInstrumentation implements Instrumenter {
     return agentBuilder
         .type(not(isInterface()).and(hasSuperType(named(Connection.class.getName()))))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            DDAdvice.create()
                 .advice(
                     nameStartsWith("prepare")
                         .and(takesArgument(0, String.class))
                         .and(returns(PreparedStatement.class)),
-                    ConnectionAdvice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    ConnectionAdvice.class.getName()))
         .asDecorator();
   }
 

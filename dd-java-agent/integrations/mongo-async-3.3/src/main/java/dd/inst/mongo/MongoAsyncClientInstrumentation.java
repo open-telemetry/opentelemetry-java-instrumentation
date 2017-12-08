@@ -1,11 +1,11 @@
 package dd.inst.mongo;
 
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.datadoghq.agent.integration.DDTracingCommandListener;
 import com.google.auto.service.AutoService;
 import com.mongodb.async.client.MongoClientSettings;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Modifier;
@@ -33,11 +33,10 @@ public final class MongoAsyncClientInstrumentation implements Instrumenter {
                                         null,
                                         new TypeDescription.Generic[] {}))))))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            DDAdvice.create()
                 .advice(
                     isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
-                    MongoAsyncClientAdvice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    MongoAsyncClientAdvice.class.getName()))
         .asDecorator();
   }
 

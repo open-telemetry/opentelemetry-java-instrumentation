@@ -1,13 +1,13 @@
 package dd.inst.servlet2;
 
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import io.opentracing.ActiveSpan;
 import io.opentracing.SpanContext;
@@ -36,14 +36,13 @@ public final class HttpServlet2Instrumentation implements Instrumenter {
                     classLoaderHasClasses(
                         "javax.servlet.ServletContextEvent", "javax.servlet.FilterChain")))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            DDAdvice.create()
                 .advice(
                     named("service")
                         .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
                         .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
                         .and(isProtected()),
-                    HttpServlet2Advice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    HttpServlet2Advice.class.getName()))
         .asDecorator();
   }
 

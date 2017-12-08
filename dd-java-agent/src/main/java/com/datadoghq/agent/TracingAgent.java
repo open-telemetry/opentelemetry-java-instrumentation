@@ -25,7 +25,6 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 
 import dd.trace.Instrumenter;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -40,7 +39,12 @@ import net.bytebuddy.utility.JavaModule;
 @Slf4j
 public class TracingAgent {
 
-  public static void premain(final String agentArgs, final Instrumentation inst) throws Exception {
+  /** Return the classloader the core agent is running on. */
+  public static ClassLoader getAgentClassLoader() {
+    return TracingAgent.class.getClassLoader();
+  }
+
+  public static void premain(String agentArgs, final Instrumentation inst) throws Exception {
     log.debug("Using premain for loading {}", TracingAgent.class.getSimpleName());
     addByteBuddy(inst);
     AgentRulesManager.initialize();
@@ -111,7 +115,7 @@ public class TracingAgent {
         final JavaModule module,
         final boolean loaded,
         final DynamicType dynamicType) {
-      log.debug("Transformed {}", typeDescription);
+      log.debug("Transformed {} -- {}", typeDescription, classLoader);
 
       if (classLoader == null) {
         return;
@@ -123,13 +127,9 @@ public class TracingAgent {
         initializedClassloaders.add(classLoader);
 
         try {
-          final Class<?> rulesManager =
-              Class.forName("com.datadoghq.agent.InstrumentationRulesManager", true, classLoader);
-          final Method registerClassLoad =
-              rulesManager.getDeclaredMethod("registerClassLoad", Object.class);
-          registerClassLoad.invoke(null, classLoader);
+          InstrumentationRulesManager.registerClassLoad(classLoader);
         } catch (final Throwable e) {
-          log.info("ClassLoad Registration for target " + classLoader, e);
+          log.error("Failed ClassLoad Registration for target " + classLoader, e);
         }
       }
     }

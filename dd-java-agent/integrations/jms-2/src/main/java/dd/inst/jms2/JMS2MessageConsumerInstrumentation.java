@@ -2,7 +2,6 @@ package dd.inst.jms2;
 
 import static com.datadoghq.agent.integration.JmsUtil.toResourceName;
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -13,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.datadoghq.agent.integration.MessagePropertyTextMap;
 import com.datadoghq.trace.DDTags;
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import io.opentracing.ActiveSpan;
 import io.opentracing.SpanContext;
@@ -36,14 +36,13 @@ public final class JMS2MessageConsumerInstrumentation implements Instrumenter {
             not(isInterface()).and(hasSuperType(named("javax.jms.MessageConsumer"))),
             classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener"))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            DDAdvice.create()
                 .advice(
                     named("receive").and(takesArguments(0)).and(isPublic()),
                     ConsumerAdvice.class.getName())
                 .advice(
                     named("receiveNoWait").and(takesArguments(0)).and(isPublic()),
-                    ConsumerAdvice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    ConsumerAdvice.class.getName()))
         .asDecorator();
   }
 

@@ -1,12 +1,12 @@
 package dd.inst.servlet3;
 
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import io.opentracing.ActiveSpan;
 import io.opentracing.SpanContext;
@@ -36,14 +36,13 @@ public final class HttpServlet3Instrumentation implements Instrumenter {
             named("javax.servlet.http.HttpServlet"),
             classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            DDAdvice.create()
                 .advice(
                     named("service")
                         .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
                         .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
                         .and(isProtected()),
-                    HttpServlet3Advice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    HttpServlet3Advice.class.getName()))
         .asDecorator();
   }
 
