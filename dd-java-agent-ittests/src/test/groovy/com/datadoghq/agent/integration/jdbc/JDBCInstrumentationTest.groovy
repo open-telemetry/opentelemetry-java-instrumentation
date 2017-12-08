@@ -3,7 +3,6 @@ package com.datadoghq.agent.integration.jdbc
 import com.datadoghq.trace.DDTracer
 import com.datadoghq.trace.writer.ListWriter
 import dd.test.TestUtils
-import io.opentracing.util.GlobalTracer
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
 import org.hsqldb.jdbc.JDBCDriver
@@ -11,7 +10,6 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import java.lang.reflect.Field
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
