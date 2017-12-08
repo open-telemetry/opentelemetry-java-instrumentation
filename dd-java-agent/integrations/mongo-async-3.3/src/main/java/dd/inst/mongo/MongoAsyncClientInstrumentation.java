@@ -24,14 +24,14 @@ public final class MongoAsyncClientInstrumentation implements Instrumenter {
                 .and(
                     declaresMethod(
                         named("addCommandListener")
-                            .and(isPublic())
                             .and(
                                 takesArguments(
                                     new TypeDescription.Latent(
                                         "com.mongodb.event.CommandListener",
                                         Modifier.PUBLIC,
                                         null,
-                                        new TypeDescription.Generic[] {}))))))
+                                        new TypeDescription.Generic[] {})))
+                            .and(isPublic()))))
         .transform(
             DDAdvice.create()
                 .advice(
