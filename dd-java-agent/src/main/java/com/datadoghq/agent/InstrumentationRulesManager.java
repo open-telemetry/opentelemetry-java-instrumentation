@@ -120,11 +120,9 @@ public class InstrumentationRulesManager {
     log.info("Initializing on classloader {}", classLoader);
 
     injector.inject(classLoader);
-
-    initTracer();
   }
 
-  private void initTracer() {
+  void initTracer() {
     synchronized (SYNC) {
       if (!GlobalTracer.isRegistered()) {
         // Try to obtain a tracer using the TracerResolver
@@ -135,6 +133,8 @@ public class InstrumentationRulesManager {
           } catch (final RuntimeException re) {
             log.warn("Failed to register tracer '" + resolved + "'", re);
           }
+        } else {
+          log.warn("Failed to resolve dd tracer");
         }
       }
     }
