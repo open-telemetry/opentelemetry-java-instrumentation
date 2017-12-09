@@ -60,13 +60,12 @@ task jmhAgent(type: JavaExec, dependsOn: project.tasks.jmhCompileGeneratedClasse
   main = "org.openjdk.jmh.Main"
   args += ["-tu", "us"]
   args += ["-bm", "avgt"]
-  args += ["-prof", "stack"]
-//  args += ["-r", "5s"]
-//  args += ["-i", "5"]
+//  args += ["-prof", "stack:lines=5;detailLine=true;period=5;excludePackages=true"]
   args += ["-f", "1"]
   args += ["-foe", "true"]
-//  args += ["-w", "2s"]
+
 //  args += ["-wi", "2"]
+//  args += ["-i", "5"]
 }
 
 tasks.jmhAgent.dependsOn project(':dd-java-agent').shadowJar

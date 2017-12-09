@@ -1,5 +1,6 @@
 package dd.trace;
 
+import java.util.WeakHashMap;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class ClassLoaderMatcher {
@@ -45,6 +46,8 @@ public class ClassLoaderMatcher {
   public static class ClassLoaderHasClassMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
+    private final WeakHashMap<ClassLoader, Boolean> cache = new WeakHashMap<>();
+
     private final String[] names;
 
     private ClassLoaderHasClassMatcher(final String... names) {
@@ -53,22 +56,31 @@ public class ClassLoaderMatcher {
 
     @Override
     public boolean matches(final ClassLoader target) {
-      try {
-        if (target != null) {
-          for (final String name : names) {
-            Class.forName(name, false, target);
+      if (target != null) {
+        synchronized (target) {
+          if (cache.containsKey(target)) {
+            return cache.get(target);
           }
-          return true;
+          try {
+            for (final String name : names) {
+              Class.forName(name, false, target);
+            }
+            cache.put(target, true);
+            return true;
+          } catch (final ClassNotFoundException e) {
+            cache.put(target, false);
+            return false;
+          }
         }
-        return false;
-      } catch (final ClassNotFoundException e) {
-        return false;
       }
+      return false;
     }
   }
 
   public static class ClassLoaderHasClassWithFieldMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
+
+    private final WeakHashMap<ClassLoader, Boolean> cache = new WeakHashMap<>();
 
     private final String className;
     private final String fieldName;
@@ -80,18 +92,26 @@ public class ClassLoaderMatcher {
 
     @Override
     public boolean matches(final ClassLoader target) {
-      try {
-        if (target != null) {
-          final Class<?> aClass = Class.forName(className, false, target);
-          aClass.getDeclaredField(fieldName);
-          return true;
+      if (target != null) {
+        synchronized (target) {
+          if (cache.containsKey(target)) {
+            return cache.get(target);
+          }
+          try {
+            final Class<?> aClass = Class.forName(className, false, target);
+            aClass.getDeclaredField(fieldName);
+            cache.put(target, true);
+            return true;
+          } catch (final ClassNotFoundException e) {
+            cache.put(target, false);
+            return false;
+          } catch (final NoSuchFieldException e) {
+            cache.put(target, false);
+            return false;
+          }
         }
-        return false;
-      } catch (final ClassNotFoundException e) {
-        return false;
-      } catch (final NoSuchFieldException e) {
-        return false;
       }
+      return false;
     }
   }
 }

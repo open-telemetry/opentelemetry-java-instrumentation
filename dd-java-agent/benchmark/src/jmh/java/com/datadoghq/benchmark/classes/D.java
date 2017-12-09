@@ -1,5 +1,5 @@
 package com.datadoghq.benchmark.classes;
 
-public interface A {
-  void a();
+public interface D extends C {
+  void d();
 }

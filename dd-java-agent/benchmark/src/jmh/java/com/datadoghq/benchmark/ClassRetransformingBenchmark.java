@@ -1,7 +1,7 @@
 package com.datadoghq.benchmark;
 
-import com.datadoghq.benchmark.classes.DeepClass;
-import com.datadoghq.benchmark.classes.SimpleClass;
+import com.datadoghq.benchmark.classes.TracedClass;
+import com.datadoghq.benchmark.classes.UntracedClass;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.lang.reflect.Field;
@@ -54,13 +54,14 @@ public class ClassRetransformingBenchmark {
   }
 
   @Benchmark
-  public void testSimpleRetransform(final BenchmarkState state) throws UnmodifiableClassException {
-    state.inst.retransformClasses(SimpleClass.class);
+  public void testUntracedRetransform(final BenchmarkState state)
+      throws UnmodifiableClassException {
+    state.inst.retransformClasses(UntracedClass.class);
   }
 
   @Benchmark
-  public void testDeepRetransform(final BenchmarkState state) throws UnmodifiableClassException {
-    state.inst.retransformClasses(DeepClass.class);
+  public void testTracedRetransform(final BenchmarkState state) throws UnmodifiableClassException {
+    state.inst.retransformClasses(TracedClass.class);
   }
 
   @Fork(jvmArgsAppend = "-javaagent:releases/dd-java-agent-0.2.2.jar")
