@@ -24,6 +24,7 @@ public class AgentRulesManager {
   public AgentRulesManager(final TracingAgentConfig config) {
     agentTracerConfig = config;
     instrumentationRulesManager = new InstrumentationRulesManager(config, this);
+    instrumentationRulesManager.initTracer();
   }
 
   /** This method initializes the manager. */
