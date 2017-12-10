@@ -1,6 +1,7 @@
 package com.datadoghq.benchmark;
 
-import com.datadoghq.trace.Trace;
+import com.datadoghq.benchmark.classes.TracedClass;
+import com.datadoghq.benchmark.classes.UntracedClass;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.lang.reflect.Field;
@@ -53,18 +54,14 @@ public class ClassRetransformingBenchmark {
   }
 
   @Benchmark
-  public void testIgnoredRetransform(final BenchmarkState state) throws UnmodifiableClassException {
-    state.inst.retransformClasses(Object.class);
+  public void testUntracedRetransform(final BenchmarkState state)
+      throws UnmodifiableClassException {
+    state.inst.retransformClasses(UntracedClass.class);
   }
 
   @Benchmark
-  public void testSimpleRetransform(final BenchmarkState state) throws UnmodifiableClassException {
-    state.inst.retransformClasses(SimpleClass.class);
-  }
-
-  @Benchmark
-  public void testDeepRetransform(final BenchmarkState state) throws UnmodifiableClassException {
-    state.inst.retransformClasses(DeepClass.class);
+  public void testTracedRetransform(final BenchmarkState state) throws UnmodifiableClassException {
+    state.inst.retransformClasses(TracedClass.class);
   }
 
   @Fork(jvmArgsAppend = "-javaagent:releases/dd-java-agent-0.2.2.jar")
@@ -90,34 +87,4 @@ public class ClassRetransformingBenchmark {
 
   @Fork(jvmArgsAppend = "-javaagent:../build/libs/dd-java-agent.jar")
   public static class WithAgent extends ClassRetransformingBenchmark {}
-
-  public static class SimpleClass {
-    @Trace
-    public void aMethodToTrace() {}
-  }
-
-  public static interface A {
-    @Trace
-    void interfaceTrace();
-  }
-
-  public static interface B extends A {
-    void something();
-  }
-
-  public static interface C extends B {
-    void somethingElse();
-  }
-
-  public static class DeepClass implements C {
-
-    @Override
-    public void interfaceTrace() {}
-
-    @Override
-    public void something() {}
-
-    @Override
-    public void somethingElse() {}
-  }
 }
