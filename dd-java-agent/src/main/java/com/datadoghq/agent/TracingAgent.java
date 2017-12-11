@@ -21,6 +21,7 @@ import static dd.trace.ClassLoaderMatcher.isReflectionClassLoader;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isBootstrapClassLoader;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
+import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 
 import dd.trace.Instrumenter;
@@ -77,6 +78,7 @@ public class TracingAgent {
             .or(nameStartsWith("org.slf4j."))
             .or(nameContains("javassist"))
             .or(nameContains(".asm."))
+            .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"))
             .ignore(
                 any(),
                 isBootstrapClassLoader()

@@ -2,7 +2,7 @@ package com.datadoghq.agent.integration.jdbc
 
 import com.datadoghq.trace.DDTracer
 import com.datadoghq.trace.writer.ListWriter
-import io.opentracing.util.GlobalTracer
+import dd.test.TestUtils
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
 import org.hsqldb.jdbc.JDBCDriver
@@ -10,7 +10,6 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import java.lang.reflect.Field
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -18,8 +17,8 @@ import java.sql.Statement
 
 class JDBCInstrumentationTest extends Specification {
 
-  ListWriter writer = new ListWriter()
-  DDTracer tracer = new DDTracer(writer)
+  final ListWriter writer = new ListWriter()
+  final DDTracer tracer = new DDTracer(writer)
 
   @Shared
   private Map<String, Connection> connections
@@ -43,16 +42,8 @@ class JDBCInstrumentationTest extends Specification {
   }
 
   def setup() {
-    try {
-      GlobalTracer.register(tracer)
-    } catch (final Exception e) {
-      // Force it anyway using reflection
-      final Field field = GlobalTracer.getDeclaredField("tracer")
-      field.setAccessible(true)
-      field.set(null, tracer)
-    }
+    TestUtils.registerOrReplaceGlobalTracer(tracer)
     writer.start()
-    assert GlobalTracer.isRegistered()
   }
 
   @Unroll
@@ -80,6 +71,7 @@ class JDBCInstrumentationTest extends Specification {
 
     def tags = span.context().tags
     tags["db.type"] == driver
+    tags["db.user"] == username
     tags["span.kind"] == "client"
     tags["component"] == "java-jdbc-statement"
 
@@ -88,16 +80,16 @@ class JDBCInstrumentationTest extends Specification {
 
     tags["thread.name"] != null
     tags["thread.id"] != null
-    tags.size() == 7
+    tags.size() == username == null ? 7 : 8
 
     cleanup:
     statement.close()
 
     where:
-    driver   | connection                | query
-    "h2"     | connections.get("h2")     | "SELECT 3"
-    "derby"  | connections.get("derby")  | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "hsqldb" | connections.get("hsqldb") | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    driver   | connection                | username | query
+    "h2"     | connections.get("h2")     | null     | "SELECT 3"
+    "derby"  | connections.get("derby")  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | connections.get("hsqldb") | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
   }
 
   @Unroll
@@ -126,6 +118,7 @@ class JDBCInstrumentationTest extends Specification {
 
     def tags = span.context().tags
     tags["db.type"] == driver
+    tags["db.user"] == username
     tags["span.kind"] == "client"
     tags["component"] == "java-jdbc-prepared_statement"
 
@@ -134,16 +127,16 @@ class JDBCInstrumentationTest extends Specification {
 
     tags["thread.name"] != null
     tags["thread.id"] != null
-    tags.size() == 7
+    tags.size() == username == null ? 7 : 8
 
     cleanup:
     statement.close()
 
     where:
-    driver   | connection                | query
-    "h2"     | connections.get("h2")     | "SELECT 3"
-    "derby"  | connections.get("derby")  | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "hsqldb" | connections.get("hsqldb") | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    driver   | connection                | username | query
+    "h2"     | connections.get("h2")     | null     | "SELECT 3"
+    "derby"  | connections.get("derby")  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | connections.get("hsqldb") | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
   }
 
   @Unroll
@@ -171,6 +164,7 @@ class JDBCInstrumentationTest extends Specification {
 
     def tags = span.context().tags
     tags["db.type"] == driver
+    tags["db.user"] == username
     tags["span.kind"] == "client"
     tags["component"] == "java-jdbc-prepared_statement"
 
@@ -179,16 +173,16 @@ class JDBCInstrumentationTest extends Specification {
 
     tags["thread.name"] != null
     tags["thread.id"] != null
-    tags.size() == 7
+    tags.size() == username == null ? 7 : 8
 
     cleanup:
     statement.close()
 
     where:
-    driver   | connection                | query
-    "h2"     | connections.get("h2")     | "SELECT 3"
-    "derby"  | connections.get("derby")  | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "hsqldb" | connections.get("hsqldb") | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    driver   | connection                | username | query
+    "h2"     | connections.get("h2")     | null     | "SELECT 3"
+    "derby"  | connections.get("derby")  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | connections.get("hsqldb") | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
   }
 
   @Unroll
@@ -217,6 +211,7 @@ class JDBCInstrumentationTest extends Specification {
 
     def tags = span.context().tags
     tags["db.type"] == driver
+    tags["db.user"] == username
     tags["span.kind"] == "client"
     tags["component"] == "java-jdbc-statement"
 
@@ -225,16 +220,16 @@ class JDBCInstrumentationTest extends Specification {
 
     tags["thread.name"] != null
     tags["thread.id"] != null
-    tags.size() == 7
+    tags.size() == username == null ? 7 : 8
 
     cleanup:
     statement.close()
 
     where:
-    driver   | connection                | query
-    "h2"     | connections.get("h2")     | "CREATE TABLE S_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "derby"  | connections.get("derby")  | "CREATE TABLE S_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "hsqldb" | connections.get("hsqldb") | "CREATE TABLE PUBLIC.S_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    driver   | connection                | username | query
+    "h2"     | connections.get("h2")     | null     | "CREATE TABLE S_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "derby"  | connections.get("derby")  | "APP"    | "CREATE TABLE S_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "hsqldb" | connections.get("hsqldb") | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))"
   }
 
   @Unroll
@@ -261,6 +256,7 @@ class JDBCInstrumentationTest extends Specification {
 
     def tags = span.context().tags
     tags["db.type"] == driver
+    tags["db.user"] == username
     tags["span.kind"] == "client"
     tags["component"] == "java-jdbc-prepared_statement"
 
@@ -269,15 +265,15 @@ class JDBCInstrumentationTest extends Specification {
 
     tags["thread.name"] != null
     tags["thread.id"] != null
-    tags.size() == 7
+    tags.size() == username == null ? 7 : 8
 
     cleanup:
     statement.close()
 
     where:
-    driver   | connection                | query
-    "h2"     | connections.get("h2")     | "CREATE TABLE PS_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    driver   | connection                | username | query
+    "h2"     | connections.get("h2")     | null     | "CREATE TABLE PS_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"
     // Derby calls executeLargeUpdate from executeUpdate thus generating a nested span breaking this test.
-    "hsqldb" | connections.get("hsqldb") | "CREATE TABLE PUBLIC.PS_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "hsqldb" | connections.get("hsqldb") | "SA"     | "CREATE TABLE PUBLIC.PS_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))"
   }
 }
