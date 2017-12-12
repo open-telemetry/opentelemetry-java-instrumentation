@@ -4,6 +4,9 @@ import dd.trace.Instrumenter
 import io.opentracing.ActiveSpan
 import io.opentracing.Tracer
 import io.opentracing.util.GlobalTracer
+import java.util.jar.JarEntry
+import java.util.jar.JarOutputStream
+import java.util.jar.Manifest
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.agent.builder.AgentBuilder
 
@@ -55,6 +58,57 @@ class TestUtils {
       return r.call()
     } finally {
       rootSpan.deactivate()
+    }
+  }
+
+  /** com.foo.Bar -> com/foo/Bar.class */
+  static String getResourceName(Class<?> clazz) {
+    return clazz.getName().replace('.', '/') + ".class"
+  }
+
+  /**
+   * Create a temporary jar on the filesystem with the bytes of the given classes.
+   *
+   * <p>The jar file will be removed when the jvm exits.
+   *
+   * @param classes classes to package into the jar.
+   * @return the location of the newly created jar.
+   * @throws IOException
+   */
+  static URL createJarWithClasses(Class<?>... classes) throws IOException {
+    final File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "", ".jar")
+    tmpJar.deleteOnExit()
+
+    final Manifest manifest = new Manifest()
+    JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest)
+    for (Class<?> clazz : classes) {
+      addToJar(clazz, target)
+    }
+    target.close()
+
+    return tmpJar.toURI().toURL()
+  }
+
+  static void addToJar(Class<?> clazz, JarOutputStream jarOutputStream) throws IOException {
+    InputStream inputStream = null
+    try {
+      JarEntry entry = new JarEntry(getResourceName(clazz))
+      jarOutputStream.putNextEntry(entry)
+      inputStream = clazz.getClassLoader().getResourceAsStream(getResourceName(clazz))
+
+      byte[] buffer = new byte[1024]
+      while (true) {
+        int count = inputStream.read(buffer)
+        if (count == -1) {
+          break
+        }
+        jarOutputStream.write(buffer, 0, count)
+      }
+      jarOutputStream.closeEntry()
+    } finally {
+      if (inputStream != null) {
+        inputStream.close()
+      }
     }
   }
 }
