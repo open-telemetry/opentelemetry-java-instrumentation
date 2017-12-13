@@ -18,10 +18,19 @@ public class DDAdvice extends AgentBuilder.Transformer.ForAdvice {
       Method getAgentClassloaderMethod = agentClass.getMethod("getAgentClassLoader");
       AGENT_CLASSLOADER = (ClassLoader) getAgentClassloaderMethod.invoke(null);
     } catch (Throwable t) {
-      log.error("Unable to locate agent classloader. Falling back to System Classloader");
-      AGENT_CLASSLOADER = ClassLoader.getSystemClassLoader();
+      AGENT_CLASSLOADER = DDAdvice.class.getClassLoader();
+      log.error(
+          "Failed to locate agent classloader. Falling back to "
+              + AGENT_CLASSLOADER
+              + " -- "
+              + t.getMessage());
     }
     AGENT_CLASS_LOCATOR = ClassFileLocator.ForClassLoader.of(AGENT_CLASSLOADER);
+  }
+
+  /** Return the classloader the datadog agent is running on. */
+  public static ClassLoader getAgentClassLoader() {
+    return AGENT_CLASSLOADER;
   }
 
   /**

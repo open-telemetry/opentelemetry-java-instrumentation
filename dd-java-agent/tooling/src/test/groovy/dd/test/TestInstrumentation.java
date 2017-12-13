@@ -13,6 +13,7 @@ public class TestInstrumentation implements Instrumenter {
   public AgentBuilder instrument(AgentBuilder agentBuilder) {
     return agentBuilder
         .type(named(TestInstrumentation.class.getName() + "$ClassToInstrument"))
+        .transform(new HelperInjector(TestInstrumentation.class.getName() + "$HelperClass"))
         .transform(
             DDAdvice.create()
                 .advice(
