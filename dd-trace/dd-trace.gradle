@@ -29,9 +29,6 @@ dependencies {
 
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6'
   testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
-
-  testCompile 'org.openjdk.jmh:jmh-core:1.19'
-  testCompile 'org.openjdk.jmh:jmh-generator-annprocess:1.19'
 }
 
 jmh {

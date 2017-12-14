@@ -11,6 +11,17 @@ lombok { // optional: values below are the defaults
   sha256 = "9d957f572386b9e257093a45b148f9b411cff80d9efd55eaf6fca27002d2e4d9"
 }
 
+apply plugin: "eclipse"
+eclipse {
+  classpath {
+    downloadSources = true
+    downloadJavadoc = true
+  }
+}
+if (configurations.find { it.name == 'jmh' }) {
+  eclipse.classpath.plusConfigurations += [ configurations.jmh ]
+}
+
 task packageSources(type: Jar) {
   classifier = 'sources'
   from sourceSets.main.allSource
