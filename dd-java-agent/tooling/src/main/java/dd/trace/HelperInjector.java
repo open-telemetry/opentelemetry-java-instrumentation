@@ -48,7 +48,7 @@ public class HelperInjector implements Transformer {
       TypeDescription typeDescription,
       ClassLoader classLoader,
       JavaModule module) {
-    if (helperClassNames.size() > 0) {
+    if (helperClassNames.size() > 0 && classLoader != null) {
       try {
         new ClassInjector.UsingReflection(classLoader).inject(getHelperMap());
       } catch (ClassNotFoundException cnfe) {

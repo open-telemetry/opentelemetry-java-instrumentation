@@ -36,12 +36,6 @@ class TestUtils {
 
   static registerOrReplaceGlobalTracer(Tracer tracer) {
     try {
-      Class.forName("com.datadoghq.agent.InstrumentationRulesManager")
-        .getMethod("registerClassLoad")
-        .invoke(null)
-    } catch (ClassNotFoundException e) {
-    }
-    try {
       GlobalTracer.register(tracer)
     } catch (final Exception e) {
       // Force it anyway using reflection

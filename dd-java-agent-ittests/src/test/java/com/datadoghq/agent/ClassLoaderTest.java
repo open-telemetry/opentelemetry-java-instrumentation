@@ -3,7 +3,6 @@ package com.datadoghq.agent;
 import static dd.test.TestUtils.createJarWithClasses;
 
 import com.datadoghq.trace.Trace;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import org.junit.Assert;
@@ -28,14 +27,6 @@ public class ClassLoaderTest {
     Assert.assertEquals(
         "Class must be loaded by loader.", loader, instrumentedClass.getClassLoader());
 
-    final Class<?> rulesManagerClass =
-        Class.forName(
-            "com.datadoghq.agent.InstrumentationRulesManager",
-            true,
-            ClassLoader.getSystemClassLoader());
-    Method isRegisteredMethod = rulesManagerClass.getMethod("isRegistered", Object.class);
-    Assert.assertTrue(
-        "Agent did not initialized loader.", (boolean) isRegisteredMethod.invoke(null, loader));
     loader.close();
   }
 

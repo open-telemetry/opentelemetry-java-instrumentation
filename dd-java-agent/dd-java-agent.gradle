@@ -44,18 +44,6 @@ dependencies {
   testCompile deps.opentracingMock
 }
 
-project(':dd-java-agent:integrations:helpers').afterEvaluate { helperProject ->
-  project.processResources {
-    from(helperProject.tasks.shadowJar)
-    rename {
-      it.startsWith("helpers") && it.endsWith(".jar") ?
-        "helpers.jar.zip" :
-        it
-    }
-  }
-  project.processResources.dependsOn helperProject.tasks.shadowJar
-}
-
 jar {
   classifier = 'unbundled'
 

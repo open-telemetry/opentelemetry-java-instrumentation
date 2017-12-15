@@ -20,9 +20,6 @@ public class TraceAnnotationsTest {
 
   @Before
   public void beforeTest() throws Exception {
-    Class.forName("com.datadoghq.agent.InstrumentationRulesManager")
-        .getMethod("registerClassLoad")
-        .invoke(null);
     TestUtils.registerOrReplaceGlobalTracer(tracer);
 
     writer.start();

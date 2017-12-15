@@ -26,10 +26,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 
 import dd.trace.Instrumenter;
 import java.lang.instrument.Instrumentation;
-import java.util.Collections;
 import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.WeakHashMap;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -97,9 +94,6 @@ public class TracingAgent {
   @Slf4j
   static class Listener implements AgentBuilder.Listener {
 
-    private final Set<ClassLoader> initializedClassloaders =
-        Collections.newSetFromMap(new WeakHashMap<ClassLoader, Boolean>());
-
     @Override
     public void onError(
         final String typeName,
@@ -118,22 +112,6 @@ public class TracingAgent {
         final boolean loaded,
         final DynamicType dynamicType) {
       log.debug("Transformed {} -- {}", typeDescription, classLoader);
-
-      if (classLoader == null) {
-        return;
-      }
-      synchronized (classLoader) {
-        if (initializedClassloaders.contains(classLoader)) {
-          return;
-        }
-        initializedClassloaders.add(classLoader);
-
-        try {
-          InstrumentationRulesManager.registerClassLoad(classLoader);
-        } catch (final Throwable e) {
-          log.error("Failed ClassLoad Registration for target " + classLoader, e);
-        }
-      }
     }
 
     @Override

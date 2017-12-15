@@ -31,12 +31,8 @@ public class ClassRetransformingBenchmark {
 
     @Setup
     public void initializeInstrumentation() {
-      try {
-        final Class<?> manager = Class.forName("com.datadoghq.agent.InstrumentationRulesManager");
-        final Method registerClassLoad = manager.getMethod("registerClassLoad");
-        registerClassLoad.invoke(null);
-      } catch (final Exception e) {
-      }
+      // loading TracedClass will initialize helper injection
+      TracedClass.class.getName();
     }
 
     @TearDown
