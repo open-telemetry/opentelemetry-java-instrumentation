@@ -1,4 +1,4 @@
-package com.datadoghq.agent.integration;
+package dd.inst.mongo;
 
 import com.datadoghq.trace.DDTags;
 import com.mongodb.event.CommandFailedEvent;

@@ -2,10 +2,10 @@ package dd.inst.mongo;
 
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
-import com.datadoghq.agent.integration.DDTracingCommandListener;
 import com.google.auto.service.AutoService;
 import com.mongodb.MongoClientOptions;
 import dd.trace.DDAdvice;
+import dd.trace.HelperInjector;
 import dd.trace.Instrumenter;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Modifier;
@@ -15,6 +15,8 @@ import net.bytebuddy.description.type.TypeDescription;
 
 @AutoService(Instrumenter.class)
 public final class MongoClientInstrumentation implements Instrumenter {
+  public static final HelperInjector MONGO_HELPER_INJECTOR =
+      new HelperInjector("dd.inst.mongo.DDTracingCommandListener");
 
   @Override
   public AgentBuilder instrument(AgentBuilder agentBuilder) {
@@ -32,6 +34,7 @@ public final class MongoClientInstrumentation implements Instrumenter {
                                         null,
                                         new TypeDescription.Generic[] {})))
                             .and(isPublic()))))
+        .transform(MONGO_HELPER_INJECTOR)
         .transform(
             DDAdvice.create()
                 .advice(

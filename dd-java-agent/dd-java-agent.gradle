@@ -21,39 +21,17 @@ dependencies {
   compile project(':dd-java-agent:tooling')
   compile project(':dd-trace-annotations')
 
-  compile(project(':dd-java-agent:integrations:apache-httpclient-4.3')) {
-    transitive = false
-  }
-  compile(project(':dd-java-agent:integrations:aws-sdk')) {
-    transitive = false
-  }
-  compile(project(':dd-java-agent:integrations:datastax-cassandra-3.2')) {
-    transitive = false
-  }
-  compile(project(':dd-java-agent:integrations:jms-1')) {
-    transitive = false
-  }
-  compile(project(':dd-java-agent:integrations:jms-2')) {
-    transitive = false
-  }
-  compile(project(':dd-java-agent:integrations:mongo-3.1')) {
-    transitive = false
-  }
-  compile(project(':dd-java-agent:integrations:mongo-async-3.3')) {
-    transitive = false
-  }
-  compile(project(':dd-java-agent:integrations:okhttp-3')) {
-    transitive = false
-  }
-  compile(project(':dd-java-agent:integrations:servlet-2')) {
-    transitive = false
-  }
-  compile(project(':dd-java-agent:integrations:servlet-3')) {
-    transitive = false
-  }
-  compile(project(':dd-java-agent:integrations:spring-web')) {
-    transitive = false
-  }
+  compile(project(':dd-java-agent:integrations:apache-httpclient-4.3'))
+  compile(project(':dd-java-agent:integrations:aws-sdk'))
+  compile(project(':dd-java-agent:integrations:datastax-cassandra-3.2'))
+  compile(project(':dd-java-agent:integrations:jms-1'))
+  compile(project(':dd-java-agent:integrations:jms-2'))
+  compile(project(':dd-java-agent:integrations:mongo-3.1'))
+  compile(project(':dd-java-agent:integrations:mongo-async-3.3'))
+  compile(project(':dd-java-agent:integrations:okhttp-3'))
+  compile project(':dd-java-agent:integrations:servlet-2')
+  compile project(':dd-java-agent:integrations:servlet-3')
+  compile(project(':dd-java-agent:integrations:spring-web'))
 
   compile deps.bytebuddy
 
@@ -64,10 +42,6 @@ dependencies {
   // ^ Generally a bad idea for libraries, but we're shadowing.
 
   testCompile deps.opentracingMock
-
-  testCompile(project(path: ':dd-java-agent:integrations:helpers')) {
-    transitive = false
-  }
 }
 
 project(':dd-java-agent:integrations:helpers').afterEvaluate { helperProject ->

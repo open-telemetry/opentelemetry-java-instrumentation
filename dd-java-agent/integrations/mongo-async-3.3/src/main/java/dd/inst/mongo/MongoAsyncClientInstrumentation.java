@@ -2,7 +2,6 @@ package dd.inst.mongo;
 
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
-import com.datadoghq.agent.integration.DDTracingCommandListener;
 import com.google.auto.service.AutoService;
 import com.mongodb.async.client.MongoClientSettings;
 import dd.trace.DDAdvice;
@@ -32,6 +31,7 @@ public final class MongoAsyncClientInstrumentation implements Instrumenter {
                                         null,
                                         new TypeDescription.Generic[] {})))
                             .and(isPublic()))))
+        .transform(MongoClientInstrumentation.MONGO_HELPER_INJECTOR)
         .transform(
             DDAdvice.create()
                 .advice(

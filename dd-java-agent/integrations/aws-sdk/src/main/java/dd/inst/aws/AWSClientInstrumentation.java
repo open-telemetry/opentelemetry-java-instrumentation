@@ -9,6 +9,7 @@ import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
 import dd.trace.DDAdvice;
+import dd.trace.HelperInjector;
 import dd.trace.Instrumenter;
 import io.opentracing.contrib.aws.TracingRequestHandler;
 import io.opentracing.util.GlobalTracer;
@@ -29,6 +30,10 @@ public final class AWSClientInstrumentation implements Instrumenter {
             classLoaderHasClasses(
                 "com.amazonaws.http.client.HttpClientFactory",
                 "com.amazonaws.http.apache.utils.ApacheUtils"))
+        .transform(
+            new HelperInjector(
+                "io.opentracing.contrib.aws.TracingRequestHandler",
+                "io.opentracing.contrib.aws.SpanDecorator"))
         .transform(
             DDAdvice.create()
                 .advice(

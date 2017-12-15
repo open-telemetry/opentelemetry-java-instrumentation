@@ -1,6 +1,6 @@
 package dd.inst.jms1;
 
-import static com.datadoghq.agent.integration.JmsUtil.toResourceName;
+import static dd.inst.jms.util.JmsUtil.toResourceName;
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -9,10 +9,11 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.datadoghq.agent.integration.MessagePropertyTextMap;
 import com.datadoghq.trace.DDTags;
 import com.google.auto.service.AutoService;
+import dd.inst.jms.util.MessagePropertyTextMap;
 import dd.trace.DDAdvice;
+import dd.trace.HelperInjector;
 import dd.trace.Instrumenter;
 import io.opentracing.ActiveSpan;
 import io.opentracing.SpanContext;
@@ -28,6 +29,8 @@ import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
 public final class JMS1MessageConsumerInstrumentation implements Instrumenter {
+  public static final HelperInjector JMS1_HELPER_INJECTOR =
+      new HelperInjector("dd.inst.jms.util.JmsUtil", "dd.inst.jms.util.MessagePropertyTextMap");
 
   @Override
   public AgentBuilder instrument(final AgentBuilder agentBuilder) {
@@ -35,6 +38,7 @@ public final class JMS1MessageConsumerInstrumentation implements Instrumenter {
         .type(
             not(isInterface()).and(hasSuperType(named("javax.jms.MessageConsumer"))),
             not(classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener")))
+        .transform(JMS1_HELPER_INJECTOR)
         .transform(
             DDAdvice.create()
                 .advice(

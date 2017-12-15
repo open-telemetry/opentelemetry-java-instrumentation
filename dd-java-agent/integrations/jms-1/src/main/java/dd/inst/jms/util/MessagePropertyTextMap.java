@@ -1,4 +1,4 @@
-package com.datadoghq.agent.integration;
+package dd.inst.jms.util;
 
 import io.opentracing.propagation.TextMap;
 import java.util.Enumeration;
@@ -21,7 +21,7 @@ public class MessagePropertyTextMap implements TextMap {
   public Iterator<Map.Entry<String, String>> iterator() {
     final Map<String, String> map = new HashMap<>();
     try {
-      final Enumeration enumeration = message.getPropertyNames();
+      final Enumeration<?> enumeration = message.getPropertyNames();
       if (enumeration != null) {
         while (enumeration.hasMoreElements()) {
           final String key = (String) enumeration.nextElement();

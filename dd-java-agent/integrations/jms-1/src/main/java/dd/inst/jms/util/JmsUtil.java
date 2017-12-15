@@ -1,4 +1,4 @@
-package com.datadoghq.agent.integration;
+package dd.inst.jms.util;
 
 import javax.jms.Destination;
 import javax.jms.Message;

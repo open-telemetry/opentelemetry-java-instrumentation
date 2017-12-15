@@ -3,9 +3,9 @@ package dd.inst.apachehttpclient;
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
-import com.datadoghq.agent.integration.DDTracingClientExec;
 import com.google.auto.service.AutoService;
 import dd.trace.DDAdvice;
+import dd.trace.HelperInjector;
 import dd.trace.Instrumenter;
 import io.opentracing.util.GlobalTracer;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -31,6 +31,7 @@ public class ApacheHttpClientInstrumentation implements Instrumenter {
                 "org.apache.http.client.protocol.HttpClientContext",
                 "org.apache.http.conn.routing.HttpRoute",
                 "org.apache.http.impl.execchain.ClientExecChain"))
+        .transform(new HelperInjector("dd.inst.apachehttpclient.DDTracingClientExec"))
         .transform(
             DDAdvice.create()
                 .advice(

@@ -14,8 +14,11 @@ versionScan {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
+  // use jms1 helpers
+  compile(project(':dd-java-agent:integrations:jms-1')) {
+    transitive = false
+  }
   compileOnly group: 'javax.jms', name: 'javax.jms-api', version: '2.0.1'
-  compileOnly project(':dd-java-agent:integrations:helpers')
 
   compile deps.bytebuddy
   compile deps.opentracing
@@ -24,7 +27,6 @@ dependencies {
   compile project(':dd-trace')
   compile project(':dd-java-agent:tooling')
   testCompile project(':dd-java-agent:tooling').sourceSets.test.output
-  testCompile project(':dd-java-agent:integrations:helpers')
 
   testCompile group: 'org.hornetq', name: 'hornetq-jms-client', version: '2.4.7.Final'
   testCompile group: 'org.hornetq', name: 'hornetq-jms-server', version: '2.4.7.Final'

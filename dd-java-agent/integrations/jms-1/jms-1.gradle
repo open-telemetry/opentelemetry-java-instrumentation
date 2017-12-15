@@ -15,7 +15,6 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   compileOnly group: 'javax.jms', name: 'jms-api', version: '1.1-rev-1'
-  compileOnly project(':dd-java-agent:integrations:helpers')
 
   compile deps.bytebuddy
   compile deps.opentracing
@@ -24,7 +23,6 @@ dependencies {
   compile project(':dd-trace')
   compile project(':dd-java-agent:tooling')
   testCompile project(':dd-java-agent:tooling').sourceSets.test.output
-  testCompile project(':dd-java-agent:integrations:helpers')
 
   testCompile group: 'org.apache.activemq.tooling', name: 'activemq-junit', version: '5.14.5'
   testCompile group: 'org.apache.activemq', name: 'activemq-pool', version: '5.14.5'
