@@ -18,6 +18,7 @@ import net.bytebuddy.utility.JavaModule;
 public class HelperInjector implements Transformer {
   private final Set<String> helperClassNames;
   private Map<TypeDescription, byte[]> helperMap = null;
+  private final Set<ClassLoader> injectedClassLoaders = new HashSet<ClassLoader>();
 
   /**
    * Construct HelperInjector.
@@ -49,11 +50,16 @@ public class HelperInjector implements Transformer {
       ClassLoader classLoader,
       JavaModule module) {
     if (helperClassNames.size() > 0 && classLoader != null) {
-      try {
-        new ClassInjector.UsingReflection(classLoader).inject(getHelperMap());
-      } catch (ClassNotFoundException cnfe) {
-        log.error("Failed to inject helper classes into " + classLoader, cnfe);
-        throw new RuntimeException(cnfe);
+      synchronized (this) {
+        if (!injectedClassLoaders.contains(classLoader)) {
+          try {
+            new ClassInjector.UsingReflection(classLoader).inject(getHelperMap());
+          } catch (ClassNotFoundException cnfe) {
+            log.error("Failed to inject helper classes into " + classLoader, cnfe);
+            throw new RuntimeException(cnfe);
+          }
+          injectedClassLoaders.add(classLoader);
+        }
       }
     }
     return builder;
