@@ -31,22 +31,12 @@ dependencies {
 
   testCompile deps.opentracingMock
 }
-
-// include dd-java-agent:integrations:* in shadowJar
+// add all subprojects under 'integrations' to the agent's dependencies
 Project java_agent_project = project
 subprojects { subProj ->
-  if (subProj.getPath().startsWith("${java_agent_project.path}:integrations:")) {
-    java_agent_project.shadowJar.dependsOn "${subProj.path}:assemble"
-  }
-}
-gradle.taskGraph.whenReady {
-  if (gradle.taskGraph.hasTask("${java_agent_project.getPath()}:shadowJar")) {
-    subprojects { subProj ->
-      if (subProj.getPath().startsWith("${java_agent_project.path}:integrations:")) {
-        java_agent_project.dependencies {
-          compile(project(subProj.path))
-        }
-      }
+  if (subProj.getPath().startsWith(java_agent_project.getPath() + ':integrations:')) {
+    java_agent_project.dependencies {
+      compile(project(subProj.getPath()))
     }
   }
 }

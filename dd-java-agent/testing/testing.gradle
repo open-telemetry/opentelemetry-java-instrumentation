@@ -1,0 +1,11 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compile deps.bytebuddy
+  compile deps.slf4j
+  compile deps.opentracing
+  compile deps.spock
+
+  compile project(':dd-trace')
+  compile project(':dd-java-agent:tooling')
+}
