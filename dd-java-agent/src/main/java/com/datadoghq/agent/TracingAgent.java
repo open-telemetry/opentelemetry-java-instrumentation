@@ -24,6 +24,8 @@ import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 
+import com.datadoghq.trace.DDTraceAnnotationsInfo;
+import com.datadoghq.trace.DDTraceInfo;
 import dd.trace.Instrumenter;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.tracerresolver.TracerResolver;
@@ -59,6 +61,12 @@ public class TracingAgent {
   }
 
   private static synchronized void initializeGlobalTracer() {
+    // version classes log important info
+    // in static initializers
+    DDJavaAgentInfo.VERSION.toString();
+    DDTraceInfo.VERSION.toString();
+    DDTraceAnnotationsInfo.VERSION.toString();
+
     if (!GlobalTracer.isRegistered()) {
       // Try to obtain a tracer using the TracerResolver
       final Tracer resolved = TracerResolver.resolveTracer();
