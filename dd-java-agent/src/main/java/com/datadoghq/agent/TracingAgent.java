@@ -25,6 +25,9 @@ import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 
 import dd.trace.Instrumenter;
+import io.opentracing.Tracer;
+import io.opentracing.contrib.tracerresolver.TracerResolver;
+import io.opentracing.util.GlobalTracer;
 import java.lang.instrument.Instrumentation;
 import java.util.ServiceLoader;
 import lombok.extern.slf4j.Slf4j;
@@ -45,14 +48,30 @@ public class TracingAgent {
   public static void premain(String agentArgs, final Instrumentation inst) throws Exception {
     log.debug("Using premain for loading {}", TracingAgent.class.getSimpleName());
     addByteBuddy(inst);
-    AgentRulesManager.initialize();
+    initializeGlobalTracer();
   }
 
   public static void agentmain(final String agentArgs, final Instrumentation inst)
       throws Exception {
     log.debug("Using agentmain for loading {}", TracingAgent.class.getSimpleName());
     addByteBuddy(inst);
-    AgentRulesManager.initialize();
+    initializeGlobalTracer();
+  }
+
+  private static synchronized void initializeGlobalTracer() {
+    if (!GlobalTracer.isRegistered()) {
+      // Try to obtain a tracer using the TracerResolver
+      final Tracer resolved = TracerResolver.resolveTracer();
+      if (resolved != null) {
+        try {
+          GlobalTracer.register(resolved);
+        } catch (final RuntimeException re) {
+          log.warn("Failed to register tracer '" + resolved + "'", re);
+        }
+      } else {
+        log.warn("Failed to resolve dd tracer");
+      }
+    }
   }
 
   public static void addByteBuddy(final Instrumentation inst) {
