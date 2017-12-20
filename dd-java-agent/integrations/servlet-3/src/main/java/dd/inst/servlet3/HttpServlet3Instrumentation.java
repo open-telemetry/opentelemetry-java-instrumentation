@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import dd.trace.DDAdvice;
+import dd.trace.HelperInjector;
 import dd.trace.Instrumenter;
 import io.opentracing.ActiveSpan;
 import io.opentracing.SpanContext;
@@ -38,6 +39,14 @@ public final class HttpServlet3Instrumentation implements Instrumenter {
         .type(
             not(isInterface()).and(hasSuperType(named("javax.servlet.http.HttpServlet"))),
             classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"))
+        .transform(
+            new HelperInjector(
+                "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter",
+                "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
+                "io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator",
+                "io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator$1",
+                "io.opentracing.contrib.web.servlet.filter.TracingFilter",
+                "io.opentracing.contrib.web.servlet.filter.TracingFilter$1"))
         .transform(
             DDAdvice.create()
                 .advice(

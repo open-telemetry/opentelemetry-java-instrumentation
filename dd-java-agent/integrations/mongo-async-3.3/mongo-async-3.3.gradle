@@ -13,10 +13,13 @@ versionScan {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
+  // use mongo listener
+  compile(project(':dd-java-agent:integrations:mongo-3.1')) {
+    transitive = false
+  }
+  compileOnly group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
 
   compile project(':dd-trace')
-  compile project(':dd-java-agent:integrations:helpers')
   compile project(':dd-java-agent:tooling')
 
   compile deps.bytebuddy

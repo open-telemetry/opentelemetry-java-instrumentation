@@ -9,6 +9,7 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 @Slf4j
 public class DDAdvice extends AgentBuilder.Transformer.ForAdvice {
   private static ClassLoader AGENT_CLASSLOADER;
+  private static ClassFileLocator AGENT_CLASS_LOCATOR;
 
   static {
     try {
@@ -17,16 +18,29 @@ public class DDAdvice extends AgentBuilder.Transformer.ForAdvice {
       Method getAgentClassloaderMethod = agentClass.getMethod("getAgentClassLoader");
       AGENT_CLASSLOADER = (ClassLoader) getAgentClassloaderMethod.invoke(null);
     } catch (Throwable t) {
-      log.error("Unable to locate agent classloader. Falling back to System Classloader");
-      AGENT_CLASSLOADER = ClassLoader.getSystemClassLoader();
+      AGENT_CLASSLOADER = DDAdvice.class.getClassLoader();
+      log.error(
+          "Failed to locate agent classloader. Falling back to "
+              + AGENT_CLASSLOADER
+              + " -- "
+              + t.getMessage());
     }
+    AGENT_CLASS_LOCATOR = ClassFileLocator.ForClassLoader.of(AGENT_CLASSLOADER);
   }
 
+  /** Return the classloader the datadog agent is running on. */
+  public static ClassLoader getAgentClassLoader() {
+    return AGENT_CLASSLOADER;
+  }
+
+  /**
+   * Create bytebuddy advice with default datadog settings.
+   *
+   * @return the bytebuddy advice
+   */
   public static AgentBuilder.Transformer.ForAdvice create() {
     return new DDAdvice()
-        .with(
-            new AgentBuilder.LocationStrategy.Simple(
-                ClassFileLocator.ForClassLoader.of(AGENT_CLASSLOADER)))
+        .with(new AgentBuilder.LocationStrategy.Simple(AGENT_CLASS_LOCATOR))
         .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler());
   }
 

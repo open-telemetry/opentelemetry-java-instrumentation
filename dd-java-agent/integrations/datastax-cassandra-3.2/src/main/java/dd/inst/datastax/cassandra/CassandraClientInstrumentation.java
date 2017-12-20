@@ -6,6 +6,7 @@ import static net.bytebuddy.matcher.ElementMatchers.*;
 import com.datastax.driver.core.Session;
 import com.google.auto.service.AutoService;
 import dd.trace.DDAdvice;
+import dd.trace.HelperInjector;
 import dd.trace.Instrumenter;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
@@ -35,6 +36,13 @@ public class CassandraClientInstrumentation implements Instrumenter {
                 "com.google.common.base.Function",
                 "com.google.common.util.concurrent.Futures",
                 "com.google.common.util.concurrent.ListenableFuture"))
+        .transform(
+            new HelperInjector(
+                "io.opentracing.contrib.cassandra.TracingSession",
+                "io.opentracing.contrib.cassandra.TracingSession$1",
+                "io.opentracing.contrib.cassandra.TracingSession$2",
+                "io.opentracing.contrib.cassandra.TracingCluster",
+                "io.opentracing.contrib.cassandra.TracingCluster$1"))
         .transform(
             DDAdvice.create()
                 .advice(

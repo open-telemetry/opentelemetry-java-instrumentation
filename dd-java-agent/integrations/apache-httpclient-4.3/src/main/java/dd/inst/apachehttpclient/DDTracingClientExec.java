@@ -1,4 +1,4 @@
-package com.datadoghq.agent.integration;
+package dd.inst.apachehttpclient;
 
 import io.opentracing.ActiveSpan;
 import io.opentracing.Tracer;

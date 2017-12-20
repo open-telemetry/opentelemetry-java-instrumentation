@@ -2,7 +2,6 @@ package dd.inst.mongo;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 
-import com.datadoghq.agent.integration.DDTracingCommandListener;
 import com.datadoghq.trace.DDSpan;
 import com.datadoghq.trace.DDTracer;
 import com.mongodb.ServerAddress;

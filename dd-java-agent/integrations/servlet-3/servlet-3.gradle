@@ -15,7 +15,9 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
-  compileOnly group: 'io.opentracing.contrib', name: 'opentracing-web-servlet-filter', version: '0.0.9'
+  compile('io.opentracing.contrib:opentracing-web-servlet-filter:0.0.9') {
+    transitive = false
+  }
 
   compile project(':dd-trace')
   compile project(':dd-java-agent:tooling')

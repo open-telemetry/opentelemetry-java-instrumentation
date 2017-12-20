@@ -25,10 +25,9 @@ versionScan {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3'
+  compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3'
 
   compile project(':dd-trace')
-  compile project(':dd-java-agent:integrations:helpers')
   compile project(':dd-java-agent:tooling')
 
   compile deps.bytebuddy

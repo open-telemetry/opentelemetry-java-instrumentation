@@ -1,6 +1,6 @@
 package dd.inst.jms2;
 
-import static com.datadoghq.agent.integration.JmsUtil.toResourceName;
+import static dd.inst.jms.util.JmsUtil.toResourceName;
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -9,9 +9,9 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import com.datadoghq.agent.integration.MessagePropertyTextMap;
 import com.datadoghq.trace.DDTags;
 import com.google.auto.service.AutoService;
+import dd.inst.jms.util.MessagePropertyTextMap;
 import dd.trace.DDAdvice;
 import dd.trace.Instrumenter;
 import io.opentracing.ActiveSpan;
@@ -35,6 +35,7 @@ public final class JMS2MessageProducerInstrumentation implements Instrumenter {
         .type(
             not(isInterface()).and(hasSuperType(named("javax.jms.MessageProducer"))),
             classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener"))
+        .transform(JMS2MessageConsumerInstrumentation.JMS2_HELPER_INJECTOR)
         .transform(
             DDAdvice.create()
                 .advice(

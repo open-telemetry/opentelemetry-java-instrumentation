@@ -1,13 +1,14 @@
 package dd.inst.okhttp3;
 
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
-import static dd.trace.ExceptionHandlers.defaultExceptionHandler;
 import static io.opentracing.contrib.okhttp3.OkHttpClientSpanDecorator.STANDARD_TAGS;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import dd.trace.DDAdvice;
+import dd.trace.HelperInjector;
 import dd.trace.Instrumenter;
 import io.opentracing.contrib.okhttp3.TracingInterceptor;
 import io.opentracing.util.GlobalTracer;
@@ -27,11 +28,23 @@ public class OkHttp3Instrumentation implements Instrumenter {
             named("okhttp3.OkHttpClient"),
             classLoaderHasClasses("okhttp3.Cookie", "okhttp3.ConnectionPool", "okhttp3.Headers"))
         .transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            new HelperInjector(
+                "io.opentracing.contrib.okhttp3.OkHttpClientSpanDecorator",
+                "io.opentracing.contrib.okhttp3.OkHttpClientSpanDecorator$1",
+                "io.opentracing.contrib.okhttp3.TagWrapper",
+                "io.opentracing.contrib.okhttp3.TracingInterceptor",
+                "io.opentracing.contrib.okhttp3.RequestBuilderInjectAdapter",
+                "io.opentracing.contrib.okhttp3.TracingCallFactory",
+                "io.opentracing.contrib.okhttp3.TracingCallFactory$NetworkInterceptor",
+                "io.opentracing.contrib.okhttp3.TracingCallFactory$1",
+                "io.opentracing.contrib.okhttp3.concurrent.TracingExecutorService",
+                "io.opentracing.contrib.okhttp3.concurrent.TracedCallable",
+                "io.opentracing.contrib.okhttp3.concurrent.TracedRunnable"))
+        .transform(
+            DDAdvice.create()
                 .advice(
                     isConstructor().and(takesArgument(0, named("okhttp3.OkHttpClient$Builder"))),
-                    OkHttp3Advice.class.getName())
-                .withExceptionHandler(defaultExceptionHandler()))
+                    OkHttp3Advice.class.getName()))
         .asDecorator();
   }
 

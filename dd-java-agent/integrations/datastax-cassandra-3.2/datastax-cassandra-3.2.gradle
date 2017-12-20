@@ -32,11 +32,12 @@ versionScan {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'
+  compileOnly group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'
+  compile('io.opentracing.contrib:opentracing-cassandra-driver:0.0.2') {
+    transitive = false
+  }
 
   compile project(':dd-trace')
-  // include helpers to pick up opentracing-cassandra-driver helper
-  compile project(':dd-java-agent:integrations:helpers')
   compile project(':dd-java-agent:tooling')
 
   compile deps.bytebuddy

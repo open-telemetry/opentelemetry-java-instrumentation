@@ -24,12 +24,14 @@ import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 
+import com.datadoghq.trace.DDTraceAnnotationsInfo;
+import com.datadoghq.trace.DDTraceInfo;
 import dd.trace.Instrumenter;
+import io.opentracing.Tracer;
+import io.opentracing.contrib.tracerresolver.TracerResolver;
+import io.opentracing.util.GlobalTracer;
 import java.lang.instrument.Instrumentation;
-import java.util.Collections;
 import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.WeakHashMap;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -48,14 +50,36 @@ public class TracingAgent {
   public static void premain(String agentArgs, final Instrumentation inst) throws Exception {
     log.debug("Using premain for loading {}", TracingAgent.class.getSimpleName());
     addByteBuddy(inst);
-    AgentRulesManager.initialize();
+    initializeGlobalTracer();
   }
 
   public static void agentmain(final String agentArgs, final Instrumentation inst)
       throws Exception {
     log.debug("Using agentmain for loading {}", TracingAgent.class.getSimpleName());
     addByteBuddy(inst);
-    AgentRulesManager.initialize();
+    initializeGlobalTracer();
+  }
+
+  private static synchronized void initializeGlobalTracer() {
+    // version classes log important info
+    // in static initializers
+    DDJavaAgentInfo.VERSION.toString();
+    DDTraceInfo.VERSION.toString();
+    DDTraceAnnotationsInfo.VERSION.toString();
+
+    if (!GlobalTracer.isRegistered()) {
+      // Try to obtain a tracer using the TracerResolver
+      final Tracer resolved = TracerResolver.resolveTracer();
+      if (resolved != null) {
+        try {
+          GlobalTracer.register(resolved);
+        } catch (final RuntimeException re) {
+          log.warn("Failed to register tracer '" + resolved + "'", re);
+        }
+      } else {
+        log.warn("Failed to resolve dd tracer");
+      }
+    }
   }
 
   public static void addByteBuddy(final Instrumentation inst) {
@@ -97,9 +121,6 @@ public class TracingAgent {
   @Slf4j
   static class Listener implements AgentBuilder.Listener {
 
-    private final Set<ClassLoader> initializedClassloaders =
-        Collections.newSetFromMap(new WeakHashMap<ClassLoader, Boolean>());
-
     @Override
     public void onError(
         final String typeName,
@@ -118,22 +139,6 @@ public class TracingAgent {
         final boolean loaded,
         final DynamicType dynamicType) {
       log.debug("Transformed {} -- {}", typeDescription, classLoader);
-
-      if (classLoader == null) {
-        return;
-      }
-      synchronized (classLoader) {
-        if (initializedClassloaders.contains(classLoader)) {
-          return;
-        }
-        initializedClassloaders.add(classLoader);
-
-        try {
-          InstrumentationRulesManager.registerClassLoad(classLoader);
-        } catch (final Throwable e) {
-          log.error("Failed ClassLoad Registration for target " + classLoader, e);
-        }
-      }
     }
 
     @Override
