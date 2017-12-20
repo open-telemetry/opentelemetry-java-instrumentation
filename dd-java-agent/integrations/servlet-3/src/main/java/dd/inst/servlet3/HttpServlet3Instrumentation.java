@@ -1,8 +1,11 @@
 package dd.inst.servlet3;
 
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -33,7 +36,7 @@ public final class HttpServlet3Instrumentation implements Instrumenter {
   public AgentBuilder instrument(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
-            named("javax.servlet.http.HttpServlet"),
+            not(isInterface()).and(hasSuperType(named("javax.servlet.http.HttpServlet"))),
             classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"))
         .transform(
             DDAdvice.create()
