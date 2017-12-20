@@ -4,6 +4,7 @@ import dd.trace.Instrumenter
 import io.opentracing.ActiveSpan
 import io.opentracing.Tracer
 import io.opentracing.util.GlobalTracer
+import java.lang.reflect.Method
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 import java.util.jar.Manifest
@@ -52,6 +53,17 @@ class TestUtils {
       return r.call()
     } finally {
       rootSpan.deactivate()
+    }
+  }
+
+  private static Method findLoadedClassMethod = ClassLoader.getDeclaredMethod("findLoadedClass", String)
+
+  static boolean isClassLoaded(String className, ClassLoader classLoader) {
+    try {
+      findLoadedClassMethod.setAccessible(true)
+      return null != findLoadedClassMethod.invoke(classLoader, className)
+    } finally {
+      findLoadedClassMethod.setAccessible(false)
     }
   }
 

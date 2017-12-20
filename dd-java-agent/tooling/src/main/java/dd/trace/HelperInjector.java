@@ -1,5 +1,6 @@
 package dd.trace;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,14 +31,15 @@ public class HelperInjector implements Transformer {
     this.helperClassNames = new HashSet<String>(Arrays.asList(helperClassNames));
   }
 
-  private synchronized Map<TypeDescription, byte[]> getHelperMap() throws ClassNotFoundException {
+  private synchronized Map<TypeDescription, byte[]> getHelperMap() throws IOException {
     if (helperMap == null) {
       helperMap = new HashMap<TypeDescription, byte[]>(helperClassNames.size());
       for (String helperName : helperClassNames) {
-        Class<?> helper = DDAdvice.getAgentClassLoader().loadClass(helperName);
-        helperMap.put(
-            new TypeDescription.ForLoadedType(helper),
-            ClassFileLocator.ForClassLoader.read(helper).resolve());
+        final ClassFileLocator locator =
+            ClassFileLocator.ForClassLoader.of(DDAdvice.getAgentClassLoader());
+        final byte[] classBytes = locator.locate(helperName).resolve();
+        final TypeDescription typeDesc = new TypeDescription.Latent(helperName, 0, null);
+        helperMap.put(typeDesc, classBytes);
       }
     }
     return helperMap;
@@ -54,9 +56,9 @@ public class HelperInjector implements Transformer {
         if (!injectedClassLoaders.contains(classLoader)) {
           try {
             new ClassInjector.UsingReflection(classLoader).inject(getHelperMap());
-          } catch (ClassNotFoundException cnfe) {
-            log.error("Failed to inject helper classes into " + classLoader, cnfe);
-            throw new RuntimeException(cnfe);
+          } catch (Exception e) {
+            log.error("Failed to inject helper classes into " + classLoader, e);
+            throw new RuntimeException(e);
           }
           injectedClassLoaders.add(classLoader);
         }
