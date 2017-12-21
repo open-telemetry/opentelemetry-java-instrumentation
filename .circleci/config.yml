@@ -30,24 +30,16 @@ jobs:
             - ~/.gradle
           key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
 
+      - run:
+          name: Save Artifacts to (project-root)/build
+          when: always
+          command: .circleci/save_artifacts.sh
+
       - store_test_results:
-          path: dd-java-agent/build/test-results
-      - store_test_results:
-          path: dd-java-agent-ittests/build/test-results
-      - store_test_results:
-          path: dd-trace/build/test-results
+          path: build/test-results
 
       - store_artifacts:
-          path: dd-java-agent/build/reports
-      - store_artifacts:
-          path: dd-java-agent-ittests/build/reports
-      - store_artifacts:
-          path: dd-trace/build/reports
-
-      - store_artifacts:
-          path: dd-java-agent/build/libs
-      - store_artifacts:
-          path: dd-trace/build/libs
+          path: build
 
       - run:
           name: Decode Signing Key
