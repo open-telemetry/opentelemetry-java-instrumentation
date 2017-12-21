@@ -13,6 +13,7 @@ ext {
     groovy     : groovyVer,
     junit      : "4.12",
     logback    : "1.2.3",
+    bytebuddy  : "1.7.6"
   ]
 
   deps = [
@@ -32,7 +33,7 @@ ext {
       dependencies.create(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version.jackson),
       dependencies.create(group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: version.jackson),
     ],
-    bytebuddy  : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: '1.7.6'),
+    bytebuddy  : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: "${version.bytebuddy}"),
     autoservice: [
       dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'),
       dependencies.create(group: 'com.google.auto', name: 'auto-common', version: '0.3'),
@@ -43,6 +44,7 @@ ext {
     spock      : dependencies.create("org.spockframework:spock-core:${version.spock}", {
       exclude group: "org.codehaus.groovy", module: "groovy-all"
     }),
+    bytebuddyagent  : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: "${version.bytebuddy}"),
     groovy     : "org.codehaus.groovy:groovy-all:${version.groovy}",
     junit      : "junit:junit:${version.junit}",
     testLogging: [
