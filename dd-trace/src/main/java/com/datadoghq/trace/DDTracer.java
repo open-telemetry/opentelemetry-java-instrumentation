@@ -3,9 +3,10 @@ package com.datadoghq.trace;
 import com.datadoghq.trace.integration.AbstractDecorator;
 import com.datadoghq.trace.propagation.Codec;
 import com.datadoghq.trace.propagation.HTTPCodec;
+import com.datadoghq.trace.resolver.DDDecoratorsFactory;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.Sampler;
-import com.datadoghq.trace.writer.LoggingWriter;
+import com.datadoghq.trace.writer.DDAgentWriter;
 import com.datadoghq.trace.writer.Writer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.opentracing.ActiveSpan;
@@ -19,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Queue;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
@@ -28,16 +30,16 @@ import lombok.extern.slf4j.Slf4j;
 public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentracing.Tracer {
 
   public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
-  public static final Writer UNASSIGNED_WRITER = new LoggingWriter();
+  public static final Writer UNASSIGNED_WRITER = new DDAgentWriter();
   public static final Sampler UNASSIGNED_SAMPLER = new AllSampler();
 
   /** Writer is an charge of reporting traces and spans to the desired endpoint */
-  private final Writer writer;
+  final Writer writer;
   /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
-  private final Sampler sampler;
+  final Sampler sampler;
 
   /** Default service name if none provided on the trace or span */
-  private final String defaultServiceName;
+  final String serviceName;
 
   /** Span context decorators */
   private final Map<String, List<AbstractDecorator>> spanContextDecorators = new HashMap<>();
@@ -45,9 +47,39 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
   private final CodecRegistry registry;
   private final Map<String, Service> services = new HashMap<>();
 
-  /** Default constructor, trace/spans are logged, no trace/span dropped */
+  /** By default, report to local agent and collect all traces. */
   public DDTracer() {
-    this(UNASSIGNED_WRITER);
+    this(new DDTraceConfig());
+  }
+
+  public DDTracer(final String serviceName) {
+    this(new DDTraceConfig(serviceName));
+  }
+
+  public DDTracer(final Properties config) {
+    this(
+        config.getProperty(DDTraceConfig.SERVICE_NAME),
+        Writer.Builder.forConfig(config),
+        Sampler.Builder.forConfig(config));
+    log.debug("Using config: {}", config);
+
+    // Create decorators from resource files
+    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createFromResources();
+    for (final AbstractDecorator decorator : decorators) {
+      log.debug("Loading decorator: {}", decorator.getClass().getSimpleName());
+      addDecorator(decorator);
+    }
+  }
+
+  public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
+    this.serviceName = serviceName;
+    this.writer = writer;
+    this.writer.start();
+    this.sampler = sampler;
+    registry = new CodecRegistry();
+    registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
+    registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec());
+    log.info("New instance: {}", this);
   }
 
   public DDTracer(final Writer writer) {
@@ -56,21 +88,6 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
 
   public DDTracer(final Writer writer, final Sampler sampler) {
     this(UNASSIGNED_DEFAULT_SERVICE_NAME, writer, sampler);
-  }
-
-  public DDTracer(final String defaultServiceName, final Writer writer, final Sampler sampler) {
-    this.defaultServiceName = defaultServiceName;
-    this.writer = writer;
-    this.writer.start();
-    this.sampler = sampler;
-    registry = new CodecRegistry();
-    registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
-    registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec());
-    log.debug(
-        "New tracer instance, default-service={}, writer={}, sampler={}",
-        defaultServiceName,
-        writer.getClass().getSimpleName(),
-        sampler.getClass().getSimpleName());
   }
 
   /**
@@ -147,7 +164,15 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
 
   @Override
   public String toString() {
-    return "DDTracer{" + "writer=" + writer + ", sampler=" + sampler + '}';
+    return "DDTracer-"
+        + Integer.toHexString(hashCode())
+        + "{ service-name="
+        + serviceName
+        + ", writer="
+        + writer
+        + ", sampler="
+        + sampler
+        + '}';
   }
 
   /**
@@ -368,7 +393,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
       }
 
       if (serviceName == null) {
-        serviceName = defaultServiceName;
+        serviceName = DDTracer.this.serviceName;
       }
 
       final String operationName =

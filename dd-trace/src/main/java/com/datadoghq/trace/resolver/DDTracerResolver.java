@@ -29,11 +29,16 @@ public class DDTracerResolver extends TracerResolver {
   protected Tracer resolve() {
     log.info("Creating the Datadog Tracer from the resolver");
 
-    // Find a resource file named dd-trace.yml
-    DDTracer tracer = null;
-    // Create tracer from resource files
-    tracer = DDTracerFactory.createFromConfigurationFile();
+    final TracerConfig tracerConfig =
+        FactoryUtils.loadConfigFromFilePropertyOrResource(
+            DDTracerFactory.SYSTEM_PROPERTY_CONFIG_PATH,
+            DDTracerFactory.CONFIG_PATH,
+            TracerConfig.class);
 
-    return tracer;
+    if (tracerConfig != null) {
+      return DDTracerFactory.createFromConfigurationFile();
+    } else {
+      return new DDTracer();
+    }
   }
 }

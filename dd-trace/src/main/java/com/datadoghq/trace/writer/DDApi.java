@@ -126,4 +126,9 @@ public class DDApi {
     httpCon.setRequestProperty("Datadog-Meta-Tracer-Version", DDTraceInfo.VERSION);
     return httpCon;
   }
+
+  @Override
+  public String toString() {
+    return "DDApi { tracesEndpoint=" + tracesEndpoint + " }";
+  }
 }

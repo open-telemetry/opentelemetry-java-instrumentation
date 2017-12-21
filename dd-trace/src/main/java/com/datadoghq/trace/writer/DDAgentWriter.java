@@ -140,6 +140,11 @@ public class DDAgentWriter implements Writer {
     }
   }
 
+  @Override
+  public String toString() {
+    return "DDAgentWriter { api=" + api + " }";
+  }
+
   /** Infinite tasks blocking until some spans come in the blocking queue. */
   class TracesSendingTask implements Runnable {
 
