@@ -63,7 +63,7 @@ test {
 }
 
 task expensiveTest(type: Test) {
-  jvmArgs "-Ddd.trace.configurationFile=${project.buildDir}/resources/test/dd-trace.yaml"
+  jvmArgs "-Ddd.writer.type=ListWriter", "-Ddd.service.name=java-app"
   jvmArgs "-Ddd.slf4j.simpleLogger.defaultLogLevel=debug"
   jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
 
