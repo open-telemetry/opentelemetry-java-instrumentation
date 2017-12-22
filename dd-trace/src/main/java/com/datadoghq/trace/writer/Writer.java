@@ -1,12 +1,17 @@
 package com.datadoghq.trace.writer;
 
 import com.datadoghq.trace.DDBaseSpan;
+import com.datadoghq.trace.DDTraceConfig;
+import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.Service;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /** A writer is responsible to send collected spans to some place */
 public interface Writer {
+  static final String DD_AGENT_WRITER_TYPE = DDAgentWriter.class.getSimpleName();
+  static final String LOGGING_WRITER_TYPE = LoggingWriter.class.getSimpleName();
 
   /**
    * Write a trace represented by the entire list of all the finished spans
@@ -30,4 +35,31 @@ public interface Writer {
    * connections and tasks
    */
   void close();
+
+  final class Builder {
+    public static Writer forConfig(final Properties config) {
+      final Writer writer;
+
+      if (config != null) {
+        final String configuredType = config.getProperty(DDTraceConfig.WRITER_TYPE);
+        if (DD_AGENT_WRITER_TYPE.equals(configuredType)) {
+          writer =
+              new DDAgentWriter(
+                  new DDApi(
+                      config.getProperty(DDTraceConfig.AGENT_HOST),
+                      Integer.parseInt(config.getProperty(DDTraceConfig.AGENT_PORT))));
+        } else if (LOGGING_WRITER_TYPE.equals(configuredType)) {
+          writer = new LoggingWriter();
+        } else {
+          writer = DDTracer.UNASSIGNED_WRITER;
+        }
+      } else {
+        writer = DDTracer.UNASSIGNED_WRITER;
+      }
+
+      return writer;
+    }
+
+    private Builder() {}
+  }
 }

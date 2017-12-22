@@ -38,7 +38,7 @@ public class CassandraIntegrationTest {
     final Cluster cluster = EmbeddedCassandraServerHelper.getCluster();
     final Session session = cluster.newSession();
     assertThat(session.getClass().getName()).endsWith("contrib.cassandra.TracingSession");
-    final int origSize = writer.getList().size();
+    final int origSize = writer.size();
 
     session.execute("DROP KEYSPACE IF EXISTS sync_test");
     session.execute(
@@ -47,7 +47,7 @@ public class CassandraIntegrationTest {
     session.execute("INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')");
     session.execute("SELECT * FROM sync_test.users where name = 'alice' ALLOW FILTERING");
 
-    assertThat(writer.getList().size()).isEqualTo(origSize + 5);
+    assertThat(writer.size()).isEqualTo(origSize + 5);
     final DDBaseSpan<?> selectTrace = writer.get(writer.size() - 1).get(0);
 
     assertThat(selectTrace.getServiceName()).isEqualTo(DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME);
@@ -70,7 +70,7 @@ public class CassandraIntegrationTest {
     final Cluster cluster = EmbeddedCassandraServerHelper.getCluster();
     final Session session = cluster.connectAsync().get();
     assertThat(session.getClass().getName()).endsWith("contrib.cassandra.TracingSession");
-    final int origSize = writer.getList().size();
+    final int origSize = writer.size();
 
     session.executeAsync("DROP KEYSPACE IF EXISTS async_test").get();
     session
@@ -84,7 +84,7 @@ public class CassandraIntegrationTest {
         .get();
 
     // traces are finished on another thread, so we have some waiting logic
-    for (int timeout = 0; writer.getList().size() < origSize + 5; timeout++) {
+    for (int timeout = 0; writer.size() < origSize + 5; timeout++) {
       if (timeout >= 10000) {
         Assert.fail("Cassandra async test timeout.");
       }

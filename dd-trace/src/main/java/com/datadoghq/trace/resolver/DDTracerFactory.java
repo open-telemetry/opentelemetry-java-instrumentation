@@ -33,7 +33,7 @@ public class DDTracerFactory {
    * @param config
    * @return the corresponding tracer
    */
-  public static DDTracer create(final TracerConfig config) {
+  static DDTracer create(final TracerConfig config) {
     final String defaultServiceName =
         config.getDefaultServiceName() != null
             ? config.getDefaultServiceName()
@@ -88,10 +88,14 @@ public class DDTracerFactory {
     return new DDTracer(defaultServiceName, writer, sampler);
   }
 
+  @Deprecated
   public static DDTracer createFromConfigurationFile() {
     final TracerConfig tracerConfig =
         FactoryUtils.loadConfigFromFilePropertyOrResource(
             SYSTEM_PROPERTY_CONFIG_PATH, CONFIG_PATH, TracerConfig.class);
+
+    log.warn("DDTracerFactory is deprecated and will be removed in the next release.");
+    log.warn("Use the constructor on DDTrace directly and env vars/sys props for config.");
 
     DDTracer tracer = null;
     log.trace("Tracer configuration: \n{}", tracerConfig);

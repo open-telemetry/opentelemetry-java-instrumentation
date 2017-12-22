@@ -171,8 +171,7 @@ class VersionScanPlugin implements Plugin<Project> {
           if (!errors.isEmpty()) {
             throw new GradleException("Version scan verification failed.\n" +
               "Errors listed above are likely the result of a new module " +
-              "being published to Maven, not a code change in this repo.\n" +
-              "This does mean a fix should be made though to 'dd-trace-supported-framework.yaml'.")
+              "being published to Maven, not a code change in this repo.")
           }
         }
 

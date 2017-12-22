@@ -9,6 +9,8 @@ apply from: "${rootDir}/gradle/jacoco.gradle"
 version = 'demo'
 description = 'dropwizard-mongo-client'
 mainClassName = 'com.datadoghq.example.dropwizard.BookApplication'
+applicationDefaultJvmArgs = ["-Ddd.service.name=dropwizard-example"]
+
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8

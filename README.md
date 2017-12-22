@@ -35,26 +35,9 @@ Download the latest Datadog Java Agent:
 wget -O dd-java-agent.jar 'https://search.maven.org/remote_content?g=com.datadoghq&a=dd-java-agent&v=LATEST'
 ```
 
-Then create a file `dd-trace.yaml` anywhere in your application's classpath (or provide the file's path via `-Ddd.trace.configurationFile` when starting the application):
+Then configure your application using either environment variables or system properties (on the command line via `-D`).  See the [config](#configuration) section for details.
 
-```yaml
-# Main service name for the app
-defaultServiceName: my-java-app
-
-writer:
-  type: DDAgentWriter # send traces to Datadog Trace Agent; only other option is LoggingWriter
-  host: localhost     # host/IP address where Datadog Trace Agent listens
-  port: 8126          # port where Datadog Trace Agent listens
-
-sampler:
-  type: AllSampler # Collect 100% of traces; only other option is RateSample
-# rate: 0.5        # if using type: RateSample, uncomment to collect only 50% of traces
-
-# Skip traces whose root span tag values matches some these regexps; useful if you want to skip health checks traces from your service stats
-# skipTagsPatterns: {"http.url": ".*/demo/add.*"}
-```
-
-**Note:** this configuration file is also required for [Manual Instrumentation](#manual-instrumentation) with the Datadog Tracer.
+**Note:** configuration is also required for [Manual Instrumentation](#manual-instrumentation) with the Datadog Tracer.
 
 Finally, add the following JVM argument when starting your application—in your IDE, your Maven or gradle application script, or your `java -jar` command:
 
@@ -63,6 +46,17 @@ Finally, add the following JVM argument when starting your application—in your
 ```
 
 The Java Agent—once passed to your application—automatically traces requests to the frameworks, application servers, and databases shown below. It does this by using various libraries from [opentracing-contrib](https://github.com/opentracing-contrib). In most cases you don't need to install or configure anything; traces will automatically show up in your Datadog dashboards.
+
+#### Configuration
+
+| Config        | System Property  | Environment Variable |  Default           |
+| ------------- | ---------------- | -------------------- | ------------------ |
+| service.name  | dd.service.name  | DD_SERVICE_NAME      | `unnamed-java-app` |
+| writer.type   | dd.writer.type   | DD_WRITER_TYPE       | `DDAgentWriter`    |
+| agent.host    | dd.agent.host    | DD_AGENT_HOST        | `localhost`        |
+| agent.port    | dd.agent.port    | DD_AGENT_PORT        | `8126`             |
+| sampler.type  | dd.sampler.type  | DD_SAMPLER_TYPE      | `AllSampler`       |
+| sampler.rate  | dd.sampler.rate  | DD_SAMPLER_RATE      | `1.0`              |
 
 #### Application Servers
 
@@ -91,17 +85,6 @@ Also, frameworks like Spring Boot and Dropwizard inherently work because they us
 | [MongoDB](https://github.com/opentracing-contrib/java-mongo-driver) | 3.x | Intercepts all the calls from the MongoDB client |
 | [Cassandra](https://github.com/opentracing-contrib/java-cassandra-driver) | 3.2.x | Intercepts all the calls from the Cassandra client |
 
-To disable tracing for any of these libraries, list them in `disabledInstrumentations` within `dd-trace.yaml`:
-
-```yaml
-...
-
-# Disable tracing on these
-disabledInstrumentations: ["opentracing-apache-httpclient", "opentracing-mongo-driver", "opentracing-web-servlet-filter"]
-```
-
-See [this YAML file](dd-java-agent/src/main/resources/dd-trace-supported-framework.yaml) for the proper names of all supported libraries (i.e. the names as you must list them in `disabledInstrumentations`).
-
 ### The `@Trace` Annotation
 
 The Java Agent lets you add a `@Trace` annotation to any method to measure its execution time. Setup the [Java Agent](#java-agent-setup) first if you haven't done so.
@@ -122,12 +105,6 @@ For gradle, add:
 
 ```gradle
 compile group: 'com.datadoghq', name: 'dd-trace-annotations', version: {version}
-```
-
-Then, in `dd-trace.yaml`, list any applications where you want to use `@Trace`:
-
-```yaml
-enableCustomAnnotationTracingOver: ["com.example.myproject"]`.
 ```
 
 The Java Agent lets you use `@Trace` not just for `com.example.myproject`, but also for any application whose name _begins_ like that, e.g. `com.example.myproject.foobar`. If you're tempted to list something like `["com", "io"]` to avoid having to fuss with this configuration as you add new projects, be careful; providing `@Trace`-ability to too many applications could hurt your package's build time.
@@ -193,6 +170,8 @@ compile group: 'io.opentracing', name: 'opentracing-util', version: "0.30.0"
 compile group: 'com.datadoghq', name: 'dd-trace', version: "${dd-trace-java.version}"
 ```
 
+Configure your application using environment variables or system properties as discussed in the [config](#configuration) section.
+
 #### Examples
 
 Rather than referencing classes directly from `dd-trace` (other than registering `DDTracer`), we strongly suggest using the [OpenTracing API](https://github.com/opentracing/opentracing-java).
@@ -204,7 +183,7 @@ Let's look at a simple example.
 class InstrumentedClass {
 
     void method0() {
-        // 1. Make sure dd-trace.yaml is in your resources directory
+        // 1. Configure your application using environment variables or system properties
         // 2. If using the Java Agent (-javaagent;/path/to/agent.jar), do not instantiate the GlobalTracer; the Agent instantiates it for you
         Tracer tracer = io.opentracing.util.GlobalTracer.get();
 
@@ -260,8 +239,6 @@ public class Application {
     }
 }
 ```
-
-`DDTracerFactory` looks for `dd-trace.yaml` in the classpath.
 
 ## Further Reading
 

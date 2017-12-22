@@ -34,7 +34,6 @@ class ActiveSpanContinuationTest extends Specification {
         def activeSpan = capture.activate()
         phaser.arriveAndAwaitAdvance()
         activeSpan.deactivate()
-        phaser.arriveAndDeregister()
       }).start()
     }
 
@@ -48,9 +47,9 @@ class ActiveSpanContinuationTest extends Specification {
 
     when:
     phaser.arriveAndAwaitAdvance() //allow threads to deactivate their span
-    phaser.arriveAndAwaitAdvance() // wait till all threads have deactivated
 
     then:
+    traceCollector.waitForTraces(1)
     traceCollector.size() == 1
     traceCollector.firstTrace().size() == 1
 
@@ -74,7 +73,6 @@ class ActiveSpanContinuationTest extends Specification {
         phaser.arriveAndAwaitAdvance()
         childSpan.finish()
         activeSpan.deactivate()
-        phaser.arriveAndDeregister()
       }).start()
     }
 
@@ -91,11 +89,9 @@ class ActiveSpanContinuationTest extends Specification {
 
     when:
     phaser.arriveAndAwaitAdvance() //allow threads to deactivate their span
-    phaser.arriveAndAwaitAdvance() // wait till all threads have deactivated
-
-    traceCollector.size()
 
     then:
+    traceCollector.waitForTraces(1)
     continuationCount.get() == 0
     traceCollector.size() == 1
     def trace = traceCollector.remove(0)
@@ -147,9 +143,8 @@ class ActiveSpanContinuationTest extends Specification {
     phaser.arriveAndAwaitAdvance() //allow threads to deactivate their span
     phaser.arriveAndAwaitAdvance() // wait till all threads have deactivated
 
-    traceCollector.size()
-
     then:
+    traceCollector.waitForTraces(1)
     continuationCount.get() == 0
     traceCollector.size() == 1
     def trace = traceCollector.remove(0)

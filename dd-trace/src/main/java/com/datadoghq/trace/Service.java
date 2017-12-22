@@ -33,16 +33,14 @@ public class Service {
 
   @Override
   public String toString() {
-    return "Service{"
+    return "Service { "
         + "name='"
         + name
-        + '\''
-        + ", appName='"
+        + "\', appName='"
         + appName
-        + '\''
-        + ", appType="
+        + "', appType="
         + appType
-        + '}';
+        + " }";
   }
 
   public enum AppType {

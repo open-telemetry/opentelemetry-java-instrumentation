@@ -17,6 +17,10 @@ public class RateSampler extends AbstractSampler {
   /** The sample rate used */
   private final double sampleRate;
 
+  public RateSampler(final String sampleRate) {
+    this(sampleRate == null ? 1 : Double.valueOf(sampleRate));
+  }
+
   /**
    * Build an instance of the sampler. The Sample rate is fixed for each instance.
    *
@@ -44,5 +48,10 @@ public class RateSampler extends AbstractSampler {
 
   public double getSampleRate() {
     return this.sampleRate;
+  }
+
+  @Override
+  public String toString() {
+    return "RateSampler { sampleRate=" + sampleRate + " }";
   }
 }

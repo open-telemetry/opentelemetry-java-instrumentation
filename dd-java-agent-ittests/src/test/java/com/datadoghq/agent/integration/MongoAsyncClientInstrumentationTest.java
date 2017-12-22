@@ -99,7 +99,7 @@ public class MongoAsyncClientInstrumentationTest {
 
     // the final trace may still be reporting to the ListWriter,
     // but we're only testing the first trace.
-    Assert.assertTrue(writer.getList().size() >= 1);
+    Assert.assertTrue(writer.size() >= 1);
 
     final String createCollectionQuery =
         "{ \"create\" : \"asyncCollection\", \"autoIndexId\" : \"?\", \"capped\" : \"?\" }";

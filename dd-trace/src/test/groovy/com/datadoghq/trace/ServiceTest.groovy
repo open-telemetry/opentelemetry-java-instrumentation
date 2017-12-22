@@ -19,6 +19,7 @@ class ServiceTest extends Specification {
     service.getName() == "api-intake"
     service.getAppName() == "kafka"
     service.getAppType() == Service.AppType.CUSTOM
+    service.toString() == "Service { name='api-intake', appName='kafka', appType=custom }"
 
   }
 

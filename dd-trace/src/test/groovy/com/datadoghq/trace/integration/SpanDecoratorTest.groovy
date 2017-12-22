@@ -3,6 +3,7 @@ package com.datadoghq.trace.integration
 import com.datadoghq.trace.DDSpanContext
 import com.datadoghq.trace.DDTracer
 import com.datadoghq.trace.SpanFactory
+import com.datadoghq.trace.writer.LoggingWriter
 import io.opentracing.tag.StringTag
 import io.opentracing.tag.Tags
 import spock.lang.Specification
@@ -11,7 +12,7 @@ class SpanDecoratorTest extends Specification {
 
   def "adding span personalisation using Decorators"() {
     setup:
-    def tracer = new DDTracer()
+    def tracer = new DDTracer(new LoggingWriter())
     def decorator = new AbstractDecorator() {
 
       @Override
@@ -32,12 +33,15 @@ class SpanDecoratorTest extends Specification {
     expect:
     span.getTags().containsKey("newFoo")
     span.getTags().get("newFoo") == "newBar"
+
+    cleanup:
+    span.finish()
   }
 
   def "override operation with OperationDecorator"() {
 
     setup:
-    def tracer = new DDTracer()
+    def tracer = new DDTracer(new LoggingWriter())
     def span = SpanFactory.newSpanOf(tracer)
     tracer.addDecorator(new OperationDecorator())
 
@@ -47,17 +51,18 @@ class SpanDecoratorTest extends Specification {
     then:
     span.getOperationName() == operationName
 
+    cleanup:
+    span.finish()
+
     where:
     component << OperationDecorator.MAPPINGS.keySet()
     operationName << OperationDecorator.MAPPINGS.values()
-
-
   }
 
   def "override operation with DBTypeDecorator"() {
 
     setup:
-    def tracer = new DDTracer()
+    def tracer = new DDTracer(new LoggingWriter())
     def span = SpanFactory.newSpanOf(tracer)
     tracer.addDecorator(new DBTypeDecorator())
 
@@ -76,16 +81,16 @@ class SpanDecoratorTest extends Specification {
     span.getOperationName() == "mongo.query"
     span.context().getSpanType() == "mongodb"
 
+    cleanup:
+    span.finish()
 
     where:
     type = "foo"
-
-
   }
 
   def "DBStatementAsResource should not interact on Mongo queries"() {
     setup:
-    def tracer = new DDTracer()
+    def tracer = new DDTracer(new LoggingWriter())
     def span = SpanFactory.newSpanOf(tracer)
     tracer.addDecorator(new DBStatementAsResourceName())
 
@@ -106,13 +111,16 @@ class SpanDecoratorTest extends Specification {
     then:
     span.getResourceName() == something
 
+    cleanup:
+    span.finish()
+
     where:
     something = "fake-query"
   }
 
   def "set 404 as a resource on a 404 issue"() {
     setup:
-    def tracer = new DDTracer()
+    def tracer = new DDTracer(new LoggingWriter())
     def span = SpanFactory.newSpanOf(tracer)
     tracer.addDecorator(new Status404Decorator())
 
@@ -122,5 +130,7 @@ class SpanDecoratorTest extends Specification {
     then:
     span.getResourceName() == "404"
 
+    cleanup:
+    span.finish()
   }
 }
