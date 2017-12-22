@@ -22,9 +22,9 @@ bootRepackage {
 
 bootRun {
   if (project.hasProperty('javaagent')) {
-    jvmArgs = ["-javaagent:$javaagent"]
+    jvmArgs = ["-javaagent:$javaagent", "-Ddd.service.name=spring-boot-jdbc"]
   } else {
-    jvmArgs = ["-javaagent:${project(':dd-java-agent').tasks.shadowJar.outputs.files.getFiles().iterator().next()}"]
+    jvmArgs = ["-javaagent:${project(':dd-java-agent').tasks.shadowJar.outputs.files.getFiles().iterator().next()}", "-Ddd.service.name=spring-boot-jdbc"]
   }
 }
 

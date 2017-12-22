@@ -1,7 +1,0 @@
-defaultServiceName: java-app
-writer:
-  type: DDAgentWriter
-  host: localhost
-  port: 10000
-sampler:
-  type: AllSampler

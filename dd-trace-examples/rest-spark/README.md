@@ -33,7 +33,7 @@ A valid ``DD_API_KEY`` is required to post collected traces to the Datadog backe
 
 Launch the application using the run wrapper you've built during the ``installDist`` step:
 ```bash
-JAVA_OPTS=-javaagent:../../dd-java-agent/build/libs/dd-java-agent-{version}.jar build/install/rest-spark/bin/rest-spark
+JAVA_OPTS=-javaagent:../../dd-java-agent/build/libs/dd-java-agent-{version}.jar -Ddd.service.name=rest-spark build/install/rest-spark/bin/rest-spark
 ```
 
 ``0.2.0-SNAPSHOT`` is an example of what ``{version}`` looks like.

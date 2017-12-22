@@ -9,6 +9,7 @@ apply from: "${rootDir}/gradle/jacoco.gradle"
 version = 'demo'
 description = 'rest-spark'
 mainClassName = 'com.datadoghq.example.restspark.SparkApplication'
+applicationDefaultJvmArgs = ["-Ddd.service.name=rest-spark"]
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8

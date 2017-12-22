@@ -36,7 +36,7 @@ stop it.*
 
 Or as an executable jar:
 ```bash
-java -javaagent:../../dd-java-agent/build/libs/dd-java-agent-{version}.jar -jar build/libs/spring-boot-jdbc-demo.jar
+java -javaagent:../../dd-java-agent/build/libs/dd-java-agent-{version}.jar -Ddd.service.name=spring-boot-jdbc -jar build/libs/spring-boot-jdbc-demo.jar
 ```
 
 ### Generate traces
