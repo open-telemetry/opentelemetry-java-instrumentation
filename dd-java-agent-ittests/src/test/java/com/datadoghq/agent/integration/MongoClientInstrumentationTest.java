@@ -96,7 +96,7 @@ public class MongoClientInstrumentationTest {
 
     Assert.assertEquals(1, collection.count());
 
-    Assert.assertEquals(3, writer.getList().size());
+    Assert.assertEquals(3, writer.size());
 
     final String createCollectionQuery =
         "{ \"create\" : \"testCollection\", \"autoIndexId\" : \"?\", \"capped\" : \"?\" }";

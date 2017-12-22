@@ -12,10 +12,6 @@ import java.util.concurrent.CountDownLatch;
 public class ListWriter extends CopyOnWriteArrayList<List<DDBaseSpan<?>>> implements Writer {
   private final List<CountDownLatch> latches = new LinkedList<>();
 
-  public List<List<DDBaseSpan<?>>> getList() {
-    return this;
-  }
-
   public List<DDBaseSpan<?>> firstTrace() {
     return get(0);
   }
