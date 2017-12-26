@@ -12,6 +12,7 @@ import spock.lang.Unroll
 import javax.jms.Connection
 import javax.jms.Session
 import javax.jms.TextMessage
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
 class JMS1Test extends Specification {
@@ -162,16 +163,18 @@ class JMS1Test extends Specification {
   @Unroll
   def "sending to a MessageListener on #resourceName generates a span"() {
     setup:
+    def lock = new CountDownLatch(1)
     def messageRef = new AtomicReference<TextMessage>()
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)
     consumer.setMessageListener { message ->
-      Thread.sleep(5) // Slow things down a bit.
+      lock.await() // ensure the producer trace is reported first.
       messageRef.set(message)
     }
 
     def message = session.createTextMessage("a message")
     producer.send(message)
+    lock.countDown()
     writer.waitForTraces(2)
 
     expect:
