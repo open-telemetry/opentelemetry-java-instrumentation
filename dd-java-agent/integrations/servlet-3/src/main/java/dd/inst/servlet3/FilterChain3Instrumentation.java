@@ -3,7 +3,7 @@ package dd.inst.servlet3;
 import static dd.trace.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isProtected;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -24,20 +24,22 @@ import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class HttpServlet3Instrumentation implements Instrumenter {
+public final class FilterChain3Instrumentation implements Instrumenter {
   public static final String SERVLET_OPERATION_NAME = "servlet.request";
 
   @Override
   public AgentBuilder instrument(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
-            not(isInterface()).and(hasSuperType(named("javax.servlet.http.HttpServlet"))),
+            not(isInterface()).and(hasSuperType(named("javax.servlet.FilterChain"))),
             classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"))
         .transform(
             new HelperInjector(
@@ -50,10 +52,10 @@ public final class HttpServlet3Instrumentation implements Instrumenter {
         .transform(
             DDAdvice.create()
                 .advice(
-                    named("service")
-                        .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
-                        .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
-                        .and(isProtected()),
+                    named("doFilter")
+                        .and(takesArgument(0, named("javax.servlet.ServletRequest")))
+                        .and(takesArgument(1, named("javax.servlet.ServletResponse")))
+                        .and(isPublic()),
                     HttpServlet3Advice.class.getName()))
         .asDecorator();
   }
@@ -61,15 +63,17 @@ public final class HttpServlet3Instrumentation implements Instrumenter {
   public static class HttpServlet3Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static ActiveSpan startSpan(@Advice.Argument(0) final HttpServletRequest req) {
-      if (GlobalTracer.get().activeSpan() != null) {
-        // Tracing might already be applied by the FilterChain.  If so ignore this.
+    public static ActiveSpan startSpan(@Advice.Argument(0) final ServletRequest req) {
+      if (GlobalTracer.get().activeSpan() != null || !(req instanceof HttpServletRequest)) {
+        // doFilter is called by each filter. We only want to time outer-most.
         return null;
       }
 
       final SpanContext extractedContext =
           GlobalTracer.get()
-              .extract(Format.Builtin.HTTP_HEADERS, new HttpServletRequestExtractAdapter(req));
+              .extract(
+                  Format.Builtin.HTTP_HEADERS,
+                  new HttpServletRequestExtractAdapter((HttpServletRequest) req));
 
       final ActiveSpan span =
           GlobalTracer.get()
@@ -78,28 +82,33 @@ public final class HttpServlet3Instrumentation implements Instrumenter {
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .startActive();
 
-      ServletFilterSpanDecorator.STANDARD_TAGS.onRequest(req, span);
+      ServletFilterSpanDecorator.STANDARD_TAGS.onRequest((HttpServletRequest) req, span);
       return span;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Argument(0) final HttpServletRequest req,
-        @Advice.Argument(1) final HttpServletResponse resp,
+        @Advice.Argument(0) final ServletRequest request,
+        @Advice.Argument(1) final ServletResponse response,
         @Advice.Enter final ActiveSpan span,
         @Advice.Thrown final Throwable throwable) {
 
       if (span != null) {
-        if (throwable != null) {
-          ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, throwable, span);
-          span.log(Collections.singletonMap("error.object", throwable));
-        } else if (req.isAsyncStarted()) {
-          final ActiveSpan.Continuation cont = span.capture();
-          final AtomicBoolean activated = new AtomicBoolean(false);
-          // what if async is already finished? This would not be called
-          req.getAsyncContext().addListener(new TagSettingAsyncListener(activated, cont, span));
-        } else {
-          ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(req, resp, span);
+        if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
+          final HttpServletRequest req = (HttpServletRequest) request;
+          final HttpServletResponse resp = (HttpServletResponse) response;
+
+          if (throwable != null) {
+            ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, throwable, span);
+            span.log(Collections.singletonMap("error.object", throwable));
+          } else if (req.isAsyncStarted()) {
+            final ActiveSpan.Continuation cont = span.capture();
+            final AtomicBoolean activated = new AtomicBoolean(false);
+            // what if async is already finished? This would not be called
+            req.getAsyncContext().addListener(new TagSettingAsyncListener(activated, cont, span));
+          } else {
+            ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(req, resp, span);
+          }
         }
         span.deactivate();
       }
