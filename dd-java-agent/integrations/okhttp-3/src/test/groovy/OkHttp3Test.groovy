@@ -1,33 +1,15 @@
 import com.datadoghq.trace.DDTags
-import com.datadoghq.trace.DDTracer
-import com.datadoghq.trace.writer.ListWriter
-import dd.test.TestUtils
+import dd.test.AgentTestRunner
 import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import ratpack.http.Headers
-import spock.lang.Shared
-import spock.lang.Specification
 
 import java.util.concurrent.atomic.AtomicReference
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
-class OkHttp3Test extends Specification {
-
-  @Shared
-  def writer = new ListWriter()
-  @Shared
-  def tracer = new DDTracer(writer)
-
-  def setupSpec() {
-    TestUtils.addByteBuddyAgent()
-    TestUtils.registerOrReplaceGlobalTracer(tracer)
-  }
-
-  def setup() {
-    writer.start()
-  }
+class OkHttp3Test extends AgentTestRunner {
 
   def "sending a request creates spans and sends headers"() {
     setup:
@@ -49,9 +31,9 @@ class OkHttp3Test extends Specification {
 
     expect:
     response.body.string() == "pong"
-    writer.size() == 1
+    TEST_WRITER.size() == 1
 
-    def trace = writer.firstTrace()
+    def trace = TEST_WRITER.firstTrace()
     trace.size() == 2
 
     and: // span 0

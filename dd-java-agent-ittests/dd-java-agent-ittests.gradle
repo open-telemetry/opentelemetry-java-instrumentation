@@ -11,7 +11,7 @@ dependencies {
 
   testCompile deps.opentracingMock
 
-  testCompile project(':dd-java-agent:tooling').sourceSets.test.output
+  testCompile project(':dd-java-agent:testing')
 
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
   testCompile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
