@@ -29,19 +29,6 @@ public class AgentInstaller {
    * @return the agent's class transformer
    */
   public static ResettableClassFileTransformer installBytebuddyAgent(final Instrumentation inst) {
-    return installBytebuddyAgent(inst, null);
-  }
-
-  /**
-   * Install the core bytebuddy agent along with all implementations of {@link
-   * dd.trace.Instrumenter}.
-   *
-   * @param inst Java Instrumentation used to install bytebuddy
-   * @param listener A bytebuddy listener to install with, or null for no listener
-   * @return the agent's class transformer
-   */
-  public static ResettableClassFileTransformer installBytebuddyAgent(
-      final Instrumentation inst, AgentBuilder.Listener listener) {
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()
@@ -69,9 +56,6 @@ public class AgentInstaller {
                     .or(
                         classLoaderWithName(
                             "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader")));
-    if (null != listener) {
-      agentBuilder = agentBuilder.with(listener);
-    }
     int numInstrumenters = 0;
     for (final Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class)) {
       agentBuilder = instrumenter.instrument(agentBuilder);
