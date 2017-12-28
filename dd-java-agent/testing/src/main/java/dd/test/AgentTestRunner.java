@@ -20,6 +20,21 @@ import org.spockframework.runtime.Sputnik;
 import org.spockframework.runtime.model.SpecMetadata;
 import spock.lang.Specification;
 
+/**
+ * A spock test runner which automatically applies instrumentation and exposes a global trace
+ * writer.
+ *
+ * <p>To use, write a regular spock test, but extend this class instead of {@link
+ * spock.lang.Specification}. <br>
+ * This will cause the following to occur before test startup:
+ *
+ * <ul>
+ *   <li>All {@link dd.trace.Instrumenter}s on the test classpath will be applied. Matching
+ *       preloaded classes will be retransformed.
+ *   <li>{@link AgentTestRunner#TEST_WRITER} will be registerd with the global tracer and available
+ *       in an initialized state.
+ * </ul>
+ */
 @RunWith(AgentTestRunner.SpockRunner.class)
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
 public abstract class AgentTestRunner extends Specification {
