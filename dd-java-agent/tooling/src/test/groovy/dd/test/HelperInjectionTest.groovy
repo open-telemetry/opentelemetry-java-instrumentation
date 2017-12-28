@@ -1,61 +1,47 @@
 package dd.test
 
-import static dd.test.TestUtils.createJarWithClasses
-
-import dd.trace.DDAdvice
+import com.datadoghq.agent.Utils
 import dd.trace.HelperInjector
 import java.lang.reflect.Method
-import net.bytebuddy.agent.ByteBuddyAgent
-import net.bytebuddy.agent.builder.AgentBuilder
 import spock.lang.Specification
 
 import static net.bytebuddy.matcher.ElementMatchers.*
 
 class HelperInjectionTest extends Specification {
-  def setupSpec() {
-    AgentBuilder builder =
-      new AgentBuilder.Default()
-        .disableClassFormatChanges()
-        .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-        .ignore(nameStartsWith("dd.inst"))
-
-    builder = new TestInstrumentation().instrument(builder)
-
-    builder.installOn(ByteBuddyAgent.install())
-  }
 
   def "helpers injected to non-delegating classloader"() {
     setup:
-    String helperClassName = TestInstrumentation.getName() + '$HelperClass'
-    String instrumentationClassName = TestInstrumentation.getName() + '$ClassToInstrument'
-    HelperInjector injector = new HelperInjector(TestInstrumentation.getName() + '$HelperClass')
+    String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
+    HelperInjector injector = new HelperInjector(helperClassName)
     URLClassLoader emptyLoader = new URLClassLoader(new URL[0], (ClassLoader)null)
-    injector.transform(null, null, emptyLoader, null)
-    // injecting into emptyLoader should not load on agent's classloader
-    assert !TestUtils.isClassLoaded(helperClassName, DDAdvice.getAgentClassLoader())
-    assert TestUtils.isClassLoaded(helperClassName, emptyLoader)
-
-    URL[] classpath = [createJarWithClasses(instrumentationClassName)]
-    URLClassLoader classloader = new URLClassLoader(classpath, (ClassLoader)null)
 
     when:
-    classloader.loadClass(helperClassName)
+    emptyLoader.loadClass(helperClassName)
     then:
     thrown ClassNotFoundException
 
     when:
-    Class<?> instrumentedClass = classloader.loadClass(instrumentationClassName)
-    Method instrumentedMethod = instrumentedClass.getMethod("isInstrumented")
+    injector.transform(null, null, emptyLoader, null)
+    emptyLoader.loadClass(helperClassName)
     then:
-    instrumentedMethod.invoke(null)
-
-    when:
-    classloader.loadClass(helperClassName)
-    then:
-    noExceptionThrown()
+    isClassLoaded(helperClassName, emptyLoader)
+    // injecting into emptyLoader should not load on agent's classloader
+    !isClassLoaded(helperClassName, Utils.getAgentClassLoader())
 
     cleanup:
-    classloader?.close()
     emptyLoader?.close()
+  }
+  
+  private static boolean isClassLoaded(String className, ClassLoader classLoader) {
+    final Method findLoadedClassMethod = ClassLoader.getDeclaredMethod("findLoadedClass", String)
+    try {
+      findLoadedClassMethod.setAccessible(true)
+      Class<?> loadedClass = (Class<?>) findLoadedClassMethod.invoke(classLoader, className)
+      return null != loadedClass && loadedClass.getClassLoader() == classLoader
+    } catch (Exception e) {
+      throw new IllegalStateException(e)
+    } finally {
+      findLoadedClassMethod.setAccessible(false)
+    }
   }
 }
