@@ -1,0 +1,13 @@
+dependencies {
+  compile project(':dd-java-agent-perftests')
+  compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.1.v20170120'
+  compile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.1.v20170120'
+}
+
+jar {
+  manifest {
+    attributes(
+      "Main-Class": "dd.perftest.jetty.JettyPerftest"
+    )
+  }
+}
