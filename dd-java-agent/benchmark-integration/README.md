@@ -8,7 +8,7 @@ Integration level performance tests for the Datadog Java Agent.
 
 ### Example
 ```
-./gradlew dd-java-agent-perftests:jetty-perftest:shadowJar
+./gradlew dd-java-agent:benchmark-integration:jetty-perftest:shadowJar
 ./run-perf-test.sh jetty-perftest/build/libs/jetty-perftest-0.2.12-SNAPSHOT-all.jar NoAgent ../dd-java-agent/build/libs/dd-java-agent-0.2.12-SNAPSHOT.jar
 cp /tmp/perf_results.csv ~/somewhere_else/
 ```
