@@ -1,12 +1,9 @@
-import com.datadoghq.trace.DDTracer
-import com.datadoghq.trace.writer.ListWriter
-import dd.test.TestUtils
+import dd.test.AgentTestRunner
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.ActiveMQMessageProducer
 import org.apache.activemq.junit.EmbeddedActiveMQBroker
 import spock.lang.Shared
-import spock.lang.Specification
 import spock.lang.Unroll
 
 import javax.jms.Connection
@@ -15,20 +12,11 @@ import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
-class JMS1Test extends Specification {
-
-  @Shared
-  static ListWriter writer = new ListWriter()
-  @Shared
-  static DDTracer tracer = new DDTracer(writer)
-
+class JMS1Test extends AgentTestRunner {
   @Shared
   static Session session
 
   def setupSpec() {
-    TestUtils.addByteBuddyAgent()
-    TestUtils.registerOrReplaceGlobalTracer(tracer)
-
     EmbeddedActiveMQBroker broker = new EmbeddedActiveMQBroker()
     broker.start()
     final ActiveMQConnectionFactory connectionFactory = broker.createConnectionFactory()
@@ -36,10 +24,6 @@ class JMS1Test extends Specification {
     final Connection connection = connectionFactory.createConnection()
     connection.start()
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-  }
-
-  def setup() {
-    writer.start()
   }
 
   @Unroll
@@ -55,10 +39,10 @@ class JMS1Test extends Specification {
 
     expect:
     receivedMessage.text == "a message"
-    writer.size() == 2
+    TEST_WRITER.size() == 2
 
     and: // producer trace
-    def trace = writer.firstTrace()
+    def trace = TEST_WRITER.firstTrace()
     trace.size() == 3
 
     and: // span 0
@@ -125,7 +109,7 @@ class JMS1Test extends Specification {
     tags2.size() == 5
 
     and: // consumer trace
-    def consumerTrace = writer.get(1)
+    def consumerTrace = TEST_WRITER.get(1)
     consumerTrace.size() == 1
 
     def consumerSpan = consumerTrace[0]
@@ -175,14 +159,14 @@ class JMS1Test extends Specification {
     def message = session.createTextMessage("a message")
     producer.send(message)
     lock.countDown()
-    writer.waitForTraces(2)
+    TEST_WRITER.waitForTraces(2)
 
     expect:
     messageRef.get().text == "a message"
-    writer.size() == 2
+    TEST_WRITER.size() == 2
 
     and: // producer trace
-    def trace = writer.firstTrace()
+    def trace = TEST_WRITER.firstTrace()
     trace.size() == 3
 
     and: // span 0
@@ -249,7 +233,7 @@ class JMS1Test extends Specification {
     tags2.size() == 5
 
     and: // consumer trace
-    def consumerTrace = writer.get(1)
+    def consumerTrace = TEST_WRITER.get(1)
     consumerTrace.size() == 1
 
     def consumerSpan = consumerTrace[0]

@@ -1,7 +1,5 @@
-import com.datadoghq.trace.DDTracer
-import com.datadoghq.trace.writer.ListWriter
+import dd.test.AgentTestRunner
 import com.google.common.io.Files
-import dd.test.TestUtils
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -16,7 +14,6 @@ import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQMessageConsumer
 import org.hornetq.jms.client.HornetQMessageProducer
 import spock.lang.Shared
-import spock.lang.Specification
 import spock.lang.Unroll
 
 import javax.jms.Session
@@ -24,19 +21,11 @@ import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
-class JMS2Test extends Specification {
-
-  @Shared
-  static ListWriter writer = new ListWriter()
-  @Shared
-  static DDTracer tracer = new DDTracer(writer)
-
+class JMS2Test extends AgentTestRunner {
   @Shared
   static Session session
 
   def setupSpec() {
-    TestUtils.addByteBuddyAgent()
-    TestUtils.registerOrReplaceGlobalTracer(tracer)
     def tempDir = Files.createTempDir()
     tempDir.deleteOnExit()
 
@@ -71,10 +60,6 @@ class JMS2Test extends Specification {
     session.run()
   }
 
-  def setup() {
-    writer.start()
-  }
-
   @Unroll
   def "sending a message to #resourceName generates spans"() {
     setup:
@@ -88,10 +73,10 @@ class JMS2Test extends Specification {
 
     expect:
     receivedMessage.text == "a message"
-    writer.size() == 2
+    TEST_WRITER.size() == 2
 
     and: // producer trace
-    def trace = writer.firstTrace()
+    def trace = TEST_WRITER.firstTrace()
     trace.size() == 1
 
     def producerSpan = trace[0]
@@ -115,7 +100,7 @@ class JMS2Test extends Specification {
     producerTags.size() == 5
 
     and: // consumer trace
-    def consumerTrace = writer.get(1)
+    def consumerTrace = TEST_WRITER.get(1)
     consumerTrace.size() == 1
 
     def consumerSpan = consumerTrace[0]
@@ -165,14 +150,14 @@ class JMS2Test extends Specification {
     def message = session.createTextMessage("a message")
     producer.send(message)
     lock.countDown()
-    writer.waitForTraces(2)
+    TEST_WRITER.waitForTraces(2)
 
     expect:
     messageRef.get().text == "a message"
-    writer.size() == 2
+    TEST_WRITER.size() == 2
 
     and: // producer trace
-    def trace = writer.firstTrace()
+    def trace = TEST_WRITER.firstTrace()
     trace.size() == 1
 
     def producerSpan = trace[0]
@@ -196,7 +181,7 @@ class JMS2Test extends Specification {
     producerTags.size() == 5
 
     and: // consumer trace
-    def consumerTrace = writer.get(1)
+    def consumerTrace = TEST_WRITER.get(1)
     consumerTrace.size() == 1
 
     def consumerSpan = consumerTrace[0]

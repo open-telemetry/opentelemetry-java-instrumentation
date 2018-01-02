@@ -26,6 +26,6 @@ dependencies {
   compile deps.bytebuddy
   compile deps.opentracing
 
+  testCompile project(':dd-java-agent:testing')
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'
-  testCompile project(':dd-java-agent:tooling').sourceSets.test.output
 }

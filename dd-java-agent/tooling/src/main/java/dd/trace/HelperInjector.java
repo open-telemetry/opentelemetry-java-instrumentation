@@ -1,5 +1,6 @@
 package dd.trace;
 
+import com.datadoghq.agent.Utils;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,7 +37,7 @@ public class HelperInjector implements Transformer {
       helperMap = new HashMap<TypeDescription, byte[]>(helperClassNames.size());
       for (String helperName : helperClassNames) {
         final ClassFileLocator locator =
-            ClassFileLocator.ForClassLoader.of(DDAdvice.getAgentClassLoader());
+            ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader());
         final byte[] classBytes = locator.locate(helperName).resolve();
         final TypeDescription typeDesc = new TypeDescription.Latent(helperName, 0, null);
         helperMap.put(typeDesc, classBytes);
