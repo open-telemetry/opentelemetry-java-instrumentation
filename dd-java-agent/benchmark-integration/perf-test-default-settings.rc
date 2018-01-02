@@ -1,0 +1,17 @@
+# Default settings for running performance tests.
+# To customize, copy this file to perf-test-settings.rc and change desired settings.
+
+# wrk settings
+test_warmup_seconds=30
+test_time_seconds=90
+test_num_connections=5
+test_num_threads=5
+
+# endpoionts to test
+declare -A endpoints
+endpoints['<1MS']='http://localhost:8080'
+endpoints['1MS']='http://localhost:8080?sleepTimeMS=1'
+endpoints['2MS']='http://localhost:8080?sleepTimeMS=2'
+endpoints['5MS']='http://localhost:8080?sleepTimeMS=5'
+endpoints['10MS']='http://localhost:8080?sleepTimeMS=10'
+test_order=( '<1MS' '1MS' '2MS' '5MS' '10MS' )

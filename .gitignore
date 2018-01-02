@@ -50,6 +50,7 @@ Thumbs.db
 /out
 */out
 dd-java-agent/integrations/*/out
+dd-java-agent/benchmark-integration/perf-test-settings.rc
 dd-trace-examples/*/out
 derby.log
 

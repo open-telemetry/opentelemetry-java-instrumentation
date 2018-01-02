@@ -19,13 +19,17 @@ if [ "$server_jar" = "" ]; then
     exit 1
 fi
 
-declare -A endpoints
-endpoints['<1MS']='http://localhost:8080'
-endpoints['1MS']='http://localhost:8080?sleepTimeMS=1'
-endpoints['2MS']='http://localhost:8080?sleepTimeMS=2'
-endpoints['5MS']='http://localhost:8080?sleepTimeMS=5'
-endpoints['10MS']='http://localhost:8080?sleepTimeMS=10'
-test_order=( '<1MS' '1MS' '2MS' '5MS' '10MS' )
+if [ -f perf-test-settings.rc ]; then
+    echo "loading custom settings"
+    cat ./perf-test-settings.rc
+    . ./perf-test-settings.rc
+else
+    echo "loading default settings"
+    cat ./perf-test-default-settings.rc
+    . ./perf-test-default-settings.rc
+fi
+echo ""
+echo ""
 
 # Start up server jar passed into the scipt
 # Blocks until server is bound to local port 8080
@@ -58,10 +62,10 @@ function stop_server {
 function test_endpoint {
     url=$1
     # warmup
-    wrk -c 5 -t5 -d 30s $url >/dev/null
+    wrk -c $test_num_connections -t$test_num_threads -d ${test_warmup_seconds}s $url >/dev/null
     wrk_results=/tmp/wrk_results.`date +%s`
     # run test
-    wrk -c 5 -t5 -d 90s $url > $wrk_results
+    wrk -c $test_num_connections -t$test_num_threads -d ${test_time_seconds}s $url > $wrk_results
     avg_throughput=$(grep "Requests/sec" $wrk_results | grep -o "[0-9.]*$")
     echo "$avg_throughput" >> $wrk_results
     echo $wrk_results
