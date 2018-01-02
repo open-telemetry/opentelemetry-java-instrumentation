@@ -1,6 +1,10 @@
 package dd.inst.mongo;
 
-import static net.bytebuddy.matcher.ElementMatchers.*;
+import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import com.mongodb.MongoClientOptions;
@@ -9,6 +13,7 @@ import dd.trace.HelperInjector;
 import dd.trace.Instrumenter;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -19,7 +24,7 @@ public final class MongoClientInstrumentation implements Instrumenter {
       new HelperInjector("dd.inst.mongo.DDTracingCommandListener");
 
   @Override
-  public AgentBuilder instrument(AgentBuilder agentBuilder) {
+  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             named("com.mongodb.MongoClientOptions$Builder")
@@ -32,7 +37,7 @@ public final class MongoClientInstrumentation implements Instrumenter {
                                         "com.mongodb.event.CommandListener",
                                         Modifier.PUBLIC,
                                         null,
-                                        new TypeDescription.Generic[] {})))
+                                        Collections.<TypeDescription.Generic>emptyList())))
                             .and(isPublic()))))
         .transform(MONGO_HELPER_INJECTOR)
         .transform(
@@ -49,7 +54,7 @@ public final class MongoClientInstrumentation implements Instrumenter {
     public static void injectTraceListener(@Advice.This final Object dis) {
       // referencing "this" in the method args causes the class to load under a transformer.
       // This bypasses the Builder instrumentation. Casting as a workaround.
-      MongoClientOptions.Builder builder = (MongoClientOptions.Builder) dis;
+      final MongoClientOptions.Builder builder = (MongoClientOptions.Builder) dis;
       final DDTracingCommandListener listener = new DDTracingCommandListener(GlobalTracer.get());
       builder.addCommandListener(listener);
     }
