@@ -2,9 +2,8 @@ package com.datadoghq.trace.integration;
 
 import com.datadoghq.trace.DDSpanContext;
 import com.datadoghq.trace.DDTags;
-import com.datadoghq.trace.resolver.DDTracerFactory;
 import com.datadoghq.trace.resolver.FactoryUtils;
-import com.datadoghq.trace.resolver.TracerConfig;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.opentracing.tag.Tags;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -13,13 +12,14 @@ import java.util.Objects;
 
 /** Decorator for servlet contrib */
 public class URLAsResourceName extends AbstractDecorator {
+  public static final String CONFIG_PATH = "dd-trace";
 
   public static final Config.Rule RULE_QPARAM = new Config.Rule("\\?.*$", "");
   public static final Config.Rule RULE_DIGIT = new Config.Rule("\\d+", "?");
   private List<Config.Rule> patterns = new ArrayList<>();
 
   public URLAsResourceName() {
-    this(DDTracerFactory.CONFIG_PATH);
+    this(CONFIG_PATH);
   }
 
   public URLAsResourceName(final String configPath) {
@@ -102,8 +102,9 @@ public class URLAsResourceName extends AbstractDecorator {
     this.patterns = patterns;
   }
 
-  /** Additional properties concerning the UrlAsResourceDecorator in the YAML config */
-  public static class Config extends TracerConfig {
+  /** Properties concerning the UrlAsResourceDecorator in the YAML config */
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public static class Config {
 
     List<Rule> urlResourcePatterns;
 
