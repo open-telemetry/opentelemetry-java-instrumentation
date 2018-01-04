@@ -1,4 +1,4 @@
-package com.datadoghq.agent.instrumentation.jdbc;
+package dd.trace.instrumentation.jdbc;
 
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;

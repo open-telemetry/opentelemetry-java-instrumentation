@@ -1,4 +1,4 @@
-package com.datadoghq.agent.instrumentation.annotation;
+package dd.trace.instrumentation.trace_annotation;
 
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
@@ -37,7 +37,7 @@ public final class TraceAnnotationInstrumentation implements Instrumenter {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static ActiveSpan startSpan(@Advice.Origin final Method method) {
       final Trace trace = method.getAnnotation(Trace.class);
-      String operationName = trace.operationName();
+      String operationName = trace == null ? null : trace.operationName();
       if (operationName == null || operationName.isEmpty()) {
         operationName = method.getDeclaringClass().getName() + "." + method.getName();
       }
