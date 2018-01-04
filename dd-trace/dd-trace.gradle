@@ -10,11 +10,9 @@ apply from: "${rootDir}/gradle/jacoco.gradle"
 minimumBranchCoverage = 0.3
 minimumInstructionCoverage = 0.5
 whitelistedInstructionClasses += whitelistedBranchClasses += [
-  "com.datadoghq.trace.integration.*",
-  'com.datadoghq.trace.resolver.TracerConfig',
-  'com.datadoghq.trace.resolver.WriterConfig',
-  'com.datadoghq.trace.resolver.DDTracerFactory',
-  'com.datadoghq.trace.resolver.SamplerConfig',
+  'com.datadoghq.trace.integration.*',
+  'com.datadoghq.trace.resolver.DecoratorsConfig',
+  'com.datadoghq.trace.writer.ListWriter',
   'com.datadoghq.trace.DDTags',
   'com.datadoghq.trace.DDTraceInfo',
   'com.datadoghq.trace.util.Clock',

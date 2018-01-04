@@ -18,9 +18,10 @@ public class DDDecoratorsFactory {
    * @param decoratorsConfig
    * @return the list of instanciated and configured decorators
    */
-  public static List<AbstractDecorator> create(final List<DDSpanDecoratorConfig> decoratorsConfig) {
+  public static List<AbstractDecorator> create(
+      final List<DecoratorsConfig.DDSpanDecoratorConfig> decoratorsConfig) {
     final List<AbstractDecorator> decorators = new ArrayList<>();
-    for (final DDSpanDecoratorConfig decoratorConfig : decoratorsConfig) {
+    for (final DecoratorsConfig.DDSpanDecoratorConfig decoratorConfig : decoratorsConfig) {
       if (decoratorConfig.getType() == null) {
         log.warn("Cannot create decorator without type from configuration {}", decoratorConfig);
         continue;
@@ -68,8 +69,8 @@ public class DDDecoratorsFactory {
 
   public static List<AbstractDecorator> createFromResources() {
     List<AbstractDecorator> result = new ArrayList<>();
-    final TracerConfig config =
-        FactoryUtils.loadConfigFromResource(CONFIG_PATH, TracerConfig.class);
+    final DecoratorsConfig config =
+        FactoryUtils.loadConfigFromResource(CONFIG_PATH, DecoratorsConfig.class);
     if (config != null) {
       result = DDDecoratorsFactory.create(config.getDecorators());
     }
