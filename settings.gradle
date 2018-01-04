@@ -18,6 +18,7 @@ include ':dd-trace-annotations'
 include ':dd-java-agent:integrations:apache-httpclient-4.3'
 include ':dd-java-agent:integrations:aws-sdk'
 include ':dd-java-agent:integrations:datastax-cassandra-3.2'
+include ':dd-java-agent:integrations:jdbc'
 include ':dd-java-agent:integrations:jms-1'
 include ':dd-java-agent:integrations:jms-2'
 include ':dd-java-agent:integrations:mongo-3.1'
@@ -26,6 +27,7 @@ include ':dd-java-agent:integrations:okhttp-3'
 include ':dd-java-agent:integrations:servlet-2'
 include ':dd-java-agent:integrations:servlet-3'
 include ':dd-java-agent:integrations:spring-web'
+include ':dd-java-agent:integrations:trace-annotation'
 
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"

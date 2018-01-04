@@ -1,4 +1,4 @@
-package com.datadoghq.agent.instrumentation.jdbc;
+package dd.trace.instrumentation.jdbc;
 
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -64,7 +64,7 @@ public final class ConnectionInstrumentation implements Instrumenter {
           }
           connectionInfo.put(connection, new DBInfo(sanitizedURL, type, user));
         }
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         // object may not be fully initialized.
         // calling constructor will populate map
       }
