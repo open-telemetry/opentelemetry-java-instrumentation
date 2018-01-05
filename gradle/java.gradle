@@ -104,3 +104,12 @@ if (project.hasProperty("removeJarVersionNumbers") && removeJarVersionNumbers) {
 
 apply from: "$rootDir/gradle/checkstyle.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
+
+
+plugins.withType(BasePlugin) {
+  project.afterEvaluate {
+    def deleteTasks = tasks.withType(Delete) + project.tasks.findByPath('clean')
+    def otherTasks = tasks - deleteTasks
+    otherTasks*.mustRunAfter deleteTasks
+  }
+}

@@ -1,6 +1,6 @@
 rootProject.name = 'dd-trace-java'
 
-include ':dd-trace'
+include ':dd-trace-ot'
 include ':dd-java-agent'
 include ':dd-java-agent:benchmark'
 include ':dd-java-agent:benchmark-integration'
@@ -8,26 +8,27 @@ include ':dd-java-agent:benchmark-integration:jetty-perftest'
 include ':dd-java-agent:testing'
 include ':dd-java-agent:tooling'
 include ':dd-java-agent-ittests'
-include ':dd-trace-examples:dropwizard-mongo-client'
-include ':dd-trace-examples:spring-boot-jdbc'
-include ':dd-trace-examples:rest-spark'
-include ':dd-trace-examples'
 include ':dd-trace-annotations'
 
-// integrations:
-include ':dd-java-agent:integrations:apache-httpclient-4.3'
-include ':dd-java-agent:integrations:aws-sdk'
-include ':dd-java-agent:integrations:datastax-cassandra-3.2'
-include ':dd-java-agent:integrations:jdbc'
-include ':dd-java-agent:integrations:jms-1'
-include ':dd-java-agent:integrations:jms-2'
-include ':dd-java-agent:integrations:mongo-3.1'
-include ':dd-java-agent:integrations:mongo-async-3.3'
-include ':dd-java-agent:integrations:okhttp-3'
-include ':dd-java-agent:integrations:servlet-2'
-include ':dd-java-agent:integrations:servlet-3'
-include ':dd-java-agent:integrations:spring-web'
-include ':dd-java-agent:integrations:trace-annotation'
+// examples
+include ':examples:dropwizard-mongo-client'
+include ':examples:spring-boot-jdbc'
+include ':examples:rest-spark'
+
+// instrumentation:
+include ':dd-java-agent:instrumentation:apache-httpclient-4.3'
+include ':dd-java-agent:instrumentation:aws-sdk'
+include ':dd-java-agent:instrumentation:datastax-cassandra-3.2'
+include ':dd-java-agent:instrumentation:jdbc'
+include ':dd-java-agent:instrumentation:jms-1'
+include ':dd-java-agent:instrumentation:jms-2'
+include ':dd-java-agent:instrumentation:mongo-3.1'
+include ':dd-java-agent:instrumentation:mongo-async-3.3'
+include ':dd-java-agent:instrumentation:okhttp-3'
+include ':dd-java-agent:instrumentation:servlet-2'
+include ':dd-java-agent:instrumentation:servlet-3'
+include ':dd-java-agent:instrumentation:spring-web'
+include ':dd-java-agent:instrumentation:trace-annotation'
 
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"

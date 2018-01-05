@@ -230,9 +230,9 @@ public class Application {
         io.opentracing.util.GlobalTracer.register(tracer);
 
         // OR from the API
-        Writer writer = new com.datadoghq.trace.writer.DDAgentWriter();
-        Sampler sampler = new com.datadoghq.trace.sampling.AllSampler();
-        Tracer tracer = new com.datadoghq.trace.DDTracer(writer, sampler);
+        Writer writer = new datadog.trace.api.writer.DDAgentWriter();
+        Sampler sampler = new datadog.trace.api.sampling.AllSampler();
+        Tracer tracer = new datadog.opentracing.DDTracer(writer, sampler);
         io.opentracing.util.GlobalTracer.register(tracer);
 
         // ...
@@ -242,7 +242,7 @@ public class Application {
 
 ## Further Reading
 
-- Browse the [example applications](dd-trace-examples) in this repository to see Java tracing in action
+- Browse the [example applications](examples) in this repository to see Java tracing in action
 - Read [OpenTracing's documentation](https://github.com/opentracing/opentracing-java); feel free to use the Trace Java API to customize your instrumentation.
 - Brush up on [Datadog APM Terminology](https://docs.datadoghq.com/tracing/terminology/)
 - Read the [Datadog APM FAQ](https://docs.datadoghq.com/tracing/faq/)

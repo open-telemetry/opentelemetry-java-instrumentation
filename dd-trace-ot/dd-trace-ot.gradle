@@ -1,0 +1,57 @@
+plugins {
+  id "me.champeau.gradle.jmh" version "0.4.4"
+}
+
+description = 'dd-trace-ot'
+
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/publish.gradle"
+apply from: "${rootDir}/gradle/jacoco.gradle"
+minimumBranchCoverage = 0.3
+minimumInstructionCoverage = 0.5
+whitelistedInstructionClasses += whitelistedBranchClasses += [
+  'datadog.opentracing.decorators.*',
+  'datadog.trace.api.writer.ListWriter',
+  'datadog.trace.api.DDTags',
+  'datadog.trace.api.DDTraceInfo',
+  'datadog.trace.api.util.Clock',
+]
+
+dependencies {
+  compile deps.opentracing
+  compile group: 'io.opentracing.contrib', name: 'opentracing-tracerresolver', version: '0.1.0'
+
+  compile deps.jackson
+  compile deps.slf4j
+  compile deps.autoservice
+  compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.13'
+
+  testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6'
+  testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
+}
+
+jmh {
+  timeUnit = 'us' // Output time unit. Available time units are: [m, s, ms, us, ns].
+  benchmarkMode = ['thrpt', 'avgt']
+  timeOnIteration = '1s'
+  iterations = 1 // Number of measurement iterations to do.
+//  fork = 2 // How many times to forks a single benchmark. Use 0 to disable forking altogether
+  jvmArgs = []
+  failOnError = true // Should JMH fail immediately if any benchmark had experienced the unrecoverable error?
+  warmup = '2s' // Time to spend at each warmup iteration.
+  warmupIterations = 1 // Number of warmup iterations to do.
+//  warmupForks = 0 // How many warmup forks to make for a single benchmark. 0 to disable warmup forks.
+
+//  profilers = ['stack']
+  // Use profilers to collect additional data. Supported profilers: [cl, comp, gc, stack, perf, perfnorm, perfasm, xperf, xperfasm, hs_cl, hs_comp, hs_gc, hs_rt, hs_thr]
+
+//  humanOutputFile = project.file("${project.buildDir}/reports/jmh/human.txt") // human-readable output file
+//  operationsPerInvocation = 10 // Operations per invocation.
+//  synchronizeIterations = false // Synchronize iterations?
+//  timeout = '1s' // Timeout for benchmark iteration.
+//  includeTests = true
+  // Allows to include test sources into generate JMH jar, i.e. use it when benchmarks depend on the test classes.
+
+  duplicateClassesStrategy = 'fail'
+  jmhVersion = '1.19' // Specifies JMH version
+}

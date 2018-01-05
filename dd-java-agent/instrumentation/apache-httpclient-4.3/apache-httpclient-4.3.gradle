@@ -1,0 +1,35 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "org.apache.httpcomponents"
+  module = "httpclient"
+  versions = "[4.3,)"
+  legacyGroup = "commons-httpclient"
+  legacyModule = "commons-httpclient"
+  verifyPresent = [
+    // The commented out classes are required for the instrumentation (this is checked by our bytebuddy rules).
+    // Once the verifier can report on the failed versions these classes can be commented out and the pass range can be widened.
+
+    // "org.apache.http.HttpException" : null,
+    // "org.apache.http.HttpRequest" : null,
+    // "org.apache.http.client.RedirectStrategy" : null,
+    "org.apache.http.client.methods.CloseableHttpResponse" : null,
+    "org.apache.http.client.methods.HttpExecutionAware" : null,
+    "org.apache.http.client.methods.HttpRequestWrapper" : null,
+    "org.apache.http.client.protocol.HttpClientContext" : null,
+    // "org.apache.http.conn.routing.HttpRoute" : null,
+    "org.apache.http.impl.execchain.ClientExecChain": null
+  ]
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3'
+
+  compile project(':dd-trace-ot')
+  compile project(':dd-java-agent:tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+}

@@ -1,1 +1,1 @@
-enableCustomAnnotationTracingOver: ["com.datadoghq.benchmark"]
+enableCustomAnnotationTracingOver: ["datadog.benchmark"]

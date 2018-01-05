@@ -33,7 +33,7 @@ function save_libs () {
 save_reports dd-java-agent
 save_reports dd-java-agent/tooling
 # Save reports for all instrumentation projects
-for integration_path in dd-java-agent/integrations/*; do
+for integration_path in dd-java-agent/instrumentation/*; do
     save_reports $integration_path
 done
 save_reports dd-java-agent-ittests

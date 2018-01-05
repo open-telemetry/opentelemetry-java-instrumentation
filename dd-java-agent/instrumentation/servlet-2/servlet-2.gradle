@@ -1,0 +1,27 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "javax.servlet"
+  module = "servlet-api"
+  versions = "[2.3,)"
+  verifyPresent = [
+    "javax.servlet.ServletContextEvent": null,
+    "javax.servlet.FilterChain"        : null,
+  ]
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
+  compile('io.opentracing.contrib:opentracing-web-servlet-filter:0.0.9') {
+    transitive = false
+  }
+
+  compile project(':dd-trace-ot')
+  compile project(':dd-java-agent:tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  compile deps.autoservice
+}
