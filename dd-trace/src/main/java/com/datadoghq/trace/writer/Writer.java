@@ -2,11 +2,11 @@ package com.datadoghq.trace.writer;
 
 import com.datadoghq.trace.DDBaseSpan;
 import com.datadoghq.trace.DDTraceConfig;
-import com.datadoghq.trace.DDTracer;
 import com.datadoghq.trace.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import lombok.extern.slf4j.Slf4j;
 
 /** A writer is responsible to send collected spans to some place */
 public interface Writer {
@@ -36,6 +36,7 @@ public interface Writer {
    */
   void close();
 
+  @Slf4j
   final class Builder {
     public static Writer forConfig(final Properties config) {
       final Writer writer;
@@ -51,10 +52,19 @@ public interface Writer {
         } else if (LOGGING_WRITER_TYPE.equals(configuredType)) {
           writer = new LoggingWriter();
         } else {
-          writer = DDTracer.UNASSIGNED_WRITER;
+          log.warn(
+              "Writer type not configured correctly: Type {} not recognized. Defaulting to DDAgentWriter.",
+              configuredType);
+          writer =
+              new DDAgentWriter(
+                  new DDApi(
+                      config.getProperty(DDTraceConfig.AGENT_HOST),
+                      Integer.parseInt(config.getProperty(DDTraceConfig.AGENT_PORT))));
         }
       } else {
-        writer = DDTracer.UNASSIGNED_WRITER;
+        log.warn(
+            "Writer type not configured correctly: No config provided! Defaulting to DDAgentWriter.");
+        writer = new DDAgentWriter();
       }
 
       return writer;

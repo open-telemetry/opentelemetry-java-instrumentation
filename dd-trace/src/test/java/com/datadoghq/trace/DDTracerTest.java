@@ -30,7 +30,7 @@ public class DDTracerTest {
     spans.add(span);
     spans.add(span);
 
-    final DDTracer tracer = new DDTracer(writer, sampler);
+    final DDTracer tracer = new DDTracer(DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME, writer, sampler);
 
     tracer.write(spans);
     tracer.write(spans);

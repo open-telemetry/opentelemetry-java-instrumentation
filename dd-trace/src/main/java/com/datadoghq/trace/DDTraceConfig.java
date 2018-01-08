@@ -1,15 +1,19 @@
 package com.datadoghq.trace;
 
+import com.datadoghq.trace.sampling.Sampler;
+import com.datadoghq.trace.writer.DDAgentWriter;
+import com.datadoghq.trace.writer.Writer;
 import java.util.Properties;
 
 /**
- * Config gives priority to system properties and falls back to environment variables.
+ * Config gives priority to system properties and falls back to environment variables. It also
+ * includes default values to ensure a valid config.
  *
  * <p>System properties are {@link DDTraceConfig#PREFIX}'ed. Environment variables are the same as
  * the system property, but uppercased with '.' -> '_'.
  */
 public class DDTraceConfig extends Properties {
-  /** Config keys bel */
+  /** Config keys below */
   private static final String PREFIX = "dd.";
 
   public static final String SERVICE_NAME = "service.name";
@@ -31,9 +35,13 @@ public class DDTraceConfig extends Properties {
 
     final Properties defaults = new Properties();
     defaults.setProperty(SERVICE_NAME, DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME);
+    defaults.setProperty(WRITER_TYPE, Writer.DD_AGENT_WRITER_TYPE);
+    defaults.setProperty(AGENT_HOST, DDAgentWriter.DEFAULT_HOSTNAME);
+    defaults.setProperty(AGENT_PORT, String.valueOf(DDAgentWriter.DEFAULT_PORT));
+    defaults.setProperty(SAMPLER_TYPE, Sampler.ALL_SAMPLER_TYPE);
+    defaults.setProperty(SAMPLER_RATE, "1.0");
     super.defaults = defaults;
 
-    final Properties baseValues = new Properties(defaults);
     setIfNotNull(SERVICE_NAME, serviceName);
     setIfNotNull(WRITER_TYPE, writerType);
     setIfNotNull(AGENT_HOST, agentHost);
@@ -43,7 +51,7 @@ public class DDTraceConfig extends Properties {
   }
 
   public DDTraceConfig(final String serviceName) {
-    super();
+    this();
     put(SERVICE_NAME, serviceName);
   }
 

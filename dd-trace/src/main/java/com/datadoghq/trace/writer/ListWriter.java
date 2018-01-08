@@ -63,4 +63,9 @@ public class ListWriter extends CopyOnWriteArrayList<List<DDBaseSpan<?>>> implem
       latches.clear();
     }
   }
+
+  @Override
+  public String toString() {
+    return "ListWriter { size=" + this.size() + " }";
+  }
 }

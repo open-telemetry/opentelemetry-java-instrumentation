@@ -6,7 +6,6 @@ import com.datadoghq.trace.propagation.HTTPCodec;
 import com.datadoghq.trace.resolver.DDDecoratorsFactory;
 import com.datadoghq.trace.sampling.AllSampler;
 import com.datadoghq.trace.sampling.Sampler;
-import com.datadoghq.trace.writer.DDAgentWriter;
 import com.datadoghq.trace.writer.Writer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.opentracing.ActiveSpan;
@@ -30,16 +29,13 @@ import lombok.extern.slf4j.Slf4j;
 public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentracing.Tracer {
 
   public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
-  public static final Writer UNASSIGNED_WRITER = new DDAgentWriter();
-  public static final Sampler UNASSIGNED_SAMPLER = new AllSampler();
 
+  /** Default service name if none provided on the trace or span */
+  final String serviceName;
   /** Writer is an charge of reporting traces and spans to the desired endpoint */
   final Writer writer;
   /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
   final Sampler sampler;
-
-  /** Default service name if none provided on the trace or span */
-  final String serviceName;
 
   /** Span context decorators */
   private final Map<String, List<AbstractDecorator>> spanContextDecorators = new HashMap<>();
@@ -83,11 +79,7 @@ public class DDTracer extends ThreadLocalActiveSpanSource implements io.opentrac
   }
 
   public DDTracer(final Writer writer) {
-    this(writer, new AllSampler());
-  }
-
-  public DDTracer(final Writer writer, final Sampler sampler) {
-    this(UNASSIGNED_DEFAULT_SERVICE_NAME, writer, sampler);
+    this(UNASSIGNED_DEFAULT_SERVICE_NAME, writer, new AllSampler());
   }
 
   /**
