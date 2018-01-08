@@ -54,7 +54,7 @@ class ServiceTest extends Specification {
 
     setup:
     def writer = spy(new DDAgentWriter())
-    def tracer = new DDTracer(writer, new AllSampler())
+    def tracer = new DDTracer(DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME, writer, new AllSampler())
 
 
     when:

@@ -103,9 +103,10 @@ public class DDApi {
         log.debug("Error while sending " + size + " " + type + " to the DD agent.", e);
       } else if (loggingRateLimiter.tryAcquire()) {
         log.warn(
-            "Error while sending {} {} to the DD agent. Message: {} (going silent for {} seconds)",
+            "Error while sending {} {} to the DD agent. {}: {} (going silent for {} seconds)",
             size,
             type,
+            e.getClass().getName(),
             e.getMessage(),
             SECONDS_BETWEEN_ERROR_LOG);
       }

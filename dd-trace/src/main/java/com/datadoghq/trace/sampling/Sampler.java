@@ -2,8 +2,8 @@ package com.datadoghq.trace.sampling;
 
 import com.datadoghq.trace.DDBaseSpan;
 import com.datadoghq.trace.DDTraceConfig;
-import com.datadoghq.trace.DDTracer;
 import java.util.Properties;
+import lombok.extern.slf4j.Slf4j;
 
 /** Main interface to sample a collection of traces. */
 public interface Sampler {
@@ -18,6 +18,7 @@ public interface Sampler {
    */
   boolean sample(DDBaseSpan<?> span);
 
+  @Slf4j
   final class Builder {
     public static Sampler forConfig(final Properties config) {
       final Sampler sampler;
@@ -29,10 +30,15 @@ public interface Sampler {
         } else if (ALL_SAMPLER_TYPE.equals(configuredType)) {
           sampler = new AllSampler();
         } else {
-          sampler = DDTracer.UNASSIGNED_SAMPLER;
+          log.warn(
+              "Sampler type not configured correctly: Type {} not recognized. Defaulting to AllSampler.",
+              configuredType);
+          sampler = new AllSampler();
         }
       } else {
-        sampler = DDTracer.UNASSIGNED_SAMPLER;
+        log.warn(
+            "Sampler type not configured correctly: No config provided! Defaulting to AllSampler.");
+        sampler = new AllSampler();
       }
       return sampler;
     }

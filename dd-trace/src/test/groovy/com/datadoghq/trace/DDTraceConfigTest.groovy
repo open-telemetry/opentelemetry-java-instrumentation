@@ -6,6 +6,7 @@ import com.datadoghq.trace.writer.DDAgentWriter
 import com.datadoghq.trace.writer.ListWriter
 import com.datadoghq.trace.writer.LoggingWriter
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
@@ -67,22 +68,22 @@ class DDTraceConfigTest extends Specification {
 
     then:
     config.getProperty(SERVICE_NAME) == "unnamed-java-app"
-    config.getProperty(WRITER_TYPE) == null
-    config.getProperty(AGENT_HOST) == null
-    config.getProperty(AGENT_PORT) == null
-    config.getProperty(SAMPLER_TYPE) == null
-    config.getProperty(SAMPLER_RATE) == null
+    config.getProperty(WRITER_TYPE) == "DDAgentWriter"
+    config.getProperty(AGENT_HOST) == "localhost"
+    config.getProperty(AGENT_PORT) == "8126"
+    config.getProperty(SAMPLER_TYPE) == "AllSampler"
+    config.getProperty(SAMPLER_RATE) == "1.0"
 
     when:
     config = new DDTraceConfig("A different service name")
 
     then:
     config.getProperty(SERVICE_NAME) == "A different service name"
-    config.getProperty(WRITER_TYPE) == null
-    config.getProperty(AGENT_HOST) == null
-    config.getProperty(AGENT_PORT) == null
-    config.getProperty(SAMPLER_TYPE) == null
-    config.getProperty(SAMPLER_RATE) == null
+    config.getProperty(WRITER_TYPE) == "DDAgentWriter"
+    config.getProperty(AGENT_HOST) == "localhost"
+    config.getProperty(AGENT_PORT) == "8126"
+    config.getProperty(SAMPLER_TYPE) == "AllSampler"
+    config.getProperty(SAMPLER_RATE) == "1.0"
   }
 
   def "specify overrides via system properties"() {
@@ -143,5 +144,26 @@ class DDTraceConfigTest extends Specification {
     tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:8126/v0.3/traces } }"
 
     tracer.spanContextDecorators.size() == 2
+  }
+
+  @Unroll
+  def "verify single override on #source for #key"() {
+    when:
+    System.setProperty(PREFIX + key, value)
+    def tracer = new DDTracer()
+
+    then:
+    tracer."$source".toString() == expected
+
+    where:
+
+    source    | key            | value           | expected
+    "writer"  | "default"      | "default"       | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:8126/v0.3/traces } }"
+    "writer"  | "writer.type"  | "LoggingWriter" | "LoggingWriter { }"
+    "writer"  | "agent.host"   | "somethingelse" | "DDAgentWriter { api=DDApi { tracesEndpoint=http://somethingelse:8126/v0.3/traces } }"
+    "writer"  | "agent.port"   | "9999"          | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:9999/v0.3/traces } }"
+    "sampler" | "default"      | "default"       | "AllSampler { sample=true }"
+    "sampler" | "sampler.type" | "RateSampler"   | "RateSampler { sampleRate=1.0 }"
+    "sampler" | "sampler.rate" | "100"           | "AllSampler { sample=true }"
   }
 }

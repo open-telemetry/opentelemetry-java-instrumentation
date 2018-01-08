@@ -30,4 +30,9 @@ public class LoggingWriter implements Writer {
   public void start() {
     log.info("start()");
   }
+
+  @Override
+  public String toString() {
+    return "LoggingWriter { }";
+  }
 }
