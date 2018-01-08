@@ -3,7 +3,7 @@ package datadog.opentracing.decorators;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import datadog.opentracing.DDSpanContext;
 import datadog.trace.api.DDTags;
-import datadog.trace.api.util.ConfigUtils;
+import datadog.trace.common.util.ConfigUtils;
 import io.opentracing.tag.Tags;
 import java.net.MalformedURLException;
 import java.util.ArrayList;

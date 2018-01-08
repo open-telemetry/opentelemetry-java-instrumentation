@@ -1,4 +1,4 @@
-package datadog.trace.api.sampling;
+package datadog.trace.common.sampling;
 
 import com.google.auto.service.AutoService;
 import datadog.opentracing.DDBaseSpan;
@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * This sampler sample the traces at a predefined rate.
+ *
+ * <p>
  *
  * <p>Keep (100 * `sample_rate`)% of the traces. It samples randomly, its main purpose is to reduce
  * the integration footprint.

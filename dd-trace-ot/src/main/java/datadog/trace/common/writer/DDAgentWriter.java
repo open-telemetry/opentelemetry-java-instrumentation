@@ -1,9 +1,9 @@
-package datadog.trace.api.writer;
+package datadog.trace.common.writer;
 
 import com.google.auto.service.AutoService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import datadog.opentracing.DDBaseSpan;
-import datadog.trace.api.Service;
+import datadog.trace.common.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -19,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * This writer write provided traces to the a DD agent which is most of time located on the same
  * host.
+ *
+ * <p>
  *
  * <p>It handles writes asynchronuously so the calling threads are automatically released. However,
  * if too much spans are collected the writers can reach a state where it is forced to drop incoming
@@ -112,7 +114,7 @@ public class DDAgentWriter implements Writer {
   }
 
   /* (non-Javadoc)
-   * @see datadog.trace.api.writer.Writer#start()
+   * @see Writer#start()
    */
   @Override
   public void start() {

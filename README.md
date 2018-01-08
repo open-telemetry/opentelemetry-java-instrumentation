@@ -17,7 +17,7 @@ These three things help you instrument Java applications:
 
 **Note:** dd-java-agent is considered experimental. Some integrations may not activate in all cases. Additional manual instrumentation using the [Opentracing API](https://github.com/opentracing/opentracing-java) is strongly encouraged.
 
-**[Datadog Tracer](https://github.com/DataDog/dd-trace-java/tree/master/dd-trace)**: an OpenTracing-compatible library that lets you trace any piece of your Java code, not just whole methods.
+**[Datadog Tracer](https://github.com/DataDog/dd-trace-java/tree/master/dd-trace-ot)**: an OpenTracing-compatible library that lets you trace any piece of your Java code, not just whole methods.
 
 **[Datadog APM Agent](https://github.com/DataDog/datadog-trace-agent)**: a (non-Java) service that runs on your application servers, accepting trace data from the Datadog Java Agent and/or Datadog Tracer and sending it to Datadog. (The APM Agent is not part of this repo; it's the same Agent to which all Datadog tracers—Go, Python, etc—send data)
 
@@ -91,12 +91,12 @@ The Java Agent lets you add a `@Trace` annotation to any method to measure its e
 
 #### Setup
 
-Add the `dd-trace-annotations` dependency to your project. For Maven, add this to pom.xml:
+Add the `dd-trace-api` dependency to your project. For Maven, add this to pom.xml:
 
 ```xml
 <dependency>
 	<groupId>com.datadoghq</groupId>
-	<artifactId>dd-trace-annotations</artifactId>
+	<artifactId>dd-trace-api</artifactId>
 	<version>{version}</version>
 </dependency>
 ```
@@ -104,7 +104,7 @@ Add the `dd-trace-annotations` dependency to your project. For Maven, add this t
 For gradle, add:
 
 ```gradle
-compile group: 'com.datadoghq', name: 'dd-trace-annotations', version: {version}
+compile group: 'com.datadoghq', name: 'dd-trace-api', version: {version}
 ```
 
 The Java Agent lets you use `@Trace` not just for `com.example.myproject`, but also for any application whose name _begins_ like that, e.g. `com.example.myproject.foobar`. If you're tempted to list something like `["com", "io"]` to avoid having to fuss with this configuration as you add new projects, be careful; providing `@Trace`-ability to too many applications could hurt your package's build time.
@@ -133,7 +133,7 @@ When you don't pass an `operationName`, the Java Agent sets it to the method nam
 
 ### Manual Instrumentation
 
-You can use the Datadog Tracer (`dd-trace`) library to measure execution times for specific pieces of code. This lets you trace your application more precisely than you can with the Java Agent alone.
+You can use the Datadog Tracer (`dd-trace-ot`) library to measure execution times for specific pieces of code. This lets you trace your application more precisely than you can with the Java Agent alone.
 
 #### Setup
 
@@ -157,7 +157,7 @@ For Maven, add this to pom.xml:
 <!-- Datadog Tracer (only needed if you do not use dd-java-agent) -->
 <dependency>
     <groupId>com.datadoghq</groupId>
-    <artifactId>dd-trace</artifactId>
+    <artifactId>dd-trace-ot</artifactId>
     <version>${dd-trace-java.version}</version>
 </dependency>
 ```
@@ -167,14 +167,14 @@ For gradle, add:
 ```
 compile group: 'io.opentracing', name: 'opentracing-api', version: "0.30.0"
 compile group: 'io.opentracing', name: 'opentracing-util', version: "0.30.0"
-compile group: 'com.datadoghq', name: 'dd-trace', version: "${dd-trace-java.version}"
+compile group: 'com.datadoghq', name: 'dd-trace-ot', version: "${dd-trace-java.version}"
 ```
 
 Configure your application using environment variables or system properties as discussed in the [config](#configuration) section.
 
 #### Examples
 
-Rather than referencing classes directly from `dd-trace` (other than registering `DDTracer`), we strongly suggest using the [OpenTracing API](https://github.com/opentracing/opentracing-java).
+Rather than referencing classes directly from `dd-trace-ot` (other than registering `DDTracer`), we strongly suggest using the [OpenTracing API](https://github.com/opentracing/opentracing-java).
 [Additional documentation on the api](docs/opentracing-api.md) is also available.
 
 Let's look at a simple example.

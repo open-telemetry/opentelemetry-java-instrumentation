@@ -1,9 +1,9 @@
 package datadog.trace
 
 import datadog.opentracing.DDTracer
-import datadog.trace.api.Service
-import datadog.trace.api.sampling.AllSampler
-import datadog.trace.api.writer.DDAgentWriter
+import datadog.trace.common.Service
+import datadog.trace.common.sampling.AllSampler
+import datadog.trace.common.writer.DDAgentWriter
 import spock.lang.Specification
 
 import static org.mockito.ArgumentMatchers.any

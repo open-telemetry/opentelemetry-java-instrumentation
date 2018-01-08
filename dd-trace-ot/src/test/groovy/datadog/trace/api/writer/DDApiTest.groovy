@@ -1,9 +1,10 @@
 package datadog.trace.api.writer
 
-import datadog.trace.SpanFactory
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import datadog.trace.api.Service
+import datadog.trace.SpanFactory
+import datadog.trace.common.Service
+import datadog.trace.common.writer.DDApi
 import org.msgpack.jackson.dataformat.MessagePackFactory
 import ratpack.http.Headers
 import ratpack.http.MediaType

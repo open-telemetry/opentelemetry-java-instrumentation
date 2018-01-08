@@ -3,7 +3,7 @@ package datadog.opentracing.decorators
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.trace.SpanFactory
-import datadog.trace.api.writer.LoggingWriter
+import datadog.trace.common.writer.LoggingWriter
 import io.opentracing.tag.StringTag
 import io.opentracing.tag.Tags
 import spock.lang.Specification

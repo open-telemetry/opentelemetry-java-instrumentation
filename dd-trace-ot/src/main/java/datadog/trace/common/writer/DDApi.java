@@ -1,10 +1,10 @@
-package datadog.trace.api.writer;
+package datadog.trace.common.writer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.RateLimiter;
 import datadog.opentracing.DDBaseSpan;
 import datadog.opentracing.DDTraceOTInfo;
-import datadog.trace.api.Service;
+import datadog.trace.common.Service;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;

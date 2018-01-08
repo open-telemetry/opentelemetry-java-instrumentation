@@ -1,4 +1,4 @@
-package datadog.trace.api.writer;
+package datadog.trace.common.writer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,6 +7,10 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * A bounded queue implementation compatible with the Datadog agent behavior. The class is
  * thread-safe and can be used with concurrency.
+ *
+ * <p>
+ *
+ * <p>
  *
  * <p>
  *

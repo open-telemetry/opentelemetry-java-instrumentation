@@ -1,4 +1,4 @@
-package datadog.trace.api.util;
+package datadog.trace.common.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;

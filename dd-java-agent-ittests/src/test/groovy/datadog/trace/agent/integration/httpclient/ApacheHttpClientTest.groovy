@@ -4,7 +4,7 @@ import datadog.opentracing.DDBaseSpan
 import datadog.opentracing.DDTracer
 import datadog.trace.agent.integration.TestHttpServer
 import datadog.trace.agent.test.TestUtils
-import datadog.trace.api.writer.ListWriter
+import datadog.trace.common.writer.ListWriter
 import io.opentracing.tag.Tags
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient

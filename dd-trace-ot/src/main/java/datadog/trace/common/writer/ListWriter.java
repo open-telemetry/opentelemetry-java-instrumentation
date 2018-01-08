@@ -1,7 +1,7 @@
-package datadog.trace.api.writer;
+package datadog.trace.common.writer;
 
 import datadog.opentracing.DDBaseSpan;
-import datadog.trace.api.Service;
+import datadog.trace.common.Service;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;

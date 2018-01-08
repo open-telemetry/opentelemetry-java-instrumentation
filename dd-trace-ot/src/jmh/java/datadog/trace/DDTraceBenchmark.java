@@ -1,7 +1,7 @@
 package datadog.trace;
 
 import datadog.opentracing.DDTracer;
-import datadog.trace.api.writer.ListWriter;
+import datadog.trace.common.writer.ListWriter;
 import io.opentracing.ActiveSpan;
 import io.opentracing.Span;
 import io.opentracing.Tracer;

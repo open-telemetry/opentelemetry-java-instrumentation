@@ -6,7 +6,7 @@ evaluationDependsOn(':dd-java-agent:tooling')
 compileTestJava.dependsOn tasks.getByPath(':dd-java-agent:tooling:testClasses')
 
 dependencies {
-  testCompile project(':dd-trace-annotations')
+  testCompile project(':dd-trace-api')
   testCompile project(':dd-trace-ot')
 
   testCompile deps.opentracingMock
@@ -58,7 +58,7 @@ test {
   }
 
   if (project.hasProperty("disableShadowRelocate") && disableShadowRelocate) {
-    exclude 'com/datadoghq/agent/ShadowPackageRenamingTest.class'
+    exclude 'datadog/trace/agent/ShadowPackageRenamingTest.class'
   }
 }
 

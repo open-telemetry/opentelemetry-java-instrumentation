@@ -11,7 +11,7 @@ import com.mongodb.async.client.MongoDatabase;
 import datadog.opentracing.DDBaseSpan;
 import datadog.opentracing.DDTracer;
 import datadog.trace.agent.test.TestUtils;
-import datadog.trace.api.writer.ListWriter;
+import datadog.trace.common.writer.ListWriter;
 import io.opentracing.tag.Tags;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;

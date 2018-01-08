@@ -3,7 +3,7 @@ package datadog.opentracing;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.trace.api.DDTags;
-import datadog.trace.api.util.Clock;
+import datadog.trace.common.util.Clock;
 import io.opentracing.BaseSpan;
 import java.io.PrintWriter;
 import java.io.StringWriter;

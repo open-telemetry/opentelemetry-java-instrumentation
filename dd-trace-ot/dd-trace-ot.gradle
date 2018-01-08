@@ -11,13 +11,13 @@ minimumBranchCoverage = 0.3
 minimumInstructionCoverage = 0.5
 whitelistedInstructionClasses += whitelistedBranchClasses += [
   'datadog.opentracing.decorators.*',
-  'datadog.trace.api.writer.ListWriter',
+  'datadog.trace.common.writer.ListWriter',
+  'datadog.trace.common.util.Clock',
   'datadog.trace.api.DDTags',
-  'datadog.trace.api.DDTraceInfo',
-  'datadog.trace.api.util.Clock',
 ]
 
 dependencies {
+  compile project(':dd-trace-api')
   compile deps.opentracing
   compile group: 'io.opentracing.contrib', name: 'opentracing-tracerresolver', version: '0.1.0'
 

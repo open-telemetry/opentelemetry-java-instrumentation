@@ -1,14 +1,16 @@
-package datadog.trace.api;
+package datadog.trace.common;
 
 import datadog.opentracing.DDTracer;
-import datadog.trace.api.sampling.Sampler;
-import datadog.trace.api.writer.DDAgentWriter;
-import datadog.trace.api.writer.Writer;
+import datadog.trace.common.sampling.Sampler;
+import datadog.trace.common.writer.DDAgentWriter;
+import datadog.trace.common.writer.Writer;
 import java.util.Properties;
 
 /**
  * Config gives priority to system properties and falls back to environment variables. It also
  * includes default values to ensure a valid config.
+ *
+ * <p>
  *
  * <p>System properties are {@link DDTraceConfig#PREFIX}'ed. Environment variables are the same as
  * the system property, but uppercased with '.' -> '_'.

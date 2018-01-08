@@ -19,7 +19,7 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
 dependencies {
   compile project(':dd-trace-ot')
   compile project(':dd-java-agent:tooling')
-  compile project(':dd-trace-annotations')
+  compile project(':dd-trace-api')
 
   compile deps.bytebuddy
 
@@ -69,16 +69,17 @@ shadowJar {
       // We want to ensure to not miss if a user is using the annotation.
       exclude 'datadog.trace.api.Trace'
     }
-    relocate('datadog.opentracing', 'datadog.trace.agent.api.opentracing')
+    relocate 'datadog.trace.common', 'datadog.trace.agent.common'
+    relocate 'datadog.opentracing', 'datadog.trace.agent.ot'
 
     relocate 'io.opentracing.contrib', 'datadog.trace.agent.opentracing.contrib'
 
-    relocate 'org.yaml', 'datadog.trace.agent.deps.org.yaml'
-    relocate 'org.msgpack', 'datadog.trace.agent.deps.org.msgpack'
-    relocate 'com.fasterxml', 'datadog.trace.agent.deps.com.fasterxml'
+    relocate 'org.yaml', 'datadog.trace.agent.deps.yaml'
+    relocate 'org.msgpack', 'datadog.trace.agent.deps.msgpack'
+    relocate 'com.fasterxml', 'datadog.trace.agent.deps.fasterxml'
 
-    relocate 'net.bytebuddy', 'datadog.trace.agent.deps.net.bytebuddy'
-    relocate('com.google', 'datadog.trace.agent.deps.com.google') {
+    relocate 'net.bytebuddy', 'datadog.trace.agent.deps.bytebuddy'
+    relocate('com.google', 'datadog.trace.agent.deps.google') {
       // This is used in the Cassandra Cluster.connectAsync signature so we can't relocate it. :fingers_crossed:
       exclude 'com.google.common.util.concurrent.ListenableFuture'
     }

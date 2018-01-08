@@ -6,8 +6,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import datadog.trace.api.sampling.RateSampler;
-import datadog.trace.api.writer.Writer;
+import datadog.trace.common.sampling.RateSampler;
+import datadog.trace.common.writer.Writer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;

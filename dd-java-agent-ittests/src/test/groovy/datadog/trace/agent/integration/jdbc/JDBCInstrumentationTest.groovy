@@ -2,7 +2,7 @@ package datadog.trace.agent.integration.jdbc
 
 import datadog.opentracing.DDTracer
 import datadog.trace.agent.test.TestUtils
-import datadog.trace.api.writer.ListWriter
+import datadog.trace.common.writer.ListWriter
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
 import org.hsqldb.jdbc.JDBCDriver

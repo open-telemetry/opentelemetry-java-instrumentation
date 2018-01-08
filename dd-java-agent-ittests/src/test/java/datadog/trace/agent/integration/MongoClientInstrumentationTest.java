@@ -6,7 +6,7 @@ import com.mongodb.client.MongoDatabase;
 import datadog.opentracing.DDBaseSpan;
 import datadog.opentracing.DDTracer;
 import datadog.trace.agent.test.TestUtils;
-import datadog.trace.api.writer.ListWriter;
+import datadog.trace.common.writer.ListWriter;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;

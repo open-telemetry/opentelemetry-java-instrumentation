@@ -1,5 +1,6 @@
 package datadog.trace.api.writer
 
+import datadog.trace.common.writer.WriterQueue
 import spock.lang.Specification
 
 import java.util.concurrent.Phaser

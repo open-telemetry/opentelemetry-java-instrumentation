@@ -15,7 +15,7 @@ public class ShadowPackageRenamingTest {
     final String agentGuavaDep =
         ddClass
             .getClassLoader()
-            .loadClass("datadog.trace.agent.deps." + MapMaker.class.getName())
+            .loadClass("datadog.trace.agent.deps.google.common.collect.MapMaker")
             .getProtectionDomain()
             .getCodeSource()
             .getLocation()

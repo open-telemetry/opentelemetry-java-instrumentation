@@ -1,9 +1,13 @@
-package datadog.trace.api.util;
+package datadog.trace.common.util;
 
 import java.util.concurrent.TimeUnit;
 
 /**
  * A simple wrapper for system clock that aims to provide the current time
+ *
+ * <p>
+ *
+ * <p>
  *
  * <p>
  *

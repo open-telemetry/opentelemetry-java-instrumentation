@@ -8,7 +8,7 @@ include ':dd-java-agent:benchmark-integration:jetty-perftest'
 include ':dd-java-agent:testing'
 include ':dd-java-agent:tooling'
 include ':dd-java-agent-ittests'
-include ':dd-trace-annotations'
+include ':dd-trace-api'
 
 // examples
 include ':examples:dropwizard-mongo-client'

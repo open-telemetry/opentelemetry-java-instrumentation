@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import datadog.opentracing.DDSpan;
+import datadog.trace.common.sampling.AllSampler;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;

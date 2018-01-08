@@ -2,7 +2,7 @@ package datadog.trace.agent.integration.servlet
 
 import com.google.common.io.Files
 import datadog.opentracing.DDTracer
-import datadog.trace.api.writer.ListWriter
+import datadog.trace.common.writer.ListWriter
 import io.opentracing.util.GlobalTracer
 import okhttp3.OkHttpClient
 import okhttp3.Request

@@ -3,7 +3,7 @@ package datadog.trace.agent.test;
 import datadog.opentracing.DDTracer;
 import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.writer.ListWriter;
+import datadog.trace.common.writer.ListWriter;
 import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;

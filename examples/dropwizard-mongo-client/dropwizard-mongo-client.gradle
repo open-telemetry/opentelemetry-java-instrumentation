@@ -17,7 +17,7 @@ targetCompatibility = 1.8
 
 dependencies {
   compile project(':dd-trace-ot')
-  compile project(':dd-trace-annotations')
+  compile project(':dd-trace-api')
 
   compile deps.opentracing
 

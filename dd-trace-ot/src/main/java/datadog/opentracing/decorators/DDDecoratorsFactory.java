@@ -1,6 +1,6 @@
 package datadog.opentracing.decorators;
 
-import datadog.trace.api.util.ConfigUtils;
+import datadog.trace.common.util.ConfigUtils;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;

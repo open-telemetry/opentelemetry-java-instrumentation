@@ -1,8 +1,8 @@
-package datadog.trace.api.writer;
+package datadog.trace.common.writer;
 
 import com.google.auto.service.AutoService;
 import datadog.opentracing.DDBaseSpan;
-import datadog.trace.api.Service;
+import datadog.trace.common.Service;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;

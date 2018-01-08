@@ -1,19 +1,19 @@
 package datadog.trace
 
 import datadog.opentracing.DDTracer
-import datadog.trace.api.DDTraceConfig
-import datadog.trace.api.sampling.AllSampler
-import datadog.trace.api.sampling.RateSampler
-import datadog.trace.api.writer.DDAgentWriter
-import datadog.trace.api.writer.ListWriter
-import datadog.trace.api.writer.LoggingWriter
+import datadog.trace.common.DDTraceConfig
+import datadog.trace.common.sampling.AllSampler
+import datadog.trace.common.sampling.RateSampler
+import datadog.trace.common.writer.DDAgentWriter
+import datadog.trace.common.writer.ListWriter
+import datadog.trace.common.writer.LoggingWriter
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 
-import static datadog.trace.api.DDTraceConfig.*
+import static datadog.trace.common.DDTraceConfig.*
 
 class DDTraceConfigTest extends Specification {
   static originalEnvMap

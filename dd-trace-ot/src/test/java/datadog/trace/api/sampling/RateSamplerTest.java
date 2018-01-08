@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import datadog.opentracing.DDSpan;
+import datadog.trace.common.sampling.RateSampler;
+import datadog.trace.common.sampling.Sampler;
 import org.junit.Test;
 
 public class RateSamplerTest {

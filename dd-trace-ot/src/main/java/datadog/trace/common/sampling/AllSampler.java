@@ -1,4 +1,4 @@
-package datadog.trace.api.sampling;
+package datadog.trace.common.sampling;
 
 import datadog.opentracing.DDBaseSpan;
 

@@ -5,7 +5,7 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  jmh project(':dd-trace-annotations')
+  jmh project(':dd-trace-api')
   jmh group: 'net.bytebuddy', name: 'byte-buddy-agent', version: '1.7.6'
 
   // Add a bunch of dependencies so instrumentation is not disabled.

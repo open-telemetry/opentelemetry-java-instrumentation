@@ -18,7 +18,7 @@ package datadog.trace.agent;
 
 import datadog.opentracing.DDTraceOTInfo;
 import datadog.trace.agent.tooling.AgentInstaller;
-import datadog.trace.api.DDTraceAnnotationsInfo;
+import datadog.trace.api.DDTraceApiInfo;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.tracerresolver.TracerResolver;
 import io.opentracing.util.GlobalTracer;
@@ -48,7 +48,7 @@ public class TracingAgent {
     // in static initializers
     DDJavaAgentInfo.VERSION.toString();
     DDTraceOTInfo.VERSION.toString();
-    DDTraceAnnotationsInfo.VERSION.toString();
+    DDTraceApiInfo.VERSION.toString();
   }
 
   /** Register a global tracer if no global tracer is already registered. */

@@ -5,7 +5,7 @@ import java.io.InputStreamReader;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DDTraceAnnotationsInfo {
+public class DDTraceApiInfo {
   public static final String VERSION;
 
   static {
@@ -16,8 +16,7 @@ public class DDTraceAnnotationsInfo {
       final BufferedReader br =
           new BufferedReader(
               new InputStreamReader(
-                  DDTraceAnnotationsInfo.class.getResourceAsStream("/dd-trace-annotations.version"),
-                  "UTF-8"));
+                  DDTraceApiInfo.class.getResourceAsStream("/dd-trace-api.version"), "UTF-8"));
       for (int c = br.read(); c != -1; c = br.read()) sb.append((char) c);
 
       v = sb.toString().trim();
@@ -25,7 +24,7 @@ public class DDTraceAnnotationsInfo {
       v = "unknown";
     }
     VERSION = v;
-    log.info("dd-trace-annotations - version: {}", v);
+    log.info("dd-trace-api - version: {}", v);
   }
 
   public static void main(final String... args) {

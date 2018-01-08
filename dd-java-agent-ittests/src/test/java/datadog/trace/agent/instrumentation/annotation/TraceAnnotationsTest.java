@@ -7,7 +7,7 @@ import datadog.opentracing.DDTracer;
 import datadog.opentracing.decorators.ErrorFlag;
 import datadog.trace.agent.test.SayTracedHello;
 import datadog.trace.agent.test.TestUtils;
-import datadog.trace.api.writer.ListWriter;
+import datadog.trace.common.writer.ListWriter;
 import io.opentracing.util.GlobalTracer;
 import java.io.PrintWriter;
 import java.io.StringWriter;

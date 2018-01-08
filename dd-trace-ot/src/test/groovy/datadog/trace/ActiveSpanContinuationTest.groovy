@@ -1,7 +1,7 @@
 package datadog.trace
 
 import datadog.opentracing.DDTracer
-import datadog.trace.api.writer.ListWriter
+import datadog.trace.common.writer.ListWriter
 import io.opentracing.util.ThreadLocalActiveSpan
 import spock.lang.Ignore
 import spock.lang.Specification

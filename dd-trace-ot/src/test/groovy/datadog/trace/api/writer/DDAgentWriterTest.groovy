@@ -1,6 +1,9 @@
 package datadog.trace.api.writer
 
 import datadog.opentracing.DDBaseSpan
+import datadog.trace.common.writer.DDAgentWriter
+import datadog.trace.common.writer.DDApi
+import datadog.trace.common.writer.WriterQueue
 import spock.lang.Specification
 
 import static datadog.trace.SpanFactory.newSpanOf

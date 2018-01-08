@@ -2,7 +2,7 @@ package datadog.trace.agent.integration.servlet
 
 import datadog.opentracing.DDBaseSpan
 import datadog.opentracing.DDTracer
-import datadog.trace.api.writer.ListWriter
+import datadog.trace.common.writer.ListWriter
 import io.opentracing.util.GlobalTracer
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -15,6 +15,7 @@ import spock.lang.Unroll
 
 import java.lang.reflect.Field
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class JettyServletTest extends Specification {
 
@@ -27,7 +28,7 @@ class JettyServletTest extends Specification {
     @Override
     Response intercept(Interceptor.Chain chain) throws IOException {
       def response = chain.proceed(chain.request())
-      JettyServletTest.latch.await()
+      JettyServletTest.latch.await(10, TimeUnit.SECONDS) // don't block forever or test never fails.
       return response
     }
   })
