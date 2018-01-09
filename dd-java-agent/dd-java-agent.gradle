@@ -10,16 +10,16 @@ apply from: "${rootDir}/gradle/jacoco.gradle"
 jacocoTestReport.dependsOn ':dd-java-agent-ittests:test'
 
 whitelistedInstructionClasses += whitelistedBranchClasses += [
-  'com.datadoghq.agent.*',
-  'com.datadoghq.agent.integration.*',
+  'datadog.agent.*',
+  'datadog.agent.decorators.*',
   'io.opentracing.contrib.*',
   'dd.opentracing.contrib.*',
 ]
 
 dependencies {
-  compile project(':dd-trace')
+  compile project(':dd-trace-ot')
   compile project(':dd-java-agent:tooling')
-  compile project(':dd-trace-annotations')
+  compile project(':dd-trace-api')
 
   compile deps.bytebuddy
 
@@ -31,10 +31,10 @@ dependencies {
 
   testCompile deps.opentracingMock
 }
-// add all subprojects under 'integrations' to the agent's dependencies
+// add all subprojects under 'instrumentation' to the agent's dependencies
 Project java_agent_project = project
 subprojects { subProj ->
-  if (subProj.getPath().startsWith(java_agent_project.getPath() + ':integrations:')) {
+  if (subProj.getPath().startsWith(java_agent_project.getPath() + ':instrumentation:')) {
     java_agent_project.dependencies {
       compile(project(subProj.getPath()))
     }
@@ -46,10 +46,9 @@ jar {
 
   manifest {
     attributes(
-      "Main-Class": "com.datadoghq.agent.DDJavaAgentInfo",
-      // I don't think we want to define this since we can't really load after startup:
-      //"Agent-Class": "com.datadoghq.trace.agent.TracingAgent",
-      "Premain-Class": "com.datadoghq.agent.TracingAgent",
+      "Main-Class": "datadog.trace.agent.DDJavaAgentInfo",
+      "Agent-Class": "datadog.trace.agent.TracingAgent",
+      "Premain-Class": "datadog.trace.agent.TracingAgent",
       "Can-Redefine-Classes": true,
       "Can-Retransform-Classes": true,
     )
@@ -61,24 +60,26 @@ shadowJar {
 
   mergeServiceFiles() // This triggers shadow to also apply the relocate rules below to the service files.
 
-  relocate 'org.slf4j', 'dd.slf4j'  // Prevents conflict with other SLF4J instances. Important for premain.
+  relocate 'org.slf4j', 'datadog.slf4j'  // Prevents conflict with other SLF4J instances. Important for premain.
 
   if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
 
     // These need to be relocated to prevent conflicts in case the regular dd-trace is already on the classpath.
-    relocate('com.datadoghq.trace', 'com.datadoghq.agent.tracer') {
+    relocate('datadog.trace.api', 'datadog.trace.agent.api') {
       // We want to ensure to not miss if a user is using the annotation.
-      exclude 'com.datadoghq.trace.Trace'
+      exclude 'datadog.trace.api.Trace'
     }
+    relocate 'datadog.trace.common', 'datadog.trace.agent.common'
+    relocate 'datadog.opentracing', 'datadog.trace.agent.ot'
 
-    relocate 'io.opentracing.contrib', 'dd.opentracing.contrib'
+    relocate 'io.opentracing.contrib', 'datadog.trace.agent.opentracing.contrib'
 
-    relocate 'org.yaml', 'dd.deps.org.yaml'
-    relocate 'org.msgpack', 'dd.deps.org.msgpack'
-    relocate 'com.fasterxml', 'dd.deps.com.fasterxml'
+    relocate 'org.yaml', 'datadog.trace.agent.deps.yaml'
+    relocate 'org.msgpack', 'datadog.trace.agent.deps.msgpack'
+    relocate 'com.fasterxml', 'datadog.trace.agent.deps.fasterxml'
 
-    relocate 'net.bytebuddy', 'dd.deps.net.bytebuddy'
-    relocate('com.google', 'dd.deps.com.google') {
+    relocate 'net.bytebuddy', 'datadog.trace.agent.deps.bytebuddy'
+    relocate('com.google', 'datadog.trace.agent.deps.google') {
       // This is used in the Cassandra Cluster.connectAsync signature so we can't relocate it. :fingers_crossed:
       exclude 'com.google.common.util.concurrent.ListenableFuture'
     }

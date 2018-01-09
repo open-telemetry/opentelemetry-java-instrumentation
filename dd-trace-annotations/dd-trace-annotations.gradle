@@ -1,9 +1,0 @@
-apply from: "${rootDir}/gradle/java.gradle"
-apply from: "${rootDir}/gradle/publish.gradle"
-apply from: "${rootDir}/gradle/jacoco.gradle"
-
-description = 'dd-trace-annotations'
-dependencies {
-  compile deps.slf4j
-  testCompile deps.junit
-}

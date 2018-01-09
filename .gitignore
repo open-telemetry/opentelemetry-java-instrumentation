@@ -11,7 +11,7 @@ target
 /.gradle
 */.gradle
 **/build/
-dd-trace-examples/**/build/
+examples/**/build/
 
 # Eclipse #
 ###########
@@ -49,9 +49,9 @@ Thumbs.db
 /bin
 /out
 */out
-dd-java-agent/integrations/*/out
+dd-java-agent/instrumentation/*/out
 dd-java-agent/benchmark-integration/perf-test-settings.rc
-dd-trace-examples/*/out
+examples/*/out
 derby.log
 
 !dd-java-agent/benchmark/releases/*.jar
