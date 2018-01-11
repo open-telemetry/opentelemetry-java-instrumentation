@@ -37,7 +37,9 @@ for integration_path in dd-java-agent/instrumentation/*; do
     save_reports $integration_path
 done
 save_reports dd-java-agent-ittests
-save_reports dd-trace
+save_reports dd-trace-api
+save_reports dd-trace-ot
 
 save_libs dd-java-agent
-save_libs dd-trace
+save_libs dd-trace-api
+save_libs dd-trace-ot
