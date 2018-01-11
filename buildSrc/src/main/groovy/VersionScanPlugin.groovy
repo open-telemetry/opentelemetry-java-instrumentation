@@ -36,7 +36,8 @@ class VersionScanPlugin implements Plugin<Project> {
 
     project.extensions.create("versionScan", VersionScanExtension)
     def scanVersions = project.task('scanVersions') {
-      description = "Queries for all versions of configured modules and finds key classes"
+      group = 'VersionScan'
+      description = "Verify instrumentation against runtime classpaths."
     }
 
     def hasRelevantTask = project.gradle.startParameter.taskNames.any { it.contains('scanVersions') }
