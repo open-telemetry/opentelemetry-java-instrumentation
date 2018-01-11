@@ -34,7 +34,8 @@ public class ApacheHttpClientInstrumentation implements Instrumenter {
                 "org.apache.http.impl.execchain.ClientExecChain"))
         .transform(
             new HelperInjector(
-                "datadog.trace.instrumentation.apachehttpclient.DDTracingClientExec"))
+                "datadog.trace.instrumentation.apachehttpclient.DDTracingClientExec",
+                "datadog.trace.instrumentation.apachehttpclient.DDTracingClientExec$HttpHeadersInjectAdapter"))
         .transform(
             DDAdvice.create()
                 .advice(

@@ -47,7 +47,8 @@ public final class HttpServlet3Instrumentation implements Instrumenter {
                 "io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator",
                 "io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator$1",
                 "io.opentracing.contrib.web.servlet.filter.TracingFilter",
-                "io.opentracing.contrib.web.servlet.filter.TracingFilter$1"))
+                "io.opentracing.contrib.web.servlet.filter.TracingFilter$1",
+                getClass().getName() + "$HttpServlet3Advice$TagSettingAsyncListener"))
         .transform(
             DDAdvice.create()
                 .advice(
