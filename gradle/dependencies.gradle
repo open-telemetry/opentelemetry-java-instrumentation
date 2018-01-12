@@ -6,14 +6,14 @@ ext {
     opentracing: '0.30.0',
 
     slf4j      : "1.7.25",
-    guava      : "21.0",
-    jackson    : "2.8.7",
+    guava      : "23.0",
+    jackson    : "2.9.3",
 
     spock      : "1.0-groovy-$spockGroovyVer",
     groovy     : groovyVer,
     junit      : "4.12",
     logback    : "1.2.3",
-    bytebuddy  : "1.7.6"
+    bytebuddy  : "1.7.9"
   ]
 
   deps = [
