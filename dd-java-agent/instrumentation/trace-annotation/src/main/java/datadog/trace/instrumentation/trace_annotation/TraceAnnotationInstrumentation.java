@@ -8,7 +8,8 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Trace;
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Method;
@@ -35,24 +36,25 @@ public final class TraceAnnotationInstrumentation implements Instrumenter {
   public static class TraceAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static ActiveSpan startSpan(@Advice.Origin final Method method) {
+    public static Scope startSpan(@Advice.Origin final Method method) {
       final Trace trace = method.getAnnotation(Trace.class);
       String operationName = trace == null ? null : trace.operationName();
       if (operationName == null || operationName.isEmpty()) {
         operationName = method.getDeclaringClass().getSimpleName() + "." + method.getName();
       }
 
-      return GlobalTracer.get().buildSpan(operationName).startActive();
+      return GlobalTracer.get().buildSpan(operationName).startActive(true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final ActiveSpan activeSpan, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        Tags.ERROR.set(activeSpan, true);
-        activeSpan.log(Collections.singletonMap("error.object", throwable));
+        final Span span = scope.span();
+        Tags.ERROR.set(span, true);
+        span.log(Collections.singletonMap("error.object", throwable));
       }
-      activeSpan.deactivate();
+      scope.close();
     }
   }
 }

@@ -187,7 +187,7 @@ class InstrumentedClass {
         // 2. If using the Java Agent (-javaagent;/path/to/agent.jar), do not instantiate the GlobalTracer; the Agent instantiates it for you
         Tracer tracer = io.opentracing.util.GlobalTracer.get();
 
-        Span span = tracer.buildSpan("operation-name").startActive();
+        Span span = tracer.buildSpan("operation-name").startActive(true);
         span.setTag(DDTags.SERVICE_NAME, "my-new-service");
 
         // The code you're tracing
@@ -207,7 +207,7 @@ class InstrumentedClass {
     void method0() {
         Tracer tracer = io.opentracing.util.GlobalTracer.get();
 
-        try (ActiveSpan span = tracer.buildSpan("operation-name").startActive()) {
+        try (ActiveSpan span = tracer.buildSpan("operation-name").startActive(true)) {
             span.setTag(DDTags.SERVICE_NAME, "my-new-service");
             Thread.sleep(1000);
         }

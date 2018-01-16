@@ -1,7 +1,7 @@
 package datadog.trace.common.writer;
 
 import com.google.auto.service.AutoService;
-import datadog.opentracing.DDBaseSpan;
+import datadog.opentracing.DDSpan;
 import datadog.trace.common.Service;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LoggingWriter implements Writer {
 
   @Override
-  public void write(final List<DDBaseSpan<?>> trace) {
+  public void write(final List<DDSpan> trace) {
     log.info("write(trace): {}", trace);
   }
 

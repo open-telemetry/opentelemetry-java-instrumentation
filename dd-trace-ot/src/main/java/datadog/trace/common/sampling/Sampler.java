@@ -1,6 +1,6 @@
 package datadog.trace.common.sampling;
 
-import datadog.opentracing.DDBaseSpan;
+import datadog.opentracing.DDSpan;
 import datadog.trace.common.DDTraceConfig;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ public interface Sampler {
    * @param span the parent span with its context
    * @return true when the trace/spans has to be reported/written
    */
-  boolean sample(DDBaseSpan<?> span);
+  boolean sample(DDSpan span);
 
   @Slf4j
   final class Builder {

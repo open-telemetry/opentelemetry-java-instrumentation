@@ -15,7 +15,8 @@ import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.jms.util.MessagePropertyTextMap;
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
@@ -69,7 +70,7 @@ public final class JMS1MessageConsumerInstrumentation implements Instrumenter {
       final SpanContext extractedContext =
           GlobalTracer.get().extract(Format.Builtin.TEXT_MAP, new MessagePropertyTextMap(message));
 
-      final ActiveSpan span =
+      final Scope scope =
           GlobalTracer.get()
               .buildSpan("jms.consume")
               .asChildOf(extractedContext)
@@ -78,14 +79,15 @@ public final class JMS1MessageConsumerInstrumentation implements Instrumenter {
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CONSUMER)
               .withTag("span.origin.type", consumer.getClass().getName())
               .withStartTimestamp(TimeUnit.MILLISECONDS.toMicros(startTime))
-              .startActive();
+              .startActive(true);
+      final Span span = scope.span();
 
       if (throwable != null) {
         Tags.ERROR.set(span, Boolean.TRUE);
         span.log(Collections.singletonMap("error.object", throwable));
       }
       span.setTag(DDTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));
-      span.deactivate();
+      scope.close();
     }
   }
 }

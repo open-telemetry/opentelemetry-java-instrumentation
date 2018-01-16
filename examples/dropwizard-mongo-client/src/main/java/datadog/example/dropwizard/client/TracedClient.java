@@ -2,7 +2,7 @@ package datadog.example.dropwizard.client;
 
 import datadog.trace.api.DDTags;
 import datadog.trace.api.Trace;
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
@@ -25,8 +25,8 @@ public class TracedClient {
   @Trace
   private static void executeCall() throws IOException {
     final Tracer tracer = GlobalTracer.get();
-    final ActiveSpan activeSpan = tracer.activeSpan();
-    activeSpan.setTag(DDTags.SERVICE_NAME, "http.client");
+    final Scope scope = tracer.scopeManager().active();
+    scope.span().setTag(DDTags.SERVICE_NAME, "http.client");
 
     final OkHttpClient client = new OkHttpClient().newBuilder().build();
     final Request request = new Request.Builder().url("http://localhost:8080/demo/").build();

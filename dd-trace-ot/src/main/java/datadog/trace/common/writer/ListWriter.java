@@ -1,6 +1,6 @@
 package datadog.trace.common.writer;
 
-import datadog.opentracing.DDBaseSpan;
+import datadog.opentracing.DDSpan;
 import datadog.trace.common.Service;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,15 +9,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 
 /** List writer used by tests mostly */
-public class ListWriter extends CopyOnWriteArrayList<List<DDBaseSpan<?>>> implements Writer {
+public class ListWriter extends CopyOnWriteArrayList<List<DDSpan>> implements Writer {
   private final List<CountDownLatch> latches = new LinkedList<>();
 
-  public List<DDBaseSpan<?>> firstTrace() {
+  public List<DDSpan> firstTrace() {
     return get(0);
   }
 
   @Override
-  public void write(final List<DDBaseSpan<?>> trace) {
+  public void write(final List<DDSpan> trace) {
     synchronized (latches) {
       add(trace);
       for (final CountDownLatch latch : latches) {

@@ -1,6 +1,6 @@
 package datadog.trace.agent.integration
 
-import io.opentracing.ActiveSpan
+import io.opentracing.Scope
 import io.opentracing.SpanContext
 import io.opentracing.propagation.Format
 import io.opentracing.propagation.TextMap
@@ -53,12 +53,12 @@ class TestHttpServer {
               final SpanContext extractedContext =
                 GlobalTracer.get()
                   .extract(Format.Builtin.HTTP_HEADERS, new RatpackResponseAdapter(context))
-              ActiveSpan span =
+              Scope scope =
                 GlobalTracer.get()
                   .buildSpan("test-http-server")
                   .asChildOf(extractedContext)
-                  .startActive()
-              span.deactivate()
+                  .startActive(true)
+              scope.close()
             }
 
             response.status(200).send(msg)

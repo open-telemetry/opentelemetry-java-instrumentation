@@ -1,6 +1,6 @@
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
-import datadog.opentracing.DDBaseSpan
+import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
 import datadog.trace.agent.test.AgentTestRunner
 import io.opentracing.tag.Tags
@@ -31,7 +31,7 @@ class CassandraClientTest extends AgentTestRunner {
     expect:
     session.getClass().getName().endsWith("contrib.cassandra.TracingSession")
     TEST_WRITER.size() == 5
-    final DDBaseSpan<?> selectTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
+    final DDSpan selectTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
 
     selectTrace.getServiceName() == DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME
     selectTrace.getOperationName() == "execute"
@@ -67,7 +67,7 @@ class CassandraClientTest extends AgentTestRunner {
 
     expect:
     session.getClass().getName().endsWith("contrib.cassandra.TracingSession")
-    final DDBaseSpan<?> selectTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
+    final DDSpan selectTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
 
     selectTrace.getServiceName() == DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME
     selectTrace.getOperationName() == "execute"

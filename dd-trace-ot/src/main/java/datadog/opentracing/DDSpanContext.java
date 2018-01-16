@@ -32,7 +32,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   private final String threadName = Thread.currentThread().getName();
   private final long threadId = Thread.currentThread().getId();
   /** The collection of all span related to this one */
-  private final Queue<DDBaseSpan<?>> trace;
+  private final Queue<DDSpan> trace;
 
   // DD attributes
   /** For technical reasons, the ref to the original tracer */
@@ -64,7 +64,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final boolean errorFlag,
       final String spanType,
       final Map<String, Object> tags,
-      final Queue<DDBaseSpan<?>> trace,
+      final Queue<DDSpan> trace,
       final DDTracer tracer) {
 
     this.traceId = traceId;
@@ -165,7 +165,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   }
 
   @JsonIgnore
-  public Queue<DDBaseSpan<?>> getTrace() {
+  public Queue<DDSpan> getTrace() {
     return this.trace;
   }
 

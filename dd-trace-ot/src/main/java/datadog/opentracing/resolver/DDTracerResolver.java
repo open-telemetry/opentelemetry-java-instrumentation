@@ -2,9 +2,9 @@ package datadog.opentracing.resolver;
 
 import com.google.auto.service.AutoService;
 import datadog.opentracing.DDTracer;
-import io.opentracing.NoopTracerFactory;
 import io.opentracing.Tracer;
 import io.opentracing.contrib.tracerresolver.TracerResolver;
+import io.opentracing.noop.NoopTracerFactory;
 import io.opentracing.util.GlobalTracer;
 import lombok.extern.slf4j.Slf4j;
 

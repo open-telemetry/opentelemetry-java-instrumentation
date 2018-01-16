@@ -14,7 +14,8 @@ import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.jms.util.MessagePropertyTextMap;
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
@@ -53,7 +54,7 @@ public final class JMS2MessageProducerInstrumentation implements Instrumenter {
   public static class ProducerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static ActiveSpan startSpan(
+    public static Scope startSpan(
         @Advice.Argument(0) final Message message, @Advice.This final MessageProducer producer) {
       Destination defaultDestination;
       try {
@@ -61,7 +62,7 @@ public final class JMS2MessageProducerInstrumentation implements Instrumenter {
       } catch (final JMSException e) {
         defaultDestination = null;
       }
-      final ActiveSpan span =
+      final Scope scope =
           GlobalTracer.get()
               .buildSpan("jms.produce")
               .withTag(DDTags.SERVICE_NAME, "jms")
@@ -71,24 +72,26 @@ public final class JMS2MessageProducerInstrumentation implements Instrumenter {
               .withTag(Tags.COMPONENT.getKey(), "jms2")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_PRODUCER)
               .withTag("span.origin.type", producer.getClass().getName())
-              .startActive();
+              .startActive(true);
 
       GlobalTracer.get()
-          .inject(span.context(), Format.Builtin.TEXT_MAP, new MessagePropertyTextMap(message));
+          .inject(
+              scope.span().context(), Format.Builtin.TEXT_MAP, new MessagePropertyTextMap(message));
 
-      return span;
+      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final ActiveSpan span, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
 
-      if (span != null) {
+      if (scope != null) {
         if (throwable != null) {
+          final Span span = scope.span();
           Tags.ERROR.set(span, Boolean.TRUE);
           span.log(Collections.singletonMap("error.object", throwable));
         }
-        span.deactivate();
+        scope.close();
       }
     }
   }
@@ -96,11 +99,11 @@ public final class JMS2MessageProducerInstrumentation implements Instrumenter {
   public static class ProducerWithDestinationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static ActiveSpan startSpan(
+    public static Scope startSpan(
         @Advice.Argument(0) final Destination destination,
         @Advice.Argument(1) final Message message,
         @Advice.This final MessageProducer producer) {
-      final ActiveSpan span =
+      final Scope scope =
           GlobalTracer.get()
               .buildSpan("jms.produce")
               .withTag(DDTags.SERVICE_NAME, "jms")
@@ -108,23 +111,25 @@ public final class JMS2MessageProducerInstrumentation implements Instrumenter {
               .withTag(Tags.COMPONENT.getKey(), "jms2")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_PRODUCER)
               .withTag("span.origin.type", producer.getClass().getName())
-              .startActive();
+              .startActive(true);
 
       GlobalTracer.get()
-          .inject(span.context(), Format.Builtin.TEXT_MAP, new MessagePropertyTextMap(message));
-      return span;
+          .inject(
+              scope.span().context(), Format.Builtin.TEXT_MAP, new MessagePropertyTextMap(message));
+      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final ActiveSpan span, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
 
-      if (span != null) {
+      if (scope != null) {
         if (throwable != null) {
+          final Span span = scope.span();
           Tags.ERROR.set(span, Boolean.TRUE);
           span.log(Collections.singletonMap("error.object", throwable));
         }
-        span.deactivate();
+        scope.close();
       }
     }
   }

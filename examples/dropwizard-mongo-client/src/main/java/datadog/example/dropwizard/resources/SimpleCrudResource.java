@@ -6,7 +6,7 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import datadog.example.dropwizard.api.Book;
 import datadog.trace.api.Trace;
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
 import java.util.ArrayList;
 import java.util.List;
@@ -113,9 +113,9 @@ public class SimpleCrudResource {
    */
   @Trace(operationName = "database.before")
   public void beforeDB() throws InterruptedException {
-    final ActiveSpan currentSpan = GlobalTracer.get().activeSpan();
-    if (currentSpan != null) {
-      currentSpan.setTag("status", "started");
+    final Scope scope = GlobalTracer.get().scopeManager().active();
+    if (scope != null) {
+      scope.span().setTag("status", "started");
       Thread.sleep(10);
     }
   }
@@ -127,9 +127,9 @@ public class SimpleCrudResource {
    */
   @Trace(operationName = "database.after")
   public void afterDB() throws InterruptedException {
-    final ActiveSpan currentSpan = GlobalTracer.get().activeSpan();
-    if (currentSpan != null) {
-      currentSpan.setTag("status", "started");
+    final Scope scope = GlobalTracer.get().scopeManager().active();
+    if (scope != null) {
+      scope.span().setTag("status", "started");
       Thread.sleep(10);
     }
   }

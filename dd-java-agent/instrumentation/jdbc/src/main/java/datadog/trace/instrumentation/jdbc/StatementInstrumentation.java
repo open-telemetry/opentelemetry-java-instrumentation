@@ -12,8 +12,9 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
-import io.opentracing.ActiveSpan;
-import io.opentracing.NoopActiveSpanSource;
+import io.opentracing.Scope;
+import io.opentracing.Span;
+import io.opentracing.noop.NoopScopeManager;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.sql.Connection;
@@ -40,14 +41,14 @@ public final class StatementInstrumentation implements Instrumenter {
   public static class StatementAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static ActiveSpan startSpan(
+    public static Scope startSpan(
         @Advice.Argument(0) final String sql, @Advice.This final Statement statement) {
       final Connection connection;
       try {
         connection = statement.getConnection();
       } catch (final Throwable e) {
         // Had some problem getting the connection.
-        return NoopActiveSpanSource.NoopActiveSpan.INSTANCE;
+        return NoopScopeManager.NoopScope.INSTANCE;
       }
 
       ConnectionInstrumentation.DBInfo dbInfo =
@@ -56,8 +57,11 @@ public final class StatementInstrumentation implements Instrumenter {
         dbInfo = ConnectionInstrumentation.DBInfo.UNKNOWN;
       }
 
-      final ActiveSpan span =
-          GlobalTracer.get().buildSpan(dbInfo.getType() + ".query").startActive();
+      final Scope scope =
+          GlobalTracer.get().buildSpan(dbInfo.getType() + ".query").startActive(true);
+
+      final Span span = scope.span();
+
       Tags.DB_TYPE.set(span, dbInfo.getType());
       Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
       Tags.COMPONENT.set(span, "java-jdbc-statement");
@@ -71,17 +75,18 @@ public final class StatementInstrumentation implements Instrumenter {
       if (dbInfo.getUser() != null) {
         Tags.DB_USER.set(span, dbInfo.getUser());
       }
-      return span;
+      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final ActiveSpan activeSpan, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        Tags.ERROR.set(activeSpan, true);
-        activeSpan.log(Collections.singletonMap("error.object", throwable));
+        final Span span = scope.span();
+        Tags.ERROR.set(span, true);
+        span.log(Collections.singletonMap("error.object", throwable));
       }
-      activeSpan.deactivate();
+      scope.close();
     }
   }
 }

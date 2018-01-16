@@ -12,7 +12,8 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter;
 import io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator;
@@ -62,8 +63,9 @@ public final class FilterChain2Instrumentation implements Instrumenter {
   public static class FilterChain2Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static ActiveSpan startSpan(@Advice.Argument(0) final ServletRequest req) {
-      if (GlobalTracer.get().activeSpan() != null || !(req instanceof HttpServletRequest)) {
+    public static Scope startSpan(@Advice.Argument(0) final ServletRequest req) {
+      if (GlobalTracer.get().scopeManager().active() != null
+          || !(req instanceof HttpServletRequest)) {
         // doFilter is called by each filter. We only want to time outer-most.
         return null;
       }
@@ -74,26 +76,27 @@ public final class FilterChain2Instrumentation implements Instrumenter {
                   Format.Builtin.HTTP_HEADERS,
                   new HttpServletRequestExtractAdapter((HttpServletRequest) req));
 
-      final ActiveSpan span =
+      final Scope scope =
           GlobalTracer.get()
               .buildSpan(FILTER_CHAIN_OPERATION_NAME)
               .asChildOf(extractedContext)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
-              .startActive();
+              .startActive(true);
 
-      ServletFilterSpanDecorator.STANDARD_TAGS.onRequest((HttpServletRequest) req, span);
-      return span;
+      ServletFilterSpanDecorator.STANDARD_TAGS.onRequest((HttpServletRequest) req, scope.span());
+      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Argument(0) final ServletRequest request,
         @Advice.Argument(1) final ServletResponse response,
-        @Advice.Enter final ActiveSpan span,
+        @Advice.Enter final Scope scope,
         @Advice.Thrown final Throwable throwable) {
 
-      if (span != null) {
+      if (scope != null) {
         if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
+          final Span span = scope.span();
           final HttpServletRequest req = (HttpServletRequest) request;
           final HttpServletResponse resp = (HttpServletResponse) response;
 
@@ -104,7 +107,7 @@ public final class FilterChain2Instrumentation implements Instrumenter {
             ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(req, resp, span);
           }
         }
-        span.deactivate();
+        scope.close();
       }
     }
   }

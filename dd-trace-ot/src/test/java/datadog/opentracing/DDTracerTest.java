@@ -25,7 +25,7 @@ public class DDTracerTest {
     // Rate 0.5
     when(sampler.sample(any(DDSpan.class))).thenReturn(true).thenReturn(false);
 
-    final Queue<DDBaseSpan<?>> spans = new LinkedList<>();
+    final Queue<DDSpan> spans = new LinkedList<>();
     spans.add(span);
     spans.add(span);
     spans.add(span);

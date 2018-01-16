@@ -1,6 +1,6 @@
 package datadog.trace.common.sampling;
 
-import datadog.opentracing.DDBaseSpan;
+import datadog.opentracing.DDSpan;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,7 +12,7 @@ public abstract class AbstractSampler implements Sampler {
   protected Map<String, Pattern> skipTagsPatterns = new HashMap<>();
 
   @Override
-  public boolean sample(final DDBaseSpan<?> span) {
+  public boolean sample(final DDSpan span) {
 
     // Filter by tag values
     for (final Entry<String, Pattern> entry : skipTagsPatterns.entrySet()) {
@@ -39,5 +39,5 @@ public abstract class AbstractSampler implements Sampler {
     skipTagsPatterns.put(tag, skipPattern);
   }
 
-  protected abstract boolean doSample(DDBaseSpan<?> span);
+  protected abstract boolean doSample(DDSpan span);
 }

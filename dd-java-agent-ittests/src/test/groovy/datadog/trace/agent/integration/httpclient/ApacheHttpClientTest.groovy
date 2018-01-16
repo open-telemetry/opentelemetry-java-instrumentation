@@ -1,6 +1,6 @@
 package datadog.trace.agent.integration.httpclient
 
-import datadog.opentracing.DDBaseSpan
+import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
 import datadog.trace.agent.integration.TestHttpServer
 import datadog.trace.agent.test.TestUtils
@@ -53,18 +53,18 @@ class ApacheHttpClientTest extends Specification {
     expect:
     // one trace on the server, one trace on the client
     writer.size() == 2
-    final List<DDBaseSpan<?>> serverTrace = writer.get(0)
+    final List<DDSpan> serverTrace = writer.get(0)
     serverTrace.size() == 1
 
-    final List<DDBaseSpan<?>> clientTrace = writer.get(1)
+    final List<DDSpan> clientTrace = writer.get(1)
     clientTrace.size() == 3
     clientTrace.get(0).getOperationName() == "someTrace"
     // our instrumentation makes 2 spans for apache-httpclient
-    final DDBaseSpan<?> localSpan = clientTrace.get(1)
+    final DDSpan localSpan = clientTrace.get(1)
     localSpan.getTags()[Tags.COMPONENT.getKey()] == "apache-httpclient"
     localSpan.getOperationName() == "GET"
 
-    final DDBaseSpan<?> clientSpan = clientTrace.get(2)
+    final DDSpan clientSpan = clientTrace.get(2)
     clientSpan.getOperationName() == "GET"
     clientSpan.getTags()[Tags.HTTP_METHOD.getKey()] == "GET"
     clientSpan.getTags()[Tags.HTTP_STATUS.getKey()] == 200
@@ -100,15 +100,15 @@ class ApacheHttpClientTest extends Specification {
     expect:
     // only one trace (client).
     writer.size() == 1
-    final List<DDBaseSpan<?>> clientTrace = writer.get(0)
+    final List<DDSpan> clientTrace = writer.get(0)
     clientTrace.size() == 3
     clientTrace.get(0).getOperationName() == "someTrace"
     // our instrumentation makes 2 spans for apache-httpclient
-    final DDBaseSpan<?> localSpan = clientTrace.get(1)
+    final DDSpan localSpan = clientTrace.get(1)
     localSpan.getTags()[Tags.COMPONENT.getKey()] == "apache-httpclient"
     localSpan.getOperationName() == "GET"
 
-    final DDBaseSpan<?> clientSpan = clientTrace.get(2)
+    final DDSpan clientSpan = clientTrace.get(2)
     clientSpan.getOperationName() == "GET"
     clientSpan.getTags()[Tags.HTTP_METHOD.getKey()] == "GET"
     clientSpan.getTags()[Tags.HTTP_STATUS.getKey()] == 200

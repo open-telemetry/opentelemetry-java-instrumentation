@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.apachehttpclient;
 
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
@@ -48,10 +49,10 @@ public class DDTracingClientExec implements ClientExecChain {
   private final Tracer tracer;
 
   public DDTracingClientExec(
-      ClientExecChain clientExecChain,
-      RedirectStrategy redirectStrategy,
-      boolean redirectHandlingDisabled,
-      Tracer tracer) {
+      final ClientExecChain clientExecChain,
+      final RedirectStrategy redirectStrategy,
+      final boolean redirectHandlingDisabled,
+      final Tracer tracer) {
     this.requestExecutor = clientExecChain;
     this.redirectStrategy = redirectStrategy;
     this.redirectHandlingDisabled = redirectHandlingDisabled;
@@ -60,30 +61,30 @@ public class DDTracingClientExec implements ClientExecChain {
 
   @Override
   public CloseableHttpResponse execute(
-      HttpRoute route,
-      HttpRequestWrapper request,
-      HttpClientContext clientContext,
-      HttpExecutionAware execAware)
+      final HttpRoute route,
+      final HttpRequestWrapper request,
+      final HttpClientContext clientContext,
+      final HttpExecutionAware execAware)
       throws IOException, HttpException {
 
-    ActiveSpan localSpan = clientContext.getAttribute(ACTIVE_SPAN, ActiveSpan.class);
+    Scope localScope = clientContext.getAttribute(ACTIVE_SPAN, Scope.class);
     CloseableHttpResponse response = null;
     try {
-      if (localSpan == null) {
-        localSpan = createLocalSpan(request, clientContext);
+      if (localScope == null) {
+        localScope = createLocalScope(request, clientContext);
       }
 
-      return (response = createNetworkSpan(localSpan, route, request, clientContext, execAware));
-    } catch (Exception e) {
-      localSpan.deactivate();
+      return (response = createNetworkSpan(localScope, route, request, clientContext, execAware));
+    } catch (final Exception e) {
+      localScope.close();
       throw e;
     } finally {
       if (response != null) {
         /**
          * This exec runs after {@link org.apache.http.impl.execchain.RedirectExec} which loops
          * until there is no redirect or reaches max redirect count. {@link RedirectStrategy} is
-         * used to decide whether localSpan should be finished or not. If there is a redirect
-         * localSpan is not finished and redirect is logged.
+         * used to decide whether localScope should be finished or not. If there is a redirect
+         * localScope is not finished and redirect is logged.
          */
         Integer redirectCount = clientContext.getAttribute(REDIRECT_COUNT, Integer.class);
         if (!redirectHandlingDisabled
@@ -92,37 +93,40 @@ public class DDTracingClientExec implements ClientExecChain {
             && ++redirectCount < clientContext.getRequestConfig().getMaxRedirects()) {
           clientContext.setAttribute(REDIRECT_COUNT, redirectCount);
         } else {
-          localSpan.deactivate();
+          localScope.close();
         }
       }
     }
   }
 
-  private ActiveSpan createLocalSpan(HttpRequest httpRequest, HttpClientContext clientContext) {
-    Tracer.SpanBuilder spanBuilder =
+  private Scope createLocalScope(
+      final HttpRequest httpRequest, final HttpClientContext clientContext) {
+    final Tracer.SpanBuilder spanBuilder =
         tracer
             .buildSpan(httpRequest.getRequestLine().getMethod())
             .withTag(Tags.COMPONENT.getKey(), COMPONENT_NAME);
 
-    ActiveSpan localSpan = spanBuilder.startActive();
-    clientContext.setAttribute(ACTIVE_SPAN, localSpan);
+    final Scope scope = spanBuilder.startActive(true);
+    clientContext.setAttribute(ACTIVE_SPAN, scope);
     clientContext.setAttribute(REDIRECT_COUNT, 0);
-    return localSpan;
+    return scope;
   }
 
   private CloseableHttpResponse createNetworkSpan(
-      ActiveSpan parentSpan,
-      HttpRoute route,
-      HttpRequestWrapper request,
-      HttpClientContext clientContext,
-      HttpExecutionAware execAware)
+      final Scope parentScope,
+      final HttpRoute route,
+      final HttpRequestWrapper request,
+      final HttpClientContext clientContext,
+      final HttpExecutionAware execAware)
       throws IOException, HttpException {
-    ActiveSpan networkSpan =
+    final Scope networkScope =
         tracer
             .buildSpan(request.getMethod())
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-            .asChildOf(parentSpan)
-            .startActive();
+            .asChildOf(parentScope.span())
+            .startActive(true);
+
+    final Span networkSpan = networkScope.span();
     tracer.inject(
         networkSpan.context(), Format.Builtin.HTTP_HEADERS, new HttpHeadersInjectAdapter(request));
 
@@ -148,20 +152,20 @@ public class DDTracingClientExec implements ClientExecChain {
 
       throw e;
     } finally {
-      networkSpan.deactivate();
+      networkScope.close();
     }
   }
 
   public static class HttpHeadersInjectAdapter implements TextMap {
 
-    private HttpRequest httpRequest;
+    private final HttpRequest httpRequest;
 
-    public HttpHeadersInjectAdapter(HttpRequest httpRequest) {
+    public HttpHeadersInjectAdapter(final HttpRequest httpRequest) {
       this.httpRequest = httpRequest;
     }
 
     @Override
-    public void put(String key, String value) {
+    public void put(final String key, final String value) {
       httpRequest.addHeader(key, value);
     }
 

@@ -4,7 +4,7 @@ import static spark.Spark.get;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import io.opentracing.ActiveSpan;
+import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import java.util.Arrays;
 import org.bson.Document;
@@ -25,7 +25,7 @@ public class SparkApplication {
     get(
         "/key/:id",
         (req, res) -> {
-          try (ActiveSpan activeSpan = mTracer.buildSpan("spark.request").startActive()) {
+          try (Scope scope = mTracer.buildSpan("spark.request").startActive(true)) {
             final String id = req.params(":id");
 
             // create a collection
@@ -43,8 +43,8 @@ public class SparkApplication {
             System.out.println(collection.count());
 
             // add some metadata to the request Span
-            activeSpan.setTag("http.status_code", res.status());
-            activeSpan.setTag("http.url", req.url());
+            scope.span().setTag("http.status_code", res.status());
+            scope.span().setTag("http.url", req.url());
 
             return "Stored!";
           }
@@ -52,11 +52,11 @@ public class SparkApplication {
     get(
         "/users/:id",
         (req, res) -> {
-          try (ActiveSpan activeSpan = mTracer.buildSpan("spark.request").startActive()) {
+          try (Scope scope = mTracer.buildSpan("spark.request").startActive(true)) {
             // this endpoint tests the 404 decorator
             res.status(404);
-            activeSpan.setTag("http.status_code", res.status());
-            activeSpan.setTag("http.url", req.url());
+            scope.span().setTag("http.status_code", res.status());
+            scope.span().setTag("http.url", req.url());
           }
           return "404";
         });
