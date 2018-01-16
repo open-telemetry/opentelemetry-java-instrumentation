@@ -9,8 +9,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -19,15 +17,6 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 public class TestUtils {
-  private static Method findLoadedClassMethod = null;
-
-  static {
-    try {
-      findLoadedClassMethod = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
-    } catch (NoSuchMethodException | SecurityException e) {
-      throw new IllegalStateException(e);
-    }
-  }
 
   public static void registerOrReplaceGlobalTracer(final Tracer tracer) {
     try {
@@ -62,18 +51,6 @@ public class TestUtils {
       throw new IllegalStateException(e);
     } finally {
       scope.close();
-    }
-  }
-
-  public static boolean isClassLoaded(final String className, final ClassLoader classLoader) {
-    try {
-      findLoadedClassMethod.setAccessible(true);
-      final Class<?> loadedClass = (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
-      return null != loadedClass && loadedClass.getClassLoader() == classLoader;
-    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      throw new IllegalStateException(e);
-    } finally {
-      findLoadedClassMethod.setAccessible(false);
     }
   }
 
