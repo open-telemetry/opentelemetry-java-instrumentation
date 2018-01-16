@@ -2,18 +2,10 @@ rootProject.name = 'dd-trace-java'
 
 include ':dd-trace-ot'
 include ':dd-java-agent'
-include ':dd-java-agent:benchmark'
-include ':dd-java-agent:benchmark-integration'
-include ':dd-java-agent:benchmark-integration:jetty-perftest'
 include ':dd-java-agent:testing'
 include ':dd-java-agent:tooling'
 include ':dd-java-agent-ittests'
 include ':dd-trace-api'
-
-// examples
-include ':examples:dropwizard-mongo-client'
-include ':examples:spring-boot-jdbc'
-include ':examples:rest-spark'
 
 // instrumentation:
 include ':dd-java-agent:instrumentation:apache-httpclient-4.3'
@@ -29,6 +21,19 @@ include ':dd-java-agent:instrumentation:servlet-2'
 include ':dd-java-agent:instrumentation:servlet-3'
 include ':dd-java-agent:instrumentation:spring-web'
 include ':dd-java-agent:instrumentation:trace-annotation'
+
+
+if (JavaVersion.current().isJava8Compatible()) {
+  // benchmark
+  include ':dd-java-agent:benchmark'
+  include ':dd-java-agent:benchmark-integration'
+  include ':dd-java-agent:benchmark-integration:jetty-perftest'
+
+  // examples
+  include ':examples:dropwizard-mongo-client'
+  include ':examples:spring-boot-jdbc'
+  include ':examples:rest-spark'
+}
 
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"

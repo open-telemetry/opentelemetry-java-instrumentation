@@ -49,8 +49,15 @@ tasks.withType(Test) {
   mustRunAfter checkstyleTasks
 }
 
-apply plugin: 'com.github.sherter.google-java-format'
+if (!JavaVersion.current().isJava9Compatible()) {
+  // Verification seems broken on Java 9.
+  apply plugin: 'com.github.sherter.google-java-format'
 
-tasks.withType(Checkstyle) {
-  mustRunAfter verifyGoogleJavaFormat
+  googleJavaFormat {
+    exclude 'gradle-home'
+  }
+
+  tasks.withType(Checkstyle) {
+    mustRunAfter verifyGoogleJavaFormat
+  }
 }

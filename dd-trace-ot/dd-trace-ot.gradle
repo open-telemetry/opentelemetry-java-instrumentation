@@ -16,6 +16,17 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
   'datadog.trace.api.DDTags',
 ]
 
+if (!JavaVersion.current().isJava8Compatible()) {
+  sourceSets {
+    test {
+      groovy {
+        // These classes use Ratpack which requires Java 8.
+        exclude 'datadog/trace/api/writer/DDApiTest.groovy'
+      }
+    }
+  }
+}
+
 dependencies {
   compile project(':dd-trace-api')
   compile deps.opentracing

@@ -86,7 +86,7 @@ shadowJar {
   }
 
   dependencies {
-    exclude(dependency('org.projectlombok:lombok:1.16.18'))
+    exclude(dependency('org.projectlombok:lombok:1.16.20'))
   }
 }
 
