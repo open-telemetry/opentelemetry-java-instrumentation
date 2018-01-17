@@ -26,7 +26,13 @@ public class OkHttp3Instrumentation implements Instrumenter {
     return agentBuilder
         .type(
             named("okhttp3.OkHttpClient"),
-            classLoaderHasClasses("okhttp3.Cookie", "okhttp3.ConnectionPool", "okhttp3.Headers"))
+            classLoaderHasClasses(
+                "okhttp3.Request",
+                "okhttp3.Response",
+                "okhttp3.Connection",
+                "okhttp3.Cookie",
+                "okhttp3.ConnectionPool",
+                "okhttp3.Headers"))
         .transform(
             new HelperInjector(
                 "io.opentracing.contrib.okhttp3.OkHttpClientSpanDecorator",
