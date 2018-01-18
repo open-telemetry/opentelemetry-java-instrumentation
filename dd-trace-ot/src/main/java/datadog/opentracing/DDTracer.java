@@ -9,7 +9,11 @@ import datadog.trace.api.DDTags;
 import datadog.trace.common.DDTraceConfig;
 import datadog.trace.common.Service;
 import datadog.trace.common.sampling.AllSampler;
+import datadog.trace.common.sampling.PrioritySampling;
+import datadog.trace.common.sampling.RateByServiceSampler;
 import datadog.trace.common.sampling.Sampler;
+import datadog.trace.common.writer.DDAgentWriter;
+import datadog.trace.common.writer.DDApi;
 import datadog.trace.common.writer.Writer;
 import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
@@ -39,6 +43,8 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
   final Writer writer;
   /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
   final Sampler sampler;
+  /** Sampler which rates based on the service name */
+  final RateByServiceSampler serviceSampler;
 
   /** Span context decorators */
   private final Map<String, List<AbstractDecorator>> spanContextDecorators = new HashMap<>();
@@ -59,7 +65,8 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     this(
         config.getProperty(DDTraceConfig.SERVICE_NAME),
         Writer.Builder.forConfig(config),
-        Sampler.Builder.forConfig(config));
+        Sampler.Builder.forConfig(config),
+        RateByServiceSampler.Builder.forConfig(config));
     log.debug("Using config: {}", config);
 
     // Create decorators from resource files
@@ -71,13 +78,26 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
   }
 
   public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
+    this(serviceName, writer, sampler, null);
+  }
+
+  public DDTracer(
+      final String serviceName,
+      final Writer writer,
+      final Sampler sampler,
+      RateByServiceSampler serviceSampler) {
     this.serviceName = serviceName;
     this.writer = writer;
     this.writer.start();
     this.sampler = sampler;
+    this.serviceSampler = serviceSampler;
     registry = new CodecRegistry();
     registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
     registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec());
+    if (this.writer instanceof DDAgentWriter && serviceSampler != null) {
+      final DDApi api = ((DDAgentWriter) this.writer).getApi();
+      api.addResponseListener(this.serviceSampler);
+    }
     log.info("New instance: {}", this);
   }
 
@@ -139,7 +159,6 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
 
   @Override
   public <T> SpanContext extract(final Format<T> format, final T carrier) {
-
     final Codec<T> codec = registry.get(format);
     if (codec == null) {
       log.warn("Unsupported format for propagation - {}", format.getClass().getName());
@@ -159,7 +178,9 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     if (trace.isEmpty()) {
       return;
     }
-    if (this.sampler.sample(trace.peek())) {
+    // If priority sampling is enabled, send all traces to the agent (even traces marked to drop).
+    // Otherwise, use the sampler to drop traces.
+    if (prioritySamplingEnabled() || this.sampler.sample(trace.peek())) {
       this.writer.write(new ArrayList<>(trace));
     }
   }
@@ -208,6 +229,10 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     return services;
   }
 
+  private boolean prioritySamplingEnabled() {
+    return null != serviceSampler;
+  }
+
   private static class CodecRegistry {
 
     private final Map<Format<?>, Codec<?>> codecs = new HashMap<>();
@@ -250,7 +275,28 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     }
 
     private DDSpan startSpan() {
-      return new DDSpan(this.timestamp, buildSpanContext());
+      final DDSpan span = new DDSpan(this.timestamp, buildSpanContext());
+      if (DDTracer.this.prioritySamplingEnabled()) {
+        if (span.isRootSpan()) {
+          // Run the priority sampler on the new span
+          if (DDTracer.this.sampler.sample(span) && DDTracer.this.serviceSampler.sample(span)) {
+            span.setSamplingPriority(PrioritySampling.SAMPLER_KEEP);
+          } else {
+            span.setSamplingPriority(PrioritySampling.SAMPLER_DROP);
+          }
+        } else {
+          if (span.getSamplingPriority() == null) {
+            // Edge case: If the parent context did not set the priority, run the priority sampler.
+            // Happens when extracted http context did not send the priority header.
+            if (DDTracer.this.sampler.sample(span) && DDTracer.this.serviceSampler.sample(span)) {
+              span.setSamplingPriority(PrioritySampling.SAMPLER_KEEP);
+            } else {
+              span.setSamplingPriority(PrioritySampling.SAMPLER_DROP);
+            }
+          }
+        }
+      }
+      return span;
     }
 
     @Override
@@ -373,6 +419,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
       final long parentSpanId;
       final Map<String, String> baggage;
       final Queue<DDSpan> parentTrace;
+      final int samplingPriority;
 
       final DDSpanContext context;
       SpanContext parentContext = this.parent;
@@ -388,6 +435,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
         parentSpanId = ddsc.getSpanId();
         baggage = ddsc.getBaggageItems();
         parentTrace = ddsc.getTrace();
+        samplingPriority = ddsc.getSamplingPriority();
 
         if (this.serviceName == null) this.serviceName = ddsc.getServiceName();
         if (this.spanType == null) this.spanType = ddsc.getSpanType();
@@ -396,6 +444,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
         parentSpanId = 0L;
         baggage = null;
         parentTrace = null;
+        samplingPriority = PrioritySampling.UNSET;
       }
 
       if (serviceName == null) {
@@ -416,6 +465,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
               serviceName,
               operationName,
               this.resourceName,
+              samplingPriority,
               baggage,
               errorFlag,
               spanType,

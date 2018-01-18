@@ -1,5 +1,6 @@
 package datadog.opentracing
 
+import datadog.trace.common.sampling.PrioritySampling
 import spock.lang.Specification
 
 class DDSpanTest extends Specification {
@@ -14,6 +15,7 @@ class DDSpanTest extends Specification {
             "fakeService",
             "fakeOperation",
             "fakeResource",
+            PrioritySampling.UNSET,
             Collections.<String, String>emptyMap(),
             false,
             "fakeType",
@@ -42,6 +44,22 @@ class DDSpanTest extends Specification {
     span.setSpanType("type")
     then:
     span.getType() == "type"
+
+    when:
+    span.setSamplingPriority(PrioritySampling.UNSET)
+    then:
+    span.getSamplingPriority() == null
+
+    when:
+    span.setSamplingPriority(PrioritySampling.SAMPLER_KEEP)
+    then:
+    span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+
+    when:
+    context.lockSamplingPriority()
+    span.setSamplingPriority(PrioritySampling.USER_KEEP)
+    then:
+    span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
   }
 
   def "resource name equals operation name if null"() {

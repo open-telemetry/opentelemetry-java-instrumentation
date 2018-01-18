@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Maps;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.trace.api.DDTags;
+import datadog.trace.common.sampling.PrioritySampling;
 import io.opentracing.tag.Tags;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,6 +50,10 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   private String spanType;
   /** Each span have an operation name describing the current span */
   private String operationName;
+  /** The sampling priority of the trace */
+  private int samplingPriority = PrioritySampling.UNSET;
+  /** When true, the samplingPriority cannot be changed. */
+  private boolean samplingPriorityLocked = false;
   // Others attributes
   /** Tags are associated to the current span, they will not propagate to the children span */
   private Map<String, Object> tags;
@@ -60,6 +65,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final String serviceName,
       final String operationName,
       final String resourceName,
+      final int samplingPriority,
       final Map<String, String> baggageItems,
       final boolean errorFlag,
       final String spanType,
@@ -80,6 +86,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.serviceName = serviceName;
     this.operationName = operationName;
     this.resourceName = resourceName;
+    this.samplingPriority = samplingPriority;
     this.errorFlag = errorFlag;
     this.spanType = spanType;
 
@@ -139,6 +146,38 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   public void setSpanType(final String spanType) {
     this.spanType = spanType;
+  }
+
+  public synchronized void setSamplingPriority(int newPriority) {
+    if (samplingPriorityLocked) {
+      log.warn(
+          "samplingPriority locked at {}. Refusing to set to {}", samplingPriority, newPriority);
+    } else {
+      this.samplingPriority = newPriority;
+    }
+  }
+
+  public synchronized int getSamplingPriority() {
+    return samplingPriority;
+  }
+
+  /**
+   * Prevent future changes to the context's sampling priority.
+   *
+   * <p>Used when a span is extracted or injected for propagation.
+   *
+   * <p>Has no effect if the sampling priority is unset.
+   *
+   * @return true if the sampling priority was locked.
+   */
+  public synchronized boolean lockSamplingPriority() {
+    if (samplingPriority == PrioritySampling.UNSET) {
+      log.debug("{} : refusing to lock unset samplingPriority", this);
+    } else {
+      this.samplingPriorityLocked = true;
+      log.debug("{} : locked samplingPriority to {}", this, this.samplingPriority);
+    }
+    return samplingPriorityLocked;
   }
 
   public void setBaggageItem(final String key, final String value) {
@@ -248,6 +287,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
             .append(getOperationName())
             .append("/")
             .append(getResourceName());
+    if (getSamplingPriority() != PrioritySampling.UNSET) {
+      s.append(" samplingPriority=").append(getSamplingPriority());
+    }
     if (errorFlag) {
       s.append(" *errored*");
     }

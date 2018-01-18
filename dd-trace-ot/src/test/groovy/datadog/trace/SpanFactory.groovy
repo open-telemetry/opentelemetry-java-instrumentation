@@ -3,6 +3,7 @@ package datadog.trace
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
+import datadog.trace.common.sampling.PrioritySampling
 
 class SpanFactory {
   static newSpanOf(long timestampMicro) {
@@ -13,6 +14,7 @@ class SpanFactory {
       "fakeService",
       "fakeOperation",
       "fakeResource",
+      PrioritySampling.UNSET,
       Collections.emptyMap(),
       false,
       "fakeType",
@@ -30,6 +32,7 @@ class SpanFactory {
       "fakeService",
       "fakeOperation",
       "fakeResource",
+      PrioritySampling.UNSET,
       Collections.emptyMap(),
       false,
       "fakeType",

@@ -1,6 +1,7 @@
 package datadog.opentracing.propagation;
 
 import datadog.opentracing.DDSpanContext;
+import datadog.trace.common.sampling.PrioritySampling;
 import io.opentracing.propagation.TextMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -17,12 +18,15 @@ public class HTTPCodec implements Codec<TextMap> {
   private static final String OT_BAGGAGE_PREFIX = "ot-baggage-";
   private static final String TRACE_ID_KEY = "x-datadog-trace-id";
   private static final String SPAN_ID_KEY = "x-datadog-parent-id";
+  private static final String SAMPLING_PRIORITY_KEY = "x-datadog-sampling-priority";
 
   @Override
   public void inject(final DDSpanContext context, final TextMap carrier) {
-
     carrier.put(TRACE_ID_KEY, String.valueOf(context.getTraceId()));
     carrier.put(SPAN_ID_KEY, String.valueOf(context.getSpanId()));
+    if (context.lockSamplingPriority()) {
+      carrier.put(SAMPLING_PRIORITY_KEY, String.valueOf(context.getSamplingPriority()));
+    }
 
     for (final Map.Entry<String, String> entry : context.baggageItems()) {
       carrier.put(OT_BAGGAGE_PREFIX + entry.getKey(), encode(entry.getValue()));
@@ -35,9 +39,9 @@ public class HTTPCodec implements Codec<TextMap> {
     Map<String, String> baggage = Collections.emptyMap();
     Long traceId = 0L;
     Long spanId = 0L;
+    int samplingPriority = PrioritySampling.UNSET;
 
     for (final Map.Entry<String, String> entry : carrier) {
-
       final String key = entry.getKey().toLowerCase();
       if (key.equalsIgnoreCase(TRACE_ID_KEY)) {
         traceId = Long.parseLong(entry.getValue());
@@ -48,14 +52,28 @@ public class HTTPCodec implements Codec<TextMap> {
           baggage = new HashMap<>();
         }
         baggage.put(key.replace(OT_BAGGAGE_PREFIX, ""), decode(entry.getValue()));
+      } else if (key.equalsIgnoreCase(SAMPLING_PRIORITY_KEY)) {
+        samplingPriority = Integer.parseInt(entry.getValue());
       }
     }
     DDSpanContext context = null;
     if (traceId != 0L) {
-
       context =
           new DDSpanContext(
-              traceId, spanId, 0L, null, null, null, baggage, false, null, null, null, null);
+              traceId,
+              spanId,
+              0L,
+              null,
+              null,
+              null,
+              samplingPriority,
+              baggage,
+              false,
+              null,
+              null,
+              null,
+              null);
+      context.lockSamplingPriority();
 
       log.debug("{} - Parent context extracted", context);
     }

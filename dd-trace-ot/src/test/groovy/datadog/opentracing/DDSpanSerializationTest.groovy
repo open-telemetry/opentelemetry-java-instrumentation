@@ -2,10 +2,14 @@ package datadog.opentracing
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.collect.Maps
+import datadog.trace.api.DDTags
+import datadog.trace.common.sampling.PrioritySampling
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class DDSpanSerializationTest extends Specification {
 
+  @Unroll
   def "serialize spans"() throws Exception {
     setup:
     final Map<String, String> baggage = new HashMap<>()
@@ -21,6 +25,9 @@ class DDSpanSerializationTest extends Specification {
     expected.put("name", "operation")
     expected.put("duration", 33000)
     expected.put("resource", "operation")
+    if (samplingPriority != PrioritySampling.UNSET) {
+      expected.put("sampling_priority", samplingPriority)
+    }
     expected.put("start", 100000)
     expected.put("span_id", 2l)
     expected.put("parent_id", 0l)
@@ -34,6 +41,7 @@ class DDSpanSerializationTest extends Specification {
         "service",
         "operation",
         null,
+        samplingPriority,
         new HashMap<>(baggage),
         false,
         "type",
@@ -50,5 +58,10 @@ class DDSpanSerializationTest extends Specification {
 
     expect:
     serializer.readTree(serializer.writeValueAsString(span)) == serializer.readTree(serializer.writeValueAsString(expected))
+
+    where:
+    samplingPriority               | _
+    PrioritySampling.SAMPLER_KEEP  | _
+    PrioritySampling.UNSET         | _
   }
 }

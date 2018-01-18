@@ -1,10 +1,12 @@
 package datadog.opentracing.propagation
 
-import com.datadoghq.trace.DDSpanContext
+import datadog.opentracing.DDSpanContext
+import datadog.trace.common.sampling.PrioritySampling
 import io.opentracing.propagation.TextMapExtractAdapter
 import io.opentracing.propagation.TextMapInjectAdapter
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 class HTTPCodecTest extends Specification {
   @Shared
@@ -13,7 +15,10 @@ class HTTPCodecTest extends Specification {
   private static final String TRACE_ID_KEY = "x-datadog-trace-id"
   @Shared
   private static final String SPAN_ID_KEY = "x-datadog-parent-id"
+  @Shared
+  private static final String SAMPLING_PRIORITY_KEY = "x-datadog-sampling-priority"
 
+  @Unroll
   def "inject http headers"() {
     setup:
     final DDSpanContext mockedContext =
@@ -24,6 +29,7 @@ class HTTPCodecTest extends Specification {
             "fakeService",
             "fakeOperation",
             "fakeResource",
+            samplingPriority,
             new HashMap<String, String>() {
               {
                 put("k1", "v1")
@@ -44,10 +50,17 @@ class HTTPCodecTest extends Specification {
     expect:
     carrier.get(TRACE_ID_KEY) == "1"
     carrier.get(SPAN_ID_KEY) == "2"
+    carrier.get(SAMPLING_PRIORITY_KEY) == (samplingPriority == PrioritySampling.UNSET ? null : String.valueOf(samplingPriority))
     carrier.get(OT_BAGGAGE_PREFIX + "k1") == "v1"
     carrier.get(OT_BAGGAGE_PREFIX + "k2") == "v2"
+
+    where:
+    samplingPriority                    | _
+    PrioritySampling.UNSET         | _
+    PrioritySampling.SAMPLER_KEEP  | _
   }
 
+  @Unroll
   def "extract http headers"() {
     setup:
     final Map<String, String> actual =
@@ -60,6 +73,10 @@ class HTTPCodecTest extends Specification {
           }
         }
 
+    if (samplingPriority != PrioritySampling.UNSET) {
+      actual.put(SAMPLING_PRIORITY_KEY, String.valueOf(samplingPriority))
+    }
+
     final HTTPCodec codec = new HTTPCodec()
     final DDSpanContext context = codec.extract(new TextMapExtractAdapter(actual))
 
@@ -68,5 +85,11 @@ class HTTPCodecTest extends Specification {
     context.getSpanId() == 2l
     context.getBaggageItem("k1") == "v1"
     context.getBaggageItem("k2") == "v2"
+    context.getSamplingPriority() == samplingPriority
+
+    where:
+    samplingPriority                    | _
+    PrioritySampling.UNSET         | _
+    PrioritySampling.SAMPLER_KEEP  | _
   }
 }

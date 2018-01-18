@@ -2,7 +2,10 @@ package datadog.opentracing;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import datadog.trace.api.DDTags;
+import datadog.trace.common.sampling.PrioritySampling;
 import datadog.trace.common.util.Clock;
 import io.opentracing.Span;
 import java.io.PrintWriter;
@@ -236,6 +239,16 @@ public class DDSpan implements Span {
     return this;
   }
 
+  /**
+   * Set the sampling priority of the span.
+   *
+   * <p>Has no effect if the span priority has been propagated (injected or extracted).
+   */
+  public final DDSpan setSamplingPriority(int newPriority) {
+    this.context().setSamplingPriority(newPriority);
+    return this;
+  }
+
   public final DDSpan setSpanType(final String type) {
     this.context().setSpanType(type);
     return this;
@@ -298,6 +311,17 @@ public class DDSpan implements Span {
   @JsonGetter("name")
   public String getOperationName() {
     return context.getOperationName();
+  }
+
+  @JsonGetter("sampling_priority")
+  @JsonInclude(Include.NON_NULL)
+  public Integer getSamplingPriority() {
+    final int samplingPriority = context.getSamplingPriority();
+    if (samplingPriority == PrioritySampling.UNSET) {
+      return null;
+    } else {
+      return samplingPriority;
+    }
   }
 
   @JsonIgnore
