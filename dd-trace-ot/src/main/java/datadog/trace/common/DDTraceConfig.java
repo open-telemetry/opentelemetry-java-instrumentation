@@ -25,6 +25,7 @@ public class DDTraceConfig extends Properties {
   public static final String AGENT_PORT = "agent.port";
   public static final String SAMPLER_TYPE = "sampler.type";
   public static final String SAMPLER_RATE = "sampler.rate";
+  public static final String PRIORITY_SAMPLING = "priority.sampling";
 
   private final String serviceName = getPropOrEnv(PREFIX + SERVICE_NAME);
   private final String writerType = getPropOrEnv(PREFIX + WRITER_TYPE);
@@ -32,6 +33,7 @@ public class DDTraceConfig extends Properties {
   private final String agentPort = getPropOrEnv(PREFIX + AGENT_PORT);
   private final String samplerType = getPropOrEnv(PREFIX + SAMPLER_TYPE);
   private final String samplerRate = getPropOrEnv(PREFIX + SAMPLER_RATE);
+  private final String prioritySampling = getPropOrEnv(PREFIX + PRIORITY_SAMPLING);
 
   public DDTraceConfig() {
     super();
@@ -51,6 +53,7 @@ public class DDTraceConfig extends Properties {
     setIfNotNull(AGENT_PORT, agentPort);
     setIfNotNull(SAMPLER_TYPE, samplerType);
     setIfNotNull(SAMPLER_RATE, samplerRate);
+    setIfNotNull(PRIORITY_SAMPLING, prioritySampling);
   }
 
   public DDTraceConfig(final String serviceName) {
