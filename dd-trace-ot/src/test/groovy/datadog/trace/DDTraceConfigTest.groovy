@@ -3,7 +3,6 @@ package datadog.trace
 import datadog.opentracing.DDTracer
 import datadog.trace.common.DDTraceConfig
 import datadog.trace.common.sampling.AllSampler
-import datadog.trace.common.sampling.RateSampler
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.common.writer.LoggingWriter
@@ -52,8 +51,6 @@ class DDTraceConfigTest extends Specification {
     System.clearProperty(PREFIX + WRITER_TYPE)
     System.clearProperty(PREFIX + AGENT_HOST)
     System.clearProperty(PREFIX + AGENT_PORT)
-    System.clearProperty(PREFIX + SAMPLER_TYPE)
-    System.clearProperty(PREFIX + SAMPLER_RATE)
   }
 
   def "verify env override"() {
@@ -73,8 +70,6 @@ class DDTraceConfigTest extends Specification {
     config.getProperty(WRITER_TYPE) == "DDAgentWriter"
     config.getProperty(AGENT_HOST) == "localhost"
     config.getProperty(AGENT_PORT) == "8126"
-    config.getProperty(SAMPLER_TYPE) == "AllSampler"
-    config.getProperty(SAMPLER_RATE) == "1.0"
 
     when:
     config = new DDTraceConfig("A different service name")
@@ -84,56 +79,45 @@ class DDTraceConfigTest extends Specification {
     config.getProperty(WRITER_TYPE) == "DDAgentWriter"
     config.getProperty(AGENT_HOST) == "localhost"
     config.getProperty(AGENT_PORT) == "8126"
-    config.getProperty(SAMPLER_TYPE) == "AllSampler"
-    config.getProperty(SAMPLER_RATE) == "1.0"
   }
 
   def "specify overrides via system properties"() {
     when:
     System.setProperty(PREFIX + SERVICE_NAME, "something else")
     System.setProperty(PREFIX + WRITER_TYPE, LoggingWriter.simpleName)
-    System.setProperty(PREFIX + SAMPLER_TYPE, RateSampler.simpleName)
-    System.setProperty(PREFIX + SAMPLER_RATE, ".5")
     def tracer = new DDTracer()
 
     then:
     tracer.serviceName == "something else"
     tracer.writer instanceof LoggingWriter
-    tracer.sampler.toString() == "RateSampler { sampleRate=0.5 }"
   }
 
   def "specify overrides via env vars"() {
     when:
     overrideEnvMap.put(propToEnvName(PREFIX + SERVICE_NAME), "still something else")
     overrideEnvMap.put(propToEnvName(PREFIX + WRITER_TYPE), LoggingWriter.simpleName)
-    overrideEnvMap.put(propToEnvName(PREFIX + SAMPLER_TYPE), AllSampler.simpleName)
     def tracer = new DDTracer()
 
     then:
     tracer.serviceName == "still something else"
     tracer.writer instanceof LoggingWriter
-    tracer.sampler instanceof AllSampler
   }
 
   def "sys props override env vars"() {
     when:
     overrideEnvMap.put(propToEnvName(PREFIX + SERVICE_NAME), "still something else")
     overrideEnvMap.put(propToEnvName(PREFIX + WRITER_TYPE), ListWriter.simpleName)
-    overrideEnvMap.put(propToEnvName(PREFIX + SAMPLER_TYPE), AllSampler.simpleName)
 
     System.setProperty(PREFIX + SERVICE_NAME, "what we actually want")
     System.setProperty(PREFIX + WRITER_TYPE, DDAgentWriter.simpleName)
     System.setProperty(PREFIX + AGENT_HOST, "somewhere")
     System.setProperty(PREFIX + AGENT_PORT, "9999")
-    System.setProperty(PREFIX + SAMPLER_TYPE, RateSampler.simpleName)
-    System.setProperty(PREFIX + SAMPLER_RATE, ".9")
 
     def tracer = new DDTracer()
 
     then:
     tracer.serviceName == "what we actually want"
     tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesEndpoint=http://somewhere:9999/v0.3/traces } }"
-    tracer.sampler.toString() == "RateSampler { sampleRate=0.9 }"
   }
 
   def "verify defaults on tracer"() {
@@ -164,8 +148,5 @@ class DDTraceConfigTest extends Specification {
     "writer"  | "writer.type"  | "LoggingWriter" | "LoggingWriter { }"
     "writer"  | "agent.host"   | "somethingelse" | "DDAgentWriter { api=DDApi { tracesEndpoint=http://somethingelse:8126/v0.3/traces } }"
     "writer"  | "agent.port"   | "9999"          | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:9999/v0.3/traces } }"
-    "sampler" | "default"      | "default"       | "AllSampler { sample=true }"
-    "sampler" | "sampler.type" | "RateSampler"   | "RateSampler { sampleRate=1.0 }"
-    "sampler" | "sampler.rate" | "100"           | "AllSampler { sample=true }"
   }
 }
