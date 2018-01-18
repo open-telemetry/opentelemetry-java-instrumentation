@@ -14,6 +14,7 @@ import datadog.trace.common.sampling.RateByServiceSampler;
 import datadog.trace.common.sampling.Sampler;
 import datadog.trace.common.writer.DDAgentWriter;
 import datadog.trace.common.writer.DDApi;
+import datadog.trace.common.writer.DDApi.ResponseListener;
 import datadog.trace.common.writer.Writer;
 import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
@@ -43,8 +44,6 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
   final Writer writer;
   /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
   final Sampler sampler;
-  /** Sampler which rates based on the service name */
-  final RateByServiceSampler serviceSampler;
 
   /** Span context decorators */
   private final Map<String, List<AbstractDecorator>> spanContextDecorators = new HashMap<>();
@@ -65,8 +64,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     this(
         config.getProperty(DDTraceConfig.SERVICE_NAME),
         Writer.Builder.forConfig(config),
-        Sampler.Builder.forConfig(config),
-        RateByServiceSampler.Builder.forConfig(config));
+        Sampler.Builder.forConfig(config));
     log.debug("Using config: {}", config);
 
     // Create decorators from resource files
@@ -78,25 +76,16 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
   }
 
   public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
-    this(serviceName, writer, sampler, null);
-  }
-
-  public DDTracer(
-      final String serviceName,
-      final Writer writer,
-      final Sampler sampler,
-      RateByServiceSampler serviceSampler) {
     this.serviceName = serviceName;
     this.writer = writer;
     this.writer.start();
     this.sampler = sampler;
-    this.serviceSampler = serviceSampler;
     registry = new CodecRegistry();
     registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
     registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec());
-    if (this.writer instanceof DDAgentWriter && serviceSampler != null) {
+    if (this.writer instanceof DDAgentWriter && sampler instanceof DDApi.ResponseListener) {
       final DDApi api = ((DDAgentWriter) this.writer).getApi();
-      api.addResponseListener(this.serviceSampler);
+      api.addResponseListener((DDApi.ResponseListener) this.sampler);
     }
     log.info("New instance: {}", this);
   }
@@ -178,9 +167,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     if (trace.isEmpty()) {
       return;
     }
-    // If priority sampling is enabled, send all traces to the agent (even traces marked to drop).
-    // Otherwise, use the sampler to drop traces.
-    if (prioritySamplingEnabled() || this.sampler.sample(trace.peek())) {
+    if (this.sampler.sample(trace.peek())) {
       this.writer.write(new ArrayList<>(trace));
     }
   }
@@ -229,10 +216,6 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     return services;
   }
 
-  private boolean prioritySamplingEnabled() {
-    return null != serviceSampler;
-  }
-
   private static class CodecRegistry {
 
     private final Map<Format<?>, Codec<?>> codecs = new HashMap<>();
@@ -276,25 +259,8 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
 
     private DDSpan startSpan() {
       final DDSpan span = new DDSpan(this.timestamp, buildSpanContext());
-      if (DDTracer.this.prioritySamplingEnabled()) {
-        if (span.isRootSpan()) {
-          // Run the priority sampler on the new span
-          if (DDTracer.this.sampler.sample(span) && DDTracer.this.serviceSampler.sample(span)) {
-            span.setSamplingPriority(PrioritySampling.SAMPLER_KEEP);
-          } else {
-            span.setSamplingPriority(PrioritySampling.SAMPLER_DROP);
-          }
-        } else {
-          if (span.getSamplingPriority() == null) {
-            // Edge case: If the parent context did not set the priority, run the priority sampler.
-            // Happens when extracted http context did not send the priority header.
-            if (DDTracer.this.sampler.sample(span) && DDTracer.this.serviceSampler.sample(span)) {
-              span.setSamplingPriority(PrioritySampling.SAMPLER_KEEP);
-            } else {
-              span.setSamplingPriority(PrioritySampling.SAMPLER_DROP);
-            }
-          }
-        }
+      if (DDTracer.this.sampler instanceof RateByServiceSampler) {
+        ((RateByServiceSampler) DDTracer.this.sampler).initializeSamplingPriority(span);
       }
       return span;
     }

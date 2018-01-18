@@ -97,7 +97,8 @@ public class DDSpan implements Span {
    *
    * @return true if root, false otherwise
    */
-  protected final boolean isRootSpan() {
+  @JsonIgnore
+  public final boolean isRootSpan() {
 
     if (context().getTrace().isEmpty()) {
       return false;

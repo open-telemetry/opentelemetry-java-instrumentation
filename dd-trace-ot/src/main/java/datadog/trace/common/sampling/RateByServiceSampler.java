@@ -3,12 +3,10 @@ package datadog.trace.common.sampling;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import datadog.opentracing.DDSpan;
-import datadog.trace.common.DDTraceConfig;
 import datadog.trace.common.writer.DDApi.ResponseListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -27,13 +25,37 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
 
   @Override
   public synchronized boolean sample(DDSpan span) {
+    // Priority sampling sends all traces to the core agent, including traces marked dropped.
+    // This allows the core agent to collect stats on all traces.
+    return true;
+  }
+
+  /** If span is a root span, set the span context samplingPriority to keep or drop */
+  public void initializeSamplingPriority(DDSpan span) {
+    if (span.isRootSpan()) {
+      // Run the priority sampler on the new span
+      setSamplingPriorityOnSpanContext(span);
+    } else if (span.getSamplingPriority() == null) {
+      // Edge case: If the parent context did not set the priority, run the priority sampler.
+      // Happens when extracted http context did not send the priority header.
+      setSamplingPriorityOnSpanContext(span);
+    }
+  }
+
+  private synchronized void setSamplingPriorityOnSpanContext(DDSpan span) {
     final String serviceName = span.getServiceName();
     final String env = getSpanEnv(span);
     final String key = "service:" + serviceName + ",env:" + env;
+    boolean agentSample;
     if (serviceRates.containsKey(key)) {
-      return serviceRates.get(key).sample(span);
+      agentSample = serviceRates.get(key).sample(span);
     } else {
-      return baseSampler.sample(span);
+      agentSample = baseSampler.sample(span);
+    }
+    if (agentSample) {
+      span.setSamplingPriority(PrioritySampling.SAMPLER_KEEP);
+    } else {
+      span.setSamplingPriority(PrioritySampling.SAMPLER_DROP);
     }
   }
 
@@ -64,22 +86,6 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
         }
       }
     }
-  }
-
-  public static final class Builder {
-    public static RateByServiceSampler forConfig(final Properties config) {
-      RateByServiceSampler sampler = null;
-      if (config != null) {
-        final boolean enabled =
-            Boolean.parseBoolean(config.getProperty(DDTraceConfig.PRIORITY_SAMPLING));
-        if (enabled) {
-          sampler = new RateByServiceSampler();
-        }
-      }
-      return sampler;
-    }
-
-    private Builder() {}
   }
 
   /**

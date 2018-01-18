@@ -18,16 +18,36 @@ class RateByServiceSamplerTest extends Specification {
     when:
     String response = '{"rate_by_service": {"service:,env:":1.0, "service:spock,env:test":0.000001}}'
     serviceSampler.onResponse("traces", serializer.readTree(response))
+    DDSpan span1 = makeTrace("foo", "bar")
+    serviceSampler.initializeSamplingPriority(span1)
     then:
-    serviceSampler.sample(makeTrace("foo", "bar"))
+    span1.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+    serviceSampler.sample(span1)
     // !serviceSampler.sample(makeTrace("spock", "test"))
 
     when:
     response = '{"rate_by_service": {"service:,env:":0.000001, "service:spock,env:test":1.0}}'
     serviceSampler.onResponse("traces", serializer.readTree(response))
+    DDSpan span2 = makeTrace("spock", "test")
+    serviceSampler.initializeSamplingPriority(span2)
     then:
     // !serviceSampler.sample(makeTrace("foo", "bar"))
-    serviceSampler.sample(makeTrace("spock", "test"))
+    span2.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+    serviceSampler.sample(span2)
+  }
+
+  def "sampling priority set on context"() {
+    setup:
+    RateByServiceSampler serviceSampler = new RateByServiceSampler()
+    ObjectMapper serializer = new ObjectMapper()
+    String response = '{"rate_by_service": {"service:,env:":1.0}}'
+    serviceSampler.onResponse("traces", serializer.readTree(response))
+
+    DDSpan span = makeTrace("foo", "bar")
+    serviceSampler.initializeSamplingPriority(span)
+    expect:
+    // sets correctly on root span
+    span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
   }
 
   private DDSpan makeTrace(String serviceName, String envName) {

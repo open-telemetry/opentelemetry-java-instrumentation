@@ -1,7 +1,6 @@
 package datadog.trace.common;
 
 import datadog.opentracing.DDTracer;
-import datadog.trace.common.sampling.Sampler;
 import datadog.trace.common.writer.DDAgentWriter;
 import datadog.trace.common.writer.Writer;
 import java.util.Properties;

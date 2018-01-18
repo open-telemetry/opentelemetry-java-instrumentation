@@ -1,6 +1,7 @@
 package datadog.trace.common.sampling;
 
 import datadog.opentracing.DDSpan;
+import datadog.trace.common.DDTraceConfig;
 import java.util.Properties;
 
 /** Main interface to sample a collection of traces. */
@@ -17,7 +18,19 @@ public interface Sampler {
 
   final class Builder {
     public static Sampler forConfig(final Properties config) {
-      return new AllSampler();
+      final Sampler sampler;
+      if (config != null) {
+        final boolean prioritySamplingEnabled =
+            Boolean.parseBoolean(config.getProperty(DDTraceConfig.PRIORITY_SAMPLING));
+        if (prioritySamplingEnabled) {
+          sampler = new RateByServiceSampler();
+        } else {
+          sampler = new AllSampler();
+        }
+      } else {
+        sampler = new AllSampler();
+      }
+      return sampler;
     }
 
     private Builder() {}
