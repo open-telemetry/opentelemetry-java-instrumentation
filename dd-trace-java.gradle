@@ -15,7 +15,7 @@ plugins {
 
 allprojects {
   group = 'com.datadoghq'
-  version = '0.3.0.RC1-SNAPSHOT'
+  version = '0.3.0.RC1'
 
   apply from: "${rootDir}/gradle/dependencies.gradle"
 }
