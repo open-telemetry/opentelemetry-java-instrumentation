@@ -49,14 +49,13 @@ The Java Agent—once passed to your application—automatically traces requests
 
 #### Configuration
 
-| Config        | System Property  | Environment Variable |  Default           |
-| ------------- | ---------------- | -------------------- | ------------------ |
-| service.name  | dd.service.name  | DD_SERVICE_NAME      | `unnamed-java-app` |
-| writer.type   | dd.writer.type   | DD_WRITER_TYPE       | `DDAgentWriter`    |
-| agent.host    | dd.agent.host    | DD_AGENT_HOST        | `localhost`        |
-| agent.port    | dd.agent.port    | DD_AGENT_PORT        | `8126`             |
-| sampler.type  | dd.sampler.type  | DD_SAMPLER_TYPE      | `AllSampler`       |
-| sampler.rate  | dd.sampler.rate  | DD_SAMPLER_RATE      | `1.0`              |
+| Config             | System Property       | Environment Variable      |  Default           |
+| ------------------ | --------------------- | ------------------------- | ------------------ |
+| service.name       | dd.service.name       | DD_SERVICE_NAME           | `unnamed-java-app` |
+| writer.type        | dd.writer.type        | DD_WRITER_TYPE            | `DDAgentWriter`    |
+| agent.host         | dd.agent.host         | DD_AGENT_HOST             | `localhost`        |
+| agent.port         | dd.agent.port         | DD_AGENT_PORT             | `8126`             |
+| priority.sampling  | dd.priority.sampling  | DD_PRIORITY_SAMPLING      | `false`            |
 
 #### Application Servers
 
