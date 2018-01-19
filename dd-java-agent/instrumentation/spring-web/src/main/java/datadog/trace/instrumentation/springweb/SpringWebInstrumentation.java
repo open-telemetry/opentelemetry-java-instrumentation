@@ -53,12 +53,14 @@ public final class SpringWebInstrumentation implements Instrumenter {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResource(@Advice.Argument(0) final HttpServletRequest request) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (scope != null) {
+      if (scope != null && request != null) {
         final String method = request.getMethod();
-        final String bestMatchingPattern =
-            request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE).toString();
-        final String resourceName = method + " " + bestMatchingPattern;
-        scope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
+        final Object bestMatchingPattern =
+            request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        if (method != null && bestMatchingPattern != null) {
+          final String resourceName = method + " " + bestMatchingPattern;
+          scope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
+        }
       }
     }
   }
