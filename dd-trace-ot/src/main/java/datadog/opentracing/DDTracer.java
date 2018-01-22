@@ -14,7 +14,6 @@ import datadog.trace.common.sampling.RateByServiceSampler;
 import datadog.trace.common.sampling.Sampler;
 import datadog.trace.common.writer.DDAgentWriter;
 import datadog.trace.common.writer.DDApi;
-import datadog.trace.common.writer.DDApi.ResponseListener;
 import datadog.trace.common.writer.Writer;
 import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
@@ -274,16 +273,16 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     }
 
     @Override
+    @Deprecated
     public DDSpan startManual() {
-      final DDSpan span = startSpan();
-      log.debug("Starting a new manual span: {}", span);
-      return span;
+      return start();
     }
 
     @Override
-    @Deprecated
     public DDSpan start() {
-      return startManual();
+      final DDSpan span = startSpan();
+      log.debug("Starting a new span: {}", span);
+      return span;
     }
 
     @Override
