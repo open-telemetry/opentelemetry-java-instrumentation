@@ -1,10 +1,12 @@
 package datadog.trace.api.writer
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import datadog.trace.SpanFactory
 import datadog.trace.common.Service
 import datadog.trace.common.writer.DDApi
+import datadog.trace.common.writer.DDApi.ResponseListener
 import org.msgpack.jackson.dataformat.MessagePackFactory
 import ratpack.http.Headers
 import ratpack.http.MediaType
@@ -21,7 +23,10 @@ class DDApiTest extends Specification {
     setup:
     def agent = ratpack {
       handlers {
-        put("v0.3/traces") {
+        put("v0.4/traces") {
+          response.status(200).send()
+        }
+        put("v0.4/services") {
           response.status(200).send()
         }
       }
@@ -39,8 +44,11 @@ class DDApiTest extends Specification {
     setup:
     def agent = ratpack {
       handlers {
-        put("v0.3/traces") {
+        put("v0.4/traces") {
           response.status(404).send()
+        }
+        put("v0.4/services") {
+          response.status(200).send()
         }
       }
     }
@@ -60,13 +68,16 @@ class DDApiTest extends Specification {
     def requestBody = new AtomicReference<byte[]>()
     def agent = ratpack {
       handlers {
-        put("v0.3/traces") {
+        put("v0.4/traces") {
           requestContentType.set(request.contentType)
           requestHeaders.set(request.headers)
           request.body.then {
             requestBody.set(it.bytes)
             response.send()
           }
+        }
+        put("v0.4/services") {
+          response.status(200).send()
         }
       }
     }
@@ -120,7 +131,10 @@ class DDApiTest extends Specification {
     setup:
     def agent = ratpack {
       handlers {
-        put("v0.3/services") {
+        put("v0.4/traces") {
+          response.status(200).send()
+        }
+        put("v0.4/services") {
           response.status(200).send()
         }
       }
@@ -138,7 +152,10 @@ class DDApiTest extends Specification {
     setup:
     def agent = ratpack {
       handlers {
-        put("v0.3/services") {
+        put("v0.4/traces") {
+          response.status(200).send()
+        }
+        put("v0.4/services") {
           response.status(404).send()
         }
       }
@@ -159,7 +176,10 @@ class DDApiTest extends Specification {
     def requestBody = new AtomicReference<byte[]>()
     def agent = ratpack {
       handlers {
-        put("v0.3/services") {
+        put("v0.4/traces") {
+          response.status(200).send()
+        }
+        put("v0.4/services") {
           requestContentType.set(request.contentType)
           requestHeaders.set(request.headers)
           request.body.then {
@@ -190,6 +210,74 @@ class DDApiTest extends Specification {
       "app"     : "my-app-name",
       "app_type": "custom"])
     ]
+  }
+
+  def "Api ResponseListeners see 200 responses"() {
+    setup:
+    def agentResponse = new AtomicReference<String>(null)
+    ResponseListener responseListener = new ResponseListener() {
+      @Override
+      void onResponse(String endpoint, JsonNode responseJson) {
+        agentResponse.set(responseJson.toString())
+      }
+    }
+    boolean servicesAvailable = true
+    def agent = ratpack {
+      handlers {
+        put("v0.4/traces") {
+          response.status(200).send('{"hello":"test"}')
+        }
+        put("v0.4/services") {
+          if (servicesAvailable) {
+            response.status(200).send('{"service-response":"from-test"}')
+          } else {
+            response.status(404).send('{"service-response":"from-test"}')
+          }
+        }
+      }
+    }
+    def client = new DDApi("localhost", agent.address.port)
+    client.addResponseListener(responseListener)
+    def services = ["my-service-name": new Service("my-service-name", "my-app-name", Service.AppType.CUSTOM)]
+
+    when:
+    client.sendTraces([])
+    then:
+    agentResponse.get() == '{"hello":"test"}'
+
+    when:
+    servicesAvailable = false
+    agentResponse.set('not-set')
+    client.sendServices(services)
+    then:
+    // response not seen because of non-200 status
+    agentResponse.get() == 'not-set'
+
+
+    cleanup:
+    agent.close()
+  }
+
+    def "Api Downgrades to v3"() {
+    setup:
+    def v3Agent = ratpack {
+      handlers {
+        put("v0.3/traces") {
+          response.status(200).send()
+        }
+        put("v0.3/services") {
+          response.status(200).send()
+        }
+      }
+    }
+    def client = new DDApi("localhost", v3Agent.address.port)
+
+    expect:
+    client.sendTraces([])
+    client.sendServices()
+
+    cleanup:
+    v3Agent.close()
   }
 
   static List<TreeMap<String, Object>> convertList(byte[] bytes) {

@@ -147,6 +147,10 @@ public class DDAgentWriter implements Writer {
     return "DDAgentWriter { api=" + api + " }";
   }
 
+  public DDApi getApi() {
+    return api;
+  }
+
   /** Infinite tasks blocking until some spans come in the blocking queue. */
   class TracesSendingTask implements Runnable {
 

@@ -3,12 +3,10 @@ package datadog.trace.common.sampling;
 import datadog.opentracing.DDSpan;
 import datadog.trace.common.DDTraceConfig;
 import java.util.Properties;
-import lombok.extern.slf4j.Slf4j;
 
 /** Main interface to sample a collection of traces. */
 public interface Sampler {
   static final String ALL_SAMPLER_TYPE = AllSampler.class.getSimpleName();
-  static final String RATE_SAMPLER_TYPE = RateSampler.class.getSimpleName();
 
   /**
    * Sample a collection of traces based on the parent span
@@ -18,26 +16,18 @@ public interface Sampler {
    */
   boolean sample(DDSpan span);
 
-  @Slf4j
   final class Builder {
     public static Sampler forConfig(final Properties config) {
       final Sampler sampler;
-
       if (config != null) {
-        final String configuredType = config.getProperty(DDTraceConfig.SAMPLER_TYPE);
-        if (RATE_SAMPLER_TYPE.equals(configuredType)) {
-          sampler = new RateSampler(config.getProperty(DDTraceConfig.SAMPLER_RATE));
-        } else if (ALL_SAMPLER_TYPE.equals(configuredType)) {
-          sampler = new AllSampler();
+        final boolean prioritySamplingEnabled =
+            Boolean.parseBoolean(config.getProperty(DDTraceConfig.PRIORITY_SAMPLING));
+        if (prioritySamplingEnabled) {
+          sampler = new RateByServiceSampler();
         } else {
-          log.warn(
-              "Sampler type not configured correctly: Type {} not recognized. Defaulting to AllSampler.",
-              configuredType);
           sampler = new AllSampler();
         }
       } else {
-        log.warn(
-            "Sampler type not configured correctly: No config provided! Defaulting to AllSampler.");
         sampler = new AllSampler();
       }
       return sampler;

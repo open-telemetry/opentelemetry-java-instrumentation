@@ -9,7 +9,12 @@ import datadog.trace.api.DDTags;
 import datadog.trace.common.DDTraceConfig;
 import datadog.trace.common.Service;
 import datadog.trace.common.sampling.AllSampler;
+import datadog.trace.common.sampling.PrioritySampling;
+import datadog.trace.common.sampling.RateByServiceSampler;
 import datadog.trace.common.sampling.Sampler;
+import datadog.trace.common.writer.DDAgentWriter;
+import datadog.trace.common.writer.DDApi;
+import datadog.trace.common.writer.DDApi.ResponseListener;
 import datadog.trace.common.writer.Writer;
 import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
@@ -78,6 +83,10 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     registry = new CodecRegistry();
     registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
     registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec());
+    if (this.writer instanceof DDAgentWriter && sampler instanceof DDApi.ResponseListener) {
+      final DDApi api = ((DDAgentWriter) this.writer).getApi();
+      api.addResponseListener((DDApi.ResponseListener) this.sampler);
+    }
     log.info("New instance: {}", this);
   }
 
@@ -139,7 +148,6 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
 
   @Override
   public <T> SpanContext extract(final Format<T> format, final T carrier) {
-
     final Codec<T> codec = registry.get(format);
     if (codec == null) {
       log.warn("Unsupported format for propagation - {}", format.getClass().getName());
@@ -250,7 +258,11 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     }
 
     private DDSpan startSpan() {
-      return new DDSpan(this.timestamp, buildSpanContext());
+      final DDSpan span = new DDSpan(this.timestamp, buildSpanContext());
+      if (DDTracer.this.sampler instanceof RateByServiceSampler) {
+        ((RateByServiceSampler) DDTracer.this.sampler).initializeSamplingPriority(span);
+      }
+      return span;
     }
 
     @Override
@@ -373,6 +385,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
       final long parentSpanId;
       final Map<String, String> baggage;
       final Queue<DDSpan> parentTrace;
+      final int samplingPriority;
 
       final DDSpanContext context;
       SpanContext parentContext = this.parent;
@@ -388,6 +401,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
         parentSpanId = ddsc.getSpanId();
         baggage = ddsc.getBaggageItems();
         parentTrace = ddsc.getTrace();
+        samplingPriority = ddsc.getSamplingPriority();
 
         if (this.serviceName == null) this.serviceName = ddsc.getServiceName();
         if (this.spanType == null) this.spanType = ddsc.getSpanType();
@@ -396,6 +410,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
         parentSpanId = 0L;
         baggage = null;
         parentTrace = null;
+        samplingPriority = PrioritySampling.UNSET;
       }
 
       if (serviceName == null) {
@@ -416,6 +431,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
               serviceName,
               operationName,
               this.resourceName,
+              samplingPriority,
               baggage,
               errorFlag,
               spanType,
