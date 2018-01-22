@@ -14,6 +14,17 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
+if (!JavaVersion.current().isJava8Compatible()) {
+  sourceSets {
+    test {
+      groovy {
+        // These classes use Ratpack which requires Java 8.
+        exclude '**/OkHttp3Test.groovy'
+      }
+    }
+  }
+}
+
 dependencies {
   compileOnly group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'
   compile('io.opentracing.contrib:opentracing-okhttp3:0.1.0-RC1') {

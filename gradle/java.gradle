@@ -7,8 +7,8 @@ targetCompatibility = 1.7
 apply plugin: "io.franzbecker.gradle-lombok"
 
 lombok { // optional: values below are the defaults
-  version = "1.16.18"
-  sha256 = "9d957f572386b9e257093a45b148f9b411cff80d9efd55eaf6fca27002d2e4d9"
+  version = "1.16.20"
+  sha256 = "c5178b18caaa1a15e17b99ba5e4023d2de2ebc18b58cde0f5a04ca4b31c10e6d"
 }
 
 apply plugin: "eclipse"
@@ -36,7 +36,7 @@ repositories {
 
 dependencies {
   testCompile deps.junit
-  testCompile group: 'org.assertj', name: 'assertj-core', version: '3.6.2'
+  testCompile group: 'org.assertj', name: 'assertj-core', version: '2.9.+'
   testCompile group: 'org.mockito', name: 'mockito-core', version: '2.7.22'
 
   testCompile deps.spock

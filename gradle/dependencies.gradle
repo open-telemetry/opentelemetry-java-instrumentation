@@ -6,7 +6,7 @@ ext {
     opentracing: '0.31.0',
 
     slf4j      : "1.7.25",
-    guava      : "23.0",
+    guava      : "20.0",
     jackson    : "2.9.3",
 
     spock      : "1.0-groovy-$spockGroovyVer",
