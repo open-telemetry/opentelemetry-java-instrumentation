@@ -51,9 +51,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   /** Each span have an operation name describing the current span */
   private String operationName;
   /** The sampling priority of the trace */
-  private int samplingPriority = PrioritySampling.UNSET;
+  private volatile int samplingPriority = PrioritySampling.UNSET;
   /** When true, the samplingPriority cannot be changed. */
-  private boolean samplingPriorityLocked = false;
+  private volatile boolean samplingPriorityLocked = false;
   // Others attributes
   /** Tags are associated to the current span, they will not propagate to the children span */
   private Map<String, Object> tags;
@@ -148,16 +148,19 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.spanType = spanType;
   }
 
-  public synchronized void setSamplingPriority(int newPriority) {
+  public void setSamplingPriority(int newPriority) {
     if (samplingPriorityLocked) {
       log.warn(
           "samplingPriority locked at {}. Refusing to set to {}", samplingPriority, newPriority);
     } else {
-      this.samplingPriority = newPriority;
+      synchronized (this) {
+        // sync with lockSamplingPriority
+        this.samplingPriority = newPriority;
+      }
     }
   }
 
-  public synchronized int getSamplingPriority() {
+  public int getSamplingPriority() {
     return samplingPriority;
   }
 
@@ -170,12 +173,17 @@ public class DDSpanContext implements io.opentracing.SpanContext {
    *
    * @return true if the sampling priority was locked.
    */
-  public synchronized boolean lockSamplingPriority() {
-    if (samplingPriority == PrioritySampling.UNSET) {
-      log.debug("{} : refusing to lock unset samplingPriority", this);
-    } else {
-      this.samplingPriorityLocked = true;
-      log.debug("{} : locked samplingPriority to {}", this, this.samplingPriority);
+  public boolean lockSamplingPriority() {
+    if (!samplingPriorityLocked) {
+      synchronized (this) {
+        // sync with setSamplingPriority
+        if (samplingPriority == PrioritySampling.UNSET) {
+          log.debug("{} : refusing to lock unset samplingPriority", this);
+        } else {
+          this.samplingPriorityLocked = true;
+          log.debug("{} : locked samplingPriority to {}", this, this.samplingPriority);
+        }
+      }
     }
     return samplingPriorityLocked;
   }
