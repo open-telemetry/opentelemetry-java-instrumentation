@@ -106,8 +106,6 @@ For gradle, add:
 compile group: 'com.datadoghq', name: 'dd-trace-api', version: {version}
 ```
 
-The Java Agent lets you use `@Trace` not just for `com.example.myproject`, but also for any application whose name _begins_ like that, e.g. `com.example.myproject.foobar`. If you're tempted to list something like `["com", "io"]` to avoid having to fuss with this configuration as you add new projects, be careful; providing `@Trace`-ability to too many applications could hurt your package's build time.
-
 #### Example
 
 Add an annotation to some method in your code:
@@ -143,14 +141,14 @@ For Maven, add this to pom.xml:
 <dependency>
     <groupId>io.opentracing</groupId>
     <artifactId>opentracing-api</artifactId>
-    <version>0.30.0</version>
+    <version>0.31.0</version>
 </dependency>
 
 <!-- OpenTracing Util -->
 <dependency>
     <groupId>io.opentracing</groupId>
     <artifactId>opentracing-util</artifactId>
-    <version>0.30.0</version>
+    <version>0.31.0</version>
 </dependency>
 
 <!-- Datadog Tracer (only needed if you do not use dd-java-agent) -->
@@ -164,8 +162,8 @@ For Maven, add this to pom.xml:
 For gradle, add:
 
 ```
-compile group: 'io.opentracing', name: 'opentracing-api', version: "0.30.0"
-compile group: 'io.opentracing', name: 'opentracing-util', version: "0.30.0"
+compile group: 'io.opentracing', name: 'opentracing-api', version: "0.31.0"
+compile group: 'io.opentracing', name: 'opentracing-util', version: "0.31.0"
 compile group: 'com.datadoghq', name: 'dd-trace-ot', version: "${dd-trace-java.version}"
 ```
 
