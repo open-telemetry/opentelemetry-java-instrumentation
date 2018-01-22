@@ -14,7 +14,7 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
-  compile('io.opentracing.contrib:opentracing-web-servlet-filter:0.1.0-RC1') {
+  compile('io.opentracing.contrib:opentracing-web-servlet-filter:0.1.0') {
     transitive = false
   }
 
