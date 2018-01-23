@@ -14,6 +14,7 @@ import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 import lombok.Data;
@@ -22,8 +23,10 @@ import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
 public final class ConnectionInstrumentation implements Instrumenter {
-  public static final Map<Connection, DBInfo> connectionInfo = new WeakHashMap<>();
-  public static final Map<PreparedStatement, String> preparedStatements = new WeakHashMap<>();
+  public static final Map<Connection, DBInfo> connectionInfo =
+      Collections.synchronizedMap(new WeakHashMap<Connection, DBInfo>());
+  public static final Map<PreparedStatement, String> preparedStatements =
+      Collections.synchronizedMap(new WeakHashMap<PreparedStatement, String>());
 
   @Override
   public AgentBuilder instrument(final AgentBuilder agentBuilder) {

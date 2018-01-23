@@ -22,7 +22,8 @@ import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
 public final class TraceAnnotationInstrumentation implements Instrumenter {
-  public static final Map<PreparedStatement, String> preparedStatements = new WeakHashMap<>();
+  public static final Map<PreparedStatement, String> preparedStatements =
+      Collections.synchronizedMap(new WeakHashMap<PreparedStatement, String>());
 
   @Override
   public AgentBuilder instrument(final AgentBuilder agentBuilder) {
