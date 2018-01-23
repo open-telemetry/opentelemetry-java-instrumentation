@@ -6,14 +6,33 @@ defaults: &defaults
   docker:
     - image: circleci/openjdk:8
 
+cache_keys: &cache_keys
+  # Reset the cache approx every release
+  keys:
+    - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+    - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
+    - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
+    - dd-trace-java
+
 test_job: &test_job
   steps:
-    - attach_workspace:
-        at: .
+    - checkout
+
+    - restore_cache:
+        <<: *cache_keys
+
+    - run:
+        name: Fix EC parameters error # (ref https://github.com/travis-ci/travis-ci/issues/8503)
+        command: |
+            if [ "${CIRCLE_JOB}" == "test_7" ]; then
+              wget "https://downloads.bouncycastle.org/java/bcprov-ext-jdk15on-158.jar" -O "${JAVA_HOME}"/jre/lib/ext/bcprov-ext-jdk15on-158.jar && \
+              perl -pi.bak -e 's/^(security\.provider\.)([0-9]+)/$1.($2+1)/ge' /etc/java-7-openjdk/security/java.security && \
+              echo "security.provider.1=org.bouncycastle.jce.provider.BouncyCastleProvider" | tee -a /etc/java-7-openjdk/security/java.security
+            fi
 
     - run:
         name: Run Tests
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew -g=gradle-home test --parallel --stacktrace --no-daemon --max-workers=3
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew test --parallel --stacktrace --no-daemon --max-workers=3
 
     - run:
         name: Save Artifacts to (project-root)/build
@@ -26,10 +45,6 @@ test_job: &test_job
     - store_artifacts:
         path: build
 
-    - persist_to_workspace:
-        root: .
-        paths: .
-
 jobs:
   build:
     <<: *defaults
@@ -40,57 +55,22 @@ jobs:
       - checkout
 
       - restore_cache:
-          # Reset the cache approx every release
-          keys:
-            - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}-verified
-            - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
-            - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
-            - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
-            - dd-trace-java
+          <<: *cache_keys
 
       - run:
           name: Build Project
-          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew -g=gradle-home clean check -x test --stacktrace --no-daemon
+          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew clean check -x test --stacktrace --no-daemon
 
       - save_cache:
           key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
-          paths: gradle-home
+          paths: ~/.gradle
           background: true
 
-      - persist_to_workspace:
-          root: .
-          paths: .
-
-#  test_7:
-#    <<: *defaults
-#    docker:
-#      - image: openjdk:7-jdk
-#
-#    steps:
-#      - attach_workspace:
-#          at: .
-#
-#      - run:
-#          name: Fix EC parameters error # (ref https://github.com/travis-ci/travis-ci/issues/8503)
-#          command: |
-#            wget "https://downloads.bouncycastle.org/java/bcprov-ext-jdk15on-158.jar" -O "${JAVA_HOME}"/jre/lib/ext/bcprov-ext-jdk15on-158.jar && \
-#            perl -pi.bak -e 's/^(security\.provider\.)([0-9]+)/$1.($2+1)/ge' /etc/java-7-openjdk/security/java.security && \
-#            echo "security.provider.1=org.bouncycastle.jce.provider.BouncyCastleProvider" | tee -a /etc/java-7-openjdk/security/java.security
-#
-#      - run:
-#          name: Run Tests
-#          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew -g=gradle-home test --parallel --stacktrace --no-daemon --max-workers=3
-#
-#      - run:
-#          name: Save Artifacts to (project-root)/build
-#          when: always
-#          command: .circleci/save_artifacts.sh
-#
-#      - store_test_results:
-#          path: build/test-results
-#
-#      - store_artifacts:
-#          path: build
+  test_7:
+    <<: *defaults
+    <<: *test_job
+    docker:
+      - image: openjdk:7-jdk
 
   test_8:
     <<: *defaults
@@ -98,21 +78,26 @@ jobs:
     docker:
       - image: circleci/openjdk:8-jdk
 
-#  test_9:
-#    <<: *defaults
-#    <<: *test_job
-#    docker:
-#      - image: circleci/openjdk:9-jdk
+  test_9:
+    <<: *defaults
+    <<: *test_job
+    docker:
+      - image: circleci/openjdk:9-jdk
 
-  scan_and_save:
+  scan_versions:
     <<: *defaults
     steps:
-      - attach_workspace:
-          at: .
+      - checkout
+
+      - restore_cache:
+          # Reset the cache approx every release
+          keys:
+            - dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
+            - dd-trace-java-version-scan
 
       - run:
           name: Verify Version Scan
-          command: ./gradlew -g=gradle-home verifyVersionScan --parallel --stacktrace --no-daemon
+          command: ./gradlew verifyVersionScan --parallel --stacktrace --no-daemon
 
       - run:
           name: Save Artifacts to (project-root)/build
@@ -126,14 +111,16 @@ jobs:
           path: build
 
       - save_cache:
-          key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}-verified
-          paths: gradle-home
+          key: dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
+          paths: ~/.gradle
 
   deploy:
     <<: *defaults
     steps:
-      - attach_workspace:
-          at: .
+      - checkout
+
+      - restore_cache:
+          <<: *cache_keys
 
       - run:
           name: Decode Signing Key
@@ -143,7 +130,7 @@ jobs:
           name: Publish master to Artifactory
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              ./gradlew -g=gradle-home -Psigning.keyId=${PGP_KEY_ID} \
+              ./gradlew -Psigning.keyId=${PGP_KEY_ID} \
                 -Psigning.password=${PGP_KEY_PASS} \
                 -Psigning.secretKeyRingFile=/home/circleci/dd-trace-java/.circleci/secring.gpg \
                 -PbintrayUser=${BINTRAY_USER} \
@@ -158,26 +145,25 @@ workflows:
     jobs:
       - build
 
-#      - test_7:
-#          requires:
-#            - build
+      - test_7:
+          requires:
+            - build
       - test_8:
           requires:
             - build
-#      - test_9:
-#          requires:
-#            - build
-
-      - scan_and_save:
+      - test_9:
           requires:
             - build
-#            - test_7
-            - test_8
-#            - test_9
+      - scan_versions:
+          requires:
+            - build
 
       - deploy:
           requires:
-            - scan_and_save
+            - test_7
+            - test_8
+            - test_9
+            - scan_versions
           filters:
             branches:
               only: master
