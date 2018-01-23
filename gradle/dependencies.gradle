@@ -35,9 +35,9 @@ ext {
     ],
     bytebuddy  : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: "${version.bytebuddy}"),
     autoservice: [
-      dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc4'),
+      dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'),
       dependencies.create(group: 'com.google.auto', name: 'auto-common', version: '0.3'),
-      dependencies.create(group: 'com.google.guava', name: 'guava', version: '19.0'),
+      dependencies.create(group: 'com.google.guava', name: 'guava', version: "${version.guava}"),
     ],
 
     // Testing
