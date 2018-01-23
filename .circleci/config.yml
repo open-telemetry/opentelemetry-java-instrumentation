@@ -61,36 +61,36 @@ jobs:
           root: .
           paths: .
 
-  test_7:
-    <<: *defaults
-    docker:
-      - image: openjdk:7-jdk
-
-    steps:
-      - attach_workspace:
-          at: .
-
-      - run:
-          name: Fix EC parameters error # (ref https://github.com/travis-ci/travis-ci/issues/8503)
-          command: |
-            wget "https://downloads.bouncycastle.org/java/bcprov-ext-jdk15on-158.jar" -O "${JAVA_HOME}"/jre/lib/ext/bcprov-ext-jdk15on-158.jar && \
-            perl -pi.bak -e 's/^(security\.provider\.)([0-9]+)/$1.($2+1)/ge' /etc/java-7-openjdk/security/java.security && \
-            echo "security.provider.1=org.bouncycastle.jce.provider.BouncyCastleProvider" | tee -a /etc/java-7-openjdk/security/java.security
-
-      - run:
-          name: Run Tests
-          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew -g=gradle-home test --parallel --stacktrace --no-daemon --max-workers=3
-
-      - run:
-          name: Save Artifacts to (project-root)/build
-          when: always
-          command: .circleci/save_artifacts.sh
-
-      - store_test_results:
-          path: build/test-results
-
-      - store_artifacts:
-          path: build
+#  test_7:
+#    <<: *defaults
+#    docker:
+#      - image: openjdk:7-jdk
+#
+#    steps:
+#      - attach_workspace:
+#          at: .
+#
+#      - run:
+#          name: Fix EC parameters error # (ref https://github.com/travis-ci/travis-ci/issues/8503)
+#          command: |
+#            wget "https://downloads.bouncycastle.org/java/bcprov-ext-jdk15on-158.jar" -O "${JAVA_HOME}"/jre/lib/ext/bcprov-ext-jdk15on-158.jar && \
+#            perl -pi.bak -e 's/^(security\.provider\.)([0-9]+)/$1.($2+1)/ge' /etc/java-7-openjdk/security/java.security && \
+#            echo "security.provider.1=org.bouncycastle.jce.provider.BouncyCastleProvider" | tee -a /etc/java-7-openjdk/security/java.security
+#
+#      - run:
+#          name: Run Tests
+#          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew -g=gradle-home test --parallel --stacktrace --no-daemon --max-workers=3
+#
+#      - run:
+#          name: Save Artifacts to (project-root)/build
+#          when: always
+#          command: .circleci/save_artifacts.sh
+#
+#      - store_test_results:
+#          path: build/test-results
+#
+#      - store_artifacts:
+#          path: build
 
   test_8:
     <<: *defaults
@@ -158,9 +158,9 @@ workflows:
     jobs:
       - build
 
-      - test_7:
-          requires:
-            - build
+#      - test_7:
+#          requires:
+#            - build
       - test_8:
           requires:
             - build
@@ -171,7 +171,7 @@ workflows:
       - scan_and_save:
           requires:
             - build
-            - test_7
+#            - test_7
             - test_8
 #            - test_9
 
