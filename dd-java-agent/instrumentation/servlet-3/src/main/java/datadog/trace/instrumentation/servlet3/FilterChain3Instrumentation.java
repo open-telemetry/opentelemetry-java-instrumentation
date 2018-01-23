@@ -50,7 +50,7 @@ public final class FilterChain3Instrumentation implements Instrumenter {
                 "io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator$1",
                 "io.opentracing.contrib.web.servlet.filter.TracingFilter",
                 "io.opentracing.contrib.web.servlet.filter.TracingFilter$1",
-                getClass().getName() + "$FilterChain3Advice$TagSettingAsyncListener"))
+                FilterChain3Advice.class.getName() + "$TagSettingAsyncListener"))
         .transform(
             DDAdvice.create()
                 .advice(

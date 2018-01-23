@@ -31,11 +31,11 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
-if (!JavaVersion.current().isJava8Compatible()) {
+if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
   sourceSets {
     test {
       groovy {
-        // These classes use Cassandra 3 which requires Java 8.
+        // These classes use Cassandra 3 which requires Java 8. (Currently incompatible with Java 9.)
         exclude '**/CassandraClientTest.groovy'
       }
     }

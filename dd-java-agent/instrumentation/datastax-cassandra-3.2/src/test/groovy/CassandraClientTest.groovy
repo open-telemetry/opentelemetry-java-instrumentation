@@ -9,7 +9,7 @@ import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 class CassandraClientTest extends AgentTestRunner {
 
   def setupSpec() {
-    EmbeddedCassandraServerHelper.startEmbeddedCassandra(40000L)
+    EmbeddedCassandraServerHelper.startEmbeddedCassandra(EmbeddedCassandraServerHelper.DEFAULT_CASSANDRA_YML_FILE, "build/tmp/embeddedCassandra")
   }
 
   def cleanupSpec() {
