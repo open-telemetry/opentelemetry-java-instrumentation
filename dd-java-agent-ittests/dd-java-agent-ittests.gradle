@@ -56,7 +56,7 @@ dependencies {
 
 test {
   jvmArgs "-Ddd.writer.type=ListWriter", "-Ddd.service.name=java-app"
-  jvmArgs "-Ddd.slf4j.simpleLogger.defaultLogLevel=debug"
+  jvmArgs "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug"
   jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
 
   doFirst {
