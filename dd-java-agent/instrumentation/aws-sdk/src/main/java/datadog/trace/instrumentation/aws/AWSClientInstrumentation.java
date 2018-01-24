@@ -1,8 +1,11 @@
 package datadog.trace.instrumentation.aws;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.amazonaws.client.builder.AwsClientBuilder;
@@ -13,7 +16,7 @@ import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.contrib.aws.TracingRequestHandler;
 import io.opentracing.util.GlobalTracer;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -25,11 +28,13 @@ public final class AWSClientInstrumentation implements Instrumenter {
   public AgentBuilder instrument(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
-            named("com.amazonaws.client.builder.AwsSyncClientBuilder")
-                .or(named("com.amazonaws.client.builder.AwsAsyncClientBuilder")),
+            hasSuperType(named("com.amazonaws.client.builder.AwsClientBuilder")),
             classLoaderHasClasses(
-                "com.amazonaws.http.client.HttpClientFactory",
-                "com.amazonaws.http.apache.utils.ApacheUtils"))
+                // aws classes used by opentracing contrib helpers
+                "com.amazonaws.handlers.RequestHandler2",
+                "com.amazonaws.Request",
+                "com.amazonaws.Response",
+                "com.amazonaws.handlers.HandlerContextKey"))
         .transform(
             new HelperInjector(
                 "io.opentracing.contrib.aws.TracingRequestHandler",
@@ -37,29 +42,30 @@ public final class AWSClientInstrumentation implements Instrumenter {
         .transform(
             DDAdvice.create()
                 .advice(
-                    named("build").and(takesArguments(0)).and(isPublic()),
+                    named("build").and(takesArguments(0)).and(isPublic()).and(not(isAbstract())),
                     AWSClientAdvice.class.getName()))
         .asDecorator();
   }
 
   public static class AWSClientAdvice {
-
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void addHandler(@Advice.This final AwsClientBuilder builder) {
-
-      final RequestHandler2 handler = new TracingRequestHandler(GlobalTracer.get());
-
+    public static void addHandler(@Advice.This final AwsClientBuilder<?, ?> builder) {
       List<RequestHandler2> handlers = builder.getRequestHandlers();
-
-      if (handlers == null || handlers.isEmpty()) {
-        handlers = Arrays.asList(handler);
+      boolean hasDDHandler = false;
+      if (null == handlers) {
+        handlers = new ArrayList<RequestHandler2>(1);
       } else {
-        // Check if we already added the handler
-        if (!(handlers.get(0) instanceof TracingRequestHandler)) {
-          handlers.add(0, handler);
+        for (RequestHandler2 handler : handlers) {
+          if (handler instanceof TracingRequestHandler) {
+            hasDDHandler = true;
+            break;
+          }
         }
       }
-      builder.setRequestHandlers(handler);
+      if (!hasDDHandler) {
+        handlers.add(new TracingRequestHandler(GlobalTracer.get()));
+        builder.setRequestHandlers(handlers.toArray(new RequestHandler2[0]));
+      }
     }
   }
 }
