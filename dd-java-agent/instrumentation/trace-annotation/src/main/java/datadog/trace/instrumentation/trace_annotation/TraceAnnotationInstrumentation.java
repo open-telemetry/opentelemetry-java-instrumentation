@@ -13,16 +13,12 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Method;
-import java.sql.PreparedStatement;
 import java.util.Collections;
-import java.util.Map;
-import java.util.WeakHashMap;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
 public final class TraceAnnotationInstrumentation implements Instrumenter {
-  public static final Map<PreparedStatement, String> preparedStatements = new WeakHashMap<>();
 
   @Override
   public AgentBuilder instrument(final AgentBuilder agentBuilder) {

@@ -16,9 +16,6 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
-import java.sql.PreparedStatement;
-import java.util.Map;
-import java.util.WeakHashMap;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -26,7 +23,6 @@ import org.springframework.web.servlet.HandlerMapping;
 
 @AutoService(Instrumenter.class)
 public final class SpringWebInstrumentation implements Instrumenter {
-  public static final Map<PreparedStatement, String> preparedStatements = new WeakHashMap<>();
 
   @Override
   public AgentBuilder instrument(final AgentBuilder agentBuilder) {

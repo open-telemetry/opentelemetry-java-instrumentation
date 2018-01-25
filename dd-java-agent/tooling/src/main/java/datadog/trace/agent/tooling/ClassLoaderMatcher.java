@@ -1,5 +1,7 @@
 package datadog.trace.agent.tooling;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.WeakHashMap;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -46,7 +48,8 @@ public class ClassLoaderMatcher {
   public static class ClassLoaderHasClassMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
-    private final WeakHashMap<ClassLoader, Boolean> cache = new WeakHashMap<>();
+    private final Map<ClassLoader, Boolean> cache =
+        Collections.synchronizedMap(new WeakHashMap<ClassLoader, Boolean>());
 
     private final String[] names;
 
@@ -80,7 +83,8 @@ public class ClassLoaderMatcher {
   public static class ClassLoaderHasClassWithFieldMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
-    private final WeakHashMap<ClassLoader, Boolean> cache = new WeakHashMap<>();
+    private final Map<ClassLoader, Boolean> cache =
+        Collections.synchronizedMap(new WeakHashMap<ClassLoader, Boolean>());
 
     private final String className;
     private final String fieldName;
