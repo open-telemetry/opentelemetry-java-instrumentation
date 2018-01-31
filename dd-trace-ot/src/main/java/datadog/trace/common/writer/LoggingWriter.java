@@ -1,5 +1,6 @@
 package datadog.trace.common.writer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auto.service.AutoService;
 import datadog.opentracing.DDSpan;
 import datadog.trace.common.Service;
@@ -10,10 +11,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AutoService(Writer.class)
 public class LoggingWriter implements Writer {
+  private final ObjectMapper serializer = new ObjectMapper();
 
   @Override
   public void write(final List<DDSpan> trace) {
-    log.info("write(trace): {}", trace);
+    try {
+      log.info("write(trace): {}", serializer.writeValueAsString(trace));
+    } catch (Exception e) {
+      log.error("error writing(trace): {}", trace);
+    }
   }
 
   @Override
