@@ -26,6 +26,8 @@ public class DBTypeDecorator extends AbstractDecorator {
       if ("mongo".equals(value)) {
         // Todo: not sure it's used cos already in the agent mongo helper
         context.setSpanType("mongodb");
+      } else if ("cassandra".equals(value)) {
+        context.setSpanType("cassandra");
       } else {
         context.setSpanType("sql");
       }

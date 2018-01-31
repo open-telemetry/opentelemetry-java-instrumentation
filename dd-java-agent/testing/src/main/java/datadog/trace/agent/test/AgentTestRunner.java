@@ -2,25 +2,19 @@ package datadog.trace.agent.test;
 
 import datadog.opentracing.DDTracer;
 import datadog.opentracing.decorators.AbstractDecorator;
-import datadog.opentracing.decorators.DBTypeDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
 import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.common.writer.ListWriter;
-
 import io.opentracing.Tracer;
-
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.List;
-
 import net.bytebuddy.agent.ByteBuddyAgent;
-
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.spockframework.runtime.model.SpecMetadata;
-
 import spock.lang.Specification;
 
 /**

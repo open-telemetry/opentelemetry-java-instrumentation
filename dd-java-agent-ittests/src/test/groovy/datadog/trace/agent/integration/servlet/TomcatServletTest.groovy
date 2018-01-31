@@ -2,6 +2,7 @@ package datadog.trace.agent.integration.servlet
 
 import com.google.common.io.Files
 import datadog.opentracing.DDTracer
+import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.util.GlobalTracer
 import okhttp3.OkHttpClient
@@ -97,6 +98,7 @@ class TomcatServletTest extends Specification {
     def span = trace[0]
 
     span.context().operationName == "servlet.request"
+    span.context().spanType == DDSpanTypes.WEB_SERVLET
     !span.context().getErrorFlag()
     span.context().parentId != 0 // parent should be the okhttp call.
     span.context().tags["http.url"] == "http://localhost:$PORT/$path"
@@ -131,6 +133,7 @@ class TomcatServletTest extends Specification {
     def span = trace[0]
 
     span.context().operationName == "servlet.request"
+    span.context().spanType == DDSpanTypes.WEB_SERVLET
     span.context().getErrorFlag()
     span.context().parentId != 0 // parent should be the okhttp call.
     span.context().tags["http.url"] == "http://localhost:$PORT/$path"

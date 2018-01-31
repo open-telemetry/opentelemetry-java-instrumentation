@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.apachehttpclient;
 
+import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -123,6 +125,7 @@ public class DDTracingClientExec implements ClientExecChain {
         tracer
             .buildSpan(request.getMethod())
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
+            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
             .asChildOf(parentScope.span())
             .startActive(true);
 

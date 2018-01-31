@@ -56,10 +56,10 @@ class OkHttp3Test extends AgentTestRunner {
     and: // span 1
     def span2 = trace[1]
 
-    span2.context().operationName == "GET"
-    span2.serviceName == "unnamed-java-app"
-    span2.resourceName == "GET"
-    span2.type == null
+    span2.context().operationName == "okhttp.http"
+    span2.serviceName == "okhttp"
+    span2.resourceName == "GET /ping"
+    span2.type == "web"
     !span2.context().getErrorFlag()
     span2.context().parentId == span1.spanId
 
