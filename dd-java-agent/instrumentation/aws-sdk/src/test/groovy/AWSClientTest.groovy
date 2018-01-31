@@ -1,6 +1,8 @@
+import com.amazonaws.AmazonWebServiceClient
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.AnonymousAWSCredentials
 import com.amazonaws.client.builder.AwsClientBuilder
+import com.amazonaws.handlers.RequestHandler2
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import datadog.trace.agent.test.AgentTestRunner
@@ -16,14 +18,22 @@ class AWSClientTest extends AgentTestRunner {
 
   def "request handler is hooked up"() {
     setup:
-    def client = AmazonS3ClientBuilder.standard()
+    def builder = AmazonS3ClientBuilder.standard()
       .withRegion(Regions.US_EAST_1)
-    client.build()
+    if (addHandler) {
+      builder.withRequestHandlers(new RequestHandler2() {})
+    }
+    AmazonWebServiceClient client = builder.build()
 
     expect:
-    client.getRequestHandlers() != null
-    client.getRequestHandlers().size() == 1
-    client.getRequestHandlers().get(0).getClass().getSimpleName() == "TracingRequestHandler"
+    client.requestHandler2s != null
+    client.requestHandler2s.size() == size
+    client.requestHandler2s.get(position).getClass().getSimpleName() == "TracingRequestHandler"
+
+    where:
+    addHandler | size | position
+    true       | 2    | 1
+    false      | 1    | 0
   }
 
   def "send request with mocked back end"() {
@@ -39,7 +49,7 @@ class AWSClientTest extends AgentTestRunner {
     }
     AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration("http://localhost:$server.address.port", "us-west-2");
 
-    def client = AmazonS3ClientBuilder
+    AmazonWebServiceClient client = AmazonS3ClientBuilder
       .standard()
       .withPathStyleAccessEnabled(true)
       .withEndpointConfiguration(endpoint)
@@ -51,12 +61,13 @@ class AWSClientTest extends AgentTestRunner {
     expect:
     bucket != null
 
-    receivedHeaders.get().get("x-datadog-trace-id") == null
-    receivedHeaders.get().get("x-datadog-parent-id") == null
+    client.requestHandler2s != null
+    client.requestHandler2s.size() == 1
+    client.requestHandler2s.get(0).getClass().getSimpleName() == "TracingRequestHandler"
 
-    TEST_WRITER.size() == 1
+    TEST_WRITER.size() == 2
 
-    def trace = TEST_WRITER.firstTrace()
+    def trace = TEST_WRITER.get(0)
     trace.size() == 2
 
     and: // span 0 - from apache-httpclient instrumentation
@@ -96,6 +107,34 @@ class AWSClientTest extends AgentTestRunner {
     tags2[DDTags.THREAD_NAME] != null
     tags2[DDTags.THREAD_ID] != null
     tags2.size() == 8
+
+    and:
+
+    def trace2 = TEST_WRITER.get(1)
+    trace2.size() == 1
+
+    and: // span 0 - from aws instrumentation
+    def span = trace2[0]
+
+    span.context().operationName == "Amazon S3"
+    span.serviceName == "unnamed-java-app"
+    span.resourceName == "Amazon S3"
+    span.type == null
+    !span.context().getErrorFlag()
+    span.context().parentId == 0
+
+    def tags = span.context().tags
+    tags["component"] == "java-aws-sdk"
+    tags2[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_CLIENT
+    tags2[Tags.HTTP_METHOD.key] == "PUT"
+    tags2[Tags.HTTP_URL.key] == "http://localhost:$server.address.port/testbucket/"
+    tags2[Tags.HTTP_STATUS.key] == 200
+    tags["thread.name"] != null
+    tags["thread.id"] != null
+    tags.size() == 7
+
+    receivedHeaders.get().get("x-datadog-trace-id") == "$span.traceId"
+    receivedHeaders.get().get("x-datadog-parent-id") == "$span.spanId"
 
     cleanup:
     server.close()

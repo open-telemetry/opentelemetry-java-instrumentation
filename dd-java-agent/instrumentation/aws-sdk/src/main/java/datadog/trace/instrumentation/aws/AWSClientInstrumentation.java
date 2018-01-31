@@ -17,6 +17,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.contrib.aws.TracingRequestHandler;
 import io.opentracing.util.GlobalTracer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -48,14 +49,14 @@ public final class AWSClientInstrumentation implements Instrumenter {
   }
 
   public static class AWSClientAdvice {
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addHandler(@Advice.This final AwsClientBuilder<?, ?> builder) {
       List<RequestHandler2> handlers = builder.getRequestHandlers();
       boolean hasDDHandler = false;
       if (null == handlers) {
-        handlers = new ArrayList<RequestHandler2>(1);
+        handlers = Collections.emptyList();
       } else {
-        for (RequestHandler2 handler : handlers) {
+        for (final RequestHandler2 handler : handlers) {
           if (handler instanceof TracingRequestHandler) {
             hasDDHandler = true;
             break;
@@ -63,6 +64,7 @@ public final class AWSClientInstrumentation implements Instrumenter {
         }
       }
       if (!hasDDHandler) {
+        handlers = new ArrayList<>(handlers); // copy since returned list is unmodifiable
         handlers.add(new TracingRequestHandler(GlobalTracer.get()));
         builder.setRequestHandlers(handlers.toArray(new RequestHandler2[0]));
       }
