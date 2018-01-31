@@ -106,7 +106,7 @@ class TomcatServletTest extends Specification {
     span.context().tags["http.status_code"] == 200
     span.context().tags["thread.name"] != null
     span.context().tags["thread.id"] != null
-    span.context().tags.size() == 7
+    span.context().tags.size() == 8
 
     where:
     path    | expectedResponse
@@ -144,7 +144,7 @@ class TomcatServletTest extends Specification {
     span.context().tags["error.msg"] == "some $path error"
     span.context().tags["error.type"] == RuntimeException.getName()
     span.context().tags["error.stack"] != null
-    span.context().tags.size() == 11
+    span.context().tags.size() == 12
 
     where:
     path   | expectedResponse

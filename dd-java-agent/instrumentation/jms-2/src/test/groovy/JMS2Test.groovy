@@ -97,7 +97,7 @@ class JMS2Test extends AgentTestRunner {
 
     producerTags["thread.name"] != null
     producerTags["thread.id"] != null
-    producerTags.size() == 5
+    producerTags.size() == 6
 
     and: // consumer trace
     def consumerTrace = TEST_WRITER.get(1)
@@ -121,7 +121,7 @@ class JMS2Test extends AgentTestRunner {
 
     consumerTags["thread.name"] != null
     consumerTags["thread.id"] != null
-    consumerTags.size() == 5
+    consumerTags.size() == 6
 
     cleanup:
     producer.close()
@@ -178,7 +178,7 @@ class JMS2Test extends AgentTestRunner {
 
     producerTags["thread.name"] != null
     producerTags["thread.id"] != null
-    producerTags.size() == 5
+    producerTags.size() == 6
 
     and: // consumer trace
     def consumerTrace = TEST_WRITER.get(1)
@@ -202,7 +202,7 @@ class JMS2Test extends AgentTestRunner {
 
     consumerTags["thread.name"] != null
     consumerTags["thread.id"] != null
-    consumerTags.size() == 5
+    consumerTags.size() == 6
 
     cleanup:
     producer.close()

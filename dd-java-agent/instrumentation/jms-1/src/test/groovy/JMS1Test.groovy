@@ -64,7 +64,7 @@ class JMS1Test extends AgentTestRunner {
 
     tags0["thread.name"] != null
     tags0["thread.id"] != null
-    tags0.size() == 5
+    tags0.size() == 6
 
     and: // span 1
     def span1 = trace[1]
@@ -85,7 +85,7 @@ class JMS1Test extends AgentTestRunner {
 
     tags1["thread.name"] != null
     tags1["thread.id"] != null
-    tags1.size() == 5
+    tags1.size() == 6
 
     and: // span 2
     def span2 = trace[2]
@@ -106,7 +106,7 @@ class JMS1Test extends AgentTestRunner {
 
     tags2["thread.name"] != null
     tags2["thread.id"] != null
-    tags2.size() == 5
+    tags2.size() == 6
 
     and: // consumer trace
     def consumerTrace = TEST_WRITER.get(1)
@@ -130,7 +130,7 @@ class JMS1Test extends AgentTestRunner {
 
     consumerTags["thread.name"] != null
     consumerTags["thread.id"] != null
-    consumerTags.size() == 5
+    consumerTags.size() == 6
 
     cleanup:
     producer.close()
@@ -188,7 +188,7 @@ class JMS1Test extends AgentTestRunner {
 
     tags0["thread.name"] != null
     tags0["thread.id"] != null
-    tags0.size() == 5
+    tags0.size() == 6
 
     and: // span 1
     def span1 = trace[1]
@@ -209,7 +209,7 @@ class JMS1Test extends AgentTestRunner {
 
     tags1["thread.name"] != null
     tags1["thread.id"] != null
-    tags1.size() == 5
+    tags1.size() == 6
 
     and: // span 2
     def span2 = trace[2]
@@ -230,7 +230,7 @@ class JMS1Test extends AgentTestRunner {
 
     tags2["thread.name"] != null
     tags2["thread.id"] != null
-    tags2.size() == 5
+    tags2.size() == 6
 
     and: // consumer trace
     def consumerTrace = TEST_WRITER.get(1)
@@ -254,7 +254,7 @@ class JMS1Test extends AgentTestRunner {
 
     consumerTags["thread.name"] != null
     consumerTags["thread.id"] != null
-    consumerTags.size() == 5
+    consumerTags.size() == 6
 
     cleanup:
     producer.close()
