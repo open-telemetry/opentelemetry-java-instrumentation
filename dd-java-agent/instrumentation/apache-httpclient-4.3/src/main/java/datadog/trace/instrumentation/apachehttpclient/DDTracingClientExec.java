@@ -127,8 +127,15 @@ public class DDTracingClientExec implements ClientExecChain {
             .startActive(true);
 
     final Span networkSpan = networkScope.span();
-    tracer.inject(
-        networkSpan.context(), Format.Builtin.HTTP_HEADERS, new HttpHeadersInjectAdapter(request));
+
+    final boolean awsClientCall = request.getHeaders("amz-sdk-invocation-id").length > 0;
+    // AWS calls are often signed, so we can't add headers without breaking the signature.
+    if (!awsClientCall) {
+      tracer.inject(
+          networkSpan.context(),
+          Format.Builtin.HTTP_HEADERS,
+          new HttpHeadersInjectAdapter(request));
+    }
 
     try {
       // request tags
