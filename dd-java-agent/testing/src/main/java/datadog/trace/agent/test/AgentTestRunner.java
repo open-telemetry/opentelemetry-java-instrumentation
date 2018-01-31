@@ -49,7 +49,7 @@ public abstract class AgentTestRunner extends Specification {
     TEST_WRITER = new ListWriter();
     TEST_TRACER = new DDTracer(TEST_WRITER);
 
-    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createFromResources();
+    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createBuiltinDecorators();
     for (final AbstractDecorator decorator : decorators) {
       ((DDTracer) TEST_TRACER).addDecorator(decorator);
     }

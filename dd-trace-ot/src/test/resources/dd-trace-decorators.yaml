@@ -1,8 +1,0 @@
-decorators:
-  - type: HTTPComponent
-    matchingValue: hello
-    setValue: world
-  - type: HTTPComponent
-    matchingValue: foo
-    setValue: bar
-  - type: URLAsResourceName
