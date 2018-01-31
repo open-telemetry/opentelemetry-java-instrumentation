@@ -1,0 +1,16 @@
+# Decorators are used to add extra information to span.
+# To modify, copy the file to dd-trace-decorators.yaml and make desired changes.
+# Could be DBServiceDecorator or HTTPServiceDecorator, etc.
+decorators:
+  - type: HTTPComponent
+    matchingTag: component
+    matchingValue: okhttp
+  - type: HTTPComponent
+    matchingTag: component
+    matchingValue: java-aws-sdk
+  - type: ErrorFlag
+  - type: DBTypeDecorator
+  - type: DBStatementAsResourceName
+  - type: OperationDecorator
+  - type: Status404Decorator
+  - type: URLAsResourceName

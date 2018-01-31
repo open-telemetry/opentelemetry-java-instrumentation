@@ -68,12 +68,38 @@ public class DDDecoratorsFactory {
   }
 
   public static List<AbstractDecorator> createFromResources() {
-    List<AbstractDecorator> result = new ArrayList<>();
+    final List<AbstractDecorator> result;
     final DecoratorsConfig config =
         ConfigUtils.loadConfigFromResource(CONFIG_PATH, DecoratorsConfig.class);
-    if (config != null) {
+    if (config == null) {
+      result = createBuiltinDecorators();
+    } else {
       result = DDDecoratorsFactory.create(config.getDecorators());
     }
     return result;
+  }
+
+  private static List<AbstractDecorator> createBuiltinDecorators() {
+    List<AbstractDecorator> builtin = new ArrayList<AbstractDecorator>(8);
+    {
+      final HTTPComponent httpDecorator1 = new HTTPComponent();
+      httpDecorator1.setMatchingTag("component");
+      httpDecorator1.setMatchingValue("okhttp");
+      builtin.add(httpDecorator1);
+    }
+    {
+      final HTTPComponent httpDecorator2 = new HTTPComponent();
+      httpDecorator2.setMatchingTag("component");
+      httpDecorator2.setMatchingValue("java-aws-sdk");
+      builtin.add(httpDecorator2);
+    }
+    builtin.add(new ErrorFlag());
+    builtin.add(new DBTypeDecorator());
+    builtin.add(new DBStatementAsResourceName());
+    builtin.add(new OperationDecorator());
+    builtin.add(new Status404Decorator());
+    builtin.add(new URLAsResourceName());
+
+    return builtin;
   }
 }
