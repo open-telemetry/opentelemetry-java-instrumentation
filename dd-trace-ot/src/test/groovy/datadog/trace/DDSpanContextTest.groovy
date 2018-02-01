@@ -17,14 +17,14 @@ class DDSpanContextTest extends Specification {
     context.serviceName == "fakeService"
     context.resourceName == "fakeResource"
     context.spanType == "fakeType"
-    context.toString() == "Span [ t_id=1, s_id=1, p_id=0] trace=fakeService/fakeOperation/fakeResource *errored* tags={${extra}thread.id=${Thread.currentThread().id}, thread.name=${Thread.currentThread().name}}"
+    context.toString() == "Span [ t_id=1, s_id=1, p_id=0] trace=fakeService/fakeOperation/fakeResource *errored* tags={${extra}span.type=${context.getSpanType()}, thread.id=${Thread.currentThread().id}, thread.name=${Thread.currentThread().name}}"
 
     where:
     name                 | extra             | tags
-    DDTags.SERVICE_NAME  | "some.tag=asdf, " | ["some.tag": "asdf", (DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
-    DDTags.RESOURCE_NAME | "some.tag=asdf, " | ["some.tag": "asdf", (DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
-    DDTags.SPAN_TYPE     | "some.tag=asdf, " | ["some.tag": "asdf", (DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
-    "some.tag"           | ""                | [(DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
+    DDTags.SERVICE_NAME  | "some.tag=asdf, " | ["some.tag": "asdf", (DDTags.SPAN_TYPE):"fakeType", (DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
+    DDTags.RESOURCE_NAME | "some.tag=asdf, " | ["some.tag": "asdf", (DDTags.SPAN_TYPE):"fakeType", (DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
+    DDTags.SPAN_TYPE     | "some.tag=asdf, " | ["some.tag": "asdf", (DDTags.SPAN_TYPE):"fakeType", (DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
+    "some.tag"           | ""                | [ (DDTags.SPAN_TYPE):"fakeType", (DDTags.THREAD_NAME): Thread.currentThread().name, (DDTags.THREAD_ID): Thread.currentThread().id]
   }
 
   def "special tags set certain values"() {
@@ -33,10 +33,13 @@ class DDSpanContextTest extends Specification {
     context.setTag(name, value)
     def thread = Thread.currentThread()
 
+    def expectedTags = [(DDTags.THREAD_NAME): thread.name, (DDTags.THREAD_ID): thread.id, (DDTags.SPAN_TYPE): context.getSpanType()]
+    def expectedTrace = "Span [ t_id=1, s_id=1, p_id=0] trace=$details tags={span.type=${context.getSpanType()}, thread.id=$thread.id, thread.name=$thread.name}"
+
     expect:
-    context.getTags() == [(DDTags.THREAD_NAME): thread.name, (DDTags.THREAD_ID): thread.id]
+    context.getTags() == expectedTags
     context."$method" == value
-    context.toString() == "Span [ t_id=1, s_id=1, p_id=0] trace=$details tags={thread.id=$thread.id, thread.name=$thread.name}"
+    context.toString() == expectedTrace
 
     where:
     name                 | value                | method         | details
@@ -54,14 +57,15 @@ class DDSpanContextTest extends Specification {
     expect:
     context.getTags() == [
       (name)              : value,
+      (DDTags.SPAN_TYPE)  : context.getSpanType(),
       (DDTags.THREAD_NAME): thread.name,
       (DDTags.THREAD_ID)  : thread.id
     ]
-    context.toString() == "Span [ t_id=1, s_id=1, p_id=0] trace=fakeService/fakeOperation/fakeResource tags={$name=$value, thread.id=$thread.id, thread.name=$thread.name}"
+    context.toString() == "Span [ t_id=1, s_id=1, p_id=0] trace=fakeService/fakeOperation/fakeResource tags={span.type=${context.getSpanType()}, $name=$value, thread.id=$thread.id, thread.name=$thread.name}"
 
     where:
     name             | value
-    "some.name"      | "some value"
+    "tag.name"       | "some value"
     "tag with int"   | 1234
     "tag-with-bool"  | false
     "tag_with_float" | 0.321

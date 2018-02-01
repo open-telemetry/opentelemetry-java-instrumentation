@@ -12,6 +12,8 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -78,6 +80,7 @@ public final class HttpServlet3Instrumentation implements Instrumenter {
               .buildSpan(SERVLET_OPERATION_NAME)
               .asChildOf(extractedContext)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
+              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
               .startActive(false);
 
       ServletFilterSpanDecorator.STANDARD_TAGS.onRequest(req, scope.span());

@@ -67,7 +67,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     log.debug("Using config: {}", config);
 
     // Create decorators from resource files
-    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createFromResources();
+    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createBuiltinDecorators();
     for (final AbstractDecorator decorator : decorators) {
       log.debug("Loading decorator: {}", decorator.getClass().getSimpleName());
       addDecorator(decorator);

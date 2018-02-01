@@ -51,15 +51,15 @@ class OkHttp3Test extends AgentTestRunner {
     tags1["component"] == "okhttp"
     tags1["thread.name"] != null
     tags1["thread.id"] != null
-    tags1.size() == 3
+    tags1.size() == 4
 
     and: // span 1
     def span2 = trace[1]
 
-    span2.context().operationName == "GET"
-    span2.serviceName == "unnamed-java-app"
-    span2.resourceName == "GET"
-    span2.type == null
+    span2.context().operationName == "okhttp.http"
+    span2.serviceName == "okhttp"
+    span2.resourceName == "GET /ping"
+    span2.type == "web"
     !span2.context().getErrorFlag()
     span2.context().parentId == span1.spanId
 
@@ -74,7 +74,7 @@ class OkHttp3Test extends AgentTestRunner {
     tags2[Tags.PEER_HOST_IPV4.key] != null
     tags2[DDTags.THREAD_NAME] != null
     tags2[DDTags.THREAD_ID] != null
-    tags2.size() == 10
+    tags2.size() == 11
 
     receivedHeaders.get().get("x-datadog-trace-id") == "$span2.traceId"
     receivedHeaders.get().get("x-datadog-parent-id") == "$span2.spanId"

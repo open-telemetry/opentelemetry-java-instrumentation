@@ -18,7 +18,7 @@ public abstract class AbstractDecorator {
   private String setValue;
 
   public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
-    if ((this.getMatchingValue() == null || value.equals(this.getMatchingValue()))) {
+    if (this.getMatchingValue() == null || this.getMatchingValue().equals(value)) {
       final String targetTag = getSetTag() == null ? tag : getSetTag();
       final String targetValue = getSetValue() == null ? String.valueOf(value) : getSetValue();
 

@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
@@ -56,6 +57,7 @@ public final class SpringWebInstrumentation implements Instrumenter {
         if (method != null && bestMatchingPattern != null) {
           final String resourceName = method + " " + bestMatchingPattern;
           scope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
+          scope.span().setTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET);
         }
       }
     }

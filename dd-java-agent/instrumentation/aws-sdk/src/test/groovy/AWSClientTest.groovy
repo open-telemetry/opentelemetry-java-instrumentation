@@ -85,15 +85,15 @@ class AWSClientTest extends AgentTestRunner {
     tags1["component"] == "apache-httpclient"
     tags1["thread.name"] != null
     tags1["thread.id"] != null
-    tags1.size() == 3
+    tags1.size() == 4
 
     and: // span 1 - from aws instrumentation
     def span2 = trace[1]
 
     span2.context().operationName == "PUT"
     span2.serviceName == "unnamed-java-app"
-    span2.resourceName == "PUT"
-    span2.type == null
+    span2.resourceName == "PUT /testbucket/"
+    span2.type == "http"
     !span2.context().getErrorFlag()
     span2.context().parentId == span1.spanId
 
@@ -106,7 +106,7 @@ class AWSClientTest extends AgentTestRunner {
     tags2[Tags.PEER_PORT.key] == server.address.port
     tags2[DDTags.THREAD_NAME] != null
     tags2[DDTags.THREAD_ID] != null
-    tags2.size() == 8
+    tags2.size() == 9
 
     and:
 
@@ -116,10 +116,10 @@ class AWSClientTest extends AgentTestRunner {
     and: // span 0 - from aws instrumentation
     def span = trace2[0]
 
-    span.context().operationName == "Amazon S3"
-    span.serviceName == "unnamed-java-app"
-    span.resourceName == "Amazon S3"
-    span.type == null
+    span.context().operationName == "aws.http"
+    span.serviceName == "java-aws-sdk"
+    span.resourceName == "PUT "
+    span.type == "web"
     !span.context().getErrorFlag()
     span.context().parentId == 0
 
@@ -131,7 +131,7 @@ class AWSClientTest extends AgentTestRunner {
     tags2[Tags.HTTP_STATUS.key] == 200
     tags["thread.name"] != null
     tags["thread.id"] != null
-    tags.size() == 7
+    tags.size() == 8
 
     receivedHeaders.get().get("x-datadog-trace-id") == "$span.traceId"
     receivedHeaders.get().get("x-datadog-parent-id") == "$span.spanId"

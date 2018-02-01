@@ -51,6 +51,7 @@ class DDSpanSerializationTest extends Specification {
 
     baggage.put(DDTags.THREAD_NAME, Thread.currentThread().getName())
     baggage.put(DDTags.THREAD_ID, String.valueOf(Thread.currentThread().getId()))
+    baggage.put(DDTags.SPAN_TYPE, context.getSpanType())
 
     DDSpan span = new DDSpan(100L, context)
     span.finish(133L)

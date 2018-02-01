@@ -129,7 +129,7 @@ class DDTraceConfigTest extends Specification {
     tracer.sampler instanceof AllSampler
     tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:8126/v0.3/traces } }"
 
-    tracer.spanContextDecorators.size() == 2
+    tracer.spanContextDecorators.size() == 6
   }
 
   @Unroll

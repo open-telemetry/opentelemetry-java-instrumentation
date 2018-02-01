@@ -1,5 +1,6 @@
 import com.google.common.io.Files
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDSpanTypes
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -84,7 +85,7 @@ class JMS2Test extends AgentTestRunner {
     producerSpan.context().operationName == "jms.produce"
     producerSpan.serviceName == "jms"
     producerSpan.resourceName == "Produced for $resourceName"
-    producerSpan.type == null
+    producerSpan.type == DDSpanTypes.MESSAGE_PRODUCER
     !producerSpan.context().getErrorFlag()
     producerSpan.context().parentId == 0
 
@@ -97,7 +98,7 @@ class JMS2Test extends AgentTestRunner {
 
     producerTags["thread.name"] != null
     producerTags["thread.id"] != null
-    producerTags.size() == 5
+    producerTags.size() == 6
 
     and: // consumer trace
     def consumerTrace = TEST_WRITER.get(1)
@@ -108,7 +109,7 @@ class JMS2Test extends AgentTestRunner {
     consumerSpan.context().operationName == "jms.consume"
     consumerSpan.serviceName == "jms"
     consumerSpan.resourceName == "Consumed from $resourceName"
-    consumerSpan.type == null
+    consumerSpan.type == DDSpanTypes.MESSAGE_CONSUMER
     !consumerSpan.context().getErrorFlag()
     consumerSpan.context().parentId == producerSpan.context().spanId
 
@@ -121,7 +122,7 @@ class JMS2Test extends AgentTestRunner {
 
     consumerTags["thread.name"] != null
     consumerTags["thread.id"] != null
-    consumerTags.size() == 5
+    consumerTags.size() == 6
 
     cleanup:
     producer.close()
@@ -165,7 +166,7 @@ class JMS2Test extends AgentTestRunner {
     producerSpan.context().operationName == "jms.produce"
     producerSpan.serviceName == "jms"
     producerSpan.resourceName == "Produced for $resourceName"
-    producerSpan.type == null
+    producerSpan.type == DDSpanTypes.MESSAGE_PRODUCER
     !producerSpan.context().getErrorFlag()
     producerSpan.context().parentId == 0
 
@@ -178,7 +179,7 @@ class JMS2Test extends AgentTestRunner {
 
     producerTags["thread.name"] != null
     producerTags["thread.id"] != null
-    producerTags.size() == 5
+    producerTags.size() == 6
 
     and: // consumer trace
     def consumerTrace = TEST_WRITER.get(1)
@@ -189,7 +190,7 @@ class JMS2Test extends AgentTestRunner {
     consumerSpan.context().operationName == "jms.onMessage"
     consumerSpan.serviceName == "jms"
     consumerSpan.resourceName == "Received from $resourceName"
-    consumerSpan.type == null
+    consumerSpan.type == DDSpanTypes.MESSAGE_CONSUMER
     !consumerSpan.context().getErrorFlag()
     consumerSpan.context().parentId == producerSpan.context().spanId
 
@@ -202,7 +203,7 @@ class JMS2Test extends AgentTestRunner {
 
     consumerTags["thread.name"] != null
     consumerTags["thread.id"] != null
-    consumerTags.size() == 5
+    consumerTags.size() == 6
 
     cleanup:
     producer.close()
