@@ -1,5 +1,6 @@
 package datadog.trace.agent.test;
 
+import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
@@ -10,6 +11,7 @@ import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.List;
+import java.util.concurrent.Phaser;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -45,8 +47,19 @@ public abstract class AgentTestRunner extends Specification {
   private static final Instrumentation instrumentation;
   private static ClassFileTransformer activeTransformer = null;
 
+  protected static final Phaser WRITER_PHASER = new Phaser();
+
   static {
-    TEST_WRITER = new ListWriter();
+    WRITER_PHASER.register();
+    TEST_WRITER =
+        new ListWriter() {
+          @Override
+          public boolean add(final List<DDSpan> trace) {
+            final boolean result = super.add(trace);
+            WRITER_PHASER.arrive();
+            return result;
+          }
+        };
     TEST_TRACER = new DDTracer(TEST_WRITER);
 
     final List<AbstractDecorator> decorators = DDDecoratorsFactory.createBuiltinDecorators();

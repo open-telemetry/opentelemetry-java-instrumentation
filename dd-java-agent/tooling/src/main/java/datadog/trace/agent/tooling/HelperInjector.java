@@ -85,7 +85,12 @@ public class HelperInjector implements Transformer {
               }
             }
           } catch (final Exception e) {
-            log.error("Failed to inject helper classes into " + classLoader, e);
+            log.error(
+                "Error preparing helpers for "
+                    + typeDescription
+                    + ". Failed to inject helper classes into "
+                    + classLoader,
+                e);
             throw new RuntimeException(e);
           }
           injectedClassLoaders.add(classLoader);
