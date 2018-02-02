@@ -83,6 +83,9 @@ shadowJar {
       // This is used in the Cassandra Cluster.connectAsync signature so we can't relocate it. :fingers_crossed:
       exclude 'com.google.common.util.concurrent.ListenableFuture'
     }
+
+    // rewrite dependencies calling Logger.getLogger
+    relocate 'java.util.logging.Logger', 'datadog.trace.agent.PatchLogger'
   }
 
   dependencies {
