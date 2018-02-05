@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.jms.util.MessagePropertyTextMap;
 import io.opentracing.Scope;
@@ -66,6 +67,7 @@ public final class JMS2MessageProducerInstrumentation implements Instrumenter {
           GlobalTracer.get()
               .buildSpan("jms.produce")
               .withTag(DDTags.SERVICE_NAME, "jms")
+              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_PRODUCER)
               .withTag(
                   DDTags.RESOURCE_NAME,
                   "Produced for " + toResourceName(message, defaultDestination))
@@ -107,6 +109,7 @@ public final class JMS2MessageProducerInstrumentation implements Instrumenter {
           GlobalTracer.get()
               .buildSpan("jms.produce")
               .withTag(DDTags.SERVICE_NAME, "jms")
+              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_PRODUCER)
               .withTag(DDTags.RESOURCE_NAME, "Produced for " + toResourceName(message, destination))
               .withTag(Tags.COMPONENT.getKey(), "jms2")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_PRODUCER)

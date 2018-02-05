@@ -37,7 +37,7 @@ function start_server {
     agent_jar="$1"
     javaagent_arg=""
     if [ "$agent_jar" != "" -a -f "$agent_jar" ]; then
-        javaagent_arg="-javaagent:$agent_jar -Ddd.slf4j.simpleLogger.defaultLogLevel=off -Ddd.writer.type=LoggingWriter -Ddd.service.name=perf-test-app"
+        javaagent_arg="-javaagent:$agent_jar -Ddatadog.slf4j.simpleLogger.defaultLogLevel=off -Ddd.writer.type=LoggingWriter -Ddd.service.name=perf-test-app"
     fi
     echo "starting server: java $javaagent_arg -jar $server_jar"
     java $javaagent_arg -jar $server_jar &

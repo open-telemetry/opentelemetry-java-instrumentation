@@ -11,6 +11,9 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
       groovy {
         // These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
         exclude '**/TestHttpServer.groovy', '**/ApacheHttpClientTest.groovy'
+
+        // log rewrite incompatible with Java9 test classpath
+        exclude '**/TestLoggerRewrite.groovy'
       }
     }
   }
@@ -37,14 +40,9 @@ dependencies {
   testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.2.0.v20160908'
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.0.41'
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '8.0.41'
-  // note: aws transitively pulls in apache-httpclient, which we also test against:
-  // testCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3'
-  testCompile(group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.119')
+  testCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3'
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
-  testCompile(group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0')
-  testCompile(group: 'org.cassandraunit', name: 'cassandra-unit', version: '3.1.3.2') {
-    exclude(module: 'netty-handler')
-  }
+
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.8.2'
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.8.2'
 
@@ -56,7 +54,7 @@ dependencies {
 
 test {
   jvmArgs "-Ddd.writer.type=ListWriter", "-Ddd.service.name=java-app"
-  jvmArgs "-Ddd.slf4j.simpleLogger.defaultLogLevel=debug"
+  jvmArgs "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug"
   jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
 
   doFirst {

@@ -63,7 +63,7 @@ public class DDSpanBuilderTest {
     span = tracer.buildSpan(expectedName).withServiceName("foo").startManual();
 
     assertThat(span.getTags()).isNotNull();
-    assertThat(span.getTags().size()).isEqualTo(2);
+    assertThat(span.getTags().size()).isEqualTo(3);
 
     // with all custom fields provided
     final String expectedResource = "fakeResource";

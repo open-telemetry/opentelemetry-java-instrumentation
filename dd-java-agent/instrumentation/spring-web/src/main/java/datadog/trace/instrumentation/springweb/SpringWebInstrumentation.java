@@ -13,12 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
-import java.sql.PreparedStatement;
-import java.util.Map;
-import java.util.WeakHashMap;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -26,7 +24,6 @@ import org.springframework.web.servlet.HandlerMapping;
 
 @AutoService(Instrumenter.class)
 public final class SpringWebInstrumentation implements Instrumenter {
-  public static final Map<PreparedStatement, String> preparedStatements = new WeakHashMap<>();
 
   @Override
   public AgentBuilder instrument(final AgentBuilder agentBuilder) {
@@ -60,6 +57,7 @@ public final class SpringWebInstrumentation implements Instrumenter {
         if (method != null && bestMatchingPattern != null) {
           final String resourceName = method + " " + bestMatchingPattern;
           scope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
+          scope.span().setTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET);
         }
       }
     }

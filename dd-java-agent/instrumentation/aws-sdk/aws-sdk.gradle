@@ -15,6 +15,17 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
+if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
+  sourceSets {
+    test {
+      groovy {
+        // These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
+        exclude '**/AWSClientTest.groovy'
+      }
+    }
+  }
+}
+
 dependencies {
   compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.119'
   compile('io.opentracing.contrib:opentracing-aws-sdk:0.0.3') {
@@ -27,4 +38,9 @@ dependencies {
   compile deps.bytebuddy
   compile deps.opentracing
   compile deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+  // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
+  testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4.3')
+  testCompile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.119'
 }

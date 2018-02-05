@@ -4,6 +4,7 @@ import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
 import datadog.trace.agent.integration.TestHttpServer
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.tag.Tags
 import org.apache.http.HttpResponse
@@ -61,11 +62,13 @@ class ApacheHttpClientTest extends Specification {
     clientTrace.get(0).getOperationName() == "someTrace"
     // our instrumentation makes 2 spans for apache-httpclient
     final DDSpan localSpan = clientTrace.get(1)
+    localSpan.getType() == null
     localSpan.getTags()[Tags.COMPONENT.getKey()] == "apache-httpclient"
     localSpan.getOperationName() == "GET"
 
     final DDSpan clientSpan = clientTrace.get(2)
     clientSpan.getOperationName() == "GET"
+    clientSpan.getType() == DDSpanTypes.HTTP_CLIENT
     clientSpan.getTags()[Tags.HTTP_METHOD.getKey()] == "GET"
     clientSpan.getTags()[Tags.HTTP_STATUS.getKey()] == 200
     clientSpan.getTags()[Tags.HTTP_URL.getKey()] == "http://localhost:" + TestHttpServer.getPort()

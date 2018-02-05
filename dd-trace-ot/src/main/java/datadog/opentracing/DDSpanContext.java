@@ -276,6 +276,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     }
     tags.put(DDTags.THREAD_NAME, threadName);
     tags.put(DDTags.THREAD_ID, threadId);
+    tags.put(DDTags.SPAN_TYPE, getSpanType());
     return Collections.unmodifiableMap(tags);
   }
 

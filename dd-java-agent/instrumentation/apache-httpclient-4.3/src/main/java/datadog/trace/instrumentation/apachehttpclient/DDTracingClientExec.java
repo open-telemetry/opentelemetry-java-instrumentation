@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.apachehttpclient;
 
+import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -123,12 +125,20 @@ public class DDTracingClientExec implements ClientExecChain {
         tracer
             .buildSpan(request.getMethod())
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
+            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
             .asChildOf(parentScope.span())
             .startActive(true);
 
     final Span networkSpan = networkScope.span();
-    tracer.inject(
-        networkSpan.context(), Format.Builtin.HTTP_HEADERS, new HttpHeadersInjectAdapter(request));
+
+    final boolean awsClientCall = request.getHeaders("amz-sdk-invocation-id").length > 0;
+    // AWS calls are often signed, so we can't add headers without breaking the signature.
+    if (!awsClientCall) {
+      tracer.inject(
+          networkSpan.context(),
+          Format.Builtin.HTTP_HEADERS,
+          new HttpHeadersInjectAdapter(request));
+    }
 
     try {
       // request tags

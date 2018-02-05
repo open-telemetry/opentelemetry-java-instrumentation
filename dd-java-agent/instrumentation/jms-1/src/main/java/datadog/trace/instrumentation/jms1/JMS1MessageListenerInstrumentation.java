@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.jms.util.MessagePropertyTextMap;
 import io.opentracing.Scope;
@@ -59,6 +60,7 @@ public final class JMS1MessageListenerInstrumentation implements Instrumenter {
           .buildSpan("jms.onMessage")
           .asChildOf(extractedContext)
           .withTag(DDTags.SERVICE_NAME, "jms")
+          .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_CONSUMER)
           .withTag(DDTags.RESOURCE_NAME, "Received from " + toResourceName(message, null))
           .withTag(Tags.COMPONENT.getKey(), "jms1")
           .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CONSUMER)

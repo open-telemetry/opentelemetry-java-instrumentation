@@ -1,8 +1,8 @@
 import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
 import datadog.opentracing.DDSpan
-import datadog.opentracing.DDTracer
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 
@@ -28,23 +28,25 @@ class CassandraClientTest extends AgentTestRunner {
     session.execute("INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')")
     session.execute("SELECT * FROM sync_test.users where name = 'alice' ALLOW FILTERING")
 
+    def query = "SELECT * FROM sync_test.users where name = 'alice' ALLOW FILTERING"
+
     expect:
     session.getClass().getName().endsWith("contrib.cassandra.TracingSession")
     TEST_WRITER.size() == 5
     final DDSpan selectTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
 
-    selectTrace.getServiceName() == DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME
-    selectTrace.getOperationName() == "execute"
-    selectTrace.getResourceName() == "execute"
+    selectTrace.getServiceName() == "cassandra"
+    selectTrace.getOperationName() == "cassandra.query"
+    selectTrace.getResourceName() == query
 
     selectTrace.getTags().get(Tags.COMPONENT.getKey()) == "java-cassandra"
-    selectTrace.getTags().get(Tags.DB_STATEMENT.getKey()) == "SELECT * FROM sync_test.users where name = 'alice' ALLOW FILTERING"
     selectTrace.getTags().get(Tags.DB_TYPE.getKey()) == "cassandra"
     selectTrace.getTags().get(Tags.PEER_HOSTNAME.getKey()) == "localhost"
     // More info about IPv4 tag: https://trello.com/c/2el2IwkF/174-mongodb-ot-contrib-provides-a-wrong-peeripv4
     selectTrace.getTags().get(Tags.PEER_HOST_IPV4.getKey()) == 2130706433
     selectTrace.getTags().get(Tags.PEER_PORT.getKey()) == 9142
     selectTrace.getTags().get(Tags.SPAN_KIND.getKey()) == "client"
+    selectTrace.getTags().get(DDTags.SPAN_TYPE) == "cassandra"
   }
 
   def "async traces"() {
@@ -65,21 +67,23 @@ class CassandraClientTest extends AgentTestRunner {
         .get()
     TEST_WRITER.waitForTraces(5)
 
+    def query = "SELECT * FROM async_test.users where name = 'alice' ALLOW FILTERING"
+
     expect:
     session.getClass().getName().endsWith("contrib.cassandra.TracingSession")
     final DDSpan selectTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
 
-    selectTrace.getServiceName() == DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME
-    selectTrace.getOperationName() == "execute"
-    selectTrace.getResourceName() == "execute"
+    selectTrace.getServiceName() == "cassandra"
+    selectTrace.getOperationName() == "cassandra.query"
+    selectTrace.getResourceName() == query
 
     selectTrace.getTags().get(Tags.COMPONENT.getKey()) == "java-cassandra"
-    selectTrace.getTags().get(Tags.DB_STATEMENT.getKey()) == "SELECT * FROM async_test.users where name = 'alice' ALLOW FILTERING"
     selectTrace.getTags().get(Tags.DB_TYPE.getKey()) == "cassandra"
     selectTrace.getTags().get(Tags.PEER_HOSTNAME.getKey()) == "localhost"
     // More info about IPv4 tag: https://trello.com/c/2el2IwkF/174-mongodb-ot-contrib-provides-a-wrong-peeripv4
     selectTrace.getTags().get(Tags.PEER_HOST_IPV4.getKey()) == 2130706433
     selectTrace.getTags().get(Tags.PEER_PORT.getKey()) == 9142
     selectTrace.getTags().get(Tags.SPAN_KIND.getKey()) == "client"
+    selectTrace.getTags().get(DDTags.SPAN_TYPE) == "cassandra"
   }
 }
