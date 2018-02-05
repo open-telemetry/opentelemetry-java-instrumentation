@@ -12,6 +12,7 @@ include ':dd-java-agent:instrumentation:apache-httpclient-4.3'
 include ':dd-java-agent:instrumentation:aws-sdk'
 include ':dd-java-agent:instrumentation:datastax-cassandra-3.2'
 include ':dd-java-agent:instrumentation:jdbc'
+include ':dd-java-agent:instrumentation:jedis-2.9'
 include ':dd-java-agent:instrumentation:jms-1'
 include ':dd-java-agent:instrumentation:jms-2'
 include ':dd-java-agent:instrumentation:mongo-3.1'
@@ -31,7 +32,7 @@ if (JavaVersion.current().isJava8Compatible()) {
 
   // examples
   include ':examples:dropwizard-mongo-client'
-  include ':examples:spring-boot-jdbc'
+  include ':examples:spring-boot-jdbc-redis'
   include ':examples:rest-spark'
 }
 

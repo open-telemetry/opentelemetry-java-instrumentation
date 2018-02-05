@@ -1,0 +1,13 @@
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'redis.clients', name: 'jedis', version: '2.9.0'
+
+  compile project(':dd-trace-ot')
+  compile project(':dd-java-agent:tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  compile deps.autoservice
+}

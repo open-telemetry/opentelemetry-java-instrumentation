@@ -15,9 +15,9 @@ all libraries and examples launching from the ``dd-trace-java`` root folder:
 ./gradlew clean shadowJar bootRepackage
 ```
 
-Then you can launch the Datadog agent as follows:
+Then you can launch the Datadog agent and a Redis instance as follows:
 ```bash
-cd examples/spring-boot-jdbc
+cd examples/spring-boot-jdbc-redis
 DD_API_KEY=<your_datadog_api_key> docker-compose up -d
 ```
 
@@ -31,12 +31,12 @@ To launch the application, just:
 ```
 
 *Note: The ``bootRun`` Gradle command appends automatically the ``-javaagent`` argument, so that you don't need to specify
-the path of the Java Agent. Gradle executes the ``:examples:spring-boot-jdbc:bootRun`` task until you
+the path of the Java Agent. Gradle executes the ``:examples:spring-boot-jdbc-redis:bootRun`` task until you
 stop it.*
 
 Or as an executable jar:
 ```bash
-java -javaagent:../../dd-java-agent/build/libs/dd-java-agent-{version}.jar -Ddd.service.name=spring-boot-jdbc -jar build/libs/spring-boot-jdbc-demo.jar
+java -javaagent:../../dd-java-agent/build/libs/dd-java-agent-{version}.jar -Ddd.service.name=spring-boot-jdbc-redis -jar build/libs/spring-boot-jdbc-redis-demo.jar
 ```
 
 ### Generate traces
@@ -45,6 +45,7 @@ Once the Gradle task is running. Go to the following urls:
 
 * [http://localhost:8080/user/add?name=foo&email=bar](http://localhost:8080/user/add?name=foo&email=bar)
 * [http://localhost:8080/user/all](http://localhost:8080/user/all)
+* [http://localhost:8080/user/all](http://localhost:8080/user/random)
 
 Then get back to Datadog and wait a bit to see a trace coming.
 
@@ -55,5 +56,6 @@ instruments:
 
 - The java servlet filters
 - The JDBC driver
+- The Jedis Redis client
 
 The Java Agent embeds the [OpenTracing Java Agent](https://github.com/opentracing-contrib/java-agent).
