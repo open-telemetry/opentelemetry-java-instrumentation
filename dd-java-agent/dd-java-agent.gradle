@@ -35,8 +35,10 @@ dependencies {
 Project java_agent_project = project
 subprojects { subProj ->
   if (subProj.getPath().startsWith(java_agent_project.getPath() + ':instrumentation:')) {
-    java_agent_project.dependencies {
-      compile(project(subProj.getPath()))
+    if (!subProj.getPath().startsWith(java_agent_project.getPath() + ':instrumentation:kafka')) {
+      java_agent_project.dependencies {
+        compile(project(subProj.getPath()))
+      }
     }
   }
 }
