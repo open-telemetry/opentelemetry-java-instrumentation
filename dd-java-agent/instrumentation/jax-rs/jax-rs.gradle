@@ -16,7 +16,7 @@ dependencies {
   compile deps.autoservice
 
   compile project(':dd-trace-ot')
-  compile project(':dd-java-agent:tooling')
+  compile project(':dd-java-agent:agent-tooling')
 
   testCompile project(':dd-java-agent:testing')
   testCompile group: 'com.sun.jersey', name: 'jersey-core', version: '1.19.4'

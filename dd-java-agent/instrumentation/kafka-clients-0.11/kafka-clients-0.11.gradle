@@ -16,7 +16,7 @@ dependencies {
   compileOnly group: 'org.apache.kafka', name: 'kafka-clients', version: '0.11.0.0'
 
   compile project(':dd-trace-ot')
-  compile project(':dd-java-agent:tooling')
+  compile project(':dd-java-agent:agent-tooling')
 
   compile deps.bytebuddy
   compile deps.opentracing

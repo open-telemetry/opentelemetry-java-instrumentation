@@ -25,7 +25,7 @@ dependencies {
   compile deps.autoservice
 
   compile project(':dd-trace-ot')
-  compile project(':dd-java-agent:tooling')
+  compile project(':dd-java-agent:agent-tooling')
 
   testCompile project(':dd-java-agent:testing')
   testCompile group: 'org.hornetq', name: 'hornetq-jms-client', version: '2.4.7.Final'

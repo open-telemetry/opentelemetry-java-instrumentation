@@ -16,37 +16,73 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
   'dd.opentracing.contrib.*',
 ]
 
-dependencies {
-  compile project(':dd-trace-ot')
-  compile project(':dd-java-agent:tooling')
-  compile project(':dd-trace-api')
+/*
+ * Include subproject's shadowJar in the dd-java-agent jar.
+ * Note jarname must end in .zip, or its classes will be on the classpath of
+ * the dd-java-agent jar.
+ */
+def includeShadowJar(subproject, jarname) {
+  def agent_project = project
+  subproject.afterEvaluate {
+    agent_project.processResources {
+      from(subproject.tasks.shadowJar)
+      rename {
+        it.equals(subproject.shadowJar.archivePath.getName()) ?
+          jarname :
+          it
+      }
+    }
+    agent_project.processResources.dependsOn subproject.tasks.shadowJar
+    subproject.shadowJar {
+      classifier null
 
-  compile deps.bytebuddy
+      mergeServiceFiles()
 
-  compile deps.autoservice
-  compile deps.slf4j
+      dependencies {
+        exclude(dependency('org.projectlombok:lombok:1.16.20'))
+      }
 
-  compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
-  // ^ Generally a bad idea for libraries, but we're shadowing.
+      relocate 'org.slf4j', 'datadog.slf4j'  // Prevents conflict with other SLF4J instances. Important for premain.
 
-  testCompile deps.opentracingMock
-}
-// add all subprojects under 'instrumentation' to the agent's dependencies
-Project java_agent_project = project
-subprojects { subProj ->
-  if (subProj.getPath().startsWith(java_agent_project.getPath() + ':instrumentation:')) {
-    java_agent_project.dependencies {
-      compile(project(subProj.getPath()))
+      if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
+
+        // These need to be relocated to prevent conflicts in case the regular dd-trace is already on the classpath.
+        relocate('datadog.trace.api', 'datadog.trace.agent.api') {
+          // We want to ensure to not miss if a user is using the annotation.
+          exclude 'datadog.trace.api.Trace'
+        }
+        relocate 'datadog.trace.common', 'datadog.trace.agent.common'
+        relocate 'datadog.opentracing', 'datadog.trace.agent.ot'
+
+        relocate 'io.opentracing.contrib', 'datadog.trace.agent.opentracing.contrib'
+
+        relocate 'org.yaml', 'datadog.trace.agent.deps.yaml'
+        relocate 'org.msgpack', 'datadog.trace.agent.deps.msgpack'
+        relocate 'com.fasterxml', 'datadog.trace.agent.deps.fasterxml'
+
+        relocate 'net.bytebuddy', 'datadog.trace.agent.deps.bytebuddy'
+        relocate('com.google', 'datadog.trace.agent.deps.google') {
+          // This is used in the Cassandra Cluster.connectAsync signature so we can't relocate it. :fingers_crossed:
+          exclude 'com.google.common.util.concurrent.ListenableFuture'
+        }
+
+        // rewrite dependencies calling Logger.getLogger
+        relocate 'java.util.logging.Logger', 'datadog.trace.agent.PatchLogger'
+      }
     }
   }
 }
+
+includeShadowJar(project(':dd-java-agent:agent-bootstrap'), 'agent-bootstrap.jar.zip')
+includeShadowJar(project(':dd-java-agent:instrumentation'), 'agent-tooling-and-instrumentation.jar.zip')
+
 
 jar {
   classifier = 'unbundled'
 
   manifest {
     attributes(
-      "Main-Class": "datadog.trace.agent.DDJavaAgentInfo",
+      "Main-Class": "datadog.trace.agent.TracingAgent",
       "Agent-Class": "datadog.trace.agent.TracingAgent",
       "Premain-Class": "datadog.trace.agent.TracingAgent",
       "Can-Redefine-Classes": true,
@@ -58,35 +94,7 @@ jar {
 shadowJar {
   classifier null
 
-  mergeServiceFiles() // This triggers shadow to also apply the relocate rules below to the service files.
-
-  relocate 'org.slf4j', 'datadog.slf4j'  // Prevents conflict with other SLF4J instances. Important for premain.
-
-  if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
-
-    // These need to be relocated to prevent conflicts in case the regular dd-trace is already on the classpath.
-    relocate('datadog.trace.api', 'datadog.trace.agent.api') {
-      // We want to ensure to not miss if a user is using the annotation.
-      exclude 'datadog.trace.api.Trace'
-    }
-    relocate 'datadog.trace.common', 'datadog.trace.agent.common'
-    relocate 'datadog.opentracing', 'datadog.trace.agent.ot'
-
-    relocate 'io.opentracing.contrib', 'datadog.trace.agent.opentracing.contrib'
-
-    relocate 'org.yaml', 'datadog.trace.agent.deps.yaml'
-    relocate 'org.msgpack', 'datadog.trace.agent.deps.msgpack'
-    relocate 'com.fasterxml', 'datadog.trace.agent.deps.fasterxml'
-
-    relocate 'net.bytebuddy', 'datadog.trace.agent.deps.bytebuddy'
-    relocate('com.google', 'datadog.trace.agent.deps.google') {
-      // This is used in the Cassandra Cluster.connectAsync signature so we can't relocate it. :fingers_crossed:
-      exclude 'com.google.common.util.concurrent.ListenableFuture'
-    }
-
-    // rewrite dependencies calling Logger.getLogger
-    relocate 'java.util.logging.Logger', 'datadog.trace.agent.PatchLogger'
-  }
+  mergeServiceFiles()
 
   dependencies {
     exclude(dependency('org.projectlombok:lombok:1.16.20'))

@@ -4,11 +4,13 @@ import com.google.common.collect.MapMaker;
 import org.junit.Assert;
 import org.junit.Test;
 
+// TODO: move to spock
+// TODO: merge with log rewrite test
 public class ShadowPackageRenamingTest {
   @Test
   public void agentDependenciesRenamed() throws Exception {
     final Class<?> ddClass =
-        ClassLoader.getSystemClassLoader().loadClass("datadog.trace.agent.TracingAgent");
+        ClassLoader.getSystemClassLoader().loadClass("datadog.trace.agent.tooling.AgentInstaller");
 
     final String userGuava =
         MapMaker.class.getProtectionDomain().getCodeSource().getLocation().getFile();
@@ -24,10 +26,14 @@ public class ShadowPackageRenamingTest {
         ddClass.getProtectionDomain().getCodeSource().getLocation().getFile();
 
     Assert.assertTrue(
-        "TracingAgent should reside in the -javaagent jar: " + agentSource,
-        agentSource.matches(".*/dd-java-agent[^/]*.jar"));
+        "AgentInstaller should reside in the tmp tooling jar: " + agentSource,
+        agentSource.matches(".*/agent-tooling-and-instrumentation[^/]*.jar"));
     Assert.assertEquals("DD guava dep must be loaded from agent jar.", agentSource, agentGuavaDep);
     Assert.assertNotEquals(
         "User guava dep must not be loaded from agent jar.", agentSource, userGuava);
   }
+
+  // TODO: Write test
+  // for every class in bootstrap jar:
+  //   assert class not present in agent jar
 }

@@ -28,6 +28,12 @@ public class AgentInstaller {
    */
   public static ResettableClassFileTransformer installBytebuddyAgent(
       final Instrumentation inst, final AgentBuilder.Listener... listeners) {
+    // Classloader notes:
+
+    // 1. Skip classloaders which don't delegate to bootstrap
+
+    // 2. Skip incompatible versions of OpenTracing
+
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()

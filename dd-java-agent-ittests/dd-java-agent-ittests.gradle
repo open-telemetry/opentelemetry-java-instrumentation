@@ -2,8 +2,8 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 description = 'dd-java-agent-ittests'
 
-evaluationDependsOn(':dd-java-agent:tooling')
-compileTestJava.dependsOn tasks.getByPath(':dd-java-agent:tooling:testClasses')
+evaluationDependsOn(':dd-java-agent:agent-tooling')
+compileTestJava.dependsOn tasks.getByPath(':dd-java-agent:agent-tooling:testClasses')
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
   sourceSets {
@@ -11,9 +11,6 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
       groovy {
         // These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
         exclude '**/TestHttpServer.groovy', '**/ApacheHttpClientTest.groovy'
-
-        // log rewrite incompatible with Java9 test classpath
-        exclude '**/TestLoggerRewrite.groovy'
       }
     }
   }

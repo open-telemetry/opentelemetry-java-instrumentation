@@ -2,10 +2,12 @@ rootProject.name = 'dd-trace-java'
 
 include ':dd-trace-ot'
 include ':dd-java-agent'
+include ':dd-java-agent:agent-bootstrap'
+include ':dd-java-agent:agent-tooling'
 include ':dd-java-agent:testing'
-include ':dd-java-agent:tooling'
 include ':dd-java-agent-ittests'
 include ':dd-trace-api'
+
 
 // instrumentation:
 include ':dd-java-agent:instrumentation:apache-httpclient-4.3'

@@ -1,0 +1,34 @@
+// this project will run in isolation under the agent's classloader
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+// add all subprojects under 'instrumentation' to the agent's dependencies
+Project instr_project = project
+subprojects { subProj ->
+  instr_project.dependencies {
+    compile(project(subProj.getPath()))
+  }
+}
+
+dependencies {
+  compile(project(':dd-java-agent:agent-tooling')) {
+    exclude module: ':dd-java-agent:agent-bootstrap'
+  }
+}
+
+configurations {
+  // exclude bootstrap dependencies from shadowJar
+  runtime.exclude module: ':dd-java-agent:agent-bootstrap'
+  runtime.exclude module: ':dd-trace-api'
+  runtime.exclude module: deps.opentracing
+  runtime.exclude module: deps.slf4j
+  runtime.exclude group: 'org.slf4j'
+  runtime.exclude group: 'io.opentracing'
+}
+
+jar {
+  classifier = 'unbundled'
+}
