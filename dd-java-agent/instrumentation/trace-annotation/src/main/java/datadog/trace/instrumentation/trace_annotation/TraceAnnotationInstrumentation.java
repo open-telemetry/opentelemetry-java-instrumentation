@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.trace_annotation;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -52,7 +53,7 @@ public final class TraceAnnotationInstrumentation extends Instrumenter.Configura
       if (throwable != null) {
         final Span span = scope.span();
         Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap("error.object", throwable));
+        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       }
       scope.close();
     }

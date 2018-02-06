@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.jdbc;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -88,7 +89,7 @@ public final class StatementInstrumentation extends Instrumenter.Configurable {
       if (throwable != null) {
         final Span span = scope.span();
         Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap("error.object", throwable));
+        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       }
       scope.close();
     }

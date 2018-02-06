@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.servlet2;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -109,7 +110,7 @@ public final class FilterChain2Instrumentation extends Instrumenter.Configurable
 
           if (throwable != null) {
             ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, throwable, span);
-            span.log(Collections.singletonMap("error.object", throwable));
+            span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
           } else {
             ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(req, resp, span);
           }

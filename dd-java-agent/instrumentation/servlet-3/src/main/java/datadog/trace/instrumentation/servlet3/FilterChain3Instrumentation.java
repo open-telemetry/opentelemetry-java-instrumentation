@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.servlet3;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -110,7 +111,7 @@ public final class FilterChain3Instrumentation extends Instrumenter.Configurable
 
           if (throwable != null) {
             ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, throwable, span);
-            span.log(Collections.singletonMap("error.object", throwable));
+            span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
             scope.close();
             scope.span().finish(); // Finish the span manually since finishSpanOnClose was false
           } else if (req.isAsyncStarted()) {
@@ -169,7 +170,7 @@ public final class FilterChain3Instrumentation extends Instrumenter.Configurable
                 (HttpServletResponse) event.getSuppliedResponse(),
                 event.getThrowable(),
                 span);
-            span.log(Collections.singletonMap("error.object", event.getThrowable()));
+            span.log(Collections.singletonMap(ERROR_OBJECT, event.getThrowable()));
           }
         }
       }

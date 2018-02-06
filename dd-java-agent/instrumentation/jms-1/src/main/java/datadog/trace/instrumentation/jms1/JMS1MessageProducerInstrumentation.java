@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.jms1;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.instrumentation.jms.util.JmsUtil.toResourceName;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -95,7 +96,7 @@ public final class JMS1MessageProducerInstrumentation extends Instrumenter.Confi
         if (throwable != null) {
           final Span span = scope.span();
           Tags.ERROR.set(span, Boolean.TRUE);
-          span.log(Collections.singletonMap("error.object", throwable));
+          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
         }
         scope.close();
       }
@@ -135,7 +136,7 @@ public final class JMS1MessageProducerInstrumentation extends Instrumenter.Confi
         if (throwable != null) {
           final Span span = scope.span();
           Tags.ERROR.set(span, Boolean.TRUE);
-          span.log(Collections.singletonMap("error.object", throwable));
+          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
         }
         scope.close();
       }
