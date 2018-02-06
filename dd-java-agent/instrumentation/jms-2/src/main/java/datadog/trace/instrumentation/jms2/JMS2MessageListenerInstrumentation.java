@@ -28,10 +28,14 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class JMS2MessageListenerInstrumentation implements Instrumenter {
+public final class JMS2MessageListenerInstrumentation extends Instrumenter.Configurable {
+
+  public JMS2MessageListenerInstrumentation() {
+    super("jms", "jms-2");
+  }
 
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             not(isInterface()).and(hasSuperType(named("javax.jms.MessageListener"))),

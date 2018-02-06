@@ -24,11 +24,15 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class PreparedStatementInstrumentation implements Instrumenter {
+public final class PreparedStatementInstrumentation extends Instrumenter.Configurable {
   private static final String UNKNOWN_QUERY = "Unknown Query";
 
+  public PreparedStatementInstrumentation() {
+    super("jdbc");
+  }
+
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(not(isInterface()).and(hasSuperType(named(PreparedStatement.class.getName()))))
         .transform(

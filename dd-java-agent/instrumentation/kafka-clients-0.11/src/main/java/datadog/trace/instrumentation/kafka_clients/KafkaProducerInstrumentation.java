@@ -25,7 +25,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 @AutoService(Instrumenter.class)
-public final class KafkaProducerInstrumentation implements Instrumenter {
+public final class KafkaProducerInstrumentation extends Instrumenter.Configurable {
   public static final HelperInjector HELPER_INJECTOR =
       new HelperInjector(
           "datadog.trace.instrumentation.kafka_clients.TextMapInjectAdapter",
@@ -34,8 +34,17 @@ public final class KafkaProducerInstrumentation implements Instrumenter {
   private static final String OPERATION = "kafka.produce";
   private static final String COMPONENT_NAME = "java-kafka";
 
+  public KafkaProducerInstrumentation() {
+    super("kafka");
+  }
+
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  protected boolean defaultEnabled() {
+    return false;
+  }
+
+  @Override
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             named("org.apache.kafka.clients.producer.KafkaProducer"),

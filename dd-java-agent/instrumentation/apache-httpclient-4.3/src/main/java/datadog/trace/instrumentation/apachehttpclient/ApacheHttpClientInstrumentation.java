@@ -15,10 +15,14 @@ import org.apache.http.impl.client.DefaultRedirectStrategy;
 import org.apache.http.impl.execchain.ClientExecChain;
 
 @AutoService(Instrumenter.class)
-public class ApacheHttpClientInstrumentation implements Instrumenter {
+public class ApacheHttpClientInstrumentation extends Instrumenter.Configurable {
+
+  public ApacheHttpClientInstrumentation() {
+    super("httpclient");
+  }
 
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             named("org.apache.http.impl.client.HttpClientBuilder"),

@@ -29,10 +29,14 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class JMS1MessageProducerInstrumentation implements Instrumenter {
+public final class JMS1MessageProducerInstrumentation extends Instrumenter.Configurable {
+
+  public JMS1MessageProducerInstrumentation() {
+    super("jms", "jms-1");
+  }
 
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             not(isInterface()).and(hasSuperType(named("javax.jms.MessageProducer"))),

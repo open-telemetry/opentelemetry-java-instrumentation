@@ -40,6 +40,7 @@ dependencies {
 
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6'
   testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
+  testCompile 'com.github.stefanbirkner:system-rules:1.17.1'
 }
 
 jmh {

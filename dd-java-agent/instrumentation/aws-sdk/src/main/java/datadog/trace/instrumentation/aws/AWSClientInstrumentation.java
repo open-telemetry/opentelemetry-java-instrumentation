@@ -23,10 +23,14 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class AWSClientInstrumentation implements Instrumenter {
+public final class AWSClientInstrumentation extends Instrumenter.Configurable {
+
+  public AWSClientInstrumentation() {
+    super("aws-sdk");
+  }
 
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             hasSuperType(named("com.amazonaws.client.builder.AwsClientBuilder")),

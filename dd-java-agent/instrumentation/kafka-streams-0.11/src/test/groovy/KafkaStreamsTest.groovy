@@ -32,6 +32,7 @@ class KafkaStreamsTest extends AgentTestRunner {
   static {
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN)
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG)
+    System.setProperty("dd.integration.kafka.enabled", "true")
   }
 
   @Shared

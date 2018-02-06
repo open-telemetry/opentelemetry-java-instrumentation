@@ -22,14 +22,18 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class ConnectionInstrumentation implements Instrumenter {
+public final class ConnectionInstrumentation extends Instrumenter.Configurable {
   public static final Map<Connection, DBInfo> connectionInfo =
       Collections.synchronizedMap(new WeakHashMap<Connection, DBInfo>());
   public static final Map<PreparedStatement, String> preparedStatements =
       Collections.synchronizedMap(new WeakHashMap<PreparedStatement, String>());
 
+  public ConnectionInstrumentation() {
+    super("jdbc");
+  }
+
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(not(isInterface()).and(hasSuperType(named(Connection.class.getName()))))
         .transform(

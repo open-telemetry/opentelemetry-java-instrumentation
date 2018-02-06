@@ -55,8 +55,8 @@ public class AgentInstaller {
                             "org.codehaus.groovy.runtime.callsite.CallSiteClassLoader")));
     int numInstrumenters = 0;
     for (final Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class)) {
-      agentBuilder = instrumenter.instrument(agentBuilder);
       log.debug("Loading instrumentation {}", instrumenter);
+      agentBuilder = instrumenter.instrument(agentBuilder);
       numInstrumenters++;
     }
     log.debug("Installed {} instrumenter(s)", numInstrumenters);

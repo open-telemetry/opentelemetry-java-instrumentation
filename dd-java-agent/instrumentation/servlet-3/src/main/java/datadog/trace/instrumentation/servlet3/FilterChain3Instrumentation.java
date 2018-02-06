@@ -35,11 +35,15 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class FilterChain3Instrumentation implements Instrumenter {
+public final class FilterChain3Instrumentation extends Instrumenter.Configurable {
   public static final String SERVLET_OPERATION_NAME = "servlet.request";
 
+  public FilterChain3Instrumentation() {
+    super("servlet", "servlet-3");
+  }
+
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             not(isInterface()).and(hasSuperType(named("javax.servlet.FilterChain"))),

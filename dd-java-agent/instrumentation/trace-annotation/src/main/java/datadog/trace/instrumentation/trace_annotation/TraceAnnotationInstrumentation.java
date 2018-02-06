@@ -18,10 +18,14 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class TraceAnnotationInstrumentation implements Instrumenter {
+public final class TraceAnnotationInstrumentation extends Instrumenter.Configurable {
+
+  public TraceAnnotationInstrumentation() {
+    super("trace", "trace-annotation");
+  }
 
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(hasSuperType(declaresMethod(isAnnotatedWith(Trace.class))))
         .transform(

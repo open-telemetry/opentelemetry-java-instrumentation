@@ -33,11 +33,15 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class HttpServlet3Instrumentation implements Instrumenter {
+public final class HttpServlet3Instrumentation extends Instrumenter.Configurable {
   public static final String SERVLET_OPERATION_NAME = "servlet.request";
 
+  public HttpServlet3Instrumentation() {
+    super("servlet", "servlet-3");
+  }
+
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             not(isInterface()).and(hasSuperType(named("javax.servlet.http.HttpServlet"))),

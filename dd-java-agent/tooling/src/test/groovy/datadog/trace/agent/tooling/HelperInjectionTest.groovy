@@ -1,7 +1,5 @@
-package datadog.trace.agent.test
+package datadog.trace.agent.tooling
 
-import datadog.trace.agent.tooling.HelperInjector
-import datadog.trace.agent.tooling.Utils
 import spock.lang.Specification
 
 import java.lang.reflect.Method
