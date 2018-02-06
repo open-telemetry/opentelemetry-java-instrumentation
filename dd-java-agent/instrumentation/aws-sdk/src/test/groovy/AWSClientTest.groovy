@@ -1,9 +1,11 @@
 import com.amazonaws.AmazonWebServiceClient
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.AnonymousAWSCredentials
+import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.handlers.RequestHandler2
 import com.amazonaws.regions.Regions
+import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDTags
@@ -16,7 +18,7 @@ import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
 class AWSClientTest extends AgentTestRunner {
 
-  def "request handler is hooked up"() {
+  def "request handler is hooked up with builder"() {
     setup:
     def builder = AmazonS3ClientBuilder.standard()
       .withRegion(Regions.US_EAST_1)
@@ -36,6 +38,27 @@ class AWSClientTest extends AgentTestRunner {
     false      | 1    | 0
   }
 
+  def "request handler is hooked up with constructor"() {
+    setup:
+    String accessKey = "asdf"
+    String secretKey = "qwerty"
+    def credentials = new BasicAWSCredentials(accessKey, secretKey)
+    def client = new AmazonS3Client(credentials)
+    if (addHandler) {
+      client.addRequestHandler(new RequestHandler2() {})
+    }
+
+    expect:
+    client.requestHandler2s != null
+    client.requestHandler2s.size() == size
+    client.requestHandler2s.get(0).getClass().getSimpleName() == "TracingRequestHandler"
+
+    where:
+    addHandler | size
+    true       | 2
+    false      | 1
+  }
+
   def "send request with mocked back end"() {
     setup:
     def receivedHeaders = new AtomicReference<Headers>()
@@ -47,7 +70,7 @@ class AWSClientTest extends AgentTestRunner {
         }
       }
     }
-    AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration("http://localhost:$server.address.port", "us-west-2");
+    AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration("http://localhost:$server.address.port", "us-west-2")
 
     AmazonWebServiceClient client = AmazonS3ClientBuilder
       .standard()
