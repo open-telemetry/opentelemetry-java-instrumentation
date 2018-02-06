@@ -10,7 +10,6 @@ import io.opentracing.Tracer;
 import io.opentracing.tag.Tags;
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -96,8 +95,7 @@ public class DDTracingCommandListener implements CommandListener {
     InetAddress inetAddress =
         event.getConnectionDescription().getServerAddress().getSocketAddress().getAddress();
     if (inetAddress instanceof Inet4Address) {
-      byte[] address = inetAddress.getAddress();
-      Tags.PEER_HOST_IPV4.set(span, ByteBuffer.wrap(address).getInt());
+      Tags.PEER_HOST_IPV4.set(span, inetAddress.getHostAddress());
     } else {
       Tags.PEER_HOST_IPV6.set(span, inetAddress.getHostAddress());
     }

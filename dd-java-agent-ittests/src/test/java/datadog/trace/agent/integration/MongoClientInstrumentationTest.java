@@ -16,9 +16,7 @@ import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.opentracing.tag.Tags;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import org.bson.Document;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -110,9 +108,7 @@ public class MongoClientInstrumentationTest {
     Assert.assertEquals(createCollectionQuery, trace0.getTags().get(Tags.DB_STATEMENT.getKey()));
     Assert.assertEquals(MONGO_DB_NAME, trace0.getTags().get(Tags.DB_INSTANCE.getKey()));
     Assert.assertEquals(MONGO_HOST, trace0.getTags().get(Tags.PEER_HOSTNAME.getKey()));
-    Assert.assertEquals(
-        ByteBuffer.wrap(InetAddress.getByName("127.0.0.1").getAddress()).getInt(),
-        trace0.getTags().get(Tags.PEER_HOST_IPV4.getKey()));
+    Assert.assertEquals("127.0.0.1", trace0.getTags().get(Tags.PEER_HOST_IPV4.getKey()));
     Assert.assertEquals(MONGO_PORT, trace0.getTags().get(Tags.PEER_PORT.getKey()));
     Assert.assertEquals("mongo", trace0.getTags().get(Tags.DB_TYPE.getKey()));
   }
