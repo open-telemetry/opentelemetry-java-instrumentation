@@ -36,5 +36,12 @@ public class Utils {
     }
   }
 
+  static boolean getConfigEnabled(final String name, final boolean fallback) {
+    final String property =
+        System.getProperty(
+            name, System.getenv(name.toUpperCase().replaceAll("[^a-zA-Z0-9_]", "_")));
+    return property == null ? fallback : Boolean.parseBoolean(property);
+  }
+
   private Utils() {}
 }

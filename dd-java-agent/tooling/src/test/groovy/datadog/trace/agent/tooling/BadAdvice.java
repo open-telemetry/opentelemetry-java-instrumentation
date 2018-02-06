@@ -1,4 +1,4 @@
-package datadog.trace.agent.test;
+package datadog.trace.agent.tooling;
 
 import net.bytebuddy.asm.Advice;
 

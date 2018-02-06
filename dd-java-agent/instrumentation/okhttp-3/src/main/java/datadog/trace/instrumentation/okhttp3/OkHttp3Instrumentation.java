@@ -19,10 +19,14 @@ import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 
 @AutoService(Instrumenter.class)
-public class OkHttp3Instrumentation implements Instrumenter {
+public class OkHttp3Instrumentation extends Instrumenter.Configurable {
+
+  public OkHttp3Instrumentation() {
+    super("okhttp", "okhttp-3");
+  }
 
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             named("okhttp3.OkHttpClient"),

@@ -25,7 +25,7 @@ import net.bytebuddy.asm.Advice;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 @AutoService(Instrumenter.class)
-public final class KafkaConsumerInstrumentation implements Instrumenter {
+public final class KafkaConsumerInstrumentation extends Instrumenter.Configurable {
   public static final HelperInjector HELPER_INJECTOR =
       new HelperInjector(
           "datadog.trace.instrumentation.kafka_clients.TextMapExtractAdapter",
@@ -38,8 +38,17 @@ public final class KafkaConsumerInstrumentation implements Instrumenter {
   private static final String OPERATION = "kafka.consume";
   private static final String COMPONENT_NAME = "java-kafka";
 
+  public KafkaConsumerInstrumentation() {
+    super("kafka");
+  }
+
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  protected boolean defaultEnabled() {
+    return false;
+  }
+
+  @Override
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             named("org.apache.kafka.clients.consumer.ConsumerRecords"),

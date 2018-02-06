@@ -18,12 +18,13 @@ import spock.lang.Shared
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
-class KafkaTest extends AgentTestRunner {
+class KafkaClientTest extends AgentTestRunner {
   static final SHARED_TOPIC = "shared.topic"
 
   static {
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN)
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG)
+    System.setProperty("dd.integration.kafka.enabled", "true")
   }
 
   @Shared

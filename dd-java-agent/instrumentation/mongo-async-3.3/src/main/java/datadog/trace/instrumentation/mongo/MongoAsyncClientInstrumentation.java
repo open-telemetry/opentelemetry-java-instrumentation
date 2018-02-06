@@ -18,10 +18,14 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 
 @AutoService(Instrumenter.class)
-public final class MongoAsyncClientInstrumentation implements Instrumenter {
+public final class MongoAsyncClientInstrumentation extends Instrumenter.Configurable {
+
+  public MongoAsyncClientInstrumentation() {
+    super("mongo");
+  }
 
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             named("com.mongodb.async.client.MongoClientSettings$Builder")

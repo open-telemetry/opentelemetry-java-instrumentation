@@ -26,7 +26,7 @@ import net.bytebuddy.asm.Advice;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
 
 public class KafkaStreamsProcessorInstrumentation {
-  // These two instrumentations work together to instrument StreamTask.process.
+  // These two instrumentations work together to apply StreamTask.process.
   // The combination of these are needed because there's not a good instrumentation point.
 
   public static final HelperInjector HELPER_INJECTOR =
@@ -36,10 +36,19 @@ public class KafkaStreamsProcessorInstrumentation {
   private static final String COMPONENT_NAME = "java-kafka";
 
   @AutoService(Instrumenter.class)
-  public static class StartInstrumentation implements Instrumenter {
+  public static class StartInstrumentation extends Instrumenter.Configurable {
+
+    public StartInstrumentation() {
+      super("kafka", "kafka-streams");
+    }
 
     @Override
-    public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+    protected boolean defaultEnabled() {
+      return false;
+    }
+
+    @Override
+    public AgentBuilder apply(final AgentBuilder agentBuilder) {
       return agentBuilder
           .type(
               named("org.apache.kafka.streams.processor.internals.PartitionGroup"),
@@ -88,10 +97,19 @@ public class KafkaStreamsProcessorInstrumentation {
   }
 
   @AutoService(Instrumenter.class)
-  public static class StopInstrumentation implements Instrumenter {
+  public static class StopInstrumentation extends Instrumenter.Configurable {
+
+    public StopInstrumentation() {
+      super("kafka", "kafka-streams");
+    }
 
     @Override
-    public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+    protected boolean defaultEnabled() {
+      return false;
+    }
+
+    @Override
+    public AgentBuilder apply(final AgentBuilder agentBuilder) {
       return agentBuilder
           .type(
               named("org.apache.kafka.streams.processor.internals.StreamTask"),

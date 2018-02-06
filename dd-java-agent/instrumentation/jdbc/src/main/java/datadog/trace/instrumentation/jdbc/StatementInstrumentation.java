@@ -24,10 +24,14 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class StatementInstrumentation implements Instrumenter {
+public final class StatementInstrumentation extends Instrumenter.Configurable {
+
+  public StatementInstrumentation() {
+    super("jdbc");
+  }
 
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(not(isInterface()).and(hasSuperType(named(Statement.class.getName()))))
         .transform(

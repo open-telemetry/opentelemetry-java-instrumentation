@@ -23,10 +23,14 @@ import net.bytebuddy.asm.Advice;
 import org.springframework.web.servlet.HandlerMapping;
 
 @AutoService(Instrumenter.class)
-public final class SpringWebInstrumentation implements Instrumenter {
+public final class SpringWebInstrumentation extends Instrumenter.Configurable {
+
+  public SpringWebInstrumentation() {
+    super("spring-web");
+  }
 
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             not(isInterface())
