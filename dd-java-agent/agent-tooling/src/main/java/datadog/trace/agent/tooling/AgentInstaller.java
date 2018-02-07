@@ -20,6 +20,10 @@ import net.bytebuddy.utility.JavaModule;
 @Slf4j
 public class AgentInstaller {
 
+  public static ResettableClassFileTransformer installBytebuddyAgent(final Instrumentation inst) {
+    return installBytebuddyAgent(inst, new AgentBuilder.Listener[0]);
+  }
+
   /**
    * Install the core bytebuddy agent along with all implementations of {@link Instrumenter}.
    *
@@ -84,7 +88,7 @@ public class AgentInstaller {
         final JavaModule module,
         final boolean loaded,
         final Throwable throwable) {
-      log.debug("Failed to handle " + typeName + " for transformation: " + throwable.getMessage());
+      log.debug("Failed to handle " + typeName + " for transformation", throwable);
     }
 
     @Override

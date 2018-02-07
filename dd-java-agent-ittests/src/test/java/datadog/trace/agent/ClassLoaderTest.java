@@ -1,6 +1,6 @@
 package datadog.trace.agent;
 
-import static datadog.trace.agent.test.TestUtils.createJarWithClasses;
+import static datadog.trace.agent.test.IntegrationTestUtils.createJarWithClasses;
 
 import datadog.trace.api.Trace;
 import java.net.URL;
@@ -8,6 +8,7 @@ import java.net.URLClassLoader;
 import org.junit.Assert;
 import org.junit.Test;
 
+// TODO: move to spock
 public class ClassLoaderTest {
 
   /** Assert that we can instrument classloaders which cannot resolve agent advice classes. */
@@ -34,4 +35,6 @@ public class ClassLoaderTest {
     @Trace
     public static void someMethod() {}
   }
+
+  // TODO: Write test: assert our agent resource locator can locate resources from the bootstrap jar
 }

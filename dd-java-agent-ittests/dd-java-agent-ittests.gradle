@@ -23,12 +23,6 @@ dependencies {
   testCompile deps.opentracingMock
   testCompile deps.testLogging
 
-  testCompile(project(':dd-java-agent:testing')) {
-    // Otherwise this can bring in classes that aren't "shadowed"
-    // that conflicts with those that are which are in the agent.
-    transitive = false
-  }
-
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
   testCompile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
   // run embeded mongodb for integration testing

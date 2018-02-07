@@ -10,23 +10,16 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import datadog.trace.agent.bootstrap.JDBCMaps;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.Collections;
-import java.util.Map;
-import java.util.WeakHashMap;
-import lombok.Data;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
 public final class ConnectionInstrumentation extends Instrumenter.Configurable {
-  public static final Map<Connection, DBInfo> connectionInfo =
-      Collections.synchronizedMap(new WeakHashMap<Connection, DBInfo>());
-  public static final Map<PreparedStatement, String> preparedStatements =
-      Collections.synchronizedMap(new WeakHashMap<PreparedStatement, String>());
 
   public ConnectionInstrumentation() {
     super("jdbc");
@@ -52,7 +45,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Configurable {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDBInfo(
         @Advice.Argument(0) final String sql, @Advice.Return final PreparedStatement statement) {
-      preparedStatements.put(statement, sql);
+      JDBCMaps.preparedStatements.put(statement, sql);
     }
   }
 
@@ -69,20 +62,12 @@ public final class ConnectionInstrumentation extends Instrumenter.Configurable {
           if (user != null && user.trim().equals("")) {
             user = null;
           }
-          connectionInfo.put(connection, new DBInfo(sanitizedURL, type, user));
+          JDBCMaps.connectionInfo.put(connection, new JDBCMaps.DBInfo(sanitizedURL, type, user));
         }
       } catch (final Throwable t) {
         // object may not be fully initialized.
         // calling constructor will populate map
       }
     }
-  }
-
-  @Data
-  public static class DBInfo {
-    public static DBInfo UNKNOWN = new DBInfo("null", "unknown", null);
-    private final String url;
-    private final String type;
-    private final String user;
   }
 }

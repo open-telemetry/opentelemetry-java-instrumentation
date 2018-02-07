@@ -12,8 +12,7 @@ class TestLoggerRewrite extends Specification {
     Object logger = logField.get(null)
 
     expect:
-    logger != null // FIXME: re-enable assertion after bootstrap work is complete
-    // !logger.getClass().getName().startsWith("java.util.logging")
+    !logger.getClass().getName().startsWith("java.util.logging")
 
     cleanup:
     logField?.setAccessible(false)

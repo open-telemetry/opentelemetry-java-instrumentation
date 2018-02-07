@@ -37,44 +37,60 @@ public class TracingAgent {
   private static synchronized void startAgent(final String agentArgs, final Instrumentation inst)
       throws Exception {
     if (null == AGENT_CLASSLOADER) {
-      final JarFile toolingJar =
-          new JarFile(
-              extractToTmpFile(
-                  TracingAgent.class.getClassLoader(),
-                  "agent-tooling-and-instrumentation.jar.zip",
-                  "agent-tooling-and-instrumentation.jar"));
-      final JarFile bootStrapJar =
-          new JarFile(
-              extractToTmpFile(
-                  TracingAgent.class.getClassLoader(),
-                  "agent-bootstrap.jar.zip",
-                  "agent-bootstrap.jar"));
+      final File toolingJar =
+          extractToTmpFile(
+              TracingAgent.class.getClassLoader(),
+              "agent-tooling-and-instrumentation.jar.zip",
+              "agent-tooling-and-instrumentation.jar");
+      final File bootstrapJar =
+          extractToTmpFile(
+              TracingAgent.class.getClassLoader(),
+              "agent-bootstrap.jar.zip",
+              "agent-bootstrap.jar");
 
-      final ClassLoader agentClassLoader = TracingAgent.class.getClassLoader();
-
-      inst.appendToSystemClassLoaderSearch(bootStrapJar);
-      inst.appendToSystemClassLoaderSearch(toolingJar);
-
-      { // install agent
-        final Class<?> agentInstallerClass =
-            agentClassLoader.loadClass("datadog.trace.agent.tooling.AgentInstaller");
-        final Method agentInstallerMethod =
-            agentInstallerClass.getMethod("installBytebuddyAgent", Instrumentation.class);
-        agentInstallerMethod.invoke(null, inst);
+      final ClassLoader agentParent;
+      final String javaVersion = System.getProperty("java.version");
+      if (javaVersion.startsWith("1.7") || javaVersion.startsWith("1.8")) {
+        agentParent = null; // bootstrap
+      } else {
+        // platform classloader is parent of system in java 9+
+        agentParent = ClassLoader.getSystemClassLoader().getParent();
       }
-      { // install global tracer
-        final Class<?> tracerInstallerClass =
-            agentClassLoader.loadClass("datadog.trace.agent.tooling.TracerInstaller");
-        final Method tracerInstallerMethod = tracerInstallerClass.getMethod("installGlobalTracer");
-        tracerInstallerMethod.invoke(null);
-        // TODO
-        // - assert global tracer class is on bootstrap
-        // - assert global tracer impl class is on agent classloader
-        final Method logVersionInfoMethod = tracerInstallerClass.getMethod("logVersionInfo");
-        logVersionInfoMethod.invoke(null);
-      }
+      final ClassLoader agentClassLoader =
+          new DatadogClassLoader(
+              bootstrapJar.toURI().toURL(), toolingJar.toURI().toURL(), agentParent);
 
-      AGENT_CLASSLOADER = agentClassLoader;
+      // FIXME: ensure all classes are available on java 9 (vs the platform loader)
+      inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
+
+      final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+      try {
+        Thread.currentThread().setContextClassLoader(agentClassLoader);
+
+        { // install agent
+          final Class<?> agentInstallerClass =
+              agentClassLoader.loadClass("datadog.trace.agent.tooling.AgentInstaller");
+          final Method agentInstallerMethod =
+              agentInstallerClass.getMethod("installBytebuddyAgent", Instrumentation.class);
+          agentInstallerMethod.invoke(null, inst);
+        }
+        { // install global tracer
+          final Class<?> tracerInstallerClass =
+              agentClassLoader.loadClass("datadog.trace.agent.tooling.TracerInstaller");
+          final Method tracerInstallerMethod =
+              tracerInstallerClass.getMethod("installGlobalTracer");
+          tracerInstallerMethod.invoke(null);
+          // TODO
+          // - assert global tracer class is on bootstrap
+          // - assert global tracer impl class is on agent classloader
+          final Method logVersionInfoMethod = tracerInstallerClass.getMethod("logVersionInfo");
+          logVersionInfoMethod.invoke(null);
+        }
+
+        AGENT_CLASSLOADER = agentClassLoader;
+      } finally {
+        Thread.currentThread().setContextClassLoader(contextLoader);
+      }
     }
   }
 
