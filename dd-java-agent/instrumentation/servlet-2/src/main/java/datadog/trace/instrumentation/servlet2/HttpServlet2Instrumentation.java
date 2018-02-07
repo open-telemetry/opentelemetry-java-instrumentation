@@ -19,7 +19,6 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter;
-import io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
@@ -52,12 +51,9 @@ public final class HttpServlet2Instrumentation extends Instrumenter.Configurable
             new HelperInjector(
                 "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter",
                 "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
-                "io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator",
-                "io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator$1",
-                "io.opentracing.contrib.web.servlet.filter.TracingFilter",
-                "io.opentracing.contrib.web.servlet.filter.TracingFilter$1"))
+                "datadog.trace.instrumentation.servlet2.ServletFilterSpanDecorator"))
         .transform(
-            DDAdvice.create()
+            DDAdvice.create(false) // Can't use the error handler for pre 1.5 classes...
                 .advice(
                     named("service")
                         .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))

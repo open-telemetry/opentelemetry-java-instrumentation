@@ -1,7 +1,6 @@
-package datadog.trace.agent.integration.servlet
-
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
+import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.util.GlobalTracer
@@ -11,21 +10,20 @@ import okhttp3.Request
 import okhttp3.Response
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
-import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.lang.reflect.Field
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-class JettyServletTest extends Specification {
+class JettyServletTest extends AgentTestRunner {
 
   static final int PORT = randomOpenPort()
 
   // Jetty needs this to ensure consistent ordering for async.
   static CountDownLatch latch
   OkHttpClient client = new OkHttpClient.Builder()
-  .addNetworkInterceptor(new Interceptor() {
+    .addNetworkInterceptor(new Interceptor() {
     @Override
     Response intercept(Interceptor.Chain chain) throws IOException {
       def response = chain.proceed(chain.request())
@@ -34,9 +32,9 @@ class JettyServletTest extends Specification {
     }
   })
   // Uncomment when debugging:
-//    .connectTimeout(1, TimeUnit.HOURS)
-//    .writeTimeout(1, TimeUnit.HOURS)
-//    .readTimeout(1, TimeUnit.HOURS)
+    .connectTimeout(1, TimeUnit.HOURS)
+    .writeTimeout(1, TimeUnit.HOURS)
+    .readTimeout(1, TimeUnit.HOURS)
     .build()
 
   private Server jettyServer
@@ -56,7 +54,6 @@ class JettyServletTest extends Specification {
     servletContext = new ServletContextHandler()
 
     servletContext.addServlet(TestServlet.Sync, "/sync")
-    servletContext.addServlet(TestServlet.Async, "/async")
 
     jettyServer.setHandler(servletContext)
     jettyServer.start()
@@ -106,15 +103,14 @@ class JettyServletTest extends Specification {
     span.context().tags["http.method"] == "GET"
     span.context().tags["span.kind"] == "server"
     span.context().tags["component"] == "java-web-servlet"
-    span.context().tags["http.status_code"] == 200
+    span.context().tags["http.status_code"] == null // sadly servlet 2.x doesn't expose it generically.
     span.context().tags["thread.name"] != null
     span.context().tags["thread.id"] != null
-    span.context().tags.size() == 8
+    span.context().tags.size() == 7
 
     where:
-    path    | expectedResponse
-    "async" | "Hello Async"
-    "sync"  | "Hello Sync"
+    path   | expectedResponse
+    "sync" | "Hello Sync"
   }
 
   @Unroll
@@ -141,19 +137,18 @@ class JettyServletTest extends Specification {
     span.context().tags["http.method"] == "GET"
     span.context().tags["span.kind"] == "server"
     span.context().tags["component"] == "java-web-servlet"
-    span.context().tags["http.status_code"] == 500
+    span.context().tags["http.status_code"] == null // sadly servlet 2.x doesn't expose it generically.
     span.context().tags["thread.name"] != null
     span.context().tags["thread.id"] != null
     span.context().tags["error"] == true
     span.context().tags["error.msg"] == "some $path error"
     span.context().tags["error.type"] == RuntimeException.getName()
     span.context().tags["error.stack"] != null
-    span.context().tags.size() == 12
+    span.context().tags.size() == 11
 
     where:
-    path    | expectedResponse
-    //"async" | "Hello Async" // FIXME: I can't seem get the async error handler to trigger
-    "sync"  | "Hello Sync"
+    path   | expectedResponse
+    "sync" | "Hello Sync"
   }
 
   private static int randomOpenPort() {
