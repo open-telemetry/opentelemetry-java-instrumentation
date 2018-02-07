@@ -7,7 +7,7 @@ ext {
 
     slf4j      : "1.7.25",
     guava      : "20.0",
-    jackson    : "2.9.3",
+    jackson    : "2.6.3",
 
     spock      : "1.0-groovy-$spockGroovyVer",
     groovy     : groovyVer,
@@ -27,27 +27,27 @@ ext {
     opentracingMock: dependencies.create(group: 'io.opentracing', name: 'opentracing-mock', version: version.opentracing),
 
     // General
-    slf4j      : "org.slf4j:slf4j-api:${version.slf4j}",
-    guava      : "com.google.guava:guava:$version.guava",
-    jackson    : [
+    slf4j          : "org.slf4j:slf4j-api:${version.slf4j}",
+    guava          : "com.google.guava:guava:$version.guava",
+    jackson        : [
       dependencies.create(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version.jackson),
       dependencies.create(group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: version.jackson),
     ],
-    bytebuddy  : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: "${version.bytebuddy}"),
-    autoservice: [
+    bytebuddy      : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: "${version.bytebuddy}"),
+    autoservice    : [
       dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'),
       dependencies.create(group: 'com.google.auto', name: 'auto-common', version: '0.3'),
       dependencies.create(group: 'com.google.guava', name: 'guava', version: "${version.guava}"),
     ],
 
     // Testing
-    spock      : dependencies.create("org.spockframework:spock-core:${version.spock}", {
+    spock          : dependencies.create("org.spockframework:spock-core:${version.spock}", {
       exclude group: "org.codehaus.groovy", module: "groovy-all"
     }),
-    bytebuddyagent  : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: "${version.bytebuddy}"),
-    groovy     : "org.codehaus.groovy:groovy-all:${version.groovy}",
-    junit      : "junit:junit:${version.junit}",
-    testLogging: [
+    bytebuddyagent : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: "${version.bytebuddy}"),
+    groovy         : "org.codehaus.groovy:groovy-all:${version.groovy}",
+    junit          : "junit:junit:${version.junit}",
+    testLogging    : [
       dependencies.create(group: 'ch.qos.logback', name: 'logback-classic', version: version.logback),
       dependencies.create(group: 'org.slf4j', name: 'log4j-over-slf4j', version: version.slf4j),
       dependencies.create(group: 'org.slf4j', name: 'jcl-over-slf4j', version: version.slf4j),
