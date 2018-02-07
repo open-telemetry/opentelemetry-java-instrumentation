@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.kafka_clients;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -120,7 +121,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Configurabl
       if (throwable != null) {
         final Span span = scope.span();
         Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap("error.object", throwable));
+        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
         span.finish();
       }
       scope.close();
@@ -140,7 +141,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Configurabl
     public void onCompletion(final RecordMetadata metadata, final Exception exception) {
       if (exception != null) {
         Tags.ERROR.set(scope.span(), Boolean.TRUE);
-        scope.span().log(Collections.singletonMap("error.object", exception));
+        scope.span().log(Collections.singletonMap(ERROR_OBJECT, exception));
       }
       try {
         if (callback != null) {

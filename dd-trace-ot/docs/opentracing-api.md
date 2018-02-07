@@ -125,7 +125,7 @@ Errors are manually captured in a span by setting the error flag and logging the
     // capture error
     ActiveSpan span = GlobalTracer.get().activeSpan();
     Tags.ERROR.set(span, Boolean.TRUE);
-    span.log(Collections.singletonMap("error.object", e));
+    span.log(Collections.singletonMap(io.opentracing.log.Fields.ERROR_OBJECT, e));
 
     // recovery code
   }

@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.kafka_streams;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -134,7 +135,7 @@ public class KafkaStreamsProcessorInstrumentation {
           if (throwable != null) {
             final Span span = scope.span();
             Tags.ERROR.set(span, Boolean.TRUE);
-            span.log(Collections.singletonMap("error.object", throwable));
+            span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
           }
           scope.close();
         }
