@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing API. */
 @Slf4j
-public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.Tracer {
+public class DDTracer implements io.opentracing.Tracer {
 
   public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
@@ -44,6 +44,10 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
   final Writer writer;
   /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
   final Sampler sampler;
+  /**
+   * Scope manager is in charge of managing the scopes from which spans are created
+   */
+  final ScopeManager scopeManager;
 
   /** A set of tags that are added to every span */
   private final Map<String, Object> spanTags;
@@ -68,7 +72,8 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
         config.getProperty(DDTraceConfig.SERVICE_NAME),
         Writer.Builder.forConfig(config),
         Sampler.Builder.forConfig(config),
-        DDTraceConfig.parseMap(config.getProperty(DDTraceConfig.SPAN_TAGS)));
+      new ThreadLocalScopeManager(),
+      DDTraceConfig.parseMap(config.getProperty(DDTraceConfig.SPAN_TAGS)));
     log.debug("Using config: {}", config);
 
     // Create decorators from resource files
@@ -80,18 +85,20 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
   }
 
   public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
-    this(serviceName, writer, sampler, Collections.<String, Object>emptyMap());
+    this(serviceName, writer, sampler, new ThreadLocalScopeManager(), Collections.<String, Object>emptyMap());
   }
 
   public DDTracer(
       final String serviceName,
       final Writer writer,
       final Sampler sampler,
+      final ScopeManager scopeManager,
       final Map<String, Object> spanTags) {
     this.serviceName = serviceName;
     this.writer = writer;
     this.writer.start();
     this.sampler = sampler;
+    this.scopeManager = scopeManager;
     this.spanTags = spanTags;
 
     registry = new CodecRegistry();
@@ -109,7 +116,8 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
         UNASSIGNED_DEFAULT_SERVICE_NAME,
         writer,
         new AllSampler(),
-        DDTraceConfig.parseMap(new DDTraceConfig().getProperty(DDTraceConfig.SPAN_TAGS)));
+      new ThreadLocalScopeManager(),
+      DDTraceConfig.parseMap(new DDTraceConfig().getProperty(DDTraceConfig.SPAN_TAGS)));
   }
 
   /**
@@ -139,18 +147,18 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
 
   @Override
   public ScopeManager scopeManager() {
-    return this;
+    return scopeManager;
   }
 
   @Override
   public Span activeSpan() {
-    final Scope active = active();
+    final Scope active = scopeManager.active();
     return active == null ? null : active.span();
   }
 
   @Override
   public DDSpanBuilder buildSpan(final String operationName) {
-    return new DDSpanBuilder(operationName, this);
+    return new DDSpanBuilder(operationName, scopeManager);
   }
 
   @Override
@@ -412,7 +420,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
       SpanContext parentContext = this.parent;
       if (parentContext == null && !ignoreScope) {
         // use the Scope as parent unless overridden or ignored.
-        final Scope scope = active();
+        final Scope scope = scopeManager.active();
         if (scope != null) parentContext = scope.span().context();
       }
 
