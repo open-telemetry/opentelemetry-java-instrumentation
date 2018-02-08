@@ -1,5 +1,3 @@
-package datadog.trace.agent.integration.servlet
-
 import groovy.servlet.AbstractHttpServlet
 
 import javax.servlet.annotation.WebServlet
