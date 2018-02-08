@@ -28,9 +28,6 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
 
 dependencies {
   compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.119'
-  compile('io.opentracing.contrib:opentracing-aws-sdk:0.0.3') {
-    transitive = false
-  }
 
   compile project(':dd-trace-ot')
   compile project(':dd-java-agent:tooling')
