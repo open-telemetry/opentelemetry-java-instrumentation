@@ -20,6 +20,8 @@ class URLAsResourceNameTest extends Specification {
 
     where:
     input                          | output
+    "/"                            | "/"
+    "/?asdf"                       | "/"
     "/search"                      | "/search"
     "/search?"                     | "/search"
     "/search?id=100&private=true"  | "/search"
@@ -52,10 +54,10 @@ class URLAsResourceNameTest extends Specification {
 
     where:
     input                                              | output
-    "/a1"                                              | "/?"
-    "/1a"                                              | "/?"
-    "/abc/-1?"                                         | "/abc/?"
-    "/ABC/a-1/b_2/c.3/d4d/5f/6"                        | "/ABC/?/?/?/?/?/?"
+    "/a1/v2"                                           | "/?/?"
+    "/v3/1a"                                           | "/v3/?"
+    "/V01/v9/abc/-1?"                                  | "/V01/v9/abc/?"
+    "/ABC/av-1/b_2/c.3/d4d/v5f/v699/7"                 | "/ABC/?/?/?/?/?/?/?"
     "/user/asdf123/repository/01234567-9ABC-DEF0-1234" | "/user/?/repository/?"
   }
 
