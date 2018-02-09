@@ -37,4 +37,6 @@ public class ClassLoaderTest {
   }
 
   // TODO: Write test: assert our agent resource locator can locate resources from the bootstrap jar
+
+  // TODO: Write test: ensure all classes are available on java 9 (vs the platform loader)
 }

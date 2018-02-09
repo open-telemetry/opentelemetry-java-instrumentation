@@ -18,7 +18,9 @@ package datadog.trace.agent;
 
 import java.io.*;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.jar.JarFile;
 
 /** Entry point for initializing the agent. */
@@ -48,20 +50,9 @@ public class TracingAgent {
               "agent-bootstrap.jar.zip",
               "agent-bootstrap.jar");
 
-      final ClassLoader agentParent;
-      final String javaVersion = System.getProperty("java.version");
-      if (javaVersion.startsWith("1.7") || javaVersion.startsWith("1.8")) {
-        agentParent = null; // bootstrap
-      } else {
-        // platform classloader is parent of system in java 9+
-        agentParent = ClassLoader.getSystemClassLoader().getParent();
-      }
-      final ClassLoader agentClassLoader =
-          new DatadogClassLoader(
-              bootstrapJar.toURI().toURL(), toolingJar.toURI().toURL(), agentParent);
-
-      // FIXME: ensure all classes are available on java 9 (vs the platform loader)
+      // bootstrap jar must be appended before agent classloader is created.
       inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
+      final ClassLoader agentClassLoader = createDatadogClassLoader(bootstrapJar, toolingJar);
 
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
@@ -92,6 +83,34 @@ public class TracingAgent {
         Thread.currentThread().setContextClassLoader(contextLoader);
       }
     }
+  }
+
+  /**
+   * Create the datadog classloader. This must be called after the bootstrap jar has been appened to
+   * the bootstrap classpath.
+   *
+   * @param bootstrapJar datadog bootstrap jar which has been appended to the bootstrap loader
+   * @param toolingJar jar to use for the classpath of the datadog classloader
+   * @return Datadog Classloader
+   */
+  private static ClassLoader createDatadogClassLoader(File bootstrapJar, File toolingJar)
+      throws Exception {
+    final ClassLoader agentParent;
+    final String javaVersion = System.getProperty("java.version");
+    if (javaVersion.startsWith("1.7") || javaVersion.startsWith("1.8")) {
+      agentParent = null; // bootstrap
+    } else {
+      // platform classloader is parent of system in java 9+
+      agentParent = ClassLoader.getSystemClassLoader().getParent();
+    }
+    Class<?> loaderClass =
+        ClassLoader.getSystemClassLoader()
+            .loadClass("datadog.trace.agent.bootstrap.DatadogClassLoader");
+    Constructor constructor =
+        loaderClass.getDeclaredConstructor(URL.class, URL.class, ClassLoader.class);
+    return (ClassLoader)
+        constructor.newInstance(
+            bootstrapJar.toURI().toURL(), toolingJar.toURI().toURL(), agentParent);
   }
 
   /**
