@@ -11,7 +11,6 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.contrib.aws.TracingRequestHandler;
 import io.opentracing.util.GlobalTracer;
 import java.util.List;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -40,8 +39,8 @@ public final class AWSClientInstrumentation extends Instrumenter.Configurable {
                 "com.amazonaws.handlers.HandlerContextKey"))
         .transform(
             new HelperInjector(
-                "io.opentracing.contrib.aws.TracingRequestHandler",
-                "io.opentracing.contrib.aws.SpanDecorator"))
+                "datadog.trace.instrumentation.aws.TracingRequestHandler",
+                "datadog.trace.instrumentation.aws.SpanDecorator"))
         .transform(DDAdvice.create().advice(isConstructor(), AWSClientAdvice.class.getName()))
         .asDecorator();
   }

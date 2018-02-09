@@ -147,14 +147,20 @@ class AWSClientTest extends AgentTestRunner {
     span.context().parentId == 0
 
     def tags = span.context().tags
-    tags["component"] == "java-aws-sdk"
-    tags2[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_CLIENT
-    tags2[Tags.HTTP_METHOD.key] == "PUT"
-    tags2[Tags.HTTP_URL.key] == "http://localhost:$server.address.port/testbucket/"
-    tags2[Tags.HTTP_STATUS.key] == 200
+    tags[Tags.COMPONENT.key] == "java-aws-sdk"
+    tags[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_CLIENT
+    tags[Tags.HTTP_METHOD.key] == "PUT"
+    tags[Tags.HTTP_URL.key] == "http://localhost:$server.address.port"
+    tags[Tags.HTTP_STATUS.key] == 200
+    tags["aws.service"] == "Amazon S3"
+    tags["aws.endpoint"] == "http://localhost:$server.address.port"
+    tags["aws.operation"] == "CreateBucketRequest"
+    tags["aws.agent"] == "java-aws-sdk"
+    tags["params"] == "{}"
+    tags["span.type"] == "web"
     tags["thread.name"] != null
     tags["thread.id"] != null
-    tags.size() == 8
+    tags.size() == 13
 
     receivedHeaders.get().get("x-datadog-trace-id") == "$span.traceId"
     receivedHeaders.get().get("x-datadog-parent-id") == "$span.spanId"
