@@ -21,12 +21,17 @@ dependencies {
 
 configurations {
   // exclude bootstrap dependencies from shadowJar
-  runtime.exclude module: ':dd-java-agent:agent-bootstrap'
-  runtime.exclude module: ':dd-trace-api'
   runtime.exclude module: deps.opentracing
   runtime.exclude module: deps.slf4j
   runtime.exclude group: 'org.slf4j'
   runtime.exclude group: 'io.opentracing'
+}
+
+shadowJar {
+  dependencies {
+    exclude(project(':dd-java-agent:agent-bootstrap'))
+    exclude(project(':dd-trace-api'))
+  }
 }
 
 jar {

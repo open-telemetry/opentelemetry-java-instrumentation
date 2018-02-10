@@ -3,8 +3,6 @@ plugins {
   id "com.github.johnrengelman.shadow"
 }
 
-// TODO include: opentracing, dd-ot-impl, dd-api
-// Also: Move Patch Logger into this project
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {

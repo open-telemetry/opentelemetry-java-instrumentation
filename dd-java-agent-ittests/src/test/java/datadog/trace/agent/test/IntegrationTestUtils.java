@@ -52,6 +52,18 @@ public class IntegrationTestUtils {
     }
   }
 
+  /** Returns the URL to the jar the agent appended to the bootstrap classpath * */
+  public static ClassLoader getBootstrapResourceLocator() throws Exception {
+    final ClassLoader agentClassLoader = getAgentClassLoader();
+    final Field field = agentClassLoader.getClass().getDeclaredField("bootstrapResourceLocator");
+    try {
+      field.setAccessible(true);
+      return (ClassLoader) field.get(agentClassLoader);
+    } finally {
+      field.setAccessible(false);
+    }
+  }
+
   /**
    * Create a temporary jar on the filesystem with the bytes of the given classes.
    *
