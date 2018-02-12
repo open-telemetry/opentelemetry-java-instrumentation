@@ -42,7 +42,10 @@ def includeShadowJar(subproject, jarname) {
         exclude(dependency('org.projectlombok:lombok:1.16.20'))
       }
 
-      relocate 'org.slf4j', 'datadog.slf4j'  // Prevents conflict with other SLF4J instances. Important for premain.
+      // Prevents conflict with other SLF4J instances. Important for premain.
+      relocate 'org.slf4j', 'datadog.slf4j'
+      // rewrite dependencies calling Logger.getLogger
+      relocate 'java.util.logging.Logger', 'datadog.trace.agent.bootstrap.PatchLogger'
 
       if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
 
@@ -65,9 +68,6 @@ def includeShadowJar(subproject, jarname) {
           // This is used in the Cassandra Cluster.connectAsync signature so we can't relocate it. :fingers_crossed:
           exclude 'com.google.common.util.concurrent.ListenableFuture'
         }
-
-        // rewrite dependencies calling Logger.getLogger
-        relocate 'java.util.logging.Logger', 'datadog.trace.agent.PatchLogger'
       }
     }
   }

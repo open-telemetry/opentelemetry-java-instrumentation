@@ -14,10 +14,10 @@ public class DatadogClassLoader extends URLClassLoader {
   /**
    * Construct a new DatadogClassLoader
    *
-   * <p>{@param bootstrapJarLocation} Location of the bootstrap jar. Will be used for resource
-   * lookups. {@param agentJarLocation} Location of the agent tooling and instrumentation jar. Will
-   * be the classpath of this classloader. {@param parent} Parent of this classloader. Should null
-   * (bootstrap), or the platform classloader for java 9+.
+   * @param bootstrapJarLocation Used for resource lookups.
+   * @param agentJarLocation Classpath of this classloader.
+   * @param parent Classloader parent. Should null (bootstrap), or the platform classloader for java
+   *     9+.
    */
   public DatadogClassLoader(URL bootstrapJarLocation, URL agentJarLocation, ClassLoader parent) {
     super(new URL[] {agentJarLocation}, parent);

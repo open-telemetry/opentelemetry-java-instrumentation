@@ -29,5 +29,8 @@ public class TracerInstaller {
     DDTraceOTInfo.VERSION.toString();
     DDTraceApiInfo.VERSION.toString();
     DDJavaAgentInfo.VERSION.toString();
+    log.debug(GlobalTracer.class.getName() + " loaded on " + GlobalTracer.class.getClassLoader());
+    log.debug(
+        AgentInstaller.class.getName() + " loaded on " + AgentInstaller.class.getClassLoader());
   }
 }

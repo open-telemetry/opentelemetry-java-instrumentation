@@ -1,5 +1,6 @@
 package datadog.trace.agent.test
 
+import datadog.trace.agent.bootstrap.ExceptionLogger
 import datadog.trace.agent.tooling.ExceptionHandlers
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.dynamic.ClassFileLocator
@@ -37,8 +38,7 @@ class ExceptionHandlerTest extends Specification {
     ByteBuddyAgent.install()
     builder.installOn(ByteBuddyAgent.getInstrumentation())
 
-    // ExceptionHandlers uses java.lang.Object for logging
-    final Logger logger = (Logger) LoggerFactory.getLogger(java.lang.Object)
+    final Logger logger = (Logger) LoggerFactory.getLogger(ExceptionLogger)
     testAppender.setContext(logger.getLoggerContext())
     logger.addAppender(testAppender)
     testAppender.start()

@@ -15,10 +15,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-/**
- * Duplication of TestUtils in testing project. Cannot directly depend on testing project due to
- * classpath issues.
- */
 public class IntegrationTestUtils {
 
   public static <T extends Object> Object runUnderTrace(

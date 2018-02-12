@@ -88,8 +88,10 @@ public class HelperInjector implements Transformer {
             log.error(
                 "Error preparing helpers for "
                     + typeDescription
-                    + ". Failed to inject helper classes into "
-                    + classLoader,
+                    + ". Failed to inject helper classes into instance "
+                    + classLoader
+                    + " of type "
+                    + classLoader.getClass().getName(),
                 e);
             throw new RuntimeException(e);
           }

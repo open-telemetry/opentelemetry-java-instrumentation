@@ -19,6 +19,7 @@ package datadog.trace.agent;
 import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.jar.JarFile;
@@ -71,9 +72,6 @@ public class TracingAgent {
           final Method tracerInstallerMethod =
               tracerInstallerClass.getMethod("installGlobalTracer");
           tracerInstallerMethod.invoke(null);
-          // TODO
-          // - assert global tracer class is on bootstrap
-          // - assert global tracer impl class is on agent classloader
           final Method logVersionInfoMethod = tracerInstallerClass.getMethod("logVersionInfo");
           logVersionInfoMethod.invoke(null);
         }
@@ -101,7 +99,7 @@ public class TracingAgent {
       agentParent = null; // bootstrap
     } else {
       // platform classloader is parent of system in java 9+
-      agentParent = ClassLoader.getSystemClassLoader().getParent();
+      agentParent = getPlatformClassLoader();
     }
     Class<?> loaderClass =
         ClassLoader.getSystemClassLoader()
@@ -113,10 +111,7 @@ public class TracingAgent {
             bootstrapJar.toURI().toURL(), toolingJar.toURI().toURL(), agentParent);
   }
 
-  /**
-   * Extract {@param loader}'s resource, {@param sourcePath}, to a temporary file named {@param
-   * destName}.
-   */
+  /** Extract sourcePath out of loader to a temporary file named destName. */
   private static File extractToTmpFile(ClassLoader loader, String sourcePath, String destName)
       throws Exception {
     final String destPrefix;
@@ -157,6 +152,13 @@ public class TracingAgent {
         outputStream.close();
       }
     }
+  }
+
+  private static ClassLoader getPlatformClassLoader()
+      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    // must invoke ClassLoader.getPlatformClassLoader by reflection to remain compatible with java 7 + 8.
+    final Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
+    return (ClassLoader) method.invoke(null);
   }
 
   public static void main(final String... args) {

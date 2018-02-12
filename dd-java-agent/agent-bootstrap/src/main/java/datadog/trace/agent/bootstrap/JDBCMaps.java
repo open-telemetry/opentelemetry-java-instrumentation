@@ -7,6 +7,11 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import lombok.Data;
 
+/**
+ * JDBC instrumentation shares a global map of connection info.
+ *
+ * <p>In the bootstrap project to ensure visibility by all classes.
+ */
 public class JDBCMaps {
   public static final Map<Connection, DBInfo> connectionInfo =
       Collections.synchronizedMap(new WeakHashMap<Connection, DBInfo>());

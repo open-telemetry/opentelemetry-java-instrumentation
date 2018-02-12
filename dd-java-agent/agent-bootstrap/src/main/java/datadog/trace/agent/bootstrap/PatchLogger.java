@@ -1,4 +1,4 @@
-package datadog.trace.agent;
+package datadog.trace.agent.bootstrap;
 
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -11,7 +11,6 @@ import java.util.logging.LogRecord;
  * <p>Shadow rewrites will redirect those calls to this class, which will return a safe logger.
  */
 public class PatchLogger {
-  // FIXME: Use "datadog.trace.agent.bootstrap" package name for clarity
   private static final PatchLogger SAFE_LOGGER = new PatchLogger("datadogSafeLogger", "bundle");
 
   public static PatchLogger getLogger(String name) {

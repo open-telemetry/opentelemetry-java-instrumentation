@@ -1,5 +1,6 @@
 package datadog.trace.agent.tooling;
 
+import datadog.trace.agent.bootstrap.ExceptionLogger;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.bytecode.StackManipulation;
 import net.bytebuddy.implementation.bytecode.StackSize;
@@ -13,8 +14,8 @@ import org.slf4j.LoggerFactory;
 public class ExceptionHandlers {
   private static final String LOG_FACTORY_NAME = LoggerFactory.class.getName().replace('.', '/');
   private static final String LOGGER_NAME = Logger.class.getName().replace('.', '/');
-  // Object.class will always be resolvable, so we'll use it in the log name
-  private static final String HANDLER_NAME = Object.class.getName().replace('.', '/');
+  // Bootstrap ExceptionHandler.class will always be resolvable, so we'll use it in the log name
+  private static final String HANDLER_NAME = ExceptionLogger.class.getName().replace('.', '/');
 
   private static final StackManipulation EXCEPTION_STACK_HANDLER =
       new StackManipulation() {
@@ -29,7 +30,7 @@ public class ExceptionHandlers {
         public Size apply(MethodVisitor mv, Implementation.Context context) {
           // writes the following bytecode:
           // try {
-          //   org.slf4j.LoggerFactory.getLogger((Class)Object.class).debug("exception in instrumentation", t);
+          //   org.slf4j.LoggerFactory.getLogger((Class)ExceptionLogger.class).debug("exception in instrumentation", t);
           // } catch (Throwable t2) {
           // }
           Label logStart = new Label();
