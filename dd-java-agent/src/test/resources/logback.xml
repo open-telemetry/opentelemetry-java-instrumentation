@@ -13,6 +13,6 @@
     <appender-ref ref="console"/>
   </root>
 
-  <logger name="com.datadoghq" level="debug"/>
+  <logger name="datadog" level="debug"/>
 
 </configuration>
