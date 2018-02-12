@@ -9,7 +9,7 @@ ext {
     guava      : "20.0",
     jackson    : "2.6.3",
 
-    spock      : "1.0-groovy-$spockGroovyVer",
+    spock      : "1.1-groovy-$spockGroovyVer",
     groovy     : groovyVer,
     junit      : "4.12",
     logback    : "1.2.3",
