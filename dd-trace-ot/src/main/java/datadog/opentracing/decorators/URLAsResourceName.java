@@ -11,9 +11,9 @@ public class URLAsResourceName extends AbstractDecorator {
 
   // Matches everything after the ? character.
   public static final Pattern QUERYSTRING = Pattern.compile("\\?.*$");
-  // Matches any path segments with numbers in them.
+  // Matches any path segments with numbers in them. (exception for versioning: "/v1/")
   public static final Pattern PATH_MIXED_ALPHANUMERICS =
-      Pattern.compile("/(?:[^\\/\\d\\?]*[\\d]+[^\\/\\?]*)");
+      Pattern.compile("(?<=/)(?![vV]\\d{1,2}/)(?:[^\\/\\d\\?]*[\\d]+[^\\/\\?]*)");
 
   public URLAsResourceName() {
     super();
@@ -60,7 +60,7 @@ public class URLAsResourceName extends AbstractDecorator {
 
     String norm = origin;
     norm = QUERYSTRING.matcher(norm).replaceAll("");
-    norm = PATH_MIXED_ALPHANUMERICS.matcher(norm).replaceAll("/?");
+    norm = PATH_MIXED_ALPHANUMERICS.matcher(norm).replaceAll("?");
 
     return norm;
   }
