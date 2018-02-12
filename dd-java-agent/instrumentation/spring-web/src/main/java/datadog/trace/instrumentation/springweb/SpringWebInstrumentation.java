@@ -1,9 +1,11 @@
 package datadog.trace.instrumentation.springweb;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithField;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,7 +18,10 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
+import io.opentracing.Span;
+import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
+import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -45,11 +50,20 @@ public final class SpringWebInstrumentation extends Instrumenter.Configurable {
                         .and(isPublic())
                         .and(nameStartsWith("handle"))
                         .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest"))),
-                    SpringWebAdvice.class.getName()))
+                    SpringWebNamingAdvice.class.getName()))
+        .type(not(isInterface()).and(named("org.springframework.web.servlet.DispatcherServlet")))
+        .transform(
+            DDAdvice.create()
+                .advice(
+                    isMethod()
+                        .and(isProtected())
+                        .and(nameStartsWith("processHandlerException"))
+                        .and(takesArgument(3, Exception.class)),
+                    SpringWebErrorHandlerAdvice.class.getName()))
         .asDecorator();
   }
 
-  public static class SpringWebAdvice {
+  public static class SpringWebNamingAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResource(@Advice.Argument(0) final HttpServletRequest request) {
@@ -63,6 +77,18 @@ public final class SpringWebInstrumentation extends Instrumenter.Configurable {
           scope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
           scope.span().setTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET);
         }
+      }
+    }
+  }
+
+  public static class SpringWebErrorHandlerAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void nameResource(@Advice.Argument(3) final Exception exception) {
+      final Scope scope = GlobalTracer.get().scopeManager().active();
+      if (scope != null && exception != null) {
+        final Span span = scope.span();
+        Tags.ERROR.set(span, true);
+        span.log(Collections.singletonMap(ERROR_OBJECT, exception));
       }
     }
   }
