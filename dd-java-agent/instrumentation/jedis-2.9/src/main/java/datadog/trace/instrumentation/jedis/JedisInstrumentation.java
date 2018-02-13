@@ -23,10 +23,21 @@ import net.bytebuddy.asm.Advice;
 import redis.clients.jedis.Protocol.Command;
 
 @AutoService(Instrumenter.class)
-public final class JedisInstrumentation implements Instrumenter {
+public final class JedisInstrumentation extends Instrumenter.Configurable {
+
+  private static final String SERVICE_NAME = "redis";
+
+  public JedisInstrumentation() {
+    super(SERVICE_NAME);
+  }
 
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  protected boolean defaultEnabled() {
+    return false;
+  }
+
+  @Override
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(not(isInterface()).and(hasSuperType(named("redis.clients.jedis.Connection"))))
         .transform(
@@ -48,14 +59,13 @@ public final class JedisInstrumentation implements Instrumenter {
       final Scope scope = GlobalTracer.get().buildSpan("redis.command").startActive(true);
 
       final Span span = scope.span();
-      Tags.DB_TYPE.set(span, "redis");
+      Tags.DB_TYPE.set(span, SERVICE_NAME);
       Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
       Tags.COMPONENT.set(span, "redis-command");
 
       span.setTag(DDTags.RESOURCE_NAME, command.name());
-      span.setTag(DDTags.SERVICE_NAME, "redis");
-      span.setTag(DDTags.SPAN_TYPE, "redis");
-      span.setTag("span.origin.type", command.getClass().getName());
+      span.setTag(DDTags.SERVICE_NAME, SERVICE_NAME);
+      span.setTag(DDTags.SPAN_TYPE, SERVICE_NAME);
 
       return scope;
     }
