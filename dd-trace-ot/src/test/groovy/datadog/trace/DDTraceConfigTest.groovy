@@ -6,56 +6,23 @@ import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.common.writer.LoggingWriter
+import org.junit.Rule
+import org.junit.contrib.java.lang.system.EnvironmentVariables
+import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
 import spock.lang.Unroll
-
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier
 
 import static datadog.trace.common.DDTraceConfig.*
 
 class DDTraceConfigTest extends Specification {
-  static originalEnvMap
-  static overrideEnvMap = new HashMap<String, String>()
-
-  def setupSpec() {
-    def envMapField = ProcessEnvironment.getDeclaredField("theUnmodifiableEnvironment")
-    envMapField.setAccessible(true)
-
-    Field modifiersField = Field.getDeclaredField("modifiers")
-    modifiersField.setAccessible(true)
-    modifiersField.setInt(envMapField, envMapField.getModifiers() & ~Modifier.FINAL)
-
-    originalEnvMap = envMapField.get(null)
-    overrideEnvMap.putAll(originalEnvMap)
-    envMapField.set(null, overrideEnvMap)
-  }
-
-  def cleanupSpec() {
-    def envMapField = ProcessEnvironment.getDeclaredField("theUnmodifiableEnvironment")
-    envMapField.setAccessible(true)
-
-    Field modifiersField = Field.getDeclaredField("modifiers")
-    modifiersField.setAccessible(true)
-    modifiersField.setInt(envMapField, envMapField.getModifiers() & ~Modifier.FINAL)
-
-    originalEnvMap = envMapField.get(null)
-    envMapField.set(null, originalEnvMap)
-  }
-
-  def setup() {
-    overrideEnvMap.clear()
-    overrideEnvMap.putAll(originalEnvMap)
-
-    System.clearProperty(PREFIX + SERVICE_NAME)
-    System.clearProperty(PREFIX + WRITER_TYPE)
-    System.clearProperty(PREFIX + AGENT_HOST)
-    System.clearProperty(PREFIX + AGENT_PORT)
-  }
+  @Rule
+  public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
+  @Rule
+  public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
   def "verify env override"() {
     setup:
-    overrideEnvMap.put("SOME_RANDOM_ENTRY", "asdf")
+    environmentVariables.set("SOME_RANDOM_ENTRY", "asdf")
 
     expect:
     System.getenv("SOME_RANDOM_ENTRY") == "asdf"
@@ -94,8 +61,8 @@ class DDTraceConfigTest extends Specification {
 
   def "specify overrides via env vars"() {
     when:
-    overrideEnvMap.put(propToEnvName(PREFIX + SERVICE_NAME), "still something else")
-    overrideEnvMap.put(propToEnvName(PREFIX + WRITER_TYPE), LoggingWriter.simpleName)
+    environmentVariables.set(propToEnvName(PREFIX + SERVICE_NAME), "still something else")
+    environmentVariables.set(propToEnvName(PREFIX + WRITER_TYPE), LoggingWriter.simpleName)
     def tracer = new DDTracer()
 
     then:
@@ -105,8 +72,8 @@ class DDTraceConfigTest extends Specification {
 
   def "sys props override env vars"() {
     when:
-    overrideEnvMap.put(propToEnvName(PREFIX + SERVICE_NAME), "still something else")
-    overrideEnvMap.put(propToEnvName(PREFIX + WRITER_TYPE), ListWriter.simpleName)
+    environmentVariables.set(propToEnvName(PREFIX + SERVICE_NAME), "still something else")
+    environmentVariables.set(propToEnvName(PREFIX + WRITER_TYPE), ListWriter.simpleName)
 
     System.setProperty(PREFIX + SERVICE_NAME, "what we actually want")
     System.setProperty(PREFIX + WRITER_TYPE, DDAgentWriter.simpleName)

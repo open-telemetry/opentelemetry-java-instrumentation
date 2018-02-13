@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.trace_annotation;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -18,10 +19,14 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class TraceAnnotationInstrumentation implements Instrumenter {
+public final class TraceAnnotationInstrumentation extends Instrumenter.Configurable {
+
+  public TraceAnnotationInstrumentation() {
+    super("trace", "trace-annotation");
+  }
 
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(hasSuperType(declaresMethod(isAnnotatedWith(Trace.class))))
         .transform(
@@ -48,7 +53,7 @@ public final class TraceAnnotationInstrumentation implements Instrumenter {
       if (throwable != null) {
         final Span span = scope.span();
         Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap("error.object", throwable));
+        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       }
       scope.close();
     }

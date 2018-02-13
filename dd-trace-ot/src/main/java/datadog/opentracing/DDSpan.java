@@ -1,5 +1,7 @@
 package datadog.opentracing;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
+
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -121,8 +123,8 @@ public class DDSpan implements Span {
   }
 
   private boolean extractError(final Map<String, ?> map) {
-    if (map.get("error.object") instanceof Throwable) {
-      final Throwable error = (Throwable) map.get("error.object");
+    if (map.get(ERROR_OBJECT) instanceof Throwable) {
+      final Throwable error = (Throwable) map.get(ERROR_OBJECT);
       setErrorMeta(error);
       return true;
     }
@@ -245,7 +247,7 @@ public class DDSpan implements Span {
    *
    * <p>Has no effect if the span priority has been propagated (injected or extracted).
    */
-  public final DDSpan setSamplingPriority(int newPriority) {
+  public final DDSpan setSamplingPriority(final int newPriority) {
     this.context().setSamplingPriority(newPriority);
     return this;
   }

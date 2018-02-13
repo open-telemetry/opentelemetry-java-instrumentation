@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.kafka_clients;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -25,7 +26,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 @AutoService(Instrumenter.class)
-public final class KafkaProducerInstrumentation implements Instrumenter {
+public final class KafkaProducerInstrumentation extends Instrumenter.Configurable {
   public static final HelperInjector HELPER_INJECTOR =
       new HelperInjector(
           "datadog.trace.instrumentation.kafka_clients.TextMapInjectAdapter",
@@ -34,8 +35,17 @@ public final class KafkaProducerInstrumentation implements Instrumenter {
   private static final String OPERATION = "kafka.produce";
   private static final String COMPONENT_NAME = "java-kafka";
 
+  public KafkaProducerInstrumentation() {
+    super("kafka");
+  }
+
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  protected boolean defaultEnabled() {
+    return false;
+  }
+
+  @Override
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             named("org.apache.kafka.clients.producer.KafkaProducer"),
@@ -111,7 +121,7 @@ public final class KafkaProducerInstrumentation implements Instrumenter {
       if (throwable != null) {
         final Span span = scope.span();
         Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap("error.object", throwable));
+        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
         span.finish();
       }
       scope.close();
@@ -131,7 +141,7 @@ public final class KafkaProducerInstrumentation implements Instrumenter {
     public void onCompletion(final RecordMetadata metadata, final Exception exception) {
       if (exception != null) {
         Tags.ERROR.set(scope.span(), Boolean.TRUE);
-        scope.span().log(Collections.singletonMap("error.object", exception));
+        scope.span().log(Collections.singletonMap(ERROR_OBJECT, exception));
       }
       try {
         if (callback != null) {

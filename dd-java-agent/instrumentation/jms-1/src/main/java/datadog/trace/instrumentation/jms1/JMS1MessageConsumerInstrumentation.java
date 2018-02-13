@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.jms1;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.instrumentation.jms.util.JmsUtil.toResourceName;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -30,14 +31,18 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class JMS1MessageConsumerInstrumentation implements Instrumenter {
+public final class JMS1MessageConsumerInstrumentation extends Instrumenter.Configurable {
   public static final HelperInjector JMS1_HELPER_INJECTOR =
       new HelperInjector(
           "datadog.trace.instrumentation.jms.util.JmsUtil",
           "datadog.trace.instrumentation.jms.util.MessagePropertyTextMap");
 
+  public JMS1MessageConsumerInstrumentation() {
+    super("jms", "jms-1");
+  }
+
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             not(isInterface()).and(hasSuperType(named("javax.jms.MessageConsumer"))),
@@ -86,7 +91,7 @@ public final class JMS1MessageConsumerInstrumentation implements Instrumenter {
 
       if (throwable != null) {
         Tags.ERROR.set(span, Boolean.TRUE);
-        span.log(Collections.singletonMap("error.object", throwable));
+        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       }
       span.setTag(DDTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));
       scope.close();

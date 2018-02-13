@@ -36,10 +36,11 @@ dependencies {
   compile deps.jackson
   compile deps.slf4j
   compile deps.autoservice
-  compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.13'
+  compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.2'
 
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6'
   testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
+  testCompile 'com.github.stefanbirkner:system-rules:1.17.1'
 }
 
 jmh {

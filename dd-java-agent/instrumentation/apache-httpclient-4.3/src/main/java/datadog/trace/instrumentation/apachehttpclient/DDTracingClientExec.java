@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.apachehttpclient;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
+
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
@@ -158,7 +160,7 @@ public class DDTracingClientExec implements ClientExecChain {
     } catch (IOException | HttpException | RuntimeException e) {
       // error tags
       Tags.ERROR.set(networkSpan, Boolean.TRUE);
-      networkSpan.log(Collections.singletonMap("error.object", e));
+      networkSpan.log(Collections.singletonMap(ERROR_OBJECT, e));
 
       throw e;
     } finally {

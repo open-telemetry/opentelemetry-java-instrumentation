@@ -1,32 +1,17 @@
 package datadog.opentracing.decorators
 
+import datadog.opentracing.DDSpanContext
+import datadog.trace.common.sampling.PrioritySampling
+import io.opentracing.tag.Tags
 import spock.lang.Specification
+import spock.lang.Subject
 
 class URLAsResourceNameTest extends Specification {
 
-  def "load the config from the yaml files"() {
-    setup:
-    def patterns = new URLAsResourceName("dd-url-patterns").getPatterns()
-
-    expect:
-    patterns.size() == 4
-    // 0 and 1 are from the config file
-    patterns.get(0).regex == ".*"
-    patterns.get(0).replacement == "foo"
-    patterns.get(1).regex == "foo"
-    patterns.get(1).replacement == "bar"
-
-    // the last and before-last are defaults
-    patterns.get(patterns.size() - 2) == URLAsResourceName.RULE_QPARAM
-    patterns.get(patterns.size() - 1) == URLAsResourceName.RULE_DIGIT
-
-  }
+  @Subject
+  def decorator = new URLAsResourceName()
 
   def "remove query params"() {
-
-    setup:
-    def decorator = new URLAsResourceName()
-
     when:
     def norm = decorator.norm(input)
 
@@ -34,16 +19,16 @@ class URLAsResourceNameTest extends Specification {
     norm == output
 
     where:
-    input << ["/search?id=100&status=true"]
-    output << ["/search"]
-
+    input                          | output
+    "/"                            | "/"
+    "/?asdf"                       | "/"
+    "/search"                      | "/search"
+    "/search?"                     | "/search"
+    "/search?id=100&private=true"  | "/search"
+    "/search?id=100&private=true?" | "/search"
   }
 
   def "should replace all digits"() {
-
-    setup:
-    def decorator = new URLAsResourceName()
-
     when:
     def norm = decorator.norm(input)
 
@@ -51,18 +36,16 @@ class URLAsResourceNameTest extends Specification {
     norm == output
 
     where:
-    input << ["/user/100/repository/50"]
-    output << ["/user/?/repository/?"]
-
+    input              | output
+    "/1"               | "/?"
+    "/9999"            | "/?"
+    "/user/1"          | "/user/?"
+    "/user/1/"         | "/user/?/"
+    "/user/1/repo/50"  | "/user/?/repo/?"
+    "/user/1/repo/50/" | "/user/?/repo/?/"
   }
 
-  def "norm should apply custom rules"() {
-
-    setup:
-    def decorator = new URLAsResourceName()
-    def r1 = new URLAsResourceName.Config.Rule(/(\\/users\\/)([^\/]*)/, /$1:id/)
-    decorator.setPatterns(Arrays.asList(r1))
-
+  def "should replace segments with mixed-characters"() {
     when:
     def norm = decorator.norm(input)
 
@@ -70,37 +53,58 @@ class URLAsResourceNameTest extends Specification {
     norm == output
 
     where:
-    input << ["/users/guillaume/list_repository/"]
-    output << ["/users/:id/list_repository/"]
-
+    input                                              | output
+    "/a1/v2"                                           | "/?/?"
+    "/v3/1a"                                           | "/v3/?"
+    "/V01/v9/abc/-1?"                                  | "/V01/v9/abc/?"
+    "/ABC/av-1/b_2/c.3/d4d/v5f/v699/7"                 | "/ABC/?/?/?/?/?/?/?"
+    "/user/asdf123/repository/01234567-9ABC-DEF0-1234" | "/user/?/repository/?"
   }
 
-  def "skip others rules if the current is set as final"() {
-
-    // Same test as above except we replace :id by :id_01
-    // And we want to stop the rule chain just after that.
-
-    setup:
-    def decorator = new URLAsResourceName()
-    def r1 = new URLAsResourceName.Config.Rule(/(\\/users\\/)([^\/]*)/, /$1:id_01/)
-    decorator.setPatterns(Arrays.asList(r1, URLAsResourceName.RULE_DIGIT))
-
+  def "should leave other segments alone"() {
     when:
-    r1.setFinal(false)
     def norm = decorator.norm(input)
 
     then:
-    norm == "/users/:id_?/list_repository/"
-
-    when:
-    r1.setFinal(true)
-    norm = decorator.norm(input)
-
-    then:
-    norm == "/users/:id_01/list_repository/"
+    norm == input
 
     where:
-    input = "/users/guillaume/list_repository/"
+    input      | _
+    "/a-b"     | _
+    "/a_b"     | _
+    "/a.b"     | _
+    "/a-b/a-b" | _
+    "/a_b/a_b" | _
+    "/a.b/a.b" | _
+  }
 
+  def "sets the resource name"() {
+    when:
+    final DDSpanContext context =
+      new DDSpanContext(
+        1L,
+        1L,
+        0L,
+        "fakeService",
+        "fakeOperation",
+        "fakeResource",
+        PrioritySampling.UNSET,
+        Collections.<String, String> emptyMap(),
+        false,
+        "fakeType",
+        tags,
+        null,
+        null)
+
+    then:
+    decorator.afterSetTag(context, Tags.HTTP_URL.getKey(), value)
+    context.resourceName == resourceName
+
+    where:
+    value                       | resourceName        | tags
+    "/path"                     | "/path"             | [:]
+    "/ABC/a-1/b_2/c.3/d4d/5f/6" | "/ABC/?/?/?/?/?/?"  | [:]
+    "/not-found"                | "fakeResource"      | [(Tags.HTTP_STATUS.key): 404]
+    "/with-method"              | "Post /with-method" | [(Tags.HTTP_METHOD.key): "Post"]
   }
 }

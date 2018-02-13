@@ -18,9 +18,15 @@ public class DDAdvice extends AgentBuilder.Transformer.ForAdvice {
    * @return the bytebuddy advice
    */
   public static AgentBuilder.Transformer.ForAdvice create() {
-    return new DDAdvice()
-        .with(AGENT_CLASS_LOCATION_STRATEGY)
-        .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler());
+    return create(true);
+  }
+
+  public static AgentBuilder.Transformer.ForAdvice create(final boolean includeExceptionHandler) {
+    ForAdvice advice = new DDAdvice().with(AGENT_CLASS_LOCATION_STRATEGY);
+    if (includeExceptionHandler) {
+      advice = advice.withExceptionHandler(ExceptionHandlers.defaultExceptionHandler());
+    }
+    return advice;
   }
 
   private DDAdvice() {}

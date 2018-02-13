@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.jdbc;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -24,10 +25,14 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class StatementInstrumentation implements Instrumenter {
+public final class StatementInstrumentation extends Instrumenter.Configurable {
+
+  public StatementInstrumentation() {
+    super("jdbc");
+  }
 
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(not(isInterface()).and(hasSuperType(named(Statement.class.getName()))))
         .transform(
@@ -84,7 +89,7 @@ public final class StatementInstrumentation implements Instrumenter {
       if (throwable != null) {
         final Span span = scope.span();
         Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap("error.object", throwable));
+        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       }
       scope.close();
     }

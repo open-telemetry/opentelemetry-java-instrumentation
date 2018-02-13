@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.servlet3;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -35,11 +36,15 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class FilterChain3Instrumentation implements Instrumenter {
+public final class FilterChain3Instrumentation extends Instrumenter.Configurable {
   public static final String SERVLET_OPERATION_NAME = "servlet.request";
 
+  public FilterChain3Instrumentation() {
+    super("servlet", "servlet-3");
+  }
+
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             not(isInterface()).and(hasSuperType(named("javax.servlet.FilterChain"))),
@@ -106,7 +111,7 @@ public final class FilterChain3Instrumentation implements Instrumenter {
 
           if (throwable != null) {
             ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, throwable, span);
-            span.log(Collections.singletonMap("error.object", throwable));
+            span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
             scope.close();
             scope.span().finish(); // Finish the span manually since finishSpanOnClose was false
           } else if (req.isAsyncStarted()) {
@@ -165,7 +170,7 @@ public final class FilterChain3Instrumentation implements Instrumenter {
                 (HttpServletResponse) event.getSuppliedResponse(),
                 event.getThrowable(),
                 span);
-            span.log(Collections.singletonMap("error.object", event.getThrowable()));
+            span.log(Collections.singletonMap(ERROR_OBJECT, event.getThrowable()));
           }
         }
       }

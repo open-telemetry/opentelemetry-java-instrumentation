@@ -18,9 +18,14 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public class CassandraClientInstrumentation implements Instrumenter {
+public class CassandraClientInstrumentation extends Instrumenter.Configurable {
+
+  public CassandraClientInstrumentation() {
+    super("cassandra");
+  }
+
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             named("com.datastax.driver.core.Cluster$Manager"),

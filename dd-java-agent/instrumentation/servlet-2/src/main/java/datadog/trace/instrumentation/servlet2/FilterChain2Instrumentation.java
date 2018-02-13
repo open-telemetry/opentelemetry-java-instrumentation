@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.servlet2;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -18,7 +19,6 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter;
-import io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
@@ -31,11 +31,15 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class FilterChain2Instrumentation implements Instrumenter {
+public final class FilterChain2Instrumentation extends Instrumenter.Configurable {
   public static final String FILTER_CHAIN_OPERATION_NAME = "servlet.request";
 
+  public FilterChain2Instrumentation() {
+    super("servlet", "servlet-2");
+  }
+
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             not(isInterface()).and(hasSuperType(named("javax.servlet.FilterChain"))),
@@ -47,10 +51,7 @@ public final class FilterChain2Instrumentation implements Instrumenter {
             new HelperInjector(
                 "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter",
                 "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
-                "io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator",
-                "io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator$1",
-                "io.opentracing.contrib.web.servlet.filter.TracingFilter",
-                "io.opentracing.contrib.web.servlet.filter.TracingFilter$1"))
+                "datadog.trace.instrumentation.servlet2.ServletFilterSpanDecorator"))
         .transform(
             DDAdvice.create()
                 .advice(
@@ -105,7 +106,7 @@ public final class FilterChain2Instrumentation implements Instrumenter {
 
           if (throwable != null) {
             ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, throwable, span);
-            span.log(Collections.singletonMap("error.object", throwable));
+            span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
           } else {
             ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(req, resp, span);
           }

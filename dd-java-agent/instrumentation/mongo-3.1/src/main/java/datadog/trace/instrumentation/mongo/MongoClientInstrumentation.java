@@ -19,12 +19,16 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 
 @AutoService(Instrumenter.class)
-public final class MongoClientInstrumentation implements Instrumenter {
+public final class MongoClientInstrumentation extends Instrumenter.Configurable {
   public static final HelperInjector MONGO_HELPER_INJECTOR =
       new HelperInjector("datadog.trace.instrumentation.mongo.DDTracingCommandListener");
 
+  public MongoClientInstrumentation() {
+    super("mongo");
+  }
+
   @Override
-  public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+  public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
             named("com.mongodb.MongoClientOptions$Builder")

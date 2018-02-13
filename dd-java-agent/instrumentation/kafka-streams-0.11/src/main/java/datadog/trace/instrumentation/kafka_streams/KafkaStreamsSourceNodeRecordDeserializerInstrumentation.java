@@ -19,10 +19,19 @@ import org.apache.kafka.common.record.TimestampType;
 public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation {
 
   @AutoService(Instrumenter.class)
-  public static class StartInstrumentation implements Instrumenter {
+  public static class StartInstrumentation extends Instrumenter.Configurable {
+
+    public StartInstrumentation() {
+      super("kafka", "kafka-streams");
+    }
 
     @Override
-    public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+    protected boolean defaultEnabled() {
+      return false;
+    }
+
+    @Override
+    public AgentBuilder apply(final AgentBuilder agentBuilder) {
       return agentBuilder
           .type(
               named("org.apache.kafka.streams.processor.internals.SourceNodeRecordDeserializer"),

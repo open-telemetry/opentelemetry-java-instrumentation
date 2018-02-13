@@ -1,7 +1,6 @@
-package datadog.trace.agent.integration.servlet
-
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
+import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.util.GlobalTracer
@@ -11,21 +10,20 @@ import okhttp3.Request
 import okhttp3.Response
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
-import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.lang.reflect.Field
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-class JettyServletTest extends Specification {
+class JettyServletTest extends AgentTestRunner {
 
   static final int PORT = randomOpenPort()
 
   // Jetty needs this to ensure consistent ordering for async.
   static CountDownLatch latch
   OkHttpClient client = new OkHttpClient.Builder()
-  .addNetworkInterceptor(new Interceptor() {
+    .addNetworkInterceptor(new Interceptor() {
     @Override
     Response intercept(Interceptor.Chain chain) throws IOException {
       def response = chain.proceed(chain.request())
@@ -98,7 +96,9 @@ class JettyServletTest extends Specification {
     trace.size() == 1
     def span = trace[0]
 
+    span.context().serviceName == "unnamed-java-app"
     span.context().operationName == "servlet.request"
+    span.context().resourceName == "servlet.request"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     !span.context().getErrorFlag()
     span.context().parentId != 0 // parent should be the okhttp call.
@@ -133,7 +133,9 @@ class JettyServletTest extends Specification {
     trace.size() == 1
     def span = trace[0]
 
+    span.context().serviceName == "unnamed-java-app"
     span.context().operationName == "servlet.request"
+    span.context().resourceName == "servlet.request"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     span.context().getErrorFlag()
     span.context().parentId != 0 // parent should be the okhttp call.
@@ -151,9 +153,9 @@ class JettyServletTest extends Specification {
     span.context().tags.size() == 12
 
     where:
-    path    | expectedResponse
+    path   | expectedResponse
     //"async" | "Hello Async" // FIXME: I can't seem get the async error handler to trigger
-    "sync"  | "Hello Sync"
+    "sync" | "Hello Sync"
   }
 
   private static int randomOpenPort() {

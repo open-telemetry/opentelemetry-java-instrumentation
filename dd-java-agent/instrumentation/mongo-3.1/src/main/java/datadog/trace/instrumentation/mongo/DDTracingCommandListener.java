@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.mongo;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
+
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
@@ -10,7 +12,6 @@ import io.opentracing.Tracer;
 import io.opentracing.tag.Tags;
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -40,36 +41,36 @@ public class DDTracingCommandListener implements CommandListener {
   /** requestID -> span */
   private final Map<Integer, Span> cache = new ConcurrentHashMap<>();
 
-  public DDTracingCommandListener(Tracer tracer) {
+  public DDTracingCommandListener(final Tracer tracer) {
     this.tracer = tracer;
   }
 
   @Override
-  public void commandStarted(CommandStartedEvent event) {
-    Span span = buildSpan(event);
+  public void commandStarted(final CommandStartedEvent event) {
+    final Span span = buildSpan(event);
     cache.put(event.getRequestId(), span);
   }
 
   @Override
-  public void commandSucceeded(CommandSucceededEvent event) {
-    Span span = cache.remove(event.getRequestId());
+  public void commandSucceeded(final CommandSucceededEvent event) {
+    final Span span = cache.remove(event.getRequestId());
     if (span != null) {
       span.finish();
     }
   }
 
   @Override
-  public void commandFailed(CommandFailedEvent event) {
-    Span span = cache.remove(event.getRequestId());
+  public void commandFailed(final CommandFailedEvent event) {
+    final Span span = cache.remove(event.getRequestId());
     if (span != null) {
       Tags.ERROR.set(span, Boolean.TRUE);
-      span.log(Collections.singletonMap("error.object", event.getThrowable()));
+      span.log(Collections.singletonMap(ERROR_OBJECT, event.getThrowable()));
       span.finish();
     }
   }
 
-  private Span buildSpan(CommandStartedEvent event) {
-    Tracer.SpanBuilder spanBuilder =
+  private Span buildSpan(final CommandStartedEvent event) {
+    final Tracer.SpanBuilder spanBuilder =
         tracer.buildSpan(MONGO_OPERATION).withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
 
     final Span span = spanBuilder.startManual();
@@ -82,7 +83,7 @@ public class DDTracingCommandListener implements CommandListener {
     return span;
   }
 
-  public static void decorate(Span span, CommandStartedEvent event) {
+  public static void decorate(final Span span, final CommandStartedEvent event) {
     // scrub the Mongo command so that parameters are removed from the string
     final BsonDocument scrubbed = scrub(event.getCommand());
     final String mongoCmd = scrubbed.toString();
@@ -93,11 +94,10 @@ public class DDTracingCommandListener implements CommandListener {
 
     Tags.PEER_HOSTNAME.set(span, event.getConnectionDescription().getServerAddress().getHost());
 
-    InetAddress inetAddress =
+    final InetAddress inetAddress =
         event.getConnectionDescription().getServerAddress().getSocketAddress().getAddress();
     if (inetAddress instanceof Inet4Address) {
-      byte[] address = inetAddress.getAddress();
-      Tags.PEER_HOST_IPV4.set(span, ByteBuffer.wrap(address).getInt());
+      Tags.PEER_HOST_IPV4.set(span, inetAddress.getHostAddress());
     } else {
       Tags.PEER_HOST_IPV6.set(span, inetAddress.getHostAddress());
     }

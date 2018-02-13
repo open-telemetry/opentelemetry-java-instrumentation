@@ -1,44 +1,24 @@
 package datadog.opentracing.decorators;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import datadog.opentracing.DDSpanContext;
 import datadog.trace.api.DDTags;
-import datadog.trace.common.util.ConfigUtils;
 import io.opentracing.tag.Tags;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.regex.Pattern;
 
 /** Decorator for servlet contrib */
 public class URLAsResourceName extends AbstractDecorator {
-  public static final String CONFIG_PATH = "dd-trace";
 
-  public static final Config.Rule RULE_QPARAM = new Config.Rule("\\?.*$", "");
-  public static final Config.Rule RULE_DIGIT = new Config.Rule("\\d+", "?");
-  private List<Config.Rule> patterns = new ArrayList<>();
+  // Matches everything after the ? character.
+  public static final Pattern QUERYSTRING = Pattern.compile("\\?.*$");
+  // Matches any path segments with numbers in them. (exception for versioning: "/v1/")
+  public static final Pattern PATH_MIXED_ALPHANUMERICS =
+      Pattern.compile("(?<=/)(?![vV]\\d{1,2}/)(?:[^\\/\\d\\?]*[\\d]+[^\\/\\?]*)");
 
   public URLAsResourceName() {
-    this(CONFIG_PATH);
-  }
-
-  public URLAsResourceName(final String configPath) {
-
     super();
     this.setMatchingTag(Tags.HTTP_URL.getKey());
     this.setSetTag(DDTags.RESOURCE_NAME);
-
-    try {
-      final Config config = ConfigUtils.loadConfigFromResource(configPath, Config.class);
-      for (final Config.Rule pattern : config.urlResourcePatterns) {
-        patterns.add(pattern);
-      }
-    } catch (final Throwable ex) {
-      // do nothing
-    } finally {
-      patterns.add(RULE_QPARAM);
-      patterns.add(RULE_DIGIT);
-    }
   }
 
   @Override
@@ -76,95 +56,12 @@ public class URLAsResourceName extends AbstractDecorator {
   }
 
   // Method to normalise the url string
-  String norm(final String origin) {
+  private String norm(final String origin) {
 
     String norm = origin;
-
-    // Apply rules
-    for (final Config.Rule p : patterns) {
-      norm = norm.replaceAll(p.regex, p.replacement);
-      // if the rule is final, so do not apply others functions
-      if (p.isFinal) {
-        break;
-      }
-    }
+    norm = QUERYSTRING.matcher(norm).replaceAll("");
+    norm = PATH_MIXED_ALPHANUMERICS.matcher(norm).replaceAll("?");
 
     return norm;
-  }
-
-  // For tests
-  List<Config.Rule> getPatterns() {
-    return patterns;
-  }
-
-  // For tests
-  void setPatterns(final List<Config.Rule> patterns) {
-    this.patterns = patterns;
-  }
-
-  /** Properties concerning the UrlAsResourceDecorator in the YAML config */
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  public static class Config {
-
-    List<Rule> urlResourcePatterns;
-
-    public List<Rule> getUrlResourcePatterns() {
-      return urlResourcePatterns;
-    }
-
-    public void setUrlResourcePatterns(final List<Rule> urlResourcePatterns) {
-      this.urlResourcePatterns = urlResourcePatterns;
-    }
-
-    public static class Rule {
-
-      String regex;
-      String replacement;
-      boolean isFinal = false;
-
-      public Rule() {}
-
-      public Rule(final String regex, final String replacement) {
-        this.regex = regex;
-        this.replacement = replacement;
-      }
-
-      public String getRegex() {
-        return regex;
-      }
-
-      public void setRegex(final String regex) {
-        this.regex = regex;
-      }
-
-      public String getReplacement() {
-        return replacement;
-      }
-
-      public void setReplacement(final String replacement) {
-        this.replacement = replacement;
-      }
-
-      public boolean isFinal() {
-        return isFinal;
-      }
-
-      public void setFinal(final boolean isFinal) {
-        this.isFinal = isFinal;
-      }
-
-      @Override
-      public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        final Rule rule = (Rule) o;
-        return Objects.equals(regex, rule.regex) && Objects.equals(replacement, rule.replacement);
-      }
-
-      @Override
-      public int hashCode() {
-        return Objects.hash(regex, replacement, isFinal);
-      }
-    }
   }
 }
