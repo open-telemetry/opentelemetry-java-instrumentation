@@ -1,23 +1,21 @@
 package datadog.trace.agent.tooling;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.WeakHashMap;
+import datadog.trace.agent.bootstrap.DatadogClassLoader;
+import datadog.trace.agent.bootstrap.PatchLogger;
+import io.opentracing.util.GlobalTracer;
+import java.util.*;
+import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
 
+@Slf4j
 public class ClassLoaderMatcher {
   /** A private constructor that must not be invoked. */
   private ClassLoaderMatcher() {
     throw new UnsupportedOperationException();
   }
 
-  public static ElementMatcher.Junction.AbstractBase<ClassLoader> classLoaderWithName(
-      final String name) {
-    return new ClassLoaderNameMatcher(name);
-  }
-
-  public static ElementMatcher.Junction.AbstractBase<ClassLoader> isReflectionClassLoader() {
-    return new ClassLoaderNameMatcher("sun.reflect.DelegatingClassLoader");
+  public static ElementMatcher.Junction.AbstractBase<ClassLoader> skipClassLoader() {
+    return SkipClassLoaderMatcher.INSTANCE;
   }
 
   public static ElementMatcher.Junction.AbstractBase<ClassLoader> classLoaderHasClasses(
@@ -28,6 +26,79 @@ public class ClassLoaderMatcher {
   public static ElementMatcher.Junction.AbstractBase<ClassLoader> classLoaderHasClassWithField(
       final String className, final String fieldName) {
     return new ClassLoaderHasClassWithFieldMatcher(className, fieldName);
+  }
+
+  private static class SkipClassLoaderMatcher
+      extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
+    public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
+    /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
+    private static final Map<ClassLoader, Boolean> SKIP_CACHE =
+        Collections.synchronizedMap(new WeakHashMap<ClassLoader, Boolean>());
+    private static final Set<String> CLASSLOADER_CLASSES_TO_SKIP;
+
+    static {
+      final Set<String> classesToSkip = new HashSet<String>();
+      classesToSkip.add("org.codehaus.groovy.runtime.callsite.CallSiteClassLoader");
+      classesToSkip.add("sun.reflect.DelegatingClassLoader");
+      classesToSkip.add(DatadogClassLoader.class.getName());
+      CLASSLOADER_CLASSES_TO_SKIP = Collections.unmodifiableSet(classesToSkip);
+    }
+
+    private SkipClassLoaderMatcher() {}
+
+    @Override
+    public boolean matches(ClassLoader target) {
+      if (null == target) {
+        // bootstrap instrumentation not supported yet.
+        return true;
+      }
+      return shouldSkipClass(target) || shouldSkipInstance(target);
+    }
+
+    private boolean shouldSkipClass(ClassLoader loader) {
+      return CLASSLOADER_CLASSES_TO_SKIP.contains(loader.getClass().getName());
+    }
+
+    private boolean shouldSkipInstance(final ClassLoader loader) {
+      Boolean cached = SKIP_CACHE.get(loader);
+      if (null != cached) {
+        return cached.booleanValue();
+      }
+      synchronized (this) {
+        cached = SKIP_CACHE.get(loader);
+        if (null != cached) {
+          return cached.booleanValue();
+        }
+        boolean skip = !delegatesToBootstrap(loader);
+        if (skip) {
+          log.debug(
+              "skipping classloader instance {} of type {}", loader, loader.getClass().getName());
+        }
+        SKIP_CACHE.put(loader, skip);
+        return skip;
+      }
+    }
+
+    private boolean delegatesToBootstrap(ClassLoader loader) {
+      boolean delegates = true;
+      if (!loadsExpectedClass(loader, GlobalTracer.class)) {
+        log.debug("loader {} failed to delegate bootstrap opentracing class", loader);
+        delegates = false;
+      }
+      if (!loadsExpectedClass(loader, PatchLogger.class)) {
+        log.debug("loader {} failed to delegate bootstrap datadog class", loader);
+        delegates = false;
+      }
+      return delegates;
+    }
+
+    private boolean loadsExpectedClass(ClassLoader loader, Class<?> expectedClass) {
+      try {
+        return loader.loadClass(expectedClass.getName()) == expectedClass;
+      } catch (ClassNotFoundException e) {
+        return false;
+      }
+    }
   }
 
   private static class ClassLoaderNameMatcher
