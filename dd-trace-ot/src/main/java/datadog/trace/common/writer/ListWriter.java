@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /** List writer used by tests mostly */
 public class ListWriter extends CopyOnWriteArrayList<List<DDSpan>> implements Writer {
@@ -30,7 +32,7 @@ public class ListWriter extends CopyOnWriteArrayList<List<DDSpan>> implements Wr
     }
   }
 
-  public void waitForTraces(final int number) throws InterruptedException {
+  public void waitForTraces(final int number) throws InterruptedException, TimeoutException {
     final CountDownLatch latch = new CountDownLatch(number);
     synchronized (latches) {
       if (size() >= number) {
@@ -38,7 +40,9 @@ public class ListWriter extends CopyOnWriteArrayList<List<DDSpan>> implements Wr
       }
       latches.add(latch);
     }
-    latch.await();
+    if (!latch.await(5, TimeUnit.SECONDS)) {
+      throw new TimeoutException("Timeout waiting for " + number + " trace(s).");
+    }
   }
 
   @Override

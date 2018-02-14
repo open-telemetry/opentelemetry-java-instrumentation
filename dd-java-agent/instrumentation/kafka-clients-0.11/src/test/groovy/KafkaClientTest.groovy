@@ -1,9 +1,6 @@
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.Logger
 import datadog.trace.agent.test.AgentTestRunner
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.junit.ClassRule
-import org.slf4j.LoggerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
@@ -22,8 +19,6 @@ class KafkaClientTest extends AgentTestRunner {
   static final SHARED_TOPIC = "shared.topic"
 
   static {
-    ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN)
-    ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG)
     System.setProperty("dd.integration.kafka.enabled", "true")
   }
 

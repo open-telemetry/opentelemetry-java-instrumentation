@@ -1,7 +1,6 @@
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import datadog.trace.agent.test.AgentTestRunner
-import io.opentracing.util.GlobalTracer
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
@@ -61,7 +60,7 @@ class KafkaStreamsTest extends AgentTestRunner {
       @Override
       void onMessage(ConsumerRecord<String, String> record) {
         WRITER_PHASER.arriveAndAwaitAdvance() // ensure consistent ordering of traces
-        GlobalTracer.get().activeSpan().setTag("testing", 123)
+        TEST_TRACER.activeSpan().setTag("testing", 123)
         records.add(record)
       }
     })
@@ -80,7 +79,7 @@ class KafkaStreamsTest extends AgentTestRunner {
       @Override
       String apply(String textLine) {
         WRITER_PHASER.arriveAndAwaitAdvance() // ensure consistent ordering of traces
-        GlobalTracer.get().activeSpan().setTag("asdf", "testing")
+        TEST_TRACER.activeSpan().setTag("asdf", "testing")
         return textLine.toLowerCase()
       }
     })

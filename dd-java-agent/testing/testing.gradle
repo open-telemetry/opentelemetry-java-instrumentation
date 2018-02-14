@@ -6,6 +6,7 @@ dependencies {
   compile deps.slf4j
   compile deps.opentracing
   compile deps.spock
+  compile deps.testLogging
 
   compile project(':dd-trace-ot')
   compile project(':dd-java-agent:tooling')
