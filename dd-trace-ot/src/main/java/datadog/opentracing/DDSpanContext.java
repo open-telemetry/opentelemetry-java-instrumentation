@@ -58,6 +58,8 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   /** Tags are associated to the current span, they will not propagate to the children span */
   private Map<String, Object> tags;
 
+  @JsonIgnore public final boolean useRefCounting;
+
   public DDSpanContext(
       final long traceId,
       final long spanId,
@@ -71,7 +73,8 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final String spanType,
       final Map<String, Object> tags,
       final Queue<DDSpan> trace,
-      final DDTracer tracer) {
+      final DDTracer tracer,
+      final boolean useRefCounting) {
 
     this.traceId = traceId;
     this.spanId = spanId;
@@ -91,6 +94,8 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.spanType = spanType;
 
     this.tags = tags;
+
+    this.useRefCounting = useRefCounting;
 
     if (trace == null) {
       // TODO: figure out better concurrency model.

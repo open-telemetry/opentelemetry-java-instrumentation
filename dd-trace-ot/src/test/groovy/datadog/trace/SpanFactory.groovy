@@ -20,7 +20,8 @@ class SpanFactory {
       "fakeType",
       Collections.emptyMap(),
       null,
-      new DDTracer())
+      new DDTracer(),
+      false)
     return new DDSpan(timestampMicro, context)
   }
 
@@ -38,7 +39,8 @@ class SpanFactory {
       "fakeType",
       Collections.emptyMap(),
       null,
-      tracer)
+      tracer,
+      false)
     return new DDSpan(1, context)
   }
 }

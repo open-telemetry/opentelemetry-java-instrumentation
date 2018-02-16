@@ -66,7 +66,8 @@ class RateByServiceSamplerTest extends Specification {
       "fakeType",
       Collections.emptyMap(),
       null,
-      new DDTracer())
+      new DDTracer(),
+      false)
     context.setTag("env", envName)
     return new DDSpan(0l, context)
   }

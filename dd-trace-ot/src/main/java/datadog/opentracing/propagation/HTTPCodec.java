@@ -72,7 +72,8 @@ public class HTTPCodec implements Codec<TextMap> {
               null,
               null,
               null,
-              null);
+              null,
+              false);
       context.lockSamplingPriority();
 
       log.debug("{} - Parent context extracted", context);

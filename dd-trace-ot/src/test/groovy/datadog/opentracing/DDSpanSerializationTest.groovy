@@ -49,7 +49,8 @@ class DDSpanSerializationTest extends Specification {
         "type",
         tags,
         null,
-        null)
+        null,
+        false)
 
     baggage.put(DDTags.THREAD_NAME, Thread.currentThread().getName())
     baggage.put(DDTags.THREAD_ID, String.valueOf(Thread.currentThread().getId()))

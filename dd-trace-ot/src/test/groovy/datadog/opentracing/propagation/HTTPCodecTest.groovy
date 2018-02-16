@@ -25,24 +25,25 @@ class HTTPCodecTest extends Specification {
     setup:
     final DDSpanContext mockedContext =
         new DDSpanContext(
-            1L,
-            2L,
-            0L,
-            "fakeService",
-            "fakeOperation",
-            "fakeResource",
-            samplingPriority,
-            new HashMap<String, String>() {
-              {
-                put("k1", "v1")
-                put("k2", "v2")
-              }
-            },
-            false,
-            "fakeType",
-            null,
-            null,
-            null)
+          1L,
+          2L,
+          0L,
+          "fakeService",
+          "fakeOperation",
+          "fakeResource",
+          samplingPriority,
+          new HashMap<String, String>() {
+            {
+              put("k1", "v1")
+              put("k2", "v2")
+            }
+          },
+          false,
+          "fakeType",
+          null,
+          null,
+          null,
+          false)
 
     final Map<String, String> carrier = new HashMap<>()
 
