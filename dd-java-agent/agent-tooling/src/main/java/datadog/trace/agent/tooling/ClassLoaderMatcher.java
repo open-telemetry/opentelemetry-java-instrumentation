@@ -9,6 +9,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
 public class ClassLoaderMatcher {
+  /* packages which will be loaded on the bootstrap classloader*/
+  public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
+    "io.opentracing", "datadog.slf4j", "datadog.trace"
+  };
+
   /** A private constructor that must not be invoked. */
   private ClassLoaderMatcher() {
     throw new UnsupportedOperationException();

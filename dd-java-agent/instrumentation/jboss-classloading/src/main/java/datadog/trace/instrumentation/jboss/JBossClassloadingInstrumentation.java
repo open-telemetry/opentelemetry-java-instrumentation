@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.jboss;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import datadog.trace.agent.tooling.ClassLoaderMatcher;
 import datadog.trace.agent.tooling.Instrumenter;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -11,10 +12,6 @@ import net.bytebuddy.utility.JavaModule;
 
 @AutoService(Instrumenter.class)
 public final class JBossClassloadingInstrumentation extends Instrumenter.Configurable {
-  private static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
-    "io.opentracing", "datadog.slf4j", "datadog.trace"
-  };
-
   public JBossClassloadingInstrumentation() {
     super("jboss-classloading");
   }
@@ -36,11 +33,11 @@ public final class JBossClassloadingInstrumentation extends Instrumenter.Configu
                 // Instead it sets a system prop to tell jboss to delegate
                 // classloads for datadog bootstrap classes
                 StringBuilder ddPrefixes = new StringBuilder("");
-                for (int i = 0; i < BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
+                for (int i = 0; i < ClassLoaderMatcher.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
                   if (i > 0) {
                     ddPrefixes.append(",");
                   }
-                  ddPrefixes.append(BOOTSTRAP_PACKAGE_PREFIXES[i]);
+                  ddPrefixes.append(ClassLoaderMatcher.BOOTSTRAP_PACKAGE_PREFIXES[i]);
                 }
                 final String existing = System.getProperty("jboss.modules.system.pkgs");
                 if (null == existing) {
