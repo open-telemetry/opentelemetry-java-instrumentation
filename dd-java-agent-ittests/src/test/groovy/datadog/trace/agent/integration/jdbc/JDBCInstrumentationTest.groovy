@@ -1,7 +1,7 @@
 package datadog.trace.agent.integration.jdbc
 
 import datadog.opentracing.DDTracer
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.IntegrationTestUtils
 import datadog.trace.common.writer.ListWriter
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
@@ -42,7 +42,7 @@ class JDBCInstrumentationTest extends Specification {
   }
 
   def setup() {
-    TestUtils.registerOrReplaceGlobalTracer(tracer)
+    IntegrationTestUtils.registerOrReplaceGlobalTracer(tracer)
     writer.start()
   }
 

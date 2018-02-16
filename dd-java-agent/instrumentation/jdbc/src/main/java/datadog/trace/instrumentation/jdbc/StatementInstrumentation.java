@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
+import datadog.trace.agent.bootstrap.JDBCMaps;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
@@ -56,10 +57,9 @@ public final class StatementInstrumentation extends Instrumenter.Configurable {
         return NoopScopeManager.NoopScope.INSTANCE;
       }
 
-      ConnectionInstrumentation.DBInfo dbInfo =
-          ConnectionInstrumentation.connectionInfo.get(connection);
+      JDBCMaps.DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
       if (dbInfo == null) {
-        dbInfo = ConnectionInstrumentation.DBInfo.UNKNOWN;
+        dbInfo = JDBCMaps.DBInfo.UNKNOWN;
       }
 
       final Scope scope =

@@ -28,7 +28,7 @@ dependencies {
   compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3'
 
   compile project(':dd-trace-ot')
-  compile project(':dd-java-agent:tooling')
+  compile project(':dd-java-agent:agent-tooling')
 
   compile deps.bytebuddy
   compile deps.opentracing

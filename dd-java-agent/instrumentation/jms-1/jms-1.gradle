@@ -21,7 +21,7 @@ dependencies {
   compile deps.autoservice
 
   compile project(':dd-trace-ot')
-  compile project(':dd-java-agent:tooling')
+  compile project(':dd-java-agent:agent-tooling')
 
   testCompile project(':dd-java-agent:testing')
   testCompile group: 'org.apache.activemq.tooling', name: 'activemq-junit', version: '5.14.5'

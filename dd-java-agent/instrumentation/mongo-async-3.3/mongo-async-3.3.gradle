@@ -20,7 +20,7 @@ dependencies {
   compileOnly group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
 
   compile project(':dd-trace-ot')
-  compile project(':dd-java-agent:tooling')
+  compile project(':dd-java-agent:agent-tooling')
 
   compile deps.bytebuddy
   compile deps.opentracing

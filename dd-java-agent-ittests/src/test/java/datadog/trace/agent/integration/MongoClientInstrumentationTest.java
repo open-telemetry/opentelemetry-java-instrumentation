@@ -5,7 +5,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
-import datadog.trace.agent.test.TestUtils;
+import datadog.trace.agent.test.IntegrationTestUtils;
 import datadog.trace.common.writer.ListWriter;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
@@ -60,7 +60,7 @@ public class MongoClientInstrumentationTest {
 
   @BeforeClass
   public static void setup() throws Exception {
-    TestUtils.registerOrReplaceGlobalTracer(tracer);
+    IntegrationTestUtils.registerOrReplaceGlobalTracer(tracer);
     startLocalMongo();
 
     client = new MongoClient(MONGO_HOST, MONGO_PORT);

@@ -3,7 +3,7 @@ package datadog.trace.agent.integration.httpclient
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
 import datadog.trace.agent.integration.TestHttpServer
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.IntegrationTestUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.tag.Tags
@@ -23,7 +23,7 @@ class ApacheHttpClientTest extends Specification {
   def tracer = new DDTracer(writer)
 
   def setupSpec() {
-    TestUtils.registerOrReplaceGlobalTracer(tracer)
+    IntegrationTestUtils.registerOrReplaceGlobalTracer(tracer)
     TestHttpServer.startServer()
   }
 
@@ -40,7 +40,7 @@ class ApacheHttpClientTest extends Specification {
     final HttpClientBuilder builder = HttpClientBuilder.create()
 
     final HttpClient client = builder.build()
-    TestUtils.runUnderTrace("someTrace") {
+    IntegrationTestUtils.runUnderTrace("someTrace") {
       try {
         HttpResponse response =
           client.execute(new HttpGet(new URI("http://localhost:" + TestHttpServer.getPort())))
@@ -88,7 +88,7 @@ class ApacheHttpClientTest extends Specification {
     final HttpClientBuilder builder = HttpClientBuilder.create()
 
     final HttpClient client = builder.build()
-    TestUtils.runUnderTrace("someTrace") {
+    IntegrationTestUtils.runUnderTrace("someTrace") {
       try {
         HttpGet request = new HttpGet(new URI("http://localhost:"
           + TestHttpServer.getPort()))

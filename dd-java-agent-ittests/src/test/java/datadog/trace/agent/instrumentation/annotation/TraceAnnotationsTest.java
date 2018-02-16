@@ -5,8 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
 import datadog.opentracing.decorators.ErrorFlag;
+import datadog.trace.agent.test.IntegrationTestUtils;
 import datadog.trace.agent.test.SayTracedHello;
-import datadog.trace.agent.test.TestUtils;
 import datadog.trace.common.writer.ListWriter;
 import io.opentracing.util.GlobalTracer;
 import java.io.PrintWriter;
@@ -20,7 +20,7 @@ public class TraceAnnotationsTest {
 
   @Before
   public void beforeTest() throws Exception {
-    TestUtils.registerOrReplaceGlobalTracer(tracer);
+    IntegrationTestUtils.registerOrReplaceGlobalTracer(tracer);
 
     writer.start();
     assertThat(GlobalTracer.isRegistered()).isTrue();

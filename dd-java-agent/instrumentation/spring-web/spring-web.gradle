@@ -20,7 +20,7 @@ dependencies {
 //  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.4'
 
   compile project(':dd-trace-ot')
-  compile project(':dd-java-agent:tooling')
+  compile project(':dd-java-agent:agent-tooling')
 
   compile deps.bytebuddy
   compile deps.opentracing
