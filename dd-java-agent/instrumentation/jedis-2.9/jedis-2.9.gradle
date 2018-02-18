@@ -10,4 +10,9 @@ dependencies {
   compile deps.bytebuddy
   compile deps.opentracing
   compile deps.autoservice
+  
+  testCompile project(':dd-java-agent:testing')
+  testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
+  testCompile group: 'redis.clients', name: 'jedis', version: '2.9.0'
+  
 }
