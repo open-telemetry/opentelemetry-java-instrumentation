@@ -37,15 +37,15 @@ class JedisClientTest extends AgentTestRunner {
   def "set command"() {	
     jedis.set("foo", "bar")		
 	
-	expect:
-	final DDSpan setTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
-	setTrace.getServiceName() == "redis"
-	setTrace.getOperationName() == "redis.query"
-	setTrace.getResourceName() == "SET"
-	setTrace.getTags().get(Tags.COMPONENT.getKey()) == "redis-command"
-	setTrace.getTags().get(Tags.DB_TYPE.getKey()) == "redis"
-	setTrace.getTags().get(Tags.SPAN_KIND.getKey()) == "client"
-	setTrace.getTags().get(DDTags.SPAN_TYPE) == "redis"
+    expect:
+    final DDSpan setTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
+    setTrace.getServiceName() == "redis"
+    setTrace.getOperationName() == "redis.query"
+    setTrace.getResourceName() == "SET"
+    setTrace.getTags().get(Tags.COMPONENT.getKey()) == "redis-command"
+    setTrace.getTags().get(Tags.DB_TYPE.getKey()) == "redis"
+    setTrace.getTags().get(Tags.SPAN_KIND.getKey()) == "client"
+    setTrace.getTags().get(DDTags.SPAN_TYPE) == "redis"
   }
   
   def "get command"() {
