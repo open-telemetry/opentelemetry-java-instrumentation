@@ -1,14 +1,14 @@
+import org.slf4j.LoggerFactory
+
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
-import org.junit.ClassRule
+import datadog.trace.api.DDTags
+import io.opentracing.tag.Tags
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import spock.lang.Shared
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.Logger
-import org.slf4j.LoggerFactory
-import io.opentracing.tag.Tags
-import datadog.trace.api.DDTags
 
 class JedisClientTest extends AgentTestRunner {
 
@@ -21,21 +21,21 @@ class JedisClientTest extends AgentTestRunner {
   }
 	
   @Shared
-  RedisServer redisServer = new RedisServer(PORT);
+  RedisServer redisServer = new RedisServer(PORT)
   @Shared
-  Jedis jedis = new Jedis("localhost",PORT);
+  Jedis jedis = new Jedis("localhost",PORT)
   
   def setupSpec() {
-    redisServer.start();
+    redisServer.start()
   }
  
   def cleanupSpec() {
-    redisServer.stop();
-	jedis.close();
+    redisServer.stop()
+	jedis.close()
   }
     
   def "set command"() {	
-    jedis.set("foo", "bar");		
+    jedis.set("foo", "bar")		
 	
 	expect:
 	final DDSpan setTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
