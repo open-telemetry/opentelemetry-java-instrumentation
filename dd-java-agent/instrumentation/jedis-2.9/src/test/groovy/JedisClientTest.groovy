@@ -9,6 +9,7 @@ import io.opentracing.tag.Tags
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import spock.lang.Shared
+import datadog.trace.instrumentation.jedis.JedisInstrumentation
 
 class JedisClientTest extends AgentTestRunner {
 
@@ -39,13 +40,13 @@ class JedisClientTest extends AgentTestRunner {
 	
     expect:
     final DDSpan setTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
-    setTrace.getServiceName() == "redis"
+    setTrace.getServiceName() == JedisInstrumentation.SERVICE_NAME
     setTrace.getOperationName() == "redis.query"
     setTrace.getResourceName() == "SET"
-    setTrace.getTags().get(Tags.COMPONENT.getKey()) == "redis-command"
-    setTrace.getTags().get(Tags.DB_TYPE.getKey()) == "redis"
-    setTrace.getTags().get(Tags.SPAN_KIND.getKey()) == "client"
-    setTrace.getTags().get(DDTags.SPAN_TYPE) == "redis"
+    setTrace.getTags().get(Tags.COMPONENT.getKey()) == JedisInstrumentation.COMPONENT_NAME
+    setTrace.getTags().get(Tags.DB_TYPE.getKey()) == JedisInstrumentation.SERVICE_NAME
+    setTrace.getTags().get(Tags.SPAN_KIND.getKey()) == Tags.SPAN_KIND_CLIENT
+    setTrace.getTags().get(DDTags.SPAN_TYPE) == JedisInstrumentation.SERVICE_NAME
   }
   
   def "get command"() {
@@ -55,13 +56,13 @@ class JedisClientTest extends AgentTestRunner {
     expect:
     value == "bar"
     final DDSpan setTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
-    setTrace.getServiceName() == "redis"
+    setTrace.getServiceName() == JedisInstrumentation.SERVICE_NAME
     setTrace.getOperationName() == "redis.query"
     setTrace.getResourceName() == "GET"
-    setTrace.getTags().get(Tags.COMPONENT.getKey()) == "redis-command"
-    setTrace.getTags().get(Tags.DB_TYPE.getKey()) == "redis"
-    setTrace.getTags().get(Tags.SPAN_KIND.getKey()) == "client"
-    setTrace.getTags().get(DDTags.SPAN_TYPE) == "redis"
+    setTrace.getTags().get(Tags.COMPONENT.getKey()) == JedisInstrumentation.COMPONENT_NAME
+    setTrace.getTags().get(Tags.DB_TYPE.getKey()) == JedisInstrumentation.SERVICE_NAME
+    setTrace.getTags().get(Tags.SPAN_KIND.getKey()) == Tags.SPAN_KIND_CLIENT
+    setTrace.getTags().get(DDTags.SPAN_TYPE) == JedisInstrumentation.SERVICE_NAME
   }
 
   def "command with no arguments"() {		
@@ -72,12 +73,12 @@ class JedisClientTest extends AgentTestRunner {
     expect:
     value == "foo"
     final DDSpan setTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
-    setTrace.getServiceName() == "redis"
+    setTrace.getServiceName() == JedisInstrumentation.SERVICE_NAME
     setTrace.getOperationName() == "redis.query"
     setTrace.getResourceName() == "RANDOMKEY"
-    setTrace.getTags().get(Tags.COMPONENT.getKey()) == "redis-command"
-    setTrace.getTags().get(Tags.DB_TYPE.getKey()) == "redis"
-    setTrace.getTags().get(Tags.SPAN_KIND.getKey()) == "client"
-    setTrace.getTags().get(DDTags.SPAN_TYPE) == "redis"
+    setTrace.getTags().get(Tags.COMPONENT.getKey()) == JedisInstrumentation.COMPONENT_NAME
+    setTrace.getTags().get(Tags.DB_TYPE.getKey()) == JedisInstrumentation.SERVICE_NAME
+    setTrace.getTags().get(Tags.SPAN_KIND.getKey()) == Tags.SPAN_KIND_CLIENT
+    setTrace.getTags().get(DDTags.SPAN_TYPE) == JedisInstrumentation.SERVICE_NAME
   }
 }

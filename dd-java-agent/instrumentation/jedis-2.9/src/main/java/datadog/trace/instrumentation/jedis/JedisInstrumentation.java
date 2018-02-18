@@ -26,6 +26,7 @@ import redis.clients.jedis.Protocol.Command;
 public final class JedisInstrumentation extends Instrumenter.Configurable {
 
   private static final String SERVICE_NAME = "redis";
+  private static final String COMPONENT_NAME = SERVICE_NAME + "-command";
 
   public JedisInstrumentation() {
     super(SERVICE_NAME);
@@ -61,7 +62,7 @@ public final class JedisInstrumentation extends Instrumenter.Configurable {
       final Span span = scope.span();
       Tags.DB_TYPE.set(span, SERVICE_NAME);
       Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
-      Tags.COMPONENT.set(span, "redis-command");
+      Tags.COMPONENT.set(span, COMPONENT_NAME);
 
       span.setTag(DDTags.RESOURCE_NAME, command.name());
       span.setTag(DDTags.SERVICE_NAME, SERVICE_NAME);
