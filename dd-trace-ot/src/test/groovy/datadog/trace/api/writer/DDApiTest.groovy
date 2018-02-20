@@ -8,9 +8,11 @@ import datadog.trace.common.Service
 import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.DDApi.ResponseListener
 import org.msgpack.jackson.dataformat.MessagePackFactory
+import ratpack.exec.Blocking
 import ratpack.http.Headers
 import ratpack.http.MediaType
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import java.util.concurrent.atomic.AtomicReference
 
@@ -253,12 +255,11 @@ class DDApiTest extends Specification {
     // response not seen because of non-200 status
     agentResponse.get() == 'not-set'
 
-
     cleanup:
     agent.close()
   }
 
-    def "Api Downgrades to v3"() {
+  def "Api Downgrades to v3 if v0.4 not available"() {
     setup:
     def v3Agent = ratpack {
       handlers {
@@ -278,6 +279,52 @@ class DDApiTest extends Specification {
 
     cleanup:
     v3Agent.close()
+  }
+
+  @Unroll
+  def "Api Downgrades to v3 if timeout exceeded (#delayTrace, #delayServices, #badPort)"() {
+    // This test is unfortunately only exercising the read timeout, not the connect timeout.
+    setup:
+    def agent = ratpack {
+      handlers {
+        put("v0.3/traces") {
+          response.status(200).send()
+        }
+        put("v0.3/services") {
+          response.status(200).send()
+        }
+        put("v0.4/traces") {
+          Blocking.exec {
+            Thread.sleep(delayTrace)
+            response.status(200).send()
+          }
+        }
+        put("v0.4/services") {
+          Blocking.exec {
+            Thread.sleep(delayServices)
+            response.status(200).send()
+          }
+        }
+      }
+    }
+    def port = badPort ? 999 : agent.address.port
+    def client = new DDApi("localhost", port)
+
+    expect:
+    client.tracesEndpoint == "http://localhost:${port}/$endpointVersion/traces"
+    client.servicesEndpoint == "http://localhost:${port}/$endpointVersion/services"
+
+    cleanup:
+    agent.close()
+
+    where:
+    endpointVersion | delayTrace | delayServices | badPort
+    "v0.4"          | 0          | 0             | false
+    "v0.3"          | 0          | 0             | true
+    "v0.4"          | 500        | 0             | false
+    "v0.4"          | 0          | 500           | false
+    "v0.3"          | 3000       | 0             | false
+    "v0.3"          | 0          | 3000          | false
   }
 
   static List<TreeMap<String, Object>> convertList(byte[] bytes) {
