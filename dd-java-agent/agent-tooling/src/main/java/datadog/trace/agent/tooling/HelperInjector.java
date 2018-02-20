@@ -1,5 +1,8 @@
 package datadog.trace.agent.tooling;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
+
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,14 +60,14 @@ public class HelperInjector implements Transformer {
       final TypeDescription typeDescription,
       final ClassLoader classLoader,
       final JavaModule module) {
-    if (helperClassNames.size() > 0 && classLoader != null) {
+    if (helperClassNames.size() > 0) {
       synchronized (this) {
         if (!injectedClassLoaders.contains(classLoader)) {
           try {
             final Map<TypeDescription, byte[]> helperMap = getHelperMap();
             final Set<String> existingClasses = new HashSet<>();
             final ClassLoader systemCL = ClassLoader.getSystemClassLoader();
-            if (!classLoader.equals(systemCL)) {
+            if (classLoader != BOOTSTRAP_CLASSLOADER && !classLoader.equals(systemCL)) {
               // Build a list of existing helper classes.
               for (final TypeDescription def : helperMap.keySet()) {
                 final String name = def.getName();
@@ -73,8 +76,16 @@ public class HelperInjector implements Transformer {
                 }
               }
             }
-            new ClassInjector.UsingReflection(classLoader).inject(helperMap);
-            if (!classLoader.equals(systemCL)) {
+            if (classLoader == BOOTSTRAP_CLASSLOADER) {
+              ClassInjector.UsingInstrumentation.of(
+                      new File(System.getProperty("java.io.tmpdir")),
+                      ClassInjector.UsingInstrumentation.Target.BOOTSTRAP,
+                      AgentInstaller.getInstrumentation())
+                  .inject(helperMap);
+            } else {
+              new ClassInjector.UsingReflection(classLoader).inject(helperMap);
+            }
+            if (classLoader != BOOTSTRAP_CLASSLOADER && !classLoader.equals(systemCL)) {
               for (final TypeDescription def : helperMap.keySet()) {
                 // Ensure we didn't add any helper classes to the system CL.
                 final String name = def.getName();
@@ -91,7 +102,9 @@ public class HelperInjector implements Transformer {
                     + ". Failed to inject helper classes into instance "
                     + classLoader
                     + " of type "
-                    + classLoader.getClass().getName(),
+                    + (classLoader == BOOTSTRAP_CLASSLOADER
+                        ? "<bootstrap>"
+                        : classLoader.getClass().getName()),
                 e);
             throw new RuntimeException(e);
           }

@@ -13,6 +13,7 @@ public class ClassLoaderMatcher {
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
     "io.opentracing", "datadog.slf4j", "datadog.trace"
   };
+  public static final ClassLoader BOOTSTRAP_CLASSLOADER = null;
 
   /** A private constructor that must not be invoked. */
   private ClassLoaderMatcher() {
@@ -53,9 +54,9 @@ public class ClassLoaderMatcher {
 
     @Override
     public boolean matches(ClassLoader target) {
-      if (null == target) {
-        // bootstrap instrumentation not supported yet.
-        return true;
+      if (target == BOOTSTRAP_CLASSLOADER) {
+        // Don't skip bootstrap loader
+        return false;
       }
       return shouldSkipClass(target) || shouldSkipInstance(target);
     }

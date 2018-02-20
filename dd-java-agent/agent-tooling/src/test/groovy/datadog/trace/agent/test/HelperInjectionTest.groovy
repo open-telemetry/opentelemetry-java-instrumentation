@@ -1,7 +1,12 @@
 package datadog.trace.agent.test
 
+import datadog.trace.agent.tooling.AgentInstaller
+
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
+
 import datadog.trace.agent.tooling.HelperInjector
 import datadog.trace.agent.tooling.Utils
+import net.bytebuddy.agent.ByteBuddyAgent
 import spock.lang.Specification
 
 import java.lang.reflect.Method
@@ -29,6 +34,26 @@ class HelperInjectionTest extends Specification {
 
     cleanup:
     emptyLoader?.close()
+  }
+
+  def "helpers injected on bootstrap classloader"() {
+    setup:
+    ByteBuddyAgent.install()
+    AgentInstaller.installBytebuddyAgent(ByteBuddyAgent.getInstrumentation())
+    String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
+    HelperInjector injector = new HelperInjector(helperClassName)
+    URLClassLoader bootstrapChild = new URLClassLoader(new URL[0], (ClassLoader) null)
+
+    when:
+    bootstrapChild.loadClass(helperClassName)
+    then:
+    thrown ClassNotFoundException
+
+    when:
+    injector.transform(null, null, BOOTSTRAP_CLASSLOADER, null)
+    Class<?> helperClass = bootstrapChild.loadClass(helperClassName)
+    then:
+    helperClass.getClassLoader() == BOOTSTRAP_CLASSLOADER
   }
 
   private static boolean isClassLoaded(String className, ClassLoader classLoader) {
