@@ -5,8 +5,10 @@ import com.google.common.collect.Maps
 import datadog.trace.api.DDTags
 import datadog.trace.common.sampling.PrioritySampling
 import spock.lang.Specification
+import spock.lang.Timeout
 import spock.lang.Unroll
 
+@Timeout(2)
 class DDSpanSerializationTest extends Specification {
 
   @Unroll

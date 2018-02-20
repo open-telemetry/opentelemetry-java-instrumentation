@@ -2,7 +2,9 @@ package datadog.opentracing
 
 import datadog.trace.common.sampling.PrioritySampling
 import spock.lang.Specification
+import spock.lang.Timeout
 
+@Timeout(1)
 class DDSpanTest extends Specification {
 
   def "getters and setters"() {

@@ -10,10 +10,12 @@ import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
+import spock.lang.Timeout
 import spock.lang.Unroll
 
 import static datadog.trace.common.DDTraceConfig.*
 
+@Timeout(1)
 class DDTraceConfigTest extends Specification {
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()

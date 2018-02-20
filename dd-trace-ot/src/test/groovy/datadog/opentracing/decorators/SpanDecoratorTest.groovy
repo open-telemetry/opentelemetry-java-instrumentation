@@ -7,7 +7,9 @@ import datadog.trace.common.writer.LoggingWriter
 import io.opentracing.tag.StringTag
 import io.opentracing.tag.Tags
 import spock.lang.Specification
+import spock.lang.Timeout
 
+@Timeout(1)
 class SpanDecoratorTest extends Specification {
 
   def "adding span personalisation using Decorators"() {

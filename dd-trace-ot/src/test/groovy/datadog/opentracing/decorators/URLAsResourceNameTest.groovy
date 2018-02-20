@@ -5,7 +5,9 @@ import datadog.trace.common.sampling.PrioritySampling
 import io.opentracing.tag.Tags
 import spock.lang.Specification
 import spock.lang.Subject
+import spock.lang.Timeout
 
+@Timeout(1)
 class URLAsResourceNameTest extends Specification {
 
   @Subject
