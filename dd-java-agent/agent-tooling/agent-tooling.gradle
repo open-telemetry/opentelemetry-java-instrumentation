@@ -2,9 +2,11 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
   compile project(':dd-java-agent:agent-bootstrap')
-  compile project(':dd-trace-ot')
   compile deps.bytebuddy
   compile deps.bytebuddyagent
+  compile deps.autoservice
+
+  compileOnly project(':dd-trace-ot')
 
   testCompile deps.opentracing
 }

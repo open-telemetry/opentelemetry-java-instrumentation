@@ -1,7 +1,6 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile project(':dd-trace-ot')
   compile project(':dd-java-agent:agent-tooling')
 
   compile deps.bytebuddy
