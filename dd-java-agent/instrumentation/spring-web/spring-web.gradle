@@ -19,7 +19,6 @@ dependencies {
 //  compileOnly group: 'org.springframework', name: 'spring-webmvc', version: '2.5.6'
 //  compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.4'
 
-  compile project(':dd-trace-ot')
   compile project(':dd-java-agent:agent-tooling')
 
   compile deps.bytebuddy
