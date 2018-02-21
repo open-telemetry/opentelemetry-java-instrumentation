@@ -279,7 +279,6 @@ public class DDTracer implements io.opentracing.Tracer {
     private boolean errorFlag;
     private String spanType;
     private boolean ignoreScope = false;
-    private boolean useRefCounting = false;
 
     public DDSpanBuilder(final String operationName, final ScopeManager scopeManager) {
       this.operationName = operationName;
@@ -341,11 +340,7 @@ public class DDTracer implements io.opentracing.Tracer {
 
     @Override
     public DDSpanBuilder withTag(final String tag, final boolean bool) {
-      if (bool && tag.equals("dd.use.ref.counting")) {
-        return withReferenceCounting();
-      } else {
-        return withTag(tag, (Object) bool);
-      }
+      return withTag(tag, (Object) bool);
     }
 
     @Override
@@ -366,11 +361,6 @@ public class DDTracer implements io.opentracing.Tracer {
 
     public DDSpanBuilder withErrorFlag() {
       this.errorFlag = true;
-      return this;
-    }
-
-    public DDSpanBuilder withReferenceCounting() {
-      this.useRefCounting = true;
       return this;
     }
 
@@ -481,8 +471,7 @@ public class DDTracer implements io.opentracing.Tracer {
               spanType,
               this.tags,
               parentTrace,
-              DDTracer.this,
-              useRefCounting);
+              DDTracer.this);
 
       return context;
     }

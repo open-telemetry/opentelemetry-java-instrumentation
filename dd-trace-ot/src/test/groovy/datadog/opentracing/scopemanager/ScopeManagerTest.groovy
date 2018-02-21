@@ -1,15 +1,18 @@
 package datadog.opentracing.scopemanager
 
-import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.Scope
 import io.opentracing.Span
 import spock.lang.Specification
 import spock.lang.Subject
+import spock.lang.Timeout
+import spock.lang.Unroll
 
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
+@Timeout(1)
 class ScopeManagerTest extends Specification {
   def writer = new ListWriter()
   def tracer = new DDTracer(writer)
@@ -34,77 +37,69 @@ class ScopeManagerTest extends Specification {
   def "threadlocal is active"() {
     when:
     def builder = tracer.buildSpan("test")
-    builder.withTag("dd.use.ref.counting", false)
-    def scope = builder.startActive(true)
+    def scope = builder.startActive(finishSpan)
 
     then:
     !spanReported(scope.span())
     scopeManager.active() == scope
-    scope instanceof ContextualScopeManager.ThreadLocalScope
+    scope instanceof RefCountingScope
     writer.empty
 
     when:
     scope.close()
 
     then:
-    spanReported(scope.span())
-    writer == [[scope.span()]]
+    spanReported(scope.span()) == finishSpan
+    writer == [[scope.span()]] || !finishSpan
     scopeManager.active() == null
+
+    where:
+    finishSpan << [true, false]
   }
 
-  def "threadlocal is active with ref counting scope"() {
+  def "sets parent as current upon close"() {
     setup:
-    def builder = tracer.buildSpan("test")
-    builder.withReferenceCounting()
-    def scope = builder.startActive(true)
+    def parentScope = tracer.buildSpan("parent").startActive(finishSpan)
+    def childScope = tracer.buildSpan("parent").startActive(finishSpan)
 
     expect:
-    !spanReported(scope.span())
-    scopeManager.active() == scope
-    scope instanceof ContextualScopeManager.RefCountingScope
+    scopeManager.active() == childScope
+    childScope.span().context().parentId == parentScope.span().context().spanId
+    childScope.span().context().trace == parentScope.span().context().trace
 
     when:
-    scope.close()
+    childScope.close()
 
     then:
-    spanReported(scope.span())
-    writer == [[scope.span()]]
-    scopeManager.active() == null
-  }
-
-  def "threadlocal is active with ref counting scope using tag"() {
-    setup:
-    def builder = tracer.buildSpan("test")
-    builder.withTag("dd.use.ref.counting", true)
-    def scope = builder.startActive(true)
-
-    expect:
-    !spanReported(scope.span())
-    scopeManager.active() == scope
-    scope instanceof ContextualScopeManager.RefCountingScope
+    scopeManager.active() == parentScope
+    spanReported(childScope.span()) == finishSpan
+    !spanReported(parentScope.span())
+    writer == []
 
     when:
-    scope.close()
+    parentScope.close()
 
     then:
-    spanReported(scope.span())
-    writer == [[scope.span()]]
+    spanReported(childScope.span()) == finishSpan
+    spanReported(parentScope.span()) == finishSpan
+    writer == [[parentScope.span(), childScope.span()]] || !finishSpan
     scopeManager.active() == null
+
+    where:
+    finishSpan << [true, false]
   }
 
   def "ref counting scope doesn't close if non-zero"() {
     setup:
     def builder = tracer.buildSpan("test")
-    builder.withReferenceCounting()
-    def scope = (ContextualScopeManager.RefCountingScope) builder.startActive(true)
+    def scope = (RefCountingScope) builder.startActive(true)
     def continuation = scope.capture()
 
     expect:
     !spanReported(scope.span())
     scopeManager.active() == scope
-    scope instanceof ContextualScopeManager.RefCountingScope
+    scope instanceof RefCountingScope
     writer.empty
-
 
     when:
     scope.close()
@@ -129,7 +124,64 @@ class ScopeManagerTest extends Specification {
     writer == [[scope.span()]]
   }
 
-  def "context takes control"() {
+  def "continuation restores trace"() {
+    setup:
+    def parentScope = tracer.buildSpan("parent").startActive(false) //false or trace is reported early
+    def parentSpan = parentScope.span()
+    RefCountingScope childScope = (RefCountingScope) tracer.buildSpan("parent").startActive(true)
+    def childSpan = childScope.span()
+
+    def cont = childScope.capture()
+    childScope.close()
+
+    expect:
+    parentSpan.context().trace == childSpan.context().trace
+    scopeManager.active() == parentScope
+    !spanReported(childSpan)
+    !spanReported(parentSpan)
+
+    when:
+    parentScope.close()
+    // If finishSpanOnClose was true for the parent, the trace would get reported even though the child was not done.
+
+    then:
+    scopeManager.active() == null
+    !spanReported(childSpan)
+    !spanReported(parentSpan)
+    writer == []
+
+    when:
+    def newScope = cont.activate()
+
+    then:
+    scopeManager.active() == newScope
+    newScope != childScope && newScope != parentScope
+    newScope.span() == childSpan
+    !spanReported(childSpan)
+    !spanReported(parentSpan)
+    writer == []
+
+    when:
+    newScope.close()
+
+    then:
+    scopeManager.active() == null
+    spanReported(childSpan)
+    !spanReported(parentSpan)
+    writer == []
+
+    when:
+    // Since finishSpanOnClose was false, we must manually finish the span.
+    parentSpan.finish()
+
+    then:
+    spanReported(childSpan)
+    spanReported(parentSpan)
+    writer == [[parentSpan, childSpan]]
+  }
+
+  @Unroll
+  def "context takes control (#active)"() {
     setup:
     contexts.each {
       scopeManager.addScopeContext(it)
@@ -140,18 +192,18 @@ class ScopeManagerTest extends Specification {
     expect:
     scopeManager.tlsScope.get() == null
     scopeManager.active() == scope
-    contexts[activeIndex].get() == scope.get()
+    contexts[active].get() == scope.get()
     writer.empty
 
     where:
-    activeIndex | contexts
-    0           | [new AtomicReferenceScope(true)]
-    0           | [new AtomicReferenceScope(true), new AtomicReferenceScope(true)]
-    1           | [new AtomicReferenceScope(false), new AtomicReferenceScope(true), new AtomicReferenceScope(true), new AtomicReferenceScope(false)]
-    2           | [new AtomicReferenceScope(false), new AtomicReferenceScope(false), new AtomicReferenceScope(true)]
+    active | contexts
+    0      | [new AtomicReferenceScope(true)]
+    1      | [new AtomicReferenceScope(true), new AtomicReferenceScope(true)]
+    3      | [new AtomicReferenceScope(false), new AtomicReferenceScope(true), new AtomicReferenceScope(false), new AtomicReferenceScope(true)]
   }
 
-  def "disabled context is ignored"() {
+  @Unroll
+  def "disabled context is ignored (#contexts.size)"() {
     setup:
     contexts.each {
       scopeManager.addScopeContext(it)
@@ -160,12 +212,13 @@ class ScopeManagerTest extends Specification {
     def scope = builder.startActive(true)
 
     expect:
+    contexts.findAll {
+      it.get() != null
+    } == []
+
     scopeManager.tlsScope.get() == scope
     scopeManager.active() == scope
     writer.empty
-    contexts.each {
-      assert it.get() == null
-    } == contexts
 
     where:
     contexts                                                                                            | _
@@ -175,20 +228,86 @@ class ScopeManagerTest extends Specification {
     [new AtomicReferenceScope(false), new AtomicReferenceScope(false), new AtomicReferenceScope(false)] | _
   }
 
-  boolean spanReported(DDSpan span) {
+  @Unroll
+  def "threadlocal to context with capture (#active)"() {
+    setup:
+    contexts.each {
+      scopeManager.addScopeContext(it)
+    }
+    RefCountingScope scope = (RefCountingScope) tracer.buildSpan("parent").startActive(true)
+
+    expect:
+    scopeManager.tlsScope.get() == scope
+
+    when:
+    def cont = scope.capture()
+    scope.close()
+
+    then:
+    scopeManager.tlsScope.get() == null
+
+    when:
+    active.each {
+      ((AtomicBoolean) contexts[it].enabled).set(true)
+    }
+    cont.activate()
+
+    then:
+    scopeManager.tlsScope.get() == null
+
+    where:
+    active | contexts
+    [0]    | [new AtomicReferenceScope(false)]
+    [0]    | [new AtomicReferenceScope(false), new AtomicReferenceScope(false)]
+    [1]    | [new AtomicReferenceScope(false), new AtomicReferenceScope(false), new AtomicReferenceScope(false)]
+    [2]    | [new AtomicReferenceScope(false), new AtomicReferenceScope(false), new AtomicReferenceScope(false)]
+    [0, 2] | [new AtomicReferenceScope(false), new AtomicReferenceScope(false), new AtomicReferenceScope(false)]
+  }
+
+  @Unroll
+  def "context to threadlocal (#contexts.size)"() {
+    setup:
+    contexts.each {
+      scopeManager.addScopeContext(it)
+    }
+    def scope = tracer.buildSpan("parent").startActive(false)
+    def span = scope.span()
+
+    expect:
+    scope instanceof AtomicReferenceScope
+    scopeManager.tlsScope.get() == null
+
+    when:
+    scope.close()
+    contexts.each {
+      ((AtomicBoolean) it.enabled).set(false)
+    }
+    scope = scopeManager.activate(span, true)
+
+    then:
+    scope instanceof RefCountingScope
+    scopeManager.tlsScope.get() == scope
+
+    where:
+    contexts                                                         | _
+    [new AtomicReferenceScope(true)]                                 | _
+    [new AtomicReferenceScope(true), new AtomicReferenceScope(true)] | _
+  }
+
+  boolean spanReported(Span span) {
     return span.durationNano != 0
   }
 
   class AtomicReferenceScope extends AtomicReference<Span> implements ScopeContext, Scope {
-    final boolean enabled
+    final AtomicBoolean enabled
 
     AtomicReferenceScope(boolean enabled) {
-      this.enabled = enabled
+      this.enabled = new AtomicBoolean(enabled)
     }
 
     @Override
     boolean inContext() {
-      return enabled
+      return enabled.get()
     }
 
     @Override
@@ -210,6 +329,10 @@ class ScopeManagerTest extends Specification {
     @Override
     Scope active() {
       return get() == null ? null : this
+    }
+
+    String toString() {
+      return "Ref: " + super.toString()
     }
   }
 }
