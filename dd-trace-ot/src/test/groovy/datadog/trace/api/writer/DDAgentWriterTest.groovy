@@ -5,11 +5,13 @@ import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.WriterQueue
 import spock.lang.Specification
+import spock.lang.Timeout
 
 import static datadog.trace.SpanFactory.newSpanOf
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.verifyNoMoreInteractions
 
+@Timeout(5)
 class DDAgentWriterTest extends Specification {
 
 
@@ -39,8 +41,6 @@ class DDAgentWriterTest extends Specification {
     trace = [newSpanOf(0)]
     flush_time_wait = (int) (1.2 * (DDAgentWriter.FLUSH_TIME_SECONDS * 1_000))
     tick << [1, 3]
-
-
   }
 
   def "check if trace has been added by force"() {
@@ -88,9 +88,5 @@ class DDAgentWriterTest extends Specification {
 
     where:
     flush_time_wait = (int) (1.2 * (DDAgentWriter.FLUSH_TIME_SECONDS * 1_000))
-
-
   }
-
-
 }

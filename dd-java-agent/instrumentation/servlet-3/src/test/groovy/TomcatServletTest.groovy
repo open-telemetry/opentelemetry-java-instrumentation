@@ -10,10 +10,12 @@ import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
+import spock.lang.Timeout
 import spock.lang.Unroll
 
 import java.lang.reflect.Field
 
+@Timeout(5)
 class TomcatServletTest extends AgentTestRunner {
 
   static final int PORT = randomOpenPort()

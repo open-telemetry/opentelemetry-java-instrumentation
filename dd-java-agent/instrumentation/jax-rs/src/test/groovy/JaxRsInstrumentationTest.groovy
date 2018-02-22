@@ -1,10 +1,12 @@
 import datadog.opentracing.DDSpanContext
 import datadog.trace.agent.test.AgentTestRunner
 import io.opentracing.util.GlobalTracer
+import spock.lang.Timeout
 import spock.lang.Unroll
 
 import javax.ws.rs.*
 
+@Timeout(1)
 class JaxRsInstrumentationTest extends AgentTestRunner {
 
   static {

@@ -14,7 +14,9 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.message.BasicHeader
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Timeout
 
+@Timeout(5)
 class ApacheHttpClientTest extends Specification {
 
   @Shared

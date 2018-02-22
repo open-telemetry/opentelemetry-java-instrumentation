@@ -2,7 +2,9 @@ package datadog.trace
 
 import datadog.trace.api.DDTags
 import spock.lang.Specification
+import spock.lang.Timeout
 
+@Timeout(1)
 class DDSpanContextTest extends Specification {
 
   def "null values for tags delete existing tags"() {
