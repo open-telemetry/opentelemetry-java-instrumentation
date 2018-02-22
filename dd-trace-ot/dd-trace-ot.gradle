@@ -14,6 +14,7 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
   'datadog.trace.common.writer.ListWriter',
   'datadog.trace.common.util.Clock',
   'datadog.trace.api.DDTags',
+  'datadog.trace.common.util.ConfigUtils',
   'datadog.trace.common.sampling.PrioritySampling'
 ]
 

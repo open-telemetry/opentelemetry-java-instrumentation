@@ -48,8 +48,7 @@ dependencies {
     transitive = false
   }
 
-  compile project(':dd-trace-ot')
-  compile project(':dd-java-agent:tooling')
+  compile project(':dd-java-agent:agent-tooling')
 
   compile deps.bytebuddy
   compile deps.opentracing

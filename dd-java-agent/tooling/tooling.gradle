@@ -1,9 +1,0 @@
-apply from: "${rootDir}/gradle/java.gradle"
-
-dependencies {
-  compile deps.bytebuddy
-  compile deps.bytebuddyagent
-  compile deps.slf4j
-
-  testCompile deps.opentracing
-}

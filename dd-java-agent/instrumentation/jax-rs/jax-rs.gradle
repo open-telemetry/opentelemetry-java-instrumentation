@@ -1,0 +1,25 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "javax.ws.rs"
+  module = "jsr311-api"
+  versions = "(,)"
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'javax.ws.rs', name: 'jsr311-api', version: '1.1.1'
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  compile deps.autoservice
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  testCompile project(':dd-java-agent:testing')
+  testCompile group: 'com.sun.jersey', name: 'jersey-core', version: '1.19.4'
+  testCompile group: 'com.sun.jersey', name: 'jersey-servlet', version: '1.19.4'
+  testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.7.1'
+  testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
+}

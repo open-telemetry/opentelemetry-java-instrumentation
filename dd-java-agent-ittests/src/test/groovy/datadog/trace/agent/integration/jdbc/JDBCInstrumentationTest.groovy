@@ -1,13 +1,14 @@
 package datadog.trace.agent.integration.jdbc
 
 import datadog.opentracing.DDTracer
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.IntegrationTestUtils
 import datadog.trace.common.writer.ListWriter
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
 import org.hsqldb.jdbc.JDBCDriver
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Timeout
 import spock.lang.Unroll
 
 import java.sql.Connection
@@ -15,6 +16,7 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
 
+@Timeout(5)
 class JDBCInstrumentationTest extends Specification {
 
   final ListWriter writer = new ListWriter()
@@ -42,7 +44,7 @@ class JDBCInstrumentationTest extends Specification {
   }
 
   def setup() {
-    TestUtils.registerOrReplaceGlobalTracer(tracer)
+    IntegrationTestUtils.registerOrReplaceGlobalTracer(tracer)
     writer.start()
   }
 

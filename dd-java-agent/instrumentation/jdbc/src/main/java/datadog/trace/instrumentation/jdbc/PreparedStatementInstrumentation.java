@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
+import datadog.trace.agent.bootstrap.JDBCMaps;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
@@ -26,7 +27,6 @@ import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
 public final class PreparedStatementInstrumentation extends Instrumenter.Configurable {
-  private static final String UNKNOWN_QUERY = "Unknown Query";
 
   public PreparedStatementInstrumentation() {
     super("jdbc");
@@ -48,7 +48,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Configu
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(@Advice.This final PreparedStatement statement) {
-      final String sql = ConnectionInstrumentation.preparedStatements.get(statement);
+      final String sql = JDBCMaps.preparedStatements.get(statement);
       final Connection connection;
       try {
         connection = statement.getConnection();
@@ -57,10 +57,9 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Configu
         return NoopScopeManager.NoopScope.INSTANCE;
       }
 
-      ConnectionInstrumentation.DBInfo dbInfo =
-          ConnectionInstrumentation.connectionInfo.get(connection);
+      JDBCMaps.DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
       if (dbInfo == null) {
-        dbInfo = ConnectionInstrumentation.DBInfo.UNKNOWN;
+        dbInfo = JDBCMaps.DBInfo.UNKNOWN;
       }
       final Scope scope =
           GlobalTracer.get().buildSpan(dbInfo.getType() + ".query").startActive(true);
@@ -71,7 +70,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Configu
       Tags.COMPONENT.set(span, "java-jdbc-prepared_statement");
 
       span.setTag(DDTags.SERVICE_NAME, dbInfo.getType());
-      span.setTag(DDTags.RESOURCE_NAME, sql == null ? UNKNOWN_QUERY : sql);
+      span.setTag(DDTags.RESOURCE_NAME, sql == null ? JDBCMaps.UNKNOWN_QUERY : sql);
       span.setTag(DDTags.SPAN_TYPE, "sql");
       span.setTag("span.origin.type", statement.getClass().getName());
       span.setTag("db.jdbc.url", dbInfo.getUrl());

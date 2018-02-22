@@ -32,7 +32,7 @@ public class DDApi {
 
   private final String tracesEndpoint;
   private final String servicesEndpoint;
-  private final List<ResponseListener> responseListeners = new ArrayList<ResponseListener>();
+  private final List<ResponseListener> responseListeners = new ArrayList<>();
 
   private final RateLimiter loggingRateLimiter =
       RateLimiter.create(1.0 / SECONDS_BETWEEN_ERROR_LOG);
@@ -51,7 +51,7 @@ public class DDApi {
     }
   }
 
-  public void addResponseListener(ResponseListener listener) {
+  public void addResponseListener(final ResponseListener listener) {
     if (!responseListeners.contains(listener)) {
       responseListeners.add(listener);
     }
@@ -137,12 +137,12 @@ public class DDApi {
         if (null != responseString
             && !"".equals(responseString.trim())
             && !"OK".equalsIgnoreCase(responseString.trim())) {
-          JsonNode response = objectMapper.readTree(responseString);
-          for (ResponseListener listener : responseListeners) {
+          final JsonNode response = objectMapper.readTree(responseString);
+          for (final ResponseListener listener : responseListeners) {
             listener.onResponse(endpoint, response);
           }
         }
-      } catch (IOException e) {
+      } catch (final IOException e) {
         log.debug("failed to parse DD agent response: " + responseString, e);
       }
       return true;
@@ -164,13 +164,25 @@ public class DDApi {
   }
 
   private boolean endpointAvailable(final String endpoint) {
+    return endpointAvailable(endpoint, true);
+  }
+
+  private boolean endpointAvailable(final String endpoint, final boolean retry) {
     try {
       final HttpURLConnection httpCon = getHttpURLConnection(endpoint);
-      OutputStreamWriter out = new OutputStreamWriter(httpCon.getOutputStream());
+
+      // This is potentially called in premain, so we want to fail fast.
+      httpCon.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(1));
+      httpCon.setReadTimeout((int) TimeUnit.SECONDS.toMillis(1));
+
+      final OutputStreamWriter out = new OutputStreamWriter(httpCon.getOutputStream());
       out.flush();
       out.close();
       return httpCon.getResponseCode() == 200;
-    } catch (IOException e) {
+    } catch (final IOException e) {
+      if (retry) {
+        return endpointAvailable(endpoint, false);
+      }
     }
     return false;
   }

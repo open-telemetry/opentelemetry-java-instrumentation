@@ -5,10 +5,12 @@ import datadog.trace.common.Service
 import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.writer.DDAgentWriter
 import spock.lang.Specification
+import spock.lang.Timeout
 
 import static org.mockito.ArgumentMatchers.any
 import static org.mockito.Mockito.*
 
+@Timeout(1)
 class ServiceTest extends Specification {
 
 
