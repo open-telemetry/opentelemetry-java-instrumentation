@@ -7,7 +7,7 @@ using the OpenTracing API and the DD Tracer.
 
 Here are the examples
 * [Dropwizard (Jax-Rs) + Mongo database + HTTP Client](dropwizard-mongo-client/README.md)
-* [Spring-boot + MySQL JDBC database](spring-boot-jdbc/README.md)
+* [Spring-boot + MySQL JDBC database + Redis (Jedis client)](spring-boot-jdbc-redis/README.md)
 * [Instrumenting using a Java Agent](javaagent/README.md)
 
 
