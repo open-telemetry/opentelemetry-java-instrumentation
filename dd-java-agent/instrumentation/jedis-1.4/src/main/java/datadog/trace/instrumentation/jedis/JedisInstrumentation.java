@@ -1,12 +1,9 @@
 package datadog.trace.instrumentation.jedis;
 
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isProtected;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
@@ -40,14 +37,16 @@ public final class JedisInstrumentation extends Instrumenter.Configurable {
   @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
-        .type(not(isInterface()).and(hasSuperType(named("redis.clients.jedis.Connection"))))
+        .type(
+            named("redis.clients.jedis.Protocol"),
+            classLoaderHasClasses("redis.clients.jedis.Protocol$Command"))
         .transform(
             DDAdvice.create()
                 .advice(
                     isMethod()
-                        .and(isProtected())
-                        .and(nameStartsWith("sendCommand"))
-                        .and(takesArgument(1, byte[][].class)),
+                        .and(isPublic())
+                        .and(named("sendCommand"))
+                        .and(takesArgument(1, named("redis.clients.jedis.Protocol$Command"))),
                     JedisAdvice.class.getName()))
         .asDecorator();
   }
@@ -55,7 +54,7 @@ public final class JedisInstrumentation extends Instrumenter.Configurable {
   public static class JedisAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope nameResource(@Advice.Argument(0) final Command command) {
+    public static Scope startSpan(@Advice.Argument(1) final Command command) {
 
       final Scope scope = GlobalTracer.get().buildSpan("redis.command").startActive(true);
 

@@ -61,6 +61,7 @@ class AWSClientTest extends AgentTestRunner {
     false      | 1
   }
 
+  @Timeout(10)
   def "send request with mocked back end"() {
     setup:
     def receivedHeaders = new AtomicReference<Headers>()

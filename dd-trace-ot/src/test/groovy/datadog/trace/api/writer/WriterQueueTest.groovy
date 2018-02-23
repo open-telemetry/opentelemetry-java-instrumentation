@@ -7,7 +7,7 @@ import spock.lang.Timeout
 import java.util.concurrent.Phaser
 import java.util.concurrent.atomic.AtomicInteger
 
-@Timeout(1)
+@Timeout(5)
 class WriterQueueTest extends Specification {
 
   def "instantiate a empty queue throws an exception"() {
@@ -120,7 +120,6 @@ class WriterQueueTest extends Specification {
     capacity = 100
     numberThreads << [1, 10, 100]
     numberInsertionsPerThread = 100
-
   }
 
 
@@ -180,7 +179,5 @@ class WriterQueueTest extends Specification {
     numberThreadsReads << [1, 5, 10]
     numberInsertionsPerThread = 100
     numberGetsPerThread = 5
-
   }
-
 }
