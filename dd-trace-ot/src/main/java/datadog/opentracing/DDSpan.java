@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Represents an in-flight span in the opentracing system.
+ * Represents a period of time. Associated information is stored in the SpanContext.
  *
  * <p>Spans are created by the {@link DDTracer#buildSpan}. This implementation adds some features
  * according to the DD agent.
@@ -28,31 +28,39 @@ import lombok.extern.slf4j.Slf4j;
 public class DDSpan implements Span {
 
   /** The context attached to the span */
-  protected final DDSpanContext context;
-  /** StartTime stores the creation time of the span in milliseconds */
-  protected long startTimeMicro;
-  /** StartTimeNano stores the only the nanoseconds for more accuracy */
-  protected long startTimeNano;
-  /** The duration in nanoseconds computed using the startTimeMicro and startTimeNano */
-  protected long durationNano;
+  private final DDSpanContext context;
+
+  /** Creation time of the span in microseconds. Must be greater than zero. */
+  private final long startTimeMicro;
+
+  /** Creation time of span in system relative nanotime (may be negative) */
+  private final long startTimeNano;
 
   /**
-   * A simple constructor. Currently, users have
-   *
-   * @param timestampMicro if set, use this time instead of the auto-generated time
-   * @param context the context
+   * The duration in nanoseconds computed using the startTimeMicro or startTimeNano. Span is
+   * considered finished when this is set.
    */
-  protected DDSpan(final long timestampMicro, final DDSpanContext context) {
+  private volatile long durationNano;
+
+  /**
+   * Spans should be constructed using the builder, not by calling the constructor directly.
+   *
+   * @param timestampMicro if greater than zero, use this time instead of the current time
+   * @param context the context used for the span
+   */
+  DDSpan(final long timestampMicro, final DDSpanContext context) {
 
     this.context = context;
 
     // record the start time in nano (current milli + nano delta)
-    if (timestampMicro == 0L) {
+    if (timestampMicro <= 0L) {
       this.startTimeMicro = Clock.currentMicroTime();
+      this.startTimeNano = Clock.currentNanoTicks();
     } else {
       this.startTimeMicro = timestampMicro;
+      // timestamp might have come from an external clock, so don't bother with nanotime.
+      this.startTimeNano = 0;
     }
-    this.startTimeNano = Clock.currentNanoTicks();
 
     // track each span of the trace
     this.context.getTrace().add(this);
@@ -60,11 +68,23 @@ public class DDSpan implements Span {
 
   @Override
   public final void finish() {
-    finish(Clock.currentMicroTime());
+    if (startTimeNano != 0) {
+      if (durationNano != 0) {
+        log.debug("Span already finished: {}", this);
+      }
+      // no external clock was used, so we can rely on nanotime.
+      this.durationNano = Math.max(1, Clock.currentNanoTicks() - startTimeNano);
+      afterFinish();
+    } else {
+      finish(Clock.currentMicroTime());
+    }
   }
 
   @Override
   public final void finish(final long stoptimeMicros) {
+    if (durationNano != 0) {
+      log.debug("Span already finished: {}", this);
+    }
     // Ensure that duration is at least 1.  Less than 1 is possible due to our use of system clock instead of nano time.
     this.durationNano =
         Math.max(1, TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - this.startTimeMicro));
