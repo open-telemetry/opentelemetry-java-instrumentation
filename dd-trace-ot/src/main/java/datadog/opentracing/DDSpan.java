@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -40,7 +41,7 @@ public class DDSpan implements Span {
    * The duration in nanoseconds computed using the startTimeMicro or startTimeNano. Span is
    * considered finished when this is set.
    */
-  private volatile long durationNano;
+  private final AtomicLong durationNano = new AtomicLong();
 
   /**
    * Spans should be constructed using the builder, not by calling the constructor directly.
@@ -69,12 +70,13 @@ public class DDSpan implements Span {
   @Override
   public final void finish() {
     if (startTimeNano != 0) {
-      if (durationNano != 0) {
+      // no external clock was used, so we can rely on nanotime.
+      if (this.durationNano.compareAndSet(
+          0, Math.max(1, Clock.currentNanoTicks() - startTimeNano))) {
+        afterFinish();
+      } else {
         log.debug("Span already finished: {}", this);
       }
-      // no external clock was used, so we can rely on nanotime.
-      this.durationNano = Math.max(1, Clock.currentNanoTicks() - startTimeNano);
-      afterFinish();
     } else {
       finish(Clock.currentMicroTime());
     }
@@ -82,20 +84,20 @@ public class DDSpan implements Span {
 
   @Override
   public final void finish(final long stoptimeMicros) {
-    if (durationNano != 0) {
+    // Ensure that duration is at least 1.  Less than 1 is possible due to our use of system clock instead of nano time.
+    if (this.durationNano.compareAndSet(
+        0, Math.max(1, TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - this.startTimeMicro)))) {
+      afterFinish();
+    } else {
       log.debug("Span already finished: {}", this);
     }
-    // Ensure that duration is at least 1.  Less than 1 is possible due to our use of system clock instead of nano time.
-    this.durationNano =
-        Math.max(1, TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - this.startTimeMicro));
-    afterFinish();
   }
 
   /**
    * Close the span. If the current span is the parent, check if each child has also been closed If
    * not, warned it
    */
-  protected final void afterFinish() {
+  private void afterFinish() {
     log.debug("{} - Closing the span.", this);
 
     // warn if one of the parent's children is not finished
@@ -303,7 +305,7 @@ public class DDSpan implements Span {
 
   @JsonGetter("duration")
   public long getDurationNano() {
-    return durationNano;
+    return durationNano.get();
   }
 
   @JsonGetter("service")

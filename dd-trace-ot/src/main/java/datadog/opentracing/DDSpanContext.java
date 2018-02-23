@@ -1,17 +1,16 @@
 package datadog.opentracing;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.Maps;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.trace.api.DDTags;
 import datadog.trace.common.sampling.PrioritySampling;
 import io.opentracing.tag.Tags;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,37 +25,42 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DDSpanContext implements io.opentracing.SpanContext {
 
-  // Opentracing attributes
-  private final long traceId;
-  private final long spanId;
-  private final long parentId;
-  private final String threadName = Thread.currentThread().getName();
-  private final long threadId = Thread.currentThread().getId();
-  /** The collection of all span related to this one */
-  private final Queue<DDSpan> trace;
-
-  // DD attributes
+  // Shared with other span contexts
   /** For technical reasons, the ref to the original tracer */
   private final DDTracer tracer;
 
-  private Map<String, String> baggageItems;
+  /** The collection of all span related to this one */
+  private final Queue<DDSpan> trace;
+
+  /** Baggage is associated with the whole trace and shared with other spans */
+  private final Map<String, String> baggageItems;
+
+  // Not Shared with other span contexts
+  private final long traceId;
+  private final long spanId;
+  private final long parentId;
+
+  /** Tags are associated to the current span, they will not propagate to the children span */
+  private final Map<String, Object> tags = new ConcurrentHashMap<>();
+
   /** The service name is required, otherwise the span are dropped by the agent */
-  private String serviceName;
+  private volatile String serviceName;
   /** The resource associated to the service (server_web, database, etc.) */
-  private String resourceName;
-  /** True indicates that the span reports an error */
-  private boolean errorFlag;
-  /** The type of the span. If null, the Datadog Agent will report as a custom */
-  private String spanType;
+  private volatile String resourceName;
   /** Each span have an operation name describing the current span */
-  private String operationName;
+  private volatile String operationName;
+  /** The type of the span. If null, the Datadog Agent will report as a custom */
+  private volatile String spanType;
+  /** True indicates that the span reports an error */
+  private volatile boolean errorFlag;
   /** The sampling priority of the trace */
   private volatile int samplingPriority = PrioritySampling.UNSET;
   /** When true, the samplingPriority cannot be changed. */
   private volatile boolean samplingPriorityLocked = false;
-  // Others attributes
-  /** Tags are associated to the current span, they will not propagate to the children span */
-  private Map<String, Object> tags;
+
+  // Additional Metadata
+  private final String threadName = Thread.currentThread().getName();
+  private final long threadId = Thread.currentThread().getId();
 
   public DDSpanContext(
       final long traceId,
@@ -78,7 +82,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.parentId = parentId;
 
     if (baggageItems == null) {
-      this.baggageItems = Collections.emptyMap();
+      this.baggageItems = new ConcurrentHashMap<>(0);
     } else {
       this.baggageItems = baggageItems;
     }
@@ -90,7 +94,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.errorFlag = errorFlag;
     this.spanType = spanType;
 
-    this.tags = tags;
+    this.tags.putAll(tags);
 
     if (trace == null) {
       // TODO: figure out better concurrency model.
@@ -130,6 +134,14 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   public void setResourceName(final String resourceName) {
     this.resourceName = resourceName;
+  }
+
+  public String getOperationName() {
+    return operationName;
+  }
+
+  public void setOperationName(final String operationName) {
+    this.operationName = operationName;
   }
 
   public boolean getErrorFlag() {
@@ -189,9 +201,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   }
 
   public void setBaggageItem(final String key, final String value) {
-    if (this.baggageItems.isEmpty()) {
-      this.baggageItems = new HashMap<>();
-    }
     this.baggageItems.put(key, value);
   }
 
@@ -244,9 +253,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       return;
     }
 
-    if (this.tags.isEmpty()) {
-      this.tags = new HashMap<>();
-    }
     this.tags.put(tag, value);
 
     // Call decorators
@@ -271,9 +277,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   }
 
   public synchronized Map<String, Object> getTags() {
-    if (tags.isEmpty()) {
-      tags = Maps.newHashMapWithExpectedSize(3);
-    }
     tags.put(DDTags.THREAD_NAME, threadName);
     tags.put(DDTags.THREAD_ID, threadId);
     tags.put(DDTags.SPAN_TYPE, getSpanType());
@@ -306,13 +309,5 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       s.append(" tags=").append(new TreeMap(tags));
     }
     return s.toString();
-  }
-
-  public String getOperationName() {
-    return operationName;
-  }
-
-  public void setOperationName(final String operationName) {
-    this.operationName = operationName;
   }
 }

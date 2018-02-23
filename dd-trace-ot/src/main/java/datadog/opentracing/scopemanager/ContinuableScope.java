@@ -4,18 +4,24 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class RefCountingScope implements Scope {
+public class ContinuableScope implements Scope {
   final ContextualScopeManager scopeManager;
   final AtomicInteger refCount;
   private final Span wrapped;
   private final boolean finishOnClose;
   private final Scope toRestore;
 
-  RefCountingScope(
+  ContinuableScope(
+      final ContextualScopeManager scopeManager, final Span wrapped, final boolean finishOnClose) {
+    this(scopeManager, new AtomicInteger(1), wrapped, finishOnClose);
+  }
+
+  private ContinuableScope(
       final ContextualScopeManager scopeManager,
       final AtomicInteger refCount,
       final Span wrapped,
       final boolean finishOnClose) {
+
     this.scopeManager = scopeManager;
     this.refCount = refCount;
     this.wrapped = wrapped;
@@ -57,7 +63,7 @@ public class RefCountingScope implements Scope {
           return context.activate(wrapped, finishOnClose);
         }
       }
-      return new RefCountingScope(scopeManager, refCount, wrapped, finishOnClose);
+      return new ContinuableScope(scopeManager, refCount, wrapped, finishOnClose);
     }
   }
 }

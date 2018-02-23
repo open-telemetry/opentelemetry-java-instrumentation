@@ -42,7 +42,7 @@ class ScopeManagerTest extends Specification {
     then:
     !spanReported(scope.span())
     scopeManager.active() == scope
-    scope instanceof RefCountingScope
+    scope instanceof ContinuableScope
     writer.empty
 
     when:
@@ -92,13 +92,13 @@ class ScopeManagerTest extends Specification {
   def "ref counting scope doesn't close if non-zero"() {
     setup:
     def builder = tracer.buildSpan("test")
-    def scope = (RefCountingScope) builder.startActive(true)
+    def scope = (ContinuableScope) builder.startActive(true)
     def continuation = scope.capture()
 
     expect:
     !spanReported(scope.span())
     scopeManager.active() == scope
-    scope instanceof RefCountingScope
+    scope instanceof ContinuableScope
     writer.empty
 
     when:
@@ -128,7 +128,7 @@ class ScopeManagerTest extends Specification {
     setup:
     def parentScope = tracer.buildSpan("parent").startActive(false) //false or trace is reported early
     def parentSpan = parentScope.span()
-    RefCountingScope childScope = (RefCountingScope) tracer.buildSpan("parent").startActive(true)
+    ContinuableScope childScope = (ContinuableScope) tracer.buildSpan("parent").startActive(true)
     def childSpan = childScope.span()
 
     def cont = childScope.capture()
@@ -234,7 +234,7 @@ class ScopeManagerTest extends Specification {
     contexts.each {
       scopeManager.addScopeContext(it)
     }
-    RefCountingScope scope = (RefCountingScope) tracer.buildSpan("parent").startActive(true)
+    ContinuableScope scope = (ContinuableScope) tracer.buildSpan("parent").startActive(true)
 
     expect:
     scopeManager.tlsScope.get() == scope
@@ -285,7 +285,7 @@ class ScopeManagerTest extends Specification {
     scope = scopeManager.activate(span, true)
 
     then:
-    scope instanceof RefCountingScope
+    scope instanceof ContinuableScope
     scopeManager.tlsScope.get() == scope
 
     where:
