@@ -52,7 +52,7 @@ test {
   }
 
   if (project.hasProperty("disableShadowRelocate") && disableShadowRelocate) {
-    exclude 'datadog/trace/agent/ShadowPackageRenamingTest.class'
+    exclude 'datadog/trace/agent/integration/classloading/ShadowPackageRenamingTest.class'
   }
 }
 

@@ -10,10 +10,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -40,8 +40,8 @@ public class DDApi {
   private final ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory());
 
   public DDApi(final String host, final int port) {
-    if (endpointAvailable("http://" + host + ":" + port + TRACES_ENDPOINT_V4)
-        && endpointAvailable("http://" + host + ":" + port + SERVICES_ENDPOINT_V4)) {
+    if (traceEndpointAvailable("http://" + host + ":" + port + TRACES_ENDPOINT_V4)
+        && serviceEndpointAvailable("http://" + host + ":" + port + SERVICES_ENDPOINT_V4)) {
       this.tracesEndpoint = "http://" + host + ":" + port + TRACES_ENDPOINT_V4;
       this.servicesEndpoint = "http://" + host + ":" + port + SERVICES_ENDPOINT_V4;
     } else {
@@ -163,11 +163,15 @@ public class DDApi {
     }
   }
 
-  private boolean endpointAvailable(final String endpoint) {
-    return endpointAvailable(endpoint, true);
+  private boolean traceEndpointAvailable(final String endpoint) {
+    return endpointAvailable(endpoint, Collections.emptyList(), true);
   }
 
-  private boolean endpointAvailable(final String endpoint, final boolean retry) {
+  private boolean serviceEndpointAvailable(final String endpoint) {
+    return endpointAvailable(endpoint, Collections.emptyMap(), true);
+  }
+
+  private boolean endpointAvailable(final String endpoint, final Object data, final boolean retry) {
     try {
       final HttpURLConnection httpCon = getHttpURLConnection(endpoint);
 
@@ -175,13 +179,14 @@ public class DDApi {
       httpCon.setConnectTimeout((int) TimeUnit.SECONDS.toMillis(1));
       httpCon.setReadTimeout((int) TimeUnit.SECONDS.toMillis(1));
 
-      final OutputStreamWriter out = new OutputStreamWriter(httpCon.getOutputStream());
+      final OutputStream out = httpCon.getOutputStream();
+      objectMapper.writeValue(out, data);
       out.flush();
       out.close();
       return httpCon.getResponseCode() == 200;
     } catch (final IOException e) {
       if (retry) {
-        return endpointAvailable(endpoint, false);
+        return endpointAvailable(endpoint, data, false);
       }
     }
     return false;

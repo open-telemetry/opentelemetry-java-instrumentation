@@ -30,10 +30,12 @@ class DDApiTest extends Specification {
     def agent = ratpack {
       handlers {
         put("v0.4/traces") {
-          response.status(200).send()
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
         put("v0.4/services") {
-          response.status(200).send()
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
       }
     }
@@ -56,7 +58,8 @@ class DDApiTest extends Specification {
           response.status(404).send()
         }
         put("v0.4/services") {
-          response.status(200).send()
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
       }
     }
@@ -87,7 +90,8 @@ class DDApiTest extends Specification {
           }
         }
         put("v0.4/services") {
-          response.status(200).send()
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
       }
     }
@@ -144,10 +148,12 @@ class DDApiTest extends Specification {
     def agent = ratpack {
       handlers {
         put("v0.4/traces") {
-          response.status(200).send()
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
         put("v0.4/services") {
-          response.status(200).send()
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
       }
     }
@@ -167,7 +173,8 @@ class DDApiTest extends Specification {
     def agent = ratpack {
       handlers {
         put("v0.4/traces") {
-          response.status(200).send()
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
         put("v0.4/services") {
           response.status(404).send()
@@ -193,7 +200,8 @@ class DDApiTest extends Specification {
     def agent = ratpack {
       handlers {
         put("v0.4/traces") {
-          response.status(200).send()
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
         put("v0.4/services") {
           requestContentType.set(request.contentType)
@@ -243,11 +251,13 @@ class DDApiTest extends Specification {
     def agent = ratpack {
       handlers {
         put("v0.4/traces") {
-          response.status(200).send('{"hello":"test"}')
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send('{"hello":"test"}')
         }
         put("v0.4/services") {
           if (servicesAvailable) {
-            response.status(200).send('{"service-response":"from-test"}')
+            def status = request.contentLength > 0 ? 200 : 500
+            response.status(status).send('{"service-response":"from-test"}')
           } else {
             response.status(404).send('{"service-response":"from-test"}')
           }
@@ -280,10 +290,12 @@ class DDApiTest extends Specification {
     def v3Agent = ratpack {
       handlers {
         put("v0.3/traces") {
-          response.status(200).send()
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
         put("v0.3/services") {
-          response.status(200).send()
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
       }
     }
@@ -307,21 +319,25 @@ class DDApiTest extends Specification {
     def agent = ratpack {
       handlers {
         put("v0.3/traces") {
-          response.status(200).send()
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
         put("v0.3/services") {
-          response.status(200).send()
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
         put("v0.4/traces") {
           Blocking.exec {
             Thread.sleep(delayTrace)
-            response.status(200).send()
+            def status = request.contentLength > 0 ? 200 : 500
+            response.status(status).send()
           }
         }
         put("v0.4/services") {
           Blocking.exec {
             Thread.sleep(delayServices)
-            response.status(200).send()
+            def status = request.contentLength > 0 ? 200 : 500
+            response.status(status).send()
           }
         }
       }
