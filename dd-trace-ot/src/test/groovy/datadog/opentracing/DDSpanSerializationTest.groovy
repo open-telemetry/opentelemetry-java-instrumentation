@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.collect.Maps
 import datadog.trace.api.DDTags
 import datadog.trace.common.sampling.PrioritySampling
+import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
 import spock.lang.Timeout
 import spock.lang.Unroll
@@ -35,6 +36,8 @@ class DDSpanSerializationTest extends Specification {
     expected.put("parent_id", 0l)
     expected.put("trace_id", 1l)
 
+    def writer = new ListWriter()
+    def tracer = new DDTracer(writer)
     final DDSpanContext context =
       new DDSpanContext(
         1L,
@@ -48,8 +51,8 @@ class DDSpanSerializationTest extends Specification {
         false,
         "type",
         tags,
-        null,
-        null)
+        new TraceCollection(tracer),
+        tracer)
 
     baggage.put(DDTags.THREAD_NAME, Thread.currentThread().getName())
     baggage.put(DDTags.THREAD_ID, String.valueOf(Thread.currentThread().getId()))

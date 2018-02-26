@@ -14,7 +14,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
@@ -70,12 +69,12 @@ public class DDSpan implements Span {
   @Override
   public final void finish() {
     if (startTimeNano != 0) {
-      // no external clock was used, so we can rely on nanotime.
+      // no external clock was used, so we can rely on nanotime, but still ensure a min duration of 1.
       if (this.durationNano.compareAndSet(
           0, Math.max(1, Clock.currentNanoTicks() - startTimeNano))) {
-        afterFinish();
+        writeTraceIfRootSpan();
       } else {
-        log.debug("Span already finished: {}", this);
+        log.debug("{} - already finished!", this);
       }
     } else {
       finish(Clock.currentMicroTime());
@@ -87,32 +86,15 @@ public class DDSpan implements Span {
     // Ensure that duration is at least 1.  Less than 1 is possible due to our use of system clock instead of nano time.
     if (this.durationNano.compareAndSet(
         0, Math.max(1, TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - this.startTimeMicro)))) {
-      afterFinish();
+      writeTraceIfRootSpan();
     } else {
-      log.debug("Span already finished: {}", this);
+      log.debug("{} - already finished!", this);
     }
   }
 
-  /**
-   * Close the span. If the current span is the parent, check if each child has also been closed If
-   * not, warned it
-   */
-  private void afterFinish() {
-    log.debug("{} - Closing the span.", this);
-
-    // warn if one of the parent's children is not finished
+  private void writeTraceIfRootSpan() {
     if (this.isRootSpan()) {
-      final Queue<DDSpan> spans = this.context().getTrace();
-
-      for (final DDSpan span : spans) {
-        if (span.getDurationNano() == 0L) {
-          log.warn(
-              "{} - The parent span is marked as finished but this span isn't. You have to close each children.",
-              this);
-        }
-      }
-      this.context.getTracer().write(this.context.getTrace());
-      log.debug("{} - Write the trace", this);
+      this.context.getTrace().write();
     }
   }
 

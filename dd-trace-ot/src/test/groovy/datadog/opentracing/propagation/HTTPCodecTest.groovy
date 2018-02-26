@@ -1,7 +1,10 @@
 package datadog.opentracing.propagation
 
 import datadog.opentracing.DDSpanContext
+import datadog.opentracing.DDTracer
+import datadog.opentracing.TraceCollection
 import datadog.trace.common.sampling.PrioritySampling
+import datadog.trace.common.writer.ListWriter
 import io.opentracing.propagation.TextMapExtractAdapter
 import io.opentracing.propagation.TextMapInjectAdapter
 import spock.lang.Shared
@@ -23,6 +26,8 @@ class HTTPCodecTest extends Specification {
   @Unroll
   def "inject http headers"() {
     setup:
+    def writer = new ListWriter()
+    def tracer = new DDTracer(writer)
     final DDSpanContext mockedContext =
         new DDSpanContext(
           1L,
@@ -41,8 +46,8 @@ class HTTPCodecTest extends Specification {
           false,
           "fakeType",
           null,
-          null,
-          null)
+          new TraceCollection(tracer),
+          tracer)
 
     final Map<String, String> carrier = new HashMap<>()
 
@@ -80,13 +85,13 @@ class HTTPCodecTest extends Specification {
     }
 
     final HTTPCodec codec = new HTTPCodec()
-    final DDSpanContext context = codec.extract(new TextMapExtractAdapter(actual))
+    final ExtractedContext context = codec.extract(new TextMapExtractAdapter(actual))
 
     expect:
     context.getTraceId() == 1l
     context.getSpanId() == 2l
-    context.getBaggageItem("k1") == "v1"
-    context.getBaggageItem("k2") == "v2"
+    context.getBaggage().get("k1") == "v1"
+    context.getBaggage().get("k2") == "v2"
     context.getSamplingPriority() == samplingPriority
 
     where:

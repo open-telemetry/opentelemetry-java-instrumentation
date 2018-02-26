@@ -1,7 +1,10 @@
 package datadog.opentracing.decorators
 
 import datadog.opentracing.DDSpanContext
+import datadog.opentracing.DDTracer
+import datadog.opentracing.TraceCollection
 import datadog.trace.common.sampling.PrioritySampling
+import datadog.trace.common.writer.ListWriter
 import io.opentracing.tag.Tags
 import spock.lang.Specification
 import spock.lang.Subject
@@ -9,6 +12,8 @@ import spock.lang.Timeout
 
 @Timeout(1)
 class URLAsResourceNameTest extends Specification {
+  def writer = new ListWriter()
+  def tracer = new DDTracer(writer)
 
   @Subject
   def decorator = new URLAsResourceName()
@@ -95,8 +100,8 @@ class URLAsResourceNameTest extends Specification {
         false,
         "fakeType",
         tags,
-        null,
-        null)
+        new TraceCollection(tracer),
+        tracer)
 
     then:
     decorator.afterSetTag(context, Tags.HTTP_URL.getKey(), value)

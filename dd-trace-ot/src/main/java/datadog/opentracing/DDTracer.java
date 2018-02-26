@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
 import datadog.opentracing.propagation.Codec;
+import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HTTPCodec;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
@@ -29,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -194,7 +194,7 @@ public class DDTracer implements io.opentracing.Tracer {
    *
    * @param trace a list of the spans related to the same trace
    */
-  public void write(final Queue<DDSpan> trace) {
+  void write(final TraceCollection trace) {
     if (trace.isEmpty()) {
       return;
     }
@@ -418,7 +418,7 @@ public class DDTracer implements io.opentracing.Tracer {
       final long spanId = generateNewId();
       final long parentSpanId;
       final Map<String, String> baggage;
-      final Queue<DDSpan> parentTrace;
+      final TraceCollection parentTrace;
       final int samplingPriority;
 
       final DDSpanContext context;
@@ -429,6 +429,7 @@ public class DDTracer implements io.opentracing.Tracer {
         if (scope != null) parentContext = scope.span().context();
       }
 
+      // Propagate internal trace
       if (parentContext instanceof DDSpanContext) {
         final DDSpanContext ddsc = (DDSpanContext) parentContext;
         traceId = ddsc.getTraceId();
@@ -436,14 +437,24 @@ public class DDTracer implements io.opentracing.Tracer {
         baggage = ddsc.getBaggageItems();
         parentTrace = ddsc.getTrace();
         samplingPriority = ddsc.getSamplingPriority();
-
         if (this.serviceName == null) this.serviceName = ddsc.getServiceName();
         if (this.spanType == null) this.spanType = ddsc.getSpanType();
+
+        // Propagate external trace
+      } else if (parentContext instanceof ExtractedContext) {
+        final ExtractedContext ddsc = (ExtractedContext) parentContext;
+        traceId = ddsc.getTraceId();
+        parentSpanId = ddsc.getSpanId();
+        baggage = ddsc.getBaggage();
+        parentTrace = new TraceCollection(DDTracer.this);
+        samplingPriority = ddsc.getSamplingPriority();
+
+        // Start a new trace
       } else {
         traceId = generateNewId();
         parentSpanId = 0L;
         baggage = null;
-        parentTrace = null;
+        parentTrace = new TraceCollection(DDTracer.this);
         samplingPriority = PrioritySampling.UNSET;
       }
 
@@ -453,8 +464,6 @@ public class DDTracer implements io.opentracing.Tracer {
 
       final String operationName =
           this.operationName != null ? this.operationName : this.resourceName;
-
-      // this.operationName, this.tags,
 
       // some attributes are inherited from the parent
       context =

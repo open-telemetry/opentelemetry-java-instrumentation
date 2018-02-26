@@ -8,10 +8,8 @@ import io.opentracing.tag.Tags;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -30,7 +28,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   private final DDTracer tracer;
 
   /** The collection of all span related to this one */
-  private final Queue<DDSpan> trace;
+  private final TraceCollection trace;
 
   /** Baggage is associated with the whole trace and shared with other spans */
   private final Map<String, String> baggageItems;
@@ -74,8 +72,13 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final boolean errorFlag,
       final String spanType,
       final Map<String, Object> tags,
-      final Queue<DDSpan> trace,
+      final TraceCollection trace,
       final DDTracer tracer) {
+
+    assert tracer != null;
+    assert trace != null;
+    this.tracer = tracer;
+    this.trace = trace;
 
     this.traceId = traceId;
     this.spanId = spanId;
@@ -87,23 +90,16 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       this.baggageItems = baggageItems;
     }
 
+    if (tags != null) {
+      this.tags.putAll(tags);
+    }
+
     this.serviceName = serviceName;
     this.operationName = operationName;
     this.resourceName = resourceName;
     this.samplingPriority = samplingPriority;
     this.errorFlag = errorFlag;
     this.spanType = spanType;
-
-    this.tags.putAll(tags);
-
-    if (trace == null) {
-      // TODO: figure out better concurrency model.
-      this.trace = new ConcurrentLinkedQueue<>();
-    } else {
-      this.trace = trace;
-    }
-
-    this.tracer = tracer;
   }
 
   public long getTraceId() {
@@ -221,7 +217,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   }
 
   @JsonIgnore
-  public Queue<DDSpan> getTrace() {
+  public TraceCollection getTrace() {
     return this.trace;
   }
 
@@ -279,7 +275,10 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   public synchronized Map<String, Object> getTags() {
     tags.put(DDTags.THREAD_NAME, threadName);
     tags.put(DDTags.THREAD_ID, threadId);
-    tags.put(DDTags.SPAN_TYPE, getSpanType());
+    final String spanType = getSpanType();
+    if (spanType != null) {
+      tags.put(DDTags.SPAN_TYPE, spanType);
+    }
     return Collections.unmodifiableMap(tags);
   }
 
