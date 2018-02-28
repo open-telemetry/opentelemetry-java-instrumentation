@@ -1,9 +1,5 @@
-package datadog.trace
+package datadog.opentracing
 
-import datadog.opentracing.DDSpan
-import datadog.opentracing.DDSpanContext
-import datadog.opentracing.DDTracer
-import datadog.opentracing.TraceCollection
 import datadog.trace.common.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 
@@ -23,7 +19,7 @@ class SpanFactory {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new TraceCollection(tracer),
+      new TraceCollection(tracer, 1L),
       tracer)
     return new DDSpan(timestampMicro, context)
   }
@@ -41,8 +37,26 @@ class SpanFactory {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new TraceCollection(tracer),
+      new TraceCollection(tracer, 1L),
       tracer)
+    return new DDSpan(1, context)
+  }
+
+  static newSpanOf(TraceCollection trace) {
+    def context = new DDSpanContext(
+      trace.traceId,
+      1L,
+      0L,
+      "fakeService",
+      "fakeOperation",
+      "fakeResource",
+      PrioritySampling.UNSET,
+      Collections.emptyMap(),
+      false,
+      "fakeType",
+      Collections.emptyMap(),
+      trace,
+      trace.tracer)
     return new DDSpan(1, context)
   }
 
@@ -61,7 +75,7 @@ class SpanFactory {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new TraceCollection(tracer),
+      new TraceCollection(tracer, 1L),
       tracer)
     context.setTag("env", envName)
     return new DDSpan(0l, context)

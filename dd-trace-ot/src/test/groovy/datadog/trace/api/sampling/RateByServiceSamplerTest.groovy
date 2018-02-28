@@ -2,7 +2,7 @@ package datadog.trace.api.sampling
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import datadog.opentracing.DDSpan
-import datadog.trace.SpanFactory
+import datadog.opentracing.SpanFactory
 import datadog.trace.common.sampling.PrioritySampling
 import datadog.trace.common.sampling.RateByServiceSampler
 import spock.lang.Specification

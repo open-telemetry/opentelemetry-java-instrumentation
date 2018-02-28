@@ -3,7 +3,7 @@ package datadog.trace.api.writer
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import datadog.trace.SpanFactory
+import datadog.opentracing.SpanFactory
 import datadog.trace.common.Service
 import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.DDApi.ResponseListener

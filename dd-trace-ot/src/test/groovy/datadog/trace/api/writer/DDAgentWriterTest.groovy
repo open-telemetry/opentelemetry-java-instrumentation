@@ -7,7 +7,7 @@ import datadog.trace.common.writer.WriterQueue
 import spock.lang.Specification
 import spock.lang.Timeout
 
-import static datadog.trace.SpanFactory.newSpanOf
+import static datadog.opentracing.SpanFactory.newSpanOf
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.verifyNoMoreInteractions
 
