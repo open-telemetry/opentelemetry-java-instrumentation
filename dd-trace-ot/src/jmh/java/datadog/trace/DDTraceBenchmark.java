@@ -25,12 +25,12 @@ public class DDTraceBenchmark {
 
   @Benchmark
   public Object testBuildStartSpan(final TraceState state) {
-    return state.tracer.buildSpan(SPAN_NAME).startManual();
+    return state.tracer.buildSpan(SPAN_NAME).start();
   }
 
   @Benchmark
   public Object testFullSpan(final TraceState state) {
-    final Span span = state.tracer.buildSpan(SPAN_NAME).startManual();
+    final Span span = state.tracer.buildSpan(SPAN_NAME).start();
     span.finish();
     return span;
   }

@@ -62,7 +62,7 @@ Sometimes you need to create a span without promoting it as the active. If you w
    
 ```java
   // Create a span, but do not promoting it as the active span 
-  Span anotherSpan = tracer.buildSpan("componentTracking").startManual();
+  Span anotherSpan = tracer.buildSpan("componentTracking").start();
 ```
 
 Typically, span creations are made in the beginning of the methods you want to trace. 

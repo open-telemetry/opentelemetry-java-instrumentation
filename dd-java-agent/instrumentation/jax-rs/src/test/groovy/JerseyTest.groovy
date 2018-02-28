@@ -4,7 +4,7 @@ import org.junit.ClassRule
 import spock.lang.Shared
 import spock.lang.Timeout
 
-@Timeout(1)
+@Timeout(5)
 class JerseyTest extends AgentTestRunner {
 
   static {
