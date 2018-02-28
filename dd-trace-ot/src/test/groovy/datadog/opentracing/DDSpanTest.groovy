@@ -27,7 +27,7 @@ class DDSpanTest extends Specification {
         false,
         "fakeType",
         null,
-        new TraceCollection(tracer),
+        new TraceCollection(tracer, 1L),
         tracer)
 
     final DDSpan span = new DDSpan(1L, context)

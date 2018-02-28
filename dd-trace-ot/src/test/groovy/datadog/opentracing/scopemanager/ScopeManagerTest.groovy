@@ -126,7 +126,7 @@ class ScopeManagerTest extends Specification {
 
   def "continuation restores trace"() {
     setup:
-    def parentScope = tracer.buildSpan("parent").startActive(false) //false or trace is reported early
+    def parentScope = tracer.buildSpan("parent").startActive(true)
     def parentSpan = parentScope.span()
     ContinuableScope childScope = (ContinuableScope) tracer.buildSpan("parent").startActive(true)
     def childSpan = childScope.span()
@@ -142,12 +142,12 @@ class ScopeManagerTest extends Specification {
 
     when:
     parentScope.close()
-    // If finishSpanOnClose was true for the parent, the trace would get reported even though the child was not done.
+    // parent span is finished, but trace is not reported
 
     then:
     scopeManager.active() == null
     !spanReported(childSpan)
-    !spanReported(parentSpan)
+    spanReported(parentSpan)
     writer == []
 
     when:
@@ -158,7 +158,7 @@ class ScopeManagerTest extends Specification {
     newScope != childScope && newScope != parentScope
     newScope.span() == childSpan
     !spanReported(childSpan)
-    !spanReported(parentSpan)
+    spanReported(parentSpan)
     writer == []
 
     when:
@@ -167,17 +167,8 @@ class ScopeManagerTest extends Specification {
     then:
     scopeManager.active() == null
     spanReported(childSpan)
-    !spanReported(parentSpan)
-    writer == []
-
-    when:
-    // Since finishSpanOnClose was false, we must manually finish the span.
-    parentSpan.finish()
-
-    then:
-    spanReported(childSpan)
     spanReported(parentSpan)
-    writer == [[parentSpan, childSpan]]
+    writer == [[childSpan, parentSpan]]
   }
 
   @Unroll

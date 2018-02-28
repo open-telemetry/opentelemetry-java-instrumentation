@@ -48,9 +48,10 @@ class DDSpanBuilderTest extends Specification {
     span = tracer.buildSpan(expectedName).withServiceName("foo").start()
 
     then:
-    span.getTags() == [(DDTags.THREAD_NAME): Thread.currentThread().getName(),
-                       (DDTags.THREAD_ID)  : Thread.currentThread().getId(),
-                       (DDTags.SPAN_TYPE)  : null]
+    span.getTags() == [
+      (DDTags.THREAD_NAME): Thread.currentThread().getName(),
+      (DDTags.THREAD_ID)  : Thread.currentThread().getId(),
+    ]
 
     when:
     // with all custom fields provided
@@ -118,6 +119,7 @@ class DDSpanBuilderTest extends Specification {
 
     when(mockedContext.getSpanId()).thenReturn(spanId)
     when(mockedContext.getServiceName()).thenReturn("foo")
+    when(mockedContext.getTrace()).thenReturn(new TraceCollection(tracer, 1L))
 
     final String expectedName = "fakeName"
 
@@ -204,13 +206,15 @@ class DDSpanBuilderTest extends Specification {
     final long tickEnd = System.currentTimeMillis()
 
     for (int i = 1; i <= 10; i++) {
-      spans.add(tracer
+      def span = tracer
         .buildSpan("fake_" + i)
         .withServiceName("foo")
         .asChildOf(spans.get(i - 1))
-        .start())
+        .start()
+      spans.add(span)
+      span.finish()
     }
-    spans.get(1).finish(tickEnd)
+    root.finish(tickEnd)
 
     expect:
     root.context().getTrace().size() == nbSamples + 1
@@ -223,9 +227,10 @@ class DDSpanBuilderTest extends Specification {
     System.setProperty("dd.trace.span.tags", tagString)
     tracer = new DDTracer(writer)
     def span = tracer.buildSpan("op name").withServiceName("foo").start()
-    tags.putAll([(DDTags.THREAD_NAME): Thread.currentThread().getName(),
-                 (DDTags.THREAD_ID)  : Thread.currentThread().getId(),
-                 (DDTags.SPAN_TYPE)  : null])
+    tags.putAll([
+      (DDTags.THREAD_NAME): Thread.currentThread().getName(),
+      (DDTags.THREAD_ID)  : Thread.currentThread().getId(),
+    ])
 
     expect:
     span.tags == tags

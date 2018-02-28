@@ -100,7 +100,7 @@ class URLAsResourceNameTest extends Specification {
         false,
         "fakeType",
         tags,
-        new TraceCollection(tracer),
+        new TraceCollection(tracer, 1L),
         tracer)
 
     then:

@@ -49,13 +49,13 @@ public class TraceAnnotationsTest {
     assertThat(writer.firstTrace().get(0).context().getParentId()).isEqualTo(0);
     assertThat(writer.firstTrace().get(0).getServiceName()).isEqualTo("test2");
 
-    assertThat(writer.firstTrace().get(1).getOperationName()).isEqualTo("SayTracedHello.sayHello");
-    assertThat(writer.firstTrace().get(1).getServiceName()).isEqualTo("test");
+    assertThat(writer.firstTrace().get(1).getOperationName()).isEqualTo("SAY_HA");
     assertThat(writer.firstTrace().get(1).getParentId()).isEqualTo(parentId);
+    assertThat(writer.firstTrace().get(1).context().getSpanType()).isEqualTo("DB");
 
-    assertThat(writer.firstTrace().get(2).getOperationName()).isEqualTo("SAY_HA");
+    assertThat(writer.firstTrace().get(2).getOperationName()).isEqualTo("SayTracedHello.sayHello");
+    assertThat(writer.firstTrace().get(2).getServiceName()).isEqualTo("test");
     assertThat(writer.firstTrace().get(2).getParentId()).isEqualTo(parentId);
-    assertThat(writer.firstTrace().get(2).context().getSpanType()).isEqualTo("DB");
   }
 
   @Test

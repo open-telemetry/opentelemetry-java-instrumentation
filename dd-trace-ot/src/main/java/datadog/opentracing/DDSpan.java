@@ -12,6 +12,7 @@ import datadog.trace.common.util.Clock;
 import io.opentracing.Span;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +43,9 @@ public class DDSpan implements Span {
    */
   private final AtomicLong durationNano = new AtomicLong();
 
+  /** Implementation detail. Stores the weak reference to this span. Used by TraceCollection. */
+  volatile WeakReference<DDSpan> ref;
+
   /**
    * Spans should be constructed using the builder, not by calling the constructor directly.
    *
@@ -61,9 +65,7 @@ public class DDSpan implements Span {
       // timestamp might have come from an external clock, so don't bother with nanotime.
       this.startTimeNano = 0;
     }
-
-    // track each span of the trace
-    this.context.getTrace().add(this);
+    this.context.getTrace().registerSpan(this);
   }
 
   @Override
@@ -72,7 +74,7 @@ public class DDSpan implements Span {
       // no external clock was used, so we can rely on nanotime, but still ensure a min duration of 1.
       if (this.durationNano.compareAndSet(
           0, Math.max(1, Clock.currentNanoTicks() - startTimeNano))) {
-        writeTraceIfRootSpan();
+        context.getTrace().addSpan(this);
       } else {
         log.debug("{} - already finished!", this);
       }
@@ -86,15 +88,9 @@ public class DDSpan implements Span {
     // Ensure that duration is at least 1.  Less than 1 is possible due to our use of system clock instead of nano time.
     if (this.durationNano.compareAndSet(
         0, Math.max(1, TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - this.startTimeMicro)))) {
-      writeTraceIfRootSpan();
+      context.getTrace().addSpan(this);
     } else {
       log.debug("{} - already finished!", this);
-    }
-  }
-
-  private void writeTraceIfRootSpan() {
-    if (this.isRootSpan()) {
-      this.context.getTrace().write();
     }
   }
 
@@ -105,14 +101,7 @@ public class DDSpan implements Span {
    */
   @JsonIgnore
   public final boolean isRootSpan() {
-
-    if (context().getTrace().isEmpty()) {
-      return false;
-    }
-    // First item of the array AND tracer set
-    final DDSpan first = context().getTrace().peek();
-    return first.context().getSpanId() == this.context().getSpanId()
-        && this.context.getTracer() != null;
+    return context.getParentId() == 0;
   }
 
   public void setErrorMeta(final Throwable error) {
