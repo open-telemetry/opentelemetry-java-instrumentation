@@ -37,7 +37,7 @@ public class SayTracedHello {
 
   public static String fromCallable() throws Exception {
     return new Callable<String>() {
-      @Trace
+      @com.newrelic.api.agent.Trace
       @Override
       public String call() throws Exception {
         return "Howdy!";

@@ -10,4 +10,5 @@ dependencies {
   implementation deps.autoservice
 
   testCompile project(':dd-java-agent:testing')
+  testCompile group: 'com.newrelic.agent.java', name: 'newrelic-api', version: '+'
 }

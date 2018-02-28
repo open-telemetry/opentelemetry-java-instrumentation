@@ -43,6 +43,7 @@ class TagsAssert {
     if (args.length > 1) {
       throw new IllegalArgumentException(args)
     }
+    assertedTags.add(name)
     assert tags[name] == args[0]
   }
 
