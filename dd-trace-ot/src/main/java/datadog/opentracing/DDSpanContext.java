@@ -148,7 +148,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.spanType = spanType;
   }
 
-  public void setSamplingPriority(int newPriority) {
+  public void setSamplingPriority(final int newPriority) {
     if (samplingPriorityLocked) {
       log.warn(
           "samplingPriority locked at {}. Refusing to set to {}", samplingPriority, newPriority);
@@ -272,7 +272,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   public synchronized Map<String, Object> getTags() {
     if (tags.isEmpty()) {
-      tags = Maps.newHashMapWithExpectedSize(2);
+      tags = Maps.newHashMapWithExpectedSize(3);
     }
     tags.put(DDTags.THREAD_NAME, threadName);
     tags.put(DDTags.THREAD_ID, threadId);
