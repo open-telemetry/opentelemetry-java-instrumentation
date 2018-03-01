@@ -118,4 +118,35 @@ class DDTraceConfigTest extends Specification {
     "writer"  | "agent.host"   | "somethingelse" | "DDAgentWriter { api=DDApi { tracesEndpoint=http://somethingelse:8126/v0.3/traces } }"
     "writer"  | "agent.port"   | "9999"          | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:9999/v0.3/traces } }"
   }
+
+  def "parsing valid string returns a map"() {
+    expect:
+    DDTraceConfig.parseMap(str) == map
+
+    where:
+    str                               | map
+    "a:a;"                            | [a: "a;"]
+    "a:1, a:2, a:3"                   | [a: "3"]
+    "a:b,c:d"                         | [a: "b", c: "d"]
+    "key 1!:va|ue_1,"                 | ["key 1!": "va|ue_1"]
+    " key1 :value1 ,\t key2:  value2" | [key1: "value1", key2: "value2"]
+  }
+
+  def "parsing an invalid string returns an empty map"() {
+    expect:
+    DDTraceConfig.parseMap(str) == map
+
+    where:
+    str         | map
+    null        | [:]
+    ""          | [:]
+    "1"         | [:]
+    "a"         | [:]
+    "a:"        | [:]
+    "a,1"       | [:]
+    "in:val:id" | [:]
+    "a:b:c:d"   | [:]
+    "a:b,c,d"   | [:]
+    "!a"        | [:]
+  }
 }

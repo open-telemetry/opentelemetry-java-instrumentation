@@ -1,6 +1,7 @@
 package datadog.opentracing;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Maps;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
 import datadog.opentracing.propagation.Codec;
@@ -44,6 +45,9 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
   /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
   final Sampler sampler;
 
+  /** A set of tags that are added to every span */
+  private final Map<String, Object> spanTags;
+
   /** Span context decorators */
   private final Map<String, List<AbstractDecorator>> spanContextDecorators = new HashMap<>();
 
@@ -63,7 +67,8 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     this(
         config.getProperty(DDTraceConfig.SERVICE_NAME),
         Writer.Builder.forConfig(config),
-        Sampler.Builder.forConfig(config));
+        Sampler.Builder.forConfig(config),
+        DDTraceConfig.parseMap(config.getProperty(DDTraceConfig.SPAN_TAGS)));
     log.debug("Using config: {}", config);
 
     // Create decorators from resource files
@@ -75,10 +80,20 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
   }
 
   public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
+    this(serviceName, writer, sampler, Collections.<String, Object>emptyMap());
+  }
+
+  public DDTracer(
+      final String serviceName,
+      final Writer writer,
+      final Sampler sampler,
+      final Map<String, Object> spanTags) {
     this.serviceName = serviceName;
     this.writer = writer;
     this.writer.start();
     this.sampler = sampler;
+    this.spanTags = spanTags;
+
     registry = new CodecRegistry();
     registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
     registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec());
@@ -90,7 +105,11 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
   }
 
   public DDTracer(final Writer writer) {
-    this(UNASSIGNED_DEFAULT_SERVICE_NAME, writer, new AllSampler());
+    this(
+        UNASSIGNED_DEFAULT_SERVICE_NAME,
+        writer,
+        new AllSampler(),
+        DDTraceConfig.parseMap(new DDTraceConfig().getProperty(DDTraceConfig.SPAN_TAGS)));
   }
 
   /**
@@ -185,6 +204,8 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
         + writer
         + ", sampler="
         + sampler
+        + ", tags="
+        + spanTags
         + '}';
   }
 
@@ -236,7 +257,8 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     private final String operationName;
 
     // Builder attributes
-    private Map<String, Object> tags = Collections.emptyMap();
+    private Map<String, Object> tags =
+        spanTags.isEmpty() ? Collections.<String, Object>emptyMap() : Maps.newHashMap(spanTags);
     private long timestamp;
     private SpanContext parent;
     private String serviceName;
@@ -361,7 +383,7 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     // Private methods
     private DDSpanBuilder withTag(final String tag, final Object value) {
       if (this.tags.isEmpty()) {
-        this.tags = new HashMap<>();
+        this.tags = Maps.newHashMap();
       }
       this.tags.put(tag, value);
       return this;

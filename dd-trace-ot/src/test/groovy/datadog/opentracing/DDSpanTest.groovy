@@ -120,7 +120,7 @@ class DDSpanTest extends Specification {
     def between = System.currentTimeMillis()
     def betweenDur = System.currentTimeMillis() - between
     span.finish()
-    def total = System.currentTimeMillis() - start
+    def total = Math.max(1, System.currentTimeMillis() - start)
 
     expect:
     span.durationNano >= TimeUnit.MILLISECONDS.toNanos(betweenDur)
