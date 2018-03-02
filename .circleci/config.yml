@@ -114,7 +114,7 @@ jobs:
           key: dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
           paths: ~/.gradle
 
-  deploy:
+  publish: &publish
     <<: *defaults
     steps:
       - checkout
@@ -129,41 +129,72 @@ jobs:
       - deploy:
           name: Publish master to Artifactory
           command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              ./gradlew -Psigning.keyId=${PGP_KEY_ID} \
-                -Psigning.password=${PGP_KEY_PASS} \
-                -Psigning.secretKeyRingFile=/home/circleci/dd-trace-java/.circleci/secring.gpg \
-                -PbintrayUser=${BINTRAY_USER} \
-                -PbintrayApiKey=${BINTRAY_API_KEY} \
-                -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
-                artifactoryPublish --max-workers=1 --stacktrace --no-daemon
-            fi
+            ./gradlew -Psigning.keyId=${PGP_KEY_ID} \
+              -Psigning.password=${PGP_KEY_PASS} \
+              -Psigning.secretKeyRingFile=/home/circleci/dd-trace-java/.circleci/secring.gpg \
+              -PbintrayUser=${BINTRAY_USER} \
+              -PbintrayApiKey=${BINTRAY_API_KEY} \
+              -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
+              artifactoryPublish --max-workers=1 --stacktrace --no-daemon
+
+  publish_master:
+    <<: *publish
+  publish_tag:
+    <<: *publish
 
 workflows:
   version: 2
   build_test_deploy:
     jobs:
-      - build
+      - build:
+          filters:
+            tags:
+              only: /.*/
 
       - test_7:
           requires:
             - build
+          filters:
+            tags:
+              only: /.*/
       - test_8:
           requires:
             - build
+          filters:
+            tags:
+              only: /.*/
       - test_9:
           requires:
             - build
+          filters:
+            tags:
+              only: /.*/
+
       - scan_versions:
           requires:
             - build
+          filters:
+            branches:
+              ignore: master
 
-      - deploy:
+      - publish_master:
           requires:
             - test_7
             - test_8
             - test_9
-            - scan_versions
           filters:
             branches:
               only: master
+            tags:
+              ignore: /.*/
+
+      - publish_tag:
+          requires:
+            - test_7
+            - test_8
+            - test_9
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
