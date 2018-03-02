@@ -1,5 +1,9 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
+whitelistedInstructionClasses += whitelistedBranchClasses += [
+  'datadog.trace.agent.tooling.*'
+]
+
 dependencies {
   compile project(':dd-java-agent:agent-bootstrap')
   compile deps.bytebuddy

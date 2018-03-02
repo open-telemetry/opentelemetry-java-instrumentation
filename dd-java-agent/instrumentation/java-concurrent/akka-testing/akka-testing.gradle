@@ -1,6 +1,10 @@
 apply from: "${rootDir}/gradle/java.gradle"
 apply plugin: 'scala'
 
+whitelistedInstructionClasses += whitelistedBranchClasses += [
+  '*'
+]
+
 dependencies {
   compile project(':dd-trace-api')
   compile project(':dd-trace-ot')

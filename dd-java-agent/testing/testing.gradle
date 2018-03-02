@@ -1,5 +1,13 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
+minimumBranchCoverage = 0.5
+minimumInstructionCoverage = 0.6
+whitelistedInstructionClasses += whitelistedBranchClasses += [
+  'datadog.trace.agent.test.*Assert',
+  'datadog.trace.agent.test.AgentTestRunner.1',
+  'datadog.trace.agent.test.TestUtils'
+]
+
 dependencies {
   compile deps.bytebuddy
   compile deps.bytebuddyagent

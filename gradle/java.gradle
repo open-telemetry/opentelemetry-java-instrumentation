@@ -153,6 +153,7 @@ tasks.withType(Test) {
 
 apply from: "$rootDir/gradle/checkstyle.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
+apply from: "$rootDir/gradle/jacoco.gradle"
 
 plugins.withType(BasePlugin) {
   project.afterEvaluate {

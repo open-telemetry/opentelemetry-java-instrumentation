@@ -53,7 +53,3 @@ tasks.withType(Test) {
 parent.subprojects.collect { it.tasks.withType(Test) } each {
   test.shouldRunAfter it
 }
-
-// Jacoco must be applied after the test javaagent config block above,
-// otherwise the javaagent args conflict. (It's order dependent and added LIFO)
-apply from: "${rootDir}/gradle/jacoco.gradle"
