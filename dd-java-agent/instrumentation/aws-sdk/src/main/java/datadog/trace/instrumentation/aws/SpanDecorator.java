@@ -16,18 +16,16 @@ package datadog.trace.instrumentation.aws;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 class SpanDecorator {
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-
   static final String COMPONENT_NAME = "java-aws-sdk";
 
   static void onRequest(final Request request, final Span span) {
@@ -38,9 +36,34 @@ class SpanDecorator {
     span.setTag("aws.service", request.getServiceName());
     span.setTag("aws.operation", request.getOriginalRequest().getClass().getSimpleName());
     span.setTag("aws.endpoint", request.getEndpoint().toString());
+
     try {
-      span.setTag("params", MAPPER.writeValueAsString(request.getParameters()));
-    } catch (final JsonProcessingException e) {
+      StringBuilder params = new StringBuilder("{");
+      final Map<String, List<Object>> requestParams = request.getParameters();
+      boolean firstKey = true;
+      for (Entry<String, List<Object>> entry : requestParams.entrySet()) {
+        if (!firstKey) {
+          params.append(",");
+        }
+        params.append(entry.getKey()).append("=[");
+        for (int i = 0; i < entry.getValue().size(); ++i) {
+          if (i > 0) {
+            params.append(",");
+          }
+          params.append(entry.getValue().get(i));
+        }
+        params.append("]");
+        firstKey = false;
+      }
+      params.append("}");
+      span.setTag("params", params.toString());
+    } catch (Exception e) {
+      try {
+        org.slf4j.LoggerFactory.getLogger(SpanDecorator.class)
+            .debug("Failed to decorate aws span", e);
+      } catch (Exception e2) {
+        // can't reach logger. Silently eat excetpion.
+      }
     }
   }
 
