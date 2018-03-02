@@ -137,9 +137,7 @@ jobs:
               -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
               artifactoryPublish --max-workers=1 --stacktrace --no-daemon
 
-  publish_master:
-    <<: *publish
-  publish_tag:
+  publish_branch:
     <<: *publish
 
 workflows:
@@ -177,24 +175,15 @@ workflows:
             branches:
               ignore: master
 
-      - publish_master:
+      - publish_branch:
           requires:
             - test_7
             - test_8
             - test_9
           filters:
             branches:
-              only: master
+              only:
+              - master
+              - /patch_release.*/
             tags:
               ignore: /.*/
-
-      - publish_tag:
-          requires:
-            - test_7
-            - test_8
-            - test_9
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
