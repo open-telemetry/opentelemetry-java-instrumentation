@@ -2,6 +2,7 @@ package datadog.opentracing;
 
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import datadog.opentracing.scopemanager.ContinuableScope;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
@@ -16,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class TraceCollection extends ConcurrentLinkedDeque<DDSpan> {
+public class SpanCollection extends ConcurrentLinkedDeque<DDSpan> {
   static {
     SpanCleaner.start();
   }
@@ -24,15 +25,15 @@ class TraceCollection extends ConcurrentLinkedDeque<DDSpan> {
   private final DDTracer tracer;
   private final long traceId;
 
-  private final ReferenceQueue refQueue = new ReferenceQueue();
+  private final ReferenceQueue referenceQueue = new ReferenceQueue();
   private final Set<WeakReference<?>> weakReferences = Sets.newConcurrentHashSet();
 
-  private final AtomicInteger unfinishedSpanCount = new AtomicInteger(0);
+  private final AtomicInteger pendingReferenceCount = new AtomicInteger(0);
 
   /** Ensure a trace is never written multiple times */
   private final AtomicBoolean isWritten = new AtomicBoolean(false);
 
-  TraceCollection(final DDTracer tracer, final long traceId) {
+  SpanCollection(final DDTracer tracer, final long traceId) {
     this.tracer = tracer;
     this.traceId = traceId;
     SpanCleaner.pendingTraces.add(this);
@@ -43,9 +44,9 @@ class TraceCollection extends ConcurrentLinkedDeque<DDSpan> {
       log.warn("{} - span registered for wrong trace ({})", span, traceId);
       return;
     }
-    span.ref = new WeakReference<DDSpan>(span, refQueue);
+    span.ref = new WeakReference<DDSpan>(span, referenceQueue);
     weakReferences.add(span.ref);
-    unfinishedSpanCount.incrementAndGet();
+    pendingReferenceCount.incrementAndGet();
   }
 
   private void expireSpan(final DDSpan span) {
@@ -56,13 +57,7 @@ class TraceCollection extends ConcurrentLinkedDeque<DDSpan> {
     weakReferences.remove(span.ref);
     span.ref.clear();
     span.ref = null;
-    expireSpan();
-  }
-
-  private void expireSpan() {
-    if (unfinishedSpanCount.decrementAndGet() == 0) {
-      write();
-    }
+    expireReference();
   }
 
   public void addSpan(final DDSpan span) {
@@ -83,6 +78,22 @@ class TraceCollection extends ConcurrentLinkedDeque<DDSpan> {
     }
   }
 
+  /**
+   * When using continuations, it's possible one may be used after all existing spans are otherwise
+   * completed, so we need to wait till continuations are de-referenced before reporting.
+   */
+  public void registerContinuation(final ContinuableScope.Continuation continuation) {
+    weakReferences.add(
+        new WeakReference<ContinuableScope.Continuation>(continuation, referenceQueue));
+    pendingReferenceCount.incrementAndGet();
+  }
+
+  private void expireReference() {
+    if (pendingReferenceCount.decrementAndGet() == 0) {
+      write();
+    }
+  }
+
   private void write() {
     if (isWritten.compareAndSet(false, true)) {
       SpanCleaner.pendingTraces.remove(this);
@@ -96,10 +107,10 @@ class TraceCollection extends ConcurrentLinkedDeque<DDSpan> {
   public synchronized boolean clean() {
     Reference ref;
     int count = 0;
-    while ((ref = refQueue.poll()) != null) {
+    while ((ref = referenceQueue.poll()) != null) {
       weakReferences.remove(ref);
       count++;
-      expireSpan();
+      expireReference();
     }
     if (count > 0) {
       log.debug("{} unfinished spans garbage collected!", count);
@@ -123,22 +134,21 @@ class TraceCollection extends ConcurrentLinkedDeque<DDSpan> {
 
   private static class SpanCleaner implements Runnable {
     private static final long CLEAN_FREQUENCY = 1;
-    private static final ThreadFactory agentWriterThreadFactory =
+    private static final ThreadFactory FACTORY =
         new ThreadFactoryBuilder().setNameFormat("dd-span-cleaner-%d").setDaemon(true).build();
 
-    private static final ScheduledExecutorService scheduledExecutor =
-        Executors.newScheduledThreadPool(1, agentWriterThreadFactory);
+    private static final ScheduledExecutorService EXECUTOR_SERVICE =
+        Executors.newScheduledThreadPool(1, FACTORY);
 
-    static final Set<TraceCollection> pendingTraces = Sets.newConcurrentHashSet();
+    static final Set<SpanCollection> pendingTraces = Sets.newConcurrentHashSet();
 
     static void start() {
-      scheduledExecutor.scheduleAtFixedRate(
-          new SpanCleaner(), 0, CLEAN_FREQUENCY, TimeUnit.SECONDS);
+      EXECUTOR_SERVICE.scheduleAtFixedRate(new SpanCleaner(), 0, CLEAN_FREQUENCY, TimeUnit.SECONDS);
     }
 
     @Override
     public void run() {
-      for (final TraceCollection trace : pendingTraces) {
+      for (final SpanCollection trace : pendingTraces) {
         trace.clean();
       }
     }

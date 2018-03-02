@@ -190,7 +190,7 @@ public class DDTracer implements io.opentracing.Tracer {
    *
    * @param trace a list of the spans related to the same trace
    */
-  void write(final TraceCollection trace) {
+  void write(final SpanCollection trace) {
     if (trace.isEmpty()) {
       return;
     }
@@ -414,7 +414,7 @@ public class DDTracer implements io.opentracing.Tracer {
       final long spanId = generateNewId();
       final long parentSpanId;
       final Map<String, String> baggage;
-      final TraceCollection parentTrace;
+      final SpanCollection parentTrace;
       final int samplingPriority;
 
       final DDSpanContext context;
@@ -442,7 +442,7 @@ public class DDTracer implements io.opentracing.Tracer {
         traceId = ddsc.getTraceId();
         parentSpanId = ddsc.getSpanId();
         baggage = ddsc.getBaggage();
-        parentTrace = new TraceCollection(DDTracer.this, traceId);
+        parentTrace = new SpanCollection(DDTracer.this, traceId);
         samplingPriority = ddsc.getSamplingPriority();
 
         // Start a new trace
@@ -450,7 +450,7 @@ public class DDTracer implements io.opentracing.Tracer {
         traceId = generateNewId();
         parentSpanId = 0L;
         baggage = null;
-        parentTrace = new TraceCollection(DDTracer.this, traceId);
+        parentTrace = new SpanCollection(DDTracer.this, traceId);
         samplingPriority = PrioritySampling.UNSET;
       }
 

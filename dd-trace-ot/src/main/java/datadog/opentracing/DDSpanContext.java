@@ -28,7 +28,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   private final DDTracer tracer;
 
   /** The collection of all span related to this one */
-  private final TraceCollection trace;
+  private final SpanCollection trace;
 
   /** Baggage is associated with the whole trace and shared with other spans */
   private final Map<String, String> baggageItems;
@@ -72,7 +72,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final boolean errorFlag,
       final String spanType,
       final Map<String, Object> tags,
-      final TraceCollection trace,
+      final SpanCollection trace,
       final DDTracer tracer) {
 
     assert tracer != null;
@@ -217,7 +217,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   }
 
   @JsonIgnore
-  public TraceCollection getTrace() {
+  public SpanCollection getTrace() {
     return this.trace;
   }
 

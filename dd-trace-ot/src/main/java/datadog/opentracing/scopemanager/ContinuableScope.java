@@ -1,5 +1,6 @@
 package datadog.opentracing.scopemanager;
 
+import datadog.opentracing.DDSpanContext;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,22 +49,30 @@ public class ContinuableScope implements Scope {
     return wrapped;
   }
 
-  public Continuation capture() {
-    return new Continuation();
+  public Continuation capture(final boolean finishOnClose) {
+    return new Continuation(this.finishOnClose && finishOnClose);
   }
 
   public class Continuation {
-    public Continuation() {
+
+    private final boolean finishSpanOnClose;
+
+    private Continuation(final boolean finishOnClose) {
+      this.finishSpanOnClose = finishOnClose;
       refCount.incrementAndGet();
+      if (wrapped.context() instanceof DDSpanContext) {
+        final DDSpanContext context = (DDSpanContext) wrapped.context();
+        context.getTrace().registerContinuation(this);
+      }
     }
 
     public Scope activate() {
       for (final ScopeContext context : scopeManager.scopeContexts) {
         if (context.inContext()) {
-          return context.activate(wrapped, finishOnClose);
+          return context.activate(wrapped, finishSpanOnClose);
         }
       }
-      return new ContinuableScope(scopeManager, refCount, wrapped, finishOnClose);
+      return new ContinuableScope(scopeManager, refCount, wrapped, finishSpanOnClose);
     }
   }
 }

@@ -2,7 +2,7 @@ package datadog.opentracing.propagation
 
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
-import datadog.opentracing.TraceCollection
+import datadog.opentracing.SpanCollection
 import datadog.trace.common.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.propagation.TextMapExtractAdapter
@@ -29,25 +29,25 @@ class HTTPCodecTest extends Specification {
     def writer = new ListWriter()
     def tracer = new DDTracer(writer)
     final DDSpanContext mockedContext =
-        new DDSpanContext(
-          1L,
-          2L,
-          0L,
-          "fakeService",
-          "fakeOperation",
-          "fakeResource",
-          samplingPriority,
-          new HashMap<String, String>() {
-            {
-              put("k1", "v1")
-              put("k2", "v2")
-            }
-          },
-          false,
-          "fakeType",
-          null,
-          new TraceCollection(tracer, 1L),
-          tracer)
+      new DDSpanContext(
+        1L,
+        2L,
+        0L,
+        "fakeService",
+        "fakeOperation",
+        "fakeResource",
+        samplingPriority,
+        new HashMap<String, String>() {
+          {
+            put("k1", "v1")
+            put("k2", "v2")
+          }
+        },
+        false,
+        "fakeType",
+        null,
+        new SpanCollection(tracer, 1L),
+        tracer)
 
     final Map<String, String> carrier = new HashMap<>()
 
@@ -62,23 +62,20 @@ class HTTPCodecTest extends Specification {
     carrier.get(OT_BAGGAGE_PREFIX + "k2") == "v2"
 
     where:
-    samplingPriority                    | _
-    PrioritySampling.UNSET         | _
-    PrioritySampling.SAMPLER_KEEP  | _
+    samplingPriority              | _
+    PrioritySampling.UNSET        | _
+    PrioritySampling.SAMPLER_KEEP | _
   }
 
   @Unroll
   def "extract http headers"() {
     setup:
-    final Map<String, String> actual =
-        new HashMap<String, String>() {
-          {
-            put(TRACE_ID_KEY.toUpperCase(), "1")
-            put(SPAN_ID_KEY.toUpperCase(), "2")
-            put(OT_BAGGAGE_PREFIX.toUpperCase() + "k1", "v1")
-            put(OT_BAGGAGE_PREFIX.toUpperCase() + "k2", "v2")
-          }
-        }
+    final Map<String, String> actual = [
+      (TRACE_ID_KEY.toUpperCase())            : "1",
+      (SPAN_ID_KEY.toUpperCase())             : "2",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
+    ]
 
     if (samplingPriority != PrioritySampling.UNSET) {
       actual.put(SAMPLING_PRIORITY_KEY, String.valueOf(samplingPriority))
@@ -95,8 +92,8 @@ class HTTPCodecTest extends Specification {
     context.getSamplingPriority() == samplingPriority
 
     where:
-    samplingPriority                    | _
-    PrioritySampling.UNSET         | _
-    PrioritySampling.SAMPLER_KEEP  | _
+    samplingPriority              | _
+    PrioritySampling.UNSET        | _
+    PrioritySampling.SAMPLER_KEEP | _
   }
 }

@@ -68,6 +68,11 @@ public class DDSpan implements Span {
     this.context.getTrace().registerSpan(this);
   }
 
+  @JsonIgnore
+  public boolean isFinished() {
+    return durationNano.get() != 0;
+  }
+
   @Override
   public final void finish() {
     if (startTimeNano != 0) {

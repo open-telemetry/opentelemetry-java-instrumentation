@@ -5,20 +5,20 @@ import spock.lang.Specification
 import spock.lang.Subject
 
 
-class TraceCollectionTest extends Specification {
+class SpanCollectionTest extends Specification {
   def writer = new ListWriter()
   def tracer = new DDTracer(writer)
 
   def traceId = System.identityHashCode(this)
 
   @Subject
-  TraceCollection trace = new TraceCollection(tracer, traceId)
+  SpanCollection trace = new SpanCollection(tracer, traceId)
 
   DDSpan rootSpan = SpanFactory.newSpanOf(trace)
 
   def setup() {
     assert trace.size() == 0
-    assert trace.unfinishedSpanCount.get() == 1
+    assert trace.pendingReferenceCount.get() == 1
     assert trace.weakReferences.size() == 1
     assert trace.isWritten.get() == false
   }
@@ -37,14 +37,14 @@ class TraceCollectionTest extends Specification {
     def child = tracer.buildSpan("child").asChildOf(rootSpan).start()
 
     then:
-    trace.unfinishedSpanCount.get() == 2
+    trace.pendingReferenceCount.get() == 2
     trace.weakReferences.size() == 2
 
     when:
     child.finish()
 
     then:
-    trace.unfinishedSpanCount.get() == 1
+    trace.pendingReferenceCount.get() == 1
     trace.weakReferences.size() == 1
     trace.asList() == [child]
     writer == []
@@ -53,7 +53,7 @@ class TraceCollectionTest extends Specification {
     rootSpan.finish()
 
     then:
-    trace.unfinishedSpanCount.get() == 0
+    trace.pendingReferenceCount.get() == 0
     trace.weakReferences.size() == 0
     trace.asList() == [rootSpan, child]
     writer == [[rootSpan, child]]
@@ -64,14 +64,14 @@ class TraceCollectionTest extends Specification {
     def child = tracer.buildSpan("child").asChildOf(rootSpan).start()
 
     then:
-    trace.unfinishedSpanCount.get() == 2
+    trace.pendingReferenceCount.get() == 2
     trace.weakReferences.size() == 2
 
     when:
     rootSpan.finish()
 
     then:
-    trace.unfinishedSpanCount.get() == 1
+    trace.pendingReferenceCount.get() == 1
     trace.weakReferences.size() == 1
     trace.asList() == [rootSpan]
     writer == []
@@ -80,7 +80,7 @@ class TraceCollectionTest extends Specification {
     child.finish()
 
     then:
-    trace.unfinishedSpanCount.get() == 0
+    trace.pendingReferenceCount.get() == 0
     trace.weakReferences.size() == 0
     trace.asList() == [child, rootSpan]
     writer == [[child, rootSpan]]
@@ -92,7 +92,7 @@ class TraceCollectionTest extends Specification {
     rootSpan.finish()
 
     then:
-    trace.unfinishedSpanCount.get() == 1
+    trace.pendingReferenceCount.get() == 1
     trace.weakReferences.size() == 1
     trace.asList() == [rootSpan]
     writer == []
@@ -104,7 +104,7 @@ class TraceCollectionTest extends Specification {
     }
 
     then:
-    trace.unfinishedSpanCount.get() == 0
+    trace.pendingReferenceCount.get() == 0
     trace.weakReferences.size() == 0
     trace.asList() == [rootSpan]
     writer == [[rootSpan]]
@@ -115,30 +115,30 @@ class TraceCollectionTest extends Specification {
     trace.addSpan(rootSpan)
 
     expect:
-    trace.unfinishedSpanCount.get() == 1
+    trace.pendingReferenceCount.get() == 1
     trace.weakReferences.size() == 1
     trace.asList() == []
   }
 
   def "register span to wrong trace fails"() {
     setup:
-    def otherTrace = new TraceCollection(tracer, traceId - 10)
+    def otherTrace = new SpanCollection(tracer, traceId - 10)
     otherTrace.registerSpan(new DDSpan(0, rootSpan.context()))
 
     expect:
-    otherTrace.unfinishedSpanCount.get() == 0
+    otherTrace.pendingReferenceCount.get() == 0
     otherTrace.weakReferences.size() == 0
     otherTrace.asList() == []
   }
 
   def "add span to wrong trace fails"() {
     setup:
-    def otherTrace = new TraceCollection(tracer, traceId - 10)
+    def otherTrace = new SpanCollection(tracer, traceId - 10)
     rootSpan.finish()
     otherTrace.addSpan(rootSpan)
 
     expect:
-    otherTrace.unfinishedSpanCount.get() == 0
+    otherTrace.pendingReferenceCount.get() == 0
     otherTrace.weakReferences.size() == 0
     otherTrace.asList() == []
   }
