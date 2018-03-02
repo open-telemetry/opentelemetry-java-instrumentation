@@ -5,14 +5,14 @@ import spock.lang.Specification
 import spock.lang.Subject
 
 
-class SpanCollectionTest extends Specification {
+class PendingTraceTest extends Specification {
   def writer = new ListWriter()
   def tracer = new DDTracer(writer)
 
   def traceId = System.identityHashCode(this)
 
   @Subject
-  SpanCollection trace = new SpanCollection(tracer, traceId)
+  PendingTrace trace = new PendingTrace(tracer, traceId)
 
   DDSpan rootSpan = SpanFactory.newSpanOf(trace)
 
@@ -122,7 +122,7 @@ class SpanCollectionTest extends Specification {
 
   def "register span to wrong trace fails"() {
     setup:
-    def otherTrace = new SpanCollection(tracer, traceId - 10)
+    def otherTrace = new PendingTrace(tracer, traceId - 10)
     otherTrace.registerSpan(new DDSpan(0, rootSpan.context()))
 
     expect:
@@ -133,7 +133,7 @@ class SpanCollectionTest extends Specification {
 
   def "add span to wrong trace fails"() {
     setup:
-    def otherTrace = new SpanCollection(tracer, traceId - 10)
+    def otherTrace = new PendingTrace(tracer, traceId - 10)
     rootSpan.finish()
     otherTrace.addSpan(rootSpan)
 

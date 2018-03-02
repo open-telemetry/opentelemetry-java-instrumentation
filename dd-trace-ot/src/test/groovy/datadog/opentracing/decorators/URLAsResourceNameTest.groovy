@@ -2,7 +2,7 @@ package datadog.opentracing.decorators
 
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
-import datadog.opentracing.SpanCollection
+import datadog.opentracing.PendingTrace
 import datadog.trace.common.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.tag.Tags
@@ -100,7 +100,7 @@ class URLAsResourceNameTest extends Specification {
         false,
         "fakeType",
         tags,
-        new SpanCollection(tracer, 1L),
+        new PendingTrace(tracer, 1L),
         tracer)
 
     then:

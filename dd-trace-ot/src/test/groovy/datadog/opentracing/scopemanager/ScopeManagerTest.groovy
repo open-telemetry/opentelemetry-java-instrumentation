@@ -3,7 +3,7 @@ package datadog.opentracing.scopemanager
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
-import datadog.opentracing.SpanCollection
+import datadog.opentracing.PendingTrace
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.Scope
 import io.opentracing.Span
@@ -115,7 +115,7 @@ class ScopeManagerTest extends Specification {
     when:
     continuation.activate()
     continuation = null // Continuation references also hold up traces.
-    SpanCollection.awaitGC()
+    PendingTrace.awaitGC()
     ((DDSpanContext) scopeManager.active().span().context()).trace.clean()
 
     then:
@@ -147,7 +147,7 @@ class ScopeManagerTest extends Specification {
     when:
     // remove hard reference and force GC
     continuation = null
-    SpanCollection.awaitGC()
+    PendingTrace.awaitGC()
     span.context().trace.clean()
 
     then:
@@ -183,7 +183,7 @@ class ScopeManagerTest extends Specification {
     when:
     def newScope = cont.activate()
     cont = null // Continuation references also hold up traces.
-    SpanCollection.awaitGC()
+    PendingTrace.awaitGC()
     ((DDSpanContext) scopeManager.active().span().context()).trace.clean()
 
     then:
@@ -236,7 +236,7 @@ class ScopeManagerTest extends Specification {
     when:
     // remove hard reference and force GC
     continuation = null
-    SpanCollection.awaitGC()
+    PendingTrace.awaitGC()
     span.context().trace.clean()
 
     then:

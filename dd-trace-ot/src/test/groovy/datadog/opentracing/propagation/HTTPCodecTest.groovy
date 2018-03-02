@@ -2,7 +2,7 @@ package datadog.opentracing.propagation
 
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
-import datadog.opentracing.SpanCollection
+import datadog.opentracing.PendingTrace
 import datadog.trace.common.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.propagation.TextMapExtractAdapter
@@ -46,7 +46,7 @@ class HTTPCodecTest extends Specification {
         false,
         "fakeType",
         null,
-        new SpanCollection(tracer, 1L),
+        new PendingTrace(tracer, 1L),
         tracer)
 
     final Map<String, String> carrier = new HashMap<>()

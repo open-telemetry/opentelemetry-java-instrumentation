@@ -19,7 +19,7 @@ class SpanFactory {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new SpanCollection(tracer, 1L),
+      new PendingTrace(tracer, 1L),
       tracer)
     return new DDSpan(timestampMicro, context)
   }
@@ -37,12 +37,12 @@ class SpanFactory {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new SpanCollection(tracer, 1L),
+      new PendingTrace(tracer, 1L),
       tracer)
     return new DDSpan(1, context)
   }
 
-  static newSpanOf(SpanCollection trace) {
+  static newSpanOf(PendingTrace trace) {
     def context = new DDSpanContext(
       trace.traceId,
       1L,
@@ -75,7 +75,7 @@ class SpanFactory {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new SpanCollection(tracer, 1L),
+      new PendingTrace(tracer, 1L),
       tracer)
     context.setTag("env", envName)
     return new DDSpan(0l, context)

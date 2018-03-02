@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SpanCollection extends ConcurrentLinkedDeque<DDSpan> {
+public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   static {
     SpanCleaner.start();
   }
@@ -33,7 +33,7 @@ public class SpanCollection extends ConcurrentLinkedDeque<DDSpan> {
   /** Ensure a trace is never written multiple times */
   private final AtomicBoolean isWritten = new AtomicBoolean(false);
 
-  SpanCollection(final DDTracer tracer, final long traceId) {
+  PendingTrace(final DDTracer tracer, final long traceId) {
     this.tracer = tracer;
     this.traceId = traceId;
     SpanCleaner.pendingTraces.add(this);
@@ -140,7 +140,7 @@ public class SpanCollection extends ConcurrentLinkedDeque<DDSpan> {
     private static final ScheduledExecutorService EXECUTOR_SERVICE =
         Executors.newScheduledThreadPool(1, FACTORY);
 
-    static final Set<SpanCollection> pendingTraces = Sets.newConcurrentHashSet();
+    static final Set<PendingTrace> pendingTraces = Sets.newConcurrentHashSet();
 
     static void start() {
       EXECUTOR_SERVICE.scheduleAtFixedRate(new SpanCleaner(), 0, CLEAN_FREQUENCY, TimeUnit.SECONDS);
@@ -148,7 +148,7 @@ public class SpanCollection extends ConcurrentLinkedDeque<DDSpan> {
 
     @Override
     public void run() {
-      for (final SpanCollection trace : pendingTraces) {
+      for (final PendingTrace trace : pendingTraces) {
         trace.clean();
       }
     }

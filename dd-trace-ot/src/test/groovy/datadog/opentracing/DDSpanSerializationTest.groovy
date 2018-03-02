@@ -51,7 +51,7 @@ class DDSpanSerializationTest extends Specification {
         false,
         "type",
         tags,
-        new SpanCollection(tracer, 1L),
+        new PendingTrace(tracer, 1L),
         tracer)
 
     baggage.put(DDTags.THREAD_NAME, Thread.currentThread().getName())
