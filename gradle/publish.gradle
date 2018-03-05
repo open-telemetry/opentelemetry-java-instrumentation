@@ -63,6 +63,7 @@ if (!isRoot) {
 }
 
 def isSnapshot = version.endsWith("-SNAPSHOT")
+def isCIandTagged = System.getenv("CIRCLE_TAG") != null
 // define in ~/.gradle/gradle.properties to override for testing
 def forceLocal = project.hasProperty('forceLocal') && forceLocal
 
@@ -151,6 +152,6 @@ bintray {
   }
 }
 
-if (!isSnapshot) {
+if (!isSnapshot && isCIandTagged) {
   artifactoryPublish.finalizedBy bintrayUpload
 }
