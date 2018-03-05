@@ -238,6 +238,7 @@ class ScopeManagerTest extends Specification {
     continuation = null
     PendingTrace.awaitGC()
     span.context().trace.clean()
+    writer.waitForTraces(1)
 
     then:
     writer == [[childSpan, span]]
