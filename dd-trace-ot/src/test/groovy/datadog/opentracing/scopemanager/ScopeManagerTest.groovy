@@ -211,7 +211,7 @@ class ScopeManagerTest extends Specification {
     def newScope = continuation.activate()
 
     then:
-    scopeManager.active() == newScope.wrapped
+    scopeManager.active() == newScope.wrappedScope
     newScope != childScope && newScope != parentScope
     newScope.span() == childSpan
     !spanFinished(childSpan)
@@ -241,7 +241,7 @@ class ScopeManagerTest extends Specification {
 
     expect:
     newScope != scope
-    scopeManager.active() == newScope.wrapped
+    scopeManager.active() == newScope.wrappedScope
     spanFinished(span)
     writer == []
 

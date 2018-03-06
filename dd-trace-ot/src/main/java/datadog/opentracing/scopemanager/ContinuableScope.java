@@ -2,6 +2,7 @@ package datadog.opentracing.scopemanager;
 
 import datadog.opentracing.DDSpanContext;
 import datadog.opentracing.PendingTrace;
+import datadog.trace.context.ContextPropagator;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.noop.NoopScopeManager;
@@ -12,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ContinuableScope implements Scope {
+public class ContinuableScope implements Scope, ContextPropagator {
   final ContextualScopeManager scopeManager;
   final AtomicInteger refCount;
   private final Span wrapped;
@@ -66,7 +67,7 @@ public class ContinuableScope implements Scope {
     return new Continuation(this.finishOnClose && finishOnClose);
   }
 
-  public class Continuation implements Closeable {
+  public class Continuation implements Closeable, ContextPropagator.Continuation {
     public WeakReference<Continuation> ref;
 
     private final AtomicBoolean used = new AtomicBoolean(false);
@@ -109,21 +110,21 @@ public class ContinuableScope implements Scope {
     }
 
     private class ClosingScope implements Scope {
-      private final Scope wrapped;
+      private final Scope wrappedScope;
 
-      private ClosingScope(final Scope wrapped) {
-        this.wrapped = wrapped;
+      private ClosingScope(final Scope wrappedScope) {
+        this.wrappedScope = wrappedScope;
       }
 
       @Override
       public void close() {
-        wrapped.close();
+        wrappedScope.close();
         Continuation.this.close();
       }
 
       @Override
       public Span span() {
-        return wrapped.span();
+        return wrappedScope.span();
       }
     }
   }

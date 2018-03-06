@@ -38,6 +38,7 @@ Thumbs.db
 *.iml
 *.ipr
 *.iws
+out/
 
 # Visual Studio Code #
 ######################
