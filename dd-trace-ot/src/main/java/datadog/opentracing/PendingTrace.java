@@ -83,9 +83,21 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
    * completed, so we need to wait till continuations are de-referenced before reporting.
    */
   public void registerContinuation(final ContinuableScope.Continuation continuation) {
-    weakReferences.add(
-        new WeakReference<ContinuableScope.Continuation>(continuation, referenceQueue));
+    continuation.ref =
+        new WeakReference<ContinuableScope.Continuation>(continuation, referenceQueue);
+    weakReferences.add(continuation.ref);
     pendingReferenceCount.incrementAndGet();
+  }
+
+  public void cancelContinuation(final ContinuableScope.Continuation continuation) {
+    synchronized (continuation) {
+      if (continuation.ref != null) {
+        weakReferences.remove(continuation.ref);
+        continuation.ref.clear();
+        continuation.ref = null;
+      }
+    }
+    expireReference();
   }
 
   private void expireReference() {

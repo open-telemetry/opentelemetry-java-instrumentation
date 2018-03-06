@@ -114,20 +114,34 @@ class ScopeManagerTest extends Specification {
 
     when:
     continuation.activate()
-    continuation = null // Continuation references also hold up traces.
-    PendingTrace.awaitGC()
-    ((DDSpanContext) scopeManager.active().span().context()).trace.clean()
+    if (forceGC) {
+      continuation = null // Continuation references also hold up traces.
+      PendingTrace.awaitGC()
+      ((DDSpanContext) scope.span().context()).trace.clean()
+    }
+    if (autoClose) {
+      if (continuation != null) {
+        continuation.close()
+      }
+    }
 
     then:
     scopeManager.active() != null
 
     when:
     scopeManager.active().close()
+    writer.waitForTraces(1)
 
     then:
     scopeManager.active() == null
     spanFinished(scope.span())
     writer == [[scope.span()]]
+
+    where:
+    autoClose | forceGC
+    true      | true
+    true      | false
+    false     | true
   }
 
   def "hard reference on continuation prevents trace from reporting"() {
@@ -145,13 +159,26 @@ class ScopeManagerTest extends Specification {
     writer == []
 
     when:
-    // remove hard reference and force GC
-    continuation = null
-    PendingTrace.awaitGC()
-    span.context().trace.clean()
+    if (forceGC) {
+      continuation = null // Continuation references also hold up traces.
+      PendingTrace.awaitGC()
+      ((DDSpanContext) span.context()).trace.clean()
+      writer.waitForTraces(1)
+    }
+    if (autoClose) {
+      if (continuation != null) {
+        continuation.close()
+      }
+    }
 
     then:
     writer == [[span]]
+
+    where:
+    autoClose | forceGC
+    true      | true
+    true      | false
+    false     | true
   }
 
   def "continuation restores trace"() {
@@ -161,7 +188,7 @@ class ScopeManagerTest extends Specification {
     ContinuableScope childScope = (ContinuableScope) tracer.buildSpan("parent").startActive(true)
     def childSpan = childScope.span()
 
-    def cont = childScope.capture(true)
+    def continuation = childScope.capture(true)
     childScope.close()
 
     expect:
@@ -181,13 +208,10 @@ class ScopeManagerTest extends Specification {
     writer == []
 
     when:
-    def newScope = cont.activate()
-    cont = null // Continuation references also hold up traces.
-    PendingTrace.awaitGC()
-    ((DDSpanContext) scopeManager.active().span().context()).trace.clean()
+    def newScope = continuation.activate()
 
     then:
-    scopeManager.active() == newScope
+    scopeManager.active() == newScope.wrapped
     newScope != childScope && newScope != parentScope
     newScope.span() == childSpan
     !spanFinished(childSpan)
@@ -217,7 +241,7 @@ class ScopeManagerTest extends Specification {
 
     expect:
     newScope != scope
-    scopeManager.active() == newScope
+    scopeManager.active() == newScope.wrapped
     spanFinished(span)
     writer == []
 
@@ -234,14 +258,21 @@ class ScopeManagerTest extends Specification {
     writer == []
 
     when:
-    // remove hard reference and force GC
-    continuation = null
-    PendingTrace.awaitGC()
-    span.context().trace.clean()
-    writer.waitForTraces(1)
+    if (closeScope) {
+      newScope.close()
+    }
+    if (closeContinuation) {
+      continuation.close()
+    }
 
     then:
     writer == [[childSpan, span]]
+
+    where:
+    closeScope | closeContinuation
+    true       | false
+    false      | true
+    true       | true
   }
 
   @Unroll
