@@ -1,6 +1,7 @@
 package datadog.opentracing;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
@@ -10,6 +11,8 @@ import datadog.opentracing.propagation.HTTPCodec;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
 import datadog.trace.api.DDTags;
+import datadog.trace.api.interceptor.MutableSpan;
+import datadog.trace.api.interceptor.TraceInterceptor;
 import datadog.trace.common.DDTraceConfig;
 import datadog.trace.common.Service;
 import datadog.trace.common.sampling.AllSampler;
@@ -25,12 +28,17 @@ import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.ServiceLoader;
+import java.util.SortedSet;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,6 +64,14 @@ public class DDTracer implements io.opentracing.Tracer {
   private final Map<String, List<AbstractDecorator>> spanContextDecorators =
       new ConcurrentHashMap<>();
 
+  private final SortedSet<TraceInterceptor> interceptors =
+      new ConcurrentSkipListSet<>(
+          new Comparator<TraceInterceptor>() {
+            @Override
+            public int compare(final TraceInterceptor o1, final TraceInterceptor o2) {
+              return Integer.compare(o1.priority(), o2.priority());
+            }
+          });
   private final CodecRegistry registry;
   private final Map<String, Service> services = new HashMap<>();
 
@@ -106,6 +122,10 @@ public class DDTracer implements io.opentracing.Tracer {
       final DDApi api = ((DDAgentWriter) this.writer).getApi();
       api.addResponseListener((DDApi.ResponseListener) this.sampler);
     }
+
+    for (final TraceInterceptor interceptor : ServiceLoader.load(TraceInterceptor.class)) {
+      interceptors.add(interceptor);
+    }
     log.info("New instance: {}", this);
   }
 
@@ -140,6 +160,17 @@ public class DDTracer implements io.opentracing.Tracer {
     list.add(decorator);
 
     spanContextDecorators.put(decorator.getMatchingTag(), list);
+  }
+
+  /**
+   * Add a new interceptor to the tracer. Interceptors with duplicate priority to existing ones are
+   * ignored.
+   *
+   * @param interceptor
+   * @return false if an interceptor with same priority exists.
+   */
+  public boolean addInterceptor(final TraceInterceptor interceptor) {
+    return interceptors.add(interceptor);
   }
 
   public void addScopeContext(final ScopeContext context) {
@@ -194,8 +225,23 @@ public class DDTracer implements io.opentracing.Tracer {
     if (trace.isEmpty()) {
       return;
     }
-    if (this.sampler.sample(trace.peek())) {
-      this.writer.write(new ArrayList<>(trace));
+    final ArrayList<DDSpan> writtenTrace;
+    if (interceptors.isEmpty()) {
+      writtenTrace = Lists.newArrayList(trace);
+    } else {
+      Collection<? extends MutableSpan> interceptedTrace = Lists.newArrayList(trace);
+      for (final TraceInterceptor interceptor : interceptors) {
+        interceptedTrace = interceptor.onTraceComplete(interceptedTrace);
+      }
+      writtenTrace = Lists.newArrayListWithExpectedSize(interceptedTrace.size());
+      for (final MutableSpan span : interceptedTrace) {
+        if (span instanceof DDSpan) {
+          writtenTrace.add((DDSpan) span);
+        }
+      }
+    }
+    if (!writtenTrace.isEmpty() && this.sampler.sample(writtenTrace.get(0))) {
+      this.writer.write(writtenTrace);
     }
   }
 

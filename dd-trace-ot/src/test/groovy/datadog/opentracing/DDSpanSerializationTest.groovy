@@ -9,7 +9,7 @@ import spock.lang.Specification
 import spock.lang.Timeout
 import spock.lang.Unroll
 
-@Timeout(2)
+@Timeout(5)
 class DDSpanSerializationTest extends Specification {
 
   @Unroll

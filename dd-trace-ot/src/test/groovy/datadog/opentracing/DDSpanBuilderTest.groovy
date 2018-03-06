@@ -235,6 +235,9 @@ class DDSpanBuilderTest extends Specification {
     expect:
     span.tags == tags
 
+    cleanup:
+    System.clearProperty("dd.trace.span.tags")
+
     where:
     tagString     | tags
     ""            | [:]
