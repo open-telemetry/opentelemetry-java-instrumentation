@@ -1,0 +1,23 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+  compile('io.opentracing.contrib:opentracing-web-servlet-filter:0.1.0') {
+    transitive = false
+  }
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  compile deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+
+  // Include servlet instrumentation for verifying the tomcat requests
+  testCompile project(':dd-java-agent:instrumentation:servlet-3')
+
+  testCompile group: 'com.sparkjava', name: 'spark-core', version: '2.7.1'
+  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+
+}
