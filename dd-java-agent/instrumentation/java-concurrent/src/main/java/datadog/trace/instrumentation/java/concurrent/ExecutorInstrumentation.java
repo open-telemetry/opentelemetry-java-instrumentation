@@ -15,9 +15,7 @@ import datadog.trace.context.ContextPropagator;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -26,7 +24,10 @@ import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
 
+@Slf4j
 @AutoService(Instrumenter.class)
 public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   public static final String EXEC_NAME = "java_concurrent";
@@ -37,6 +38,49 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
           ExecutorInstrumentation.class.getName() + "$CallableWrapper",
           ExecutorInstrumentation.class.getName() + "$RunnableWrapper");
 
+  /**
+   * Only apply executor instrumentation to whitelisted executors. In the future, this restriction
+   * may be lifted to include all executors.
+   */
+  private static final Collection<String> WHITELISTED_EXECUTORS;
+
+  static {
+    final String[] whitelist = {
+      "java.util.concurrent.AbstractExecutorService",
+      "java.util.concurrent.ThreadPoolExecutor",
+      "java.util.concurrent.ScheduledThreadPoolExecutor",
+      "java.util.concurrent.ForkJoinPool",
+      "java.util.concurrent.Executors$FinalizableDelegatedExecutorService",
+      "java.util.concurrent.Executors$DelegatedExecutorService",
+      "javax.management.NotificationBroadcasterSupport$1",
+      "scala.concurrent.Future$InternalCallbackExecutor$",
+      "scala.concurrent.impl.ExecutionContextImpl",
+      "scala.concurrent.impl.ExecutionContextImpl$$anon$1",
+      "scala.concurrent.forkjoin.ForkJoinPool",
+      "scala.concurrent.impl.ExecutionContextImpl$$anon$3",
+      "akka.dispatch.MessageDispatcher",
+      "akka.dispatch.Dispatcher",
+      "akka.dispatch.Dispatcher$LazyExecutorServiceDelegate",
+      "akka.actor.ActorSystemImpl$$anon$1",
+      "akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinPool",
+      "akka.dispatch.forkjoin.ForkJoinPool",
+      "akka.dispatch.MessageDispatcher",
+      "akka.dispatch.Dispatcher",
+      "akka.dispatch.Dispatcher$LazyExecutorServiceDelegate",
+      "akka.actor.ActorSystemImpl$$anon$1",
+      "akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinPool",
+      "akka.dispatch.forkjoin.ForkJoinPool",
+      "akka.dispatch.BalancingDispatcher",
+      "akka.dispatch.ThreadPoolConfig$ThreadPoolExecutorServiceFactory$$anon$1",
+      "akka.dispatch.PinnedDispatcher",
+      "akka.dispatch.ExecutionContexts$sameThreadExecutionContext$",
+      "akka.dispatch.ExecutionContexts$sameThreadExecutionContext$",
+      "play.api.libs.streams.Execution$trampoline$"
+    };
+    WHITELISTED_EXECUTORS =
+        Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(whitelist)));
+  }
+
   public ExecutorInstrumentation() {
     super(EXEC_NAME);
   }
@@ -45,6 +89,17 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(not(isInterface()).and(hasSuperType(named(Executor.class.getName()))))
+        .and(
+            new ElementMatcher<TypeDescription>() {
+              @Override
+              public boolean matches(TypeDescription target) {
+                final boolean whitelisted = WHITELISTED_EXECUTORS.contains(target.getName());
+                if (!whitelisted) {
+                  log.debug("Skipping executor instrumentation for {}", target.getName());
+                }
+                return whitelisted;
+              }
+            })
         .transform(EXEC_HELPER_INJECTOR)
         .transform(
             DDAdvice.create()
