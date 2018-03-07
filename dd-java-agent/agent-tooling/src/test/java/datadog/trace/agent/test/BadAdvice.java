@@ -8,4 +8,11 @@ public class BadAdvice {
     returnVal = true;
     throw new RuntimeException("Test Exception");
   }
+
+  public static class NoOpAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void doNothing() {
+      System.currentTimeMillis();
+    }
+  }
 }
