@@ -1,5 +1,8 @@
 package datadog.trace.instrumentation.sparkjava;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static net.bytebuddy.matcher.ElementMatchers.*;
+
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
@@ -9,9 +12,6 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import spark.route.HttpMethod;
 import spark.routematch.RouteMatch;
-
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
-import static net.bytebuddy.matcher.ElementMatchers.*;
 
 public class RoutesInstrumentation extends Instrumenter.Configurable {
 
