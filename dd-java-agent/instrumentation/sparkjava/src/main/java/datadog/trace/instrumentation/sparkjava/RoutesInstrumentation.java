@@ -28,7 +28,7 @@ public class RoutesInstrumentation extends Instrumenter.Configurable {
       .transform(
         DDAdvice.create()
           .advice(
-            named("find") // HttpMethod httpMethod, String path, String acceptType
+            named("find")
               .and(takesArgument(0, named("spark.route.HttpMethod")))
               .and(takesArgument(1, named("String")))
               .and(takesArgument(2, named("String")))
