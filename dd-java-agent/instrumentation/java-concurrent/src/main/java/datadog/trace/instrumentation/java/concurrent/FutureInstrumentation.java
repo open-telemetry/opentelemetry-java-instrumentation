@@ -26,10 +26,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class FutureInstrumentation extends Instrumenter.Configurable {
 
-  public FutureInstrumentation() {
-    super(ExecutorInstrumentation.EXEC_NAME);
-  }
-
   /**
    * Only apply executor instrumentation to whitelisted executors. In the future, this restriction
    * may be lifted to include all executors.
@@ -68,6 +64,15 @@ public final class FutureInstrumentation extends Instrumenter.Configurable {
     };
     WHITELISTED_FUTURES =
         Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(whitelist)));
+  }
+
+  public FutureInstrumentation() {
+    super(ExecutorInstrumentation.EXEC_NAME);
+  }
+
+  @Override
+  protected boolean defaultEnabled() {
+    return false;
   }
 
   @Override
