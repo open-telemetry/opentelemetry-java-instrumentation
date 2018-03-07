@@ -33,6 +33,13 @@ class ExceptionHandlerTest extends Specification {
         .advice(
         isMethod().and(named("isInstrumented")),
         BadAdvice.getName()))
+      .transform(
+      new AgentBuilder.Transformer.ForAdvice()
+        .with(new AgentBuilder.LocationStrategy.Simple(ClassFileLocator.ForClassLoader.of(BadAdvice.getClassLoader())))
+        .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
+        .advice(
+        isMethod().and(named("smallStack").or(named("largeStack"))),
+        BadAdvice.NoOpAdvice.getName()))
       .asDecorator()
 
     ByteBuddyAgent.install()
@@ -80,9 +87,31 @@ class ExceptionHandlerTest extends Specification {
     testAppender.list.size() == initLogEvents
   }
 
+  def "exception handler sets the correct stack size"() {
+    when:
+    SomeClass.smallStack()
+    SomeClass.largeStack()
+
+    then:
+    noExceptionThrown()
+  }
+
   static class SomeClass {
     static boolean isInstrumented() {
       return false
+    }
+
+    static void smallStack() {
+      // a method with a max stack of 0
+    }
+
+    static void largeStack() {
+      // a method with a max stack of 6
+      long l = 22l
+      int i = 3
+      double d = 32.2d
+      Object o = new Object()
+      println "large stack: $l $i $d $o"
     }
   }
 }

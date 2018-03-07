@@ -3,7 +3,6 @@ package datadog.trace.agent.tooling;
 import datadog.trace.agent.bootstrap.ExceptionLogger;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.bytecode.StackManipulation;
-import net.bytebuddy.implementation.bytecode.StackSize;
 import net.bytebuddy.jar.asm.Label;
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
@@ -19,7 +18,8 @@ public class ExceptionHandlers {
 
   private static final StackManipulation EXCEPTION_STACK_HANDLER =
       new StackManipulation() {
-        private final Size size = StackSize.SINGLE.toDecreasingSize();
+        // Pops one Throwable off the stack. Maxes the stack to at least 3.
+        private final Size size = new StackManipulation.Size(-1, 3);
 
         @Override
         public boolean isValid() {

@@ -7,7 +7,7 @@ import spock.lang.Timeout
 
 import java.util.concurrent.TimeUnit
 
-@Timeout(1)
+@Timeout(10)
 class DDSpanTest extends Specification {
   def writer = new ListWriter()
   def tracer = new DDTracer(writer)
