@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.servlet3;
+package datadog.trace.instrumentation.jetty9;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
@@ -36,18 +36,18 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class Filter3Instrumentation extends Instrumenter.Configurable {
-  public static final String SERVLET_OPERATION_NAME = "servlet.request";
+public final class HandlerInstrumentation extends Instrumenter.Configurable {
+  public static final String SERVLET_OPERATION_NAME = "jetty.request";
 
-  public Filter3Instrumentation() {
-    super("servlet", "servlet-3");
+  public HandlerInstrumentation() {
+    super("jetty", "jetty-9");
   }
 
   @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
       .type(
-        not(isInterface()).and(hasSuperType(named("javax.servlet.Filter"))),
+        not(isInterface()).and(hasSuperType(named("org.eclipse.jetty.server.Handler"))),
         classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"))
       .transform(
         new HelperInjector(
@@ -57,59 +57,50 @@ public final class Filter3Instrumentation extends Instrumenter.Configurable {
           "io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator$1",
           "io.opentracing.contrib.web.servlet.filter.TracingFilter",
           "io.opentracing.contrib.web.servlet.filter.TracingFilter$1",
-          FilterChain3Advice.class.getName() + "$TagSettingAsyncListener"))
+          HandlerInstrumentationAdvice.class.getName() + "$TagSettingAsyncListener"))
       .transform(
         DDAdvice.create()
           .advice(
-            named("doFilter")
-              .and(takesArgument(0, named("javax.servlet.ServletRequest")))
-              .and(takesArgument(1, named("javax.servlet.ServletResponse")))
-              .and(takesArgument(2, named("javax.servlet.ServletResponse")))
+            named("handle")
+              .and(takesArgument(0, named("String")))
+              .and(takesArgument(1, named("org.eclipse.jetty.server.Request")))
+              .and(takesArgument(2, named("javax.servlet.HttpServletRequest")))
+              .and(takesArgument(3, named("javax.servlet.HttpServletResponse")))
               .and(isPublic()),
-            FilterChain3Advice.class.getName()))
+            HandlerInstrumentationAdvice.class.getName()))
       .asDecorator();
   }
 
-  public static class FilterChain3Advice {
+  public static class HandlerInstrumentationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(@Advice.Argument(0) final ServletRequest req) {
-      if (GlobalTracer.get().activeSpan() != null || !(req instanceof HttpServletRequest)) {
-        // Tracing might already be applied by the FilterChain.  If so ignore this.
-        return null;
-      }
+    public static Scope startSpan(@Advice.Argument(0) final String target, @Advice.Argument(2) final HttpServletRequest req) {
 
       final SpanContext extractedContext =
-        GlobalTracer.get()
-          .extract(
-            Format.Builtin.HTTP_HEADERS,
-            new HttpServletRequestExtractAdapter((HttpServletRequest) req));
-
+        GlobalTracer.get().extract(Format.Builtin.HTTP_HEADERS, new HttpServletRequestExtractAdapter(req));
+      final String resourceName = req.getMethod() + target;
       final Scope scope =
         GlobalTracer.get()
           .buildSpan(SERVLET_OPERATION_NAME)
           .asChildOf(extractedContext)
           .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
           .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
+          //.withTag("span.origin.type", statement.getClass().getName())
+          .withTag(DDTags.RESOURCE_NAME, resourceName)
           .startActive(false);
 
-      ServletFilterSpanDecorator.STANDARD_TAGS.onRequest((HttpServletRequest) req, scope.span());
+      ServletFilterSpanDecorator.STANDARD_TAGS.onRequest(req, scope.span());
       return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-      @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(1) final ServletResponse response,
+      @Advice.Argument(2) final HttpServletRequest req,
+      @Advice.Argument(3) final HttpServletResponse resp,
       @Advice.Enter final Scope scope,
       @Advice.Thrown final Throwable throwable) {
-
       if (scope != null) {
-        if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
-          final HttpServletRequest req = (HttpServletRequest) request;
-          final HttpServletResponse resp = (HttpServletResponse) response;
           final Span span = scope.span();
-
           if (throwable != null) {
             ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, throwable, span);
             span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
@@ -124,7 +115,6 @@ public final class Filter3Instrumentation extends Instrumenter.Configurable {
             scope.close();
             scope.span().finish(); // Finish the span manually since finishSpanOnClose was false
           }
-        }
       }
     }
 

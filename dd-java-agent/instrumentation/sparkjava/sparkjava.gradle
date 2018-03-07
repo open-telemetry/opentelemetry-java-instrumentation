@@ -1,5 +1,16 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
+if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
+  sourceSets {
+    test {
+      groovy {
+        // Sparkjava is not compatible with < Java 8
+        exclude '**/SparkJavaBasedTest.groovy'
+      }
+    }
+  }
+}
+
 dependencies {
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
   compile('io.opentracing.contrib:opentracing-web-servlet-filter:0.1.0') {
@@ -11,13 +22,12 @@ dependencies {
   compile deps.bytebuddy
   compile deps.opentracing
   compile deps.autoservice
+  compile group: 'com.sparkjava', name: 'spark-core', version: '2.7.1'
 
   testCompile project(':dd-java-agent:testing')
 
-  // Include servlet instrumentation for verifying the tomcat requests
-  testCompile project(':dd-java-agent:instrumentation:servlet-3')
-
-  testCompile group: 'com.sparkjava', name: 'spark-core', version: '2.7.1'
+  // Uses jetty-9 instrumentation for requests
+  testCompile project(':dd-java-agent:instrumentation:jetty-9')
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
 
 }
