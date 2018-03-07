@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.jetty9;
+package datadog.trace.instrumentation.jetty8;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
@@ -33,7 +33,12 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
   public static final String SERVLET_OPERATION_NAME = "jetty.request";
 
   public HandlerInstrumentation() {
-    super("jetty", "jetty-9");
+    super("jetty", "jetty-8");
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return false;
   }
 
   @Override
@@ -69,6 +74,10 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
         @Advice.Argument(0) final String target, @Advice.Argument(2) final HttpServletRequest req) {
+      if (GlobalTracer.get().activeSpan() != null) {
+        // Tracing might already be applied.  If so ignore this.
+        return null;
+      }
 
       final SpanContext extractedContext =
           GlobalTracer.get()
