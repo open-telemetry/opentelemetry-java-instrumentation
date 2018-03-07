@@ -22,28 +22,28 @@ public class RoutesInstrumentation extends Instrumenter.Configurable {
   @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
-      .type(
-        is(named("spark.route.Routes")),
-        classLoaderHasClasses("spark.embeddedserver.jetty.EmbeddedJettyServer"))
-      .transform(
-        DDAdvice.create()
-          .advice(
-            named("find")
-              .and(takesArgument(0, named("spark.route.HttpMethod")))
-              .and(takesArgument(1, named("String")))
-              .and(takesArgument(2, named("String")))
-              .and(isPublic()),
-            RoutesInstrumentationAdvice.class.getName()))
-      .asDecorator();
+        .type(
+            is(named("spark.route.Routes")),
+            classLoaderHasClasses("spark.embeddedserver.jetty.EmbeddedJettyServer"))
+        .transform(
+            DDAdvice.create()
+                .advice(
+                    named("find")
+                        .and(takesArgument(0, named("spark.route.HttpMethod")))
+                        .and(takesArgument(1, named("String")))
+                        .and(takesArgument(2, named("String")))
+                        .and(isPublic()),
+                    RoutesInstrumentationAdvice.class.getName()))
+        .asDecorator();
   }
 
   public static class RoutesInstrumentationAdvice {
 
     @Advice.OnMethodExit()
     public static void routeMatchEnricher(
-      @Advice.Argument(0) final HttpMethod method,
-      @Advice.Enter final Scope scope,
-      @Advice.Return final RouteMatch routeMatch) {
+        @Advice.Argument(0) final HttpMethod method,
+        @Advice.Enter final Scope scope,
+        @Advice.Return final RouteMatch routeMatch) {
       if (scope != null && routeMatch != null) {
         final Span span = scope.span();
         final String resourceName = method.name() + " " + routeMatch.getMatchUri();
