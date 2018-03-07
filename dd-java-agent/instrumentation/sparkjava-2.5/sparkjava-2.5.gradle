@@ -1,3 +1,14 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "spark"
+  module = 'spark.routes-Routes'
+  versions = "[3.0,)"
+  verifyPresent = [
+    "spark.embeddedserver.jetty.EmbeddedJettyServer"   : null
+  ]
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
 
 if (JavaVersion.current().isJava8Compatible()) {
