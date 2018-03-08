@@ -2,8 +2,8 @@ apply plugin: 'version-scan'
 
 versionScan {
   group = "spark"
-  module = 'spark.routes-Routes'
-  versions = "[3.0,)"
+  module = 'spark'
+  versions = "[2.3,)"
   verifyPresent = [
     "spark.embeddedserver.jetty.EmbeddedJettyServer"   : null
   ]
@@ -18,6 +18,9 @@ if (JavaVersion.current().isJava8Compatible()) {
         // Sparkjava is not compatible with < Java 8
         exclude '**/SparkJavaBasedTest.groovy'
       }
+      java {
+        exclude '**/TestSparkJavaApplication.java'
+      }
     }
   }
 }
@@ -28,7 +31,7 @@ dependencies {
   compile deps.bytebuddy
   compile deps.opentracing
   compile deps.autoservice
-  compile group: 'com.sparkjava', name: 'spark-core', version: '2.5'
+  compile group: 'com.sparkjava', name: 'spark-core', version: '2.3'
 
   testCompile project(':dd-java-agent:instrumentation:jetty-8')
   testCompile project(':dd-java-agent:testing')
