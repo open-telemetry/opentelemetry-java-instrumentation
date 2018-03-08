@@ -140,4 +140,30 @@ public class IntegrationTestUtils {
   public static String getResourceName(final String className) {
     return className.replace('.', '/') + ".class";
   }
+
+  public static String[] getBootstrapPackagePrefixes() {
+    try {
+      Field f =
+          getAgentClassLoader()
+              .loadClass("datadog.trace.agent.tooling.Utils")
+              .getField("BOOTSTRAP_PACKAGE_PREFIXES");
+      return (String[]) f.get(null);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+
+  public static String[] getAgentPackagePrefixes() {
+    try {
+      Field f =
+          getAgentClassLoader()
+              .loadClass("datadog.trace.agent.tooling.Utils")
+              .getField("AGENT_PACKAGE_PREFIXES");
+      return (String[]) f.get(null);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
 }

@@ -1,4 +1,4 @@
-package datadog.trace.agent.bootstrap;
+package datadog.trace.bootstrap;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

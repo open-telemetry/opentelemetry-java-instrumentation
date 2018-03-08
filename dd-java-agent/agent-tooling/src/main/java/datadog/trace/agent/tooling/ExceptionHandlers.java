@@ -1,6 +1,6 @@
 package datadog.trace.agent.tooling;
 
-import datadog.trace.agent.bootstrap.ExceptionLogger;
+import datadog.trace.bootstrap.ExceptionLogger;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.bytecode.StackManipulation;
 import net.bytebuddy.jar.asm.Label;

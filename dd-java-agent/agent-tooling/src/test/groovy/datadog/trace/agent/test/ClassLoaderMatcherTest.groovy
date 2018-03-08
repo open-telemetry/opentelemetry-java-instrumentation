@@ -1,6 +1,6 @@
 package datadog.trace.agent.test
 
-import datadog.trace.agent.bootstrap.DatadogClassLoader
+import datadog.trace.bootstrap.DatadogClassLoader
 import datadog.trace.agent.tooling.ClassLoaderMatcher
 import spock.lang.Specification
 

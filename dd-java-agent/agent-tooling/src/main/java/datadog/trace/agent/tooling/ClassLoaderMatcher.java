@@ -1,7 +1,7 @@
 package datadog.trace.agent.tooling;
 
-import datadog.trace.agent.bootstrap.DatadogClassLoader;
-import datadog.trace.agent.bootstrap.PatchLogger;
+import datadog.trace.bootstrap.DatadogClassLoader;
+import datadog.trace.bootstrap.PatchLogger;
 import io.opentracing.util.GlobalTracer;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;

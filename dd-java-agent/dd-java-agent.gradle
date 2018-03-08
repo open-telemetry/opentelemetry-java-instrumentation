@@ -45,7 +45,7 @@ def includeShadowJar(subproject, jarname) {
       // Prevents conflict with other SLF4J instances. Important for premain.
       relocate 'org.slf4j', 'datadog.slf4j'
       // rewrite dependencies calling Logger.getLogger
-      relocate 'java.util.logging.Logger', 'datadog.trace.agent.bootstrap.PatchLogger'
+      relocate 'java.util.logging.Logger', 'datadog.trace.bootstrap.PatchLogger'
 
       if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
         relocate 'datadog.trace.common', 'datadog.trace.agent.common'

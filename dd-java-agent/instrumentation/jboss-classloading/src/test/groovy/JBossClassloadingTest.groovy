@@ -8,6 +8,6 @@ class JBossClassloadingTest extends AgentTestRunner {
     org.jboss.modules.Module.getName()
 
     expect:
-    System.getProperty("jboss.modules.system.pkgs") == "io.opentracing,datadog.slf4j,datadog.trace"
+    System.getProperty("jboss.modules.system.pkgs") == "io.opentracing,datadog.slf4j,datadog.trace.bootstrap,datadog.trace.api,datadog.trace.context"
   }
 }

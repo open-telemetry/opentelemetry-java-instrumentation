@@ -6,10 +6,17 @@ import java.lang.reflect.Method;
 public class Utils {
   /* packages which will be loaded on the bootstrap classloader*/
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
-    "io.opentracing", "datadog.slf4j", "datadog.trace.bootstrap", "datadog.trace.api"
+    "io.opentracing",
+    "datadog.slf4j",
+    "datadog.trace.bootstrap",
+    "datadog.trace.api",
+    "datadog.trace.context"
   };
   public static final String[] AGENT_PACKAGE_PREFIXES = {
-    "datadog.trace.agent", "datadog.opentracing", "datadog.trace.common"
+    "datadog.trace.agent",
+    "datadog.opentracing",
+    "datadog.trace.common",
+    "datadog.trace.instrumentation"
   };
 
   private static Method findLoadedClassMethod = null;
