@@ -20,6 +20,11 @@ public class RoutesInstrumentation extends Instrumenter.Configurable {
   }
 
   @Override
+  public boolean defaultEnabled() {
+    return false;
+  }
+
+  @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(

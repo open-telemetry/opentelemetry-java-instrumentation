@@ -11,7 +11,7 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
-if (JavaVersion.current().isJava8Compatible()) {
+if (!JavaVersion.current().isJava8Compatible()) {
   sourceSets {
     test {
       groovy {
@@ -26,6 +26,8 @@ if (JavaVersion.current().isJava8Compatible()) {
 }
 
 dependencies {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
   compile project(':dd-java-agent:agent-tooling')
 
   compile deps.bytebuddy
