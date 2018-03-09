@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.trace_annotation;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
+import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 
@@ -28,7 +29,7 @@ public final class TraceAnnotationInstrumentation extends Instrumenter.Configura
   @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
-        .type(hasSuperType(declaresMethod(isAnnotatedWith(Trace.class))))
+        .type(failSafe(hasSuperType(declaresMethod(isAnnotatedWith(Trace.class)))))
         .transform(
             DDAdvice.create().advice(isAnnotatedWith(Trace.class), TraceAdvice.class.getName()))
         .asDecorator();

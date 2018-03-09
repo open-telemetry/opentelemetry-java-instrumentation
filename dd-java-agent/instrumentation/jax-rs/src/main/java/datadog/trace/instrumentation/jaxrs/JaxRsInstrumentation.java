@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.jaxrs;
 
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
+import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -38,7 +39,10 @@ public final class JaxRsInstrumentation extends Instrumenter.Configurable {
         .type(
             hasSuperType(
                 isAnnotatedWith(named("javax.ws.rs.Path"))
-                    .or(hasSuperType(declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path")))))))
+                    .or(
+                        failSafe(
+                            hasSuperType(
+                                declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path"))))))))
         .transform(
             DDAdvice.create()
                 .advice(

@@ -12,7 +12,7 @@ class ClassLoaderInstrumentationTest extends AgentTestRunner {
   DDTracer tracer = Mock()
 
   def setup() {
-    TestUtils.registerOrReplaceGlobalTracer(tracer);
+    TestUtils.registerOrReplaceGlobalTracer(tracer)
   }
 
   def "creating classloader calls register on tracer"() {
