@@ -5,6 +5,5 @@ apply from: "${rootDir}/gradle/jacoco.gradle"
 description = 'dd-trace-api'
 dependencies {
   compile deps.slf4j
-  compile deps.opentracing
   testCompile deps.junit
 }

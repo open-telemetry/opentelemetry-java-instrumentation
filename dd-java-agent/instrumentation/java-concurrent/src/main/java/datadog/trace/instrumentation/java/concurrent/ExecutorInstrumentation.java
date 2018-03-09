@@ -237,11 +237,11 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
 
     @Override
     public void run() {
-      final Scope scope = continuation.activate();
+      final ContextPropagator context = continuation.activate();
       try {
         delegatee.run();
       } finally {
-        scope.close();
+        context.close();
       }
     }
   }
@@ -257,11 +257,11 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
 
     @Override
     public T call() throws Exception {
-      final Scope scope = continuation.activate();
+      final ContextPropagator context = continuation.activate();
       try {
         return delegatee.call();
       } finally {
-        scope.close();
+        context.close();
       }
     }
   }

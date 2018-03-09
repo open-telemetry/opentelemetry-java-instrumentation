@@ -86,7 +86,7 @@ public class ContinuableScope implements Scope, ContextPropagator {
       }
     }
 
-    public Scope activate() {
+    public ClosingScope activate() {
       if (used.compareAndSet(false, true)) {
         for (final ScopeContext context : scopeManager.scopeContexts) {
           if (context.inContext()) {
@@ -97,7 +97,7 @@ public class ContinuableScope implements Scope, ContextPropagator {
             new ContinuableScope(scopeManager, refCount, wrapped, finishSpanOnClose));
       } else {
         log.debug("Reusing a continuation not allowed.  Returning no-op scope.");
-        return NoopScopeManager.NoopScope.INSTANCE;
+        return new ClosingScope(NoopScopeManager.NoopScope.INSTANCE);
       }
     }
 
@@ -109,7 +109,7 @@ public class ContinuableScope implements Scope, ContextPropagator {
       }
     }
 
-    private class ClosingScope implements Scope {
+    private class ClosingScope implements Scope, ContextPropagator {
       private final Scope wrappedScope;
 
       private ClosingScope(final Scope wrappedScope) {
@@ -117,9 +117,22 @@ public class ContinuableScope implements Scope, ContextPropagator {
       }
 
       @Override
+      public Continuation capture(boolean finishOnClose) {
+        if (wrappedScope instanceof ContextPropagator) {
+          return ((ContextPropagator) wrappedScope).capture(finishOnClose);
+        } else {
+          log.debug(
+              "{} Failed to capture. ClosingScope does not wrap a ContextPropagator: {}.",
+              this,
+              wrappedScope);
+          return null;
+        }
+      }
+
+      @Override
       public void close() {
         wrappedScope.close();
-        Continuation.this.close();
+        ContinuableScope.Continuation.this.close();
       }
 
       @Override
