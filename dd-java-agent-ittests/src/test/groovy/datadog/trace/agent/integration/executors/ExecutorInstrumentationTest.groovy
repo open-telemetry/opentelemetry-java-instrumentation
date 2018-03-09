@@ -136,6 +136,17 @@ class ExecutorInstrumentationTest extends Specification {
     trace.size() == expectedNumberOfSpans
   }
 
+  def "scala propagates across futures with no traces"() {
+    setup:
+    ScalaConcurrentTests scalaTest = new ScalaConcurrentTests()
+    int expectedNumberOfSpans = scalaTest.tracedAcrossThreadsWithNoTrace()
+    testWriter.waitForTraces(1)
+    List<DDSpan> trace = testWriter.get(0)
+
+    expect:
+    trace.size() == expectedNumberOfSpans
+  }
+
   def "scala either promise completion"() {
     setup:
     ScalaConcurrentTests scalaTest = new ScalaConcurrentTests()

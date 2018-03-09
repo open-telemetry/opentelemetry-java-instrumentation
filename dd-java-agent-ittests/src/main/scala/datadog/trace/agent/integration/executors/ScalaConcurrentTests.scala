@@ -32,6 +32,22 @@ class ScalaConcurrentTests {
     return 5
   }
 
+  @Trace
+  def tracedAcrossThreadsWithNoTrace() :Integer = {
+    val goodFuture: Future[Integer] = Future {
+      1
+    }
+    goodFuture onSuccess {
+      case _ => Future {
+        2
+      } onSuccess {
+        case _ => tracedChild("callback")
+      }
+    }
+
+    return 2
+  }
+
   /**
     * @return Number of expected spans in the trace
     */
