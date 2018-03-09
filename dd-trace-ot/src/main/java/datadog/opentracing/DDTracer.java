@@ -35,9 +35,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.SortedSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
@@ -123,9 +124,8 @@ public class DDTracer implements io.opentracing.Tracer {
       api.addResponseListener((DDApi.ResponseListener) this.sampler);
     }
 
-    for (final TraceInterceptor interceptor : ServiceLoader.load(TraceInterceptor.class)) {
-      interceptors.add(interceptor);
-    }
+    registerClassLoader(ClassLoader.getSystemClassLoader());
+
     log.info("New instance: {}", this);
   }
 
@@ -175,6 +175,23 @@ public class DDTracer implements io.opentracing.Tracer {
 
   public void addScopeContext(final ScopeContext context) {
     scopeManager.addScopeContext(context);
+  }
+
+  /**
+   * If an application is using a non-system classloader, that classloader should be registered
+   * here. Due to the way Spring Boot structures its' executable jar, this might log some warnings.
+   *
+   * @param classLoader to register.
+   */
+  public void registerClassLoader(final ClassLoader classLoader) {
+    try {
+      for (final TraceInterceptor interceptor :
+          ServiceLoader.load(TraceInterceptor.class, classLoader)) {
+        addInterceptor(interceptor);
+      }
+    } catch (final ServiceConfigurationError e) {
+      log.warn("Problem loading TraceInterceptor for classLoader: " + classLoader, e);
+    }
   }
 
   @Override
