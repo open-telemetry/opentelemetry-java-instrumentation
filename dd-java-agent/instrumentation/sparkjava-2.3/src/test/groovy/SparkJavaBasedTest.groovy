@@ -2,20 +2,42 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import spark.Spark
 import spock.lang.Timeout
 
 
 @Timeout(20)
 class SparkJavaBasedTest extends AgentTestRunner {
 
-  static {
+  def setupSpec() {
     TestSparkJavaApplication.initSpark()
+  }
+
+  def cleanupSpec() {
+    Spark.stop()
+  }
+
+  def setup() {
+    TEST_WRITER.start()
   }
 
   private int port = 4567
   OkHttpClient client = new OkHttpClient.Builder().build()
 
   def "valid response"() {
+    setup:
+    def request = new Request.Builder()
+      .url("http://localhost:$port/")
+      .get()
+      .build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    port != 0
+    response.body().string() == "Hello World"
+  }
+
+  def "valid response with registered trace"() {
     setup:
     def request = new Request.Builder()
       .url("http://localhost:$port/")
@@ -48,22 +70,22 @@ class SparkJavaBasedTest extends AgentTestRunner {
 
     def trace = TEST_WRITER.firstTrace()
     trace.size() == 1
-    def span = trace[0]
+    def spanContext = trace[0].context()
 
-    span.context().operationName == "jetty.request"
-    span.context().resourceName == "GET /param/:param/"
-    span.context().spanType == DDSpanTypes.WEB_SERVLET
-    !span.context().getErrorFlag()
-    span.context().parentId == 0
-    span.context().tags["http.url"] == "http://localhost:$port/param/asdf1234/"
-    span.context().tags["http.method"] == "GET"
-    span.context().tags["span.kind"] == "server"
-    span.context().tags["span.type"] == "web"
-    span.context().tags["component"] == "java-web-servlet"
-    span.context().tags["http.status_code"] == 200
-    span.context().tags["thread.name"] != null
-    span.context().tags["thread.id"] != null
-    span.context().tags.size() == 8
+    spanContext.operationName == "jetty.request"
+    spanContext.resourceName == "GET /param/:param/"
+    spanContext.spanType == DDSpanTypes.WEB_SERVLET
+    !spanContext.getErrorFlag()
+    spanContext.parentId == 0
+    spanContext.tags["http.url"] == "http://localhost:$port/param/asdf1234/"
+    spanContext.tags["http.method"] == "GET"
+    spanContext.tags["span.kind"] == "server"
+    spanContext.tags["span.type"] == "web"
+    spanContext.tags["component"] == "java-web-servlet"
+    spanContext.tags["http.status_code"] == 200
+    spanContext.tags["thread.name"] != null
+    spanContext.tags["thread.id"] != null
+    spanContext.tags.size() == 8
   }
 
 }

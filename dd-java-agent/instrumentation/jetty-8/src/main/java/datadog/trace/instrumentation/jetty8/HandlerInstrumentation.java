@@ -89,7 +89,7 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
               .asChildOf(extractedContext)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
-              // .withTag("span.origin.type", statement.getClass().getName())
+              .withTag("span.origin.type", HandlerInstrumentationAdvice.class.getName())
               .withTag(DDTags.RESOURCE_NAME, resourceName)
               .startActive(false);
 

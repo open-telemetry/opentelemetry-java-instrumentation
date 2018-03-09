@@ -15,5 +15,4 @@ public class TestSparkJavaApplication {
         });
     Spark.awaitInitialization();
   }
-
 }
