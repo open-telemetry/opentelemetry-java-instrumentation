@@ -266,6 +266,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     }
   }
 
+  /** Utils for pulling DatadogWrapper out of Future instances. */
   public static class ConcurrentUtils {
     private static Map<Class<?>, Field> fieldCache = new ConcurrentHashMap<>();
     private static String[] wrapperFields = {"runnable", "callable"};

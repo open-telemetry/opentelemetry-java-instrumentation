@@ -23,10 +23,6 @@ public class AsyncChild implements Runnable, Callable {
     blockThread.set(false);
   }
 
-  public int numberOfWorkers() {
-    return numberOfWorkers.get();
-  }
-
   @Override
   public void run() {
     runImpl();
