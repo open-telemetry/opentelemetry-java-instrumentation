@@ -15,6 +15,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.client.RedirectStrategy;
@@ -30,6 +31,7 @@ import org.apache.http.impl.execchain.ClientExecChain;
  * the next to last. Note that {@link org.apache.http.impl.execchain.RedirectExec} is invoked before
  * so this exec has to deal with redirects.
  */
+@Slf4j
 public class DDTracingClientExec implements ClientExecChain {
   private static final String COMPONENT_NAME = "apache-httpclient";
   /**
@@ -123,38 +125,53 @@ public class DDTracingClientExec implements ClientExecChain {
       final HttpClientContext clientContext,
       final HttpExecutionAware execAware)
       throws IOException, HttpException {
-    final Scope networkScope =
-        tracer
-            .buildSpan(request.getMethod())
-            .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
-            .asChildOf(parentScope.span())
-            .startActive(true);
-
-    final Span networkSpan = networkScope.span();
-
-    final boolean awsClientCall = request.getHeaders("amz-sdk-invocation-id").length > 0;
-    // AWS calls are often signed, so we can't add headers without breaking the signature.
-    if (!awsClientCall) {
-      tracer.inject(
-          networkSpan.context(),
-          Format.Builtin.HTTP_HEADERS,
-          new HttpHeadersInjectAdapter(request));
-    }
-
+    Scope networkScope = null;
+    Span networkSpan = null;
     try {
-      // request tags
-      Tags.HTTP_METHOD.set(networkSpan, request.getRequestLine().getMethod());
-      final URI uri = request.getURI();
-      Tags.HTTP_URL.set(networkSpan, request.getRequestLine().getUri());
-      Tags.PEER_PORT.set(networkSpan, uri.getPort() == -1 ? 80 : uri.getPort());
-      Tags.PEER_HOSTNAME.set(networkSpan, uri.getHost());
+      // This handlers runs untrapped in the client code
+      // so we must ensure any unexpected agent errors are caught.
+      try {
+        networkScope =
+            tracer
+                .buildSpan(request.getMethod())
+                .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
+                .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
+                .asChildOf(parentScope.span())
+                .startActive(true);
+        networkSpan = networkScope.span();
+
+        final boolean awsClientCall = request.getHeaders("amz-sdk-invocation-id").length > 0;
+        // AWS calls are often signed, so we can't add headers without breaking the signature.
+        if (!awsClientCall) {
+          tracer.inject(
+              networkSpan.context(),
+              Format.Builtin.HTTP_HEADERS,
+              new HttpHeadersInjectAdapter(request));
+        }
+        // request tags
+        Tags.HTTP_METHOD.set(networkSpan, request.getRequestLine().getMethod());
+        Tags.HTTP_URL.set(networkSpan, request.getRequestLine().getUri());
+        final URI uri = request.getURI();
+        // zuul users have encountered cases where getURI returns null
+        if (null != uri) {
+          Tags.PEER_PORT.set(networkSpan, uri.getPort() == -1 ? 80 : uri.getPort());
+          Tags.PEER_HOSTNAME.set(networkSpan, uri.getHost());
+        }
+      } catch (Exception e) {
+        log.debug("failed to create network span", e);
+      }
 
       final CloseableHttpResponse response =
           requestExecutor.execute(route, request, clientContext, execAware);
 
-      // response tags
-      Tags.HTTP_STATUS.set(networkSpan, response.getStatusLine().getStatusCode());
+      try {
+        // response tags
+        if (null != networkSpan) {
+          Tags.HTTP_STATUS.set(networkSpan, response.getStatusLine().getStatusCode());
+        }
+      } catch (Exception e) {
+        log.debug("failed to set network span status", e);
+      }
 
       return response;
     } catch (IOException | HttpException | RuntimeException e) {
@@ -164,7 +181,9 @@ public class DDTracingClientExec implements ClientExecChain {
 
       throw e;
     } finally {
-      networkScope.close();
+      if (null != networkScope) {
+        networkScope.close();
+      }
     }
   }
 
