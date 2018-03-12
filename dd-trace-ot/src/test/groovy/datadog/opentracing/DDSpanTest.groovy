@@ -27,8 +27,8 @@ class DDSpanTest extends Specification {
         false,
         "fakeType",
         null,
-        null,
-        null)
+        new PendingTrace(tracer, 1L),
+        tracer)
 
     final DDSpan span = new DDSpan(1L, context)
 
@@ -125,7 +125,7 @@ class DDSpanTest extends Specification {
     expect:
     span.durationNano >= TimeUnit.MILLISECONDS.toNanos(betweenDur)
     span.durationNano <= TimeUnit.MILLISECONDS.toNanos(total)
-    span.durationNano % mod == 0
+    span.durationNano % mod == 0 || span.durationNano == 1
   }
 
   def "stopping with a timestamp disables nanotime"() {

@@ -1,5 +1,6 @@
 package datadog.trace
 
+import datadog.opentracing.SpanFactory
 import datadog.trace.api.DDTags
 import spock.lang.Specification
 import spock.lang.Timeout

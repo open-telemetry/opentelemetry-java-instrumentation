@@ -17,6 +17,11 @@ import net.bytebuddy.utility.JavaModule;
 
 @Slf4j
 public class AgentInstaller {
+  private static volatile Instrumentation INSTRUMENTATION;
+
+  public static Instrumentation getInstrumentation() {
+    return INSTRUMENTATION;
+  }
 
   public static ResettableClassFileTransformer installBytebuddyAgent(final Instrumentation inst) {
     return installBytebuddyAgent(inst, new AgentBuilder.Listener[0]);
@@ -30,6 +35,7 @@ public class AgentInstaller {
    */
   public static ResettableClassFileTransformer installBytebuddyAgent(
       final Instrumentation inst, final AgentBuilder.Listener... listeners) {
+    INSTRUMENTATION = inst;
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()
@@ -55,7 +61,7 @@ public class AgentInstaller {
     }
     int numInstrumenters = 0;
     for (final Instrumenter instrumenter : ServiceLoader.load(Instrumenter.class)) {
-      log.debug("Loading instrumentation {}", instrumenter);
+      log.debug("Loading instrumentation {}", instrumenter.getClass().getName());
       agentBuilder = instrumenter.instrument(agentBuilder);
       numInstrumenters++;
     }

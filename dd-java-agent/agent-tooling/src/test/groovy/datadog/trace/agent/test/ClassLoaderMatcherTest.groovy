@@ -29,6 +29,11 @@ class ClassLoaderMatcherTest extends Specification {
     !ClassLoaderMatcher.skipClassLoader().matches(emptyLoader)
   }
 
+  def "does not skip bootstrap classloader"() {
+    expect:
+    !ClassLoaderMatcher.skipClassLoader().matches(null)
+  }
+
   /*
    * A URLClassloader which only delegates java.* classes
    */

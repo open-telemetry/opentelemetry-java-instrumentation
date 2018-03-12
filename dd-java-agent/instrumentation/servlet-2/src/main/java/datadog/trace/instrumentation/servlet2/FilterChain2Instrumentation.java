@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.servlet2;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -42,7 +43,7 @@ public final class FilterChain2Instrumentation extends Instrumenter.Configurable
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
-            not(isInterface()).and(hasSuperType(named("javax.servlet.FilterChain"))),
+            not(isInterface()).and(failSafe(hasSuperType(named("javax.servlet.FilterChain")))),
             not(classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"))
                 .and(
                     classLoaderHasClasses(

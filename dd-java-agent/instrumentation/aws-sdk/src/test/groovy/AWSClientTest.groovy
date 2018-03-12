@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
-@Timeout(5)
+@Timeout(20)
 class AWSClientTest extends AgentTestRunner {
 
   def "request handler is hooked up with builder"() {
@@ -61,7 +61,6 @@ class AWSClientTest extends AgentTestRunner {
     false      | 1
   }
 
-  @Timeout(10)
   def "send request with mocked back end"() {
     setup:
     def receivedHeaders = new AtomicReference<Headers>()
@@ -111,7 +110,7 @@ class AWSClientTest extends AgentTestRunner {
     tags1["component"] == "apache-httpclient"
     tags1["thread.name"] != null
     tags1["thread.id"] != null
-    tags1.size() == 4
+    tags1.size() == 3
 
     and: // span 1 - from aws instrumentation
     def span2 = trace[1]

@@ -72,6 +72,7 @@ class DDTraceConfigTest extends Specification {
     tracer.writer instanceof LoggingWriter
   }
 
+  @Timeout(5)
   def "sys props override env vars"() {
     when:
     environmentVariables.set(propToEnvName(PREFIX + SERVICE_NAME), "still something else")
@@ -101,6 +102,7 @@ class DDTraceConfigTest extends Specification {
     tracer.spanContextDecorators.size() == 6
   }
 
+  @Timeout(5)
   @Unroll
   def "verify single override on #source for #key"() {
     when:

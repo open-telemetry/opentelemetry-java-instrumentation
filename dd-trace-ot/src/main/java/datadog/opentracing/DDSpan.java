@@ -7,15 +7,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import datadog.trace.api.DDTags;
+import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.common.sampling.PrioritySampling;
 import datadog.trace.common.util.Clock;
 import io.opentracing.Span;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -25,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * according to the DD agent.
  */
 @Slf4j
-public class DDSpan implements Span {
+public class DDSpan implements Span, MutableSpan {
 
   /** The context attached to the span */
   private final DDSpanContext context;
@@ -40,7 +42,10 @@ public class DDSpan implements Span {
    * The duration in nanoseconds computed using the startTimeMicro or startTimeNano. Span is
    * considered finished when this is set.
    */
-  private volatile long durationNano;
+  private final AtomicLong durationNano = new AtomicLong();
+
+  /** Implementation detail. Stores the weak reference to this span. Used by TraceCollection. */
+  volatile WeakReference<DDSpan> ref;
 
   /**
    * Spans should be constructed using the builder, not by calling the constructor directly.
@@ -61,20 +66,24 @@ public class DDSpan implements Span {
       // timestamp might have come from an external clock, so don't bother with nanotime.
       this.startTimeNano = 0;
     }
+    this.context.getTrace().registerSpan(this);
+  }
 
-    // track each span of the trace
-    this.context.getTrace().add(this);
+  @JsonIgnore
+  public boolean isFinished() {
+    return durationNano.get() != 0;
   }
 
   @Override
   public final void finish() {
     if (startTimeNano != 0) {
-      if (durationNano != 0) {
-        log.debug("Span already finished: {}", this);
+      // no external clock was used, so we can rely on nanotime, but still ensure a min duration of 1.
+      if (this.durationNano.compareAndSet(
+          0, Math.max(1, Clock.currentNanoTicks() - startTimeNano))) {
+        context.getTrace().addSpan(this);
+      } else {
+        log.debug("{} - already finished!", this);
       }
-      // no external clock was used, so we can rely on nanotime.
-      this.durationNano = Math.max(1, Clock.currentNanoTicks() - startTimeNano);
-      afterFinish();
     } else {
       finish(Clock.currentMicroTime());
     }
@@ -82,35 +91,12 @@ public class DDSpan implements Span {
 
   @Override
   public final void finish(final long stoptimeMicros) {
-    if (durationNano != 0) {
-      log.debug("Span already finished: {}", this);
-    }
     // Ensure that duration is at least 1.  Less than 1 is possible due to our use of system clock instead of nano time.
-    this.durationNano =
-        Math.max(1, TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - this.startTimeMicro));
-    afterFinish();
-  }
-
-  /**
-   * Close the span. If the current span is the parent, check if each child has also been closed If
-   * not, warned it
-   */
-  protected final void afterFinish() {
-    log.debug("{} - Closing the span.", this);
-
-    // warn if one of the parent's children is not finished
-    if (this.isRootSpan()) {
-      final Queue<DDSpan> spans = this.context().getTrace();
-
-      for (final DDSpan span : spans) {
-        if (span.getDurationNano() == 0L) {
-          log.warn(
-              "{} - The parent span is marked as finished but this span isn't. You have to close each children.",
-              this);
-        }
-      }
-      this.context.getTracer().write(this.context.getTrace());
-      log.debug("{} - Write the trace", this);
+    if (this.durationNano.compareAndSet(
+        0, Math.max(1, TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - this.startTimeMicro)))) {
+      context.getTrace().addSpan(this);
+    } else {
+      log.debug("{} - already finished!", this);
     }
   }
 
@@ -121,18 +107,17 @@ public class DDSpan implements Span {
    */
   @JsonIgnore
   public final boolean isRootSpan() {
+    return context.getParentId() == 0;
+  }
 
-    if (context().getTrace().isEmpty()) {
-      return false;
-    }
-    // First item of the array AND tracer set
-    final DDSpan first = context().getTrace().peek();
-    return first.context().getSpanId() == this.context().getSpanId()
-        && this.context.getTracer() != null;
+  @Override
+  public DDSpan setError(final boolean error) {
+    context.setErrorFlag(true);
+    return this;
   }
 
   public void setErrorMeta(final Throwable error) {
-    context.setErrorFlag(true);
+    setError(true);
 
     setTag(DDTags.ERROR_MSG, error.getMessage());
     setTag(DDTags.ERROR_TYPE, error.getClass().getName());
@@ -155,7 +140,7 @@ public class DDSpan implements Span {
    * @see io.opentracing.BaseSpan#setTag(java.lang.String, java.lang.String)
    */
   @Override
-  public final Span setTag(final String tag, final String value) {
+  public final DDSpan setTag(final String tag, final String value) {
     this.context().setTag(tag, (Object) value);
     return this;
   }
@@ -164,7 +149,7 @@ public class DDSpan implements Span {
    * @see io.opentracing.BaseSpan#setTag(java.lang.String, boolean)
    */
   @Override
-  public final Span setTag(final String tag, final boolean value) {
+  public final DDSpan setTag(final String tag, final boolean value) {
     this.context().setTag(tag, (Object) value);
     return this;
   }
@@ -173,7 +158,7 @@ public class DDSpan implements Span {
    * @see io.opentracing.BaseSpan#setTag(java.lang.String, java.lang.Number)
    */
   @Override
-  public final Span setTag(final String tag, final Number value) {
+  public final DDSpan setTag(final String tag, final Number value) {
     this.context().setTag(tag, (Object) value);
     return this;
   }
@@ -252,11 +237,13 @@ public class DDSpan implements Span {
     return this;
   }
 
+  @Override
   public final DDSpan setServiceName(final String serviceName) {
     this.context().setServiceName(serviceName);
     return this;
   }
 
+  @Override
   public final DDSpan setResourceName(final String resourceName) {
     this.context().setResourceName(resourceName);
     return this;
@@ -267,11 +254,13 @@ public class DDSpan implements Span {
    *
    * <p>Has no effect if the span priority has been propagated (injected or extracted).
    */
+  @Override
   public final DDSpan setSamplingPriority(final int newPriority) {
     this.context().setSamplingPriority(newPriority);
     return this;
   }
 
+  @Override
   public final DDSpan setSpanType(final String type) {
     this.context().setSpanType(type);
     return this;
@@ -303,9 +292,10 @@ public class DDSpan implements Span {
 
   @JsonGetter("duration")
   public long getDurationNano() {
-    return durationNano;
+    return durationNano.get();
   }
 
+  @Override
   @JsonGetter("service")
   public String getServiceName() {
     return context.getServiceName();
@@ -326,16 +316,19 @@ public class DDSpan implements Span {
     return context.getParentId();
   }
 
+  @Override
   @JsonGetter("resource")
   public String getResourceName() {
     return context.getResourceName();
   }
 
+  @Override
   @JsonGetter("name")
   public String getOperationName() {
     return context.getOperationName();
   }
 
+  @Override
   @JsonGetter("sampling_priority")
   @JsonInclude(Include.NON_NULL)
   public Integer getSamplingPriority() {
@@ -347,6 +340,13 @@ public class DDSpan implements Span {
     }
   }
 
+  @Override
+  @JsonIgnore
+  public String getSpanType() {
+    return context.getSpanType();
+  }
+
+  @Override
   @JsonIgnore
   public Map<String, Object> getTags() {
     return this.context().getTags();
@@ -355,6 +355,12 @@ public class DDSpan implements Span {
   @JsonGetter
   public String getType() {
     return context.getSpanType();
+  }
+
+  @Override
+  @JsonIgnore
+  public Boolean isError() {
+    return context.getErrorFlag();
   }
 
   @JsonGetter

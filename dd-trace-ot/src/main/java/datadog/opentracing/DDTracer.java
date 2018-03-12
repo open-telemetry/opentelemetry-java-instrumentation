@@ -1,12 +1,18 @@
 package datadog.opentracing;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
 import datadog.opentracing.propagation.Codec;
+import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HTTPCodec;
+import datadog.opentracing.scopemanager.ContextualScopeManager;
+import datadog.opentracing.scopemanager.ScopeContext;
 import datadog.trace.api.DDTags;
+import datadog.trace.api.interceptor.MutableSpan;
+import datadog.trace.api.interceptor.TraceInterceptor;
 import datadog.trace.common.DDTraceConfig;
 import datadog.trace.common.Service;
 import datadog.trace.common.sampling.AllSampler;
@@ -21,20 +27,25 @@ import io.opentracing.ScopeManager;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
-import io.opentracing.util.ThreadLocalScopeManager;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Queue;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
+import java.util.SortedSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing API. */
 @Slf4j
-public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.Tracer {
+public class DDTracer implements io.opentracing.Tracer {
 
   public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
@@ -44,13 +55,24 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
   final Writer writer;
   /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
   final Sampler sampler;
+  /** Scope manager is in charge of managing the scopes from which spans are created */
+  final ContextualScopeManager scopeManager = new ContextualScopeManager();
 
   /** A set of tags that are added to every span */
   private final Map<String, Object> spanTags;
 
   /** Span context decorators */
-  private final Map<String, List<AbstractDecorator>> spanContextDecorators = new HashMap<>();
+  private final Map<String, List<AbstractDecorator>> spanContextDecorators =
+      new ConcurrentHashMap<>();
 
+  private final SortedSet<TraceInterceptor> interceptors =
+      new ConcurrentSkipListSet<>(
+          new Comparator<TraceInterceptor>() {
+            @Override
+            public int compare(final TraceInterceptor o1, final TraceInterceptor o2) {
+              return Integer.compare(o1.priority(), o2.priority());
+            }
+          });
   private final CodecRegistry registry;
   private final Map<String, Service> services = new HashMap<>();
 
@@ -101,6 +123,9 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
       final DDApi api = ((DDAgentWriter) this.writer).getApi();
       api.addResponseListener((DDApi.ResponseListener) this.sampler);
     }
+
+    registerClassLoader(ClassLoader.getSystemClassLoader());
+
     log.info("New instance: {}", this);
   }
 
@@ -137,20 +162,52 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
     spanContextDecorators.put(decorator.getMatchingTag(), list);
   }
 
+  /**
+   * Add a new interceptor to the tracer. Interceptors with duplicate priority to existing ones are
+   * ignored.
+   *
+   * @param interceptor
+   * @return false if an interceptor with same priority exists.
+   */
+  public boolean addInterceptor(final TraceInterceptor interceptor) {
+    return interceptors.add(interceptor);
+  }
+
+  public void addScopeContext(final ScopeContext context) {
+    scopeManager.addScopeContext(context);
+  }
+
+  /**
+   * If an application is using a non-system classloader, that classloader should be registered
+   * here. Due to the way Spring Boot structures its' executable jar, this might log some warnings.
+   *
+   * @param classLoader to register.
+   */
+  public void registerClassLoader(final ClassLoader classLoader) {
+    try {
+      for (final TraceInterceptor interceptor :
+          ServiceLoader.load(TraceInterceptor.class, classLoader)) {
+        addInterceptor(interceptor);
+      }
+    } catch (final ServiceConfigurationError e) {
+      log.warn("Problem loading TraceInterceptor for classLoader: " + classLoader, e);
+    }
+  }
+
   @Override
-  public ScopeManager scopeManager() {
-    return this;
+  public ContextualScopeManager scopeManager() {
+    return scopeManager;
   }
 
   @Override
   public Span activeSpan() {
-    final Scope active = active();
+    final Scope active = scopeManager.active();
     return active == null ? null : active.span();
   }
 
   @Override
   public DDSpanBuilder buildSpan(final String operationName) {
-    return new DDSpanBuilder(operationName, this);
+    return new DDSpanBuilder(operationName, scopeManager);
   }
 
   @Override
@@ -181,12 +238,27 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
    *
    * @param trace a list of the spans related to the same trace
    */
-  public void write(final Queue<DDSpan> trace) {
+  void write(final PendingTrace trace) {
     if (trace.isEmpty()) {
       return;
     }
-    if (this.sampler.sample(trace.peek())) {
-      this.writer.write(new ArrayList<>(trace));
+    final ArrayList<DDSpan> writtenTrace;
+    if (interceptors.isEmpty()) {
+      writtenTrace = Lists.newArrayList(trace);
+    } else {
+      Collection<? extends MutableSpan> interceptedTrace = Lists.newArrayList(trace);
+      for (final TraceInterceptor interceptor : interceptors) {
+        interceptedTrace = interceptor.onTraceComplete(interceptedTrace);
+      }
+      writtenTrace = Lists.newArrayListWithExpectedSize(interceptedTrace.size());
+      for (final MutableSpan span : interceptedTrace) {
+        if (span instanceof DDSpan) {
+          writtenTrace.add((DDSpan) span);
+        }
+      }
+    }
+    if (!writtenTrace.isEmpty() && this.sampler.sample(writtenTrace.get(0))) {
+      this.writer.write(writtenTrace);
     }
   }
 
@@ -405,17 +477,18 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
       final long spanId = generateNewId();
       final long parentSpanId;
       final Map<String, String> baggage;
-      final Queue<DDSpan> parentTrace;
+      final PendingTrace parentTrace;
       final int samplingPriority;
 
       final DDSpanContext context;
       SpanContext parentContext = this.parent;
       if (parentContext == null && !ignoreScope) {
         // use the Scope as parent unless overridden or ignored.
-        final Scope scope = active();
+        final Scope scope = scopeManager.active();
         if (scope != null) parentContext = scope.span().context();
       }
 
+      // Propagate internal trace
       if (parentContext instanceof DDSpanContext) {
         final DDSpanContext ddsc = (DDSpanContext) parentContext;
         traceId = ddsc.getTraceId();
@@ -423,14 +496,24 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
         baggage = ddsc.getBaggageItems();
         parentTrace = ddsc.getTrace();
         samplingPriority = ddsc.getSamplingPriority();
-
         if (this.serviceName == null) this.serviceName = ddsc.getServiceName();
         if (this.spanType == null) this.spanType = ddsc.getSpanType();
+
+        // Propagate external trace
+      } else if (parentContext instanceof ExtractedContext) {
+        final ExtractedContext ddsc = (ExtractedContext) parentContext;
+        traceId = ddsc.getTraceId();
+        parentSpanId = ddsc.getSpanId();
+        baggage = ddsc.getBaggage();
+        parentTrace = new PendingTrace(DDTracer.this, traceId);
+        samplingPriority = ddsc.getSamplingPriority();
+
+        // Start a new trace
       } else {
         traceId = generateNewId();
         parentSpanId = 0L;
         baggage = null;
-        parentTrace = null;
+        parentTrace = new PendingTrace(DDTracer.this, traceId);
         samplingPriority = PrioritySampling.UNSET;
       }
 
@@ -440,8 +523,6 @@ public class DDTracer extends ThreadLocalScopeManager implements io.opentracing.
 
       final String operationName =
           this.operationName != null ? this.operationName : this.resourceName;
-
-      // this.operationName, this.tags,
 
       // some attributes are inherited from the parent
       context =

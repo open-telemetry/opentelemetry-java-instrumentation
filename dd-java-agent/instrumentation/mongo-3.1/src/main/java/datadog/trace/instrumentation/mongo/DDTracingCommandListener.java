@@ -73,7 +73,7 @@ public class DDTracingCommandListener implements CommandListener {
     final Tracer.SpanBuilder spanBuilder =
         tracer.buildSpan(MONGO_OPERATION).withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
 
-    final Span span = spanBuilder.startManual();
+    final Span span = spanBuilder.start();
     try {
       decorate(span, event);
     } catch (final Throwable e) {

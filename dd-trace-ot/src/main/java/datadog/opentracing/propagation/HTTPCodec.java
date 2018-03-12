@@ -34,7 +34,7 @@ public class HTTPCodec implements Codec<TextMap> {
   }
 
   @Override
-  public DDSpanContext extract(final TextMap carrier) {
+  public ExtractedContext extract(final TextMap carrier) {
 
     Map<String, String> baggage = Collections.emptyMap();
     Long traceId = 0L;
@@ -56,23 +56,9 @@ public class HTTPCodec implements Codec<TextMap> {
         samplingPriority = Integer.parseInt(entry.getValue());
       }
     }
-    DDSpanContext context = null;
+    ExtractedContext context = null;
     if (traceId != 0L) {
-      context =
-          new DDSpanContext(
-              traceId,
-              spanId,
-              0L,
-              null,
-              null,
-              null,
-              samplingPriority,
-              baggage,
-              false,
-              null,
-              null,
-              null,
-              null);
+      context = new ExtractedContext(traceId, spanId, samplingPriority, baggage);
       context.lockSamplingPriority();
 
       log.debug("{} - Parent context extracted", context);

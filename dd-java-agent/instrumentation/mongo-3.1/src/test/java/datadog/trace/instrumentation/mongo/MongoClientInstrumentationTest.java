@@ -28,7 +28,7 @@ public class MongoClientInstrumentationTest {
     final CommandStartedEvent cmd =
         new CommandStartedEvent(1, makeConnection(), "databasename", "query", new BsonDocument());
 
-    final DDSpan span = new DDTracer().buildSpan("foo").startManual();
+    final DDSpan span = new DDTracer().buildSpan("foo").start();
     DDTracingCommandListener.decorate(span, cmd);
 
     assertThat(span.context().getSpanType()).isEqualTo("mongodb");
@@ -50,7 +50,7 @@ public class MongoClientInstrumentationTest {
       final CommandStartedEvent cmd =
           new CommandStartedEvent(1, makeConnection(), "databasename", "query", query);
 
-      final DDSpan span = new DDTracer().buildSpan("foo").startManual();
+      final DDSpan span = new DDTracer().buildSpan("foo").start();
       DDTracingCommandListener.decorate(span, cmd);
 
       assertThat(span.getTags().get(Tags.DB_STATEMENT.getKey()))

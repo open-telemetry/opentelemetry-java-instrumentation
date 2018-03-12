@@ -25,7 +25,7 @@ import spock.lang.Timeout
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
-@Timeout(5)
+@Timeout(15)
 class KafkaStreamsTest extends AgentTestRunner {
   static final STREAM_PENDING = "test.pending"
   static final STREAM_PROCESSED = "test.processed"
@@ -135,41 +135,41 @@ class KafkaStreamsTest extends AgentTestRunner {
     and: // STREAMING span 0
     def t2span1 = t2[0]
 
-    t2span1.context().operationName == "kafka.consume"
+    t2span1.context().operationName == "kafka.produce"
     t2span1.serviceName == "kafka"
-    t2span1.resourceName == "Consume Topic $STREAM_PENDING"
+    t2span1.resourceName == "Produce Topic $STREAM_PROCESSED"
     t2span1.type == "queue"
     !t2span1.context().getErrorFlag()
-    t2span1.context().parentId == t1span1.context().spanId
 
     def t2tags1 = t2span1.context().tags
     t2tags1["component"] == "java-kafka"
-    t2tags1["span.kind"] == "consumer"
-    t1tags1["span.type"] == "queue"
-    t2tags1["partition"] >= 0
-    t2tags1["offset"] == 0
+    t2tags1["span.kind"] == "producer"
+    t2tags1["span.type"] == "queue"
     t2tags1["thread.name"] != null
     t2tags1["thread.id"] != null
-    t2tags1["asdf"] == "testing"
-    t2tags1.size() == 8
+    t2tags1.size() == 5
 
     and: // STREAMING span 1
     def t2span2 = t2[1]
+    t2span1.context().parentId == t2span2.context().spanId
 
-    t2span2.context().operationName == "kafka.produce"
+    t2span2.context().operationName == "kafka.consume"
     t2span2.serviceName == "kafka"
-    t2span2.resourceName == "Produce Topic $STREAM_PROCESSED"
+    t2span2.resourceName == "Consume Topic $STREAM_PENDING"
     t2span2.type == "queue"
     !t2span2.context().getErrorFlag()
-    t2span2.context().parentId == t2span1.context().spanId
+    t2span2.context().parentId == t1span1.context().spanId
 
     def t2tags2 = t2span2.context().tags
     t2tags2["component"] == "java-kafka"
-    t2tags2["span.kind"] == "producer"
-    t2tags2["span.type"] == "queue"
+    t2tags2["span.kind"] == "consumer"
+    t1tags1["span.type"] == "queue"
+    t2tags2["partition"] >= 0
+    t2tags2["offset"] == 0
     t2tags2["thread.name"] != null
     t2tags2["thread.id"] != null
-    t2tags2.size() == 5
+    t2tags2["asdf"] == "testing"
+    t2tags2.size() == 8
 
     and: // CONSUMER span 0
     def t3span1 = t3[0]
@@ -179,7 +179,7 @@ class KafkaStreamsTest extends AgentTestRunner {
     t3span1.resourceName == "Consume Topic $STREAM_PROCESSED"
     t3span1.type == "queue"
     !t3span1.context().getErrorFlag()
-    t3span1.context().parentId == t2span2.context().spanId
+    t3span1.context().parentId == t2span1.context().spanId
 
     def t3tags1 = t3span1.context().tags
     t3tags1["component"] == "java-kafka"
@@ -194,8 +194,8 @@ class KafkaStreamsTest extends AgentTestRunner {
 
     def headers = received.headers()
     headers.iterator().hasNext()
-    new String(headers.headers("x-datadog-trace-id").iterator().next().value()) == "$t2span2.traceId"
-    new String(headers.headers("x-datadog-parent-id").iterator().next().value()) == "$t2span2.spanId"
+    new String(headers.headers("x-datadog-trace-id").iterator().next().value()) == "$t2span1.traceId"
+    new String(headers.headers("x-datadog-parent-id").iterator().next().value()) == "$t2span1.spanId"
 
 
     cleanup:

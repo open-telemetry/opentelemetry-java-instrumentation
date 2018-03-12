@@ -41,5 +41,5 @@ public interface Codec<T> {
    * @param carrier
    * @return the span context
    */
-  DDSpanContext extract(T carrier);
+  ExtractedContext extract(T carrier);
 }
