@@ -44,9 +44,16 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       log.warn("{} - span registered for wrong trace ({})", span, traceId);
       return;
     }
-    span.ref = new WeakReference<DDSpan>(span, referenceQueue);
-    weakReferences.add(span.ref);
-    pendingReferenceCount.incrementAndGet();
+    synchronized (span) {
+      if (null == span.ref) {
+        span.ref = new WeakReference<DDSpan>(span, referenceQueue);
+        weakReferences.add(span.ref);
+        final int count = pendingReferenceCount.incrementAndGet();
+        log.debug("traceId: {} -- registered span {}. count = {}", traceId, span, count);
+      } else {
+        log.debug("span {} already registered in trace {}", span, traceId);
+      }
+    }
   }
 
   private void expireSpan(final DDSpan span) {
@@ -54,10 +61,16 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       log.warn("{} - span expired for wrong trace ({})", span, traceId);
       return;
     }
-    weakReferences.remove(span.ref);
-    span.ref.clear();
-    span.ref = null;
-    expireReference();
+    synchronized (span) {
+      if (null == span.ref) {
+        log.debug("span {} not registered in trace {}", span, traceId);
+      } else {
+        weakReferences.remove(span.ref);
+        span.ref.clear();
+        span.ref = null;
+        expireReference();
+      }
+    }
   }
 
   public void addSpan(final DDSpan span) {
@@ -83,27 +96,39 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
    * completed, so we need to wait till continuations are de-referenced before reporting.
    */
   public void registerContinuation(final ContinuableScope.Continuation continuation) {
-    continuation.ref =
-        new WeakReference<ContinuableScope.Continuation>(continuation, referenceQueue);
-    weakReferences.add(continuation.ref);
-    pendingReferenceCount.incrementAndGet();
+    synchronized (continuation) {
+      if (continuation.ref == null) {
+        continuation.ref =
+            new WeakReference<ContinuableScope.Continuation>(continuation, referenceQueue);
+        weakReferences.add(continuation.ref);
+        final int count = pendingReferenceCount.incrementAndGet();
+        log.debug(
+            "traceId: {} -- registered continuation {}. count = {}", traceId, continuation, count);
+      } else {
+        log.debug("continuation {} already registered in trace {}", continuation, traceId);
+      }
+    }
   }
 
   public void cancelContinuation(final ContinuableScope.Continuation continuation) {
     synchronized (continuation) {
-      if (continuation.ref != null) {
+      if (continuation.ref == null) {
+        log.debug("continuation {} not registered in trace {}", continuation, traceId);
+      } else {
         weakReferences.remove(continuation.ref);
         continuation.ref.clear();
         continuation.ref = null;
+        expireReference();
       }
     }
-    expireReference();
   }
 
   private void expireReference() {
-    if (pendingReferenceCount.decrementAndGet() == 0) {
+    final int count = pendingReferenceCount.decrementAndGet();
+    if (count == 0) {
       write();
     }
+    log.debug("traceId: {} -- Expired reference. count = {}", traceId, count);
   }
 
   private void write() {
