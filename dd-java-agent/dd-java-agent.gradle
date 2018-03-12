@@ -48,12 +48,6 @@ def includeShadowJar(subproject, jarname) {
       relocate 'java.util.logging.Logger', 'datadog.trace.agent.bootstrap.PatchLogger'
 
       if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
-
-        // These need to be relocated to prevent conflicts in case the regular dd-trace is already on the classpath.
-        relocate('datadog.trace.api', 'datadog.trace.agent.api') {
-          // We want to ensure to not miss if a user is using the annotation.
-          exclude 'datadog.trace.api.Trace'
-        }
         relocate 'datadog.trace.common', 'datadog.trace.agent.common'
         relocate 'datadog.opentracing', 'datadog.trace.agent.ot'
 
