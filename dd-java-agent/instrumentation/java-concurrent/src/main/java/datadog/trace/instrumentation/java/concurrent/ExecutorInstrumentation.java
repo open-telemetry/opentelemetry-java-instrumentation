@@ -11,7 +11,7 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.context.ContextPropagator;
+import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Field;
@@ -137,8 +137,8 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     public static DatadogWrapper wrapJob(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (scope instanceof ContextPropagator && task != null && !(task instanceof DatadogWrapper)) {
-        task = new RunnableWrapper(task, (ContextPropagator) scope);
+      if (scope instanceof TraceScope && task != null && !(task instanceof DatadogWrapper)) {
+        task = new RunnableWrapper(task, (TraceScope) scope);
         return (DatadogWrapper) task;
       }
       return null;
@@ -158,8 +158,8 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     public static DatadogWrapper wrapJob(
         @Advice.Argument(value = 0, readOnly = false) Callable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (scope instanceof ContextPropagator && task != null && !(task instanceof DatadogWrapper)) {
-        task = new CallableWrapper(task, (ContextPropagator) scope);
+      if (scope instanceof TraceScope && task != null && !(task instanceof DatadogWrapper)) {
+        task = new CallableWrapper(task, (TraceScope) scope);
         return (DatadogWrapper) task;
       }
       return null;
@@ -179,12 +179,12 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     public static Collection<?> wrapJob(
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (scope instanceof ContextPropagator) {
+      if (scope instanceof TraceScope) {
         Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
         for (Callable task : tasks) {
           if (task != null) {
             if (!(task instanceof CallableWrapper)) {
-              task = new CallableWrapper(task, (ContextPropagator) scope);
+              task = new CallableWrapper(task, (TraceScope) scope);
             }
             wrappedTasks.add(task);
           }
@@ -211,9 +211,9 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   /** Marker interface for tasks which are wrapped to propagate the trace context. */
   @Slf4j
   public abstract static class DatadogWrapper {
-    protected final ContextPropagator.Continuation continuation;
+    protected final TraceScope.Continuation continuation;
 
-    public DatadogWrapper(ContextPropagator scope) {
+    public DatadogWrapper(TraceScope scope) {
       continuation = scope.capture(true);
       log.debug("created continuation {} from scope {}", continuation, scope);
     }
@@ -230,14 +230,14 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   public static class RunnableWrapper extends DatadogWrapper implements Runnable {
     private final Runnable delegatee;
 
-    public RunnableWrapper(Runnable toWrap, ContextPropagator scope) {
+    public RunnableWrapper(Runnable toWrap, TraceScope scope) {
       super(scope);
       delegatee = toWrap;
     }
 
     @Override
     public void run() {
-      final ContextPropagator context = continuation.activate();
+      final TraceScope context = continuation.activate();
       try {
         delegatee.run();
       } finally {
@@ -250,14 +250,14 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   public static class CallableWrapper<T> extends DatadogWrapper implements Callable<T> {
     private final Callable<T> delegatee;
 
-    public CallableWrapper(Callable<T> toWrap, ContextPropagator scope) {
+    public CallableWrapper(Callable<T> toWrap, TraceScope scope) {
       super(scope);
       delegatee = toWrap;
     }
 
     @Override
     public T call() throws Exception {
-      final ContextPropagator context = continuation.activate();
+      final TraceScope context = continuation.activate();
       try {
         return delegatee.call();
       } finally {

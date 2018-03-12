@@ -70,6 +70,7 @@ class ExecutorInstrumentationTest extends Specification {
     trace.size() == 2
     trace.get(0).operationName == "parent"
     trace.get(1).operationName == "asyncChild"
+    trace.get(1).parentId == trace.get(0).spanId
 
     cleanup:
     pool?.shutdown()

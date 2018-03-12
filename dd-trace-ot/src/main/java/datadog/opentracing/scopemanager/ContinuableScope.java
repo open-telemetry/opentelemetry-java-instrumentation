@@ -2,7 +2,7 @@ package datadog.opentracing.scopemanager;
 
 import datadog.opentracing.DDSpanContext;
 import datadog.opentracing.PendingTrace;
-import datadog.trace.context.ContextPropagator;
+import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.noop.NoopScopeManager;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ContinuableScope implements Scope, ContextPropagator {
+public class ContinuableScope implements Scope, TraceScope {
   final ContextualScopeManager scopeManager;
   final AtomicInteger refCount;
   private final Span wrapped;
@@ -67,7 +67,7 @@ public class ContinuableScope implements Scope, ContextPropagator {
     return new Continuation(this.finishOnClose && finishOnClose);
   }
 
-  public class Continuation implements Closeable, ContextPropagator.Continuation {
+  public class Continuation implements Closeable, TraceScope.Continuation {
     public WeakReference<Continuation> ref;
 
     private final AtomicBoolean used = new AtomicBoolean(false);
@@ -109,7 +109,7 @@ public class ContinuableScope implements Scope, ContextPropagator {
       }
     }
 
-    private class ClosingScope implements Scope, ContextPropagator {
+    private class ClosingScope implements Scope, TraceScope {
       private final Scope wrappedScope;
 
       private ClosingScope(final Scope wrappedScope) {
@@ -118,11 +118,11 @@ public class ContinuableScope implements Scope, ContextPropagator {
 
       @Override
       public Continuation capture(boolean finishOnClose) {
-        if (wrappedScope instanceof ContextPropagator) {
-          return ((ContextPropagator) wrappedScope).capture(finishOnClose);
+        if (wrappedScope instanceof TraceScope) {
+          return ((TraceScope) wrappedScope).capture(finishOnClose);
         } else {
           log.debug(
-              "{} Failed to capture. ClosingScope does not wrap a ContextPropagator: {}.",
+              "{} Failed to capture. ClosingScope does not wrap a TraceScope: {}.",
               this,
               wrappedScope);
           return null;

@@ -1,10 +1,10 @@
 package datadog.trace.context;
 
 /** An object when can propagate a datadog trace across multiple threads. */
-public interface ContextPropagator {
+public interface TraceScope {
   /**
-   * Prevent the trace attached to this ContextPropagator from reporting until the returned
-   * Continuation finishes.
+   * Prevent the trace attached to this TraceScope from reporting until the returned Continuation
+   * finishes.
    *
    * <p>Should be called on the parent thread.
    */
@@ -20,6 +20,6 @@ public interface ContextPropagator {
      *
      * <p>Should be called on the child thread.
      */
-    ContextPropagator activate();
+    TraceScope activate();
   }
 }
