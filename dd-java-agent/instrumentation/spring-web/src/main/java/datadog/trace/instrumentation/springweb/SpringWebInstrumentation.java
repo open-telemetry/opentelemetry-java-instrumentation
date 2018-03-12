@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.springweb;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithField;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -39,7 +40,9 @@ public final class SpringWebInstrumentation extends Instrumenter.Configurable {
     return agentBuilder
         .type(
             not(isInterface())
-                .and(hasSuperType(named("org.springframework.web.servlet.HandlerAdapter"))),
+                .and(
+                    failSafe(
+                        hasSuperType(named("org.springframework.web.servlet.HandlerAdapter")))),
             classLoaderHasClassWithField(
                 "org.springframework.web.servlet.HandlerMapping",
                 "BEST_MATCHING_PATTERN_ATTRIBUTE"))

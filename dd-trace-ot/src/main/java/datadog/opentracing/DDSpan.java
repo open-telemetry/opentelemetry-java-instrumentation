@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import datadog.trace.api.DDTags;
+import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.common.sampling.PrioritySampling;
 import datadog.trace.common.util.Clock;
 import io.opentracing.Span;
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * according to the DD agent.
  */
 @Slf4j
-public class DDSpan implements Span {
+public class DDSpan implements Span, MutableSpan {
 
   /** The context attached to the span */
   private final DDSpanContext context;
@@ -109,8 +110,14 @@ public class DDSpan implements Span {
     return context.getParentId() == 0;
   }
 
-  public void setErrorMeta(final Throwable error) {
+  @Override
+  public DDSpan setError(final boolean error) {
     context.setErrorFlag(true);
+    return this;
+  }
+
+  public void setErrorMeta(final Throwable error) {
+    setError(true);
 
     setTag(DDTags.ERROR_MSG, error.getMessage());
     setTag(DDTags.ERROR_TYPE, error.getClass().getName());
@@ -133,7 +140,7 @@ public class DDSpan implements Span {
    * @see io.opentracing.BaseSpan#setTag(java.lang.String, java.lang.String)
    */
   @Override
-  public final Span setTag(final String tag, final String value) {
+  public final DDSpan setTag(final String tag, final String value) {
     this.context().setTag(tag, (Object) value);
     return this;
   }
@@ -142,7 +149,7 @@ public class DDSpan implements Span {
    * @see io.opentracing.BaseSpan#setTag(java.lang.String, boolean)
    */
   @Override
-  public final Span setTag(final String tag, final boolean value) {
+  public final DDSpan setTag(final String tag, final boolean value) {
     this.context().setTag(tag, (Object) value);
     return this;
   }
@@ -151,7 +158,7 @@ public class DDSpan implements Span {
    * @see io.opentracing.BaseSpan#setTag(java.lang.String, java.lang.Number)
    */
   @Override
-  public final Span setTag(final String tag, final Number value) {
+  public final DDSpan setTag(final String tag, final Number value) {
     this.context().setTag(tag, (Object) value);
     return this;
   }
@@ -230,11 +237,13 @@ public class DDSpan implements Span {
     return this;
   }
 
+  @Override
   public final DDSpan setServiceName(final String serviceName) {
     this.context().setServiceName(serviceName);
     return this;
   }
 
+  @Override
   public final DDSpan setResourceName(final String resourceName) {
     this.context().setResourceName(resourceName);
     return this;
@@ -245,11 +254,13 @@ public class DDSpan implements Span {
    *
    * <p>Has no effect if the span priority has been propagated (injected or extracted).
    */
+  @Override
   public final DDSpan setSamplingPriority(final int newPriority) {
     this.context().setSamplingPriority(newPriority);
     return this;
   }
 
+  @Override
   public final DDSpan setSpanType(final String type) {
     this.context().setSpanType(type);
     return this;
@@ -284,6 +295,7 @@ public class DDSpan implements Span {
     return durationNano.get();
   }
 
+  @Override
   @JsonGetter("service")
   public String getServiceName() {
     return context.getServiceName();
@@ -304,16 +316,19 @@ public class DDSpan implements Span {
     return context.getParentId();
   }
 
+  @Override
   @JsonGetter("resource")
   public String getResourceName() {
     return context.getResourceName();
   }
 
+  @Override
   @JsonGetter("name")
   public String getOperationName() {
     return context.getOperationName();
   }
 
+  @Override
   @JsonGetter("sampling_priority")
   @JsonInclude(Include.NON_NULL)
   public Integer getSamplingPriority() {
@@ -325,6 +340,13 @@ public class DDSpan implements Span {
     }
   }
 
+  @Override
+  @JsonIgnore
+  public String getSpanType() {
+    return context.getSpanType();
+  }
+
+  @Override
   @JsonIgnore
   public Map<String, Object> getTags() {
     return this.context().getTags();
@@ -333,6 +355,12 @@ public class DDSpan implements Span {
   @JsonGetter
   public String getType() {
     return context.getSpanType();
+  }
+
+  @Override
+  @JsonIgnore
+  public Boolean isError() {
+    return context.getErrorFlag();
   }
 
   @JsonGetter

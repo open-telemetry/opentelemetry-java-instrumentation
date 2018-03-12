@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.jms2;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.instrumentation.jms.util.JmsUtil.toResourceName;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -39,7 +40,7 @@ public final class JMS2MessageListenerInstrumentation extends Instrumenter.Confi
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
-            not(isInterface()).and(hasSuperType(named("javax.jms.MessageListener"))),
+            not(isInterface()).and(failSafe(hasSuperType(named("javax.jms.MessageListener")))),
             classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener"))
         .transform(JMS2MessageConsumerInstrumentation.JMS2_HELPER_INJECTOR)
         .transform(

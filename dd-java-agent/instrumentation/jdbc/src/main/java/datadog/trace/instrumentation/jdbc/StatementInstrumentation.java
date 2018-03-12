@@ -1,11 +1,11 @@
 package datadog.trace.instrumentation.jdbc;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
-import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -35,7 +35,7 @@ public final class StatementInstrumentation extends Instrumenter.Configurable {
   @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
-        .type(not(isInterface()).and(hasSuperType(named(Statement.class.getName()))))
+        .type(not(isInterface()).and(failSafe(isSubTypeOf(Statement.class))))
         .transform(
             DDAdvice.create()
                 .advice(
