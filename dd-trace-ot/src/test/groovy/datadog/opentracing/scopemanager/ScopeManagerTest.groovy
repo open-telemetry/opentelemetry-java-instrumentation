@@ -209,8 +209,10 @@ class ScopeManagerTest extends Specification {
 
     when:
     def newScope = continuation.activate()
+    def newContinuation = newScope.capture(true)
 
     then:
+    newScope instanceof ContinuableScope.Continuation.ClosingScope
     scopeManager.active() == newScope.wrappedScope
     newScope != childScope && newScope != parentScope
     newScope.span() == childSpan
@@ -220,6 +222,7 @@ class ScopeManagerTest extends Specification {
 
     when:
     newScope.close()
+    newContinuation.activate().close()
 
     then:
     scopeManager.active() == null
@@ -240,6 +243,7 @@ class ScopeManagerTest extends Specification {
     def newScope = continuation.activate()
 
     expect:
+    newScope instanceof ContinuableScope.Continuation.ClosingScope
     newScope != scope
     scopeManager.active() == newScope.wrappedScope
     spanFinished(span)

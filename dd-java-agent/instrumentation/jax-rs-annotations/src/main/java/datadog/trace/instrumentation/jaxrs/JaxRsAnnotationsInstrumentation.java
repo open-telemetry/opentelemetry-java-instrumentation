@@ -22,10 +22,10 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
-public final class JaxRsInstrumentation extends Instrumenter.Configurable {
+public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Configurable {
 
-  public JaxRsInstrumentation() {
-    super("jax-rs", "jaxrs");
+  public JaxRsAnnotationsInstrumentation() {
+    super("jax-rs", "jaxrs", "jax-rs-annotations");
   }
 
   @Override
@@ -54,11 +54,11 @@ public final class JaxRsInstrumentation extends Instrumenter.Configurable {
                             .or(named("javax.ws.rs.OPTIONS"))
                             .or(named("javax.ws.rs.POST"))
                             .or(named("javax.ws.rs.PUT"))),
-                    JaxRsAdvice.class.getName()))
+                    JaxRsAnnotationsAdvice.class.getName()))
         .asDecorator();
   }
 
-  public static class JaxRsAdvice {
+  public static class JaxRsAnnotationsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameSpan(@Advice.This final Object obj, @Advice.Origin final Method method) {

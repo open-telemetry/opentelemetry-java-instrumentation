@@ -1,0 +1,45 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "javax.ws.rs"
+  module = "jsr311-api"
+  versions = "(,)"
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
+  sourceSets {
+    test {
+      groovy {
+        // These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
+        exclude '**/*.groovy'
+      }
+    }
+  }
+}
+
+dependencies {
+  compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.1'
+  compileOnly group: 'javax.annotation', name: 'javax.annotation-api', version: '1.2'
+
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  compile deps.autoservice
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  testCompile project(':dd-java-agent:testing')
+
+//  testCompile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.1'
+
+  testCompile group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.25.1'
+  testCompile group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.2.2'
+  testCompile group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.5.0.Final'
+
+//  testCompile group: 'com.sun.jersey', name: 'jersey-core', version: '1.19.4'
+//  testCompile group: 'com.sun.jersey', name: 'jersey-servlet', version: '1.19.4'
+//  testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.7.1'
+//  testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
+}
