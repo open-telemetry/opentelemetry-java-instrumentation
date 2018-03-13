@@ -41,6 +41,7 @@ public class AgentInstaller {
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(new LoggingListener())
+            .with(new DDLocationStrategy())
             .ignore(nameStartsWith("datadog.trace."))
             .or(nameStartsWith("datadog.opentracing."))
             .or(nameStartsWith("datadog.slf4j."))
