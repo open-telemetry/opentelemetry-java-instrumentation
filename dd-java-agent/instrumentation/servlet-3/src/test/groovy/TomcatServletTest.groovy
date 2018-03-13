@@ -1,5 +1,7 @@
 import com.google.common.io.Files
 import datadog.opentracing.DDTracer
+import datadog.opentracing.decorators.AbstractDecorator
+import datadog.opentracing.decorators.DDDecoratorsFactory
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.writer.ListWriter
@@ -33,6 +35,11 @@ class TomcatServletTest extends AgentTestRunner {
   DDTracer tracer = new DDTracer(writer)
 
   def setup() {
+    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createBuiltinDecorators()
+    for (final AbstractDecorator decorator : decorators) {
+      tracer.addDecorator(decorator)
+    }
+
     tomcatServer = new Tomcat()
     tomcatServer.setPort(PORT)
 
@@ -99,7 +106,7 @@ class TomcatServletTest extends AgentTestRunner {
 
     span.context().serviceName == "unnamed-java-app"
     span.context().operationName == "servlet.request"
-    span.context().resourceName == "servlet.request"
+    span.context().resourceName == "GET /$path"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     !span.context().getErrorFlag()
     span.context().parentId != 0 // parent should be the okhttp call.
@@ -136,7 +143,7 @@ class TomcatServletTest extends AgentTestRunner {
 
     span.context().serviceName == "unnamed-java-app"
     span.context().operationName == "servlet.request"
-    span.context().resourceName == "servlet.request"
+    span.context().resourceName == "GET /$path"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     span.context().getErrorFlag()
     span.context().parentId != 0 // parent should be the okhttp call.
