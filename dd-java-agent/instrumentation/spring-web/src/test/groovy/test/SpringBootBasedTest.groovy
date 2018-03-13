@@ -148,7 +148,6 @@ class SpringBootBasedTest extends AgentTestRunner {
     span1.context().operationName == "servlet.request"
     span1.context().resourceName == "GET /error"
     span1.context().spanType == DDSpanTypes.WEB_SERVLET
-    !span1.context().getErrorFlag()
     span1.context().parentId == 0
     span1.context().tags["http.url"] == "http://localhost:$port/error"
     span1.context().tags["http.method"] == "GET"
@@ -156,9 +155,10 @@ class SpringBootBasedTest extends AgentTestRunner {
     span1.context().tags["span.type"] == "web"
     span1.context().tags["component"] == "java-web-servlet"
     span1.context().tags["http.status_code"] == 500
+    span1.context().getErrorFlag()
     span1.context().tags["thread.name"] != null
     span1.context().tags["thread.id"] != null
-    span1.context().tags.size() == 8
+    span1.context().tags.size() == 9
   }
 
   def "validated form"() {

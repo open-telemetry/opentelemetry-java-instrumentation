@@ -25,6 +25,7 @@ public class DDDecoratorsFactory {
     builtin.add(new OperationDecorator());
     builtin.add(new Status404Decorator());
     builtin.add(new URLAsResourceName());
+    builtin.add(new Status5XXDecorator());
 
     return builtin;
   }

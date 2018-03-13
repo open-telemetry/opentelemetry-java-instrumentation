@@ -13,6 +13,10 @@ class TestServlet {
       if (req.getParameter("error") != null) {
         throw new RuntimeException("some sync error")
       }
+      if (req.getParameter("non-throwing-error") != null) {
+        resp.sendError(500, "some sync error")
+        return
+      }
       resp.writer.print("Hello Sync")
     }
   }
