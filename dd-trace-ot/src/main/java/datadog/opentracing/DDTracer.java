@@ -92,13 +92,6 @@ public class DDTracer implements io.opentracing.Tracer {
         Sampler.Builder.forConfig(config),
         DDTraceConfig.parseMap(config.getProperty(DDTraceConfig.SPAN_TAGS)));
     log.debug("Using config: {}", config);
-
-    // Create decorators from resource files
-    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createBuiltinDecorators();
-    for (final AbstractDecorator decorator : decorators) {
-      log.debug("Loading decorator: {}", decorator.getClass().getSimpleName());
-      addDecorator(decorator);
-    }
   }
 
   public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
@@ -125,6 +118,12 @@ public class DDTracer implements io.opentracing.Tracer {
     }
 
     registerClassLoader(ClassLoader.getSystemClassLoader());
+
+    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createBuiltinDecorators();
+    for (final AbstractDecorator decorator : decorators) {
+      log.debug("Loading decorator: {}", decorator.getClass().getSimpleName());
+      addDecorator(decorator);
+    }
 
     log.info("New instance: {}", this);
   }

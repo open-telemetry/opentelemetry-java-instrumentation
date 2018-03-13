@@ -99,7 +99,7 @@ class JettyServletTest extends AgentTestRunner {
 
     span.context().serviceName == "unnamed-java-app"
     span.context().operationName == "servlet.request"
-    span.context().resourceName == "servlet.request"
+    span.context().resourceName == "GET /$path"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     !span.context().getErrorFlag()
     span.context().parentId != 0 // parent should be the okhttp call.
@@ -134,7 +134,7 @@ class JettyServletTest extends AgentTestRunner {
     def span = trace[0]
 
     span.context().operationName == "servlet.request"
-    span.context().resourceName == "servlet.request"
+    span.context().resourceName == "GET /$path"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     span.context().getErrorFlag()
     span.context().parentId != 0 // parent should be the okhttp call.

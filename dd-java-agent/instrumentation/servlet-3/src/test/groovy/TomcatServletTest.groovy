@@ -1,7 +1,5 @@
 import com.google.common.io.Files
 import datadog.opentracing.DDTracer
-import datadog.opentracing.decorators.AbstractDecorator
-import datadog.opentracing.decorators.DDDecoratorsFactory
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.writer.ListWriter
@@ -35,11 +33,6 @@ class TomcatServletTest extends AgentTestRunner {
   DDTracer tracer = new DDTracer(writer)
 
   def setup() {
-    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createBuiltinDecorators()
-    for (final AbstractDecorator decorator : decorators) {
-      tracer.addDecorator(decorator)
-    }
-
     tomcatServer = new Tomcat()
     tomcatServer.setPort(PORT)
 
