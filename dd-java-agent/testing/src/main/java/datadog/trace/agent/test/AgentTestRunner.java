@@ -4,8 +4,6 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
-import datadog.opentracing.decorators.AbstractDecorator;
-import datadog.opentracing.decorators.DDDecoratorsFactory;
 import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.common.writer.ListWriter;
@@ -78,10 +76,6 @@ public abstract class AgentTestRunner extends Specification {
         };
     TEST_TRACER = new DDTracer(TEST_WRITER);
 
-    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createBuiltinDecorators();
-    for (final AbstractDecorator decorator : decorators) {
-      ((DDTracer) TEST_TRACER).addDecorator(decorator);
-    }
     ByteBuddyAgent.install();
     instrumentation = ByteBuddyAgent.getInstrumentation();
   }
