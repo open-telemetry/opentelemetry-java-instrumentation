@@ -9,6 +9,11 @@ import spock.lang.Timeout
 @Timeout(20)
 class SparkJavaBasedTest extends AgentTestRunner {
 
+  static {
+    System.setProperty("dd.integration.jetty.enabled", "true")
+    System.setProperty("dd.integration.sparkjava.enabled", "true")
+  }
+
   def setupSpec() {
     TestSparkJavaApplication.initSpark()
   }
