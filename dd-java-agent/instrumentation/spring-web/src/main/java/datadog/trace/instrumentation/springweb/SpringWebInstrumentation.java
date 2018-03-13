@@ -90,8 +90,10 @@ public final class SpringWebInstrumentation extends Instrumenter.Configurable {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       if (scope != null && exception != null) {
         final Span span = scope.span();
-        Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, exception));
+        // We want to capture the stacktrace, but that doesn't mean it should be an error.
+        // We rely on a decorator to set the error state based on response code. (5xx -> error)
+        Tags.ERROR.set(span, false);
       }
     }
   }
