@@ -1,7 +1,5 @@
 package datadog.trace.agent.test;
 
-import static datadog.trace.agent.tooling.Utils.AGENT_PACKAGE_PREFIXES;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import datadog.opentracing.DDSpan;
@@ -10,18 +8,14 @@ import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.common.writer.ListWriter;
 import io.opentracing.Tracer;
-import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Field;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.utility.JavaModule;
 import org.junit.After;
@@ -29,10 +23,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
-import org.junit.runner.notification.RunNotifier;
-import org.junit.runners.model.InitializationError;
 import org.slf4j.LoggerFactory;
-import org.spockframework.runtime.Sputnik;
 import org.spockframework.runtime.model.SpecMetadata;
 import spock.lang.Specification;
 
@@ -51,8 +42,7 @@ import spock.lang.Specification;
  *       in an initialized state.
  * </ul>
  */
-@Slf4j
-@RunWith(AgentTestRunner.SpockRunner.class)
+@RunWith(SpockRunner.class)
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
 public abstract class AgentTestRunner extends Specification {
   /**
@@ -66,11 +56,13 @@ public abstract class AgentTestRunner extends Specification {
   private static final AtomicInteger INSTRUMENTATION_ERROR_COUNT = new AtomicInteger();
 
   private static final Instrumentation instrumentation;
-  private static ClassFileTransformer activeTransformer = null;
+  private static volatile ClassFileTransformer activeTransformer = null;
 
   protected static final Phaser WRITER_PHASER = new Phaser();
 
   static {
+    instrumentation = ByteBuddyAgent.getInstrumentation();
+
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG);
 
@@ -85,27 +77,24 @@ public abstract class AgentTestRunner extends Specification {
           }
         };
     TEST_TRACER = new DDTracer(TEST_WRITER);
-
-    ByteBuddyAgent.install();
-    instrumentation = ByteBuddyAgent.getInstrumentation();
+    TestUtils.registerOrReplaceGlobalTracer(TEST_TRACER);
   }
 
   @BeforeClass
-  public static synchronized void agentSetup() {
+  public static synchronized void agentSetup() throws Exception {
     if (null != activeTransformer) {
       throw new IllegalStateException("transformer already in place: " + activeTransformer);
     }
 
     activeTransformer =
         AgentInstaller.installBytebuddyAgent(instrumentation, new ErrorCountingListener());
-    TestUtils.registerOrReplaceGlobalTracer(TEST_TRACER);
   }
 
   @Before
   public void beforeTest() {
     TEST_WRITER.start();
     INSTRUMENTATION_ERROR_COUNT.set(0);
-    assert TEST_TRACER.activeSpan() == null;
+    assert (TEST_TRACER).activeSpan() == null;
   }
 
   @After
@@ -115,11 +104,13 @@ public abstract class AgentTestRunner extends Specification {
 
   @AfterClass
   public static synchronized void agentClenup() {
-    instrumentation.removeTransformer(activeTransformer);
-    activeTransformer = null;
+    if (null != activeTransformer) {
+      instrumentation.removeTransformer(activeTransformer);
+      activeTransformer = null;
+    }
   }
 
-  private static class ErrorCountingListener implements AgentBuilder.Listener {
+  public static class ErrorCountingListener implements AgentBuilder.Listener {
     @Override
     public void onDiscovery(
         final String typeName,
@@ -160,77 +151,94 @@ public abstract class AgentTestRunner extends Specification {
         final boolean loaded) {}
   }
 
-  public static class SpockRunner extends Sputnik {
-    private final InstrumentationClassLoader customLoader;
+  // TODO: remove in a separate commit
+  // Notes for running agent on isolated classloader.
+  /*
+  final File bootstrapJar = createBootstrapJar();
+  final File agentJar = createAgentJar();
 
-    public SpockRunner(Class<?> clazz)
-        throws InitializationError, NoSuchFieldException, SecurityException,
-            IllegalArgumentException, IllegalAccessException {
-      super(shadowTestClass(clazz));
-      // access the classloader created in shadowTestClass above
-      Field clazzField = Sputnik.class.getDeclaredField("clazz");
-      try {
-        clazzField.setAccessible(true);
-        customLoader =
-            (InstrumentationClassLoader) ((Class<?>) clazzField.get(this)).getClassLoader();
-      } finally {
-        clazzField.setAccessible(false);
-      }
-    }
+  instrumentation.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
 
-    // Shadow the test class with bytes loaded by InstrumentationClassLoader
-    private static Class<?> shadowTestClass(final Class<?> clazz) {
-      try {
-        InstrumentationClassLoader customLoader =
-            new InstrumentationClassLoader(SpockRunner.class.getClassLoader());
-        return customLoader.shadow(clazz);
-      } catch (IOException e) {
-        throw new IllegalStateException(e);
-      }
-    }
+  final ClassLoader agentClassLoader = createDatadogClassLoader(bootstrapJar, agentJar);
+  final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+  try {
+    Thread.currentThread().setContextClassLoader(agentClassLoader);
 
-    // Replace the context class loader for each test with InstrumentationClassLoader
-    @Override
-    public void run(final RunNotifier notifier) {
-      final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-      try {
-        Thread.currentThread().setContextClassLoader(customLoader);
-        super.run(notifier);
-      } finally {
-        Thread.currentThread().setContextClassLoader(contextLoader);
-      }
+    { // install agent
+      final Class<?> agentInstallerClass =
+        agentClassLoader.loadClass("datadog.trace.agent.tooling.AgentInstaller");
+      final Class<?> listenerArrayClass =
+        Array.newInstance(agentClassLoader.loadClass("net.bytebuddy.agent.builder.AgentBuilder$Listener"), 0).getClass();
+      final Class<?> errorListenerClass =
+        agentClassLoader.loadClass(AgentTestRunner.class.getName()+ "$ErrorCountingListener");
+      final Method agentInstallerMethod =
+        agentInstallerClass.getMethod("installBytebuddyAgent", Instrumentation.class, listenerArrayClass);
+      final Object listeners = Array.newInstance(errorListenerClass, 1);
+      Array.set(listeners, 0, errorListenerClass.newInstance());
+      activeTransformer = (ClassFileTransformer) agentInstallerMethod.invoke(null, instrumentation, listeners);
     }
+  } finally {
+    Thread.currentThread().setContextClassLoader(contextLoader);
   }
+  */
 
-  /** TODO: Doc */
-  private static class InstrumentationClassLoader extends java.lang.ClassLoader {
-    final ClassLoader parent;
-
-    public InstrumentationClassLoader(ClassLoader parent) {
-      super(parent);
-      this.parent = parent;
-    }
-
-    /** Forcefully inject the bytes of clazz into this classloader. */
-    public Class<?> shadow(Class<?> clazz) throws IOException {
-      final ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(clazz.getClassLoader());
-      final byte[] classBytes = locator.locate(clazz.getName()).resolve();
-
-      Class<?> shadowed = this.defineClass(clazz.getName(), classBytes, 0, classBytes.length);
-      return shadowed;
-    }
-
-    @Override
-    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-      if (!name.startsWith("datadog.trace.agent.test.")) {
-        for (int i = 0; i < AGENT_PACKAGE_PREFIXES.length; ++i) {
-          if (name.startsWith(AGENT_PACKAGE_PREFIXES[i])) {
-            throw new ClassNotFoundException(
-                "refusing to load agent class" + name + " on test classloader.");
-          }
+  /*
+  private static File createAgentJar() throws IOException {
+    final ClassLoader loader = AgentTestRunner.class.getClassLoader();
+    final ClassPath testCP = ClassPath.from(loader);
+    Set<String> agentClasses = new HashSet<String>();
+    for (ClassPath.ClassInfo info : testCP.getAllClasses()) {
+      boolean isAgentClass = true;
+      for (int i = 0; i < TEST_BOOTSTRAP.length; ++i) {
+        if (info.getName().startsWith(TEST_BOOTSTRAP[i])) {
+          isAgentClass = false;
+          break;
         }
       }
-      return parent.loadClass(name);
+      if (info.getName().startsWith("org.junit")
+        || info.getName().startsWith("junit")
+        || info.getName().startsWith("org.mockito")
+        || info.getName().startsWith("org.assertj")
+        || info.getName().startsWith("org.omg")
+        || info.getName().startsWith("lombok")
+        || info.getName().startsWith("org.spockframework")
+        || info.getName().startsWith("spock")
+        || info.getName().startsWith("java")
+        || info.getName().startsWith("sun")
+        || info.getName().startsWith("jdk")
+        || info.getName().startsWith("com.intellij")
+        || info.getName().startsWith("org.jetbrains")
+        || info.getName().startsWith("com.oracle")
+        || info.getName().startsWith("com.sun")
+        || info.getName().startsWith("ratpack")
+        || info.getName().startsWith("org.codehaus.groovy")
+        || info.getName().startsWith("org.groovy")
+        || info.getName().startsWith("groovy")) {
+       isAgentClass = false;
+      }
+      if (isAgentClass) {
+        agentClasses.add(info.getResourceName());
+      }
     }
+    for (ClassPath.ResourceInfo resource : testCP.getResources()) {
+      if (resource.getResourceName().startsWith("META-INF/services/")) {
+        agentClasses.add(resource.getResourceName());
+      }
+    }
+    final File file  = new File(TestUtils.createJarWithClasses(loader, agentClasses.toArray(new String[0])).getFile());
+    return file;
   }
+
+  private static ClassLoader createDatadogClassLoader(File bootstrapJar, File toolingJar)
+    throws Exception {
+    final ClassLoader agentParent = ClassLoader.getSystemClassLoader().getParent();
+    Class<?> loaderClass =
+      ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.DatadogClassLoader");
+    Constructor constructor =
+      loaderClass.getDeclaredConstructor(URL.class, URL.class, ClassLoader.class);
+    return (ClassLoader)
+      constructor.newInstance(
+        bootstrapJar.toURI().toURL(), toolingJar.toURI().toURL(), agentParent);
+  }
+  */
 }
