@@ -90,7 +90,7 @@ public abstract class AgentTestRunner extends Specification {
     try {
       Thread.currentThread().setContextClassLoader(AgentTestRunner.class.getClassLoader());
       activeTransformer =
-        AgentInstaller.installBytebuddyAgent(instrumentation, new ErrorCountingListener());
+          AgentInstaller.installBytebuddyAgent(instrumentation, new ErrorCountingListener());
     } finally {
       Thread.currentThread().setContextClassLoader(contextLoader);
     }
@@ -156,95 +156,4 @@ public abstract class AgentTestRunner extends Specification {
         final JavaModule module,
         final boolean loaded) {}
   }
-
-  // TODO: remove in a separate commit
-  // Notes for running agent on isolated classloader.
-  /*
-  final File bootstrapJar = createBootstrapJar();
-  final File agentJar = createAgentJar();
-
-  instrumentation.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
-
-  final ClassLoader agentClassLoader = createDatadogClassLoader(bootstrapJar, agentJar);
-  final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-  try {
-    Thread.currentThread().setContextClassLoader(agentClassLoader);
-
-    { // install agent
-      final Class<?> agentInstallerClass =
-        agentClassLoader.loadClass("datadog.trace.agent.tooling.AgentInstaller");
-      final Class<?> listenerArrayClass =
-        Array.newInstance(agentClassLoader.loadClass("net.bytebuddy.agent.builder.AgentBuilder$Listener"), 0).getClass();
-      final Class<?> errorListenerClass =
-        agentClassLoader.loadClass(AgentTestRunner.class.getName()+ "$ErrorCountingListener");
-      final Method agentInstallerMethod =
-        agentInstallerClass.getMethod("installBytebuddyAgent", Instrumentation.class, listenerArrayClass);
-      final Object listeners = Array.newInstance(errorListenerClass, 1);
-      Array.set(listeners, 0, errorListenerClass.newInstance());
-      activeTransformer = (ClassFileTransformer) agentInstallerMethod.invoke(null, instrumentation, listeners);
-    }
-  } finally {
-    Thread.currentThread().setContextClassLoader(contextLoader);
-  }
-  */
-
-  /*
-  private static File createAgentJar() throws IOException {
-    final ClassLoader loader = AgentTestRunner.class.getClassLoader();
-    final ClassPath testCP = ClassPath.from(loader);
-    Set<String> agentClasses = new HashSet<String>();
-    for (ClassPath.ClassInfo info : testCP.getAllClasses()) {
-      boolean isAgentClass = true;
-      for (int i = 0; i < TEST_BOOTSTRAP.length; ++i) {
-        if (info.getName().startsWith(TEST_BOOTSTRAP[i])) {
-          isAgentClass = false;
-          break;
-        }
-      }
-      if (info.getName().startsWith("org.junit")
-        || info.getName().startsWith("junit")
-        || info.getName().startsWith("org.mockito")
-        || info.getName().startsWith("org.assertj")
-        || info.getName().startsWith("org.omg")
-        || info.getName().startsWith("lombok")
-        || info.getName().startsWith("org.spockframework")
-        || info.getName().startsWith("spock")
-        || info.getName().startsWith("java")
-        || info.getName().startsWith("sun")
-        || info.getName().startsWith("jdk")
-        || info.getName().startsWith("com.intellij")
-        || info.getName().startsWith("org.jetbrains")
-        || info.getName().startsWith("com.oracle")
-        || info.getName().startsWith("com.sun")
-        || info.getName().startsWith("ratpack")
-        || info.getName().startsWith("org.codehaus.groovy")
-        || info.getName().startsWith("org.groovy")
-        || info.getName().startsWith("groovy")) {
-       isAgentClass = false;
-      }
-      if (isAgentClass) {
-        agentClasses.add(info.getResourceName());
-      }
-    }
-    for (ClassPath.ResourceInfo resource : testCP.getResources()) {
-      if (resource.getResourceName().startsWith("META-INF/services/")) {
-        agentClasses.add(resource.getResourceName());
-      }
-    }
-    final File file  = new File(TestUtils.createJarWithClasses(loader, agentClasses.toArray(new String[0])).getFile());
-    return file;
-  }
-
-  private static ClassLoader createDatadogClassLoader(File bootstrapJar, File toolingJar)
-    throws Exception {
-    final ClassLoader agentParent = ClassLoader.getSystemClassLoader().getParent();
-    Class<?> loaderClass =
-      ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.DatadogClassLoader");
-    Constructor constructor =
-      loaderClass.getDeclaredConstructor(URL.class, URL.class, ClassLoader.class);
-    return (ClassLoader)
-      constructor.newInstance(
-        bootstrapJar.toURI().toURL(), toolingJar.toURI().toURL(), agentParent);
-  }
-  */
 }

@@ -112,9 +112,7 @@ public class SpockRunner extends Sputnik {
         TestUtils.createJarWithClasses(loader, bootstrapClasses.toArray(new String[0])).getFile());
   }
 
-  /**
-   * Run test classes in a classloader which loads test classes before delegating.
-   */
+  /** Run test classes in a classloader which loads test classes before delegating. */
   private static class InstrumentationClassLoader extends java.lang.ClassLoader {
     final ClassLoader parent;
     final String shadowPrefix;
