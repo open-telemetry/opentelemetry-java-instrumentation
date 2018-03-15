@@ -11,7 +11,7 @@ import static datadog.opentracing.SpanFactory.newSpanOf
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.verifyNoMoreInteractions
 
-@Timeout(5)
+@Timeout(10)
 class DDAgentWriterTest extends Specification {
 
 
