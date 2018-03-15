@@ -21,7 +21,6 @@ import org.spockframework.runtime.Sputnik;
  *
  * <ul>
  *   <li> Adds agent bootstrap classes to bootstrap classpath.
- *   <li> Runs tests in a custom classloader which cannot see core agent classes.
  * </ul>
  */
 public class SpockRunner extends Sputnik {
@@ -113,7 +112,9 @@ public class SpockRunner extends Sputnik {
         TestUtils.createJarWithClasses(loader, bootstrapClasses.toArray(new String[0])).getFile());
   }
 
-  /** TODO: Doc */
+  /**
+   * Run test classes in a classloader which loads test classes before delegating.
+   */
   private static class InstrumentationClassLoader extends java.lang.ClassLoader {
     final ClassLoader parent;
     final String shadowPrefix;
@@ -154,7 +155,7 @@ public class SpockRunner extends Sputnik {
         for (int i = 0; i < AGENT_PACKAGE_PREFIXES.length; ++i) {
           if (name.startsWith(AGENT_PACKAGE_PREFIXES[i])) {
             throw new ClassNotFoundException(
-                "refusing to load agent class" + name + " on test classloader.");
+                "refusing to load agent class: " + name + " on test classloader.");
           }
         }
       }

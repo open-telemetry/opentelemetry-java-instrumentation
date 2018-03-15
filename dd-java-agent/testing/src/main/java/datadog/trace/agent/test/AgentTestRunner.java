@@ -86,8 +86,14 @@ public abstract class AgentTestRunner extends Specification {
       throw new IllegalStateException("transformer already in place: " + activeTransformer);
     }
 
-    activeTransformer =
+    final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+    try {
+      Thread.currentThread().setContextClassLoader(AgentTestRunner.class.getClassLoader());
+      activeTransformer =
         AgentInstaller.installBytebuddyAgent(instrumentation, new ErrorCountingListener());
+    } finally {
+      Thread.currentThread().setContextClassLoader(contextLoader);
+    }
   }
 
   @Before

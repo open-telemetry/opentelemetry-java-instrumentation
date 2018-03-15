@@ -1,12 +1,13 @@
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.tooling.AgentInstaller
 
 import java.lang.reflect.Field
-
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
 
 import datadog.trace.agent.test.AgentTestRunner
 
 class AgentTestRunnerTest extends AgentTestRunner {
+  private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
+
   static {
     // when test class initializes, opentracing should be set up, but not the agent.
     assert io.opentracing.Tracer.getClassLoader() == BOOTSTRAP_CLASSLOADER
@@ -18,6 +19,7 @@ class AgentTestRunnerTest extends AgentTestRunner {
     io.opentracing.Tracer.getClassLoader() == BOOTSTRAP_CLASSLOADER
     TEST_TRACER == TestUtils.getUnderlyingGlobalTracer()
     getAgentTransformer() != null
+    datadog.trace.api.Trace.getClassLoader() == BOOTSTRAP_CLASSLOADER
   }
 
   def "logging works"() {
@@ -25,10 +27,6 @@ class AgentTestRunnerTest extends AgentTestRunner {
     org.slf4j.LoggerFactory.getLogger(AgentTestRunnerTest).debug("hello")
     then:
     noExceptionThrown()
-  }
-
-  def "can't see agent classes"() {
-    // TODO
   }
 
   private static getAgentTransformer() {
