@@ -6,6 +6,8 @@ import com.google.common.reflect.ClassPath;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -96,7 +98,24 @@ public class SpockRunner extends Sputnik {
   }
 
   private static File createBootstrapJar() throws IOException {
-    final ClassLoader loader = AgentTestRunner.class.getClassLoader();
+    ClassLoader loader = AgentTestRunner.class.getClassLoader();
+    if (!(loader instanceof URLClassLoader)) {
+      // java9's system loader does not extend URLClassLoader
+      // which breaks google ClassPath lookup
+      Field f = null;
+      try {
+        f = loader.getClass().getDeclaredField("ucp");
+        f.setAccessible(true);
+        Object ucp = f.get(loader);
+        loader = new URLClassLoader((URL[]) ucp.getClass().getMethod("getURLs").invoke(ucp), null);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      } finally {
+        if (null != f) {
+          f.setAccessible(false);
+        }
+      }
+    }
     final ClassPath testCP = ClassPath.from(loader);
     Set<String> bootstrapClasses = new HashSet<String>();
     for (ClassPath.ClassInfo info : testCP.getAllClasses()) {

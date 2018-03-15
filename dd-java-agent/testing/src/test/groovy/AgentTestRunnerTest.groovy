@@ -6,20 +6,19 @@ import datadog.trace.agent.test.AgentTestRunner
 
 class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
-  private static final boolean OT_LOADED_IN_CLINIT
+  private static final ClassLoader OT_LOADER
   private static final boolean AGENT_INSTALLED_IN_CLINIT
 
   static {
     // when test class initializes, opentracing should be set up, but not the agent.
-    OT_LOADED_IN_CLINIT = io.opentracing.Tracer.getClassLoader() == BOOTSTRAP_CLASSLOADER
+    OT_LOADER = io.opentracing.Tracer.getClassLoader()
     AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null
   }
 
   def "classpath setup"() {
     expect:
-    OT_LOADED_IN_CLINIT
+    OT_LOADER == BOOTSTRAP_CLASSLOADER
     !AGENT_INSTALLED_IN_CLINIT
-    io.opentracing.Tracer.getClassLoader() == BOOTSTRAP_CLASSLOADER
     TEST_TRACER == TestUtils.getUnderlyingGlobalTracer()
     getAgentTransformer() != null
     datadog.trace.api.Trace.getClassLoader() == BOOTSTRAP_CLASSLOADER

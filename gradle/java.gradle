@@ -114,3 +114,11 @@ plugins.withType(BasePlugin) {
     otherTasks*.mustRunAfter deleteTasks
   }
 }
+
+if (JavaVersion.current().isJava9Compatible()) {
+  // required to allow reflection into java9 for testing
+  test {
+    jvmArgs '--add-opens'
+    jvmArgs 'java.base/jdk.internal.loader=ALL-UNNAMED'
+  }
+}
