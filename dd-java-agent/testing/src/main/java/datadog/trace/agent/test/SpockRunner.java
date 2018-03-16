@@ -32,10 +32,12 @@ public class SpockRunner extends Sputnik {
     ByteBuddyAgent.install();
     final String[] testBS = {
       "io.opentracing",
-      // Putting the logger on the bootstrap breaks some tests
-      // we can get away with keeping the logger in the system loader because we control the classloading env
-      // "org.slf4j",
-      // "ch.qos.logback"
+      "org.slf4j",
+      "ch.qos.logback",
+      // Tomcat's servlet classes must be on boostrap
+      // when running tomcat test
+      "javax.servlet.ServletContainerInitializer",
+      "javax.servlet.ServletContext"
     };
     TEST_BOOTSTRAP_PREFIXES =
         Arrays.copyOf(
@@ -156,16 +158,17 @@ public class SpockRunner extends Sputnik {
 
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-      Class c = this.findLoadedClass(name);
-      if (c != null) {
-        return c;
-      }
-      if (name.startsWith(shadowPrefix)) {
-        try {
-          return shadow(super.loadClass(name, resolve));
-        } catch (Exception e) {
+      synchronized (super.getClassLoadingLock(name)) {
+        Class c = this.findLoadedClass(name);
+        if (c != null) {
+          return c;
         }
-      }
+        if (name.startsWith(shadowPrefix)) {
+          try {
+            return shadow(super.loadClass(name, resolve));
+          } catch (Exception e) {
+          }
+        }
 
       /*
       if (!name.startsWith("datadog.trace.agent.test.")) {
@@ -177,7 +180,8 @@ public class SpockRunner extends Sputnik {
         }
       }
       */
-      return parent.loadClass(name);
+        return parent.loadClass(name);
+      }
     }
   }
 }

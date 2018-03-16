@@ -8,8 +8,10 @@ apply from: "${rootDir}/gradle/java.gradle"
 // add all subprojects under 'instrumentation' to the agent's dependencies
 Project instr_project = project
 subprojects { subProj ->
-  instr_project.dependencies {
-    compile(project(subProj.getPath()))
+  if (subProj.getParent() == instr_project) {
+    instr_project.dependencies {
+      compile(project(subProj.getPath()))
+    }
   }
 }
 
