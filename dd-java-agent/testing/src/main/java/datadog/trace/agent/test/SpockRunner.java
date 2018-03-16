@@ -170,16 +170,16 @@ public class SpockRunner extends Sputnik {
           }
         }
 
-      /*
-      if (!name.startsWith("datadog.trace.agent.test.")) {
-        for (int i = 0; i < AGENT_PACKAGE_PREFIXES.length; ++i) {
-          if (name.startsWith(AGENT_PACKAGE_PREFIXES[i])) {
-            throw new ClassNotFoundException(
-                "refusing to load agent class: " + name + " on test classloader.");
+        /*
+        if (!name.startsWith("datadog.trace.agent.test.")) {
+          for (int i = 0; i < AGENT_PACKAGE_PREFIXES.length; ++i) {
+            if (name.startsWith(AGENT_PACKAGE_PREFIXES[i])) {
+              throw new ClassNotFoundException(
+                  "refusing to load agent class: " + name + " on test classloader.");
+            }
           }
         }
-      }
-      */
+        */
         return parent.loadClass(name);
       }
     }

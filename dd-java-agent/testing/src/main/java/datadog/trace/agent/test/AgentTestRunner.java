@@ -146,6 +146,8 @@ public abstract class AgentTestRunner extends Specification {
         final JavaModule module,
         final boolean loaded,
         final Throwable throwable) {
+      // System.err.println("failed to instrument " + typeName);
+      // throwable.printStackTrace();
       INSTRUMENTATION_ERROR_COUNT.incrementAndGet();
     }
 

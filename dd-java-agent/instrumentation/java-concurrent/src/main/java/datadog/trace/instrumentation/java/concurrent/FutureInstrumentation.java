@@ -48,7 +48,6 @@ public final class FutureInstrumentation extends Instrumenter.Configurable {
       "scala.concurrent.forkjoin.ForkJoinTask$AdaptedCallable",
       "scala.concurrent.forkjoin.ForkJoinTask$AdaptedRunnable",
       "scala.collection.parallel.AdaptiveWorkStealingForkJoinTasks$WrappedTask",
-      /*
       "akka.dispatch.Mailbox",
       "akka.dispatch.forkjoin.ForkJoinTask",
       "akka.dispatch.Mailboxes$$anon$1",
@@ -57,7 +56,6 @@ public final class FutureInstrumentation extends Instrumenter.Configurable {
       "akka.dispatch.forkjoin.ForkJoinTask$AdaptedRunnable",
       "akka.dispatch.Dispatcher$$anon$1",
       "akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinTask",
-      */
       "com.google.common.util.concurrent.SettableFuture",
       "com.google.common.util.concurrent.AbstractFuture$TrustedFuture",
       "com.google.common.util.concurrent.AbstractFuture"
