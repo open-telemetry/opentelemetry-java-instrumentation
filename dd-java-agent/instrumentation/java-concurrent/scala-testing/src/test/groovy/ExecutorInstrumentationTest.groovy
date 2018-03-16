@@ -31,6 +31,11 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     submitMethod = ExecutorService.getMethod("submit", Callable)
   }
 
+  @Override
+  void afterTest() {
+    // Ignore failures to instrument sun proxy classes
+  }
+
   @Unroll
   // more useful name breaks java9 javac
   // def "#poolImpl.getClass().getSimpleName() #method.getName() propagates"()
