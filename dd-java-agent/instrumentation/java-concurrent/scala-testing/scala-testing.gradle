@@ -1,0 +1,16 @@
+apply from: "${rootDir}/gradle/java.gradle"
+apply plugin: 'scala'
+
+dependencies {
+  // calling scala classes in spock requires an explicit dependency,
+  // hence the compile instead of testCompile
+  compileOnly group: 'org.scala-lang', name: 'scala-library', version: '2.11.12'
+  testCompile group: 'org.scala-lang', name: 'scala-library', version: '2.11.12'
+
+  compile project(':dd-trace-api')
+  compile project(':dd-trace-ot')
+
+  testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  testCompile project(':dd-java-agent:instrumentation:trace-annotation')
+}
