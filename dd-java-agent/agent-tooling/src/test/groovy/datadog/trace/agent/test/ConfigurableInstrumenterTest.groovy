@@ -1,5 +1,6 @@
-package datadog.trace.agent.tooling
+package datadog.trace.agent.test
 
+import datadog.trace.agent.tooling.Instrumenter
 import net.bytebuddy.agent.builder.AgentBuilder
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables

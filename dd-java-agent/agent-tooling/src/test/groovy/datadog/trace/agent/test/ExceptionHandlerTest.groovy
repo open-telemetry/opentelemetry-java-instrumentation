@@ -1,6 +1,6 @@
 package datadog.trace.agent.test
 
-import datadog.trace.agent.bootstrap.ExceptionLogger
+import datadog.trace.bootstrap.ExceptionLogger
 import datadog.trace.agent.tooling.ExceptionHandlers
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.dynamic.ClassFileLocator

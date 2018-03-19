@@ -8,6 +8,6 @@ class OSGIClassloadingTest extends AgentTestRunner {
     org.osgi.framework.Bundle.getName()
 
     expect:
-    System.getProperty("org.osgi.framework.bootdelegation") == "io.opentracing.*,io.opentracing,datadog.slf4j.*,datadog.slf4j,datadog.trace.*,datadog.trace"
+    System.getProperty("org.osgi.framework.bootdelegation") == "io.opentracing.*,io.opentracing,datadog.slf4j.*,datadog.slf4j,datadog.trace.bootstrap.*,datadog.trace.bootstrap,datadog.trace.api.*,datadog.trace.api,datadog.trace.context.*,datadog.trace.context"
   }
 }

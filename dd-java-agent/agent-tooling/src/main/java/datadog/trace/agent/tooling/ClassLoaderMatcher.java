@@ -1,7 +1,7 @@
 package datadog.trace.agent.tooling;
 
-import datadog.trace.agent.bootstrap.DatadogClassLoader;
-import datadog.trace.agent.bootstrap.PatchLogger;
+import datadog.trace.bootstrap.DatadogClassLoader;
+import datadog.trace.bootstrap.PatchLogger;
 import io.opentracing.util.GlobalTracer;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -9,10 +9,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
 public class ClassLoaderMatcher {
-  /* packages which will be loaded on the bootstrap classloader*/
-  public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
-    "io.opentracing", "datadog.slf4j", "datadog.trace"
-  };
   public static final ClassLoader BOOTSTRAP_CLASSLOADER = null;
 
   /** A private constructor that must not be invoked. */

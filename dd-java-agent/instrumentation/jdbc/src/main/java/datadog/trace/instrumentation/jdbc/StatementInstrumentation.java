@@ -10,10 +10,10 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.bootstrap.JDBCMaps;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
+import datadog.trace.bootstrap.JDBCMaps;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.noop.NoopScopeManager;

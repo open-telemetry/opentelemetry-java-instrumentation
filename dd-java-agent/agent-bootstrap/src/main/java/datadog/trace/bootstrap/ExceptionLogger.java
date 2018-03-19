@@ -1,4 +1,4 @@
-package datadog.trace.agent.bootstrap;
+package datadog.trace.bootstrap;
 
 /**
  * Class used for exception handler logging.

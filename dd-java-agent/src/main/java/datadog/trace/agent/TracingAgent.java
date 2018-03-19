@@ -102,8 +102,7 @@ public class TracingAgent {
       agentParent = getPlatformClassLoader();
     }
     Class<?> loaderClass =
-        ClassLoader.getSystemClassLoader()
-            .loadClass("datadog.trace.agent.bootstrap.DatadogClassLoader");
+        ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.DatadogClassLoader");
     Constructor constructor =
         loaderClass.getDeclaredConstructor(URL.class, URL.class, ClassLoader.class);
     return (ClassLoader)

@@ -16,7 +16,7 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
 
-@Timeout(5)
+@Timeout(10)
 class JDBCInstrumentationTest extends Specification {
 
   final ListWriter writer = new ListWriter()

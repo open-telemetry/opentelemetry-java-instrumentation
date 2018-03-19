@@ -3,8 +3,8 @@ package datadog.trace.instrumentation.osgi;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.ClassLoaderMatcher;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.agent.tooling.Utils;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
@@ -33,13 +33,13 @@ public final class OSGIClassloadingInstrumentation extends Instrumenter.Configur
                 // Instead it sets a system prop to tell osgi to delegate
                 // classloads for datadog bootstrap classes
                 StringBuilder ddPrefixes = new StringBuilder("");
-                for (int i = 0; i < ClassLoaderMatcher.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
+                for (int i = 0; i < Utils.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
                   if (i > 0) {
                     // must append twice. Once for exact package and wildcard for child packages
                     ddPrefixes.append(",");
                   }
-                  ddPrefixes.append(ClassLoaderMatcher.BOOTSTRAP_PACKAGE_PREFIXES[i]).append(".*,");
-                  ddPrefixes.append(ClassLoaderMatcher.BOOTSTRAP_PACKAGE_PREFIXES[i]);
+                  ddPrefixes.append(Utils.BOOTSTRAP_PACKAGE_PREFIXES[i]).append(".*,");
+                  ddPrefixes.append(Utils.BOOTSTRAP_PACKAGE_PREFIXES[i]);
                 }
                 final String existing = System.getProperty("org.osgi.framework.bootdelegation");
                 if (null == existing) {

@@ -10,10 +10,9 @@ import datadog.trace.common.writer.ListWriter;
 import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -23,6 +22,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
 import org.spockframework.runtime.model.SpecMetadata;
 import spock.lang.Specification;
@@ -42,7 +42,7 @@ import spock.lang.Specification;
  *       in an initialized state.
  * </ul>
  */
-@Slf4j
+@RunWith(SpockRunner.class)
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
 public abstract class AgentTestRunner extends Specification {
   /**
@@ -56,11 +56,13 @@ public abstract class AgentTestRunner extends Specification {
   private static final AtomicInteger INSTRUMENTATION_ERROR_COUNT = new AtomicInteger();
 
   private static final Instrumentation instrumentation;
-  private static ClassFileTransformer activeTransformer = null;
+  private static volatile ClassFileTransformer activeTransformer = null;
 
   protected static final Phaser WRITER_PHASER = new Phaser();
 
   static {
+    instrumentation = ByteBuddyAgent.getInstrumentation();
+
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG);
 
@@ -75,27 +77,30 @@ public abstract class AgentTestRunner extends Specification {
           }
         };
     TEST_TRACER = new DDTracer(TEST_WRITER);
-
-    ByteBuddyAgent.install();
-    instrumentation = ByteBuddyAgent.getInstrumentation();
+    TestUtils.registerOrReplaceGlobalTracer(TEST_TRACER);
   }
 
   @BeforeClass
-  public static synchronized void agentSetup() {
+  public static synchronized void agentSetup() throws Exception {
     if (null != activeTransformer) {
       throw new IllegalStateException("transformer already in place: " + activeTransformer);
     }
 
-    activeTransformer =
-        AgentInstaller.installBytebuddyAgent(instrumentation, new ErrorCountingListener());
-    TestUtils.registerOrReplaceGlobalTracer(TEST_TRACER);
+    final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+    try {
+      Thread.currentThread().setContextClassLoader(AgentTestRunner.class.getClassLoader());
+      activeTransformer =
+          AgentInstaller.installBytebuddyAgent(instrumentation, new ErrorCountingListener());
+    } finally {
+      Thread.currentThread().setContextClassLoader(contextLoader);
+    }
   }
 
   @Before
   public void beforeTest() {
     TEST_WRITER.start();
     INSTRUMENTATION_ERROR_COUNT.set(0);
-    assert TEST_TRACER.activeSpan() == null;
+    assert (TEST_TRACER).activeSpan() == null;
   }
 
   @After
@@ -105,11 +110,13 @@ public abstract class AgentTestRunner extends Specification {
 
   @AfterClass
   public static synchronized void agentClenup() {
-    instrumentation.removeTransformer(activeTransformer);
-    activeTransformer = null;
+    if (null != activeTransformer) {
+      instrumentation.removeTransformer(activeTransformer);
+      activeTransformer = null;
+    }
   }
 
-  private static class ErrorCountingListener implements AgentBuilder.Listener {
+  public static class ErrorCountingListener implements AgentBuilder.Listener {
     @Override
     public void onDiscovery(
         final String typeName,
