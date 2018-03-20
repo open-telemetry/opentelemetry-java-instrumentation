@@ -1,5 +1,3 @@
-package datadog.trace.agent.integration.executors
-
 import datadog.trace.api.Trace
 import io.opentracing.util.GlobalTracer
 

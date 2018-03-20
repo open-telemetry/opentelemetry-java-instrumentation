@@ -1,0 +1,12 @@
+apply from: "${rootDir}/gradle/java.gradle"
+apply plugin: 'scala'
+
+dependencies {
+  compile project(':dd-trace-api')
+  compile project(':dd-trace-ot')
+  compile group: 'org.scala-lang', name: 'scala-library', version: '2.11.12'
+
+  testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  testCompile project(':dd-java-agent:instrumentation:trace-annotation')
+}

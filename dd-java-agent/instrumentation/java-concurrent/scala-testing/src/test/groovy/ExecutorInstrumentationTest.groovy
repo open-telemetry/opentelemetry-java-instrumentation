@@ -1,12 +1,7 @@
-package datadog.trace.agent.integration.executors
-
 import datadog.opentracing.DDSpan
-import datadog.opentracing.DDTracer
-import datadog.trace.agent.test.IntegrationTestUtils
+import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
-import datadog.trace.common.writer.ListWriter
 import spock.lang.Shared
-import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.lang.reflect.Method
@@ -21,26 +16,24 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-class ExecutorInstrumentationTest extends Specification {
-  @Shared
-  ListWriter testWriter = new ListWriter()
-  @Shared
-  DDTracer tracer = new DDTracer(testWriter)
+class ExecutorInstrumentationTest extends AgentTestRunner {
   @Shared
   Method submitMethod
   @Shared
   Method executeMethod
 
-  def setupSpec() {
-    IntegrationTestUtils.registerOrReplaceGlobalTracer(tracer)
-    testWriter.start()
+  static {
+    System.setProperty("dd.integration.java_concurrent.enabled", "true")
+  }
 
+  def setupSpec() {
     executeMethod = Executor.getMethod("execute", Runnable)
     submitMethod = ExecutorService.getMethod("submit", Callable)
   }
 
-  def setup() {
-    getTestWriter().close()
+  @Override
+  void afterTest() {
+    // Ignore failures to instrument sun proxy classes
   }
 
   @Unroll
@@ -62,11 +55,11 @@ class ExecutorInstrumentationTest extends Specification {
       }
     }.run()
 
-    testWriter.waitForTraces(1)
-    List<DDSpan> trace = testWriter.get(0)
+    TEST_WRITER.waitForTraces(1)
+    List<DDSpan> trace = TEST_WRITER.get(0)
 
     expect:
-    testWriter.size() == 1
+    TEST_WRITER.size() == 1
     trace.size() == 2
     trace.get(0).operationName == "parent"
     trace.get(1).operationName == "asyncChild"
@@ -114,10 +107,10 @@ class ExecutorInstrumentationTest extends Specification {
       }
     }.run()
 
-    testWriter.waitForTraces(1)
+    TEST_WRITER.waitForTraces(1)
 
     expect:
-    testWriter.size() == 1
+    TEST_WRITER.size() == 1
 
     where:
     poolImpl                                                                                        | _
@@ -130,8 +123,8 @@ class ExecutorInstrumentationTest extends Specification {
     setup:
     ScalaConcurrentTests scalaTest = new ScalaConcurrentTests()
     int expectedNumberOfSpans = scalaTest.traceWithFutureAndCallbacks()
-    testWriter.waitForTraces(1)
-    List<DDSpan> trace = testWriter.get(0)
+    TEST_WRITER.waitForTraces(1)
+    List<DDSpan> trace = TEST_WRITER.get(0)
 
     expect:
     trace.size() == expectedNumberOfSpans
@@ -146,8 +139,8 @@ class ExecutorInstrumentationTest extends Specification {
     setup:
     ScalaConcurrentTests scalaTest = new ScalaConcurrentTests()
     int expectedNumberOfSpans = scalaTest.tracedAcrossThreadsWithNoTrace()
-    testWriter.waitForTraces(1)
-    List<DDSpan> trace = testWriter.get(0)
+    TEST_WRITER.waitForTraces(1)
+    List<DDSpan> trace = TEST_WRITER.get(0)
 
     expect:
     trace.size() == expectedNumberOfSpans
@@ -159,11 +152,11 @@ class ExecutorInstrumentationTest extends Specification {
     setup:
     ScalaConcurrentTests scalaTest = new ScalaConcurrentTests()
     int expectedNumberOfSpans = scalaTest.traceWithPromises()
-    testWriter.waitForTraces(1)
-    List<DDSpan> trace = testWriter.get(0)
+    TEST_WRITER.waitForTraces(1)
+    List<DDSpan> trace = TEST_WRITER.get(0)
 
     expect:
-    testWriter.size() == 1
+    TEST_WRITER.size() == 1
     trace.size() == expectedNumberOfSpans
     trace[0].operationName == "ScalaConcurrentTests.traceWithPromises"
     findSpan(trace, "keptPromise").context().getParentId() == trace[0].context().getSpanId()
@@ -175,11 +168,11 @@ class ExecutorInstrumentationTest extends Specification {
     setup:
     ScalaConcurrentTests scalaTest = new ScalaConcurrentTests()
     int expectedNumberOfSpans = scalaTest.tracedWithFutureFirstCompletions()
-    testWriter.waitForTraces(1)
-    List<DDSpan> trace = testWriter.get(0)
+    TEST_WRITER.waitForTraces(1)
+    List<DDSpan> trace = TEST_WRITER.get(0)
 
     expect:
-    testWriter.size() == 1
+    TEST_WRITER.size() == 1
     trace.size() == expectedNumberOfSpans
     findSpan(trace, "timeout1").context().getParentId() == trace[0].context().getSpanId()
     findSpan(trace, "timeout2").context().getParentId() == trace[0].context().getSpanId()

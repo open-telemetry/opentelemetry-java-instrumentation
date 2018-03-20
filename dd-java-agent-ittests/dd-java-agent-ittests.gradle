@@ -1,6 +1,4 @@
 apply from: "${rootDir}/gradle/java.gradle"
-// TODO: Test scala in separate project
-apply plugin: 'scala'
 
 description = 'dd-java-agent-ittests'
 
@@ -19,12 +17,8 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
 }
 
 dependencies {
-  compile project(':dd-trace-api')
-  compile project(':dd-trace-ot')
-
-  // calling scala classes in spock requires an explicit dependency,
-  // hence the compile instead of testCompile
-  compile group: 'org.scala-lang', name: 'scala-library', version: '2.11.12'
+  testCompile project(':dd-trace-api')
+  testCompile project(':dd-trace-ot')
 
   testCompile deps.opentracingMock
   testCompile deps.testLogging
@@ -51,7 +45,6 @@ test {
   doFirst {
     // Defining here to allow jacoco to be first on the command line.
     jvmArgs "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
-    jvmArgs "-Ddd.integration.java_concurrent.enabled=true"
   }
 
   testLogging {
