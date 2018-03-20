@@ -7,6 +7,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import javax.ws.rs.client.ClientBuilder;
@@ -33,6 +34,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Configurable 
             new HelperInjector(
                 "datadog.trace.instrumentation.jaxrs.ClientTracingFeature",
                 "datadog.trace.instrumentation.jaxrs.ClientTracingFilter"))
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(

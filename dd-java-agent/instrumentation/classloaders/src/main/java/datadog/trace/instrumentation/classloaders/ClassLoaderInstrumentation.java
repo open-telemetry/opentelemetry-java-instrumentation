@@ -8,6 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import com.google.auto.service.AutoService;
 import datadog.opentracing.DDTracer;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.util.GlobalTracer;
@@ -36,6 +37,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Configurable 
         .transform(
             new HelperInjector(
                 "datadog.trace.instrumentation.classloaders.CallDepthThreadLocalMap"))
+        .transform(DDTransformers.defaultTransformers())
         .transform(DDAdvice.create().advice(isConstructor(), ClassloaderAdvice.class.getName()))
         .asDecorator();
   }

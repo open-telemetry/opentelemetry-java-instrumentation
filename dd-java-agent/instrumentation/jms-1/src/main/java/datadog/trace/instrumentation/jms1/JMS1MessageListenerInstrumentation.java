@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
@@ -43,6 +44,7 @@ public final class JMS1MessageListenerInstrumentation extends Instrumenter.Confi
             not(isInterface()).and(failSafe(hasSuperType(named("javax.jms.MessageListener")))),
             not(classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener")))
         .transform(JMS1MessageConsumerInstrumentation.JMS1_HELPER_INJECTOR)
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(

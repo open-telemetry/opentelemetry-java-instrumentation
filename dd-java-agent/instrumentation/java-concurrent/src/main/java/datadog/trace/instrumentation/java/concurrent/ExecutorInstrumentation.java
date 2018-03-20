@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.context.TraceScope;
@@ -106,6 +107,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
               }
             })
         .transform(EXEC_HELPER_INJECTOR)
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(
@@ -114,6 +116,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
         .asDecorator()
         .type(not(isInterface()).and(hasSuperType(named(ExecutorService.class.getName()))))
         .transform(EXEC_HELPER_INJECTOR)
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(

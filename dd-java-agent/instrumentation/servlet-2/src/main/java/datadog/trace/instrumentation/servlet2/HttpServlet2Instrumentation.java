@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
@@ -53,6 +54,7 @@ public final class HttpServlet2Instrumentation extends Instrumenter.Configurable
                 "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter",
                 "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
                 "datadog.trace.instrumentation.servlet2.ServletFilterSpanDecorator"))
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create(false) // Can't use the error handler for pre 1.5 classes...
                 .advice(

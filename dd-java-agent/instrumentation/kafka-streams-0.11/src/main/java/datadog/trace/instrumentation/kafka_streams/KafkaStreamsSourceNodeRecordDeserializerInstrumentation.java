@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -36,6 +37,7 @@ public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation {
           .type(
               named("org.apache.kafka.streams.processor.internals.SourceNodeRecordDeserializer"),
               classLoaderHasClasses("org.apache.kafka.streams.state.internals.KeyValueIterators"))
+          .transform(DDTransformers.defaultTransformers())
           .transform(
               DDAdvice.create()
                   .advice(

@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
@@ -57,6 +58,7 @@ public final class HttpServlet3Instrumentation extends Instrumenter.Configurable
                 "io.opentracing.contrib.web.servlet.filter.TracingFilter",
                 "io.opentracing.contrib.web.servlet.filter.TracingFilter$1",
                 HttpServlet3Advice.class.getName() + "$TagSettingAsyncListener"))
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(
