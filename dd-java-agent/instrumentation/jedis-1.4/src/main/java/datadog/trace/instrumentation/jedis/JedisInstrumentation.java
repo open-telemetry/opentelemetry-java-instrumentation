@@ -8,6 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
@@ -40,6 +41,7 @@ public final class JedisInstrumentation extends Instrumenter.Configurable {
         .type(
             named("redis.clients.jedis.Protocol"),
             classLoaderHasClasses("redis.clients.jedis.Protocol$Command"))
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(

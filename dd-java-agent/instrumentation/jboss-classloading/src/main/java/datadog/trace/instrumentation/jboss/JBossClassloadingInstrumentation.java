@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.jboss;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.agent.tooling.Utils;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -21,6 +22,7 @@ public final class JBossClassloadingInstrumentation extends Instrumenter.Configu
     return agentBuilder
         // Jboss Module class loads the sys prop which defines bootstrap classes
         .type(named("org.jboss.modules.Module"))
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             new AgentBuilder.Transformer() {
               @Override

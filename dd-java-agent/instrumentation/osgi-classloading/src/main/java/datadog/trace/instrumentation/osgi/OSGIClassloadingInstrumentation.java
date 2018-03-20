@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.osgi;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.agent.tooling.Utils;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -21,6 +22,7 @@ public final class OSGIClassloadingInstrumentation extends Instrumenter.Configur
     return agentBuilder
         // OSGI Bundle class loads the sys prop which defines bootstrap classes
         .type(named("org.osgi.framework.Bundle"))
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             new AgentBuilder.Transformer() {
               @Override

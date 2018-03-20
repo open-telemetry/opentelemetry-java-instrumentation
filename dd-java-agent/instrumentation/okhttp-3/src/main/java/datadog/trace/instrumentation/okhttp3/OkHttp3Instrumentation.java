@@ -8,6 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.contrib.okhttp3.TracingInterceptor;
@@ -47,6 +48,7 @@ public class OkHttp3Instrumentation extends Instrumenter.Configurable {
                 "io.opentracing.contrib.okhttp3.TracingCallFactory",
                 "io.opentracing.contrib.okhttp3.TracingCallFactory$NetworkInterceptor",
                 "io.opentracing.contrib.okhttp3.TracingCallFactory$1"))
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(

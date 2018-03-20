@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import com.mongodb.async.client.MongoClientSettings;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Modifier;
@@ -41,6 +42,7 @@ public final class MongoAsyncClientInstrumentation extends Instrumenter.Configur
                                         Collections.<TypeDescription.Generic>emptyList())))
                             .and(isPublic()))))
         .transform(MongoClientInstrumentation.MONGO_HELPER_INJECTOR)
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(

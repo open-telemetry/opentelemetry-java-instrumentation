@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.datastax.driver.core.Session;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.Tracer;
@@ -51,6 +52,7 @@ public class CassandraClientInstrumentation extends Instrumenter.Configurable {
                 "io.opentracing.contrib.cassandra.TracingSession$2",
                 "io.opentracing.contrib.cassandra.TracingCluster",
                 "io.opentracing.contrib.cassandra.TracingCluster$1"))
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(

@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.util.GlobalTracer;
@@ -41,6 +42,7 @@ public final class AWSClientInstrumentation extends Instrumenter.Configurable {
             new HelperInjector(
                 "datadog.trace.instrumentation.aws.TracingRequestHandler",
                 "datadog.trace.instrumentation.aws.SpanDecorator"))
+        .transform(DDTransformers.defaultTransformers())
         .transform(DDAdvice.create().advice(isConstructor(), AWSClientAdvice.class.getName()))
         .asDecorator();
   }

@@ -8,6 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Trace;
 import io.opentracing.Scope;
@@ -30,6 +31,7 @@ public final class TraceAnnotationInstrumentation extends Instrumenter.Configura
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(failSafe(hasSuperType(declaresMethod(isAnnotatedWith(Trace.class)))))
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create().advice(isAnnotatedWith(Trace.class), TraceAdvice.class.getName()))
         .asDecorator();

@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.JDBCMaps;
@@ -36,6 +37,7 @@ public final class StatementInstrumentation extends Instrumenter.Configurable {
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(not(isInterface()).and(failSafe(isSubTypeOf(Statement.class))))
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(

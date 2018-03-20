@@ -8,6 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
@@ -43,6 +44,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Configur
                         failSafe(
                             hasSuperType(
                                 declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path"))))))))
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(

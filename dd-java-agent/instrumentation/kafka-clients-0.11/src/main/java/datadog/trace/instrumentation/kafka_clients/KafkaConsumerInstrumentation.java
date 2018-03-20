@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
@@ -55,6 +56,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Configurabl
             classLoaderHasClasses(
                 "org.apache.kafka.common.header.Header", "org.apache.kafka.common.header.Headers"))
         .transform(HELPER_INJECTOR)
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(

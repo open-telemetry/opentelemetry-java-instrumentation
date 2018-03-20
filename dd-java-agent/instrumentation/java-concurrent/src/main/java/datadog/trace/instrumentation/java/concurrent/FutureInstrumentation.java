@@ -8,6 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
+import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.instrumentation.java.concurrent.ExecutorInstrumentation.ConcurrentUtils;
 import datadog.trace.instrumentation.java.concurrent.ExecutorInstrumentation.DatadogWrapper;
@@ -89,6 +90,7 @@ public final class FutureInstrumentation extends Instrumenter.Configurable {
               }
             })
         .transform(ExecutorInstrumentation.EXEC_HELPER_INJECTOR)
+        .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(
