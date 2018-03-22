@@ -1,6 +1,9 @@
 package datadog.perftest.jetty;
 
 import datadog.perftest.Worker;
+import datadog.trace.api.Trace;
+import io.opentracing.Span;
+import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -49,10 +52,21 @@ public class JettyPerftest {
       if (null != workVal) {
         workTimeMS = Long.parseLong(workVal);
       }
+      scheduleWork(workTimeMS);
+      response.getWriter().print("Did " + workTimeMS + "ms of work.");
+    }
+
+    @Trace
+    private void scheduleWork(final long workTimeMS) {
+      final Span span = GlobalTracer.get().activeSpan();
+      if (span != null) {
+        span.setTag("work-time", workTimeMS);
+        span.setTag("info", "interesting stuff");
+        span.setTag("additionalInfo", "interesting stuff");
+      }
       if (workTimeMS > 0) {
         Worker.doWork(workTimeMS);
       }
-      response.getWriter().print("Did " + workTimeMS + "ms of work.");
     }
   }
 }

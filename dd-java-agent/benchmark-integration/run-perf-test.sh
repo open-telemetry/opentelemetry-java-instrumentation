@@ -2,9 +2,12 @@
 
 # A script for measuring a server's throughput with or without a java agent.
 test_csv_file=/tmp/perf_results.csv
+server_output=/tmp/server_output.txt
 server_jar=$1
 agent_jars="${@:2}"
 server_pid=""
+agent_pid=$(lsof -i tcp:8126 | awk '$8 == "TCP" { print $2 }')
+
 
 if [ "$server_jar" = "" ]; then
     echo "usage: ./run-perf-test.sh path-to-server-jar path-to-agent1 path-to-agent2..."
@@ -17,6 +20,14 @@ if [ "$server_jar" = "" ]; then
     echo ""
     echo "Test results are saved to $test_csv_file"
     exit 1
+fi
+
+if [ "$agent_pid" = "" ]; then
+    echo "discarding traces"
+    writer_type="LoggingWriter"
+else
+    echo "sending traces to local trace agent: $agent_pid"
+    writer_type="DDAgentWriter"
 fi
 
 if [ -f perf-test-settings.rc ]; then
@@ -37,20 +48,22 @@ function start_server {
     agent_jar="$1"
     javaagent_arg=""
     if [ "$agent_jar" != "" -a -f "$agent_jar" ]; then
-        javaagent_arg="-javaagent:$agent_jar -Ddatadog.slf4j.simpleLogger.defaultLogLevel=off -Ddd.writer.type=LoggingWriter -Ddd.service.name=perf-test-app"
+        javaagent_arg="-javaagent:$agent_jar -Ddatadog.slf4j.simpleLogger.defaultLogLevel=off -Ddd.writer.type=$writer_type -Ddd.service.name=perf-test-app"
     fi
     echo "starting server: java $javaagent_arg -jar $server_jar"
-    java $javaagent_arg -jar $server_jar &
-    server_pid=$!
+    { /usr/bin/time -l java $javaagent_arg -jar $server_jar ; } 2> $server_output  &
+
     # Block until server is up
     until nc -z localhost 8080; do
         sleep 0.5
     done
+    server_pid=$(lsof -i tcp:8080 | awk '$8 == "TCP" { print $2 }')
 }
 
 # Send a kill signal to the running server
 # and block until the server is stopped
 function stop_server {
+    echo "Stopping $server_pid"
     kill $server_pid
     wait
     server_pid=""
@@ -63,11 +76,10 @@ function test_endpoint {
     url=$1
     # warmup
     wrk -c $test_num_connections -t$test_num_threads -d ${test_warmup_seconds}s $url >/dev/null
-    wrk_results=/tmp/wrk_results.`date +%s`
+
     # run test
+    wrk_results=/tmp/wrk_results.`date +%s`
     wrk -c $test_num_connections -t$test_num_threads -d ${test_time_seconds}s $url > $wrk_results
-    avg_throughput=$(grep "Requests/sec" $wrk_results | grep -o "[0-9.]*$")
-    echo "$avg_throughput" >> $wrk_results
     echo $wrk_results
 }
 
@@ -76,8 +88,9 @@ trap 'stop_server; exit' SIGINT
 trap 'kill $server_pid; exit' SIGTERM
 header='Client Version'
 for label in "${test_order[@]}"; do
-    header="$header,$label"
+    header="$header,$label Latency,$label Throughput"
 done
+header="$header,Agent CPU Burn,Server CPU Burn,Agent RSS Delta,Server Max RSS"
 echo $header > $test_csv_file
 
 for agent_jar in $agent_jars; do
@@ -92,19 +105,49 @@ for agent_jar in $agent_jars; do
         start_server $agent_jar
     fi
 
+
+    if [ "$agent_pid" = "" ]; then
+        agent_start_cpu=0
+        agent_start_rss=0
+    else
+        agent_start_cpu=$(ps -o 'pid,time' | awk "\$1 == $agent_pid { print \$2 }" | awk -F'[:\.]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+        agent_start_rss=$(ps -o 'pid,rss' | awk "\$1 == $agent_pid { print \$2 }")
+    fi
+    server_start_cpu=$(ps -o 'pid,time' | awk "\$1 == $server_pid { print \$2 }" | awk -F'[:\.]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+
     for t in "${test_order[@]}"; do
         label="$t"
         url="${endpoints[$label]}"
         echo "--Testing $label -- $url--"
         test_output_file=$(test_endpoint $url)
         cat $test_output_file
-        throughput=$(tail -n 1 $test_output_file)
-        result_row="$result_row,$throughput"
+        avg_latency=$(awk '$1 == "Latency" { print $2 }' $test_output_file)
+        avg_throughput=$(awk '$1 == "Requests/sec:" { print $2 }' $test_output_file)
+        result_row="$result_row,$avg_latency,$avg_throughput"
         rm $test_output_file
     done
-    echo "$result_row" >> $test_csv_file
+
+    if [ "$agent_pid" = "" ]; then
+        agent_stop_cpu=0
+        agent_stop_rss=0
+    else
+        agent_stop_cpu=$(ps -o 'pid,time' | awk "\$1 == $agent_pid { print \$2 }" | awk -F'[:\.]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+        agent_stop_rss=$(ps -o 'pid,rss' | awk "\$1 == $agent_pid { print \$2 }")
+    fi
+    server_stop_cpu=$(ps -o 'pid,time' | awk "\$1 == $server_pid { print \$2 }" | awk -F'[:\.]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+
+    let agent_cpu=$agent_stop_cpu-$agent_start_cpu
+    let agent_rss=$agent_stop_rss-$agent_start_rss
+    let server_cpu=$server_stop_cpu-$server_start_cpu
+
     stop_server
+
+    server_rss=$(awk '/.* maximum resident set size/ { print $1 }' $server_output)
+    rm $server_output
+
+    echo "$result_row,$agent_cpu,$server_cpu,$agent_rss,$server_rss" >> $test_csv_file
     echo "----/Testing agent $agent_jar----"
+    echo ""
 done
 
 echo ""
