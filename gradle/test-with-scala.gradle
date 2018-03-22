@@ -1,0 +1,8 @@
+// Enable testing scala code in groovy spock tests.
+
+apply plugin: 'scala'
+
+compileTestGroovy {
+    classpath = classpath.plus(files(compileTestScala.destinationDir))
+    dependsOn compileTestScala
+}
