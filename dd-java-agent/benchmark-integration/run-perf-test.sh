@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # A script for measuring a server's throughput with or without a java agent.
 test_csv_file=/tmp/perf_results.csv
@@ -7,7 +7,6 @@ server_jar=$1
 agent_jars="${@:2}"
 server_pid=""
 agent_pid=$(lsof -i tcp:8126 | awk '$8 == "TCP" { print $2 }')
-
 
 if [ "$server_jar" = "" ]; then
     echo "usage: ./run-perf-test.sh path-to-server-jar path-to-agent1 path-to-agent2..."
@@ -57,7 +56,7 @@ function start_server {
     until nc -z localhost 8080; do
         sleep 0.5
     done
-    server_pid=$(lsof -i tcp:8080 | awk '$8 == "TCP" { print $2 }')
+    server_pid=$(lsof -i tcp:8080 | awk '$8 == "TCP" { print $2 }' | uniq)
 }
 
 # Send a kill signal to the running server
