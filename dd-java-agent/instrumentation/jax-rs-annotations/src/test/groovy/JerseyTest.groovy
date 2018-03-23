@@ -18,7 +18,7 @@ class JerseyTest extends AgentTestRunner {
   def "test resource"() {
     setup:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
-    def scope = TEST_TRACER.buildSpan("test.span").startActive(true)
+    def scope = getTestTracer().buildSpan("test.span").startActive(true)
     def response = resources.client().resource("/test/hello/bob").post(String)
     scope.close()
 

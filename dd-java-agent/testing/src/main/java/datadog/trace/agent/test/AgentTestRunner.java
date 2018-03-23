@@ -7,6 +7,7 @@ import datadog.opentracing.DDTracer;
 import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.common.writer.ListWriter;
+import datadog.trace.common.writer.Writer;
 import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -52,7 +53,10 @@ public abstract class AgentTestRunner extends Specification {
    */
   public static final ListWriter TEST_WRITER;
 
-  protected static final Tracer TEST_TRACER;
+  // having a reference to io.opentracing.Tracer in test field
+  // loads opentracing before bootstrap classpath is setup
+  // so we declare tracer as an object and cast when needed.
+  private static final Object TEST_TRACER;
   private static final AtomicInteger INSTRUMENTATION_ERROR_COUNT = new AtomicInteger();
 
   private static final Instrumentation instrumentation;
@@ -77,7 +81,15 @@ public abstract class AgentTestRunner extends Specification {
           }
         };
     TEST_TRACER = new DDTracer(TEST_WRITER);
-    TestUtils.registerOrReplaceGlobalTracer(TEST_TRACER);
+    TestUtils.registerOrReplaceGlobalTracer((Tracer) TEST_TRACER);
+  }
+
+  protected static Tracer getTestTracer() {
+    return (Tracer) TEST_TRACER;
+  }
+
+  protected static Writer getTestWriter() {
+    return TEST_WRITER;
   }
 
   @BeforeClass
@@ -100,7 +112,7 @@ public abstract class AgentTestRunner extends Specification {
   public void beforeTest() {
     TEST_WRITER.start();
     INSTRUMENTATION_ERROR_COUNT.set(0);
-    assert (TEST_TRACER).activeSpan() == null;
+    assert getTestTracer().activeSpan() == null;
   }
 
   @After
