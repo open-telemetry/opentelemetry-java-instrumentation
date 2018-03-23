@@ -8,6 +8,7 @@ import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
 
 public class JmsUtil {
+  private static final String TIBCO_TMP_PREFIX = "$TMP$";
 
   public static String toResourceName(final Message message, final Destination destination) {
     Destination jmsDestination = null;
@@ -18,21 +19,25 @@ public class JmsUtil {
     if (jmsDestination == null) {
       jmsDestination = destination;
     }
-    if (jmsDestination instanceof TemporaryQueue) {
-      return "Temporary Queue";
-    }
-    if (jmsDestination instanceof TemporaryTopic) {
-      return "Temporary Topic";
-    }
     try {
       if (jmsDestination instanceof Queue) {
-        return "Queue " + ((Queue) jmsDestination).getQueueName();
+        final String queueName = ((Queue) jmsDestination).getQueueName();
+        if (jmsDestination instanceof TemporaryQueue || queueName.startsWith(TIBCO_TMP_PREFIX)) {
+          return "Temporary Queue";
+        } else {
+          return "Queue " + queueName;
+        }
       }
       if (jmsDestination instanceof Topic) {
-        return "Topic " + ((Topic) jmsDestination).getTopicName();
+        final String topicName = ((Topic) jmsDestination).getTopicName();
+        if (jmsDestination instanceof TemporaryTopic || topicName.startsWith(TIBCO_TMP_PREFIX)) {
+          return "Temporary Topic";
+        } else {
+          return "Topic " + topicName;
+        }
       }
     } catch (final Exception e) {
     }
-    return "Unknown Destination";
+    return "Destination";
   }
 }
