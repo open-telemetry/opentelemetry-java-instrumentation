@@ -62,7 +62,7 @@ class KafkaStreamsTest extends AgentTestRunner {
       @Override
       void onMessage(ConsumerRecord<String, String> record) {
         WRITER_PHASER.arriveAndAwaitAdvance() // ensure consistent ordering of traces
-        TEST_TRACER.activeSpan().setTag("testing", 123)
+        getTestTracer().activeSpan().setTag("testing", 123)
         records.add(record)
       }
     })
@@ -81,7 +81,7 @@ class KafkaStreamsTest extends AgentTestRunner {
       @Override
       String apply(String textLine) {
         WRITER_PHASER.arriveAndAwaitAdvance() // ensure consistent ordering of traces
-        TEST_TRACER.activeSpan().setTag("asdf", "testing")
+        getTestTracer().activeSpan().setTag("asdf", "testing")
         return textLine.toLowerCase()
       }
     })
