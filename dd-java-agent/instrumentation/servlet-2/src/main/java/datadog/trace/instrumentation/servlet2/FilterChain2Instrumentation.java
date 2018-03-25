@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
@@ -49,11 +48,7 @@ public final class FilterChain2Instrumentation extends Instrumenter.Configurable
                 .and(
                     classLoaderHasClasses(
                         "javax.servlet.ServletContextEvent", "javax.servlet.ServletRequest")))
-        .transform(
-            new HelperInjector(
-                "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter",
-                "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
-                "datadog.trace.instrumentation.servlet2.ServletFilterSpanDecorator"))
+        .transform(HttpServlet2Instrumentation.SERVLET2_HELPER_INJECTOR)
         .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()

@@ -35,6 +35,12 @@ import net.bytebuddy.asm.Advice;
 @AutoService(Instrumenter.class)
 public final class HttpServlet2Instrumentation extends Instrumenter.Configurable {
   public static final String SERVLET_OPERATION_NAME = "servlet.request";
+  static final HelperInjector SERVLET2_HELPER_INJECTOR =
+      new HelperInjector(
+          "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter",
+          "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
+          "datadog.trace.instrumentation.servlet2.ServletFilterSpanDecorator",
+          "datadog.trace.instrumentation.servlet2.ServletFilterSpanDecorator$1");
 
   public HttpServlet2Instrumentation() {
     super("servlet", "servlet-2");
@@ -49,11 +55,7 @@ public final class HttpServlet2Instrumentation extends Instrumenter.Configurable
                 .and(
                     classLoaderHasClasses(
                         "javax.servlet.ServletContextEvent", "javax.servlet.FilterChain")))
-        .transform(
-            new HelperInjector(
-                "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter",
-                "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
-                "datadog.trace.instrumentation.servlet2.ServletFilterSpanDecorator"))
+        .transform(SERVLET2_HELPER_INJECTOR)
         .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create(false) // Can't use the error handler for pre 1.5 classes...
