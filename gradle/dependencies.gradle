@@ -2,56 +2,58 @@ def groovyVer = GroovySystem.version
 def spockGroovyVer = GroovySystem.version.replaceAll(/\.\d+$/, '')
 
 ext {
-  version = [
+  versions = [
     opentracing: '0.31.0',
 
     slf4j      : "1.7.25",
-    guava      : "20.0",
-    jackson    : "2.6.3",
+    guava      : "20.0", // Last version to support Java 7
+    jackson    : "2.6.3", // This is a transitive dependency for the tracer.
+    // Use an old version to not force an upgrade for others using tracer as a dependency.
 
     spock      : "1.1-groovy-$spockGroovyVer",
     groovy     : groovyVer,
     junit      : "4.12",
     logback    : "1.2.3",
-    bytebuddy  : "1.7.9"
+    bytebuddy  : "1.7.11",  // Test failure when updating to 1.8.0.
   ]
 
   deps = [
     // OpenTracing
-    opentracingApi : dependencies.create(group: 'io.opentracing', name: 'opentracing-api', version: version.opentracing),
+    opentracingApi : dependencies.create(group: 'io.opentracing', name: 'opentracing-api', version: versions.opentracing),
     opentracing    : [
-      dependencies.create(group: 'io.opentracing', name: 'opentracing-api', version: version.opentracing),
-      dependencies.create(group: 'io.opentracing', name: 'opentracing-noop', version: version.opentracing),
-      dependencies.create(group: 'io.opentracing', name: 'opentracing-util', version: version.opentracing),
+      dependencies.create(group: 'io.opentracing', name: 'opentracing-api', version: versions.opentracing),
+      dependencies.create(group: 'io.opentracing', name: 'opentracing-noop', version: versions.opentracing),
+      dependencies.create(group: 'io.opentracing', name: 'opentracing-util', version: versions.opentracing),
     ],
-    opentracingMock: dependencies.create(group: 'io.opentracing', name: 'opentracing-mock', version: version.opentracing),
+    opentracingMock: dependencies.create(group: 'io.opentracing', name: 'opentracing-mock', version: versions.opentracing),
 
     // General
-    slf4j          : "org.slf4j:slf4j-api:${version.slf4j}",
-    guava          : "com.google.guava:guava:$version.guava",
+    slf4j          : "org.slf4j:slf4j-api:${versions.slf4j}",
+    guava          : "com.google.guava:guava:$versions.guava",
     jackson        : [
-      dependencies.create(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: version.jackson),
-      dependencies.create(group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: version.jackson),
+      dependencies.create(group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: versions.jackson),
+      dependencies.create(group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: versions.jackson),
     ],
-    bytebuddy      : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: "${version.bytebuddy}"),
+    bytebuddy      : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: "${versions.bytebuddy}"),
     autoservice    : [
       dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'),
-      dependencies.create(group: 'com.google.auto', name: 'auto-common', version: '0.3'),
-      dependencies.create(group: 'com.google.guava', name: 'guava', version: "${version.guava}"),
+      dependencies.create(group: 'com.google.auto', name: 'auto-common', version: '0.8'),
+      // These are the last versions that support guava 20.0.  Upgrading has odd interactions with shadow.
+      dependencies.create(group: 'com.google.guava', name: 'guava', version: "${versions.guava}"),
     ],
 
     // Testing
-    spock          : dependencies.create("org.spockframework:spock-core:${version.spock}", {
+    spock          : dependencies.create("org.spockframework:spock-core:${versions.spock}", {
       exclude group: "org.codehaus.groovy", module: "groovy-all"
     }),
-    bytebuddyagent : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: "${version.bytebuddy}"),
-    groovy         : "org.codehaus.groovy:groovy-all:${version.groovy}",
-    junit          : "junit:junit:${version.junit}",
+    bytebuddyagent : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: "${versions.bytebuddy}"),
+    groovy         : "org.codehaus.groovy:groovy-all:${versions.groovy}",
+    junit          : "junit:junit:${versions.junit}",
     testLogging    : [
-      dependencies.create(group: 'ch.qos.logback', name: 'logback-classic', version: version.logback),
-      dependencies.create(group: 'org.slf4j', name: 'log4j-over-slf4j', version: version.slf4j),
-      dependencies.create(group: 'org.slf4j', name: 'jcl-over-slf4j', version: version.slf4j),
-      dependencies.create(group: 'org.slf4j', name: 'jul-to-slf4j', version: version.slf4j),
+      dependencies.create(group: 'ch.qos.logback', name: 'logback-classic', version: versions.logback),
+      dependencies.create(group: 'org.slf4j', name: 'log4j-over-slf4j', version: versions.slf4j),
+      dependencies.create(group: 'org.slf4j', name: 'jcl-over-slf4j', version: versions.slf4j),
+      dependencies.create(group: 'org.slf4j', name: 'jul-to-slf4j', version: versions.slf4j),
     ],
   ]
 }
