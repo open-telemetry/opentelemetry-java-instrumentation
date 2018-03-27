@@ -81,6 +81,33 @@ public class ClassRetransformingBenchmark {
   @Fork(jvmArgsAppend = "-javaagent:releases/dd-java-agent-0.2.10.jar")
   public static class WithAgent0210 extends ClassRetransformingBenchmark {}
 
+  @Fork(jvmArgsAppend = "-javaagent:releases/dd-java-agent-0.2.11.jar")
+  public static class WithAgent0211 extends ClassRetransformingBenchmark {}
+
+  @Fork(jvmArgsAppend = "-javaagent:releases/dd-java-agent-0.2.12.jar")
+  public static class WithAgent0212 extends ClassRetransformingBenchmark {}
+
+  @Fork(jvmArgsAppend = "-javaagent:releases/dd-java-agent-0.3.0.jar")
+  public static class WithAgent030 extends ClassRetransformingBenchmark {}
+
+  @Fork(jvmArgsAppend = "-javaagent:releases/dd-java-agent-0.3.1.jar")
+  public static class WithAgent031 extends ClassRetransformingBenchmark {}
+
+  @Fork(jvmArgsAppend = "-javaagent:releases/dd-java-agent-0.3.2.jar")
+  public static class WithAgent032 extends ClassRetransformingBenchmark {}
+
+  @Fork(jvmArgsAppend = "-javaagent:releases/dd-java-agent-0.3.3.jar")
+  public static class WithAgent033 extends ClassRetransformingBenchmark {}
+
+  @Fork(jvmArgsAppend = "-javaagent:releases/dd-java-agent-0.4.0.jar")
+  public static class WithAgent040 extends ClassRetransformingBenchmark {}
+
+  @Fork(jvmArgsAppend = "-javaagent:releases/dd-java-agent-0.4.1.jar")
+  public static class WithAgent041 extends ClassRetransformingBenchmark {}
+
+  @Fork(jvmArgsAppend = "-javaagent:releases/dd-java-agent-0.5.0.jar")
+  public static class WithAgent050 extends ClassRetransformingBenchmark {}
+
   @Fork(jvmArgsAppend = "-javaagent:../build/libs/dd-java-agent.jar")
   public static class WithAgent extends ClassRetransformingBenchmark {}
 }

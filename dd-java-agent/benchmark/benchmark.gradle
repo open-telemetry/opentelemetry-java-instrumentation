@@ -50,7 +50,7 @@ jmh {
   // Allows to include test sources into generate JMH jar, i.e. use it when benchmarks depend on the test classes.
 
   duplicateClassesStrategy = 'fail'
-  jmhVersion = '1.19' // Specifies JMH version
+  jmhVersion = '1.20' // Specifies JMH version
 }
 
 // configured as a separate task since the 'jmh' task did not like adding a javaagent argument.
