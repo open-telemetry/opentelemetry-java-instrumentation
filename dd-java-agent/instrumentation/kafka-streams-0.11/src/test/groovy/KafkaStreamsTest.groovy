@@ -1,5 +1,3 @@
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.Logger
 import datadog.trace.agent.test.AgentTestRunner
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.Serdes
@@ -9,7 +7,6 @@ import org.apache.kafka.streams.kstream.KStream
 import org.apache.kafka.streams.kstream.KStreamBuilder
 import org.apache.kafka.streams.kstream.ValueMapper
 import org.junit.ClassRule
-import org.slf4j.LoggerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
@@ -29,12 +26,6 @@ import java.util.concurrent.TimeUnit
 class KafkaStreamsTest extends AgentTestRunner {
   static final STREAM_PENDING = "test.pending"
   static final STREAM_PROCESSED = "test.processed"
-
-  static {
-    ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN)
-    ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG)
-    System.setProperty("dd.integration.kafka.enabled", "true")
-  }
 
   @Shared
   @ClassRule

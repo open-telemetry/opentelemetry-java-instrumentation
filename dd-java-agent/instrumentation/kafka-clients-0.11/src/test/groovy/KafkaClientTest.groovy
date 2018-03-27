@@ -20,10 +20,6 @@ import java.util.concurrent.TimeUnit
 class KafkaClientTest extends AgentTestRunner {
   static final SHARED_TOPIC = "shared.topic"
 
-  static {
-    System.setProperty("dd.integration.kafka.enabled", "true")
-  }
-
   @Shared
   @ClassRule
   KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, SHARED_TOPIC)

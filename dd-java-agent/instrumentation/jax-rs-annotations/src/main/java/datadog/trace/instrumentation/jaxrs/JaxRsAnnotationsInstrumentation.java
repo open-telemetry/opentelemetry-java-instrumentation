@@ -30,11 +30,6 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Configur
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   protected AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
