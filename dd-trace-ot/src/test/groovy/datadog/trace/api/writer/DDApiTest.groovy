@@ -241,11 +241,8 @@ class DDApiTest extends Specification {
   def "Api ResponseListeners see 200 responses"() {
     setup:
     def agentResponse = new AtomicReference<String>(null)
-    ResponseListener responseListener = new ResponseListener() {
-      @Override
-      void onResponse(String endpoint, JsonNode responseJson) {
-        agentResponse.set(responseJson.toString())
-      }
+    ResponseListener responseListener = { String endpoint, JsonNode responseJson ->
+      agentResponse.set(responseJson.toString())
     }
     boolean servicesAvailable = true
     def agent = ratpack {
