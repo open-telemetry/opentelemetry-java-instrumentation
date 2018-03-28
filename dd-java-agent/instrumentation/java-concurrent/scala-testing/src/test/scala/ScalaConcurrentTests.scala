@@ -1,8 +1,8 @@
 import datadog.trace.api.Trace
 import io.opentracing.util.GlobalTracer
 
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
 
 class ScalaConcurrentTests {
