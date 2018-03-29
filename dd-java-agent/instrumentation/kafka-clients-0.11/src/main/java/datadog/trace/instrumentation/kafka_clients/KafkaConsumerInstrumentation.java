@@ -34,10 +34,6 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Configurabl
           "datadog.trace.instrumentation.kafka_clients.TracingIterable$TracingIterator",
           "datadog.trace.instrumentation.kafka_clients.TracingIterable$SpanBuilderDecorator",
           "datadog.trace.instrumentation.kafka_clients.KafkaConsumerInstrumentation$ConsumeScopeAction");
-  public static final ConsumeScopeAction CONSUME_ACTION = new ConsumeScopeAction();
-
-  private static final String OPERATION = "kafka.consume";
-  private static final String COMPONENT_NAME = "java-kafka";
 
   public KafkaConsumerInstrumentation() {
     super("kafka");
@@ -75,7 +71,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Configurabl
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) Iterable<ConsumerRecord> iterable) {
-      iterable = new TracingIterable(iterable, OPERATION, CONSUME_ACTION);
+      iterable = new TracingIterable(iterable, "kafka.consume", ConsumeScopeAction.INSTANCE);
     }
   }
 
@@ -83,12 +79,15 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Configurabl
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) Iterator<ConsumerRecord> iterator) {
-      iterator = new TracingIterable.TracingIterator(iterator, OPERATION, CONSUME_ACTION);
+      iterator =
+          new TracingIterable.TracingIterator(
+              iterator, "kafka.consume", ConsumeScopeAction.INSTANCE);
     }
   }
 
   public static class ConsumeScopeAction
       implements TracingIterable.SpanBuilderDecorator<ConsumerRecord> {
+    public static final ConsumeScopeAction INSTANCE = new ConsumeScopeAction();
 
     @Override
     public void decorate(final Tracer.SpanBuilder spanBuilder, final ConsumerRecord record) {
@@ -101,7 +100,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Configurabl
           .withTag(DDTags.SERVICE_NAME, "kafka")
           .withTag(DDTags.RESOURCE_NAME, "Consume Topic " + topic)
           .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_CONSUMER)
-          .withTag(Tags.COMPONENT.getKey(), COMPONENT_NAME)
+          .withTag(Tags.COMPONENT.getKey(), "java-kafka")
           .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CONSUMER)
           .withTag("partition", record.partition())
           .withTag("offset", record.offset());

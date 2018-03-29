@@ -34,9 +34,6 @@ public class KafkaStreamsProcessorInstrumentation {
   public static final HelperInjector HELPER_INJECTOR =
       new HelperInjector("datadog.trace.instrumentation.kafka_streams.TextMapExtractAdapter");
 
-  private static final String OPERATION = "kafka.consume";
-  private static final String COMPONENT_NAME = "java-kafka";
-
   @AutoService(Instrumenter.class)
   public static class StartInstrumentation extends Instrumenter.Configurable {
 
@@ -80,12 +77,12 @@ public class KafkaStreamsProcessorInstrumentation {
                     Format.Builtin.TEXT_MAP, new TextMapExtractAdapter(record.value.headers()));
 
         GlobalTracer.get()
-            .buildSpan(OPERATION)
+            .buildSpan("kafka.consume")
             .asChildOf(extractedContext)
             .withTag(DDTags.SERVICE_NAME, "kafka")
             .withTag(DDTags.RESOURCE_NAME, "Consume Topic " + record.topic())
             .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_CONSUMER)
-            .withTag(Tags.COMPONENT.getKey(), COMPONENT_NAME)
+            .withTag(Tags.COMPONENT.getKey(), "java-kafka")
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CONSUMER)
             .withTag("partition", record.partition())
             .withTag("offset", record.offset())
