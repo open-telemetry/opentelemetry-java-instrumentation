@@ -7,10 +7,6 @@ import spock.lang.Timeout
 @Timeout(5)
 class JerseyTest extends AgentTestRunner {
 
-  static {
-    System.setProperty("dd.integration.jax-rs.enabled", "true")
-  }
-
   @Shared
   @ClassRule
   ResourceTestRule resources = ResourceTestRule.builder().addResource(new TestResource()).build()

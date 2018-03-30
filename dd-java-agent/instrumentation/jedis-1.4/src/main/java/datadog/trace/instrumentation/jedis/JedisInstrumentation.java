@@ -31,11 +31,6 @@ public final class JedisInstrumentation extends Instrumenter.Configurable {
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(

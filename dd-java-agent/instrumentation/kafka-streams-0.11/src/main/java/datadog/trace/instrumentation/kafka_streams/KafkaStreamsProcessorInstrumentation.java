@@ -45,11 +45,6 @@ public class KafkaStreamsProcessorInstrumentation {
     }
 
     @Override
-    protected boolean defaultEnabled() {
-      return false;
-    }
-
-    @Override
     public AgentBuilder apply(final AgentBuilder agentBuilder) {
       return agentBuilder
           .type(
@@ -104,11 +99,6 @@ public class KafkaStreamsProcessorInstrumentation {
 
     public StopInstrumentation() {
       super("kafka", "kafka-streams");
-    }
-
-    @Override
-    protected boolean defaultEnabled() {
-      return false;
     }
 
     @Override

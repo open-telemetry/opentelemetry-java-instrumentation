@@ -7,11 +7,7 @@ import spock.lang.Unroll
 import javax.ws.rs.*
 
 @Timeout(1)
-class JaxRsInstrumentationTest extends AgentTestRunner {
-
-  static {
-    System.setProperty("dd.integration.jax-rs.enabled", "true")
-  }
+class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 
   @Unroll
   def "span named '#resourceName' from annotations on class"() {

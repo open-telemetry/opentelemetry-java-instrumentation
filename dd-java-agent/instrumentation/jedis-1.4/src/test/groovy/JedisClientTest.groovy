@@ -13,10 +13,6 @@ class JedisClientTest extends AgentTestRunner {
 
   public static final int PORT = 6399
 
-  static {
-    System.setProperty("dd.integration.redis.enabled", "true")
-  }
-
   @Shared
   RedisServer redisServer = RedisServer.builder()
   // bind to localhost to avoid firewall popup

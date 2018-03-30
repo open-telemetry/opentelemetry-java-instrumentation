@@ -41,11 +41,6 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Configurabl
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
