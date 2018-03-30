@@ -84,6 +84,38 @@ jobs:
     docker:
       - image: circleci/openjdk:9-jdk
 
+  agent_integration_tests:
+    <<: *defaults
+    docker:
+      - image: circleci/openjdk:8-jdk
+      - image: datadog/docker-dd-agent
+        env:
+          - DD_APM_ENABLED=true
+          - DD_BIND_HOST=0.0.0.0
+          - DD_API_KEY=invalid_key_but_this_is_fine
+    steps:
+      - checkout
+
+      - restore_cache:
+          # Reset the cache approx every release
+          keys:
+            - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+            - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
+            - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
+            - dd-trace-java
+
+      - run:
+          name: Run Trace Agent Tests
+          command: ./gradlew traceAgentTest --parallel --stacktrace --no-daemon
+
+      - run:
+          name: Save Artifacts to (project-root)/build
+          when: always
+          command: .circleci/save_artifacts.sh
+
+      - store_test_results:
+          path: build/test-results
+
   scan_versions:
     <<: *defaults
     steps:
@@ -170,6 +202,13 @@ workflows:
             tags:
               only: /.*/
 
+      - agent_integration_tests:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+
       - scan_versions:
           requires:
             - build
@@ -182,6 +221,7 @@ workflows:
             - test_7
             - test_8
             - test_9
+            - agent_integration_tests
           filters:
             branches:
               only: master
@@ -193,6 +233,7 @@ workflows:
             - test_7
             - test_8
             - test_9
+            - agent_integration_tests
           filters:
             branches:
               ignore: /.*/

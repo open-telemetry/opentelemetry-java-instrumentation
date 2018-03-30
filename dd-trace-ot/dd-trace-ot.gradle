@@ -1,5 +1,6 @@
 plugins {
   id "me.champeau.gradle.jmh" version "0.4.4"
+  id 'org.unbroken-dome.test-sets' version '1.4.4'
 }
 
 description = 'dd-trace-ot'
@@ -27,6 +28,10 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
       }
     }
   }
+}
+
+testSets {
+  traceAgentTest
 }
 
 dependencies {

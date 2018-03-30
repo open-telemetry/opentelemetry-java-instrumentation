@@ -37,11 +37,18 @@ public class DDApi {
   private final RateLimiter loggingRateLimiter =
       RateLimiter.create(1.0 / SECONDS_BETWEEN_ERROR_LOG);
 
-  private final ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory());
+  private static final ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory());
 
   public DDApi(final String host, final int port) {
-    if (traceEndpointAvailable("http://" + host + ":" + port + TRACES_ENDPOINT_V4)
-        && serviceEndpointAvailable("http://" + host + ":" + port + SERVICES_ENDPOINT_V4)) {
+    this(
+        host,
+        port,
+        traceEndpointAvailable("http://" + host + ":" + port + TRACES_ENDPOINT_V4)
+            && serviceEndpointAvailable("http://" + host + ":" + port + SERVICES_ENDPOINT_V4));
+  }
+
+  DDApi(final String host, final int port, final boolean v4EndpointsAvailable) {
+    if (v4EndpointsAvailable) {
       this.tracesEndpoint = "http://" + host + ":" + port + TRACES_ENDPOINT_V4;
       this.servicesEndpoint = "http://" + host + ":" + port + SERVICES_ENDPOINT_V4;
     } else {
@@ -163,15 +170,16 @@ public class DDApi {
     }
   }
 
-  private boolean traceEndpointAvailable(final String endpoint) {
+  private static boolean traceEndpointAvailable(final String endpoint) {
     return endpointAvailable(endpoint, Collections.emptyList(), true);
   }
 
-  private boolean serviceEndpointAvailable(final String endpoint) {
+  private static boolean serviceEndpointAvailable(final String endpoint) {
     return endpointAvailable(endpoint, Collections.emptyMap(), true);
   }
 
-  private boolean endpointAvailable(final String endpoint, final Object data, final boolean retry) {
+  private static boolean endpointAvailable(
+      final String endpoint, final Object data, final boolean retry) {
     try {
       final HttpURLConnection httpCon = getHttpURLConnection(endpoint);
 
@@ -192,7 +200,7 @@ public class DDApi {
     return false;
   }
 
-  private HttpURLConnection getHttpURLConnection(final String endpoint) throws IOException {
+  private static HttpURLConnection getHttpURLConnection(final String endpoint) throws IOException {
     final HttpURLConnection httpCon;
     final URL url = new URL(endpoint);
     httpCon = (HttpURLConnection) url.openConnection();
