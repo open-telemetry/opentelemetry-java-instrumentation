@@ -13,6 +13,12 @@ public interface TraceScope {
   /** Close the activated context and allow any underlying spans to finish. */
   void close();
 
+  /** If true, this context will propagate across async boundaries. */
+  boolean isAsyncLinking();
+
+  /** Set context's async propagation value. */
+  void setAsyncLinking(boolean value);
+
   /** Used to pass async context between workers. */
   interface Continuation {
     /**

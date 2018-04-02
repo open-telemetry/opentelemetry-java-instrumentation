@@ -9,6 +9,7 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.*;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
+import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -77,9 +78,7 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
   public static class PlayAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(@Advice.Argument(0) final Request req) {
-      // TODO
-      // begin tracking across threads
-
+      final Scope scope;
       if (GlobalTracer.get().activeSpan() == null) {
         final SpanContext extractedContext;
         if (GlobalTracer.get().scopeManager().active() == null) {
@@ -88,15 +87,21 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
         } else {
           extractedContext = null;
         }
-        return GlobalTracer.get()
-            .buildSpan("play.request")
-            .asChildOf(extractedContext)
-            .startActive(false);
+        scope =
+            GlobalTracer.get()
+                .buildSpan("play.request")
+                .asChildOf(extractedContext)
+                .startActive(false);
       } else {
         // An upstream framework (e.g. akka-http, netty) has already started the span.
         // Do not extract the context.
-        return GlobalTracer.get().buildSpan("play.request").startActive(false);
+        scope = GlobalTracer.get().buildSpan("play.request").startActive(false);
       }
+
+      if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
+        ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncLinking(true);
+      }
+      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -169,6 +174,9 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
     @Override
     public Object apply(Throwable t, boolean isCheck) throws Exception {
       try {
+        if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
+          ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncLinking(false);
+        }
         onError(span, t);
       } catch (Throwable t2) {
         LoggerFactory.getLogger(RequestCallback.class).debug("error in play instrumentation", t);
@@ -193,8 +201,9 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
     }
 
     public Result apply(Result result) {
-      // TODO
-      // stop tracking across threads
+      if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
+        ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncLinking(false);
+      }
       try {
         Tags.HTTP_STATUS.set(span, result.header().status());
       } catch (Throwable t) {

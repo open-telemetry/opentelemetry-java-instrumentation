@@ -27,6 +27,8 @@ public class ContinuableScope implements Scope, TraceScope {
   private final Scope toRestore;
   /** Continuation that created this scope. May be null. */
   private final Continuation continuation;
+  /** Flag to propagate this scope across async boundaries. */
+  private final AtomicBoolean isAsyncLinking = new AtomicBoolean(false);
 
   ContinuableScope(
       final ContextualScopeManager scopeManager,
@@ -68,6 +70,16 @@ public class ContinuableScope implements Scope, TraceScope {
   @Override
   public DDSpan span() {
     return spanUnderScope;
+  }
+
+  @Override
+  public void setAsyncLinking(boolean value) {
+    isAsyncLinking.set(value);
+  }
+
+  @Override
+  public boolean isAsyncLinking() {
+    return isAsyncLinking.get();
   }
 
   /**
