@@ -217,13 +217,13 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     protected final TraceScope.Continuation continuation;
 
     public DatadogWrapper(TraceScope scope) {
-      continuation = scope.capture(true);
+      continuation = scope.capture();
       log.debug("created continuation {} from scope {}", continuation, scope);
     }
 
     public void cancel() {
       if (null != continuation) {
-        continuation.activate().close();
+        continuation.close();
         log.debug("canceled continuation {}", continuation);
       }
     }

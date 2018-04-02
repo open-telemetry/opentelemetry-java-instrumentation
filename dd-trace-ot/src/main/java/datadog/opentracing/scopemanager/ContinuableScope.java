@@ -1,11 +1,10 @@
 package datadog.opentracing.scopemanager;
 
+import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDSpanContext;
 import datadog.opentracing.PendingTrace;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.noop.NoopScopeManager;
 import java.io.Closeable;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,26 +13,38 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ContinuableScope implements Scope, TraceScope {
-  final ContextualScopeManager scopeManager;
-  final AtomicInteger refCount;
-  private final Span wrapped;
+  /** ScopeManager holding the thread-local to this scope. */
+  private final ContextualScopeManager scopeManager;
+  /**
+   * Span contained by this scope. Async scopes will hold a reference to the parent scope's span.
+   */
+  private final DDSpan spanUnderScope;
+  /** If true, finish the span when openCount hits 0. */
   private final boolean finishOnClose;
+  /** Count of open scope and continuations */
+  private final AtomicInteger openCount;
+  /** Scope to placed in the thread local after close. May be null. */
   private final Scope toRestore;
+  /** Continuation that created this scope. May be null. */
+  private final Continuation continuation;
 
   ContinuableScope(
-      final ContextualScopeManager scopeManager, final Span wrapped, final boolean finishOnClose) {
-    this(scopeManager, new AtomicInteger(1), wrapped, finishOnClose);
+      final ContextualScopeManager scopeManager,
+      final DDSpan spanUnderScope,
+      final boolean finishOnClose) {
+    this(scopeManager, new AtomicInteger(1), null, spanUnderScope, finishOnClose);
   }
 
   private ContinuableScope(
       final ContextualScopeManager scopeManager,
-      final AtomicInteger refCount,
-      final Span wrapped,
+      final AtomicInteger openCount,
+      final Continuation continuation,
+      final DDSpan spanUnderScope,
       final boolean finishOnClose) {
-
     this.scopeManager = scopeManager;
-    this.refCount = refCount;
-    this.wrapped = wrapped;
+    this.openCount = openCount;
+    this.continuation = continuation;
+    this.spanUnderScope = spanUnderScope;
     this.finishOnClose = finishOnClose;
     this.toRestore = scopeManager.tlsScope.get();
     scopeManager.tlsScope.set(this);
@@ -41,20 +52,22 @@ public class ContinuableScope implements Scope, TraceScope {
 
   @Override
   public void close() {
-    if (scopeManager.tlsScope.get() != this) {
-      return;
+    if (null != continuation) {
+      spanUnderScope.context().getTrace().cancelContinuation(continuation);
     }
 
-    if (refCount.decrementAndGet() == 0 && finishOnClose) {
-      wrapped.finish();
+    if (openCount.decrementAndGet() == 0 && finishOnClose) {
+      spanUnderScope.finish();
     }
 
-    scopeManager.tlsScope.set(toRestore);
+    if (scopeManager.tlsScope.get() == this) {
+      scopeManager.tlsScope.set(toRestore);
+    }
   }
 
   @Override
-  public Span span() {
-    return wrapped;
+  public DDSpan span() {
+    return spanUnderScope;
   }
 
   /**
@@ -63,8 +76,8 @@ public class ContinuableScope implements Scope, TraceScope {
    * @param finishOnClose
    * @return
    */
-  public Continuation capture(final boolean finishOnClose) {
-    return new Continuation(this.finishOnClose && finishOnClose);
+  public Continuation capture() {
+    return new Continuation();
   }
 
   public class Continuation implements Closeable, TraceScope.Continuation {
@@ -72,72 +85,32 @@ public class ContinuableScope implements Scope, TraceScope {
 
     private final AtomicBoolean used = new AtomicBoolean(false);
     private final PendingTrace trace;
-    private final boolean finishSpanOnClose;
 
-    private Continuation(final boolean finishOnClose) {
-      this.finishSpanOnClose = finishOnClose;
-      refCount.incrementAndGet();
-      if (wrapped.context() instanceof DDSpanContext) {
-        final DDSpanContext context = (DDSpanContext) wrapped.context();
-        trace = context.getTrace();
-        trace.registerContinuation(this);
-      } else {
-        trace = null;
-      }
+    private Continuation() {
+      openCount.incrementAndGet();
+      final DDSpanContext context = (DDSpanContext) spanUnderScope.context();
+      trace = context.getTrace();
+      trace.registerContinuation(this);
     }
 
-    public ClosingScope activate() {
+    public ContinuableScope activate() {
       if (used.compareAndSet(false, true)) {
-        for (final ScopeContext context : scopeManager.scopeContexts) {
-          if (context.inContext()) {
-            return new ClosingScope(context.activate(wrapped, finishSpanOnClose));
-          }
-        }
-        return new ClosingScope(
-            new ContinuableScope(scopeManager, refCount, wrapped, finishSpanOnClose));
+        return new ContinuableScope(scopeManager, openCount, this, spanUnderScope, finishOnClose);
       } else {
-        log.debug("Reusing a continuation not allowed.  Returning no-op scope.");
-        return new ClosingScope(NoopScopeManager.NoopScope.INSTANCE);
+        log.debug(
+            "Failed to activate continuation. Reusing a continuation not allowed.  Returning a new scope. Spans will not be linked.");
+        return new ContinuableScope(
+            scopeManager, new AtomicInteger(1), null, spanUnderScope, finishOnClose);
       }
     }
 
     @Override
     public void close() {
-      used.getAndSet(true);
-      if (trace != null) {
+      if (used.compareAndSet(false, true)) {
         trace.cancelContinuation(this);
-      }
-    }
-
-    private class ClosingScope implements Scope, TraceScope {
-      private final Scope wrappedScope;
-
-      private ClosingScope(final Scope wrappedScope) {
-        this.wrappedScope = wrappedScope;
-      }
-
-      @Override
-      public Continuation capture(boolean finishOnClose) {
-        if (wrappedScope instanceof TraceScope) {
-          return ((TraceScope) wrappedScope).capture(finishOnClose);
-        } else {
-          log.debug(
-              "{} Failed to capture. ClosingScope does not wrap a TraceScope: {}.",
-              this,
-              wrappedScope);
-          return null;
-        }
-      }
-
-      @Override
-      public void close() {
-        wrappedScope.close();
-        ContinuableScope.Continuation.this.close();
-      }
-
-      @Override
-      public Span span() {
-        return wrappedScope.span();
+        ContinuableScope.this.close();
+      } else {
+        log.debug("Failed to close continuation {}. Already used.", this);
       }
     }
   }

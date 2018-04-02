@@ -8,7 +8,7 @@ public interface TraceScope {
    *
    * <p>Should be called on the parent thread.
    */
-  Continuation capture(boolean finishOnClose);
+  Continuation capture();
 
   /** Close the activated context and allow any underlying spans to finish. */
   void close();
@@ -21,5 +21,8 @@ public interface TraceScope {
      * <p>Should be called on the child thread.
      */
     TraceScope activate();
+
+    /** Cancel the continuation. */
+    void close();
   }
 }

@@ -92,11 +92,11 @@ class ScopeManagerTest extends Specification {
     finishSpan << [true, false]
   }
 
-  def "ref counting scope doesn't close if non-zero"() {
+  def "ContinuableScope doesn't close if non-zero"() {
     setup:
     def builder = tracer.buildSpan("test")
     def scope = (ContinuableScope) builder.startActive(true)
-    def continuation = scope.capture(true)
+    def continuation = scope.capture()
 
     expect:
     !spanFinished(scope.span())
@@ -149,7 +149,7 @@ class ScopeManagerTest extends Specification {
     def builder = tracer.buildSpan("test")
     def scope = (ContinuableScope) builder.startActive(false)
     def span = scope.span()
-    def continuation = scope.capture(true)
+    def continuation = scope.capture()
     scope.close()
     span.finish()
 
@@ -188,7 +188,7 @@ class ScopeManagerTest extends Specification {
     ContinuableScope childScope = (ContinuableScope) tracer.buildSpan("parent").startActive(true)
     def childSpan = childScope.span()
 
-    def continuation = childScope.capture(true)
+    def continuation = childScope.capture()
     childScope.close()
 
     expect:
@@ -209,11 +209,11 @@ class ScopeManagerTest extends Specification {
 
     when:
     def newScope = continuation.activate()
-    def newContinuation = newScope.capture(true)
+    def newContinuation = newScope.capture()
 
     then:
-    newScope instanceof ContinuableScope.Continuation.ClosingScope
-    scopeManager.active() == newScope.wrappedScope
+    newScope instanceof ContinuableScope
+    scopeManager.active() == newScope
     newScope != childScope && newScope != parentScope
     newScope.span() == childSpan
     !spanFinished(childSpan)
@@ -236,16 +236,16 @@ class ScopeManagerTest extends Specification {
     def builder = tracer.buildSpan("test")
     def scope = (ContinuableScope) builder.startActive(false)
     def span = scope.span()
-    def continuation = scope.capture(false)
+    def continuation = scope.capture()
     scope.close()
     span.finish()
 
     def newScope = continuation.activate()
 
     expect:
-    newScope instanceof ContinuableScope.Continuation.ClosingScope
+    newScope instanceof ContinuableScope
     newScope != scope
-    scopeManager.active() == newScope.wrappedScope
+    scopeManager.active() == newScope
     spanFinished(span)
     writer == []
 
@@ -259,24 +259,7 @@ class ScopeManagerTest extends Specification {
     scopeManager.active() == null
     spanFinished(childSpan)
     childSpan.context().parentId == span.context().spanId
-    writer == []
-
-    when:
-    if (closeScope) {
-      newScope.close()
-    }
-    if (closeContinuation) {
-      continuation.close()
-    }
-
-    then:
     writer == [[childSpan, span]]
-
-    where:
-    closeScope | closeContinuation
-    true       | false
-    false      | true
-    true       | true
   }
 
   @Unroll
@@ -327,40 +310,27 @@ class ScopeManagerTest extends Specification {
     [new AtomicReferenceScope(false), new AtomicReferenceScope(false), new AtomicReferenceScope(false)] | _
   }
 
-  @Unroll
-  def "threadlocal to context with capture (#active)"() {
+  def "ContinuableScope put in threadLocal after continuation activation"() {
     setup:
-    contexts.each {
-      scopeManager.addScopeContext(it)
-    }
     ContinuableScope scope = (ContinuableScope) tracer.buildSpan("parent").startActive(true)
 
     expect:
     scopeManager.tlsScope.get() == scope
 
     when:
-    def cont = scope.capture(true)
+    def cont = scope.capture()
     scope.close()
 
     then:
     scopeManager.tlsScope.get() == null
 
     when:
-    active.each {
-      ((AtomicBoolean) contexts[it].enabled).set(true)
-    }
-    cont.activate()
+    scopeManager.addScopeContext(new AtomicReferenceScope(true))
+    def newScope = cont.activate()
 
     then:
-    scopeManager.tlsScope.get() == null
-
-    where:
-    active | contexts
-    [0]    | [new AtomicReferenceScope(false)]
-    [0]    | [new AtomicReferenceScope(false), new AtomicReferenceScope(false)]
-    [1]    | [new AtomicReferenceScope(false), new AtomicReferenceScope(false), new AtomicReferenceScope(false)]
-    [2]    | [new AtomicReferenceScope(false), new AtomicReferenceScope(false), new AtomicReferenceScope(false)]
-    [0, 2] | [new AtomicReferenceScope(false), new AtomicReferenceScope(false), new AtomicReferenceScope(false)]
+    newScope != scope
+    scopeManager.tlsScope.get() == newScope
   }
 
   @Unroll
