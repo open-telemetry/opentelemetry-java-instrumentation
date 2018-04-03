@@ -17,8 +17,6 @@ import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -175,26 +173,12 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
 
     public static void onError(final Span span, final Throwable t) {
       Tags.ERROR.set(span, Boolean.TRUE);
-      span.log(logsForException(t));
+      span.log(Collections.singletonMap("error.object", t));
       Tags.HTTP_STATUS.set(span, 500);
-    }
-
-    public static Map<String, Object> logsForException(Throwable throwable) {
-      final Map<String, Object> errorLogs = new HashMap<>(4);
-      errorLogs.put("event", Tags.ERROR.getKey());
-      errorLogs.put("error.kind", throwable.getClass().getName());
-      errorLogs.put("error.object", throwable);
-
-      errorLogs.put("message", throwable.getMessage());
-
-      final StringWriter sw = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(sw));
-      errorLogs.put("stack", sw.toString());
-
-      return errorLogs;
     }
   }
 
+  @Slf4j
   public static class RequestCallback implements Function1<Result, Result> {
     private final Span span;
 
@@ -208,7 +192,7 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
       try {
         Tags.HTTP_STATUS.set(span, result.header().status());
       } catch (Throwable t) {
-        LoggerFactory.getLogger(RequestCallback.class).debug("error in play instrumentation", t);
+        log.debug("error in play instrumentation", t);
       }
       span.finish();
       return result;

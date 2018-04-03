@@ -1,5 +1,6 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.TestUtils
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import play.api.test.TestServer
@@ -13,10 +14,12 @@ class PlayTest extends AgentTestRunner {
   }
 
   @Shared
+  int port = TestUtils.randomOpenPort()
+  @Shared
   TestServer testServer
 
   def setupSpec() {
-    testServer = Helpers.testServer(9080, PlayTestUtils.buildTestApp())
+    testServer = Helpers.testServer(port, PlayTestUtils.buildTestApp())
     testServer.start()
   }
 
@@ -33,7 +36,7 @@ class PlayTest extends AgentTestRunner {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
-      .url("http://localhost:9080/helloplay/spock")
+      .url("http://localhost:$port/helloplay/spock")
       .header("x-datadog-trace-id", "123")
       .header("x-datadog-parent-id", "456")
       .get()
@@ -69,7 +72,7 @@ class PlayTest extends AgentTestRunner {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
-      .url("http://localhost:9080/make-error")
+      .url("http://localhost:$port/make-error")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -96,7 +99,7 @@ class PlayTest extends AgentTestRunner {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
-      .url("http://localhost:9080/exception")
+      .url("http://localhost:$port/exception")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -126,7 +129,7 @@ class PlayTest extends AgentTestRunner {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
-      .url("http://localhost:9080/nowhere")
+      .url("http://localhost:$port/nowhere")
       .get()
       .build()
     def response = client.newCall(request).execute()
