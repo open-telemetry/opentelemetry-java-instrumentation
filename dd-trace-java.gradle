@@ -5,7 +5,8 @@ buildscript {
   dependencies {
     classpath "io.franzbecker:gradle-lombok:1.8"
     classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.18"
-    classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+    classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3"
+    classpath "net.ltgt.gradle:gradle-errorprone-plugin:0.0.13"
   }
 }
 
