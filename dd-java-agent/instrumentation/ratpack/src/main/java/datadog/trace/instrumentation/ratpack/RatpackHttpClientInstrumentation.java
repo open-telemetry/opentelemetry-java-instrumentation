@@ -16,11 +16,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -39,7 +35,9 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Configu
       new HelperInjector(
           "datadog.trace.instrumentation.ratpack.RatpackHttpClientInstrumentation$RatpackHttpClientRequestAdvice",
           "datadog.trace.instrumentation.ratpack.RatpackHttpClientInstrumentation$RatpackHttpClientRequestStreamAdvice",
-          "datadog.trace.instrumentation.ratpack.RatpackHttpClientInstrumentation$RatpackHttpGetAdvice");
+          "datadog.trace.instrumentation.ratpack.RatpackHttpClientInstrumentation$RatpackHttpGetAdvice",
+          "datadog.trace.instrumentation.ratpack.RatpackHttpClientInstrumentation$GetRequestSpecAction",
+          "datadog.trace.instrumentation.ratpack.RatapckInstrumentationUtils");
   public static final TypeDescription.ForLoadedType URI_TYPE_DESCRIPTION =
       new TypeDescription.ForLoadedType(URI.class);
 
@@ -91,36 +89,24 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Configu
         .asDecorator();
   }
 
-  private static Map<String, Object> errorLogs(final Throwable throwable) {
-    final Map<String, Object> errorLogs = new HashMap<>(4);
-    errorLogs.put("event", Tags.ERROR.getKey());
-    errorLogs.put("error.kind", throwable.getClass().getName());
-    errorLogs.put("error.object", throwable);
-
-    errorLogs.put("message", throwable.getMessage());
-
-    final StringWriter sw = new StringWriter();
-    throwable.printStackTrace(new PrintWriter(sw));
-    errorLogs.put("stack", sw.toString());
-
-    return errorLogs;
-  }
-
   public static class RequestAction implements Action<RequestSpec> {
 
     private final Action<? super RequestSpec> requestAction;
-    private final AtomicReference<Span> span;
+    private final AtomicReference<Span> spanRef;
 
-    public RequestAction(Action<? super RequestSpec> requestAction, AtomicReference<Span> span) {
+    public RequestAction(Action<? super RequestSpec> requestAction, AtomicReference<Span> spanRef) {
       this.requestAction = requestAction;
-      this.span = span;
+      this.spanRef = spanRef;
     }
 
     @Override
     public void execute(RequestSpec requestSpec) throws Exception {
       requestAction.execute(
           new WrappedRequestSpec(
-              requestSpec, GlobalTracer.get(), GlobalTracer.get().scopeManager().active(), span));
+              requestSpec,
+              GlobalTracer.get(),
+              GlobalTracer.get().scopeManager().active(),
+              spanRef));
     }
   }
 
@@ -140,7 +126,7 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Configu
       span.finish();
       if (result.isError()) {
         Tags.ERROR.set(span, true);
-        span.log(errorLogs(result.getThrowable()));
+        span.log(RatapckInstrumentationUtils.errorLogs(result.getThrowable()));
       } else {
         Tags.HTTP_STATUS.set(span, result.getValue().getStatusCode());
       }
@@ -159,7 +145,7 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Configu
       span.finish();
       if (result.isError()) {
         Tags.ERROR.set(span, true);
-        span.log(errorLogs(result.getThrowable()));
+        span.log(RatapckInstrumentationUtils.errorLogs(result.getThrowable()));
       } else {
         Tags.HTTP_STATUS.set(span, result.getValue().getStatusCode());
       }
@@ -219,7 +205,15 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Configu
     public static void ensureGetMethodSet(
         @Advice.Argument(value = 1, readOnly = false) Action<? super RequestSpec> requestAction) {
       //noinspection UnusedAssignment
-      requestAction = requestAction.prepend(RequestSpec::get);
+      requestAction = requestAction.prepend(new GetRequestSpecAction());
+    }
+  }
+
+  /** This was a method reference but we can't use Java 8 due to Java 7 support */
+  public static class GetRequestSpecAction implements Action<RequestSpec> {
+    @Override
+    public void execute(RequestSpec requestSpec) {
+      requestSpec.get();
     }
   }
 }

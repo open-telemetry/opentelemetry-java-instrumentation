@@ -19,6 +19,17 @@ apply from: "${rootDir}/gradle/java.gradle"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
+  sourceSets {
+    test {
+      groovy {
+        // These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
+        exclude '**/RatpackTest.groovy'
+      }
+    }
+  }
+}
+
 dependencies {
   compileOnly group: 'io.ratpack', name: 'ratpack-core', version: '1.4.6'
 
@@ -32,6 +43,5 @@ dependencies {
   testCompile project(':dd-java-agent:testing')
   testCompile group: 'io.ratpack', name: 'ratpack-test', version: '1.4.6'
 
-  testCompile project(':dd-java-agent:instrumentation:okhttp-3') // used in the tests
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
 }

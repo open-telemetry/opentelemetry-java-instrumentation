@@ -23,6 +23,10 @@ public final class RatpackScopeManager implements ScopeContext {
     RatpackScope ratpackScope =
         new RatpackScope(
             span, finishSpanOnClose, execution.maybeGet(RatpackScope.class).orElse(null));
+    // remove any existing RatpackScopes before adding it to the registry
+    execution
+        .maybeGet(RatpackScope.class)
+        .ifPresent(ignored -> execution.remove(RatpackScope.class));
     execution.add(RatpackScope.class, ratpackScope);
     execution.onComplete(
         ratpackScope); // ensure that the scope is closed when the execution finishes

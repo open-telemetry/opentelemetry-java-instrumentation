@@ -41,10 +41,10 @@ public final class TracingHandler implements Handler {
         .beforeSend(
             response -> {
               Span span = scope.span();
+              span.setTag(DDTags.RESOURCE_NAME, getResourceName(ctx));
               Status status = response.getStatus();
               if (status != null) {
-                // Should a 4xx be marked as an error?
-                if (status.is4xx() || status.is5xx()) {
+                if (status.is5xx()) {
                   Tags.ERROR.set(span, true);
                 }
                 Tags.HTTP_STATUS.set(span, status.getCode());
@@ -53,5 +53,13 @@ public final class TracingHandler implements Handler {
             });
 
     ctx.next();
+  }
+
+  private static String getResourceName(Context ctx) {
+    String description = ctx.getPathBinding().getDescription();
+    if (description == null || description.isEmpty()) {
+      return ctx.getRequest().getUri();
+    }
+    return description;
   }
 }

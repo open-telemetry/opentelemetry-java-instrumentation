@@ -25,13 +25,13 @@ public final class WrappedRequestSpec implements RequestSpec {
   private final RequestSpec delegate;
   private final Tracer tracer;
   private final Scope scope;
-  private final AtomicReference<Span> span;
+  private final AtomicReference<Span> spanRef;
 
-  WrappedRequestSpec(RequestSpec spec, Tracer tracer, Scope scope, AtomicReference<Span> span) {
+  WrappedRequestSpec(RequestSpec spec, Tracer tracer, Scope scope, AtomicReference<Span> spanRef) {
     this.delegate = spec;
     this.tracer = tracer;
     this.scope = scope;
-    this.span = span;
+    this.spanRef = spanRef;
     this.delegate.onRedirect(this::redirectHandler);
   }
 
@@ -42,7 +42,7 @@ public final class WrappedRequestSpec implements RequestSpec {
    */
   private Action<? super RequestSpec> redirectHandler(ReceivedResponse response) {
     //handler.handleReceive(response.getStatusCode(), null, span.get());
-    return (s) -> new WrappedRequestSpec(s, tracer, scope, span);
+    return (s) -> new WrappedRequestSpec(s, tracer, scope, spanRef);
   }
 
   @Override
@@ -89,14 +89,14 @@ public final class WrappedRequestSpec implements RequestSpec {
   public RequestSpec method(HttpMethod method) {
     Span span =
         tracer
-            .buildSpan("ratpack")
-            .asChildOf(scope.span())
+            .buildSpan("ratpack.client-request")
+            .asChildOf(scope != null ? scope.span() : null)
             .withTag(Tags.COMPONENT.getKey(), "httpclient")
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
             .withTag(Tags.HTTP_URL.getKey(), getUri().toString())
             .withTag(Tags.HTTP_METHOD.getKey(), method.getName())
             .start();
-    this.span.set(span);
+    this.spanRef.set(span);
     this.delegate.method(method);
     tracer.inject(span.context(), Format.Builtin.HTTP_HEADERS, new RequestSpecInjectAdapter(this));
     return this;
