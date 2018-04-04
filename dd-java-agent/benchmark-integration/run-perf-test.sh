@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # A script for measuring a server's throughput with or without a java agent.
 test_csv_file=/tmp/perf_results.csv
@@ -50,13 +50,14 @@ function start_server {
         javaagent_arg="-javaagent:$agent_jar -Ddatadog.slf4j.simpleLogger.defaultLogLevel=off -Ddd.writer.type=$writer_type -Ddd.service.name=perf-test-app"
     fi
     echo "starting server: java $javaagent_arg -jar $server_jar"
-    { /usr/bin/time -l java $javaagent_arg -jar $server_jar ; } 2> $server_output  &
+    { /usr/bin/time -l java $javaagent_arg -Xms256m -Xmx256m -jar $server_jar ; } 2> $server_output  &
 
     # Block until server is up
     until nc -z localhost 8080; do
         sleep 0.5
     done
     server_pid=$(lsof -i tcp:8080 | awk '$8 == "TCP" { print $2 }' | uniq)
+    echo "server $server_pid started"
 }
 
 # Send a kill signal to the running server
@@ -89,7 +90,7 @@ header='Client Version'
 for label in "${test_order[@]}"; do
     header="$header,$label Latency,$label Throughput"
 done
-header="$header,Agent CPU Burn,Server CPU Burn,Agent RSS Delta,Server Max RSS"
+header="$header,Agent CPU Burn,Server CPU Burn,Agent RSS Delta,Server Max RSS,Server Avg RSS"
 echo $header > $test_csv_file
 
 for agent_jar in $agent_jars; do
@@ -98,7 +99,6 @@ for agent_jar in $agent_jars; do
         result_row="NoAgent"
         start_server ""
     else
-        # agent_version=$(java -jar $agent_jar 2>/dev/null | grep -o "^[^~]*")
         agent_version=$(java -jar $agent_jar 2>/dev/null)
         result_row="$agent_version"
         start_server $agent_jar
@@ -113,12 +113,16 @@ for agent_jar in $agent_jars; do
         agent_start_rss=$(ps -o 'pid,rss' | awk "\$1 == $agent_pid { print \$2 }")
     fi
     server_start_cpu=$(ps -o 'pid,time' | awk "\$1 == $server_pid { print \$2 }" | awk -F'[:\.]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+    server_total_rss=0
+    server_total_rss_count=0
 
     for t in "${test_order[@]}"; do
         label="$t"
         url="${endpoints[$label]}"
         echo "--Testing $label -- $url--"
         test_output_file=$(test_endpoint $url)
+        let server_total_rss=$server_total_rss+$(ps -o 'pid,rss' | awk "\$1 == $server_pid { print \$2 }")
+        let server_total_rss_count=$server_total_rss_count+1
         cat $test_output_file
         avg_latency=$(awk '$1 == "Latency" { print $2 }' $test_output_file)
         avg_throughput=$(awk '$1 == "Requests/sec:" { print $2 }' $test_output_file)
@@ -139,12 +143,14 @@ for agent_jar in $agent_jars; do
     let agent_rss=$agent_stop_rss-$agent_start_rss
     let server_cpu=$server_stop_cpu-$server_start_cpu
 
+    server_avg_rss=$(echo "scale=2; $server_total_rss / $server_total_rss_count" | bc)
+
     stop_server
 
     server_rss=$(awk '/.* maximum resident set size/ { print $1 }' $server_output)
     rm $server_output
 
-    echo "$result_row,$agent_cpu,$server_cpu,$agent_rss,$server_rss" >> $test_csv_file
+    echo "$result_row,$agent_cpu,$server_cpu,$agent_rss,$server_rss,$server_avg_rss" >> $test_csv_file
     echo "----/Testing agent $agent_jar----"
     echo ""
 done
