@@ -11,10 +11,12 @@ lombok { // optional: values below are the defaults
   sha256 = "c5178b18caaa1a15e17b99ba5e4023d2de2ebc18b58cde0f5a04ca4b31c10e6d"
 }
 
-apply plugin: "net.ltgt.errorprone"
-tasks.withType(JavaCompile) {
-  // workaround for: https://github.com/google/error-prone/issues/780
-  options.compilerArgs += ['-Xep:ParameterName:OFF']
+if (JavaVersion.current().isJava8Compatible()) {
+  apply plugin: "net.ltgt.errorprone"
+  tasks.withType(JavaCompile) {
+    // workaround for: https://github.com/google/error-prone/issues/780
+    options.compilerArgs += ['-Xep:ParameterName:OFF']
+  }
 }
 
 apply plugin: "eclipse"

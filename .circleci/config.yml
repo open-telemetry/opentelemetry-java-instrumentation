@@ -59,7 +59,7 @@ jobs:
 
       - run:
           name: Build Project
-          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew clean check -x test --stacktrace --no-daemon
+          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew clean check -x test --parallel --stacktrace --no-daemon --max-workers=6
 
       - save_cache:
           key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
@@ -106,7 +106,7 @@ jobs:
 
       - run:
           name: Run Trace Agent Tests
-          command: ./gradlew traceAgentTest --parallel --stacktrace --no-daemon
+          command: ./gradlew traceAgentTest --parallel --stacktrace --no-daemon --max-workers=6
 
       - run:
           name: Save Artifacts to (project-root)/build
@@ -129,7 +129,7 @@ jobs:
 
       - run:
           name: Verify Version Scan
-          command: ./gradlew verifyVersionScan --parallel --stacktrace --no-daemon
+          command: ./gradlew verifyVersionScan --parallel --stacktrace --no-daemon --max-workers=6
 
       - run:
           name: Save Artifacts to (project-root)/build
