@@ -7,7 +7,7 @@ import play.api.test.TestServer
 import play.test.Helpers
 import spock.lang.Shared
 
-class PlayTest extends AgentTestRunner {
+class Play26Test extends AgentTestRunner {
   static {
     System.setProperty("dd.integration.java_concurrent.enabled", "true")
     System.setProperty("dd.integration.play.enabled", "true")
@@ -19,7 +19,7 @@ class PlayTest extends AgentTestRunner {
   TestServer testServer
 
   def setupSpec() {
-    testServer = Helpers.testServer(port, PlayTestUtils.buildTestApp())
+    testServer = Helpers.testServer(port, Play26TestUtils.buildTestApp())
     testServer.start()
   }
 

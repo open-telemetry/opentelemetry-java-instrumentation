@@ -1,13 +1,12 @@
 package datadog.trace.instrumentation.play;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithMethod;
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import akka.japi.JavaPartialFunction;
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
-import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.agent.tooling.*;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
@@ -25,9 +24,6 @@ import org.slf4j.LoggerFactory;
 import play.api.mvc.Action;
 import play.api.mvc.Request;
 import play.api.mvc.Result;
-import play.routing.HandlerDef;
-import play.routing.Router;
-import scala.Function1;
 import scala.Option;
 import scala.Tuple2;
 import scala.concurrent.Future;
@@ -53,7 +49,16 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
   @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
-        .type(hasSuperType(named("play.api.mvc.Action")))
+        .type(
+            hasSuperType(named("play.api.mvc.Action")),
+            classLoaderHasClasses(
+                    "akka.japi.JavaPartialFunction",
+                    "play.api.mvc.Action",
+                    "play.api.mvc.Result",
+                    "scala.Option",
+                    "scala.Tuple2",
+                    "scala.concurrent.Future")
+                .and(classLoaderHasClassWithMethod("play.api.mvc.Request", "tags")))
         .and(
             declaresMethod(
                 named("executionContext").and(returns(named("scala.concurrent.ExecutionContext")))))
@@ -102,13 +107,14 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
         @Advice.Argument(0) final Request req,
         @Advice.Return(readOnly = false) Future<Result> responseFuture) {
       // more about routes here: https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md
-      final Option handlerOption = req.attrs().get(Router.Attrs.HANDLER_DEF.underlying());
-      if (!handlerOption.isEmpty()) {
-        final HandlerDef handlerDef = (HandlerDef) handlerOption.get();
-        scope.span().setTag(Tags.HTTP_URL.getKey(), handlerDef.path());
-        scope.span().setOperationName(handlerDef.path());
-        scope.span().setTag(DDTags.RESOURCE_NAME, req.method() + " " + handlerDef.path());
+      final Option pathOption = req.tags().get("ROUTE_PATTERN");
+      if (!pathOption.isEmpty()) {
+        final String path = (String) pathOption.get();
+        scope.span().setTag(Tags.HTTP_URL.getKey(), path);
+        scope.span().setOperationName(path);
+        scope.span().setTag(DDTags.RESOURCE_NAME, req.method() + " " + path);
       }
+
       scope.span().setTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER);
       scope.span().setTag(Tags.HTTP_METHOD.getKey(), req.method());
       scope.span().setTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET);
@@ -179,7 +185,7 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
   }
 
   @Slf4j
-  public static class RequestCallback implements Function1<Result, Result> {
+  public static class RequestCallback extends scala.runtime.AbstractFunction1<Result, Result> {
     private final Span span;
 
     public RequestCallback(Span span) {

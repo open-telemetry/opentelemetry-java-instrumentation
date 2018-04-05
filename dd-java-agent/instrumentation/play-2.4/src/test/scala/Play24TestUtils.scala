@@ -1,28 +1,29 @@
-import play.api.mvc.Action
-import play.api.routing.{HandlerDef, Router}
-import play.api.mvc._
-import play.api.routing.sird._
 import java.lang.reflect.Field
 
+import play.api.mvc.Action
+import play.api.routing.Router
+import play.api.mvc._
+import play.api.routing.sird._
 import datadog.trace.api.Trace
+import play.inject.DelegateInjector
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import play.api.inject.bind
 
+import scala.concurrent.ExecutionContext.Implicits.global
 
-object PlayTestUtils {
+object Play24TestUtils {
   def buildTestApp(): play.Application = {
     // build play.api.Application with desired setting and pass into play.Application for testing
     val apiApp :play.api.Application = new play.api.inject.guice.GuiceApplicationBuilder()
-          .requireAtInjectOnConstructors(true)
-      .router(
-        Router.from {
+        .overrides(bind[Router].toInstance(Router.from {
           case GET(p"/helloplay/$from") => Action { req: RequestHeader =>
             HandlerSetter.setHandler(req, "/helloplay/:from")
             val f: Future[String] = Future[String] {
               TracedWork.doWork()
               from
-            }(Action.executionContext)
+            }
             Results.Ok(s"hello " + Await.result(f, 5 seconds))
           }
           case GET(p"/make-error") => Action { req: RequestHeader =>
@@ -39,10 +40,11 @@ object PlayTestUtils {
           case _ => Action {
             Results.NotFound("Sorry..")
           }
-        })
+        }))
       .build()
 
-    return new play.DefaultApplication(apiApp, new play.inject.guice.GuiceApplicationBuilder().build().injector())
+
+    return new play.DefaultApplication(apiApp, new DelegateInjector(apiApp.injector))
   }
 }
 
@@ -54,11 +56,21 @@ object TracedWork {
 
 object HandlerSetter {
   def setHandler(req: RequestHeader, path: String): Unit = {
-    val f: Field = req.getClass().getDeclaredField("attrs")
+    val rh = getField(req, "rh$1")
+    val newTags: Map[String, String] = Map(Router.Tags.RoutePattern -> path)
+    val f: Field = rh.getClass().getDeclaredField("tags")
     f.setAccessible(true)
-    f.set(req, req.attrs.updated(play.routing.Router.Attrs.HANDLER_DEF.underlying(), new HandlerDef(null, null, null, null, null, null, path, null, null)))
+    f.set(rh, newTags)
     f.setAccessible(false)
+  }
+
+  private def getField(o: Object, fieldName :String): Object = {
+    val f: Field = o.getClass().getDeclaredField(fieldName)
+    f.setAccessible(true)
+    val result: Object = f.get(o)
+    f.setAccessible(false)
+    return result
   }
 }
 
-class PlayTestUtils {}
+class Play24TestUtils {}
