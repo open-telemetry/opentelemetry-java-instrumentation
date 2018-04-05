@@ -28,7 +28,7 @@ public class ContinuableScope implements Scope, TraceScope {
   /** Continuation that created this scope. May be null. */
   private final Continuation continuation;
   /** Flag to propagate this scope across async boundaries. */
-  private final AtomicBoolean isAsyncLinking = new AtomicBoolean(false);
+  private final AtomicBoolean isAsyncPropagating = new AtomicBoolean(false);
 
   ContinuableScope(
       final ContextualScopeManager scopeManager,
@@ -73,23 +73,26 @@ public class ContinuableScope implements Scope, TraceScope {
   }
 
   @Override
-  public void setAsyncLinking(boolean value) {
-    isAsyncLinking.set(value);
+  public boolean isAsyncPropagating() {
+    return isAsyncPropagating.get();
   }
 
   @Override
-  public boolean isAsyncLinking() {
-    return isAsyncLinking.get();
+  public void setAsyncPropagation(boolean value) {
+    isAsyncPropagating.set(value);
   }
 
   /**
-   * The continuation returned should be closed after the associa
+   * The continuation returned must be closed or activated or the trace will not finish.
    *
-   * @param finishOnClose
-   * @return
+   * @return The new continuation, or null if this scope is not async propagating.
    */
   public Continuation capture() {
-    return new Continuation();
+    if (isAsyncPropagating()) {
+      return new Continuation();
+    } else {
+      return null;
+    }
   }
 
   public class Continuation implements Closeable, TraceScope.Continuation {

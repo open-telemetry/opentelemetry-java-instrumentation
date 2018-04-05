@@ -14,10 +14,14 @@ public interface TraceScope {
   void close();
 
   /** If true, this context will propagate across async boundaries. */
-  boolean isAsyncLinking();
+  boolean isAsyncPropagating();
 
-  /** Set context's async propagation value. */
-  void setAsyncLinking(boolean value);
+  /**
+   * Enable or disable async propagation. Async propagation is initially set to false.
+   *
+   * @param value The new propagation value. True == propagate. False == don't propagate.
+   */
+  void setAsyncPropagation(boolean value);
 
   /** Used to pass async context between workers. */
   interface Continuation {

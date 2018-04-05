@@ -141,7 +141,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       if (scope instanceof TraceScope
-          && ((TraceScope) scope).isAsyncLinking()
+          && ((TraceScope) scope).isAsyncPropagating()
           && task != null
           && !(task instanceof DatadogWrapper)) {
         task = new RunnableWrapper(task, (TraceScope) scope);
@@ -165,7 +165,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
         @Advice.Argument(value = 0, readOnly = false) Callable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       if (scope instanceof TraceScope
-          && ((TraceScope) scope).isAsyncLinking()
+          && ((TraceScope) scope).isAsyncPropagating()
           && task != null
           && !(task instanceof DatadogWrapper)) {
         task = new CallableWrapper(task, (TraceScope) scope);
@@ -188,7 +188,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     public static Collection<?> wrapJob(
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (scope instanceof TraceScope && ((TraceScope) scope).isAsyncLinking()) {
+      if (scope instanceof TraceScope && ((TraceScope) scope).isAsyncPropagating()) {
         Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
         for (Callable task : tasks) {
           if (task != null) {
@@ -247,7 +247,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     @Override
     public void run() {
       final TraceScope context = continuation.activate();
-      context.setAsyncLinking(true);
+      context.setAsyncPropagation(true);
       try {
         delegatee.run();
       } finally {
@@ -268,7 +268,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     @Override
     public T call() throws Exception {
       final TraceScope context = continuation.activate();
-      context.setAsyncLinking(true);
+      context.setAsyncPropagation(true);
       try {
         return delegatee.call();
       } finally {

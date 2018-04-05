@@ -50,7 +50,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
       @Override
       @Trace(operationName = "parent")
       void run() {
-        ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncLinking(true)
+        ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
         // this child will have a span
         m.invoke(pool, new AsyncChild())
         // this child won't
@@ -95,7 +95,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
       @Override
       @Trace(operationName = "parent")
       void run() {
-        ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncLinking(true)
+        ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
         try {
           for (int i = 0; i < 20; ++ i) {
             Future f = pool.submit((Callable)child)

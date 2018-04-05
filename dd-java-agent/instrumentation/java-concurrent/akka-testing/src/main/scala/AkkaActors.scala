@@ -33,21 +33,21 @@ class AkkaActors {
 
   @Trace
   def basicTell() : Unit = {
-    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncLinking(true)
+    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     howdyGreeter ! WhoToGreet("Akka")
     howdyGreeter ! Greet
   }
 
   @Trace
   def basicAsk() : Unit = {
-    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncLinking(true)
+    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     howdyGreeter ! WhoToGreet("Akka")
     howdyGreeter ? Greet
   }
 
   @Trace
   def basicForward() : Unit = {
-    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncLinking(true)
+    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     helloGreeter ! WhoToGreet("Akka")
     helloGreeter ? Greet
   }

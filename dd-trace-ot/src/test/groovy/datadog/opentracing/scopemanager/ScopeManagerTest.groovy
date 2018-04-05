@@ -92,10 +92,30 @@ class ScopeManagerTest extends Specification {
     finishSpan << [true, false]
   }
 
+  def "ContinuableScope only creates continuations when propagation is set"() {
+    setup:
+    def builder = tracer.buildSpan("test")
+    def scope = (ContinuableScope) builder.startActive(true)
+    def continuation = scope.capture()
+
+    expect:
+    continuation == null
+
+    when:
+    scope.setAsyncPropagation(true)
+    continuation = scope.capture()
+    then:
+    continuation != null
+
+    cleanup:
+    continuation.close()
+  }
+
   def "ContinuableScope doesn't close if non-zero"() {
     setup:
     def builder = tracer.buildSpan("test")
     def scope = (ContinuableScope) builder.startActive(true)
+    scope.setAsyncPropagation(true)
     def continuation = scope.capture()
 
     expect:
@@ -149,6 +169,7 @@ class ScopeManagerTest extends Specification {
     def builder = tracer.buildSpan("test")
     def scope = (ContinuableScope) builder.startActive(false)
     def span = scope.span()
+    scope.setAsyncPropagation(true)
     def continuation = scope.capture()
     scope.close()
     span.finish()
@@ -186,6 +207,7 @@ class ScopeManagerTest extends Specification {
     def parentScope = tracer.buildSpan("parent").startActive(true)
     def parentSpan = parentScope.span()
     ContinuableScope childScope = (ContinuableScope) tracer.buildSpan("parent").startActive(true)
+    childScope.setAsyncPropagation(true)
     def childSpan = childScope.span()
 
     def continuation = childScope.capture()
@@ -209,6 +231,7 @@ class ScopeManagerTest extends Specification {
 
     when:
     def newScope = continuation.activate()
+    newScope.setAsyncPropagation(true)
     def newContinuation = newScope.capture()
 
     then:
@@ -236,6 +259,7 @@ class ScopeManagerTest extends Specification {
     def builder = tracer.buildSpan("test")
     def scope = (ContinuableScope) builder.startActive(false)
     def span = scope.span()
+    scope.setAsyncPropagation(true)
     def continuation = scope.capture()
     scope.close()
     span.finish()
@@ -313,6 +337,7 @@ class ScopeManagerTest extends Specification {
   def "ContinuableScope put in threadLocal after continuation activation"() {
     setup:
     ContinuableScope scope = (ContinuableScope) tracer.buildSpan("parent").startActive(true)
+    scope.setAsyncPropagation(true)
 
     expect:
     scopeManager.tlsScope.get() == scope

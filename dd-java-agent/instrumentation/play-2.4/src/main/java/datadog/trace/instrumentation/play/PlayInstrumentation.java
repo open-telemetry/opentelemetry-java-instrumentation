@@ -99,7 +99,7 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
       }
 
       if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
-        ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncLinking(true);
+        ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true);
       }
       return scope;
     }
@@ -175,7 +175,7 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
     public Object apply(Throwable t, boolean isCheck) throws Exception {
       try {
         if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
-          ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncLinking(false);
+          ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(false);
         }
         onError(span, t);
       } catch (Throwable t2) {
@@ -202,7 +202,7 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
 
     public Result apply(Result result) {
       if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
-        ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncLinking(false);
+        ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(false);
       }
       try {
         Tags.HTTP_STATUS.set(span, result.header().status());
