@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.ratpack;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.instrumentation.ratpack.RatpackInstrumentation.ACTION_TYPE_DESCRIPTION;
 import static datadog.trace.instrumentation.ratpack.RatpackInstrumentation.EXEC_NAME;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,6 +18,7 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.net.URI;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -36,8 +38,7 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Configu
           "datadog.trace.instrumentation.ratpack.RatpackHttpClientInstrumentation$RatpackHttpClientRequestAdvice",
           "datadog.trace.instrumentation.ratpack.RatpackHttpClientInstrumentation$RatpackHttpClientRequestStreamAdvice",
           "datadog.trace.instrumentation.ratpack.RatpackHttpClientInstrumentation$RatpackHttpGetAdvice",
-          "datadog.trace.instrumentation.ratpack.RatpackHttpClientInstrumentation$GetRequestSpecAction",
-          "datadog.trace.instrumentation.ratpack.RatapckInstrumentationUtils");
+          "datadog.trace.instrumentation.ratpack.RatpackHttpClientInstrumentation$GetRequestSpecAction");
   public static final TypeDescription.ForLoadedType URI_TYPE_DESCRIPTION =
       new TypeDescription.ForLoadedType(URI.class);
 
@@ -126,7 +127,7 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Configu
       span.finish();
       if (result.isError()) {
         Tags.ERROR.set(span, true);
-        span.log(RatapckInstrumentationUtils.errorLogs(result.getThrowable()));
+        span.log(Collections.singletonMap(ERROR_OBJECT, result.getThrowable()));
       } else {
         Tags.HTTP_STATUS.set(span, result.getValue().getStatusCode());
       }
@@ -145,7 +146,7 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Configu
       span.finish();
       if (result.isError()) {
         Tags.ERROR.set(span, true);
-        span.log(RatapckInstrumentationUtils.errorLogs(result.getThrowable()));
+        span.log(Collections.singletonMap(ERROR_OBJECT, result.getThrowable()));
       } else {
         Tags.HTTP_STATUS.set(span, result.getValue().getStatusCode());
       }

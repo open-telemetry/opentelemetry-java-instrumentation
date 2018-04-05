@@ -15,7 +15,7 @@ import ratpack.http.Status;
 
 /**
  * This Ratpack handler reads tracing headers from the incoming request, starts a scope and ensures
- * that the scope is closed when the request is sent
+ * that the scope is closed when the response is sent
  */
 public final class TracingHandler implements Handler {
   @Override
@@ -28,7 +28,7 @@ public final class TracingHandler implements Handler {
 
     final Scope scope =
         GlobalTracer.get()
-            .buildSpan("ratpack")
+            .buildSpan("ratpack.handler")
             .asChildOf(extractedContext)
             .withTag(Tags.COMPONENT.getKey(), "handler")
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
@@ -58,8 +58,11 @@ public final class TracingHandler implements Handler {
   private static String getResourceName(Context ctx) {
     String description = ctx.getPathBinding().getDescription();
     if (description == null || description.isEmpty()) {
-      return ctx.getRequest().getUri();
+      description = ctx.getRequest().getUri();
     }
-    return description;
+    if (!description.startsWith("/")) {
+      description = "/" + description;
+    }
+    return ctx.getRequest().getMethod().getName() + " " + description;
   }
 }

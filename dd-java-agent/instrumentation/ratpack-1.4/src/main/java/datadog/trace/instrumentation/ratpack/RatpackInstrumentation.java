@@ -1,14 +1,7 @@
 package datadog.trace.instrumentation.ratpack;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isStatic;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.google.auto.service.AutoService;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
@@ -25,7 +18,6 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import ratpack.exec.ExecStarter;
-import ratpack.exec.Execution;
 import ratpack.func.Action;
 import ratpack.handling.HandlerDecorator;
 import ratpack.registry.Registry;
@@ -92,7 +84,7 @@ public final class RatpackInstrumentation extends Instrumenter.Configurable {
                     ExecStarterAdvice.class.getName()))
         .asDecorator()
         .type(
-            named(Execution.class.getName())
+            named("ratpack.exec.Execution")
                 .or(not(isInterface()).and(hasSuperType(named("ratpack.exec.Execution")))),
             classLoaderHasClasses(
                 "ratpack.exec.ExecStarter", "ratpack.registry.RegistrySpec", "ratpack.func.Action"))

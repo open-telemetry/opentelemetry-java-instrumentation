@@ -52,8 +52,8 @@ class RatpackTest extends AgentTestRunner {
     def span = trace[0]
 
     span.context().serviceName == "unnamed-java-app"
-    span.context().operationName == "ratpack"
-    span.context().resourceName == "/"
+    span.context().operationName == "ratpack.handler"
+    span.context().resourceName == "GET /"
     span.context().tags["component"] == "handler"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     !span.context().getErrorFlag()
@@ -92,8 +92,8 @@ class RatpackTest extends AgentTestRunner {
     def span = trace[0]
 
     span.context().serviceName == "unnamed-java-app"
-    span.context().operationName == "ratpack"
-    span.context().resourceName == ":foo/:bar?/baz"
+    span.context().operationName == "ratpack.handler"
+    span.context().resourceName == "GET /:foo/:bar?/baz"
     span.context().tags["component"] == "handler"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     !span.context().getErrorFlag()
@@ -130,7 +130,8 @@ class RatpackTest extends AgentTestRunner {
 
     span.context().getErrorFlag()
     span.context().serviceName == "unnamed-java-app"
-    span.context().operationName == "ratpack"
+    span.context().operationName == "ratpack.handler"
+    span.context().resourceName == "GET /"
     span.context().tags["component"] == "handler"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     span.context().tags["http.url"] == "/"
@@ -194,8 +195,8 @@ class RatpackTest extends AgentTestRunner {
     def span = trace[0]
 
     span.context().serviceName == "unnamed-java-app"
-    span.context().operationName == "ratpack"
-    span.context().resourceName == "/"
+    span.context().operationName == "ratpack.handler"
+    span.context().resourceName == "GET /"
     span.context().tags["component"] == "handler"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     !span.context().getErrorFlag()
@@ -239,8 +240,8 @@ class RatpackTest extends AgentTestRunner {
     def nestedSpan = nestedTrace[0]
 
     nestedSpan.context().serviceName == "unnamed-java-app"
-    nestedSpan.context().operationName == "ratpack"
-    nestedSpan.context().resourceName == "nested2"
+    nestedSpan.context().operationName == "ratpack.handler"
+    nestedSpan.context().resourceName == "GET /nested2"
     nestedSpan.context().tags["component"] == "handler"
     nestedSpan.context().spanType == DDSpanTypes.WEB_SERVLET
     !nestedSpan.context().getErrorFlag()
@@ -256,8 +257,8 @@ class RatpackTest extends AgentTestRunner {
     def nestedSpan2 = nestedTrace2[0]
 
     nestedSpan2.context().serviceName == "unnamed-java-app"
-    nestedSpan2.context().operationName == "ratpack"
-    nestedSpan2.context().resourceName == "nested"
+    nestedSpan2.context().operationName == "ratpack.handler"
+    nestedSpan2.context().resourceName == "GET /nested"
     nestedSpan2.context().tags["component"] == "handler"
     nestedSpan2.context().spanType == DDSpanTypes.WEB_SERVLET
     !nestedSpan2.context().getErrorFlag()

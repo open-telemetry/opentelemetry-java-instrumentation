@@ -7,9 +7,25 @@ versionScan {
   verifyPresent = [
     "ratpack.exec.ExecStarter"              : null,
     "ratpack.exec.Execution"                : null,
+    "ratpack.exec.Promise"                  : null,
+    "ratpack.exec.Result"                   : null,
     "ratpack.func.Action"                   : null,
+    "ratpack.func.Function"                 : null,
+    "ratpack.handling.Context"              : null,
+    "ratpack.handling.Handler"              : null,
+    "ratpack.handling.HandlerDecorator"     : null,
+    "ratpack.http.HttpMethod"               : null,
+    "ratpack.http.MutableHeaders"           : null,
+    "ratpack.http.Request"                  : null,
+    "ratpack.http.Status"                   : null,
     "ratpack.http.client.HttpClient"        : null,
-    "ratpack.server.internal.ServerRegistry": "buildBaseRegistry",
+    "ratpack.http.client.ReceivedResponse"  : null,
+    "ratpack.http.client.RequestSpec"       : null,
+    "ratpack.http.client.StreamedResponse"  : null,
+    "ratpack.path.PathBinding"              : "getDescription",
+    "ratpack.registry.Registry"             : null,
+    "ratpack.registry.RegistrySpec"         : null,
+    "ratpack.server.internal.ServerRegistry": "buildBaseRegistry"
   ]
 }
 
