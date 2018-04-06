@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.ratpack;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.instrumentation.ratpack.RatpackInstrumentation.ACTION_TYPE_DESCRIPTION;
+import static datadog.trace.instrumentation.ratpack.RatpackInstrumentation.CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE;
 import static datadog.trace.instrumentation.ratpack.RatpackInstrumentation.EXEC_NAME;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
@@ -57,18 +57,7 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Configu
     return agentBuilder
         .type(
             not(isInterface()).and(hasSuperType(named("ratpack.http.client.HttpClient"))),
-            classLoaderHasClasses(
-                "ratpack.exec.Promise",
-                "ratpack.exec.Result",
-                "ratpack.func.Action",
-                "ratpack.http.client.ReceivedResponse",
-                "ratpack.http.client.RequestSpec",
-                "ratpack.http.client.StreamedResponse",
-                "ratpack.http.Request",
-                "ratpack.func.Function",
-                "ratpack.http.HttpMethod",
-                "ratpack.http.MutableHeaders",
-                "com.google.common.collect.ListMultimap"))
+            CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE)
         .transform(HTTP_CLIENT_HELPER_INJECTOR)
         .transform(
             DDAdvice.create()

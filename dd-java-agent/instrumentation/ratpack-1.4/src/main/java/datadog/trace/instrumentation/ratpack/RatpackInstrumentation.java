@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.ratpack;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithMethod;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.google.auto.service.AutoService;
@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.exec.ExecStarter;
 import ratpack.func.Action;
 import ratpack.handling.HandlerDecorator;
@@ -38,9 +39,13 @@ public final class RatpackInstrumentation extends Instrumenter.Configurable {
           "datadog.trace.instrumentation.ratpack.RatpackInstrumentation$ExecStarterAdvice",
           "datadog.trace.instrumentation.ratpack.RatpackInstrumentation$ExecStarterAction");
 
-  public static final TypeDescription.Latent ACTION_TYPE_DESCRIPTION =
+  static final TypeDescription.Latent ACTION_TYPE_DESCRIPTION =
       new TypeDescription.Latent(
           "ratpack.func.Action", Modifier.PUBLIC, null, Collections.emptyList());
+
+  static final ElementMatcher.Junction.AbstractBase<ClassLoader>
+      CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE =
+          classLoaderHasClassWithMethod("ratpack.path.PathBinding", "getDescription");
 
   public RatpackInstrumentation() {
     super(EXEC_NAME);
@@ -57,14 +62,7 @@ public final class RatpackInstrumentation extends Instrumenter.Configurable {
     return agentBuilder
         .type(
             named("ratpack.server.internal.ServerRegistry"),
-            classLoaderHasClasses(
-                "ratpack.handling.HandlerDecorator",
-                "ratpack.registry.Registry",
-                "ratpack.registry.RegistrySpec",
-                "ratpack.handling.Context",
-                "ratpack.handling.Handler",
-                "ratpack.http.Request",
-                "ratpack.http.Status"))
+            CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE)
         .transform(SERVER_REGISTRY_HELPER_INJECTOR)
         .transform(
             DDAdvice.create()
@@ -74,8 +72,7 @@ public final class RatpackInstrumentation extends Instrumenter.Configurable {
         .asDecorator()
         .type(
             not(isInterface()).and(hasSuperType(named("ratpack.exec.ExecStarter"))),
-            classLoaderHasClasses(
-                "ratpack.exec.Execution", "ratpack.registry.RegistrySpec", "ratpack.func.Action"))
+            CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE)
         .transform(EXEC_STARTER_HELPER_INJECTOR)
         .transform(
             DDAdvice.create()
@@ -86,8 +83,7 @@ public final class RatpackInstrumentation extends Instrumenter.Configurable {
         .type(
             named("ratpack.exec.Execution")
                 .or(not(isInterface()).and(hasSuperType(named("ratpack.exec.Execution")))),
-            classLoaderHasClasses(
-                "ratpack.exec.ExecStarter", "ratpack.registry.RegistrySpec", "ratpack.func.Action"))
+            CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE)
         .transform(EXEC_STARTER_HELPER_INJECTOR)
         .transform(
             DDAdvice.create()
