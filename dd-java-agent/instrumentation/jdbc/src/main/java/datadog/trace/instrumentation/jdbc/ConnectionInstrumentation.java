@@ -13,9 +13,11 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.bootstrap.JDBCMaps;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
@@ -52,9 +54,19 @@ public final class ConnectionInstrumentation extends Instrumenter.Configurable {
   }
 
   public static class ConnectionConstructorAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static int constructorEnter() {
+      // We use this to make sure we only apply the exit instrumentation
+      // after the constructors are done calling their super constructors.
+      return CallDepthThreadLocalMap.get(Connection.class).incrementCallDepth();
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void addDBInfo(@Advice.This final Connection connection) {
-      try {
+    public static void constructorExit(
+        @Advice.Enter final int depth, @Advice.This final Connection connection)
+        throws SQLException {
+      if (depth == 0) {
+        CallDepthThreadLocalMap.get(Connection.class).reset();
         final String url = connection.getMetaData().getURL();
         if (url != null) {
           // Remove end of url to prevent passwords from leaking:
@@ -66,9 +78,6 @@ public final class ConnectionInstrumentation extends Instrumenter.Configurable {
           }
           JDBCMaps.connectionInfo.put(connection, new JDBCMaps.DBInfo(sanitizedURL, type, user));
         }
-      } catch (final Throwable t) {
-        // object may not be fully initialized.
-        // calling constructor will populate map
       }
     }
   }

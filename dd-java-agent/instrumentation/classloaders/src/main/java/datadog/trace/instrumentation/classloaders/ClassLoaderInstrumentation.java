@@ -9,8 +9,8 @@ import com.google.auto.service.AutoService;
 import datadog.opentracing.DDTracer;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Field;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -34,9 +34,6 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Configurable 
         .type(
             failSafe(isSubTypeOf(ClassLoader.class)),
             classLoaderHasClasses("io.opentracing.util.GlobalTracer"))
-        .transform(
-            new HelperInjector(
-                "datadog.trace.instrumentation.classloaders.CallDepthThreadLocalMap"))
         .transform(DDTransformers.defaultTransformers())
         .transform(DDAdvice.create().advice(isConstructor(), ClassloaderAdvice.class.getName()))
         .asDecorator();
@@ -48,7 +45,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Configurable 
     public static int constructorEnter() {
       // We use this to make sure we only apply the exit instrumentation
       // after the constructors are done calling their super constructors.
-      return CallDepthThreadLocalMap.incrementCallDepth();
+      return CallDepthThreadLocalMap.get(ClassLoader.class).incrementCallDepth();
     }
 
     // Not sure why, but adding suppress causes a verify error.
@@ -56,7 +53,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Configurable 
     public static void constructorExit(
         @Advice.This final ClassLoader cl, @Advice.Enter final int depth) {
       if (depth == 0) {
-        CallDepthThreadLocalMap.reset();
+        CallDepthThreadLocalMap.get(ClassLoader.class).reset();
 
         try {
           final Field field = GlobalTracer.class.getDeclaredField("tracer");
