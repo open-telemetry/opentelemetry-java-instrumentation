@@ -26,9 +26,9 @@ public class TracerInstaller {
   public static void logVersionInfo() {
     // version classes log important info
     // in static initializers
-    DDTraceOTInfo.VERSION.toString();
-    DDTraceApiInfo.VERSION.toString();
-    DDJavaAgentInfo.VERSION.toString();
+    final String s = DDTraceOTInfo.VERSION.toString();
+    final String s1 = DDTraceApiInfo.VERSION.toString();
+    final String s2 = DDJavaAgentInfo.VERSION.toString();
     log.debug(GlobalTracer.class.getName() + " loaded on " + GlobalTracer.class.getClassLoader());
     log.debug(
         AgentInstaller.class.getName() + " loaded on " + AgentInstaller.class.getClassLoader());

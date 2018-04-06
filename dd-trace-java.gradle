@@ -5,11 +5,13 @@ buildscript {
   dependencies {
     classpath "io.franzbecker:gradle-lombok:1.8"
     classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.18"
-    classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
+    classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3"
+    classpath "net.ltgt.gradle:gradle-errorprone-plugin:0.0.13"
   }
 }
 
 plugins {
+  id 'com.gradle.build-scan' version '1.13'
   id 'com.github.sherter.google-java-format' version '0.6'
 }
 
@@ -31,6 +33,17 @@ task traceAgentTest {}
 
 // Applied here to allow publishing of artifactory build info
 apply from: "${rootDir}/gradle/publish.gradle"
+
+buildScan {
+  termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+  termsOfServiceAgree = 'yes'
+
+  def isCI = System.getenv("CI") != null
+  if (isCI) {
+    publishAlways()
+    tag 'CI'
+  }
+}
 
 ext.gradleWrapperVersion = '4.6'
 task wrapper(type: Wrapper) {

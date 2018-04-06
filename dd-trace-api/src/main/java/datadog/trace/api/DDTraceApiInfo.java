@@ -11,7 +11,7 @@ public class DDTraceApiInfo {
   static {
     String v;
     try {
-      final StringBuffer sb = new StringBuffer();
+      final StringBuilder sb = new StringBuilder();
 
       final BufferedReader br =
           new BufferedReader(
