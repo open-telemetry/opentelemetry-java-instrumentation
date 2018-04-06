@@ -90,7 +90,7 @@ header='Client Version'
 for label in "${test_order[@]}"; do
     header="$header,$label Latency,$label Throughput"
 done
-header="$header,Agent CPU Burn,Server CPU Burn,Agent RSS Delta,Server Max RSS,Server Avg RSS"
+header="$header,Agent CPU Burn,Server CPU Burn,Agent RSS Delta,Server Max RSS,Server Start RSS,Server Load Increase RSS"
 echo $header > $test_csv_file
 
 for agent_jar in $agent_jars; do
@@ -113,6 +113,8 @@ for agent_jar in $agent_jars; do
         agent_start_rss=$(ps -o 'pid,rss' | awk "\$1 == $agent_pid { print \$2 }")
     fi
     server_start_cpu=$(ps -o 'pid,time' | awk "\$1 == $server_pid { print \$2 }" | awk -F'[:\.]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
+    server_start_rss=$(ps -o 'pid,rss' | awk "\$1 == $server_pid { print \$2 }")
+
     server_total_rss=0
     server_total_rss_count=0
 
@@ -143,14 +145,14 @@ for agent_jar in $agent_jars; do
     let agent_rss=$agent_stop_rss-$agent_start_rss
     let server_cpu=$server_stop_cpu-$server_start_cpu
 
-    server_avg_rss=$(echo "scale=2; $server_total_rss / $server_total_rss_count" | bc)
+    server_load_increase_rss=$(echo "scale=2; ( $server_total_rss / $server_total_rss_count ) - $server_start_rss" | bc)
 
     stop_server
 
-    server_rss=$(awk '/.* maximum resident set size/ { print $1 }' $server_output)
+    server_max_rss=$(awk '/.* maximum resident set size/ { print $1 }' $server_output)
     rm $server_output
 
-    echo "$result_row,$agent_cpu,$server_cpu,$agent_rss,$server_rss,$server_avg_rss" >> $test_csv_file
+    echo "$result_row,$agent_cpu,$server_cpu,$agent_rss,$server_max_rss,$server_start_rss,$server_load_increase_rss" >> $test_csv_file
     echo "----/Testing agent $agent_jar----"
     echo ""
 done
