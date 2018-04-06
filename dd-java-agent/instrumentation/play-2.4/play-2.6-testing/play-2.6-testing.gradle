@@ -21,7 +21,7 @@ dependencies {
 }
 
 test {
-  if (JavaVersion.current().isJava8Compatible()) {
+  if (!JavaVersion.current().isJava8Compatible()) {
     exclude '*Play*Test*'
   }
 }
