@@ -30,6 +30,11 @@ public class ClassLoaderMatcher {
     return new ClassLoaderHasClassWithFieldMatcher(className, fieldName);
   }
 
+  public static ElementMatcher.Junction.AbstractBase<ClassLoader> classLoaderHasClassWithMethod(
+      final String className, final String methodName, final Class... methodArgs) {
+    return new ClassLoaderHasClassWithMethodMatcher(className, methodName, methodArgs);
+  }
+
   private static class SkipClassLoaderMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
     public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
@@ -183,6 +188,52 @@ public class ClassLoaderMatcher {
             cache.put(target, false);
             return false;
           } catch (final NoSuchFieldException e) {
+            cache.put(target, false);
+            return false;
+          }
+        }
+      }
+      return false;
+    }
+  }
+
+  public static class ClassLoaderHasClassWithMethodMatcher
+      extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
+
+    private final Map<ClassLoader, Boolean> cache =
+        Collections.synchronizedMap(new WeakHashMap<ClassLoader, Boolean>());
+
+    private final String className;
+    private final String methodName;
+    private final Class[] methodArgs;
+
+    private ClassLoaderHasClassWithMethodMatcher(
+        final String className, final String methodName, final Class... methodArgs) {
+      this.className = className;
+      this.methodName = methodName;
+      this.methodArgs = methodArgs;
+    }
+
+    @Override
+    public boolean matches(final ClassLoader target) {
+      if (target != null) {
+        synchronized (target) {
+          if (cache.containsKey(target)) {
+            return cache.get(target);
+          }
+          try {
+            final Class<?> aClass = Class.forName(className, false, target);
+            if (aClass.isInterface()) {
+              aClass.getMethod(methodName, methodArgs);
+            } else {
+              aClass.getDeclaredMethod(methodName, methodArgs);
+            }
+            cache.put(target, true);
+            return true;
+          } catch (final ClassNotFoundException e) {
+            cache.put(target, false);
+            return false;
+          } catch (final NoSuchMethodException e) {
             cache.put(target, false);
             return false;
           }

@@ -6,6 +6,7 @@ import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import java.io.*;
 import java.lang.reflect.Field;
+import java.net.ServerSocket;
 import java.net.URL;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -159,5 +160,19 @@ public class TestUtils {
     jarOutputStream.putNextEntry(entry);
     jarOutputStream.write(bytes, 0, bytes.length);
     jarOutputStream.closeEntry();
+  }
+
+  /** Open up a random, reusable port. */
+  public static int randomOpenPort() {
+    ServerSocket socket;
+    try {
+      socket = new ServerSocket(0);
+      socket.setReuseAddress(true);
+      socket.close();
+      return socket.getLocalPort();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+      return -1;
+    }
   }
 }
