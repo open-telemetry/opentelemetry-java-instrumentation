@@ -285,11 +285,13 @@ public class DDSpan implements Span, MutableSpan {
     return meta;
   }
 
+  @Override
   @JsonGetter("start")
   public long getStartTime() {
     return startTimeMicro * 1000L;
   }
 
+  @Override
   @JsonGetter("duration")
   public long getDurationNano() {
     return durationNano.get();
