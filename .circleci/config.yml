@@ -32,7 +32,7 @@ test_job: &test_job
 
     - run:
         name: Run Tests
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew test --parallel --stacktrace --no-daemon --max-workers=3
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew compileJava compileScala compileGroovy compileTestJava compileTestScala compileTestGroovy shadowJar --stacktrace --no-daemon && GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew test --parallel --stacktrace --no-daemon --max-workers=3
 
     - run:
         name: Save Artifacts to (project-root)/build
