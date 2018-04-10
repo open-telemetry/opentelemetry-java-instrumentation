@@ -330,7 +330,7 @@ public class DDTracer implements io.opentracing.Tracer {
     // Builder attributes
     private Map<String, Object> tags =
         spanTags.isEmpty() ? Collections.<String, Object>emptyMap() : Maps.newHashMap(spanTags);
-    private long timestamp;
+    private long timestampMicro;
     private SpanContext parent;
     private String serviceName;
     private String resourceName;
@@ -350,7 +350,7 @@ public class DDTracer implements io.opentracing.Tracer {
     }
 
     private DDSpan startSpan() {
-      final DDSpan span = new DDSpan(this.timestamp, buildSpanContext());
+      final DDSpan span = new DDSpan(this.timestampMicro, buildSpanContext());
       if (DDTracer.this.sampler instanceof RateByServiceSampler) {
         ((RateByServiceSampler) DDTracer.this.sampler).initializeSamplingPriority(span);
       }
@@ -402,8 +402,8 @@ public class DDTracer implements io.opentracing.Tracer {
     }
 
     @Override
-    public DDSpanBuilder withStartTimestamp(final long timestampMillis) {
-      this.timestamp = timestampMillis;
+    public DDSpanBuilder withStartTimestamp(final long timestampMicroseconds) {
+      this.timestampMicro = timestampMicroseconds;
       return this;
     }
 
