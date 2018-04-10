@@ -14,16 +14,8 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
-if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
-  sourceSets {
-    test {
-      groovy {
-        // These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
-        exclude '**/OkHttp3Test.groovy'
-      }
-    }
-  }
-}
+// These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
+testJava8Only += '**/OkHttp3Test.class'
 
 dependencies {
   compileOnly group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'

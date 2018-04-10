@@ -19,16 +19,8 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
   'datadog.trace.common.sampling.PrioritySampling'
 ]
 
-if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
-  sourceSets {
-    test {
-      groovy {
-        // These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
-        exclude 'datadog/trace/api/writer/DDApiTest.groovy'
-      }
-    }
-  }
-}
+// These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
+testJava8Only += 'datadog/trace/api/writer/DDApiTest.class'
 
 testSets {
   traceAgentTest

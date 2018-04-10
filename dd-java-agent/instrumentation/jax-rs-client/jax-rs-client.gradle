@@ -8,16 +8,8 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
-if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
-  sourceSets {
-    test {
-      groovy {
-        // These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
-        exclude '**/*.groovy'
-      }
-    }
-  }
-}
+// These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
+testJava8Only += '**/*.class'
 
 dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.1'

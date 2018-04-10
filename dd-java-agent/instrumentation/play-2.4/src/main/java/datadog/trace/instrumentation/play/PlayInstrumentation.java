@@ -192,6 +192,7 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
       this.span = span;
     }
 
+    @Override
     public Result apply(Result result) {
       // TODO
       // stop tracking across threads

@@ -15,9 +15,15 @@ plugins {
   id 'com.github.sherter.google-java-format' version '0.6'
 }
 
+def isCI = System.getenv("CI") != null
+
 allprojects {
   group = 'com.datadoghq'
   version = '0.6.1-SNAPSHOT'
+
+  if (isCI) {
+    buildDir = "${rootDir}/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"
+  }
 
   apply from: "${rootDir}/gradle/dependencies.gradle"
 }
@@ -38,7 +44,6 @@ buildScan {
   termsOfServiceUrl = 'https://gradle.com/terms-of-service'
   termsOfServiceAgree = 'yes'
 
-  def isCI = System.getenv("CI") != null
   if (isCI) {
     publishAlways()
     tag 'CI'

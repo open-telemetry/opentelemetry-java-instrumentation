@@ -1,6 +1,7 @@
 import com.google.common.io.Files
 import datadog.opentracing.DDTracer
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.util.GlobalTracer
@@ -18,7 +19,7 @@ import java.lang.reflect.Field
 @Timeout(5)
 class TomcatServletTest extends AgentTestRunner {
 
-  static final int PORT = randomOpenPort()
+  static final int PORT = TestUtils.randomOpenPort()
   OkHttpClient client = new OkHttpClient.Builder()
   // Uncomment when debugging:
 //    .connectTimeout(1, TimeUnit.HOURS)
@@ -92,7 +93,7 @@ class TomcatServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() == expectedResponse
-    writer.size() == 2 // second (parent) trace is the okhttp call above...
+    writer.size() == 1
     def trace = writer.firstTrace()
     trace.size() == 1
     def span = trace[0]
@@ -102,7 +103,7 @@ class TomcatServletTest extends AgentTestRunner {
     span.context().resourceName == "GET /$path"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     !span.context().getErrorFlag()
-    span.context().parentId != 0 // parent should be the okhttp call.
+    span.context().parentId == 0
     span.context().tags["http.url"] == "http://localhost:$PORT/$path"
     span.context().tags["http.method"] == "GET"
     span.context().tags["span.kind"] == "server"
@@ -129,7 +130,7 @@ class TomcatServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() != expectedResponse
-    writer.size() == 2 // second (parent) trace is the okhttp call above...
+    writer.size() == 1
     def trace = writer.firstTrace()
     trace.size() == 1
     def span = trace[0]
@@ -139,7 +140,7 @@ class TomcatServletTest extends AgentTestRunner {
     span.context().resourceName == "GET /$path"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     span.context().getErrorFlag()
-    span.context().parentId != 0 // parent should be the okhttp call.
+    span.context().parentId == 0
     span.context().tags["http.url"] == "http://localhost:$PORT/$path"
     span.context().tags["http.method"] == "GET"
     span.context().tags["span.kind"] == "server"
@@ -170,7 +171,7 @@ class TomcatServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() != expectedResponse
-    writer.size() == 2 // second (parent) trace is the okhttp call above...
+    writer.size() == 1
     def trace = writer.firstTrace()
     trace.size() == 1
     def span = trace[0]
@@ -180,7 +181,7 @@ class TomcatServletTest extends AgentTestRunner {
     span.context().resourceName == "GET /$path"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     span.context().getErrorFlag()
-    span.context().parentId != 0 // parent should be the okhttp call.
+    span.context().parentId == 0
     span.context().tags["http.url"] == "http://localhost:$PORT/$path"
     span.context().tags["http.method"] == "GET"
     span.context().tags["span.kind"] == "server"
@@ -197,12 +198,5 @@ class TomcatServletTest extends AgentTestRunner {
     where:
     path   | expectedResponse
     "sync" | "Hello Sync"
-  }
-
-  private static int randomOpenPort() {
-    new ServerSocket(0).withCloseable {
-      it.setReuseAddress(true)
-      return it.getLocalPort()
-    }
   }
 }
