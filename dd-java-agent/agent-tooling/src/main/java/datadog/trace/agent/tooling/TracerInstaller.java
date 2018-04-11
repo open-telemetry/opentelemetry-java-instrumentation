@@ -1,8 +1,6 @@
 package datadog.trace.agent.tooling;
 
-import datadog.opentracing.DDTraceOTInfo;
 import datadog.opentracing.DDTracer;
-import datadog.trace.api.DDTraceApiInfo;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import lombok.extern.slf4j.Slf4j;
@@ -24,11 +22,7 @@ public class TracerInstaller {
   }
 
   public static void logVersionInfo() {
-    // version classes log important info
-    // in static initializers
-    final String s = DDTraceOTInfo.VERSION.toString();
-    final String s1 = DDTraceApiInfo.VERSION.toString();
-    final String s2 = DDJavaAgentInfo.VERSION.toString();
+    VersionLogger.logAllVersions();
     log.debug(GlobalTracer.class.getName() + " loaded on " + GlobalTracer.class.getClassLoader());
     log.debug(
         AgentInstaller.class.getName() + " loaded on " + AgentInstaller.class.getClassLoader());
