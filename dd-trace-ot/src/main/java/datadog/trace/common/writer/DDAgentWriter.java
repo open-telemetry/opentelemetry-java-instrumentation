@@ -36,7 +36,7 @@ public class DDAgentWriter implements Writer {
   public static final int DEFAULT_PORT = 8126;
 
   /** Maximum number of traces kept in memory */
-  static final int DEFAULT_MAX_TRACES = 1000;
+  static final int DEFAULT_MAX_TRACES = 7000;
 
   /** Timeout for the API in seconds */
   static final long API_TIMEOUT_SECONDS = 1;
