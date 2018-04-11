@@ -116,7 +116,6 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
       if (!pathOption.isEmpty()) {
         final String path = (String) pathOption.get();
         scope.span().setTag(Tags.HTTP_URL.getKey(), path);
-        scope.span().setOperationName(path);
         scope.span().setTag(DDTags.RESOURCE_NAME, req.method() + " " + path);
       }
 

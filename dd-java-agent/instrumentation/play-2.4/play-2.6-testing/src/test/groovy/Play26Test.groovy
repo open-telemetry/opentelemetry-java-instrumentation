@@ -58,7 +58,7 @@ class Play26Test extends AgentTestRunner {
     root.traceId == 123
     root.parentId == 456
     root.serviceName == "unnamed-java-app"
-    root.operationName == "/helloplay/:from"
+    root.operationName == "play.request"
     root.resourceName == "GET /helloplay/:from"
     !root.context().getErrorFlag()
     root.context().tags["http.status_code"] == 200
@@ -85,7 +85,7 @@ class Play26Test extends AgentTestRunner {
     response.code() == 500
 
     root.serviceName == "unnamed-java-app"
-    root.operationName == "/make-error"
+    root.operationName == "play.request"
     root.resourceName == "GET /make-error"
     root.context().getErrorFlag()
     root.context().tags["http.status_code"] == 500
@@ -116,7 +116,7 @@ class Play26Test extends AgentTestRunner {
     root.context().tags["error.type"] == RuntimeException.getName()
 
     root.serviceName == "unnamed-java-app"
-    root.operationName == "/exception"
+    root.operationName == "play.request"
     root.resourceName == "GET /exception"
     root.context().tags["http.status_code"] == 500
     root.context().tags["http.url"] == "/exception"
