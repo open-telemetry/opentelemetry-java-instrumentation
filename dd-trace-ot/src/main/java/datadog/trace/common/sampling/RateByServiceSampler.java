@@ -3,6 +3,7 @@ package datadog.trace.common.sampling;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import datadog.opentracing.DDSpan;
+import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.writer.DDApi.ResponseListener;
 import java.util.HashMap;
 import java.util.Iterator;
