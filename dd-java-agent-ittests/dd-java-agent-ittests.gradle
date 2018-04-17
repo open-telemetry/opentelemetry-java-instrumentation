@@ -5,16 +5,8 @@ description = 'dd-java-agent-ittests'
 evaluationDependsOn(':dd-java-agent:agent-tooling')
 compileTestJava.dependsOn tasks.getByPath(':dd-java-agent:agent-tooling:testClasses')
 
-if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
-  sourceSets {
-    test {
-      groovy {
-        // These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
-        exclude '**/TestHttpServer.groovy', '**/ApacheHttpClientTest.groovy'
-      }
-    }
-  }
-}
+// These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
+testJava8Only += ['**/TestHttpServer.class', '**/ApacheHttpClientTest.class']
 
 dependencies {
   testCompile project(':dd-trace-api')
@@ -37,7 +29,7 @@ dependencies {
   testCompile group: 'org.apache.derby', name: 'derby', version: '10.12.1.1'
 }
 
-test {
+tasks.withType(Test) {
   jvmArgs "-Ddd.writer.type=LogWriter", "-Ddd.service.name=java-app"
   jvmArgs "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug"
   jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
@@ -54,9 +46,9 @@ test {
   if (project.hasProperty("disableShadowRelocate") && disableShadowRelocate) {
     exclude 'datadog/trace/agent/integration/classloading/ShadowPackageRenamingTest.class'
   }
-}
 
-test.dependsOn project(':dd-java-agent').shadowJar
+  dependsOn project(':dd-java-agent').shadowJar
+}
 
 parent.subprojects.collect { it.tasks.withType(Test) } each {
   test.shouldRunAfter it

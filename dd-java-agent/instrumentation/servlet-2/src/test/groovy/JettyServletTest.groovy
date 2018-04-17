@@ -1,6 +1,7 @@
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.util.GlobalTracer
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeUnit
 @Timeout(1)
 class JettyServletTest extends AgentTestRunner {
 
-  static final int PORT = randomOpenPort()
+  static final int PORT = TestUtils.randomOpenPort()
 
   // Jetty needs this to ensure consistent ordering for async.
   static CountDownLatch latch
@@ -154,12 +155,5 @@ class JettyServletTest extends AgentTestRunner {
     where:
     path   | expectedResponse
     "sync" | "Hello Sync"
-  }
-
-  private static int randomOpenPort() {
-    new ServerSocket(0).withCloseable {
-      it.setReuseAddress(true)
-      return it.getLocalPort()
-    }
   }
 }

@@ -31,16 +31,8 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
-if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
-  sourceSets {
-    test {
-      groovy {
-        // These classes use Cassandra 3 which requires Java 8. (Currently incompatible with Java 9.)
-        exclude '**/CassandraClientTest.groovy'
-      }
-    }
-  }
-}
+// These classes use Cassandra 3 which requires Java 8. (Currently incompatible with Java 9.)
+testJava8Only += '**/CassandraClientTest.class'
 
 dependencies {
   compileOnly group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'

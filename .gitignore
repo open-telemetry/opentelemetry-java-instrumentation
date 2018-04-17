@@ -50,6 +50,7 @@ out/
 /bin
 /out
 */out
+/workspace
 dd-java-agent/instrumentation/*/out
 dd-java-agent/benchmark-integration/perf-test-settings.rc
 examples/*/out

@@ -20,8 +20,4 @@ dependencies {
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
 }
 
-test {
-  if (!JavaVersion.current().isJava8Compatible()) {
-    exclude '*Play*Test*'
-  }
-}
+testJava8Minimum += '*Play*Test*'

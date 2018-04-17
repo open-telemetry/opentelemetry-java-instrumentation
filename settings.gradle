@@ -8,7 +8,6 @@ include ':dd-java-agent:testing'
 include ':dd-java-agent-ittests'
 include ':dd-trace-api'
 
-
 // instrumentation:
 include ':dd-java-agent:instrumentation:apache-httpclient-4.3'
 include ':dd-java-agent:instrumentation:aws-sdk'
@@ -30,27 +29,22 @@ include ':dd-java-agent:instrumentation:mongo-3.1'
 include ':dd-java-agent:instrumentation:mongo-async-3.3'
 include ':dd-java-agent:instrumentation:okhttp-3'
 include ':dd-java-agent:instrumentation:osgi-classloading'
+include ':dd-java-agent:instrumentation:play-2.4'
+include ':dd-java-agent:instrumentation:play-2.4:play-2.6-testing'
 include ':dd-java-agent:instrumentation:servlet-2'
 include ':dd-java-agent:instrumentation:servlet-3'
 include ':dd-java-agent:instrumentation:spring-web'
 include ':dd-java-agent:instrumentation:trace-annotation'
 
+// benchmark
+include ':dd-java-agent:benchmark'
+include ':dd-java-agent:benchmark-integration'
+include ':dd-java-agent:benchmark-integration:jetty-perftest'
 
-if (JavaVersion.current().isJava8Compatible()) {
-  // java 8 only instrumentation
-  include ':dd-java-agent:instrumentation:play-2.4'
-  include ':dd-java-agent:instrumentation:play-2.4:play-2.6-testing'
-
-  // benchmark
-  include ':dd-java-agent:benchmark'
-  include ':dd-java-agent:benchmark-integration'
-  include ':dd-java-agent:benchmark-integration:jetty-perftest'
-
-  // examples
-  include ':examples:dropwizard-mongo-client'
-  include ':examples:spring-boot-jdbc-redis'
-  include ':examples:rest-spark'
-}
+// examples
+include ':examples:dropwizard-mongo-client'
+include ':examples:spring-boot-jdbc-redis'
+include ':examples:rest-spark'
 
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"
