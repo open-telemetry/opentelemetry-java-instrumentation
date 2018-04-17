@@ -3,7 +3,7 @@ package datadog.opentracing;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.trace.api.DDTags;
-import datadog.trace.common.sampling.PrioritySampling;
+import datadog.trace.api.sampling.PrioritySampling;
 import io.opentracing.tag.Tags;
 import java.util.Collections;
 import java.util.List;

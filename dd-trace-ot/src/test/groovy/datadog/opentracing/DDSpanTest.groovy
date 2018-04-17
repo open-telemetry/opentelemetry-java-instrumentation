@@ -1,6 +1,6 @@
 package datadog.opentracing
 
-import datadog.trace.common.sampling.PrioritySampling
+import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
 import spock.lang.Timeout

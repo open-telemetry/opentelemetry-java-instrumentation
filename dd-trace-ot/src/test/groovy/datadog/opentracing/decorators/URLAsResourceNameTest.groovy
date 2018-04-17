@@ -3,7 +3,7 @@ package datadog.opentracing.decorators
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
-import datadog.trace.common.sampling.PrioritySampling
+import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.tag.Tags
 import spock.lang.Specification

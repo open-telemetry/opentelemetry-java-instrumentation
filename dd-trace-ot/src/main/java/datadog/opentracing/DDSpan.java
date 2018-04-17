@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
-import datadog.trace.common.sampling.PrioritySampling;
+import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.util.Clock;
 import io.opentracing.Span;
 import java.io.PrintWriter;

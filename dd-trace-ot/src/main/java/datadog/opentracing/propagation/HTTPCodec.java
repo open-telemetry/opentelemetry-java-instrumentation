@@ -1,7 +1,7 @@
 package datadog.opentracing.propagation;
 
 import datadog.opentracing.DDSpanContext;
-import datadog.trace.common.sampling.PrioritySampling;
+import datadog.trace.api.sampling.PrioritySampling;
 import io.opentracing.propagation.TextMap;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;

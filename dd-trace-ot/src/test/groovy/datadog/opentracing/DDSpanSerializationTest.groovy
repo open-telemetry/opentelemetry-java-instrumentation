@@ -3,7 +3,7 @@ package datadog.opentracing
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.collect.Maps
 import datadog.trace.api.DDTags
-import datadog.trace.common.sampling.PrioritySampling
+import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
 import spock.lang.Timeout

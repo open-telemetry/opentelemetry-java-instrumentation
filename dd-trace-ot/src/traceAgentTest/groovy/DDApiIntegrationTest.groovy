@@ -4,7 +4,7 @@ import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
 import datadog.trace.common.Service
-import datadog.trace.common.sampling.PrioritySampling
+import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.ListWriter
