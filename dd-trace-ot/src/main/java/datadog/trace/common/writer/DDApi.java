@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.RateLimiter;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTraceOTInfo;
-import datadog.trace.common.Service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -15,24 +14,28 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 
 /** The API pointing to a DD agent */
 @Slf4j
 public class DDApi {
+  private static final String DATADOG_META_LANG = "Datadog-Meta-Lang";
+  private static final String DATADOG_META_LANG_VERSION = "Datadog-Meta-Lang-Version";
+  private static final String DATADOG_META_LANG_INTERPRETER = "Datadog-Meta-Lang-Interpreter";
+  private static final String DATADOG_META_TRACER_VERSION = "Datadog-Meta-Tracer-Version";
+  private static final String X_DATADOG_TRACE_COUNT = "X-Datadog-Trace-Count";
 
   private static final String TRACES_ENDPOINT_V3 = "/v0.3/traces";
-  private static final String SERVICES_ENDPOINT_V3 = "/v0.3/services";
   private static final String TRACES_ENDPOINT_V4 = "/v0.4/traces";
-  private static final String SERVICES_ENDPOINT_V4 = "/v0.4/services";
   private static final long SECONDS_BETWEEN_ERROR_LOG = TimeUnit.MINUTES.toSeconds(5);
 
   private final String tracesEndpoint;
-  private final String servicesEndpoint;
   private final List<ResponseListener> responseListeners = new ArrayList<>();
+
+  private AtomicInteger traceCount;
 
   private final RateLimiter loggingRateLimiter =
       RateLimiter.create(1.0 / SECONDS_BETWEEN_ERROR_LOG);
@@ -40,21 +43,15 @@ public class DDApi {
   private static final ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory());
 
   public DDApi(final String host, final int port) {
-    this(
-        host,
-        port,
-        traceEndpointAvailable("http://" + host + ":" + port + TRACES_ENDPOINT_V4)
-            && serviceEndpointAvailable("http://" + host + ":" + port + SERVICES_ENDPOINT_V4));
+    this(host, port, traceEndpointAvailable("http://" + host + ":" + port + TRACES_ENDPOINT_V4));
   }
 
   DDApi(final String host, final int port, final boolean v4EndpointsAvailable) {
     if (v4EndpointsAvailable) {
       this.tracesEndpoint = "http://" + host + ":" + port + TRACES_ENDPOINT_V4;
-      this.servicesEndpoint = "http://" + host + ":" + port + SERVICES_ENDPOINT_V4;
     } else {
       log.debug("API v0.4 endpoints not available. Downgrading to v0.3");
       this.tracesEndpoint = "http://" + host + ":" + port + TRACES_ENDPOINT_V3;
-      this.servicesEndpoint = "http://" + host + ":" + port + SERVICES_ENDPOINT_V3;
     }
   }
 
@@ -64,6 +61,10 @@ public class DDApi {
     }
   }
 
+  public void addTraceCounter(final AtomicInteger traceCount) {
+    this.traceCount = traceCount;
+  }
+
   /**
    * Send traces to the DD agent
    *
@@ -71,34 +72,13 @@ public class DDApi {
    * @return the staus code returned
    */
   public boolean sendTraces(final List<List<DDSpan>> traces) {
-    return putContent("traces", tracesEndpoint, traces, traces.size());
-  }
-
-  /**
-   * Send service extra information to the services endpoint
-   *
-   * @param services the services to be sent
-   */
-  public boolean sendServices(final Map<String, Service> services) {
-    if (services == null) {
-      return true;
-    }
-    return putContent("services", servicesEndpoint, services, services.size());
-  }
-
-  /**
-   * PUT to an endpoint the provided JSON content
-   *
-   * @param content
-   * @return the status code
-   */
-  private boolean putContent(
-      final String type, final String endpoint, final Object content, final int size) {
+    final int totalSize = traceCount == null ? traces.size() : traceCount.getAndSet(0);
     try {
-      final HttpURLConnection httpCon = getHttpURLConnection(endpoint);
+      final HttpURLConnection httpCon = getHttpURLConnection(tracesEndpoint);
+      httpCon.setRequestProperty(X_DATADOG_TRACE_COUNT, String.valueOf(totalSize));
 
       final OutputStream out = httpCon.getOutputStream();
-      objectMapper.writeValue(out, content);
+      objectMapper.writeValue(out, traces);
       out.flush();
       out.close();
 
@@ -121,16 +101,16 @@ public class DDApi {
       if (responseCode != 200) {
         if (log.isDebugEnabled()) {
           log.debug(
-              "Error while sending {} {} to the DD agent. Status: {}, ResponseMessage: ",
-              size,
-              type,
+              "Error while sending {} of {} traces to the DD agent. Status: {}, ResponseMessage: ",
+              traces.size(),
+              totalSize,
               responseCode,
               httpCon.getResponseMessage());
         } else if (loggingRateLimiter.tryAcquire()) {
           log.warn(
-              "Error while sending {} {} to the DD agent. Status: {} (going silent for {} seconds)",
-              size,
-              type,
+              "Error while sending {} of {} traces to the DD agent. Status: {} (going silent for {} seconds)",
+              traces.size(),
+              totalSize,
               responseCode,
               httpCon.getResponseMessage(),
               SECONDS_BETWEEN_ERROR_LOG);
@@ -138,7 +118,7 @@ public class DDApi {
         return false;
       }
 
-      log.debug("Succesfully sent {} {} to the DD agent.", size, type);
+      log.debug("Succesfully sent {} of {} traces to the DD agent.", traces.size(), totalSize);
 
       try {
         if (null != responseString
@@ -146,7 +126,7 @@ public class DDApi {
             && !"OK".equalsIgnoreCase(responseString.trim())) {
           final JsonNode response = objectMapper.readTree(responseString);
           for (final ResponseListener listener : responseListeners) {
-            listener.onResponse(endpoint, response);
+            listener.onResponse(tracesEndpoint, response);
           }
         }
       } catch (final IOException e) {
@@ -156,12 +136,18 @@ public class DDApi {
 
     } catch (final IOException e) {
       if (log.isDebugEnabled()) {
-        log.debug("Error while sending " + size + " " + type + " to the DD agent.", e);
+        log.debug(
+            "Error while sending "
+                + traces.size()
+                + " of "
+                + totalSize
+                + " traces to the DD agent.",
+            e);
       } else if (loggingRateLimiter.tryAcquire()) {
         log.warn(
-            "Error while sending {} {} to the DD agent. {}: {} (going silent for {} seconds)",
-            size,
-            type,
+            "Error while sending {} of {} traces to the DD agent. {}: {} (going silent for {} seconds)",
+            traces.size(),
+            totalSize,
             e.getClass().getName(),
             e.getMessage(),
             SECONDS_BETWEEN_ERROR_LOG);
@@ -208,10 +194,11 @@ public class DDApi {
     httpCon.setDoInput(true);
     httpCon.setRequestMethod("PUT");
     httpCon.setRequestProperty("Content-Type", "application/msgpack");
-    httpCon.setRequestProperty("Datadog-Meta-Lang", "java");
-    httpCon.setRequestProperty("Datadog-Meta-Lang-Version", DDTraceOTInfo.JAVA_VERSION);
-    httpCon.setRequestProperty("Datadog-Meta-Lang-Interpreter", DDTraceOTInfo.JAVA_VM_NAME);
-    httpCon.setRequestProperty("Datadog-Meta-Tracer-Version", DDTraceOTInfo.VERSION);
+    httpCon.setRequestProperty(DATADOG_META_LANG, "java");
+    httpCon.setRequestProperty(DATADOG_META_LANG_VERSION, DDTraceOTInfo.JAVA_VERSION);
+    httpCon.setRequestProperty(DATADOG_META_LANG_INTERPRETER, DDTraceOTInfo.JAVA_VM_NAME);
+    httpCon.setRequestProperty(DATADOG_META_TRACER_VERSION, DDTraceOTInfo.VERSION);
+
     return httpCon;
   }
 

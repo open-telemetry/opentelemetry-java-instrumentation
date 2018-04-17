@@ -8,6 +8,7 @@ import spock.lang.Subject
 class PendingTraceTest extends Specification {
   def writer = new ListWriter()
   def tracer = new DDTracer(writer)
+  def traceCount = tracer.traceCount
 
   def traceId = System.identityHashCode(this)
 
@@ -30,6 +31,7 @@ class PendingTraceTest extends Specification {
     expect:
     trace.asList() == [rootSpan]
     writer == [[rootSpan]]
+    traceCount.get() == 1
   }
 
   def "child finishes before parent"() {
@@ -57,6 +59,7 @@ class PendingTraceTest extends Specification {
     trace.weakReferences.size() == 0
     trace.asList() == [rootSpan, child]
     writer == [[rootSpan, child]]
+    traceCount.get() == 1
   }
 
   def "parent finishes before child which holds up trace"() {
@@ -84,6 +87,7 @@ class PendingTraceTest extends Specification {
     trace.weakReferences.size() == 0
     trace.asList() == [child, rootSpan]
     writer == [[child, rootSpan]]
+    traceCount.get() == 1
   }
 
   def "trace reported when unfinished child discarded"() {
@@ -108,6 +112,7 @@ class PendingTraceTest extends Specification {
     trace.weakReferences.size() == 0
     trace.asList() == [rootSpan]
     writer == [[rootSpan]]
+    traceCount.get() == 1
   }
 
   def "add unfinished span to trace fails"() {
@@ -118,6 +123,7 @@ class PendingTraceTest extends Specification {
     trace.pendingReferenceCount.get() == 1
     trace.weakReferences.size() == 1
     trace.asList() == []
+    traceCount.get() == 0
   }
 
   def "register span to wrong trace fails"() {

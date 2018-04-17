@@ -3,9 +3,7 @@ package datadog.trace.common.writer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auto.service.AutoService;
 import datadog.opentracing.DDSpan;
-import datadog.trace.common.Service;
 import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -17,14 +15,9 @@ public class LoggingWriter implements Writer {
   public void write(final List<DDSpan> trace) {
     try {
       log.info("write(trace): {}", serializer.writeValueAsString(trace));
-    } catch (Exception e) {
+    } catch (final Exception e) {
       log.error("error writing(trace): {}", trace);
     }
-  }
-
-  @Override
-  public void writeServices(final Map<String, Service> services) {
-    log.info("additional service information: {}", services.values());
   }
 
   @Override
