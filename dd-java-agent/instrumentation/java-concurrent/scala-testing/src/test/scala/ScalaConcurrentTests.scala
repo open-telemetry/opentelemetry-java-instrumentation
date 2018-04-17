@@ -1,8 +1,9 @@
 import datadog.trace.api.Trace
+import datadog.trace.context.TraceScope
 import io.opentracing.util.GlobalTracer
 
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Future, Promise}
 
 class ScalaConcurrentTests {
@@ -12,6 +13,7 @@ class ScalaConcurrentTests {
     */
   @Trace
   def traceWithFutureAndCallbacks() : Integer = {
+    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     val goodFuture: Future[Integer] = Future {
       tracedChild("goodFuture")
       1
@@ -32,6 +34,7 @@ class ScalaConcurrentTests {
 
   @Trace
   def tracedAcrossThreadsWithNoTrace() :Integer = {
+    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     val goodFuture: Future[Integer] = Future {
       1
     }
@@ -51,6 +54,7 @@ class ScalaConcurrentTests {
     */
   @Trace
   def traceWithPromises() : Integer = {
+    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     val keptPromise = Promise[Boolean]()
     val brokenPromise = Promise[Boolean]()
     val afterPromise = keptPromise.future
@@ -83,6 +87,7 @@ class ScalaConcurrentTests {
     */
   @Trace
   def tracedWithFutureFirstCompletions() :Integer = {
+    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     val completedVal = Future.firstCompletedOf(
       List(
         Future {
@@ -106,6 +111,7 @@ class ScalaConcurrentTests {
     */
   @Trace
   def tracedTimeout(): Integer = {
+    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     val f: Future[String] = Future {
       tracedChild("timeoutChild")
       while(true) {

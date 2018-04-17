@@ -1,5 +1,5 @@
 apply from: "${rootDir}/gradle/java.gradle"
-apply plugin: 'scala'
+apply from: "${rootDir}/gradle/test-with-scala.gradle"
 
 dependencies {
   compile project(':dd-trace-api')
