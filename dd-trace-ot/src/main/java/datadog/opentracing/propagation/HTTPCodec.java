@@ -31,6 +31,7 @@ public class HTTPCodec implements Codec<TextMap> {
     for (final Map.Entry<String, String> entry : context.baggageItems()) {
       carrier.put(OT_BAGGAGE_PREFIX + entry.getKey(), encode(entry.getValue()));
     }
+    log.debug("{} - Parent context injected", context.getTraceId());
   }
 
   @Override
@@ -61,7 +62,7 @@ public class HTTPCodec implements Codec<TextMap> {
       context = new ExtractedContext(traceId, spanId, samplingPriority, baggage);
       context.lockSamplingPriority();
 
-      log.debug("{} - Parent context extracted", context);
+      log.debug("{} - Parent context extracted", context.getTraceId());
     }
 
     return context;
