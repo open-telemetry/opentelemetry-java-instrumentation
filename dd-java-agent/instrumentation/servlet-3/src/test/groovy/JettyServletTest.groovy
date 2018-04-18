@@ -94,6 +94,7 @@ class JettyServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() == expectedResponse
+    writer.waitForTraces(1)
     writer.size() == 1
     def trace = writer.firstTrace()
     trace.size() == 1
@@ -131,6 +132,7 @@ class JettyServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() != expectedResponse
+    writer.waitForTraces(1)
     writer.size() == 1
     def trace = writer.firstTrace()
     trace.size() == 1
@@ -172,6 +174,7 @@ class JettyServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() != expectedResponse
+    writer.waitForTraces(1)
     writer.size() == 1
     def trace = writer.firstTrace()
     trace.size() == 1
