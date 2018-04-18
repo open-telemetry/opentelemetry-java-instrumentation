@@ -75,7 +75,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
 
   public void addSpan(final DDSpan span) {
     if (span.getDurationNano() == 0) {
-      log.warn("{} - added to trace, but not complete.", span);
+      log.debug("{} - added to trace, but not complete.", span);
       return;
     }
     if (traceId != span.getTraceId()) {
@@ -85,10 +85,10 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
 
     if (!isWritten.get()) {
       addFirst(span);
-      expireSpan(span);
     } else {
-      log.warn("{} - finished after trace reported.", span);
+      log.debug("{} - finished after trace reported.", span);
     }
+    expireSpan(span);
   }
 
   /**
