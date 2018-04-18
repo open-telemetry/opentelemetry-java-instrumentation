@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.ratpack;
+package datadog.trace.instrumentation.ratpack.impl;
 
 import com.google.common.collect.ListMultimap;
 import io.opentracing.propagation.TextMap;

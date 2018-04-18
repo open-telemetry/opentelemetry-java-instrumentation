@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.ratpack;
+package datadog.trace.instrumentation.ratpack.impl;
 
 import datadog.opentracing.scopemanager.ScopeContext;
 import io.opentracing.Scope;

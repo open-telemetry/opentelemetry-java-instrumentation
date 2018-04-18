@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.ratpack;
+package datadog.trace.instrumentation.ratpack.impl;
 
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
