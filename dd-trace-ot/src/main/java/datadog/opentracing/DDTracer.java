@@ -1,6 +1,5 @@
 package datadog.opentracing;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import datadog.opentracing.decorators.AbstractDecorator;
@@ -15,7 +14,6 @@ import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.interceptor.TraceInterceptor;
 import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.DDTraceConfig;
-import datadog.trace.common.Service;
 import datadog.trace.common.sampling.AllSampler;
 import datadog.trace.common.sampling.RateByServiceSampler;
 import datadog.trace.common.sampling.Sampler;
@@ -41,6 +39,7 @@ import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing API. */
@@ -74,7 +73,8 @@ public class DDTracer implements io.opentracing.Tracer {
             }
           });
   private final CodecRegistry registry;
-  private final Map<String, Service> services = new HashMap<>();
+
+  private final AtomicInteger traceCount = new AtomicInteger(0);
 
   /** By default, report to local agent and collect all traces. */
   public DDTracer() {
@@ -115,6 +115,7 @@ public class DDTracer implements io.opentracing.Tracer {
     if (this.writer instanceof DDAgentWriter && sampler instanceof DDApi.ResponseListener) {
       final DDApi api = ((DDAgentWriter) this.writer).getApi();
       api.addResponseListener((DDApi.ResponseListener) this.sampler);
+      api.addTraceCounter(traceCount);
     }
 
     registerClassLoader(ClassLoader.getSystemClassLoader());
@@ -256,6 +257,7 @@ public class DDTracer implements io.opentracing.Tracer {
         }
       }
     }
+    traceCount.incrementAndGet();
     if (!writtenTrace.isEmpty() && this.sampler.sample(writtenTrace.get(0))) {
       this.writer.write(writtenTrace);
     }
@@ -278,33 +280,6 @@ public class DDTracer implements io.opentracing.Tracer {
         + ", tags="
         + spanTags
         + '}';
-  }
-
-  /**
-   * Register additional information about a service. Service additional information are a Datadog
-   * feature only. Services are reported through a specific Datadog endpoint.
-   *
-   * @param service additional service information
-   */
-  public void addServiceInfo(final Service service) {
-    services.put(service.getName(), service);
-    // Update the writer
-    try {
-      // We don't bother to send multiple times the list of services at this time
-      writer.writeServices(services);
-    } catch (final Throwable ex) {
-      log.warn("Failed to report additional service information, reason: {}", ex.getMessage());
-    }
-  }
-
-  /**
-   * Return the list of additional service information registered
-   *
-   * @return the list of additional service information
-   */
-  @JsonIgnore
-  public Map<String, Service> getServiceInfo() {
-    return services;
   }
 
   private static class CodecRegistry {

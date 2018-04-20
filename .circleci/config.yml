@@ -29,7 +29,23 @@ jobs:
 
       - run:
           name: Build Project
-          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew clean compileTestGroovy compileTestScala compileTestJava check -x test -x traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=6
+          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew clean :dd-java-agent:shadowJar compileTestGroovy compileTestScala compileTestJava check -x test -x traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=6
+
+      - run:
+          name: Collect Libs
+          when: always
+          command: .circleci/collect_libs.sh
+
+      - store_artifacts:
+          path: ./libs
+
+      - run:
+          name: Collect Reports
+          when: always
+          command: .circleci/collect_reports.sh
+
+      - store_artifacts:
+          path: ./reports
 
       - persist_to_workspace:
           root: .
@@ -69,15 +85,20 @@ jobs:
           command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew $TEST_TASK --build-cache --parallel --stacktrace --no-daemon --max-workers=3
 
       - run:
-          name: Collect Artifacts
+          name: Collect Reports
           when: always
-          command: .circleci/collect_artifacts.sh
-
-      - store_test_results:
-          path: ./reports
+          command: .circleci/collect_reports.sh
 
       - store_artifacts:
-          path: ./artifacts
+          path: ./reports
+
+      - run:
+          name: Collect Test Results
+          when: always
+          command: .circleci/collect_results.sh
+
+      - store_test_results:
+          path: ./results
 
   test_7:
     <<: *default_test_job
@@ -128,12 +149,20 @@ jobs:
           command: ./gradlew traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=6
 
       - run:
-          name: Collect Artifacts
+          name: Collect Reports
           when: always
-          command: .circleci/collect_artifacts.sh
+          command: .circleci/collect_reports.sh
+
+      - store_artifacts:
+          path: ./reports
+
+      - run:
+          name: Collect Test Results
+          when: always
+          command: .circleci/collect_results.sh
 
       - store_test_results:
-          path: ./reports
+          path: ./results
 
   scan_versions:
     <<: *defaults
@@ -149,17 +178,6 @@ jobs:
       - run:
           name: Verify Version Scan
           command: ./gradlew verifyVersionScan --parallel --stacktrace --no-daemon --max-workers=6
-
-      - run:
-          name: Collect Artifacts
-          when: always
-          command: .circleci/collect_artifacts.sh
-
-      - store_test_results:
-          path: ./reports
-
-      - store_artifacts:
-          path: ./artifacts
 
       - save_cache:
           key: dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}

@@ -93,7 +93,8 @@ class JettyServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() == expectedResponse
-    writer.size() == 2 // second (parent) trace is the okhttp call above...
+    writer.waitForTraces(1)
+    writer.size() == 1
     def trace = writer.firstTrace()
     trace.size() == 1
     def span = trace[0]
@@ -103,7 +104,7 @@ class JettyServletTest extends AgentTestRunner {
     span.context().resourceName == "GET /$path"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     !span.context().getErrorFlag()
-    span.context().parentId != 0 // parent should be the okhttp call.
+    span.context().parentId == 0
     span.context().tags["http.url"] == "http://localhost:$PORT/$path"
     span.context().tags["http.method"] == "GET"
     span.context().tags["span.kind"] == "server"
@@ -129,7 +130,8 @@ class JettyServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() != expectedResponse
-    writer.size() == 2 // second (parent) trace is the okhttp call above...
+    writer.waitForTraces(1)
+    writer.size() == 1
     def trace = writer.firstTrace()
     trace.size() == 1
     def span = trace[0]
@@ -138,7 +140,7 @@ class JettyServletTest extends AgentTestRunner {
     span.context().resourceName == "GET /$path"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     span.context().getErrorFlag()
-    span.context().parentId != 0 // parent should be the okhttp call.
+    span.context().parentId == 0
     span.context().tags["http.url"] == "http://localhost:$PORT/$path"
     span.context().tags["http.method"] == "GET"
     span.context().tags["span.kind"] == "server"

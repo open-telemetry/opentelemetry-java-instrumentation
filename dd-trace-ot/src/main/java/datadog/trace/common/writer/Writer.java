@@ -2,9 +2,7 @@ package datadog.trace.common.writer;
 
 import datadog.opentracing.DDSpan;
 import datadog.trace.common.DDTraceConfig;
-import datadog.trace.common.Service;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,13 +17,6 @@ public interface Writer {
    * @param trace the list of spans to write
    */
   void write(List<DDSpan> trace);
-
-  /**
-   * Report additional service information to the endpoint
-   *
-   * @param services a list of extra information about services
-   */
-  void writeServices(Map<String, Service> services);
 
   /** Start the writer */
   void start();

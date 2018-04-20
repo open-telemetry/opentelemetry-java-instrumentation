@@ -1,10 +1,8 @@
 package datadog.trace.common.writer;
 
 import datadog.opentracing.DDSpan;
-import datadog.trace.common.Service;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -43,11 +41,6 @@ public class ListWriter extends CopyOnWriteArrayList<List<DDSpan>> implements Wr
     if (!latch.await(5, TimeUnit.SECONDS)) {
       throw new TimeoutException("Timeout waiting for " + number + " trace(s).");
     }
-  }
-
-  @Override
-  public void writeServices(final Map<String, Service> services) {
-    throw new UnsupportedOperationException();
   }
 
   @Override

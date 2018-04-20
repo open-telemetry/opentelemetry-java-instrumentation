@@ -3,7 +3,6 @@ import datadog.opentracing.DDSpan
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
-import datadog.trace.common.Service
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.DDApi
@@ -66,18 +65,6 @@ class DDApiIntegrationTest {
       [[], []]                                                                            | 2
       [[new DDSpan(1, CONTEXT)]]                                                          | 3
       [[new DDSpan(TimeUnit.MILLISECONDS.toMicros(System.currentTimeMillis()), CONTEXT)]] | 4
-    }
-
-    def "Sending services succeeds"() {
-      expect:
-      api.sendServices(services)
-      endpoint.get() == null
-      agentResponse.get() == null
-
-      where:
-      services                                                     | _
-      [:]                                                          | _
-      ['app': new Service("name", "appName", Service.AppType.WEB)] | _
     }
 
     @Unroll
