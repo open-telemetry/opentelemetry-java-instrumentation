@@ -215,7 +215,7 @@ public class DDTracer implements io.opentracing.Tracer {
 
     final Codec<T> codec = registry.get(format);
     if (codec == null) {
-      log.warn("Unsupported format for propagation - {}", format.getClass().getName());
+      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
     } else {
       codec.inject((DDSpanContext) spanContext, carrier);
     }
@@ -225,7 +225,7 @@ public class DDTracer implements io.opentracing.Tracer {
   public <T> SpanContext extract(final Format<T> format, final T carrier) {
     final Codec<T> codec = registry.get(format);
     if (codec == null) {
-      log.warn("Unsupported format for propagation - {}", format.getClass().getName());
+      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
     } else {
       return codec.extract(carrier);
     }
