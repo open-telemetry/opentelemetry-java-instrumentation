@@ -148,4 +148,20 @@ class PendingTraceTest extends Specification {
     otherTrace.weakReferences.size() == 0
     otherTrace.asList() == []
   }
+
+
+  def "child spans created after trace written" () {
+    setup:
+    rootSpan.finish()
+    // this shouldn't happen, but it's possible users of the api
+    // may incorrectly add spans after the trace is reported.
+    // in those cases we should still decrement the pending trace count
+    DDSpan childSpan = tracer.buildSpan("child").asChildOf(rootSpan).start()
+    childSpan.finish()
+
+    expect:
+    trace.pendingReferenceCount.get() == 0
+    trace.asList() == [rootSpan]
+    writer == [[rootSpan]]
+  }
 }
