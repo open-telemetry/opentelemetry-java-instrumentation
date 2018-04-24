@@ -143,9 +143,6 @@ class RatpackTest extends AgentTestRunner {
   }
 
   def "test path call using ratpack http client"() {
-    /*
-    This test is somewhat convoluted and it raises some questions about how this is supposed to work
-     */
     setup:
 
     def external = GroovyEmbeddedApp.ratpack {
@@ -185,10 +182,9 @@ class RatpackTest extends AgentTestRunner {
     resp.code() == 200
     resp.body().string() == "success"
 
-    // 3rd is the three traces, ratpack, http client 2 and http client 1  - I would have expected client 1 and then 2
+    // 3rd is the three traces, ratpack, http client 2 and http client 1
     // 2nd is nested2 from the external server (the result of the 2nd internal http client call)
     // 1st is nested from the external server (the result of the 1st internal http client call)
-    // I am not sure if this is correct
     TEST_WRITER.size() == 3
     def trace = TEST_WRITER.get(2)
     trace.size() == 3
@@ -207,9 +203,7 @@ class RatpackTest extends AgentTestRunner {
     span.context().tags["thread.name"] != null
     span.context().tags["thread.id"] != null
 
-    //def trace2 = writer.get(1)
-    //trace2.size() == 1
-    def clientTrace1 = trace[1] // this is in reverse order - should the 2nd http call occur before the first
+    def clientTrace1 = trace[1] // Second http client call that receives the 'ess' of Success
 
     clientTrace1.context().serviceName == "unnamed-java-app"
     clientTrace1.context().operationName == "ratpack.client-request"
@@ -222,7 +216,7 @@ class RatpackTest extends AgentTestRunner {
     clientTrace1.context().tags["thread.name"] != null
     clientTrace1.context().tags["thread.id"] != null
 
-    def clientTrace2 = trace[2]
+    def clientTrace2 = trace[2] // First http client call that receives the 'Succ' of Success
 
     clientTrace2.context().serviceName == "unnamed-java-app"
     clientTrace2.context().operationName == "ratpack.client-request"
@@ -237,7 +231,7 @@ class RatpackTest extends AgentTestRunner {
 
     def nestedTrace = TEST_WRITER.get(1)
     nestedTrace.size() == 1
-    def nestedSpan = nestedTrace[0]
+    def nestedSpan = nestedTrace[0] // simulated external system, second call
 
     nestedSpan.context().serviceName == "unnamed-java-app"
     nestedSpan.context().operationName == "ratpack.handler"
@@ -254,7 +248,7 @@ class RatpackTest extends AgentTestRunner {
 
     def nestedTrace2 = TEST_WRITER.get(0)
     nestedTrace2.size() == 1
-    def nestedSpan2 = nestedTrace2[0]
+    def nestedSpan2 = nestedTrace2[0] // simulated external system, first call
 
     nestedSpan2.context().serviceName == "unnamed-java-app"
     nestedSpan2.context().operationName == "ratpack.handler"
