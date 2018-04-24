@@ -28,12 +28,18 @@ public class RatpackHttpClientAdvice {
 
     @Override
     public void execute(RequestSpec requestSpec) throws Exception {
-      requestAction.execute(
-          new WrappedRequestSpec(
-              requestSpec,
-              GlobalTracer.get(),
-              GlobalTracer.get().scopeManager().active(),
-              spanRef));
+      WrappedRequestSpec wrappedRequestSpec;
+      if (requestSpec instanceof WrappedRequestSpec) {
+        wrappedRequestSpec = (WrappedRequestSpec) requestSpec;
+      } else {
+        wrappedRequestSpec =
+            new WrappedRequestSpec(
+                requestSpec,
+                GlobalTracer.get(),
+                GlobalTracer.get().scopeManager().active(),
+                spanRef);
+      }
+      requestAction.execute(wrappedRequestSpec);
     }
   }
 
