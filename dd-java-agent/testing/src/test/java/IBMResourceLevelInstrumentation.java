@@ -14,7 +14,7 @@ public class IBMResourceLevelInstrumentation extends Instrumenter.Configurable {
   }
 
   @Override
-  protected AgentBuilder apply(AgentBuilder agentBuilder) {
+  protected AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(named("com.ibm.as400.resource.ResourceLevel"))
         .transform(DDTransformers.defaultTransformers())

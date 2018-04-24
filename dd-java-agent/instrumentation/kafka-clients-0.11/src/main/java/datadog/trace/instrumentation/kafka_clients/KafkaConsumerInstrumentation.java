@@ -71,7 +71,9 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Configurabl
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) Iterable<ConsumerRecord> iterable) {
-      iterable = new TracingIterable(iterable, "kafka.consume", ConsumeScopeAction.INSTANCE);
+      if (iterable != null) {
+        iterable = new TracingIterable(iterable, "kafka.consume", ConsumeScopeAction.INSTANCE);
+      }
     }
   }
 
@@ -79,9 +81,11 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Configurabl
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) Iterator<ConsumerRecord> iterator) {
-      iterator =
-          new TracingIterable.TracingIterator(
-              iterator, "kafka.consume", ConsumeScopeAction.INSTANCE);
+      if (iterator != null) {
+        iterator =
+            new TracingIterable.TracingIterator(
+                iterator, "kafka.consume", ConsumeScopeAction.INSTANCE);
+      }
     }
   }
 

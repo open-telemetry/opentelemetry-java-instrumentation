@@ -112,11 +112,11 @@ public class KafkaStreamsProcessorInstrumentation {
               DDAdvice.create()
                   .advice(
                       isMethod().and(isPublic()).and(named("process")).and(takesArguments(0)),
-                      StartSpanAdvice.class.getName()))
+                      StopSpanAdvice.class.getName()))
           .asDecorator();
     }
 
-    public static class StartSpanAdvice {
+    public static class StopSpanAdvice {
 
       @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
       public static void stopSpan(@Advice.Thrown final Throwable throwable) {

@@ -61,6 +61,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Configurable {
       return CallDepthThreadLocalMap.get(Connection.class).incrementCallDepth();
     }
 
+    // Since we're instrumenting the constructor, we can't add onThrowable.
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void constructorExit(
         @Advice.Enter final int depth, @Advice.This final Connection connection)
