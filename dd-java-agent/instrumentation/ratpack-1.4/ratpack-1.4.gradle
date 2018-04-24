@@ -1,0 +1,50 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "io.ratpack"
+  module = 'ratpack'
+  versions = "[1.4.0,)"
+  verifyPresent = [
+    "ratpack.path.PathBinding": "getDescription",
+  ]
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+/*
+Here we introduce a sourceSet for the java 8 code which needs to be compiled with a source and target of 1.8
+The instrumentation classes must be compiled with java 7 and do nothing when ratpack is not on the classpath. The
+java 8 classes are used lazily so there is no direct linking between the 1.7 and 1.8 bytecode.
+*/
+sourceSets {
+  main_java8 {
+    java.srcDirs "${project.projectDir}/src/main/java8"
+  }
+}
+
+compileMain_java8Java {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
+dependencies {
+  main_java8CompileOnly group: 'io.ratpack', name: 'ratpack-core', version: '1.4.0'
+
+  main_java8Compile project(':dd-trace-ot')
+  main_java8Compile project(':dd-java-agent:agent-tooling')
+
+  main_java8Compile deps.bytebuddy
+  main_java8Compile deps.opentracing
+  main_java8Compile deps.autoservice
+
+  compileOnly sourceSets.main_java8.compileClasspath
+
+  compile sourceSets.main_java8.output
+
+  testCompile project(':dd-java-agent:testing')
+  testCompile group: 'io.ratpack', name: 'ratpack-test', version: '1.4.0'
+
+  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+}
+
+testJava8Only += '**/RatpackTest.class'
