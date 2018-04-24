@@ -158,7 +158,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   public void setSamplingPriority(final int newPriority) {
     if (samplingPriorityLocked) {
-      log.warn(
+      log.debug(
           "samplingPriority locked at {}. Refusing to set to {}", samplingPriority, newPriority);
     } else {
       synchronized (this) {
@@ -258,7 +258,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         try {
           decorator.afterSetTag(this, tag, value);
         } catch (final Throwable ex) {
-          log.warn(
+          log.debug(
               "Could not decorate the span decorator={}: {}",
               decorator.getClass().getSimpleName(),
               ex.getMessage());

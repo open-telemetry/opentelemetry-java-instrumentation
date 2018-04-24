@@ -41,7 +41,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
 
   public void registerSpan(final DDSpan span) {
     if (span.context().getTraceId() != traceId) {
-      log.warn("{} - span registered for wrong trace ({})", span, traceId);
+      log.debug("{} - span registered for wrong trace ({})", span, traceId);
       return;
     }
     synchronized (span) {
@@ -58,7 +58,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
 
   private void expireSpan(final DDSpan span) {
     if (span.context().getTraceId() != traceId) {
-      log.warn("{} - span expired for wrong trace ({})", span, traceId);
+      log.debug("{} - span expired for wrong trace ({})", span, traceId);
       return;
     }
     synchronized (span) {
@@ -79,7 +79,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       return;
     }
     if (traceId != span.getTraceId()) {
-      log.warn("{} - added to a mismatched trace.", span);
+      log.debug("{} - added to a mismatched trace.", span);
       return;
     }
 
