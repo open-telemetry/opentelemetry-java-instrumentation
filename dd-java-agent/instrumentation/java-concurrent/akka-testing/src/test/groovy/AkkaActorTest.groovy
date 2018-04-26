@@ -3,9 +3,6 @@ import datadog.trace.agent.test.AgentTestRunner
 import spock.lang.Unroll
 
 class AkkaActorTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.java_concurrent.enabled", "true")
-  }
 
   @Override
   void afterTest() {
