@@ -33,7 +33,8 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Configurable 
         .transform(
             new HelperInjector(
                 "datadog.trace.instrumentation.jaxrs.ClientTracingFeature",
-                "datadog.trace.instrumentation.jaxrs.ClientTracingFilter"))
+                "datadog.trace.instrumentation.jaxrs.ClientTracingFilter",
+                "datadog.trace.instrumentation.jaxrs.InjectAdapter"))
         .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
