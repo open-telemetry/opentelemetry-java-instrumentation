@@ -1,12 +1,11 @@
 apply plugin: 'version-scan'
 
 versionScan {
-  group = "org.eclipse.jetty.server"
-  module = 'org.eclipse.jetty.server-Handler'
+  group = "org.eclipse.jetty"
+  module = 'jetty-server'
   versions = "[8.0.0.v20110901,)"
-  verifyPresent = [
-    "javax.servlet.AsyncEvent"   : null,
-    "javax.servlet.AsyncListener": null,
+  verifyMissing = [
+    "org.eclipse.jetty.server.AsyncContext",
   ]
 }
 
@@ -29,6 +28,5 @@ dependencies {
   testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.0.0.v20110901'
   testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.0.0.v20110901'
 
-  testCompile project(':dd-java-agent:instrumentation:okhttp-3') // used in the tests
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
 }

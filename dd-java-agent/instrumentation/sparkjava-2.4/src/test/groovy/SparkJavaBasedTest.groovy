@@ -1,10 +1,11 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import spark.Spark
+import spark.embeddedserver.jetty.JettyHandler
 import spock.lang.Timeout
-
 
 @Timeout(20)
 class SparkJavaBasedTest extends AgentTestRunner {
@@ -13,45 +14,46 @@ class SparkJavaBasedTest extends AgentTestRunner {
     System.setProperty("dd.integration.jetty.enabled", "true")
     System.setProperty("dd.integration.sparkjava.enabled", "true")
   }
+  static final int PORT = TestUtils.randomOpenPort()
+
+  OkHttpClient client = new OkHttpClient.Builder()
+  // Uncomment when debugging:
+//    .connectTimeout(1, TimeUnit.HOURS)
+//    .writeTimeout(1, TimeUnit.HOURS)
+//    .readTimeout(1, TimeUnit.HOURS)
+    .build()
 
   def setupSpec() {
-    TestSparkJavaApplication.initSpark()
+    TestSparkJavaApplication.initSpark(PORT)
   }
 
   def cleanupSpec() {
     Spark.stop()
   }
 
-  def setup() {
-    TEST_WRITER.start()
-  }
-
-  private int port = 4567
-  OkHttpClient client = new OkHttpClient.Builder().build()
-
   def "valid response"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$port/")
+      .url("http://localhost:$PORT/")
       .get()
       .build()
     def response = client.newCall(request).execute()
 
     expect:
-    port != 0
+    PORT != 0
     response.body().string() == "Hello World"
   }
 
   def "valid response with registered trace"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$port/")
+      .url("http://localhost:$PORT/")
       .get()
       .build()
     def response = client.newCall(request).execute()
 
     expect:
-    port != 0
+    PORT != 0
     response.body().string() == "Hello World"
 
     and:
@@ -63,7 +65,7 @@ class SparkJavaBasedTest extends AgentTestRunner {
   def "generates spans"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$port/param/asdf1234")
+      .url("http://localhost:$PORT/param/asdf1234")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -75,22 +77,24 @@ class SparkJavaBasedTest extends AgentTestRunner {
 
     def trace = TEST_WRITER.firstTrace()
     trace.size() == 1
-    def spanContext = trace[0].context()
-
-    spanContext.operationName == "jetty.request"
-    spanContext.resourceName == "GET /param/:param/"
-    spanContext.spanType == DDSpanTypes.WEB_SERVLET
-    !spanContext.getErrorFlag()
-    spanContext.parentId == 0
-    spanContext.tags["http.url"] == "http://localhost:$port/param/asdf1234/"
-    spanContext.tags["http.method"] == "GET"
-    spanContext.tags["span.kind"] == "server"
-    spanContext.tags["span.type"] == "web"
-    spanContext.tags["component"] == "java-web-servlet"
-    spanContext.tags["http.status_code"] == 200
-    spanContext.tags["thread.name"] != null
-    spanContext.tags["thread.id"] != null
-    spanContext.tags.size() == 8
+    def context = trace[0].context()
+    context.serviceName == "unnamed-java-app"
+    context.operationName == "jetty.request"
+    context.resourceName == "GET /param/:param"
+    context.spanType == DDSpanTypes.WEB_SERVLET
+    !context.getErrorFlag()
+    context.parentId == 0
+    def tags = context.tags
+    tags["http.url"] == "http://localhost:$PORT/param/asdf1234"
+    tags["http.method"] == "GET"
+    tags["span.kind"] == "server"
+    tags["span.type"] == "web"
+    tags["component"] == "jetty-handler"
+    tags["http.status_code"] == 200
+    tags["thread.name"] != null
+    tags["thread.id"] != null
+    tags["span.origin.type"] == JettyHandler.name
+    tags.size() == 9
   }
 
 }

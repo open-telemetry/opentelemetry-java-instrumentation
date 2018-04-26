@@ -15,7 +15,7 @@ import spock.lang.Unroll
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
-@Timeout(1)
+@Timeout(10)
 class ScopeManagerTest extends Specification {
   def writer = new ListWriter()
   def tracer = new DDTracer(writer)

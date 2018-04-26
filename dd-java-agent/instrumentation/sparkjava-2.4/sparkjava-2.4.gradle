@@ -1,0 +1,34 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "com.sparkjava"
+  module = 'spark-core'
+  versions = "[2.4,)"
+  verifyPresent = [
+    "spark.route.Routes": null
+  ]
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+testJava8Minimum += '**/SparkJavaBasedTest.class'
+
+compileTestJava {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+
+dependencies {
+  compileOnly group: 'com.sparkjava', name: 'spark-core', version: '2.4'
+
+  compile project(':dd-java-agent:agent-tooling')
+  compile deps.bytebuddy
+  compile deps.opentracing
+  compile deps.autoservice
+
+  testCompile project(':dd-java-agent:instrumentation:jetty-8')
+  testCompile project(':dd-java-agent:testing')
+
+  testCompile group: 'com.sparkjava', name: 'spark-core', version: '2.4'
+  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+}

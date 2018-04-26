@@ -2,7 +2,12 @@ package datadog.trace.instrumentation.jetty8;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static net.bytebuddy.matcher.ElementMatchers.*;
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
@@ -45,8 +50,10 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
-            not(isInterface()).and(hasSuperType(named("org.eclipse.jetty.server.Handler"))),
-            classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"))
+            not(isInterface())
+                .and(hasSuperType(named("org.eclipse.jetty.server.Handler")))
+                .and(not(named("org.eclipse.jetty.server.handler.HandlerWrapper"))),
+            not(classLoaderHasClasses("org.eclipse.jetty.server.AsyncContext")))
         .transform(
             new HelperInjector(
                 "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter",
@@ -60,10 +67,10 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
             DDAdvice.create()
                 .advice(
                     named("handle")
-                        .and(takesArgument(0, named("String")))
+                        .and(takesArgument(0, named("java.lang.String")))
                         .and(takesArgument(1, named("org.eclipse.jetty.server.Request")))
-                        .and(takesArgument(2, named("javax.servlet.HttpServletRequest")))
-                        .and(takesArgument(3, named("javax.servlet.HttpServletResponse")))
+                        .and(takesArgument(2, named("javax.servlet.http.HttpServletRequest")))
+                        .and(takesArgument(3, named("javax.servlet.http.HttpServletResponse")))
                         .and(isPublic()),
                     HandlerInstrumentationAdvice.class.getName()))
         .asDecorator();
@@ -73,7 +80,8 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
-        @Advice.Argument(0) final String target, @Advice.Argument(2) final HttpServletRequest req) {
+        @Advice.This final Object source, @Advice.Argument(2) final HttpServletRequest req) {
+
       if (GlobalTracer.get().activeSpan() != null) {
         // Tracing might already be applied.  If so ignore this.
         return null;
@@ -82,18 +90,19 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
       final SpanContext extractedContext =
           GlobalTracer.get()
               .extract(Format.Builtin.HTTP_HEADERS, new HttpServletRequestExtractAdapter(req));
-      final String resourceName = req.getMethod() + target;
+      final String resourceName = req.getMethod() + " " + source.getClass().getName();
       final Scope scope =
           GlobalTracer.get()
               .buildSpan(SERVLET_OPERATION_NAME)
               .asChildOf(extractedContext)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
-              .withTag("span.origin.type", HandlerInstrumentationAdvice.class.getName())
-              .withTag(DDTags.RESOURCE_NAME, resourceName)
+              .withTag("span.origin.type", source.getClass().getName())
               .startActive(false);
 
       ServletFilterSpanDecorator.STANDARD_TAGS.onRequest(req, scope.span());
+      Tags.COMPONENT.set(scope.span(), "jetty-handler");
+      scope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
       return scope;
     }
 
@@ -103,6 +112,7 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
         @Advice.Argument(3) final HttpServletResponse resp,
         @Advice.Enter final Scope scope,
         @Advice.Thrown final Throwable throwable) {
+
       if (scope != null) {
         final Span span = scope.span();
         if (throwable != null) {

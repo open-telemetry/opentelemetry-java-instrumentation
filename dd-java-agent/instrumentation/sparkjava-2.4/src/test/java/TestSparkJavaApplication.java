@@ -2,8 +2,8 @@ import spark.Spark;
 
 public class TestSparkJavaApplication {
 
-  public static void initSpark() {
-    Spark.port(4567);
+  public static void initSpark(final int port) {
+    Spark.port(port);
     Spark.get("/", (req, res) -> "Hello World");
 
     Spark.get("/param/:param", (req, res) -> "Hello " + req.params("param"));
@@ -13,6 +13,7 @@ public class TestSparkJavaApplication {
         (req, res) -> {
           throw new RuntimeException(req.params("param"));
         });
+
     Spark.awaitInitialization();
   }
 }

@@ -9,7 +9,7 @@ import spock.lang.Timeout
 
 import java.lang.reflect.Field
 
-@Timeout(1)
+@Timeout(10)
 class ShadowPackageRenamingTest extends Specification {
   def "agent dependencies renamed"() {
     setup:
