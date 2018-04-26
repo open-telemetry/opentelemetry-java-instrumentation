@@ -14,7 +14,7 @@ ext {
     groovy     : groovyVer,
     junit      : "4.12",
     logback    : "1.2.3",
-    bytebuddy  : "1.8.1",
+    bytebuddy  : "1.8.8",
   ]
 
   deps = [
