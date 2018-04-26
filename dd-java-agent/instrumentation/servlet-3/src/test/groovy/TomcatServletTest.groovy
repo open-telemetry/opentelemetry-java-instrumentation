@@ -16,7 +16,7 @@ import spock.lang.Unroll
 
 import java.lang.reflect.Field
 
-@Timeout(5)
+@Timeout(15)
 class TomcatServletTest extends AgentTestRunner {
 
   static final int PORT = TestUtils.randomOpenPort()
