@@ -33,7 +33,7 @@ class CassandraClientTest extends AgentTestRunner {
     def query = "SELECT * FROM sync_test.users where name = 'alice' ALLOW FILTERING"
 
     expect:
-    session.getClass().getName().endsWith("contrib.cassandra.TracingSession")
+    session.getClass().getName().endsWith("cassandra.TracingSession")
     TEST_WRITER.size() == 5
     final DDSpan selectTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
 
@@ -72,7 +72,7 @@ class CassandraClientTest extends AgentTestRunner {
     def query = "SELECT * FROM async_test.users where name = 'alice' ALLOW FILTERING"
 
     expect:
-    session.getClass().getName().endsWith("contrib.cassandra.TracingSession")
+    session.getClass().getName().endsWith("cassandra.TracingSession")
     final DDSpan selectTrace = TEST_WRITER.get(TEST_WRITER.size() - 1).get(0)
 
     selectTrace.getServiceName() == "cassandra"

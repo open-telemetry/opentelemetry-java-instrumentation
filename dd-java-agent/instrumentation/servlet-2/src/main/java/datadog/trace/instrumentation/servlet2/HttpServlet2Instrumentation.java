@@ -20,7 +20,6 @@ import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
-import io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
@@ -37,10 +36,8 @@ public final class HttpServlet2Instrumentation extends Instrumenter.Configurable
   public static final String SERVLET_OPERATION_NAME = "servlet.request";
   static final HelperInjector SERVLET2_HELPER_INJECTOR =
       new HelperInjector(
-          "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter",
-          "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
-          "datadog.trace.instrumentation.servlet2.ServletFilterSpanDecorator",
-          "datadog.trace.instrumentation.servlet2.ServletFilterSpanDecorator$1");
+          "datadog.trace.instrumentation.servlet2.HttpServletRequestExtractAdapter",
+          "datadog.trace.instrumentation.servlet2.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator");
 
   public HttpServlet2Instrumentation() {
     super("servlet", "servlet-2");
@@ -71,18 +68,15 @@ public final class HttpServlet2Instrumentation extends Instrumenter.Configurable
   public static class HttpServlet2Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(@Advice.Argument(0) final ServletRequest req) {
-      if (GlobalTracer.get().scopeManager().active() != null
-          || !(req instanceof HttpServletRequest)) {
+    public static Scope startSpan(@Advice.Argument(0) final HttpServletRequest req) {
+      if (GlobalTracer.get().scopeManager().active() != null) {
         // doFilter is called by each filter. We only want to time outer-most.
         return null;
       }
 
       final SpanContext extractedContext =
           GlobalTracer.get()
-              .extract(
-                  Format.Builtin.HTTP_HEADERS,
-                  new HttpServletRequestExtractAdapter((HttpServletRequest) req));
+              .extract(Format.Builtin.HTTP_HEADERS, new HttpServletRequestExtractAdapter(req));
 
       final Scope scope =
           GlobalTracer.get()
@@ -92,7 +86,10 @@ public final class HttpServlet2Instrumentation extends Instrumenter.Configurable
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
               .startActive(true);
 
-      ServletFilterSpanDecorator.STANDARD_TAGS.onRequest((HttpServletRequest) req, scope.span());
+      final Span span = scope.span();
+      Tags.COMPONENT.set(span, "java-web-servlet");
+      Tags.HTTP_METHOD.set(span, req.getMethod());
+      Tags.HTTP_URL.set(span, req.getRequestURL().toString());
       return scope;
     }
 
@@ -110,10 +107,12 @@ public final class HttpServlet2Instrumentation extends Instrumenter.Configurable
           final HttpServletResponse resp = (HttpServletResponse) response;
 
           if (throwable != null) {
-            ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, throwable, span);
+            Tags.ERROR.set(span, Boolean.TRUE);
             span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
           } else {
-            ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(req, resp, span);
+            Tags.COMPONENT.set(span, "java-web-servlet");
+            Tags.HTTP_METHOD.set(span, req.getMethod());
+            Tags.HTTP_URL.set(span, req.getRequestURL().toString());
           }
         }
         scope.close();

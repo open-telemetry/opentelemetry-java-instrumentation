@@ -62,9 +62,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   @Override
   public void beforeRequest(final Request<?> request) {
     final Tracer.SpanBuilder spanBuilder =
-        tracer
-            .buildSpan(request.getServiceName())
-            .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
+        tracer.buildSpan("aws.command").withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
 
     if (parentContext != null) {
       spanBuilder.asChildOf(parentContext);

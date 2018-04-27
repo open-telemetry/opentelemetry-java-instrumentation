@@ -19,9 +19,6 @@ testJava8Only += '**/OkHttp3Test.class'
 
 dependencies {
   compileOnly group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'
-  compile('io.opentracing.contrib:opentracing-okhttp3:0.1.0') {
-    transitive = false
-  }
 
   compile project(':dd-java-agent:agent-tooling')
 

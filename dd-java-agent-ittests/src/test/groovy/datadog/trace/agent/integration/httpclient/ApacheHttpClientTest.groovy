@@ -66,10 +66,10 @@ class ApacheHttpClientTest extends Specification {
     final DDSpan localSpan = clientTrace.get(1)
     localSpan.getType() == null
     localSpan.getTags()[Tags.COMPONENT.getKey()] == "apache-httpclient"
-    localSpan.getOperationName() == "GET"
+    localSpan.getOperationName() == "http.request"
 
     final DDSpan clientSpan = clientTrace.get(2)
-    clientSpan.getOperationName() == "GET"
+    clientSpan.getOperationName() == "http.request"
     clientSpan.getType() == DDSpanTypes.HTTP_CLIENT
     clientSpan.getTags()[Tags.HTTP_METHOD.getKey()] == "GET"
     clientSpan.getTags()[Tags.HTTP_STATUS.getKey()] == 200
@@ -111,10 +111,10 @@ class ApacheHttpClientTest extends Specification {
     // our instrumentation makes 2 spans for apache-httpclient
     final DDSpan localSpan = clientTrace.get(1)
     localSpan.getTags()[Tags.COMPONENT.getKey()] == "apache-httpclient"
-    localSpan.getOperationName() == "GET"
+    localSpan.getOperationName() == "http.request"
 
     final DDSpan clientSpan = clientTrace.get(2)
-    clientSpan.getOperationName() == "GET"
+    clientSpan.getOperationName() == "http.request"
     clientSpan.getTags()[Tags.HTTP_METHOD.getKey()] == "GET"
     clientSpan.getTags()[Tags.HTTP_STATUS.getKey()] == 200
     clientSpan.getTags()[Tags.HTTP_URL.getKey()] == "http://localhost:" + TestHttpServer.getPort()

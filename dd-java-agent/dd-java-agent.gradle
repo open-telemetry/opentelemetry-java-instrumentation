@@ -12,8 +12,6 @@ jacocoTestReport.dependsOn ':dd-java-agent-ittests:test'
 whitelistedInstructionClasses += whitelistedBranchClasses += [
   'datadog.agent.*',
   'datadog.agent.decorators.*',
-  'io.opentracing.contrib.*',
-  'dd.opentracing.contrib.*',
 ]
 
 /*

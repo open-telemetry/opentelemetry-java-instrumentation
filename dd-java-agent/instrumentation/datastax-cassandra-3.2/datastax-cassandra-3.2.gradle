@@ -8,25 +8,9 @@ versionScan {
   group = "com.datastax.cassandra"
   module = "cassandra-driver-core"
   versions = "[3.2.0,)"
-//  verifyPresent = [
-//    // class we're advising
-//    'com.datastax.driver.core.Cluster$Manager'          : null,
-//    // used by TracingSession
-//    'com.datastax.driver.core.BoundStatement'           : null,
-//    'com.datastax.driver.core.BoundStatement'           : null,
-//    'com.datastax.driver.core.CloseFuture'              : null,
-//    'com.datastax.driver.core.Cluster'                  : null,
-//    'com.datastax.driver.core.Host'                     : null,
-//    'com.datastax.driver.core.PreparedStatement'        : null,
-//    'com.datastax.driver.core.RegularStatement'         : null,
-//    'com.datastax.driver.core.ResultSet'                : null,
-//    'com.datastax.driver.core.ResultSetFuture'          : null,
-//    'com.datastax.driver.core.Session'                  : null,
-//    'com.datastax.driver.core.Statement'                : null,
-//    'com.google.common.base.Function'                   : null,
-//    'com.google.common.util.concurrent.Futures'         : null,
-//    'com.google.common.util.concurrent.ListenableFuture': null
-//  ]
+  verifyPresent = [
+    "com.datastax.driver.core.Duration": null,
+  ]
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
@@ -36,9 +20,6 @@ testJava8Only += '**/CassandraClientTest.class'
 
 dependencies {
   compileOnly group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.2.0'
-  compile('io.opentracing.contrib:opentracing-cassandra-driver:0.0.3') {
-    transitive = false
-  }
 
   compile project(':dd-java-agent:agent-tooling')
 
