@@ -98,9 +98,9 @@ class AWSClientTest extends AgentTestRunner {
     and: // span 0 - from apache-httpclient instrumentation
     def span1 = trace[0]
 
-    span1.context().operationName == "PUT"
+    span1.context().operationName == "http.request"
     span1.serviceName == "unnamed-java-app"
-    span1.resourceName == "PUT"
+    span1.resourceName == "http.request"
     span1.type == null
     !span1.context().getErrorFlag()
     span1.context().parentId == 0
@@ -115,7 +115,7 @@ class AWSClientTest extends AgentTestRunner {
     and: // span 1 - from aws instrumentation
     def span2 = trace[1]
 
-    span2.context().operationName == "PUT"
+    span2.context().operationName == "http.request"
     span2.serviceName == "unnamed-java-app"
     span2.resourceName == "PUT /testbucket/"
     span2.type == "http"

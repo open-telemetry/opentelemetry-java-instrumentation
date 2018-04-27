@@ -19,7 +19,6 @@ import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
-import io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
@@ -85,7 +84,10 @@ public final class FilterChain2Instrumentation extends Instrumenter.Configurable
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
               .startActive(true);
 
-      ServletFilterSpanDecorator.STANDARD_TAGS.onRequest((HttpServletRequest) req, scope.span());
+      final Span span = scope.span();
+      Tags.COMPONENT.set(span, "java-web-servlet");
+      Tags.HTTP_METHOD.set(span, ((HttpServletRequest) req).getMethod());
+      Tags.HTTP_URL.set(span, ((HttpServletRequest) req).getRequestURL().toString());
       return scope;
     }
 
@@ -103,10 +105,12 @@ public final class FilterChain2Instrumentation extends Instrumenter.Configurable
           final HttpServletResponse resp = (HttpServletResponse) response;
 
           if (throwable != null) {
-            ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, throwable, span);
+            Tags.ERROR.set(span, Boolean.TRUE);
             span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
           } else {
-            ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(req, resp, span);
+            Tags.COMPONENT.set(span, "java-web-servlet");
+            Tags.HTTP_METHOD.set(span, req.getMethod());
+            Tags.HTTP_URL.set(span, req.getRequestURL().toString());
           }
         }
         scope.close();

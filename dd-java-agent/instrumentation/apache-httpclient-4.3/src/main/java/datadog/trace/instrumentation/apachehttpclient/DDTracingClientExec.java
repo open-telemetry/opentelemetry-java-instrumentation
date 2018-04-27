@@ -34,6 +34,7 @@ import org.apache.http.impl.execchain.ClientExecChain;
 @Slf4j
 public class DDTracingClientExec implements ClientExecChain {
   private static final String COMPONENT_NAME = "apache-httpclient";
+  private static final String OPERATION_NAME = "http.request";
   /**
    * Id of {@link HttpClientContext#setAttribute(String, Object)} representing span associated with
    * the current client processing. Referenced span is local span not a span representing HTTP
@@ -108,9 +109,7 @@ public class DDTracingClientExec implements ClientExecChain {
   private Scope createLocalScope(
       final HttpRequest httpRequest, final HttpClientContext clientContext) {
     final Tracer.SpanBuilder spanBuilder =
-        tracer
-            .buildSpan(httpRequest.getRequestLine().getMethod())
-            .withTag(Tags.COMPONENT.getKey(), COMPONENT_NAME);
+        tracer.buildSpan(OPERATION_NAME).withTag(Tags.COMPONENT.getKey(), COMPONENT_NAME);
 
     final Scope scope = spanBuilder.startActive(true);
     clientContext.setAttribute(ACTIVE_SPAN, scope);
@@ -133,7 +132,7 @@ public class DDTracingClientExec implements ClientExecChain {
       try {
         networkScope =
             tracer
-                .buildSpan(request.getMethod())
+                .buildSpan(OPERATION_NAME)
                 .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
                 .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
                 .asChildOf(parentScope.span())
@@ -157,7 +156,7 @@ public class DDTracingClientExec implements ClientExecChain {
           Tags.PEER_PORT.set(networkSpan, uri.getPort() == -1 ? 80 : uri.getPort());
           Tags.PEER_HOSTNAME.set(networkSpan, uri.getHost());
         }
-      } catch (Exception e) {
+      } catch (final Exception e) {
         log.debug("failed to create network span", e);
       }
 
@@ -169,7 +168,7 @@ public class DDTracingClientExec implements ClientExecChain {
         if (null != networkSpan) {
           Tags.HTTP_STATUS.set(networkSpan, response.getStatusLine().getStatusCode());
         }
-      } catch (Exception e) {
+      } catch (final Exception e) {
         log.debug("failed to set network span status", e);
       }
 

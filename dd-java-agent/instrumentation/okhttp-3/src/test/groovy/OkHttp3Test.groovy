@@ -41,9 +41,9 @@ class OkHttp3Test extends AgentTestRunner {
     and: // span 0
     def span1 = trace[0]
 
-    span1.context().operationName == "GET"
+    span1.context().operationName == "http.request"
     span1.serviceName == "unnamed-java-app"
-    span1.resourceName == "GET"
+    span1.resourceName == "http.request"
     span1.type == null
     !span1.context().getErrorFlag()
     span1.context().parentId == 0

@@ -30,28 +30,12 @@ public class CassandraClientInstrumentation extends Instrumenter.Configurable {
     return agentBuilder
         .type(
             named("com.datastax.driver.core.Cluster$Manager"),
-            classLoaderHasClasses(
-                "com.datastax.driver.core.BoundStatement",
-                "com.datastax.driver.core.BoundStatement",
-                "com.datastax.driver.core.CloseFuture",
-                "com.datastax.driver.core.Cluster",
-                "com.datastax.driver.core.Host",
-                "com.datastax.driver.core.PreparedStatement",
-                "com.datastax.driver.core.RegularStatement",
-                "com.datastax.driver.core.ResultSet",
-                "com.datastax.driver.core.ResultSetFuture",
-                "com.datastax.driver.core.Session",
-                "com.datastax.driver.core.Statement",
-                "com.google.common.base.Function",
-                "com.google.common.util.concurrent.Futures",
-                "com.google.common.util.concurrent.ListenableFuture"))
+            classLoaderHasClasses("com.datastax.driver.core.Duration"))
         .transform(
             new HelperInjector(
-                "io.opentracing.contrib.cassandra.TracingSession",
-                "io.opentracing.contrib.cassandra.TracingSession$1",
-                "io.opentracing.contrib.cassandra.TracingSession$2",
-                "io.opentracing.contrib.cassandra.TracingCluster",
-                "io.opentracing.contrib.cassandra.TracingCluster$1"))
+                "datadog.trace.instrumentation.datastax.cassandra.TracingSession",
+                "datadog.trace.instrumentation.datastax.cassandra.TracingSession$1",
+                "datadog.trace.instrumentation.datastax.cassandra.TracingSession$2"))
         .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
@@ -74,11 +58,13 @@ public class CassandraClientInstrumentation extends Instrumenter.Configurable {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void injectTracingSession(@Advice.Return(readOnly = false) Session session)
         throws Exception {
-      if (session.getClass().getName().endsWith("contrib.cassandra.TracingSession")) {
+      // This should cover ours and OT's TracingSession
+      if (session.getClass().getName().endsWith("cassandra.TracingSession")) {
         return;
       }
 
-      final Class<?> clazz = Class.forName("io.opentracing.contrib.cassandra.TracingSession");
+      final Class<?> clazz =
+          Class.forName("datadog.trace.instrumentation.datastax.cassandra.TracingSession");
       final Constructor<?> constructor = clazz.getDeclaredConstructor(Session.class, Tracer.class);
       constructor.setAccessible(true);
       session = (Session) constructor.newInstance(session, GlobalTracer.get());

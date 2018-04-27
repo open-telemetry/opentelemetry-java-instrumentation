@@ -18,8 +18,6 @@ import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
-import io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter;
-import io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
@@ -56,12 +54,8 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
             not(classLoaderHasClasses("org.eclipse.jetty.server.AsyncContext")))
         .transform(
             new HelperInjector(
-                "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter",
-                "io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
-                "io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator",
-                "io.opentracing.contrib.web.servlet.filter.ServletFilterSpanDecorator$1",
-                "io.opentracing.contrib.web.servlet.filter.TracingFilter",
-                "io.opentracing.contrib.web.servlet.filter.TracingFilter$1",
+                "datadog.trace.instrumentation.jetty8.HttpServletRequestExtractAdapter",
+                "datadog.trace.instrumentation.jetty8.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
                 HandlerInstrumentationAdvice.class.getName() + "$TagSettingAsyncListener"))
         .transform(
             DDAdvice.create()
@@ -100,9 +94,11 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
               .withTag("span.origin.type", source.getClass().getName())
               .startActive(false);
 
-      ServletFilterSpanDecorator.STANDARD_TAGS.onRequest(req, scope.span());
-      Tags.COMPONENT.set(scope.span(), "jetty-handler");
-      scope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
+      final Span span = scope.span();
+      Tags.HTTP_METHOD.set(span, req.getMethod());
+      Tags.HTTP_URL.set(span, req.getRequestURL().toString());
+      Tags.COMPONENT.set(span, "jetty-handler");
+      span.setTag(DDTags.RESOURCE_NAME, resourceName);
       return scope;
     }
 
@@ -116,7 +112,11 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
       if (scope != null) {
         final Span span = scope.span();
         if (throwable != null) {
-          ServletFilterSpanDecorator.STANDARD_TAGS.onError(req, resp, throwable, span);
+          if (resp.getStatus() == HttpServletResponse.SC_OK) {
+            // exception is thrown in filter chain, but status code is incorrect
+            Tags.HTTP_STATUS.set(span, 500);
+          }
+          Tags.ERROR.set(span, Boolean.TRUE);
           span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
           scope.close();
           scope.span().finish(); // Finish the span manually since finishSpanOnClose was false
@@ -125,7 +125,7 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
           // what if async is already finished? This would not be called
           req.getAsyncContext().addListener(new TagSettingAsyncListener(activated, span));
         } else {
-          ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(req, resp, span);
+          Tags.HTTP_STATUS.set(span, resp.getStatus());
           scope.close();
           scope.span().finish(); // Finish the span manually since finishSpanOnClose was false
         }
@@ -145,10 +145,8 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
       public void onComplete(final AsyncEvent event) throws IOException {
         if (activated.compareAndSet(false, true)) {
           try (Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
-            ServletFilterSpanDecorator.STANDARD_TAGS.onResponse(
-                (HttpServletRequest) event.getSuppliedRequest(),
-                (HttpServletResponse) event.getSuppliedResponse(),
-                span);
+            Tags.HTTP_STATUS.set(
+                span, ((HttpServletResponse) event.getSuppliedResponse()).getStatus());
           }
         }
       }
@@ -157,11 +155,8 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
       public void onTimeout(final AsyncEvent event) throws IOException {
         if (activated.compareAndSet(false, true)) {
           try (Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
-            ServletFilterSpanDecorator.STANDARD_TAGS.onTimeout(
-                (HttpServletRequest) event.getSuppliedRequest(),
-                (HttpServletResponse) event.getSuppliedResponse(),
-                event.getAsyncContext().getTimeout(),
-                span);
+            Tags.ERROR.set(span, Boolean.TRUE);
+            span.setTag("timeout", event.getAsyncContext().getTimeout());
           }
         }
       }
@@ -170,11 +165,12 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
       public void onError(final AsyncEvent event) throws IOException {
         if (event.getThrowable() != null && activated.compareAndSet(false, true)) {
           try (Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
-            ServletFilterSpanDecorator.STANDARD_TAGS.onError(
-                (HttpServletRequest) event.getSuppliedRequest(),
-                (HttpServletResponse) event.getSuppliedResponse(),
-                event.getThrowable(),
-                span);
+            if (((HttpServletResponse) event.getSuppliedResponse()).getStatus()
+                == HttpServletResponse.SC_OK) {
+              // exception is thrown in filter chain, but status code is incorrect
+              Tags.HTTP_STATUS.set(span, 500);
+            }
+            Tags.ERROR.set(span, Boolean.TRUE);
             span.log(Collections.singletonMap(ERROR_OBJECT, event.getThrowable()));
           }
         }
