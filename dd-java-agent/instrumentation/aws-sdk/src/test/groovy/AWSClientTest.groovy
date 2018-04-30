@@ -5,18 +5,40 @@ import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.handlers.RequestHandler2
 import com.amazonaws.regions.Regions
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder
+import com.amazonaws.services.rds.AmazonRDSClientBuilder
+import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import ratpack.http.Headers
+import spock.lang.Shared
+import spock.lang.Unroll
 
 import java.util.concurrent.atomic.AtomicReference
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
 class AWSClientTest extends AgentTestRunner {
+  @Shared
+  def credentialsProvider = new AWSStaticCredentialsProvider(new AnonymousAWSCredentials())
+  @Shared
+  def receivedHeaders = new AtomicReference<Headers>()
+  @Shared
+  def responseBody = new AtomicReference<String>()
+  @Shared
+  def server = ratpack {
+    handlers {
+      all {
+        receivedHeaders.set(request.headers)
+        response.status(200).send(responseBody.get())
+      }
+    }
+  }
+  @Shared
+  def endpoint = new AwsClientBuilder.EndpointConfiguration("http://localhost:$server.address.port", "us-west-2")
 
   def "request handler is hooked up with builder"() {
     setup:
@@ -59,33 +81,17 @@ class AWSClientTest extends AgentTestRunner {
     false      | 1
   }
 
-  def "send request with mocked back end"() {
+  @Unroll
+  def "send #operation request with mocked response"() {
     setup:
-    def receivedHeaders = new AtomicReference<Headers>()
-    def server = ratpack {
-      handlers {
-        all {
-          receivedHeaders.set(request.headers)
-          response.status(200).send("pong")
-        }
-      }
-    }
-    AwsClientBuilder.EndpointConfiguration endpoint = new AwsClientBuilder.EndpointConfiguration("http://localhost:$server.address.port", "us-west-2")
-
-    AmazonWebServiceClient client = AmazonS3ClientBuilder
-      .standard()
-      .withPathStyleAccessEnabled(true)
-      .withEndpointConfiguration(endpoint)
-      .withCredentials(new AWSStaticCredentialsProvider(new AnonymousAWSCredentials()))
-      .build()
-
-    def bucket = client.createBucket("testbucket")
+    responseBody.set(body)
+    def response = call.call(client)
 
     expect:
-    bucket != null
+    response != null
 
     client.requestHandler2s != null
-    client.requestHandler2s.size() == 1
+    client.requestHandler2s.size() == handlerCount
     client.requestHandler2s.get(0).getClass().getSimpleName() == "TracingRequestHandler"
 
     TEST_WRITER.size() == 2
@@ -110,12 +116,12 @@ class AWSClientTest extends AgentTestRunner {
     tags1["thread.id"] != null
     tags1.size() == 3
 
-    and: // span 1 - from aws instrumentation
+    and: // span 1 - from apache-httpclient instrumentation
     def span2 = trace[1]
 
     span2.context().operationName == "http.request"
     span2.serviceName == "unnamed-java-app"
-    span2.resourceName == "PUT /testbucket/"
+    span2.resourceName == "$method /$url"
     span2.type == "http"
     !span2.context().getErrorFlag()
     span2.context().parentId == span1.spanId
@@ -123,8 +129,8 @@ class AWSClientTest extends AgentTestRunner {
 
     def tags2 = span2.context().tags
     tags2[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_CLIENT
-    tags2[Tags.HTTP_METHOD.key] == "PUT"
-    tags2[Tags.HTTP_URL.key] == "http://localhost:$server.address.port/testbucket/"
+    tags2[Tags.HTTP_METHOD.key] == "$method"
+    tags2[Tags.HTTP_URL.key] == "http://localhost:$server.address.port/$url"
     tags2[Tags.PEER_HOSTNAME.key] == "localhost"
     tags2[Tags.PEER_PORT.key] == server.address.port
     tags2[DDTags.THREAD_NAME] != null
@@ -141,7 +147,7 @@ class AWSClientTest extends AgentTestRunner {
 
     span.context().operationName == "aws.http"
     span.serviceName == "java-aws-sdk"
-    span.resourceName == "PUT "
+    span.resourceName == "$service.$operation"
     span.type == "web"
     !span.context().getErrorFlag()
     span.context().parentId == 0
@@ -149,14 +155,14 @@ class AWSClientTest extends AgentTestRunner {
     def tags = span.context().tags
     tags[Tags.COMPONENT.key] == "java-aws-sdk"
     tags[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_CLIENT
-    tags[Tags.HTTP_METHOD.key] == "PUT"
+    tags[Tags.HTTP_METHOD.key] == "$method"
     tags[Tags.HTTP_URL.key] == "http://localhost:$server.address.port"
     tags[Tags.HTTP_STATUS.key] == 200
-    tags["aws.service"] == "Amazon S3"
+    tags["aws.service"] == "Amazon $service" || tags["aws.service"] == "Amazon$service"
     tags["aws.endpoint"] == "http://localhost:$server.address.port"
-    tags["aws.operation"] == "CreateBucketRequest"
+    tags["aws.operation"] == "${operation}Request"
     tags["aws.agent"] == "java-aws-sdk"
-    tags["params"] == "{}"
+    tags["params"] == params
     tags["span.type"] == "web"
     tags["thread.name"] != null
     tags["thread.id"] != null
@@ -165,7 +171,23 @@ class AWSClientTest extends AgentTestRunner {
     receivedHeaders.get().get("x-datadog-trace-id") == "$span.traceId"
     receivedHeaders.get().get("x-datadog-parent-id") == "$span.spanId"
 
-    cleanup:
-    server.close()
+    where:
+    service | operation           | method | url                  | handlerCount | call                                                                   | body               | params                                              | client
+    "S3"    | "CreateBucket"      | "PUT"  | "testbucket/"        | 1            | { client -> client.createBucket("testbucket") }                        | ""                 | "{}"                                                | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()
+    "S3"    | "GetObject"         | "GET"  | "someBucket/someKey" | 1            | { client -> client.getObject("someBucket", "someKey") }                | ""                 | "{}"                                                | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()
+    "EC2"   | "AllocateAddress"   | "POST" | ""                   | 4            | { client -> client.allocateAddress() }                                 | """
+            <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
+               <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
+               <publicIp>192.0.2.1</publicIp>
+               <domain>standard</domain>
+            </AllocateAddressResponse>
+            """ | "{Action=[AllocateAddress],Version=[2016-11-15]}"   | AmazonEC2ClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()
+    "RDS"   | "DeleteOptionGroup" | "POST" | ""                   | 5            | { client -> client.deleteOptionGroup(new DeleteOptionGroupRequest()) } | """
+        <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
+          <ResponseMetadata>
+            <RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId>
+          </ResponseMetadata>
+        </DeleteOptionGroupResponse>
+      """       | "{Action=[DeleteOptionGroup],Version=[2014-10-31]}" | AmazonRDSClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()
   }
 }
