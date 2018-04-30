@@ -5,9 +5,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import spark.Spark
 import spark.embeddedserver.jetty.JettyHandler
-import spock.lang.Timeout
 
-@Timeout(20)
 class SparkJavaBasedTest extends AgentTestRunner {
 
   static {

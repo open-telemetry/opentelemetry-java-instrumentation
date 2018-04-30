@@ -5,9 +5,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
-import spock.lang.Timeout
 
-@Timeout(15)
 class CassandraClientTest extends AgentTestRunner {
 
   def setupSpec() {

@@ -5,9 +5,7 @@ import datadog.opentracing.DDSpan
 import datadog.opentracing.SpanFactory
 import datadog.trace.common.sampling.RateByServiceSampler
 import spock.lang.Specification
-import spock.lang.Timeout
 
-@Timeout(1)
 class RateByServiceSamplerTest extends Specification {
 
   def "rate by service name"() {

@@ -11,14 +11,12 @@ import okhttp3.Request
 import okhttp3.Response
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
-import spock.lang.Timeout
 import spock.lang.Unroll
 
 import java.lang.reflect.Field
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-@Timeout(1)
 class JettyServletTest extends AgentTestRunner {
 
   static final int PORT = TestUtils.randomOpenPort()

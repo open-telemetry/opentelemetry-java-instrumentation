@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
-//@Timeout(10)
 class JaxRsClientTest extends AgentTestRunner {
   static {
     System.setProperty("dd.integration.jax-rs.enabled", "true")

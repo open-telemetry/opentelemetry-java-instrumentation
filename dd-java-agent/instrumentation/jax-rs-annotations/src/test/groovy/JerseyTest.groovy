@@ -2,9 +2,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import io.dropwizard.testing.junit.ResourceTestRule
 import org.junit.ClassRule
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class JerseyTest extends AgentTestRunner {
 
   @Shared

@@ -9,9 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.util.NestedServletException
-import spock.lang.Timeout
 
-@Timeout(5)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class SpringBootBasedTest extends AgentTestRunner {
 

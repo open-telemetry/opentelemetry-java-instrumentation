@@ -15,7 +15,6 @@ import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQMessageConsumer
 import org.hornetq.jms.client.HornetQMessageProducer
 import spock.lang.Shared
-import spock.lang.Timeout
 import spock.lang.Unroll
 
 import javax.jms.Session
@@ -23,7 +22,6 @@ import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
-@Timeout(1)
 class JMS2Test extends AgentTestRunner {
   @Shared
   static Session session

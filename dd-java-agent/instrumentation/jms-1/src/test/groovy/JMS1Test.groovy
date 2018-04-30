@@ -5,7 +5,6 @@ import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.ActiveMQMessageProducer
 import org.apache.activemq.junit.EmbeddedActiveMQBroker
 import spock.lang.Shared
-import spock.lang.Timeout
 import spock.lang.Unroll
 
 import javax.jms.Connection
@@ -14,7 +13,6 @@ import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
-@Timeout(1)
 class JMS1Test extends AgentTestRunner {
   @Shared
   static Session session
