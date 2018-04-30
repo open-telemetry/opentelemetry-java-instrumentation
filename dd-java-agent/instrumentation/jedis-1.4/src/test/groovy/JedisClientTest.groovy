@@ -6,9 +6,7 @@ import io.opentracing.tag.Tags
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
 import spock.lang.Shared
-import spock.lang.Timeout
 
-@Timeout(5)
 class JedisClientTest extends AgentTestRunner {
 
   public static final int PORT = 6399

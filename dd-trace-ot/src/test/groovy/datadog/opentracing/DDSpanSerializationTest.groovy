@@ -6,10 +6,8 @@ import datadog.trace.api.DDTags
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
-import spock.lang.Timeout
 import spock.lang.Unroll
 
-@Timeout(5)
 class DDSpanSerializationTest extends Specification {
 
   @Unroll

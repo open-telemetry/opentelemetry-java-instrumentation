@@ -9,10 +9,8 @@ import io.opentracing.propagation.TextMapExtractAdapter
 import io.opentracing.propagation.TextMapInjectAdapter
 import spock.lang.Shared
 import spock.lang.Specification
-import spock.lang.Timeout
 import spock.lang.Unroll
 
-@Timeout(1)
 class HTTPCodecTest extends Specification {
   @Shared
   private static final String OT_BAGGAGE_PREFIX = "ot-baggage-"

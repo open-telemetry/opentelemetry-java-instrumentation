@@ -3,11 +3,9 @@ package datadog.opentracing
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
-import spock.lang.Timeout
 
 import java.util.concurrent.TimeUnit
 
-@Timeout(10)
 class DDSpanTest extends Specification {
   def writer = new ListWriter()
   def tracer = new DDTracer(writer)

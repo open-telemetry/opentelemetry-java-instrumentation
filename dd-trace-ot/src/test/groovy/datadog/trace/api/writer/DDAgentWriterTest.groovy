@@ -5,13 +5,11 @@ import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.WriterQueue
 import spock.lang.Specification
-import spock.lang.Timeout
 
 import static datadog.opentracing.SpanFactory.newSpanOf
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.verifyNoMoreInteractions
 
-@Timeout(10)
 class DDAgentWriterTest extends Specification {
 
 

@@ -5,11 +5,9 @@ import com.google.common.reflect.ClassPath
 import datadog.trace.agent.test.IntegrationTestUtils
 import io.opentracing.util.GlobalTracer
 import spock.lang.Specification
-import spock.lang.Timeout
 
 import java.lang.reflect.Field
 
-@Timeout(10)
 class ShadowPackageRenamingTest extends Specification {
   def "agent dependencies renamed"() {
     setup:

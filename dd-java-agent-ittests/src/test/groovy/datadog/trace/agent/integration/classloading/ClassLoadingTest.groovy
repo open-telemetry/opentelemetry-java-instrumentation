@@ -3,11 +3,9 @@ package datadog.trace.agent.integration.classloading
 import datadog.trace.agent.test.IntegrationTestUtils
 import datadog.trace.api.Trace
 import spock.lang.Specification
-import spock.lang.Timeout
 
 import static datadog.trace.agent.test.IntegrationTestUtils.createJarWithClasses
 
-@Timeout(1)
 class ClassLoadingTest extends Specification {
 
   /** Assert that we can instrument classloaders which cannot resolve agent advice classes. */

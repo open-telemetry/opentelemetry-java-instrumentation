@@ -11,13 +11,11 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import ratpack.http.Headers
-import spock.lang.Timeout
 
 import java.util.concurrent.atomic.AtomicReference
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
-@Timeout(20)
 class AWSClientTest extends AgentTestRunner {
 
   def "request handler is hooked up with builder"() {

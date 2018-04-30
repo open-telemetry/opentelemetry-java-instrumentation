@@ -4,13 +4,11 @@ import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import ratpack.http.Headers
-import spock.lang.Timeout
 
 import java.util.concurrent.atomic.AtomicReference
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
-@Timeout(10)
 class OkHttp3Test extends AgentTestRunner {
 
   def "sending a request creates spans and sends headers"() {

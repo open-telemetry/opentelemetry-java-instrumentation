@@ -9,13 +9,11 @@ import io.opentracing.Scope
 import io.opentracing.Span
 import spock.lang.Specification
 import spock.lang.Subject
-import spock.lang.Timeout
 import spock.lang.Unroll
 
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
-@Timeout(10)
 class ScopeManagerTest extends Specification {
   def writer = new ListWriter()
   def tracer = new DDTracer(writer)

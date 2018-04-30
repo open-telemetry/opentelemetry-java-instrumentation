@@ -8,7 +8,6 @@ import org.h2.Driver
 import org.hsqldb.jdbc.JDBCDriver
 import spock.lang.Shared
 import spock.lang.Specification
-import spock.lang.Timeout
 import spock.lang.Unroll
 
 import java.sql.Connection
@@ -16,7 +15,6 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
 
-@Timeout(10)
 class JDBCInstrumentationTest extends Specification {
 
   final ListWriter writer = new ListWriter()

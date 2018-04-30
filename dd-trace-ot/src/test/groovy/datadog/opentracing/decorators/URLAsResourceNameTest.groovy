@@ -8,9 +8,7 @@ import datadog.trace.common.writer.ListWriter
 import io.opentracing.tag.Tags
 import spock.lang.Specification
 import spock.lang.Subject
-import spock.lang.Timeout
 
-@Timeout(1)
 class URLAsResourceNameTest extends Specification {
   def writer = new ListWriter()
   def tracer = new DDTracer(writer)

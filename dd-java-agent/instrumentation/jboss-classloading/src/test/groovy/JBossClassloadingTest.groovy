@@ -1,7 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import spock.lang.Timeout
 
-@Timeout(5)
 class JBossClassloadingTest extends AgentTestRunner {
   def "delegation property set on module load"() {
     setup:

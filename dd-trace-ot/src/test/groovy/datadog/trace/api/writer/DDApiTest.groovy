@@ -11,7 +11,6 @@ import ratpack.exec.Blocking
 import ratpack.http.Headers
 import ratpack.http.MediaType
 import spock.lang.Specification
-import spock.lang.Timeout
 import spock.lang.Unroll
 
 import java.util.concurrent.atomic.AtomicInteger
@@ -19,11 +18,9 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
-@Timeout(1)
 class DDApiTest extends Specification {
   static mapper = new ObjectMapper(new MessagePackFactory())
 
-  @Timeout(10)
   // first test takes longer
   def "sending an empty list of traces returns no errors"() {
     setup:
@@ -183,7 +180,6 @@ class DDApiTest extends Specification {
     v3Agent.close()
   }
 
-  @Timeout(5)
   @Unroll
   def "Api Downgrades to v3 if timeout exceeded (#delayTrace, #badPort)"() {
     // This test is unfortunately only exercising the read timeout, not the connect timeout.
