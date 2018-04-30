@@ -19,11 +19,18 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class RatpackInstrumentation extends Instrumenter.Configurable {
 
   static final String EXEC_NAME = "ratpack";
+
+  static final HelperInjector ROOT_RATPACK_HELPER_INJECTOR =
+      new HelperInjector(
+          "datadog.opentracing.scopemanager.ContextualScopeManager",
+          "datadog.opentracing.scopemanager.ScopeContext");
+
   private static final HelperInjector SERVER_REGISTRY_HELPER_INJECTOR =
       new HelperInjector(
+          "datadog.trace.instrumentation.ratpack.impl.RatpackRequestExtractAdapter",
           "datadog.trace.instrumentation.ratpack.impl.RatpackScopeManager",
-          "datadog.trace.instrumentation.ratpack.impl.TracingHandler",
-          "datadog.trace.instrumentation.ratpack.impl.RatpackServerAdvice$RatpackServerRegistryAdvice");
+          "datadog.trace.instrumentation.ratpack.impl.RatpackServerAdvice$RatpackServerRegistryAdvice",
+          "datadog.trace.instrumentation.ratpack.impl.TracingHandler");
   private static final HelperInjector EXEC_STARTER_HELPER_INJECTOR =
       new HelperInjector(
           "datadog.trace.instrumentation.ratpack.impl.RatpackServerAdvice$ExecStarterAdvice",
@@ -52,6 +59,7 @@ public final class RatpackInstrumentation extends Instrumenter.Configurable {
         .type(
             named("ratpack.server.internal.ServerRegistry"),
             CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE)
+        .transform(ROOT_RATPACK_HELPER_INJECTOR)
         .transform(SERVER_REGISTRY_HELPER_INJECTOR)
         .transform(
             DDAdvice.create()
@@ -62,6 +70,7 @@ public final class RatpackInstrumentation extends Instrumenter.Configurable {
         .type(
             not(isInterface()).and(hasSuperType(named("ratpack.exec.ExecStarter"))),
             CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE)
+        .transform(ROOT_RATPACK_HELPER_INJECTOR)
         .transform(EXEC_STARTER_HELPER_INJECTOR)
         .transform(
             DDAdvice.create()

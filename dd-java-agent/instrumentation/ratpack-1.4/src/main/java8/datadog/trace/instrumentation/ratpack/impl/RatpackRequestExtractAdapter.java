@@ -1,25 +1,24 @@
 package datadog.trace.instrumentation.ratpack.impl;
 
-import com.google.common.collect.ListMultimap;
 import io.opentracing.propagation.TextMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import ratpack.http.Request;
+import ratpack.util.MultiValueMap;
 
 /**
  * Simple request extractor in the same vein as @see
  * io.opentracing.contrib.web.servlet.filter.HttpServletRequestExtractAdapter
  */
 public class RatpackRequestExtractAdapter implements TextMap {
-  private final ListMultimap<String, String> headers;
+  private final MultiValueMap<String, String> headers;
 
   RatpackRequestExtractAdapter(Request request) {
-    this.headers = request.getHeaders().asMultiValueMap().asMultimap();
+    this.headers = request.getHeaders().asMultiValueMap();
   }
 
   @Override
   public Iterator<Map.Entry<String, String>> iterator() {
-    return headers.entries().iterator();
+    return headers.entrySet().iterator();
   }
 
   @Override
