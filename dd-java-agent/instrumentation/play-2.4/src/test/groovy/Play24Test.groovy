@@ -9,7 +9,6 @@ import spock.lang.Shared
 
 class Play24Test extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.java_concurrent.enabled", "true")
     System.setProperty("dd.integration.play.enabled", "true")
   }
 

@@ -2,10 +2,6 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 
 class ScalaInstrumentationTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.java_concurrent.enabled", "true")
-  }
-
   @Override
   void afterTest() {
     // Ignore failures to instrument sun proxy classes
