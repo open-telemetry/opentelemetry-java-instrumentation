@@ -61,8 +61,7 @@ public final class FutureInstrumentation extends Instrumenter.Configurable {
       "com.google.common.util.concurrent.AbstractFuture$TrustedFuture",
       "com.google.common.util.concurrent.AbstractFuture"
     };
-    WHITELISTED_FUTURES =
-        Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(whitelist)));
+    WHITELISTED_FUTURES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(whitelist)));
   }
 
   public FutureInstrumentation() {
@@ -76,7 +75,7 @@ public final class FutureInstrumentation extends Instrumenter.Configurable {
         .and(
             new ElementMatcher<TypeDescription>() {
               @Override
-              public boolean matches(TypeDescription target) {
+              public boolean matches(final TypeDescription target) {
                 final boolean whitelisted = WHITELISTED_FUTURES.contains(target.getName());
                 if (!whitelisted) {
                   log.debug("Skipping future instrumentation for {}", target.getName());
@@ -96,13 +95,13 @@ public final class FutureInstrumentation extends Instrumenter.Configurable {
 
   public static class CanceledFutureAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static DatadogWrapper findWrapper(@Advice.This Future<?> future) {
+    public static DatadogWrapper findWrapper(@Advice.This final Future<?> future) {
       return ConcurrentUtils.getDatadogWrapper(future);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void abortTracing(
-        @Advice.Enter final DatadogWrapper wrapper, @Advice.Return boolean canceled) {
+        @Advice.Enter final DatadogWrapper wrapper, @Advice.Return final boolean canceled) {
       if (canceled && null != wrapper) {
         wrapper.cancel();
       }

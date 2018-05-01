@@ -48,6 +48,7 @@ public final class AWSClientInstrumentation extends Instrumenter.Configurable {
   }
 
   public static class AWSClientAdvice {
+    // Since we're instrumenting the constructor, we can't add onThrowable.
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addHandler(
         @Advice.FieldValue("requestHandler2s") final List<RequestHandler2> handlers) {

@@ -45,7 +45,7 @@ public class RoutesInstrumentation extends Instrumenter.Configurable {
 
   public static class RoutesAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void routeMatchEnricher(
         @Advice.Argument(0) final HttpMethod method, @Advice.Return final RouteMatch routeMatch) {
 
