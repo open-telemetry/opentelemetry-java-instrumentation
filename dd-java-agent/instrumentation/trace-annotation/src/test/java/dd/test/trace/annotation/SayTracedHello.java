@@ -1,9 +1,10 @@
-package datadog.trace.agent.test;
+package dd.test.trace.annotation;
 
 import datadog.trace.api.DDTags;
 import datadog.trace.api.Trace;
 import io.opentracing.tag.StringTag;
 import io.opentracing.util.GlobalTracer;
+import java.util.concurrent.Callable;
 
 public class SayTracedHello {
 
@@ -32,5 +33,15 @@ public class SayTracedHello {
   @Trace(operationName = "ERROR")
   public static String sayERROR() {
     throw new RuntimeException();
+  }
+
+  public static String fromCallable() throws Exception {
+    return new Callable<String>() {
+      @Trace
+      @Override
+      public String call() throws Exception {
+        return "Howdy!";
+      }
+    }.call();
   }
 }
