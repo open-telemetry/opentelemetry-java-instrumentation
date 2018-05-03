@@ -44,7 +44,18 @@ public final class TraceAnnotationInstrumentation extends Instrumenter.Configura
       final Trace trace = method.getAnnotation(Trace.class);
       String operationName = trace == null ? null : trace.operationName();
       if (operationName == null || operationName.isEmpty()) {
-        operationName = method.getDeclaringClass().getSimpleName() + "." + method.getName();
+        final Class<?> declaringClass = method.getDeclaringClass();
+        String className = declaringClass.getSimpleName();
+        if (className.isEmpty()) {
+          className = declaringClass.getName();
+          if (declaringClass.getPackage() != null) {
+            final String pkgName = declaringClass.getPackage().getName();
+            if (!pkgName.isEmpty()) {
+              className = declaringClass.getName().replace(pkgName, "").substring(1);
+            }
+          }
+        }
+        operationName = className + "." + method.getName();
       }
 
       return GlobalTracer.get().buildSpan(operationName).startActive(true);

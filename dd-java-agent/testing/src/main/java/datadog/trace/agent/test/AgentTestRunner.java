@@ -11,7 +11,7 @@ import datadog.trace.common.writer.Writer;
 import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.bytebuddy.agent.ByteBuddyAgent;
@@ -56,7 +56,7 @@ public abstract class AgentTestRunner extends Specification {
   // having a reference to io.opentracing.Tracer in test field
   // loads opentracing before bootstrap classpath is setup
   // so we declare tracer as an object and cast when needed.
-  private static final Object TEST_TRACER;
+  protected static final Object TEST_TRACER;
   private static final AtomicInteger INSTRUMENTATION_ERROR_COUNT = new AtomicInteger();
 
   private static final Instrumentation instrumentation;

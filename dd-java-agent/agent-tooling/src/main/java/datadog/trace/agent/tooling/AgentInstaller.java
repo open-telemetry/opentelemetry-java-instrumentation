@@ -5,6 +5,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import java.lang.instrument.Instrumentation;
 import java.util.ServiceLoader;
@@ -42,11 +43,12 @@ public class AgentInstaller {
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(new LoggingListener())
             .with(new DDLocationStrategy())
-            .ignore(nameStartsWith("datadog.trace."))
+            .ignore(any(), skipClassLoader())
+            .or(nameStartsWith("datadog.trace."))
             .or(nameStartsWith("datadog.opentracing."))
             .or(nameStartsWith("datadog.slf4j."))
-            .or(nameStartsWith("java."))
-            .or(nameStartsWith("com.sun."))
+            .or(nameStartsWith("java.").and(not(nameStartsWith("java.util.concurrent."))))
+            .or(nameStartsWith("com.sun.").and(not(nameStartsWith("com.sun.proxy."))))
             .or(nameStartsWith("sun."))
             .or(nameStartsWith("jdk."))
             .or(nameStartsWith("org.aspectj."))
@@ -55,8 +57,7 @@ public class AgentInstaller {
             .or(nameStartsWith("org.slf4j."))
             .or(nameContains("javassist"))
             .or(nameContains(".asm."))
-            .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"))
-            .ignore(any(), skipClassLoader());
+            .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"));
     for (final AgentBuilder.Listener listener : listeners) {
       agentBuilder = agentBuilder.with(listener);
     }

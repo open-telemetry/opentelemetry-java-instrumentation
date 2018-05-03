@@ -7,4 +7,6 @@ dependencies {
   compile deps.bytebuddy
   compile deps.opentracing
   compile deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
 }
