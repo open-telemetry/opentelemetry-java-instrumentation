@@ -48,7 +48,7 @@ public class AgentInstaller {
             .or(nameStartsWith("datadog.opentracing."))
             .or(nameStartsWith("datadog.slf4j."))
             .or(nameStartsWith("java.").and(not(nameStartsWith("java.util.concurrent."))))
-            .or(nameStartsWith("com.sun.").and(not(nameStartsWith("com.sun.proxy."))))
+            .or(nameStartsWith("com.sun."))
             .or(nameStartsWith("sun."))
             .or(nameStartsWith("jdk."))
             .or(nameStartsWith("org.aspectj."))
