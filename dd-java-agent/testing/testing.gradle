@@ -11,6 +11,8 @@ dependencies {
   compile project(':dd-trace-ot')
   compile project(':dd-java-agent:agent-tooling')
 
+  compile deps.groovy
+
   // test instrumenting java 1.1 bytecode
   testCompile group: 'net.sf.jt400', name: 'jt400', version: '6.1'
 }
