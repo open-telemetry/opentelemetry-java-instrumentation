@@ -1,13 +1,11 @@
 package datadog.trace.common.writer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.auto.service.AutoService;
 import datadog.opentracing.DDSpan;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@AutoService(Writer.class)
 public class LoggingWriter implements Writer {
   private final ObjectMapper serializer = new ObjectMapper();
 

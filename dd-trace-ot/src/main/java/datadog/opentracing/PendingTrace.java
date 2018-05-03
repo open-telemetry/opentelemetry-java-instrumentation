@@ -1,12 +1,12 @@
 package datadog.opentracing;
 
-import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import datadog.opentracing.scopemanager.ContinuableScope;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -26,7 +26,8 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   private final long traceId;
 
   private final ReferenceQueue referenceQueue = new ReferenceQueue();
-  private final Set<WeakReference<?>> weakReferences = Sets.newConcurrentHashSet();
+  private final Set<WeakReference<?>> weakReferences =
+      Collections.newSetFromMap(new ConcurrentHashMap<WeakReference<?>, Boolean>());
 
   private final AtomicInteger pendingReferenceCount = new AtomicInteger(0);
 
@@ -172,12 +173,20 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   private static class SpanCleaner implements Runnable {
     private static final long CLEAN_FREQUENCY = 1;
     private static final ThreadFactory FACTORY =
-        new ThreadFactoryBuilder().setNameFormat("dd-span-cleaner-%d").setDaemon(true).build();
+        new ThreadFactory() {
+          @Override
+          public Thread newThread(final Runnable r) {
+            final Thread thread = new Thread(r, "dd-span-cleaner");
+            thread.setDaemon(true);
+            return thread;
+          }
+        };
 
     private static final ScheduledExecutorService EXECUTOR_SERVICE =
         Executors.newScheduledThreadPool(1, FACTORY);
 
-    static final Set<PendingTrace> pendingTraces = Sets.newConcurrentHashSet();
+    static final Set<PendingTrace> pendingTraces =
+        Collections.newSetFromMap(new ConcurrentHashMap<PendingTrace, Boolean>());
 
     static void start() {
       EXECUTOR_SERVICE.scheduleAtFixedRate(new SpanCleaner(), 0, CLEAN_FREQUENCY, TimeUnit.SECONDS);

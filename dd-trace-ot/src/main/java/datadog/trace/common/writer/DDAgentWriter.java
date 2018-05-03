@@ -1,7 +1,5 @@
 package datadog.trace.common.writer;
 
-import com.google.auto.service.AutoService;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import datadog.opentracing.DDSpan;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -25,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
  * spans.
  */
 @Slf4j
-@AutoService(Writer.class)
 public class DDAgentWriter implements Writer {
 
   /** Default location of the DD agent */
@@ -43,7 +40,14 @@ public class DDAgentWriter implements Writer {
   static final long FLUSH_TIME_SECONDS = 1;
 
   private final ThreadFactory agentWriterThreadFactory =
-      new ThreadFactoryBuilder().setNameFormat("dd-agent-writer-%d").setDaemon(true).build();
+      new ThreadFactory() {
+        @Override
+        public Thread newThread(final Runnable r) {
+          final Thread thread = new Thread(r, "dd-agent-writer");
+          thread.setDaemon(true);
+          return thread;
+        }
+      };
 
   /** Scheduled thread pool, acting like a cron */
   private final ScheduledExecutorService scheduledExecutor =
