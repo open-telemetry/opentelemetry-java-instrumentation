@@ -18,6 +18,7 @@ import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.bootstrap.JDBCMaps;
 import io.opentracing.Scope;
 import io.opentracing.Span;
+import io.opentracing.noop.NoopScopeManager.NoopScope;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.sql.Connection;
@@ -60,7 +61,7 @@ public final class StatementInstrumentation extends Instrumenter.Configurable {
         connection = statement.getConnection();
       } catch (final Throwable e) {
         // Had some problem getting the connection.
-        return null;
+        return NoopScope.INSTANCE;
       }
 
       JDBCMaps.DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
