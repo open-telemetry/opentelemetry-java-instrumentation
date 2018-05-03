@@ -27,15 +27,17 @@ testSets {
 }
 
 dependencies {
+  compile deps.autoservice
+  
   compile project(':dd-trace-api')
   compile deps.opentracing
   compile group: 'io.opentracing.contrib', name: 'opentracing-tracerresolver', version: '0.1.0'
 
   compile deps.jackson
   compile deps.slf4j
-  compile deps.autoservice
   compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.2'
 
+  testCompile deps.autoservice
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6'
   testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
   testCompile 'com.github.stefanbirkner:system-rules:1.17.1'

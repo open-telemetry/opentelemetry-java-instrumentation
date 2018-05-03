@@ -1,10 +1,10 @@
 package datadog.trace.common;
 
-import com.google.common.collect.Maps;
 import datadog.opentracing.DDTracer;
 import datadog.trace.common.writer.DDAgentWriter;
 import datadog.trace.common.writer.Writer;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +84,7 @@ public class DDTraceConfig extends Properties {
     }
 
     final String[] tokens = str.split(",");
-    final Map<String, Object> map = Maps.newHashMapWithExpectedSize(tokens.length);
+    final Map<String, Object> map = new HashMap<>(tokens.length + 1, 1f);
 
     for (final String token : tokens) {
       final String[] keyValue = token.split(":");

@@ -2,7 +2,6 @@ package datadog.trace.common.writer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.RateLimiter;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTraceOTInfo;
 import java.io.BufferedReader;
@@ -30,15 +29,13 @@ public class DDApi {
 
   private static final String TRACES_ENDPOINT_V3 = "/v0.3/traces";
   private static final String TRACES_ENDPOINT_V4 = "/v0.4/traces";
-  private static final long SECONDS_BETWEEN_ERROR_LOG = TimeUnit.MINUTES.toSeconds(5);
+  private static final long MILLISECONDS_BETWEEN_ERROR_LOG = TimeUnit.MINUTES.toMillis(5);
 
   private final String tracesEndpoint;
   private final List<ResponseListener> responseListeners = new ArrayList<>();
 
   private AtomicInteger traceCount;
-
-  private final RateLimiter loggingRateLimiter =
-      RateLimiter.create(1.0 / SECONDS_BETWEEN_ERROR_LOG);
+  private volatile long nextAllowedLogTime = 0;
 
   private static final ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory());
 
@@ -106,14 +103,15 @@ public class DDApi {
               totalSize,
               responseCode,
               httpCon.getResponseMessage());
-        } else if (loggingRateLimiter.tryAcquire()) {
+        } else if (nextAllowedLogTime < System.currentTimeMillis()) {
+          nextAllowedLogTime = System.currentTimeMillis() + MILLISECONDS_BETWEEN_ERROR_LOG;
           log.warn(
               "Error while sending {} of {} traces to the DD agent. Status: {} (going silent for {} seconds)",
               traces.size(),
               totalSize,
               responseCode,
               httpCon.getResponseMessage(),
-              SECONDS_BETWEEN_ERROR_LOG);
+              TimeUnit.MILLISECONDS.toMinutes(MILLISECONDS_BETWEEN_ERROR_LOG));
         }
         return false;
       }
@@ -143,14 +141,15 @@ public class DDApi {
                 + totalSize
                 + " traces to the DD agent.",
             e);
-      } else if (loggingRateLimiter.tryAcquire()) {
+      } else if (nextAllowedLogTime < System.currentTimeMillis()) {
+        nextAllowedLogTime = System.currentTimeMillis() + MILLISECONDS_BETWEEN_ERROR_LOG;
         log.warn(
-            "Error while sending {} of {} traces to the DD agent. {}: {} (going silent for {} seconds)",
+            "Error while sending {} of {} traces to the DD agent. {}: {} (going silent for {} minutes)",
             traces.size(),
             totalSize,
             e.getClass().getName(),
             e.getMessage(),
-            SECONDS_BETWEEN_ERROR_LOG);
+            TimeUnit.MILLISECONDS.toMinutes(MILLISECONDS_BETWEEN_ERROR_LOG));
       }
       return false;
     }

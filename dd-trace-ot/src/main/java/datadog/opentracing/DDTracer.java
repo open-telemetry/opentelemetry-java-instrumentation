@@ -1,7 +1,5 @@
 package datadog.opentracing;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
 import datadog.opentracing.propagation.Codec;
@@ -244,13 +242,13 @@ public class DDTracer implements io.opentracing.Tracer {
     }
     final ArrayList<DDSpan> writtenTrace;
     if (interceptors.isEmpty()) {
-      writtenTrace = Lists.newArrayList(trace);
+      writtenTrace = new ArrayList<>(trace);
     } else {
-      Collection<? extends MutableSpan> interceptedTrace = Lists.newArrayList(trace);
+      Collection<? extends MutableSpan> interceptedTrace = new ArrayList<>(trace);
       for (final TraceInterceptor interceptor : interceptors) {
         interceptedTrace = interceptor.onTraceComplete(interceptedTrace);
       }
-      writtenTrace = Lists.newArrayListWithExpectedSize(interceptedTrace.size());
+      writtenTrace = new ArrayList<>(interceptedTrace.size());
       for (final MutableSpan span : interceptedTrace) {
         if (span instanceof DDSpan) {
           writtenTrace.add((DDSpan) span);
@@ -304,7 +302,7 @@ public class DDTracer implements io.opentracing.Tracer {
 
     // Builder attributes
     private Map<String, Object> tags =
-        spanTags.isEmpty() ? Collections.<String, Object>emptyMap() : Maps.newHashMap(spanTags);
+        spanTags.isEmpty() ? Collections.<String, Object>emptyMap() : new HashMap<>(spanTags);
     private long timestampMicro;
     private SpanContext parent;
     private String serviceName;
@@ -429,7 +427,7 @@ public class DDTracer implements io.opentracing.Tracer {
     // Private methods
     private DDSpanBuilder withTag(final String tag, final Object value) {
       if (this.tags.isEmpty()) {
-        this.tags = Maps.newHashMap();
+        this.tags = new HashMap<>();
       }
       this.tags.put(tag, value);
       return this;
