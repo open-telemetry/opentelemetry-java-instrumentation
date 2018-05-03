@@ -16,6 +16,7 @@ package datadog.trace.instrumentation.aws;
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
+import datadog.trace.api.DDTags;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.io.PrintWriter;
@@ -24,24 +25,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 class SpanDecorator {
   static final String COMPONENT_NAME = "java-aws-sdk";
+
+  private static final Map<String, String> SERVICE_NAMES = new ConcurrentHashMap<>();
+  private static final Map<Class, String> OPERATION_NAMES = new ConcurrentHashMap<>();
 
   static void onRequest(final Request request, final Span span) {
     Tags.COMPONENT.set(span, COMPONENT_NAME);
     Tags.HTTP_METHOD.set(span, request.getHttpMethod().name());
     Tags.HTTP_URL.set(span, request.getEndpoint().toString());
+
+    final String awsServiceName = request.getServiceName();
+    final Class<?> awsOperation = request.getOriginalRequest().getClass();
+
     span.setTag("aws.agent", COMPONENT_NAME);
-    span.setTag("aws.service", request.getServiceName());
-    span.setTag("aws.operation", request.getOriginalRequest().getClass().getSimpleName());
+    span.setTag("aws.service", awsServiceName);
+    span.setTag("aws.operation", awsOperation.getSimpleName());
     span.setTag("aws.endpoint", request.getEndpoint().toString());
 
+    span.setTag(
+        DDTags.RESOURCE_NAME,
+        remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation));
+
     try {
-      StringBuilder params = new StringBuilder("{");
+      final StringBuilder params = new StringBuilder("{");
       final Map<String, List<Object>> requestParams = request.getParameters();
       boolean firstKey = true;
-      for (Entry<String, List<Object>> entry : requestParams.entrySet()) {
+      for (final Entry<String, List<Object>> entry : requestParams.entrySet()) {
         if (!firstKey) {
           params.append(",");
         }
@@ -57,11 +70,11 @@ class SpanDecorator {
       }
       params.append("}");
       span.setTag("params", params.toString());
-    } catch (Exception e) {
+    } catch (final Exception e) {
       try {
         org.slf4j.LoggerFactory.getLogger(SpanDecorator.class)
             .debug("Failed to decorate aws span", e);
-      } catch (Exception e2) {
+      } catch (final Exception e2) {
         // can't reach logger. Silently eat excetpion.
       }
     }
@@ -93,5 +106,19 @@ class SpanDecorator {
     errorLogs.put("stack", sw.toString());
 
     return errorLogs;
+  }
+
+  private static String remapServiceName(final String serviceName) {
+    if (!SERVICE_NAMES.containsKey(serviceName)) {
+      SERVICE_NAMES.put(serviceName, serviceName.replace("Amazon", "").trim());
+    }
+    return SERVICE_NAMES.get(serviceName);
+  }
+
+  private static String remapOperationName(final Class<?> awsOperation) {
+    if (!OPERATION_NAMES.containsKey(awsOperation)) {
+      OPERATION_NAMES.put(awsOperation, awsOperation.getSimpleName().replace("Request", ""));
+    }
+    return OPERATION_NAMES.get(awsOperation);
   }
 }
