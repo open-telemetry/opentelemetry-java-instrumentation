@@ -273,7 +273,7 @@ class JDBCInstrumentationTest extends Specification {
     where:
     driver   | connection                | username | query
     "h2"     | connections.get("h2")     | null     | "CREATE TABLE PS_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    // Derby calls executeLargeUpdate from executeUpdate thus generating a nested span breaking this test.
+    "derby"  | connections.get("derby")  | "APP"    | "CREATE TABLE PS_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"
     "hsqldb" | connections.get("hsqldb") | "SA"     | "CREATE TABLE PUBLIC.PS_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))"
   }
 }

@@ -14,10 +14,11 @@ import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
+import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.bootstrap.JDBCMaps;
 import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.noop.NoopScopeManager;
+import io.opentracing.noop.NoopScopeManager.NoopScope;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.sql.Connection;
@@ -51,12 +52,16 @@ public final class StatementInstrumentation extends Instrumenter.Configurable {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
         @Advice.Argument(0) final String sql, @Advice.This final Statement statement) {
+      final int callDepth = CallDepthThreadLocalMap.get(Statement.class).incrementCallDepth();
+      if (callDepth > 0) {
+        return null;
+      }
       final Connection connection;
       try {
         connection = statement.getConnection();
       } catch (final Throwable e) {
         // Had some problem getting the connection.
-        return NoopScopeManager.NoopScope.INSTANCE;
+        return NoopScope.INSTANCE;
       }
 
       JDBCMaps.DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
@@ -88,12 +93,15 @@ public final class StatementInstrumentation extends Instrumenter.Configurable {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
-      if (throwable != null) {
-        final Span span = scope.span();
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+      if (scope != null) {
+        if (throwable != null) {
+          final Span span = scope.span();
+          Tags.ERROR.set(span, true);
+          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+        }
+        scope.close();
+        CallDepthThreadLocalMap.get(Statement.class).reset();
       }
-      scope.close();
     }
   }
 }
