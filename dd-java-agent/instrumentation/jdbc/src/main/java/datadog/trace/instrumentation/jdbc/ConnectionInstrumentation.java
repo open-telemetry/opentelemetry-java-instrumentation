@@ -72,7 +72,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Configurable {
         if (url != null) {
           // Remove end of url to prevent passwords from leaking:
           final String sanitizedURL = url.replaceAll("[?;].*", "");
-          final String type = url.split(":")[1];
+          final String type = url.split(":", -1)[1];
           String user = connection.getMetaData().getUserName();
           if (user != null && user.trim().equals("")) {
             user = null;

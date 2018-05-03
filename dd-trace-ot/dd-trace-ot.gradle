@@ -28,7 +28,8 @@ testSets {
 }
 
 dependencies {
-  compile deps.autoservice
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
   
   compile project(':dd-trace-api')
   compile deps.opentracing

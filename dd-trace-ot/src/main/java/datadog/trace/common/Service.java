@@ -57,6 +57,7 @@ public class Service {
     }
 
     @JsonValue
+    @Override
     public String toString() {
       return type;
     }

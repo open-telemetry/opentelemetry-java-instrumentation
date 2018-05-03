@@ -18,7 +18,7 @@ public interface Instrumenter {
     protected final boolean enabled;
 
     public Configurable(final String instrumentationName, final String... additionalNames) {
-      this.instrumentationNames = new HashSet(Arrays.asList(additionalNames));
+      this.instrumentationNames = new HashSet<>(Arrays.asList(additionalNames));
       instrumentationNames.add(instrumentationName);
 
       // If default is enabled, we want to enable individually,

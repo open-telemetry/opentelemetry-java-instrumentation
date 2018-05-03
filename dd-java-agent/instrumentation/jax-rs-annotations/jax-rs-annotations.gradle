@@ -13,7 +13,8 @@ dependencies {
 
   compile deps.bytebuddy
   compile deps.opentracing
-  compile deps.autoservice
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
 
   compile project(':dd-java-agent:agent-tooling')
 

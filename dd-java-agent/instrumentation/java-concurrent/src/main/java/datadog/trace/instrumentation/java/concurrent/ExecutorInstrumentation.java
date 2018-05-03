@@ -16,7 +16,12 @@ import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -78,8 +83,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
       "akka.dispatch.ExecutionContexts$sameThreadExecutionContext$",
       "play.api.libs.streams.Execution$trampoline$"
     };
-    WHITELISTED_EXECUTORS =
-        Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(whitelist)));
+    WHITELISTED_EXECUTORS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(whitelist)));
   }
 
   public ExecutorInstrumentation() {
@@ -93,7 +97,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
         .and(
             new ElementMatcher<TypeDescription>() {
               @Override
-              public boolean matches(TypeDescription target) {
+              public boolean matches(final TypeDescription target) {
                 final boolean whitelisted = WHITELISTED_EXECUTORS.contains(target.getName());
                 if (!whitelisted) {
                   log.debug("Skipping executor instrumentation for {}", target.getName());
@@ -157,13 +161,13 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   public static class WrapCallableAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DatadogWrapper wrapJob(
-        @Advice.Argument(value = 0, readOnly = false) Callable task) {
+        @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       if (scope instanceof TraceScope
           && ((TraceScope) scope).isAsyncPropagating()
           && task != null
           && !(task instanceof DatadogWrapper)) {
-        task = new CallableWrapper(task, (TraceScope) scope);
+        task = new CallableWrapper<>(task, (TraceScope) scope);
         return (CallableWrapper) task;
       }
       return null;
@@ -184,11 +188,11 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       if (scope instanceof TraceScope && ((TraceScope) scope).isAsyncPropagating()) {
-        Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
-        for (Callable task : tasks) {
+        final Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
+        for (Callable<?> task : tasks) {
           if (task != null) {
             if (!(task instanceof CallableWrapper)) {
-              task = new CallableWrapper(task, (TraceScope) scope);
+              task = new CallableWrapper<>(task, (TraceScope) scope);
             }
             wrappedTasks.add(task);
           }
@@ -203,7 +207,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     public static void checkCancel(
         @Advice.Enter final Collection<?> wrappedJobs, @Advice.Thrown final Throwable throwable) {
       if (null != wrappedJobs && null != throwable) {
-        for (Object wrapper : wrappedJobs) {
+        for (final Object wrapper : wrappedJobs) {
           if (wrapper instanceof DatadogWrapper) {
             ((DatadogWrapper) wrapper).cancel();
           }
@@ -217,7 +221,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   public abstract static class DatadogWrapper {
     protected final TraceScope.Continuation continuation;
 
-    public DatadogWrapper(TraceScope scope) {
+    public DatadogWrapper(final TraceScope scope) {
       continuation = scope.capture();
       log.debug("created continuation {} from scope {}", continuation, scope);
     }
@@ -234,7 +238,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   public static class RunnableWrapper extends DatadogWrapper implements Runnable {
     private final Runnable delegatee;
 
-    public RunnableWrapper(Runnable toWrap, TraceScope scope) {
+    public RunnableWrapper(final Runnable toWrap, final TraceScope scope) {
       super(scope);
       delegatee = toWrap;
     }
@@ -255,7 +259,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   public static class CallableWrapper<T> extends DatadogWrapper implements Callable<T> {
     private final Callable<T> delegatee;
 
-    public CallableWrapper(Callable<T> toWrap, TraceScope scope) {
+    public CallableWrapper(final Callable<T> toWrap, final TraceScope scope) {
       super(scope);
       delegatee = toWrap;
     }
@@ -274,14 +278,14 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
 
   /** Utils for pulling DatadogWrapper out of Future instances. */
   public static class ConcurrentUtils {
-    private static Map<Class<?>, Field> fieldCache = new ConcurrentHashMap<>();
-    private static String[] wrapperFields = {"runnable", "callable"};
+    private static final Map<Class<?>, Field> fieldCache = new ConcurrentHashMap<>();
+    private static final String[] wrapperFields = {"runnable", "callable"};
 
-    public static boolean safeToWrap(Future<?> f) {
+    public static boolean safeToWrap(final Future<?> f) {
       return null != getDatadogWrapper(f);
     }
 
-    public static DatadogWrapper getDatadogWrapper(Future<?> f) {
+    public static DatadogWrapper getDatadogWrapper(final Future<?> f) {
       final Field field;
       if (fieldCache.containsKey(f.getClass())) {
         field = fieldCache.get(f.getClass());
@@ -293,7 +297,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
       if (field != null) {
         try {
           field.setAccessible(true);
-          Object o = field.get(f);
+          final Object o = field.get(f);
           if (o instanceof DatadogWrapper) {
             return (DatadogWrapper) o;
           }
@@ -312,7 +316,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
           try {
             field = clazz.getDeclaredField(wrapperFields[i]);
             break;
-          } catch (Exception e) {
+          } catch (final Exception e) {
           }
         }
         clazz = clazz.getSuperclass();

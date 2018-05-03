@@ -14,7 +14,8 @@ dependencies {
   compile project(':dd-java-agent:agent-tooling')
   compile deps.bytebuddy
   compile deps.opentracing
-  compile deps.autoservice
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
 
   testCompile group: 'org.scala-lang', name: 'scala-library', version: '2.11.12'
   testCompile group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'

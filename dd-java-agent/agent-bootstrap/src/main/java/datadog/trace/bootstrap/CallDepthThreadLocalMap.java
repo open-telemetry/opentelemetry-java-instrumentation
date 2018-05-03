@@ -14,7 +14,9 @@ public class CallDepthThreadLocalMap {
   private static final ThreadLocal<Map<Object, CallDepthThreadLocalMap>> INSTANCES =
       new ThreadLocal<>();
 
-  public static CallDepthThreadLocalMap get(Object o) {
+  private static final ThreadLocal<AtomicInteger> tls = new ThreadLocal<>();
+
+  public static CallDepthThreadLocalMap get(final Object o) {
     if (INSTANCES.get() == null) {
       INSTANCES.set(new WeakHashMap<Object, CallDepthThreadLocalMap>());
     }
@@ -23,8 +25,6 @@ public class CallDepthThreadLocalMap {
     }
     return INSTANCES.get().get(o);
   }
-
-  private final ThreadLocal<AtomicInteger> tls = new ThreadLocal<>();
 
   private CallDepthThreadLocalMap() {}
 

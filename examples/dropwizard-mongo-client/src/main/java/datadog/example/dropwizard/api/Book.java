@@ -7,12 +7,12 @@ public class Book {
 
   private final String title;
   private final int numberPages;
-  private final String IsbnCode;
+  private final String isbnCode;
 
   public Book(final String isbnCode, final String title, final int numberPages) {
     this.title = title;
     this.numberPages = numberPages;
-    IsbnCode = isbnCode;
+    this.isbnCode = isbnCode;
   }
 
   public Book(final Document d) {
@@ -21,7 +21,7 @@ public class Book {
 
   @JsonProperty("ISBN")
   public String getIsbnCode() {
-    return IsbnCode;
+    return isbnCode;
   }
 
   public String getTitle() {
@@ -33,6 +33,6 @@ public class Book {
   }
 
   public Document toDocument() {
-    return new Document("isbn", IsbnCode).append("title", title).append("page", numberPages);
+    return new Document("isbn", isbnCode).append("title", title).append("page", numberPages);
   }
 }

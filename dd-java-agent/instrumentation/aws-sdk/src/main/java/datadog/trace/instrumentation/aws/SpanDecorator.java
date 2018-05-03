@@ -33,7 +33,7 @@ class SpanDecorator {
   private static final Map<String, String> SERVICE_NAMES = new ConcurrentHashMap<>();
   private static final Map<Class, String> OPERATION_NAMES = new ConcurrentHashMap<>();
 
-  static void onRequest(final Request request, final Span span) {
+  static void onRequest(final Request<?> request, final Span span) {
     Tags.COMPONENT.set(span, COMPONENT_NAME);
     Tags.HTTP_METHOD.set(span, request.getHttpMethod().name());
     Tags.HTTP_URL.set(span, request.getEndpoint().toString());
@@ -52,9 +52,9 @@ class SpanDecorator {
 
     try {
       final StringBuilder params = new StringBuilder("{");
-      final Map<String, List<Object>> requestParams = request.getParameters();
+      final Map<String, List<String>> requestParams = request.getParameters();
       boolean firstKey = true;
-      for (final Entry<String, List<Object>> entry : requestParams.entrySet()) {
+      for (final Entry<String, List<String>> entry : requestParams.entrySet()) {
         if (!firstKey) {
           params.append(",");
         }

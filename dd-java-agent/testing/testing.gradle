@@ -7,9 +7,13 @@ dependencies {
   compile deps.opentracing
   compile deps.spock
   compile deps.testLogging
+  compile deps.guava
 
   compile project(':dd-trace-ot')
   compile project(':dd-java-agent:agent-tooling')
+  
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
 
   compile deps.groovy
 

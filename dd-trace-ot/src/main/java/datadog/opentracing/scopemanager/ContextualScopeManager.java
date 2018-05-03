@@ -8,7 +8,7 @@ import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class ContextualScopeManager implements ScopeManager {
-  final ThreadLocal<Scope> tlsScope = new ThreadLocal<>();
+  static final ThreadLocal<Scope> tlsScope = new ThreadLocal<>();
   final Deque<ScopeContext> scopeContexts = new ConcurrentLinkedDeque<>();
 
   @Override

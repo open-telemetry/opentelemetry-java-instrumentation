@@ -31,4 +31,6 @@ dependencies {
 
   compile deps.bytebuddy
   compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
 }

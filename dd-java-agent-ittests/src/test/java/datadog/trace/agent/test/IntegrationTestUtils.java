@@ -39,7 +39,7 @@ public class IntegrationTestUtils {
       classloaderField = tracingAgentClass.getDeclaredField("AGENT_CLASSLOADER");
       classloaderField.setAccessible(true);
       return (ClassLoader) classloaderField.get(null);
-    } catch (Exception e) {
+    } catch (final Exception e) {
       throw new IllegalStateException(e);
     } finally {
       if (null != classloaderField) {
@@ -141,29 +141,19 @@ public class IntegrationTestUtils {
     return className.replace('.', '/') + ".class";
   }
 
-  public static String[] getBootstrapPackagePrefixes() {
-    try {
-      Field f =
-          getAgentClassLoader()
-              .loadClass("datadog.trace.agent.tooling.Utils")
-              .getField("BOOTSTRAP_PACKAGE_PREFIXES");
-      return (String[]) f.get(null);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return null;
+  public static String[] getBootstrapPackagePrefixes() throws Exception {
+    final Field f =
+        getAgentClassLoader()
+            .loadClass("datadog.trace.agent.tooling.Utils")
+            .getField("BOOTSTRAP_PACKAGE_PREFIXES");
+    return (String[]) f.get(null);
   }
 
-  public static String[] getAgentPackagePrefixes() {
-    try {
-      Field f =
-          getAgentClassLoader()
-              .loadClass("datadog.trace.agent.tooling.Utils")
-              .getField("AGENT_PACKAGE_PREFIXES");
-      return (String[]) f.get(null);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return null;
+  public static String[] getAgentPackagePrefixes() throws Exception {
+    final Field f =
+        getAgentClassLoader()
+            .loadClass("datadog.trace.agent.tooling.Utils")
+            .getField("AGENT_PACKAGE_PREFIXES");
+    return (String[]) f.get(null);
   }
 }

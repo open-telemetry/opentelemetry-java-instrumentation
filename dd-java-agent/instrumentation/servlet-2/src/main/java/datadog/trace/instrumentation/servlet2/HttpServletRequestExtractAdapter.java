@@ -38,14 +38,14 @@ public class HttpServletRequestExtractAdapter implements TextMap {
       final HttpServletRequest httpServletRequest) {
     final Map<String, List<String>> headersResult = new HashMap<>();
 
-    final Enumeration<String> headerNamesIt = httpServletRequest.getHeaderNames();
+    final Enumeration<?> headerNamesIt = httpServletRequest.getHeaderNames();
     while (headerNamesIt.hasMoreElements()) {
-      final String headerName = headerNamesIt.nextElement();
+      final String headerName = headerNamesIt.nextElement().toString();
 
-      final Enumeration<String> valuesIt = httpServletRequest.getHeaders(headerName);
+      final Enumeration<?> valuesIt = httpServletRequest.getHeaders(headerName);
       final List<String> valuesList = new ArrayList<>(1);
       while (valuesIt.hasMoreElements()) {
-        valuesList.add(valuesIt.nextElement());
+        valuesList.add(valuesIt.nextElement().toString());
       }
 
       headersResult.put(headerName, valuesList);
