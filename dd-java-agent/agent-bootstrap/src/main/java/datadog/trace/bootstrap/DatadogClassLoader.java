@@ -9,7 +9,7 @@ public class DatadogClassLoader extends URLClassLoader {
   // adds a jar to the bootstrap class lookup, but not to the resource lookup.
   // As a workaround, we keep a reference to the bootstrap jar
   // to use only for resource lookups.
-  private final ClassLoader bootstrapResourceLocator;
+  private final BootstrapClassLoaderProxy bootstrapProxy;
 
   /**
    * Construct a new DatadogClassLoader
@@ -21,16 +21,41 @@ public class DatadogClassLoader extends URLClassLoader {
    */
   public DatadogClassLoader(URL bootstrapJarLocation, URL agentJarLocation, ClassLoader parent) {
     super(new URL[] {agentJarLocation}, parent);
-    bootstrapResourceLocator = new URLClassLoader(new URL[] {bootstrapJarLocation}, null);
+    bootstrapProxy = new BootstrapClassLoaderProxy(new URL[] {bootstrapJarLocation}, null);
   }
 
   @Override
   public URL getResource(String resourceName) {
-    final URL bootstrapResource = bootstrapResourceLocator.getResource(resourceName);
+    final URL bootstrapResource = bootstrapProxy.getResource(resourceName);
     if (null == bootstrapResource) {
       return super.getResource(resourceName);
     } else {
       return bootstrapResource;
+    }
+  }
+
+  public BootstrapClassLoaderProxy getBootstrapProxy() {
+    return bootstrapProxy;
+  }
+
+  /**
+   * A stand-in for the bootstrap classloader. Used to look up bootstrap resources and resources appended by instrumentation.
+   *
+   * <p>This class is thread safe.
+   */
+  public static final class BootstrapClassLoaderProxy extends URLClassLoader {
+    public BootstrapClassLoaderProxy(URL[] urls, ClassLoader parent) {
+      super(urls, parent);
+    }
+
+    @Override
+    public void addURL(URL url) {
+      super.addURL(url);
+    }
+
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+      throw new ClassNotFoundException(name);
     }
   }
 }

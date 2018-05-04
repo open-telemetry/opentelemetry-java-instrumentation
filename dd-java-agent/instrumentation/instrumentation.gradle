@@ -1,14 +1,27 @@
 // this project will run in isolation under the agent's classloader
+buildscript {
+  dependencies {
+    classpath "net.bytebuddy:byte-buddy-gradle-plugin:${versions.bytebuddy}"
+  }
+}
 plugins {
   id "com.github.johnrengelman.shadow"
 }
-
 apply from: "${rootDir}/gradle/java.gradle"
 
 // add all subprojects under 'instrumentation' to the agent's dependencies
 Project instr_project = project
 subprojects { subProj ->
   if (subProj.getParent() == instr_project) {
+    apply plugin: "net.bytebuddy.byte-buddy"
+    subProj.byteBuddy {
+      transformation {
+        tasks = ["compileJava"]
+        plugin = "datadog.trace.agent.tooling.muzzle.MuzzleGradlePlugin"
+        classPath = project(':dd-java-agent:agent-tooling').configurations.instrumentationMuzzle
+      }
+    }
+
     instr_project.dependencies {
       compile(project(subProj.getPath()))
     }

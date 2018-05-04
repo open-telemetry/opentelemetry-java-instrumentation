@@ -1,7 +1,10 @@
 package datadog.trace.agent.tooling;
 
+import datadog.trace.bootstrap.DatadogClassLoader;
+import datadog.trace.bootstrap.DatadogClassLoader.BootstrapClassLoaderProxy;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 
 public class Utils {
   /* packages which will be loaded on the bootstrap classloader*/
@@ -21,6 +24,9 @@ public class Utils {
 
   private static Method findLoadedClassMethod = null;
 
+  private static BootstrapClassLoaderProxy unitTestBootstrapProxy =
+      new BootstrapClassLoaderProxy(new URL[0], null);
+
   static {
     try {
       findLoadedClassMethod = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
@@ -34,16 +40,42 @@ public class Utils {
     return AgentInstaller.class.getClassLoader();
   }
 
+  /** Return a classloader which can be used to look up bootstrap resources. */
+  public static BootstrapClassLoaderProxy getBootstrapProxy() {
+    if (getAgentClassLoader() instanceof DatadogClassLoader) {
+      return ((DatadogClassLoader) getAgentClassLoader()).getBootstrapProxy();
+    } else {
+      // in a unit test
+      return unitTestBootstrapProxy;
+    }
+  }
+
   /** com.foo.Bar -> com/foo/Bar.class */
   public static String getResourceName(final String className) {
-    return className.replace('.', '/') + ".class";
+    if (!className.endsWith(".class")) {
+      return className.replace('.', '/') + ".class";
+    } else {
+      return className;
+    }
+  }
+
+  /** com/foo/Bar.class -> com.foo.Bar */
+  public static String getClassName(final String resourceName) {
+    return resourceName.replaceAll("\\.class\\$", "").replace('/', '.');
   }
 
   public static boolean isClassLoaded(final String className, final ClassLoader classLoader) {
+    Class<?> loadedClass = findLoadedClass(className, classLoader);
+    return loadedClass != null && loadedClass.getClassLoader() == classLoader;
+  }
+
+  public static Class<?> findLoadedClass(final String className, ClassLoader classLoader) {
+    if (classLoader == ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER) {
+      classLoader = ClassLoader.getSystemClassLoader();
+    }
     try {
       findLoadedClassMethod.setAccessible(true);
-      final Class<?> loadedClass = (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
-      return null != loadedClass && loadedClass.getClassLoader() == classLoader;
+      return (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
     } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       throw new IllegalStateException(e);
     } finally {
