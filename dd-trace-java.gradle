@@ -7,6 +7,7 @@ buildscript {
     classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.18"
     classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3"
     classpath "net.ltgt.gradle:gradle-errorprone-plugin:0.0.13"
+    classpath 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin:1.4.5'
   }
 }
 
@@ -36,6 +37,8 @@ repositories {
 description = 'dd-trace-java'
 
 task traceAgentTest {}
+task latestDepTest {}
+task latestDepTestJava9 {}
 
 // Applied here to allow publishing of artifactory build info
 apply from: "${rootDir}/gradle/publish.gradle"

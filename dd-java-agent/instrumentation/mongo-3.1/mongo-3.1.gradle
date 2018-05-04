@@ -12,6 +12,14 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
 dependencies {
   compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
 
@@ -22,4 +30,6 @@ dependencies {
 
   testCompile project(':dd-trace-ot')
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
+
+  latestDepTestCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '+'
 }

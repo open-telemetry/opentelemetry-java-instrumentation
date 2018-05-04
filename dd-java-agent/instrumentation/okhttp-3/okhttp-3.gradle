@@ -17,6 +17,14 @@ apply from: "${rootDir}/gradle/java.gradle"
 // These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
 testJava8Only += '**/OkHttp3Test.class'
 
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
 dependencies {
   compileOnly group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'
 
@@ -27,4 +35,6 @@ dependencies {
 
   testCompile project(':dd-java-agent:testing')
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'
+
+  latestDepTestCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '+'
 }

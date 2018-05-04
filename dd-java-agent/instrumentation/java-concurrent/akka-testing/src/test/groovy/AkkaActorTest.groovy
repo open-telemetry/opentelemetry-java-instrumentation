@@ -4,11 +4,6 @@ import spock.lang.Unroll
 
 class AkkaActorTest extends AgentTestRunner {
 
-  @Override
-  void afterTest() {
-    // Ignore failures to instrument sun proxy classes
-  }
-
   @Unroll
   def "akka #testMethod" () {
     setup:

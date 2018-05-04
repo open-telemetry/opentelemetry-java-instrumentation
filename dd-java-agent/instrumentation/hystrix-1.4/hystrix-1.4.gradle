@@ -11,6 +11,14 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
 dependencies {
 //  compileOnly group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.5.12'
 
@@ -25,4 +33,6 @@ dependencies {
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
   testCompile project(':dd-java-agent:instrumentation:trace-annotation')
   testCompile group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
+
+  latestDepTestCompile group: 'com.netflix.hystrix', name: 'hystrix-core', version: '+'
 }

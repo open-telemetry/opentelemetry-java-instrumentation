@@ -13,9 +13,27 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 testJava8Minimum += '**/SparkJavaBasedTest.class'
 
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+latestDepTest {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+
 compileTestJava {
   sourceCompatibility = "1.8"
   targetCompatibility = "1.8"
+}
+
+compileJava {
+  sourceCompatibility = "1.7"
+  targetCompatibility = "1.7"
 }
 
 dependencies {
@@ -31,4 +49,6 @@ dependencies {
 
   testCompile group: 'com.sparkjava', name: 'spark-core', version: '2.4'
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+
+  latestDepTestCompile group: 'com.sparkjava', name: 'spark-core', version: '+'
 }

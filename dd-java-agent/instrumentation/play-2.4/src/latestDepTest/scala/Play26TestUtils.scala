@@ -16,7 +16,7 @@ object Play26TestUtils {
   def buildTestApp(): play.Application = {
     // build play.api.Application with desired setting and pass into play.Application for testing
     val apiApp :play.api.Application = new play.api.inject.guice.GuiceApplicationBuilder()
-          .requireAtInjectOnConstructors(true)
+      .requireAtInjectOnConstructors(true)
       .router(
         Router.from {
           case GET(p"/helloplay/$from") => Action { req: RequestHeader =>
