@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.hystrix;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -31,8 +32,8 @@ public class HystrixThreadPoolInstrumentation extends Instrumenter.Configurable 
     return agentBuilder
         .type(
             named(
-                "com.netflix.hystrix.strategy.concurrency.HystrixContextScheduler$ThreadPoolWorker"))
-        // Not adding check for classes on the classpath because this is the only class we need.
+                "com.netflix.hystrix.strategy.concurrency.HystrixContextScheduler$ThreadPoolWorker"),
+            classLoaderHasClasses("com.netflix.hystrix.AbstractCommand"))
         .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
