@@ -15,6 +15,14 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
 // These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
 testJava8Only += '**/AWSClientTest.class'
 
@@ -31,4 +39,6 @@ dependencies {
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4.3')
   testCompile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.119'
+
+  latestDepTestCompile group: 'com.amazonaws', name: 'aws-java-sdk', version: '+'
 }

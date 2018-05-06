@@ -2,10 +2,6 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 
 class ScalaInstrumentationTest extends AgentTestRunner {
-  @Override
-  void afterTest() {
-    // Ignore failures to instrument sun proxy classes
-  }
 
   def "scala futures and callbacks"() {
     setup:

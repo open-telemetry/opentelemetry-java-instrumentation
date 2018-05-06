@@ -9,8 +9,8 @@ import spock.lang.Unroll
 import java.lang.reflect.Method
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
@@ -31,11 +31,6 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
   def setupSpec() {
     executeMethod = Executor.getMethod("execute", Runnable)
     submitMethod = ExecutorService.getMethod("submit", Callable)
-  }
-
-  @Override
-  void afterTest() {
-    // Ignore failures to instrument sun proxy classes
   }
 
   @Unroll

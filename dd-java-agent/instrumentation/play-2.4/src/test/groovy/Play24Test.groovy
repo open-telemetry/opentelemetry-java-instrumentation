@@ -26,11 +26,6 @@ class Play24Test extends AgentTestRunner {
     testServer.stop()
   }
 
-  @Override
-  void afterTest() {
-    // Ignore failures to instrument sun proxy classes
-  }
-
   def "request traces" () {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()

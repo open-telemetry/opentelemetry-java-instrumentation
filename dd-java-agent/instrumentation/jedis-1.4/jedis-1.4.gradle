@@ -12,6 +12,14 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
 dependencies {
   compileOnly group: 'redis.clients', name: 'jedis', version: '1.4.0'
 
@@ -24,5 +32,6 @@ dependencies {
   testCompile project(':dd-java-agent:testing')
   testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   testCompile group: 'redis.clients', name: 'jedis', version: '1.4.0'
-  
+
+  latestDepTestCompile group: 'redis.clients', name: 'jedis', version: '+'
 }

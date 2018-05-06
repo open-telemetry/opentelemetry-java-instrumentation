@@ -11,6 +11,14 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
 dependencies {
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.0.1'
 
@@ -26,4 +34,7 @@ dependencies {
   testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.0.0.v20110901'
 
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+
+  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '+'
+  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '+'
 }
