@@ -8,6 +8,8 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 import javax.jms.Connection
+import javax.jms.Message
+import javax.jms.MessageListener
 import javax.jms.Session
 import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
@@ -152,9 +154,12 @@ class JMS1Test extends AgentTestRunner {
     def messageRef = new AtomicReference<TextMessage>()
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)
-    consumer.setMessageListener { message ->
-      lock.await() // ensure the producer trace is reported first.
-      messageRef.set(message)
+    consumer.setMessageListener new MessageListener() {
+      @Override
+      void onMessage(Message message) {
+        lock.await() // ensure the producer trace is reported first.
+        messageRef.set(message)
+      }
     }
 
     def message = session.createTextMessage("a message")
