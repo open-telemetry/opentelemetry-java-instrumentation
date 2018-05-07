@@ -2,6 +2,7 @@ package datadog.trace.agent.test;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import com.google.common.collect.Sets;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
 import datadog.trace.agent.tooling.AgentInstaller;
@@ -12,6 +13,8 @@ import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.List;
+import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.bytebuddy.agent.ByteBuddyAgent;
@@ -57,6 +60,8 @@ public abstract class AgentTestRunner extends Specification {
   // loads opentracing before bootstrap classpath is setup
   // so we declare tracer as an object and cast when needed.
   protected static final Object TEST_TRACER;
+
+  protected static final Set<String> TRANSFORMED_CLASSES = Sets.newConcurrentHashSet();
   private static final AtomicInteger INSTRUMENTATION_ERROR_COUNT = new AtomicInteger();
 
   private static final Instrumentation instrumentation;
@@ -101,6 +106,7 @@ public abstract class AgentTestRunner extends Specification {
     final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
     try {
       Thread.currentThread().setContextClassLoader(AgentTestRunner.class.getClassLoader());
+      assert ServiceLoader.load(Instrumenter.class).iterator().hasNext();
       activeTransformer =
           AgentInstaller.installBytebuddyAgent(instrumentation, new ErrorCountingListener());
     } finally {
@@ -142,7 +148,9 @@ public abstract class AgentTestRunner extends Specification {
         final ClassLoader classLoader,
         final JavaModule module,
         final boolean loaded,
-        final DynamicType dynamicType) {}
+        final DynamicType dynamicType) {
+      TRANSFORMED_CLASSES.add(typeDescription.getActualName());
+    }
 
     @Override
     public void onIgnored(

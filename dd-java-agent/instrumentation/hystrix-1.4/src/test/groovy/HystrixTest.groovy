@@ -35,6 +35,8 @@ class HystrixTest extends AgentTestRunner {
       operation(command)
     }
     expect:
+    TRANSFORMED_CLASSES.contains("com.netflix.hystrix.strategy.concurrency.HystrixContextScheduler\$ThreadPoolWorker")
+    TRANSFORMED_CLASSES.contains("HystrixTest\$1")
     result == "Hello!"
 
     assertTraces(TEST_WRITER, 1) {
@@ -106,6 +108,8 @@ class HystrixTest extends AgentTestRunner {
       operation(command)
     }
     expect:
+    TRANSFORMED_CLASSES.contains("com.netflix.hystrix.strategy.concurrency.HystrixContextScheduler\$ThreadPoolWorker")
+    TRANSFORMED_CLASSES.contains("HystrixTest\$2")
     result == "Fallback!"
 
     assertTraces(TEST_WRITER, 1) {

@@ -27,6 +27,8 @@ dependencies {
 
   compile deps.bytebuddy
   compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
 
   testCompile project(':dd-trace-ot')
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'

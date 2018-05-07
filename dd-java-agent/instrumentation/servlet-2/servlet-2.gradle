@@ -19,7 +19,8 @@ dependencies {
 
   compile deps.bytebuddy
   compile deps.opentracing
-  compile deps.autoservice
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
 
   testCompile project(':dd-java-agent:testing')
   testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.0.0.v20091005'

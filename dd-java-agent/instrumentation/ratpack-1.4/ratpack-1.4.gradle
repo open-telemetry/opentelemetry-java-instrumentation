@@ -26,6 +26,10 @@ compileMain_java8Java {
   sourceCompatibility = 1.8
   targetCompatibility = 1.8
 }
+configurations {
+  main_java8AnnotationProcessor.extendsFrom lombok
+  main_java8Implementation.extendsFrom lombok
+}
 
 apply plugin: 'org.unbroken-dome.test-sets'
 
@@ -43,7 +47,9 @@ dependencies {
 
   main_java8Compile deps.bytebuddy
   main_java8Compile deps.opentracing
-  main_java8Compile deps.autoservice
+
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
 
   compileOnly sourceSets.main_java8.compileClasspath
 

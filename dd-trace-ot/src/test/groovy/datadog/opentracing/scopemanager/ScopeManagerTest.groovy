@@ -7,6 +7,7 @@ import datadog.opentracing.PendingTrace
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.Scope
 import io.opentracing.Span
+import io.opentracing.noop.NoopSpan
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
@@ -23,6 +24,21 @@ class ScopeManagerTest extends Specification {
 
   def cleanup() {
     scopeManager.tlsScope.remove()
+  }
+
+  def "non-ddspan activation results in a simple scope"() {
+    when:
+    def scope = scopeManager.activate(NoopSpan.INSTANCE, true)
+
+    then:
+    scopeManager.active() == scope
+    scope instanceof SimpleScope
+
+    when:
+    scope.close()
+
+    then:
+    scopeManager.active() == null
   }
 
   def "threadlocal is empty"() {

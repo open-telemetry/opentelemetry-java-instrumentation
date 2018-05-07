@@ -2,6 +2,7 @@ package datadog.opentracing.decorators;
 
 import datadog.opentracing.DDSpanContext;
 import io.opentracing.tag.Tags;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,18 +12,19 @@ import java.util.Map;
  */
 public class OperationDecorator extends AbstractDecorator {
 
-  static final Map<String, String> MAPPINGS =
-      new HashMap<String, String>() {
-        {
-          // Component name <> Operation name
-          put("apache-httpclient", "apache.http");
-          put("java-aws-sdk", "aws.http");
-          // FIXME: JMS ops card is low (jms-send or jms-receive), may be this mapping is useless
-          put("java-jms", "jms");
-          put("okhttp", "okhttp.http");
-          // Cassandra, Mongo, JDBC are set via DBTypeDecorator
-        }
-      };
+  static final Map<String, String> MAPPINGS;
+
+  static {
+    final Map<String, String> mappings = new HashMap<>();
+    // Component name <> Operation name
+    mappings.put("apache-httpclient", "apache.http");
+    mappings.put("java-aws-sdk", "aws.http");
+    // FIXME: JMS ops card is low (jms-send or jms-receive), may be this mapping is useless
+    mappings.put("java-jms", "jms");
+    mappings.put("okhttp", "okhttp.http");
+    // Cassandra, Mongo, JDBC are set via DBTypeDecorator
+    MAPPINGS = Collections.unmodifiableMap(mappings);
+  }
 
   public OperationDecorator() {
     super();

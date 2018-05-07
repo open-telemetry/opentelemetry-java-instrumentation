@@ -67,9 +67,10 @@ public class TracingIterable<T> implements Iterable<T> {
           decorator.decorate(spanBuilder, next);
           currentScope = spanBuilder.startActive(true);
         }
-      } finally {
-        return next;
+      } catch (final Exception e) {
+        log.debug("Error during decoration", e);
       }
+      return next;
     }
 
     @Override

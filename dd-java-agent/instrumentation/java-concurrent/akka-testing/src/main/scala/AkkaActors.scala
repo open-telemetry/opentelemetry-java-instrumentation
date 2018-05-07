@@ -1,12 +1,11 @@
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.pattern.ask
+import akka.util.Timeout
 import datadog.trace.api.Trace
 import datadog.trace.context.TraceScope
-import akka.pattern.ask
 import io.opentracing.util.GlobalTracer
 
 import scala.concurrent.duration._
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
-import akka.routing.Broadcast
-import akka.util.Timeout
 
 // ! == send-message
 object AkkaActors {
@@ -84,7 +83,6 @@ class Receiver extends Actor with ActorLogging {
   def receive = {
     case Greeting(greeting) => {
       AkkaActors.tracedChild(greeting)
-      "done"
     }
 
   }

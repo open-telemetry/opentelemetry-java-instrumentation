@@ -3,7 +3,8 @@ apply from: "${rootDir}/gradle/java.gradle"
 dependencies {
   compile project(':dd-java-agent:agent-tooling')
   compile deps.bytebuddy
-  compile deps.autoservice
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
 
   testCompile group: 'org.jboss.modules', name: 'jboss-modules', version: '1.3.10.Final'
   testCompile project(':dd-java-agent:testing')

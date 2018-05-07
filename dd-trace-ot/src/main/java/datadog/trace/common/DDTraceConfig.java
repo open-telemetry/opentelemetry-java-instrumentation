@@ -83,12 +83,14 @@ public class DDTraceConfig extends Properties {
       return Collections.emptyMap();
     }
 
-    final String[] tokens = str.split(",");
+    final String[] tokens = str.split(",", -1);
     final Map<String, Object> map = new HashMap<>(tokens.length + 1, 1f);
 
     for (final String token : tokens) {
-      final String[] keyValue = token.split(":");
-      map.put(keyValue[0].trim(), keyValue[1].trim());
+      final String[] keyValue = token.split(":", -1);
+      if (keyValue.length == 2) {
+        map.put(keyValue[0].trim(), keyValue[1].trim());
+      }
     }
     return Collections.unmodifiableMap(map);
   }

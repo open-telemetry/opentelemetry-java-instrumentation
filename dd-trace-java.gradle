@@ -3,9 +3,9 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath "io.franzbecker:gradle-lombok:1.8"
-    classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.4.18"
-    classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3"
+    classpath "io.franzbecker:gradle-lombok:1.13"
+    classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.7.2"
+    classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0"
     classpath "net.ltgt.gradle:gradle-errorprone-plugin:0.0.13"
     classpath 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin:1.4.5'
   }

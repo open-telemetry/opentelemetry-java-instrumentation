@@ -4,7 +4,6 @@ plugins {
 
 apply plugin: 'application'
 apply from: "${rootDir}/gradle/java.gradle"
-apply from: "${rootDir}/gradle/jacoco.gradle"
 
 version = 'demo'
 description = 'rest-spark'

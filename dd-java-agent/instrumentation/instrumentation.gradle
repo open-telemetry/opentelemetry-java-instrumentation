@@ -15,6 +15,10 @@ subprojects { subProj ->
   }
 }
 
+whitelistedInstructionClasses += whitelistedBranchClasses += [
+  'datadog.trace.instrumentation.*'
+]
+
 dependencies {
   compile(project(':dd-java-agent:agent-tooling')) {
     exclude module: ':dd-java-agent:agent-bootstrap'

@@ -13,6 +13,7 @@ lombok { // optional: values below are the defaults
 
 apply plugin: "net.ltgt.errorprone"
 tasks.withType(JavaCompile) {
+  options.compilerArgs += ['-Xep:FutureReturnValueIgnored:OFF']
   // workaround for: https://github.com/google/error-prone/issues/780
   options.compilerArgs += ['-Xep:ParameterName:OFF']
 }
@@ -152,6 +153,7 @@ tasks.withType(Test) {
 
 apply from: "$rootDir/gradle/checkstyle.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
+apply from: "$rootDir/gradle/jacoco.gradle"
 
 plugins.withType(BasePlugin) {
   project.afterEvaluate {

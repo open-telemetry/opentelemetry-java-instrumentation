@@ -33,7 +33,8 @@ dependencies {
 
   compile deps.bytebuddy
   compile deps.opentracing
-  compile deps.autoservice
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
 
   testCompile project(':dd-java-agent:testing')
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.

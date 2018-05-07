@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.jdbc;
 
+import static datadog.trace.bootstrap.CallDepthThreadLocalMap.Key.CONNECTION;
 import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -58,7 +59,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Configurable {
     public static int constructorEnter() {
       // We use this to make sure we only apply the exit instrumentation
       // after the constructors are done calling their super constructors.
-      return CallDepthThreadLocalMap.get(Connection.class).incrementCallDepth();
+      return CallDepthThreadLocalMap.incrementCallDepth(CONNECTION);
     }
 
     // Since we're instrumenting the constructor, we can't add onThrowable.
@@ -67,12 +68,12 @@ public final class ConnectionInstrumentation extends Instrumenter.Configurable {
         @Advice.Enter final int depth, @Advice.This final Connection connection)
         throws SQLException {
       if (depth == 0) {
-        CallDepthThreadLocalMap.get(Connection.class).reset();
+        CallDepthThreadLocalMap.reset(CONNECTION);
         final String url = connection.getMetaData().getURL();
         if (url != null) {
           // Remove end of url to prevent passwords from leaking:
           final String sanitizedURL = url.replaceAll("[?;].*", "");
-          final String type = url.split(":")[1];
+          final String type = url.split(":", -1)[1];
           String user = connection.getMetaData().getUserName();
           if (user != null && user.trim().equals("")) {
             user = null;

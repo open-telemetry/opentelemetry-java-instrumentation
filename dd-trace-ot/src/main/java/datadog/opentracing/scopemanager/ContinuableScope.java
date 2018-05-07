@@ -78,7 +78,7 @@ public class ContinuableScope implements Scope, TraceScope {
   }
 
   @Override
-  public void setAsyncPropagation(boolean value) {
+  public void setAsyncPropagation(final boolean value) {
     isAsyncPropagating.set(value);
   }
 
@@ -87,6 +87,7 @@ public class ContinuableScope implements Scope, TraceScope {
    *
    * @return The new continuation, or null if this scope is not async propagating.
    */
+  @Override
   public Continuation capture() {
     if (isAsyncPropagating()) {
       return new Continuation();
@@ -108,6 +109,7 @@ public class ContinuableScope implements Scope, TraceScope {
       trace.registerContinuation(this);
     }
 
+    @Override
     public ContinuableScope activate() {
       if (used.compareAndSet(false, true)) {
         return new ContinuableScope(scopeManager, openCount, this, spanUnderScope, finishOnClose);

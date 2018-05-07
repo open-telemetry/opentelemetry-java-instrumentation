@@ -6,13 +6,8 @@ description = 'dd-java-agent'
 
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/publish.gradle"
-apply from: "${rootDir}/gradle/jacoco.gradle"
-jacocoTestReport.dependsOn ':dd-java-agent-ittests:test'
 
-whitelistedInstructionClasses += whitelistedBranchClasses += [
-  'datadog.agent.*',
-  'datadog.agent.decorators.*',
-]
+jacocoTestReport.dependsOn ':dd-java-agent-ittests:test'
 
 /*
  * Include subproject's shadowJar in the dd-java-agent jar.

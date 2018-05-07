@@ -6,15 +6,12 @@ description = 'dd-trace-ot'
 
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/publish.gradle"
-apply from: "${rootDir}/gradle/jacoco.gradle"
-minimumBranchCoverage = 0.3
-minimumInstructionCoverage = 0.5
+
+minimumBranchCoverage = 0.5
+minimumInstructionCoverage = 0.6
 whitelistedInstructionClasses += whitelistedBranchClasses += [
   'datadog.opentracing.decorators.*',
   'datadog.trace.common.writer.ListWriter',
-  'datadog.trace.common.util.Clock',
-  'datadog.trace.api.DDTags',
-  'datadog.trace.common.util.ConfigUtils',
   'datadog.trace.common.sampling.PrioritySampling'
 ]
 
@@ -28,7 +25,8 @@ testSets {
 }
 
 dependencies {
-  compile deps.autoservice
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
   
   compile project(':dd-trace-api')
   compile deps.opentracing

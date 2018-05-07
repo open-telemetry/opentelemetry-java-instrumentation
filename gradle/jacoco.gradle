@@ -1,5 +1,9 @@
 apply plugin: "jacoco"
 
+jacoco {
+  toolVersion = "0.8.0"
+}
+
 jacocoTestReport {
   dependsOn test
   reports {
@@ -9,11 +13,21 @@ jacocoTestReport {
   }
 }
 
-project.ext.whitelistedBranchClasses = []
-project.ext.whitelistedInstructionClasses = []
+if (project.parent.hasProperty("whitelistedBranchClasses")) {
+  project.ext.whitelistedBranchClasses = parent.whitelistedBranchClasses
+} else {
+  project.ext.whitelistedBranchClasses = []
+}
 
-project.ext.minimumBranchCoverage = 0.6
-project.ext.minimumInstructionCoverage = 0.6
+if (project.parent.hasProperty("whitelistedInstructionClasses")) {
+  project.ext.whitelistedInstructionClasses = parent.whitelistedInstructionClasses
+} else {
+  project.ext.whitelistedInstructionClasses = []
+}
+
+// defaults can be overridden per project:
+project.ext.minimumBranchCoverage = 0.9
+project.ext.minimumInstructionCoverage = 0.9
 
 afterEvaluate {
   jacocoTestCoverageVerification {
