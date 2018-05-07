@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.jdbc;
 
-import static datadog.trace.bootstrap.CallDepthThreadLocalMap.Key.STATEMENT;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -53,7 +52,7 @@ public final class StatementInstrumentation extends Instrumenter.Configurable {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
         @Advice.Argument(0) final String sql, @Advice.This final Statement statement) {
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(STATEMENT);
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Statement.class);
       if (callDepth > 0) {
         return null;
       }
@@ -101,7 +100,7 @@ public final class StatementInstrumentation extends Instrumenter.Configurable {
           span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
         }
         scope.close();
-        CallDepthThreadLocalMap.reset(STATEMENT);
+        CallDepthThreadLocalMap.reset(Statement.class);
       }
     }
   }
