@@ -35,6 +35,7 @@ class SpanAssert {
 
   def spanType(String type) {
     assert span.spanType == type
+    assert span.tags["span.type"] == type
   }
 
   def parent() {

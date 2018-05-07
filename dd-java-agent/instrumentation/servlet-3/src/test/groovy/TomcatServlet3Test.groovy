@@ -15,7 +15,9 @@ import spock.lang.Unroll
 
 import java.lang.reflect.Field
 
-class TomcatServletTest extends AgentTestRunner {
+import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+
+class TomcatServlet3Test extends AgentTestRunner {
 
   static final int PORT = TestUtils.randomOpenPort()
   OkHttpClient client = new OkHttpClient.Builder()
@@ -52,10 +54,10 @@ class TomcatServletTest extends AgentTestRunner {
       }
     })
 
-    Tomcat.addServlet(appContext, "syncServlet", new TestServlet.Sync())
+    Tomcat.addServlet(appContext, "syncServlet", new TestServlet3.Sync())
     appContext.addServletMappingDecoded("/sync", "syncServlet")
 
-    Tomcat.addServlet(appContext, "asyncServlet", new TestServlet.Async())
+    Tomcat.addServlet(appContext, "asyncServlet", new TestServlet3.Async())
     appContext.addServletMappingDecoded("/async", "asyncServlet")
 
     tomcatServer.start()
@@ -91,26 +93,28 @@ class TomcatServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() == expectedResponse
-    writer.waitForTraces(1)
-    writer.size() == 1
-    def trace = writer.firstTrace()
-    trace.size() == 1
-    def span = trace[0]
 
-    span.context().serviceName == "unnamed-java-app"
-    span.context().operationName == "servlet.request"
-    span.context().resourceName == "GET /$path"
-    span.context().spanType == DDSpanTypes.WEB_SERVLET
-    !span.context().getErrorFlag()
-    span.context().parentId == 0
-    span.context().tags["http.url"] == "http://localhost:$PORT/$path"
-    span.context().tags["http.method"] == "GET"
-    span.context().tags["span.kind"] == "server"
-    span.context().tags["component"] == "java-web-servlet"
-    span.context().tags["http.status_code"] == 200
-    span.context().tags["thread.name"] != null
-    span.context().tags["thread.id"] != null
-    span.context().tags.size() == 8
+    assertTraces(writer, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "servlet.request"
+          resourceName "GET /$path"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          parent()
+          tags {
+            "http.url" "http://localhost:$PORT/$path"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "http.status_code" 200
+            defaultTags()
+          }
+        }
+      }
+    }
 
     where:
     path    | expectedResponse
@@ -129,30 +133,29 @@ class TomcatServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() != expectedResponse
-    writer.waitForTraces(1)
-    writer.size() == 1
-    def trace = writer.firstTrace()
-    trace.size() == 1
-    def span = trace[0]
 
-    span.context().serviceName == "unnamed-java-app"
-    span.context().operationName == "servlet.request"
-    span.context().resourceName == "GET /$path"
-    span.context().spanType == DDSpanTypes.WEB_SERVLET
-    span.context().getErrorFlag()
-    span.context().parentId == 0
-    span.context().tags["http.url"] == "http://localhost:$PORT/$path"
-    span.context().tags["http.method"] == "GET"
-    span.context().tags["span.kind"] == "server"
-    span.context().tags["component"] == "java-web-servlet"
-    span.context().tags["http.status_code"] == 500
-    span.context().tags["thread.name"] != null
-    span.context().tags["thread.id"] != null
-    span.context().tags["error"] == true
-    span.context().tags["error.msg"] == "some $path error"
-    span.context().tags["error.type"] == RuntimeException.getName()
-    span.context().tags["error.stack"] != null
-    span.context().tags.size() == 12
+    assertTraces(writer, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "servlet.request"
+          resourceName "GET /$path"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored true
+          parent()
+          tags {
+            "http.url" "http://localhost:$PORT/$path"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "http.status_code" 500
+            errorTags(RuntimeException, "some $path error")
+            defaultTags()
+          }
+        }
+      }
+    }
 
     where:
     path   | expectedResponse
@@ -171,30 +174,29 @@ class TomcatServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() != expectedResponse
-    writer.waitForTraces(1)
-    writer.size() == 1
-    def trace = writer.firstTrace()
-    trace.size() == 1
-    def span = trace[0]
 
-    span.context().serviceName == "unnamed-java-app"
-    span.context().operationName == "servlet.request"
-    span.context().resourceName == "GET /$path"
-    span.context().spanType == DDSpanTypes.WEB_SERVLET
-    span.context().getErrorFlag()
-    span.context().parentId == 0
-    span.context().tags["http.url"] == "http://localhost:$PORT/$path"
-    span.context().tags["http.method"] == "GET"
-    span.context().tags["span.kind"] == "server"
-    span.context().tags["component"] == "java-web-servlet"
-    span.context().tags["http.status_code"] == 500
-    span.context().tags["thread.name"] != null
-    span.context().tags["thread.id"] != null
-    span.context().tags["error"] == true
-    span.context().tags["error.msg"] == null
-    span.context().tags["error.type"] == null
-    span.context().tags["error.stack"] == null
-    span.context().tags.size() == 9
+    assertTraces(writer, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "servlet.request"
+          resourceName "GET /$path"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored true
+          parent()
+          tags {
+            "http.url" "http://localhost:$PORT/$path"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "http.status_code" 500
+            "error" true
+            defaultTags()
+          }
+        }
+      }
+    }
 
     where:
     path   | expectedResponse
