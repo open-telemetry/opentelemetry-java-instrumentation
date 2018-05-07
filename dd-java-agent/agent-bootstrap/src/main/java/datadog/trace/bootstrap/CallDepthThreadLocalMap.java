@@ -11,16 +11,16 @@ import java.util.concurrent.atomic.AtomicInteger;
  * #incrementCallDepth at the beginning of each constructor.
  */
 public class CallDepthThreadLocalMap {
-  private static final ThreadLocal<Map<Key, AtomicInteger>> TLS =
-      new ThreadLocal<Map<Key, AtomicInteger>>() {
+  private static final ThreadLocal<Map<Object, AtomicInteger>> TLS =
+      new ThreadLocal<Map<Object, AtomicInteger>>() {
         @Override
-        public Map<Key, AtomicInteger> initialValue() {
+        public Map<Object, AtomicInteger> initialValue() {
           return new HashMap<>();
         }
       };
 
-  public static int incrementCallDepth(final Key k) {
-    final Map<Key, AtomicInteger> map = TLS.get();
+  public static int incrementCallDepth(final Object k) {
+    final Map<Object, AtomicInteger> map = TLS.get();
     AtomicInteger depth = map.get(k);
     if (depth == null) {
       depth = new AtomicInteger(0);
@@ -31,17 +31,10 @@ public class CallDepthThreadLocalMap {
     }
   }
 
-  public static void reset(final Key k) {
-    final Map<Key, AtomicInteger> map = TLS.get();
+  public static void reset(final Object k) {
+    final Map<Object, AtomicInteger> map = TLS.get();
     if (map != null) {
       map.remove(k);
     }
-  }
-
-  public enum Key {
-    CLASSLOADER,
-    CONNECTION,
-    PREPARED_STATEMENT,
-    STATEMENT
   }
 }

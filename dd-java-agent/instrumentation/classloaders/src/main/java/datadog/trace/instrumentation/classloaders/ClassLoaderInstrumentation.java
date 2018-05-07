@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.classloaders;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
-import static datadog.trace.bootstrap.CallDepthThreadLocalMap.Key.CLASSLOADER;
 import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
@@ -46,7 +45,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Configurable 
     public static int constructorEnter() {
       // We use this to make sure we only apply the exit instrumentation
       // after the constructors are done calling their super constructors.
-      return CallDepthThreadLocalMap.incrementCallDepth(CLASSLOADER);
+      return CallDepthThreadLocalMap.incrementCallDepth(ClassLoader.class);
     }
 
     // Not sure why, but adding suppress causes a verify error.
@@ -54,7 +53,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Configurable 
     public static void constructorExit(
         @Advice.This final ClassLoader cl, @Advice.Enter final int depth) {
       if (depth == 0) {
-        CallDepthThreadLocalMap.reset(CLASSLOADER);
+        CallDepthThreadLocalMap.reset(ClassLoader.class);
 
         try {
           final Field field = GlobalTracer.class.getDeclaredField("tracer");

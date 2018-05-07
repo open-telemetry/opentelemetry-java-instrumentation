@@ -6,8 +6,8 @@ class CallDepthThreadLocalMapTest extends Specification {
 
   def "test CallDepthThreadLocalMap"() {
     setup:
-    def k1 = CallDepthThreadLocalMap.Key.CLASSLOADER
-    def k2 = CallDepthThreadLocalMap.Key.CONNECTION
+    def k1 = new Object()
+    def k2 = new Object()
 
     expect:
     CallDepthThreadLocalMap.incrementCallDepth(k1) == 0
