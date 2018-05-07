@@ -161,7 +161,7 @@ class HystrixTest extends AgentTestRunner {
       cmd.observe().subscribe { next ->
         queue.put(next)
       }
-      queue.poll()
+      queue.take()
     }
   }
 }
