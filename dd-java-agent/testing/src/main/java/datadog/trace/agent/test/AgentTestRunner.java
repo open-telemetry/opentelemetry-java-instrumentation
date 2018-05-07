@@ -127,7 +127,7 @@ public abstract class AgentTestRunner extends Specification {
   }
 
   @AfterClass
-  public static synchronized void agentClenup() {
+  public static synchronized void agentCleanup() {
     if (null != activeTransformer) {
       instrumentation.removeTransformer(activeTransformer);
       activeTransformer = null;

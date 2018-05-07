@@ -9,6 +9,10 @@ import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class TraceAnnotationsTest extends AgentTestRunner {
 
+  static {
+    System.clearProperty("dd.trace.annotations")
+  }
+
   def "test simple case annotations"() {
     setup:
     // Test single span in new trace
@@ -141,35 +145,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
           }
         }
       }
-    }
-  }
-
-  def "test configuration based trace"() {
-    expect:
-    new ConfigTracedCallable().call() == "Hello!"
-
-    when:
-    TEST_WRITER.waitForTraces(1)
-
-    then:
-    assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
-        span(0) {
-          resourceName "ConfigTracedCallable.call"
-          operationName "ConfigTracedCallable.call"
-        }
-      }
-    }
-  }
-
-  static {
-    System.setProperty("dd.trace.methods", "package.ClassName[method1,method2];${ConfigTracedCallable.name}[call]")
-  }
-
-  class ConfigTracedCallable implements Callable<String> {
-    @Override
-    String call() throws Exception {
-      return "Hello!"
     }
   }
 }

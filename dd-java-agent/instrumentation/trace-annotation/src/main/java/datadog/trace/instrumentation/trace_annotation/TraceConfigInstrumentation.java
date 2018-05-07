@@ -21,6 +21,19 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class TraceConfigInstrumentation extends Instrumenter.Configurable {
   private static final String CONFIG_NAME = "dd.trace.methods";
 
+  static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.\\$]+";
+  private static final String METHOD_LIST_REGEX = "\\s*(?:\\w+\\s*,)*\\s*(?:\\w+\\s*,?)\\s*";
+  private static final String CONFIG_FORMAT =
+      "(?:\\s*"
+          + PACKAGE_CLASS_NAME_REGEX
+          + "\\["
+          + METHOD_LIST_REGEX
+          + "\\]\\s*;)*\\s*"
+          + PACKAGE_CLASS_NAME_REGEX
+          + "\\["
+          + METHOD_LIST_REGEX
+          + "\\]\\s*;?\\s*";
+
   private final Map<String, Set<String>> classMethodsToTrace;
 
   public TraceConfigInstrumentation() {
@@ -30,10 +43,10 @@ public class TraceConfigInstrumentation extends Instrumenter.Configurable {
     if (configString == null || configString.trim().isEmpty()) {
       classMethodsToTrace = Collections.emptyMap();
 
-    } else if (!configString.matches(
-        "(?:([\\w.\\$]+)\\[((?:\\w+,)*(?:\\w+,?))\\];)*([\\w.\\$]+)\\[((?:\\w+,)*(?:\\w+,?))\\];?")) {
+    } else if (!configString.matches(CONFIG_FORMAT)) {
       log.warn(
-          "Invalid config '{}'. Must match 'package.Class$Name[method1,method2];*'.", configString);
+          "Invalid trace method config '{}'. Must match 'package.Class$Name[method1,method2];*'.",
+          configString);
       classMethodsToTrace = Collections.emptyMap();
 
     } else {
@@ -42,10 +55,20 @@ public class TraceConfigInstrumentation extends Instrumenter.Configurable {
       for (final String classMethod : classMethods) {
         final String[] splitClassMethod = classMethod.split("\\[");
         final String className = splitClassMethod[0];
-        final String methodNames =
-            splitClassMethod[1].substring(0, splitClassMethod[1].length() - 1);
+        final String method = splitClassMethod[1].trim();
+        final String methodNames = method.substring(0, method.length() - 1);
         final String[] splitMethodNames = methodNames.split(",");
-        toTrace.put(className, Sets.newHashSet(splitMethodNames));
+        final Set<String> trimmedMethodNames =
+            Sets.newHashSetWithExpectedSize(splitMethodNames.length);
+        for (final String methodName : splitMethodNames) {
+          final String trimmedMethodName = methodName.trim();
+          if (!trimmedMethodName.isEmpty()) {
+            trimmedMethodNames.add(trimmedMethodName);
+          }
+        }
+        if (!trimmedMethodNames.isEmpty()) {
+          toTrace.put(className.trim(), trimmedMethodNames);
+        }
       }
       classMethodsToTrace = Collections.unmodifiableMap(toTrace);
     }
