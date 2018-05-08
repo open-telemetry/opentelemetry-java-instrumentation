@@ -21,7 +21,7 @@ public class JDBCMaps {
 
   @Data
   public static class DBInfo {
-    public static DBInfo UNKNOWN = new DBInfo("null", "unknown", null);
+    public static DBInfo UNKNOWN = new DBInfo("null", "database", null);
     private final String url;
     private final String type;
     private final String user;
