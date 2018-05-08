@@ -17,11 +17,11 @@ public class JDBCMaps {
       Collections.synchronizedMap(new WeakHashMap<Connection, DBInfo>());
   public static final Map<PreparedStatement, String> preparedStatements =
       Collections.synchronizedMap(new WeakHashMap<PreparedStatement, String>());
-  public static final String UNKNOWN_QUERY = "Unknown Query";
+  public static final String DB_QUERY = "DB Query";
 
   @Data
   public static class DBInfo {
-    public static DBInfo UNKNOWN = new DBInfo("null", "database", null);
+    public static DBInfo DEFAULT = new DBInfo("null", "database", null);
     private final String url;
     private final String type;
     private final String user;

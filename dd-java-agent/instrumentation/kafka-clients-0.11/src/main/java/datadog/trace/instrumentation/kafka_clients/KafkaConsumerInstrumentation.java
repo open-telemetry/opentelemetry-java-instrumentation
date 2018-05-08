@@ -95,7 +95,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Configurabl
 
     @Override
     public void decorate(final Tracer.SpanBuilder spanBuilder, final ConsumerRecord record) {
-      final String topic = record.topic() == null ? "unknown" : record.topic();
+      final String topic = record.topic() == null ? "kafka" : record.topic();
       final SpanContext spanContext =
           GlobalTracer.get()
               .extract(Format.Builtin.TEXT_MAP, new TextMapExtractAdapter(record.headers()));

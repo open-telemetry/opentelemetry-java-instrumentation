@@ -66,7 +66,7 @@ public final class StatementInstrumentation extends Instrumenter.Configurable {
 
       JDBCMaps.DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
       if (dbInfo == null) {
-        dbInfo = JDBCMaps.DBInfo.UNKNOWN;
+        dbInfo = JDBCMaps.DBInfo.DEFAULT;
       }
 
       final Scope scope =
