@@ -17,18 +17,20 @@ import java.lang.reflect.Field
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-class JettyServletTest extends AgentTestRunner {
+import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+
+class JettyServlet2Test extends AgentTestRunner {
 
   static final int PORT = TestUtils.randomOpenPort()
 
   // Jetty needs this to ensure consistent ordering for async.
-  static CountDownLatch latch
+  CountDownLatch latch = new CountDownLatch(1)
   OkHttpClient client = new OkHttpClient.Builder()
     .addNetworkInterceptor(new Interceptor() {
     @Override
     Response intercept(Interceptor.Chain chain) throws IOException {
       def response = chain.proceed(chain.request())
-      JettyServletTest.latch.await(10, TimeUnit.SECONDS) // don't block forever or test never fails.
+      JettyServlet2Test.this.latch.await(10, TimeUnit.SECONDS) // don't block forever or test never fails.
       return response
     }
   })
@@ -45,7 +47,7 @@ class JettyServletTest extends AgentTestRunner {
     @Override
     void write(final List<DDSpan> trace) {
       add(trace)
-      JettyServletTest.latch.countDown()
+      JettyServlet2Test.this.latch.countDown()
     }
   }
   DDTracer tracer = new DDTracer(writer)
@@ -54,7 +56,7 @@ class JettyServletTest extends AgentTestRunner {
     jettyServer = new Server(PORT)
     servletContext = new ServletContextHandler()
 
-    servletContext.addServlet(TestServlet.Sync, "/sync")
+    servletContext.addServlet(TestServlet2.Sync, "/sync")
 
     jettyServer.setHandler(servletContext)
     jettyServer.start()
@@ -82,7 +84,6 @@ class JettyServletTest extends AgentTestRunner {
   @Unroll
   def "test #path servlet call"() {
     setup:
-    latch = new CountDownLatch(1)
     def request = new Request.Builder()
       .url("http://localhost:$PORT/$path")
       .get()
@@ -91,26 +92,27 @@ class JettyServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() == expectedResponse
-    writer.waitForTraces(1)
-    writer.size() == 1
-    def trace = writer.firstTrace()
-    trace.size() == 1
-    def span = trace[0]
 
-    span.context().serviceName == "unnamed-java-app"
-    span.context().operationName == "servlet.request"
-    span.context().resourceName == "GET /$path"
-    span.context().spanType == DDSpanTypes.WEB_SERVLET
-    !span.context().getErrorFlag()
-    span.context().parentId == 0
-    span.context().tags["http.url"] == "http://localhost:$PORT/$path"
-    span.context().tags["http.method"] == "GET"
-    span.context().tags["span.kind"] == "server"
-    span.context().tags["component"] == "java-web-servlet"
-    span.context().tags["http.status_code"] == null // sadly servlet 2.x doesn't expose it generically.
-    span.context().tags["thread.name"] != null
-    span.context().tags["thread.id"] != null
-    span.context().tags.size() == 7
+    assertTraces(writer, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "servlet.request"
+          resourceName "GET /$path"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          parent()
+          tags {
+            "http.url" "http://localhost:$PORT/$path"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            defaultTags()
+          }
+        }
+      }
+    }
 
     where:
     path   | expectedResponse
@@ -128,29 +130,67 @@ class JettyServletTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() != expectedResponse
-    writer.waitForTraces(1)
-    writer.size() == 1
-    def trace = writer.firstTrace()
-    trace.size() == 1
-    def span = trace[0]
 
-    span.context().operationName == "servlet.request"
-    span.context().resourceName == "GET /$path"
-    span.context().spanType == DDSpanTypes.WEB_SERVLET
-    span.context().getErrorFlag()
-    span.context().parentId == 0
-    span.context().tags["http.url"] == "http://localhost:$PORT/$path"
-    span.context().tags["http.method"] == "GET"
-    span.context().tags["span.kind"] == "server"
-    span.context().tags["component"] == "java-web-servlet"
-    span.context().tags["http.status_code"] == null // sadly servlet 2.x doesn't expose it generically.
-    span.context().tags["thread.name"] != null
-    span.context().tags["thread.id"] != null
-    span.context().tags["error"] == true
-    span.context().tags["error.msg"] == "some $path error"
-    span.context().tags["error.type"] == RuntimeException.getName()
-    span.context().tags["error.stack"] != null
-    span.context().tags.size() == 11
+    assertTraces(writer, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "servlet.request"
+          resourceName "GET /$path"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored true
+          parent()
+          tags {
+            "http.url" "http://localhost:$PORT/$path"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            errorTags(RuntimeException, "some $path error")
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    where:
+    path   | expectedResponse
+    "sync" | "Hello Sync"
+  }
+
+  @Unroll
+  def "test #path non-throwing-error servlet call"() {
+    // This doesn't actually detect the error because we can't get the status code via the old servlet API.
+    setup:
+    def request = new Request.Builder()
+      .url("http://localhost:$PORT/$path?non-throwing-error=true")
+      .get()
+      .build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.body().string().trim() != expectedResponse
+
+    assertTraces(writer, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "servlet.request"
+          resourceName "GET /$path"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          parent()
+          tags {
+            "http.url" "http://localhost:$PORT/$path"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            defaultTags()
+          }
+        }
+      }
+    }
 
     where:
     path   | expectedResponse

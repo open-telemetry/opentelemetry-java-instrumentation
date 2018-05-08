@@ -60,6 +60,7 @@ class TraceConfigTest extends AgentTestRunner {
     " "                                                             | [:]
     "some.package.ClassName"                                        | [:]
     "some.package.ClassName[ , ]"                                   | [:]
+    "some.package.ClassName[ , method]"                             | [:]
     "some.package.Class\$Name[ method , ]"                          | ["some.package.Class\$Name": ["method"].toSet()]
     "ClassName[ method1,]"                                          | ["ClassName": ["method1"].toSet()]
     "ClassName[method1 , method2]"                                  | ["ClassName": ["method1", "method2"].toSet()]

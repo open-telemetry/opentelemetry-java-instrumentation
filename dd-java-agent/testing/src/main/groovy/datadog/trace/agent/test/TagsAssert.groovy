@@ -30,9 +30,18 @@ class TagsAssert {
   }
 
   def errorTags(Class<Throwable> errorType) {
+    errorTags(errorType, null)
+  }
+
+  def errorTags(Class<Throwable> errorType, String message) {
     assertedTags.add("error")
     assertedTags.add("error.type")
     assertedTags.add("error.stack")
+
+    if (message != null) {
+      assertedTags.add("error.msg")
+      tags["error.msg"] == message
+    }
 
     tags["error"] == true
     tags["error.type"] == errorType

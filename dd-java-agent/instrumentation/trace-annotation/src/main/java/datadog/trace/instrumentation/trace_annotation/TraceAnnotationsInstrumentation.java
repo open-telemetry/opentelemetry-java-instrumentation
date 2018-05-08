@@ -24,7 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
 @AutoService(Instrumenter.class)
-public final class TraceAnnotationInstrumentation extends Instrumenter.Configurable {
+public final class TraceAnnotationsInstrumentation extends Instrumenter.Configurable {
   private static final String CONFIG_NAME = "dd.trace.annotations";
 
   static final String CONFIG_FORMAT =
@@ -45,7 +45,7 @@ public final class TraceAnnotationInstrumentation extends Instrumenter.Configura
 
   private final Set<String> additionalTraceAnnotations;
 
-  public TraceAnnotationInstrumentation() {
+  public TraceAnnotationsInstrumentation() {
     super("trace", "trace-annotation");
 
     final String configString = getPropOrEnv(CONFIG_NAME);
