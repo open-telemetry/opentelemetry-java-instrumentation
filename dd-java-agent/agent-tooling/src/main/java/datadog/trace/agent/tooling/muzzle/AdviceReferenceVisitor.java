@@ -85,7 +85,7 @@ public class AdviceReferenceVisitor extends ClassVisitor {
     final Set<String> visitedSources = new HashSet<String>();
     final Map<String, Reference> references = new HashMap<>();
 
-    final Queue<String> instrumentationQueue = new LinkedList<>();
+    final Queue<String> instrumentationQueue = new ArrayDeque<>();
     instrumentationQueue.add(entryPointClassName);
 
     while (!instrumentationQueue.isEmpty()) {

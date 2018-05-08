@@ -39,7 +39,8 @@ public class DatadogClassLoader extends URLClassLoader {
   }
 
   /**
-   * A stand-in for the bootstrap classloader. Used to look up bootstrap resources and resources appended by instrumentation.
+   * A stand-in for the bootstrap classloader. Used to look up bootstrap resources and resources
+   * appended by instrumentation.
    *
    * <p>This class is thread safe.
    */

@@ -12,9 +12,8 @@ import net.bytebuddy.jar.asm.*;
 import net.bytebuddy.pool.TypePool;
 
 /**
- * Add a referenceMatcher field and 2.
- *
- * <p>And for each decorator add a final transformer to assert the classpath is safe instrument.
+ * Add a instrumentationMuzzle field and for each decorator add a final transformer to assert the
+ * classpath is safe instrument.
  */
 public class MuzzleVisitor implements AsmVisitorWrapper {
   @Override
@@ -71,7 +70,6 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
       if ("<init>".equals(name)) {
         methodVisitor = new InitializeFieldVisitor(methodVisitor);
       }
-      // return new ReplaceIsSafeVisitor(methodVisitor);
       return new InsertMuzzleTransformer(methodVisitor);
     }
 
@@ -79,7 +77,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
     public void visitEnd() {
       super.visitField(
           Opcodes.ACC_PUBLIC,
-          "referenceMatcher",
+          "instrumentationMuzzle",
           Type.getDescriptor(ReferenceMatcher.class),
           null,
           null);
@@ -91,7 +89,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
      * &nbsp.transform(DDAdvice.create().advice(named("fooMethod", FooAdvice.class.getname())))
      * &nbsp.asDecorator(); Into this:<br>
      * &nbsp.transform(DDAdvice.create().advice(named("fooMethod", FooAdvice.class.getname())))
-     * &nbsp.transform(this.referenceMatcher.assertSafeTransformation("foo.package.FooAdvice"));
+     * &nbsp.transform(this.instrumentationMuzzle.assertSafeTransformation("foo.package.FooAdvice"));
      * &nbsp.asDecorator(); className)
      */
     public class InsertMuzzleTransformer extends MethodVisitor {
@@ -138,7 +136,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
           this.visitFieldInsn(
               Opcodes.GETFIELD,
               instrumentationClassName,
-              "referenceMatcher",
+              "instrumentationMuzzle",
               Type.getDescriptor(ReferenceMatcher.class));
           mv.visitIntInsn(Opcodes.BIPUSH, adviceClassNames.size());
           mv.visitTypeInsn(Opcodes.ANEWARRAY, "java/lang/String");
@@ -152,7 +150,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
           }
           mv.visitMethodInsn(
               Opcodes.INVOKEVIRTUAL,
-            "datadog/trace/agent/tooling/muzzle/ReferenceMatcher",
+              "datadog/trace/agent/tooling/muzzle/ReferenceMatcher",
               "assertSafeTransformation",
               "([Ljava/lang/String;)Lnet/bytebuddy/agent/builder/AgentBuilder$Transformer;",
               false);
@@ -184,53 +182,6 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
       }
     }
 
-    /**
-     * Replace:<br>
-     * &nbsp&nbsp advice(elementMatcher, className)<br>
-     * Into:<br>
-     * &nbsp&nbsp advice(this.referenceMatcher.createElementMatcher(elementMatcher, className),
-     * className)
-     */
-    public class ReplaceIsSafeVisitor extends MethodVisitor {
-      public ReplaceIsSafeVisitor(MethodVisitor methodVisitor) {
-        super(Opcodes.ASM6, methodVisitor);
-      }
-
-      @Override
-      public void visitMethodInsn(
-          final int opcode,
-          final String owner,
-          final String name,
-          final String descriptor,
-          final boolean isInterface) {
-        if (name.equals("advice")) {
-          // stack: [class, matcher]
-          this.visitVarInsn(Opcodes.ALOAD, 0);
-          // stack: [this, class, matcher]
-          this.visitFieldInsn(
-              Opcodes.GETFIELD,
-              instrumentationClassName,
-              "referenceMatcher",
-              Type.getDescriptor(ReferenceMatcher.class));
-          // stack: [referenceMatcher, class, matcher]
-          this.visitInsn(Opcodes.DUP2_X1);
-          // stack: [referenceMatcher, class, matcher, referenceMatcher, class]
-          this.visitInsn(Opcodes.POP);
-          // stack: [class, matcher, referenceMatcher, class]
-          this.visitMethodInsn(
-              Opcodes.INVOKEVIRTUAL,
-            "datadog/trace/agent/tooling/muzzle/ReferenceMatcher",
-              "createElementMatcher",
-              "(Lnet/bytebuddy/matcher/ElementMatcher;Ljava/lang/String;)Lnet/bytebuddy/matcher/ElementMatcher;",
-              false);
-          // stack: [safe-matcher, class]
-          this.visitInsn(Opcodes.SWAP);
-          // stack: [class, safe-matcher]
-        }
-        super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
-      }
-    }
-
     /** Append a field initializer to the end of a method. */
     public class InitializeFieldVisitor extends MethodVisitor {
       public InitializeFieldVisitor(MethodVisitor methodVisitor) {
@@ -245,14 +196,14 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
           mv.visitInsn(Opcodes.DUP);
           mv.visitMethodInsn(
               Opcodes.INVOKESPECIAL,
-            "datadog/trace/agent/tooling/muzzle/ReferenceMatcher",
+              "datadog/trace/agent/tooling/muzzle/ReferenceMatcher",
               "<init>",
               "()V",
               false);
           super.visitFieldInsn(
               Opcodes.PUTFIELD,
               instrumentationClassName.replace('.', '/'),
-              "referenceMatcher",
+              "instrumentationMuzzle",
               Type.getDescriptor(ReferenceMatcher.class));
         }
         super.visitInsn(opcode);
