@@ -1,13 +1,13 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.instrumentation.trace_annotation.TraceAnnotationInstrumentation
+import datadog.trace.instrumentation.trace_annotation.TraceAnnotationsInstrumentation
 import dd.test.trace.annotation.SayTracedHello
 import spock.lang.Unroll
 
 import java.util.concurrent.Callable
 
+import static TraceAnnotationsInstrumentation.DEFAULT_ANNOTATIONS
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.TestUtils.withSystemProperty
-import static datadog.trace.instrumentation.trace_annotation.TraceAnnotationInstrumentation.DEFAULT_ANNOTATIONS
 
 class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
 
@@ -22,7 +22,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
 
   def "test disabled nr annotation"() {
     setup:
-    SayTracedHello.fromCallable()
+    SayTracedHello.fromCallableWhenDisabled()
 
     expect:
     TEST_WRITER == []
@@ -51,7 +51,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     setup:
     def config = null
     withSystemProperty("dd.trace.annotations", value) {
-      def instrumentation = new TraceAnnotationInstrumentation()
+      def instrumentation = new TraceAnnotationsInstrumentation()
       config = instrumentation.additionalTraceAnnotations
     }
     expect:

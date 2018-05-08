@@ -51,13 +51,16 @@ public class TraceConfigInstrumentation extends Instrumenter.Configurable {
 
     } else {
       final Map<String, Set<String>> toTrace = Maps.newHashMap();
-      final String[] classMethods = configString.split(";");
+      final String[] classMethods = configString.split(";", -1);
       for (final String classMethod : classMethods) {
-        final String[] splitClassMethod = classMethod.split("\\[");
+        if (classMethod.trim().isEmpty()) {
+          continue;
+        }
+        final String[] splitClassMethod = classMethod.split("\\[", -1);
         final String className = splitClassMethod[0];
         final String method = splitClassMethod[1].trim();
         final String methodNames = method.substring(0, method.length() - 1);
-        final String[] splitMethodNames = methodNames.split(",");
+        final String[] splitMethodNames = methodNames.split(",", -1);
         final Set<String> trimmedMethodNames =
             Sets.newHashSetWithExpectedSize(splitMethodNames.length);
         for (final String methodName : splitMethodNames) {

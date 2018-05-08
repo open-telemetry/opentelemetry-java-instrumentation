@@ -44,4 +44,14 @@ public class SayTracedHello {
       }
     }.call();
   }
+
+  public static String fromCallableWhenDisabled() throws Exception {
+    return new Callable<String>() {
+      @com.newrelic.api.agent.Trace
+      @Override
+      public String call() throws Exception {
+        return "Howdy!";
+      }
+    }.call();
+  }
 }
