@@ -44,7 +44,10 @@ def includeShadowJar(subproject, jarname) {
         relocate 'datadog.trace.common', 'datadog.trace.agent.common'
         relocate 'datadog.opentracing', 'datadog.trace.agent.ot'
 
-        relocate 'io.opentracing.contrib', 'datadog.trace.agent.opentracing.contrib'
+        relocate('io.opentracing.contrib', 'datadog.trace.agent.opentracing.contrib') {
+          // Don't want to change the annotation we're looking for.
+          exclude 'io.opentracing.contrib.dropwizard.Trace'
+        }
 
         relocate 'org.yaml', 'datadog.trace.agent.deps.yaml'
         relocate 'org.msgpack', 'datadog.trace.agent.deps.msgpack'
