@@ -32,12 +32,10 @@ public class OperationDecorator extends AbstractDecorator {
   }
 
   @Override
-  public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
-
+  public boolean shouldSetTag(final DDSpanContext context, final String tag, final Object value) {
     if (MAPPINGS.containsKey(String.valueOf(value))) {
       context.setOperationName(MAPPINGS.get(String.valueOf(value)));
-      return true;
     }
-    return false;
+    return true;
   }
 }

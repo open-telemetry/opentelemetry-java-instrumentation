@@ -102,7 +102,7 @@ class URLAsResourceNameTest extends Specification {
         tracer)
 
     then:
-    decorator.afterSetTag(context, Tags.HTTP_URL.getKey(), value)
+    decorator.shouldSetTag(context, Tags.HTTP_URL.getKey(), value)
     context.resourceName == resourceName
 
     where:

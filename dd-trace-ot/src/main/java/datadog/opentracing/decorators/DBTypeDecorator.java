@@ -13,14 +13,14 @@ public class DBTypeDecorator extends AbstractDecorator {
   public DBTypeDecorator() {
     super();
     this.setMatchingTag(Tags.DB_TYPE.getKey());
-    this.setSetTag(DDTags.SERVICE_NAME);
+    this.setReplacementTag(DDTags.SERVICE_NAME);
   }
 
   @Override
-  public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
+  public boolean shouldSetTag(final DDSpanContext context, final String tag, final Object value) {
 
     // Assign service name
-    if (super.afterSetTag(context, tag, value)) {
+    if (!super.shouldSetTag(context, tag, value)) {
       // Assign span type to DB
       // Special case: Mongo, set to mongodb
       if ("mongo".equals(value)) {
@@ -33,8 +33,7 @@ public class DBTypeDecorator extends AbstractDecorator {
       }
       // Works for: mongo, cassandra, jdbc
       context.setOperationName(String.valueOf(value) + ".query");
-      return true;
     }
-    return false;
+    return true;
   }
 }

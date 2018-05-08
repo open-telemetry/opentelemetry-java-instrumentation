@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.trace.api.DDTags;
 import datadog.trace.api.sampling.PrioritySampling;
-import io.opentracing.tag.Tags;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -238,25 +237,14 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       return;
     }
 
-    if (tag.equals(DDTags.SERVICE_NAME)) {
-      setServiceName(value.toString());
-      return;
-    } else if (tag.equals(DDTags.RESOURCE_NAME)) {
-      setResourceName(value.toString());
-      return;
-    } else if (tag.equals(DDTags.SPAN_TYPE)) {
-      setSpanType(value.toString());
-      return;
-    }
-
-    this.tags.put(tag, value);
+    boolean addTag = true;
 
     // Call decorators
     final List<AbstractDecorator> decorators = tracer.getSpanContextDecorators(tag);
     if (decorators != null && value != null) {
       for (final AbstractDecorator decorator : decorators) {
         try {
-          decorator.afterSetTag(this, tag, value);
+          addTag &= decorator.shouldSetTag(this, tag, value);
         } catch (final Throwable ex) {
           log.debug(
               "Could not decorate the span decorator={}: {}",
@@ -265,10 +253,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
         }
       }
     }
-    // Error management
-    if (Tags.ERROR.getKey().equals(tag)
-        && Boolean.TRUE.equals(value instanceof String ? Boolean.valueOf((String) value) : value)) {
-      this.errorFlag = true;
+
+    if (addTag) {
+      this.tags.put(tag, value);
     }
   }
 

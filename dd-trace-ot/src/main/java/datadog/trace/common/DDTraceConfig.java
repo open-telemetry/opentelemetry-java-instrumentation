@@ -24,6 +24,7 @@ public class DDTraceConfig extends Properties {
   private static final String PREFIX = "dd.";
 
   public static final String SERVICE_NAME = "service.name";
+  public static final String SERVICE_MAPPING = "service.mapping";
   public static final String WRITER_TYPE = "writer.type";
   public static final String AGENT_HOST = "agent.host";
   public static final String AGENT_PORT = "agent.port";
@@ -31,6 +32,7 @@ public class DDTraceConfig extends Properties {
   public static final String SPAN_TAGS = "trace.span.tags";
 
   private final String serviceName = getPropOrEnv(PREFIX + SERVICE_NAME);
+  private final String serviceMapping = getPropOrEnv(PREFIX + SERVICE_MAPPING);
   private final String writerType = getPropOrEnv(PREFIX + WRITER_TYPE);
   private final String agentHost = getPropOrEnv(PREFIX + AGENT_HOST);
   private final String agentPort = getPropOrEnv(PREFIX + AGENT_PORT);
@@ -48,6 +50,7 @@ public class DDTraceConfig extends Properties {
     super.defaults = defaults;
 
     setIfNotNull(SERVICE_NAME, serviceName);
+    setIfNotNull(SERVICE_MAPPING, serviceMapping);
     setIfNotNull(WRITER_TYPE, writerType);
     setIfNotNull(AGENT_HOST, agentHost);
     setIfNotNull(AGENT_PORT, agentPort);
@@ -74,7 +77,7 @@ public class DDTraceConfig extends Properties {
     return name.toUpperCase().replace(".", "_");
   }
 
-  public static Map<String, Object> parseMap(final String str) {
+  public static Map<String, String> parseMap(final String str) {
     if (str == null || str.trim().isEmpty()) {
       return Collections.emptyMap();
     }
@@ -84,7 +87,7 @@ public class DDTraceConfig extends Properties {
     }
 
     final String[] tokens = str.split(",", -1);
-    final Map<String, Object> map = new HashMap<>(tokens.length + 1, 1f);
+    final Map<String, String> map = new HashMap<>(tokens.length + 1, 1f);
 
     for (final String token : tokens) {
       final String[] keyValue = token.split(":", -1);

@@ -10,13 +10,14 @@ public class ErrorFlag extends AbstractDecorator {
   }
 
   @Override
-  public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
+  public boolean shouldSetTag(final DDSpanContext context, final String tag, final Object value) {
     // Assign resource name
     try {
       context.setErrorFlag(Boolean.parseBoolean(String.valueOf(value)));
     } catch (final Throwable t) {
       // DO NOTHING
     }
+    // TODO: Do we really want an error tag if the error flag is already set?
     return true;
   }
 }

@@ -56,7 +56,7 @@ public class DDTracer implements io.opentracing.Tracer {
   final ContextualScopeManager scopeManager = new ContextualScopeManager();
 
   /** A set of tags that are added to every span */
-  private final Map<String, Object> spanTags;
+  private final Map<String, String> spanTags;
 
   /** Span context decorators */
   private final Map<String, List<AbstractDecorator>> spanContextDecorators =
@@ -88,24 +88,31 @@ public class DDTracer implements io.opentracing.Tracer {
         config.getProperty(DDTraceConfig.SERVICE_NAME),
         Writer.Builder.forConfig(config),
         Sampler.Builder.forConfig(config),
-        DDTraceConfig.parseMap(config.getProperty(DDTraceConfig.SPAN_TAGS)));
+        DDTraceConfig.parseMap(config.getProperty(DDTraceConfig.SPAN_TAGS)),
+        DDTraceConfig.parseMap(config.getProperty(DDTraceConfig.SERVICE_MAPPING)));
     log.debug("Using config: {}", config);
   }
 
   public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
-    this(serviceName, writer, sampler, Collections.<String, Object>emptyMap());
+    this(
+        serviceName,
+        writer,
+        sampler,
+        Collections.<String, String>emptyMap(),
+        Collections.<String, String>emptyMap());
   }
 
   public DDTracer(
       final String serviceName,
       final Writer writer,
       final Sampler sampler,
-      final Map<String, Object> spanTags) {
+      final Map<String, String> defaultSpanTags,
+      final Map<String, String> serviceNameMappings) {
     this.serviceName = serviceName;
     this.writer = writer;
     this.writer.start();
     this.sampler = sampler;
-    this.spanTags = spanTags;
+    this.spanTags = defaultSpanTags;
 
     registry = new CodecRegistry();
     registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
@@ -118,7 +125,8 @@ public class DDTracer implements io.opentracing.Tracer {
 
     registerClassLoader(ClassLoader.getSystemClassLoader());
 
-    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createBuiltinDecorators();
+    final List<AbstractDecorator> decorators =
+        DDDecoratorsFactory.createBuiltinDecorators(serviceNameMappings);
     for (final AbstractDecorator decorator : decorators) {
       log.debug("Loading decorator: {}", decorator.getClass().getSimpleName());
       addDecorator(decorator);
@@ -132,7 +140,8 @@ public class DDTracer implements io.opentracing.Tracer {
         UNASSIGNED_DEFAULT_SERVICE_NAME,
         writer,
         new AllSampler(),
-        DDTraceConfig.parseMap(new DDTraceConfig().getProperty(DDTraceConfig.SPAN_TAGS)));
+        DDTraceConfig.parseMap(new DDTraceConfig().getProperty(DDTraceConfig.SPAN_TAGS)),
+        DDTraceConfig.parseMap(new DDTraceConfig().getProperty(DDTraceConfig.SERVICE_MAPPING)));
   }
 
   /**
@@ -302,7 +311,9 @@ public class DDTracer implements io.opentracing.Tracer {
 
     // Builder attributes
     private Map<String, Object> tags =
-        spanTags.isEmpty() ? Collections.<String, Object>emptyMap() : new HashMap<>(spanTags);
+        spanTags.isEmpty()
+            ? Collections.<String, Object>emptyMap()
+            : new HashMap<String, Object>(spanTags);
     private long timestampMicro;
     private SpanContext parent;
     private String serviceName;

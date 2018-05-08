@@ -10,7 +10,6 @@ apply from: "${rootDir}/gradle/publish.gradle"
 minimumBranchCoverage = 0.5
 minimumInstructionCoverage = 0.6
 whitelistedInstructionClasses += whitelistedBranchClasses += [
-  'datadog.opentracing.decorators.*',
   'datadog.trace.common.writer.ListWriter',
   'datadog.trace.common.sampling.PrioritySampling'
 ]
