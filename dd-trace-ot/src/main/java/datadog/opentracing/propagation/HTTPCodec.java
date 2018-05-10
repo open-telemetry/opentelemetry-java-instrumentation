@@ -20,6 +20,15 @@ public class HTTPCodec implements Codec<TextMap> {
   private static final String SPAN_ID_KEY = "x-datadog-parent-id";
   private static final String SAMPLING_PRIORITY_KEY = "x-datadog-sampling-priority";
 
+  private final Map<String, String> taggedHeaders;
+
+  public HTTPCodec(final Map<String, String> taggedHeaders) {
+    this.taggedHeaders = new HashMap<>();
+    for (final Map.Entry<String, String> mapping : taggedHeaders.entrySet()) {
+      this.taggedHeaders.put(mapping.getKey().trim().toLowerCase(), mapping.getValue());
+    }
+  }
+
   @Override
   public void inject(final DDSpanContext context, final TextMap carrier) {
     carrier.put(TRACE_ID_KEY, String.valueOf(context.getTraceId()));
@@ -38,6 +47,7 @@ public class HTTPCodec implements Codec<TextMap> {
   public ExtractedContext extract(final TextMap carrier) {
 
     Map<String, String> baggage = Collections.emptyMap();
+    Map<String, String> tags = Collections.emptyMap();
     Long traceId = 0L;
     Long spanId = 0L;
     int samplingPriority = PrioritySampling.UNSET;
@@ -56,10 +66,17 @@ public class HTTPCodec implements Codec<TextMap> {
       } else if (key.equalsIgnoreCase(SAMPLING_PRIORITY_KEY)) {
         samplingPriority = Integer.parseInt(entry.getValue());
       }
+
+      if (taggedHeaders.containsKey(key)) {
+        if (tags.isEmpty()) {
+          tags = new HashMap<>();
+        }
+        tags.put(taggedHeaders.get(key), decode(entry.getValue()));
+      }
     }
     ExtractedContext context = null;
     if (traceId != 0L) {
-      context = new ExtractedContext(traceId, spanId, samplingPriority, baggage);
+      context = new ExtractedContext(traceId, spanId, samplingPriority, baggage, tags);
       context.lockSamplingPriority();
 
       log.debug("{} - Parent context extracted", context.getTraceId());

@@ -89,7 +89,8 @@ public class DDTracer implements io.opentracing.Tracer {
         Writer.Builder.forConfig(config),
         Sampler.Builder.forConfig(config),
         DDTraceConfig.parseMap(config.getProperty(DDTraceConfig.SPAN_TAGS)),
-        DDTraceConfig.parseMap(config.getProperty(DDTraceConfig.SERVICE_MAPPING)));
+        DDTraceConfig.parseMap(config.getProperty(DDTraceConfig.SERVICE_MAPPING)),
+        DDTraceConfig.parseMap(config.getProperty(DDTraceConfig.HEADER_TAGS)));
     log.debug("Using config: {}", config);
   }
 
@@ -99,6 +100,7 @@ public class DDTracer implements io.opentracing.Tracer {
         writer,
         sampler,
         Collections.<String, String>emptyMap(),
+        Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap());
   }
 
@@ -107,7 +109,8 @@ public class DDTracer implements io.opentracing.Tracer {
       final Writer writer,
       final Sampler sampler,
       final Map<String, String> defaultSpanTags,
-      final Map<String, String> serviceNameMappings) {
+      final Map<String, String> serviceNameMappings,
+      final Map<String, String> taggedHeaders) {
     this.serviceName = serviceName;
     this.writer = writer;
     this.writer.start();
@@ -115,8 +118,8 @@ public class DDTracer implements io.opentracing.Tracer {
     this.spanTags = defaultSpanTags;
 
     registry = new CodecRegistry();
-    registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
-    registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec());
+    registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec(taggedHeaders));
+    registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec(taggedHeaders));
     if (this.writer instanceof DDAgentWriter && sampler instanceof DDApi.ResponseListener) {
       final DDApi api = ((DDAgentWriter) this.writer).getApi();
       api.addResponseListener((DDApi.ResponseListener) this.sampler);
@@ -141,7 +144,8 @@ public class DDTracer implements io.opentracing.Tracer {
         writer,
         new AllSampler(),
         DDTraceConfig.parseMap(new DDTraceConfig().getProperty(DDTraceConfig.SPAN_TAGS)),
-        DDTraceConfig.parseMap(new DDTraceConfig().getProperty(DDTraceConfig.SERVICE_MAPPING)));
+        DDTraceConfig.parseMap(new DDTraceConfig().getProperty(DDTraceConfig.SERVICE_MAPPING)),
+        DDTraceConfig.parseMap(new DDTraceConfig().getProperty(DDTraceConfig.HEADER_TAGS)));
   }
 
   /**
@@ -488,6 +492,12 @@ public class DDTracer implements io.opentracing.Tracer {
         traceId = ddsc.getTraceId();
         parentSpanId = ddsc.getSpanId();
         baggage = ddsc.getBaggage();
+        if (this.tags.isEmpty() && !ddsc.getTags().isEmpty()) {
+          this.tags = new HashMap<>();
+        }
+        if (!ddsc.getTags().isEmpty()) {
+          tags.putAll(ddsc.getTags());
+        }
         parentTrace = new PendingTrace(DDTracer.this, traceId);
         samplingPriority = ddsc.getSamplingPriority();
 

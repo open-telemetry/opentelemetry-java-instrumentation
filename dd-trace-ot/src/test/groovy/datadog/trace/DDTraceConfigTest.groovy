@@ -14,6 +14,7 @@ import spock.lang.Specification
 
 import static datadog.trace.common.DDTraceConfig.AGENT_HOST
 import static datadog.trace.common.DDTraceConfig.AGENT_PORT
+import static datadog.trace.common.DDTraceConfig.HEADER_TAGS
 import static datadog.trace.common.DDTraceConfig.PREFIX
 import static datadog.trace.common.DDTraceConfig.SERVICE_MAPPING
 import static datadog.trace.common.DDTraceConfig.SERVICE_NAME
@@ -114,16 +115,19 @@ class DDTraceConfigTest extends Specification {
     setup:
     System.setProperty(PREFIX + SERVICE_MAPPING, mapString)
     System.setProperty(PREFIX + SPAN_TAGS, mapString)
+    System.setProperty(PREFIX + HEADER_TAGS, mapString)
 
     when:
     def tracer = new DDTracer()
     ServiceNameDecorator decorator = tracer.spanContextDecorators.values().flatten().find {
       it instanceof ServiceNameDecorator
     }
+    def taggedHeaders = tracer.registry.codecs.values().first().taggedHeaders
 
     then:
     tracer.spanTags == map
     decorator.mappings == map
+    taggedHeaders == map
 
     where:
     mapString       | map
