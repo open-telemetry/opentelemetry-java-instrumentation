@@ -49,6 +49,7 @@ dependencies {
   testCompile deps.spock
   testCompile deps.groovy
   testCompile deps.testLogging
+  testCompile 'info.solidsoft.spock:spock-global-unroll:0.5.1'
   testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.6'
   testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.17.1'
 }

@@ -1,7 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.instrumentation.trace_annotation.TraceAnnotationsInstrumentation
 import dd.test.trace.annotation.SayTracedHello
-import spock.lang.Unroll
 
 import java.util.concurrent.Callable
 
@@ -46,7 +45,6 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     }
   }
 
-  @Unroll
   def "test configuration #value"() {
     setup:
     def config = null

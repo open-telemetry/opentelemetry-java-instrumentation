@@ -9,7 +9,6 @@ import io.opentracing.propagation.TextMapExtractAdapter
 import io.opentracing.propagation.TextMapInjectAdapter
 import spock.lang.Shared
 import spock.lang.Specification
-import spock.lang.Unroll
 
 class HTTPCodecTest extends Specification {
   @Shared
@@ -21,7 +20,6 @@ class HTTPCodecTest extends Specification {
   @Shared
   private static final String SAMPLING_PRIORITY_KEY = "x-datadog-sampling-priority"
 
-  @Unroll
   def "inject http headers"() {
     setup:
     def writer = new ListWriter()
@@ -65,7 +63,6 @@ class HTTPCodecTest extends Specification {
     PrioritySampling.SAMPLER_KEEP | _
   }
 
-  @Unroll
   def "extract http headers"() {
     setup:
     final Map<String, String> actual = [

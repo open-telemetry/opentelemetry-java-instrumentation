@@ -6,11 +6,9 @@ import datadog.trace.api.DDTags
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
-import spock.lang.Unroll
 
 class DDSpanSerializationTest extends Specification {
 
-  @Unroll
   def "serialize spans"() throws Exception {
     setup:
     final Map<String, String> baggage = new HashMap<>()
@@ -64,8 +62,8 @@ class DDSpanSerializationTest extends Specification {
     serializer.readTree(serializer.writeValueAsString(span)) == serializer.readTree(serializer.writeValueAsString(expected))
 
     where:
-    samplingPriority               | _
-    PrioritySampling.SAMPLER_KEEP  | _
-    PrioritySampling.UNSET         | _
+    samplingPriority              | _
+    PrioritySampling.SAMPLER_KEEP | _
+    PrioritySampling.UNSET        | _
   }
 }

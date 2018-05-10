@@ -11,7 +11,6 @@ import okhttp3.Request
 import okhttp3.Response
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
-import spock.lang.Unroll
 
 import java.lang.reflect.Field
 import java.util.concurrent.CountDownLatch
@@ -81,7 +80,6 @@ class JettyServlet2Test extends AgentTestRunner {
     jettyServer.destroy()
   }
 
-  @Unroll
   def "test #path servlet call"() {
     setup:
     def request = new Request.Builder()
@@ -119,7 +117,6 @@ class JettyServlet2Test extends AgentTestRunner {
     "sync" | "Hello Sync"
   }
 
-  @Unroll
   def "test #path error servlet call"() {
     setup:
     def request = new Request.Builder()
@@ -158,7 +155,6 @@ class JettyServlet2Test extends AgentTestRunner {
     "sync" | "Hello Sync"
   }
 
-  @Unroll
   def "test #path non-throwing-error servlet call"() {
     // This doesn't actually detect the error because we can't get the status code via the old servlet API.
     setup:

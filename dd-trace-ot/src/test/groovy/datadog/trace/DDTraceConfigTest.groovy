@@ -11,7 +11,6 @@ import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
-import spock.lang.Unroll
 
 import static datadog.trace.common.DDTraceConfig.AGENT_HOST
 import static datadog.trace.common.DDTraceConfig.AGENT_PORT
@@ -132,7 +131,6 @@ class DDTraceConfigTest extends Specification {
     "a:b,c:d"       | [a: "b", c: "d"]
   }
 
-  @Unroll
   def "verify single override on #source for #key"() {
     when:
     System.setProperty(PREFIX + key, value)
@@ -143,11 +141,11 @@ class DDTraceConfigTest extends Specification {
 
     where:
 
-    source    | key            | value           | expected
-    "writer"  | "default"      | "default"       | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:8126/v0.3/traces } }"
-    "writer"  | "writer.type"  | "LoggingWriter" | "LoggingWriter { }"
-    "writer"  | "agent.host"   | "somethingelse" | "DDAgentWriter { api=DDApi { tracesEndpoint=http://somethingelse:8126/v0.3/traces } }"
-    "writer"  | "agent.port"   | "9999"          | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:9999/v0.3/traces } }"
+    source   | key           | value           | expected
+    "writer" | "default"     | "default"       | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:8126/v0.3/traces } }"
+    "writer" | "writer.type" | "LoggingWriter" | "LoggingWriter { }"
+    "writer" | "agent.host"  | "somethingelse" | "DDAgentWriter { api=DDApi { tracesEndpoint=http://somethingelse:8126/v0.3/traces } }"
+    "writer" | "agent.port"  | "9999"          | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:9999/v0.3/traces } }"
   }
 
   def "parsing valid string returns a map"() {

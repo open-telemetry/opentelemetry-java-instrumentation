@@ -1,7 +1,6 @@
 import com.netflix.hystrix.HystrixCommand
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
-import spock.lang.Unroll
 
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -17,7 +16,6 @@ class HystrixTest extends AgentTestRunner {
 //    System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
   }
 
-  @Unroll
   def "test command #action"() {
     setup:
     def command = new HystrixCommand(asKey("ExampleGroup")) {
@@ -91,7 +89,6 @@ class HystrixTest extends AgentTestRunner {
     }
   }
 
-  @Unroll
   def "test command #action fallback"() {
     setup:
     def command = new HystrixCommand(asKey("ExampleGroup")) {
