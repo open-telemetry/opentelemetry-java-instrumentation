@@ -8,7 +8,6 @@ import org.h2.Driver
 import org.hsqldb.jdbc.JDBCDriver
 import spock.lang.Shared
 import spock.lang.Specification
-import spock.lang.Unroll
 
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -46,7 +45,6 @@ class JDBCInstrumentationTest extends Specification {
     writer.start()
   }
 
-  @Unroll
   def "basic statement on #driver generates spans"() {
     setup:
     Statement statement = connection.createStatement()
@@ -92,7 +90,6 @@ class JDBCInstrumentationTest extends Specification {
     "hsqldb" | connections.get("hsqldb") | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
   }
 
-  @Unroll
   def "prepared statement execute on #driver generates a span"() {
     setup:
     PreparedStatement statement = connection.prepareStatement(query)
@@ -139,7 +136,6 @@ class JDBCInstrumentationTest extends Specification {
     "hsqldb" | connections.get("hsqldb") | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
   }
 
-  @Unroll
   def "prepared statement query on #driver generates a span"() {
     setup:
     PreparedStatement statement = connection.prepareStatement(query)
@@ -185,7 +181,6 @@ class JDBCInstrumentationTest extends Specification {
     "hsqldb" | connections.get("hsqldb") | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
   }
 
-  @Unroll
   def "statement update on #driver generates a span"() {
     setup:
     Statement statement = connection.createStatement()
@@ -232,7 +227,6 @@ class JDBCInstrumentationTest extends Specification {
     "hsqldb" | connections.get("hsqldb") | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))"
   }
 
-  @Unroll
   def "prepared statement update on #driver generates a span"() {
     setup:
     def sql = connection.nativeSQL(query)

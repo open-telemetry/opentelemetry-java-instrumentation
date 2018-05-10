@@ -6,7 +6,6 @@ import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
-import spock.lang.Unroll
 
 class ConfigurableInstrumenterTest extends Specification {
   @Rule
@@ -70,7 +69,6 @@ class ConfigurableInstrumenterTest extends Specification {
     enabled << [true, false]
   }
 
-  @Unroll
   def "configure default sys prop as #value"() {
     setup:
     System.setProperty("dd.integrations.enabled", value)
@@ -88,7 +86,6 @@ class ConfigurableInstrumenterTest extends Specification {
     "asdf"  | false
   }
 
-  @Unroll
   def "configure default env var as #value"() {
     setup:
     environmentVariables.set("DD_INTEGRATIONS_ENABLED", value)
@@ -106,7 +103,6 @@ class ConfigurableInstrumenterTest extends Specification {
     "asdf"  | false
   }
 
-  @Unroll
   def "configure sys prop enabled for #value when default is disabled"() {
     setup:
     System.setProperty("dd.integrations.enabled", "false")
@@ -129,7 +125,6 @@ class ConfigurableInstrumenterTest extends Specification {
     "period.test"     | true    | "period.test" | "asdf"
   }
 
-  @Unroll
   def "configure env var enabled for #value when default is disabled"() {
     setup:
     environmentVariables.set("DD_INTEGRATIONS_ENABLED", "false")

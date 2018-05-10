@@ -1,11 +1,9 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
-import spock.lang.Unroll
 
 class AkkaActorTest extends AgentTestRunner {
 
-  @Unroll
-  def "akka #testMethod" () {
+  def "akka #testMethod"() {
     setup:
     AkkaActors akkaTester = new AkkaActors()
     akkaTester."$testMethod"()
@@ -20,10 +18,10 @@ class AkkaActorTest extends AgentTestRunner {
     findSpan(trace, "$expectedGreeting, Akka").context().getParentId() == trace[0].getSpanId()
 
     where:
-    testMethod         | expectedGreeting
-    "basicTell"        | "Howdy"
-    "basicAsk"         | "Howdy"
-    "basicForward"     | "Hello"
+    testMethod     | expectedGreeting
+    "basicTell"    | "Howdy"
+    "basicAsk"     | "Howdy"
+    "basicForward" | "Hello"
   }
 
   private DDSpan findSpan(List<DDSpan> trace, String opName) {

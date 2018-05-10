@@ -4,7 +4,6 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
 import io.opentracing.util.GlobalTracer
 import spock.lang.Shared
-import spock.lang.Unroll
 
 import java.lang.reflect.Method
 import java.util.concurrent.ArrayBlockingQueue
@@ -33,7 +32,6 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     submitMethod = ExecutorService.getMethod("submit", Callable)
   }
 
-  @Unroll
   // more useful name breaks java9 javac
   // def "#poolImpl.getClass().getSimpleName() #method.getName() propagates"()
   def "#poolImpl #method propagates"() {
@@ -41,7 +39,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     def pool = poolImpl
     def m = method
 
-    new Runnable(){
+    new Runnable() {
       @Override
       @Trace(operationName = "parent")
       void run() {
@@ -68,32 +66,31 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
 
     // Unfortunately, there's no simple way to test the cross product of methods/pools.
     where:
-    poolImpl                                                                                        | method
-    new ForkJoinPool()                                                                              | submitMethod
-    new ForkJoinPool()                                                                              | executeMethod
-    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))   | submitMethod
-    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))   | executeMethod
-    new ScheduledThreadPoolExecutor(1)                                                              | submitMethod
-    new ScheduledThreadPoolExecutor(1)                                                              | executeMethod
+    poolImpl                                                                                      | method
+    new ForkJoinPool()                                                                            | submitMethod
+    new ForkJoinPool()                                                                            | executeMethod
+    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitMethod
+    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | executeMethod
+    new ScheduledThreadPoolExecutor(1)                                                            | submitMethod
+    new ScheduledThreadPoolExecutor(1)                                                            | executeMethod
   }
 
-  @Unroll
   // more useful name breaks java9 javac
   // def "#poolImpl.getClass().getSimpleName() #method.getName() propagates"()
-  def "#poolImpl reports after canceled jobs" () {
+  def "#poolImpl reports after canceled jobs"() {
     setup:
     def pool = poolImpl
     final AsyncChild child = new AsyncChild(true, true)
     List<Future> jobFutures = new ArrayList<Future>()
 
-    new Runnable(){
+    new Runnable() {
       @Override
       @Trace(operationName = "parent")
       void run() {
         ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
         try {
-          for (int i = 0; i < 20; ++ i) {
-            Future f = pool.submit((Callable)child)
+          for (int i = 0; i < 20; ++i) {
+            Future f = pool.submit((Callable) child)
             jobFutures.add(f)
           }
         } catch (RejectedExecutionException e) {
@@ -112,9 +109,9 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     TEST_WRITER.size() == 1
 
     where:
-    poolImpl                                                                                        | _
-    new ForkJoinPool()                                                                              | _
-    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))   | _
-    new ScheduledThreadPoolExecutor(1)                                                              | _
+    poolImpl                                                                                      | _
+    new ForkJoinPool()                                                                            | _
+    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | _
+    new ScheduledThreadPoolExecutor(1)                                                            | _
   }
 }

@@ -8,7 +8,6 @@ import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
-import spock.lang.Unroll
 
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -50,7 +49,6 @@ class DDApiIntegrationTest {
       return true
     }
 
-    @Unroll
     def "Sending traces succeeds (test #test)"() {
       expect:
       api.sendTraces(traces)
@@ -67,7 +65,6 @@ class DDApiIntegrationTest {
       [[new DDSpan(TimeUnit.MILLISECONDS.toMicros(System.currentTimeMillis()), CONTEXT)]] | 4
     }
 
-    @Unroll
     def "Sending bad trace fails (test #test)"() {
       expect:
       api.sendTraces(traces) == false

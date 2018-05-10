@@ -15,7 +15,6 @@ import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQMessageConsumer
 import org.hornetq.jms.client.HornetQMessageProducer
 import spock.lang.Shared
-import spock.lang.Unroll
 
 import javax.jms.Message
 import javax.jms.MessageListener
@@ -63,7 +62,6 @@ class JMS2Test extends AgentTestRunner {
     session.run()
   }
 
-  @Unroll
   def "sending a message to #resourceName generates spans"() {
     setup:
     def producer = session.createProducer(destination)
@@ -138,7 +136,6 @@ class JMS2Test extends AgentTestRunner {
     session.createTemporaryTopic()   | "Temporary Topic"
   }
 
-  @Unroll
   def "sending to a MessageListener on #resourceName generates a span"() {
     setup:
     def lock = new CountDownLatch(1)

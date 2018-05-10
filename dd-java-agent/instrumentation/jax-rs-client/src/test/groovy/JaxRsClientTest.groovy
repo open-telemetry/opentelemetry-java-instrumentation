@@ -6,7 +6,6 @@ import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
 import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 import ratpack.http.Headers
-import spock.lang.Unroll
 
 import javax.ws.rs.client.AsyncInvoker
 import javax.ws.rs.client.Client
@@ -33,7 +32,6 @@ class JaxRsClientTest extends AgentTestRunner {
     }
   }
 
-  @Unroll
   def "#lib request creates spans and sends headers"() {
     setup:
     Client client = builder.build()

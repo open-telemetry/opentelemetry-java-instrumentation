@@ -11,7 +11,6 @@ import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
-import spock.lang.Unroll
 
 import java.lang.reflect.Field
 
@@ -82,7 +81,6 @@ class TomcatServlet3Test extends AgentTestRunner {
     tomcatServer.destroy()
   }
 
-  @Unroll
   def "test #path servlet call"() {
     setup:
     def request = new Request.Builder()
@@ -122,7 +120,6 @@ class TomcatServlet3Test extends AgentTestRunner {
     "sync"  | "Hello Sync"
   }
 
-  @Unroll
   def "test #path error servlet call"() {
     setup:
     def request = new Request.Builder()
@@ -163,7 +160,6 @@ class TomcatServlet3Test extends AgentTestRunner {
     "sync" | "Hello Sync"
   }
 
-  @Unroll
   def "test #path error servlet call for non-throwing error"() {
     setup:
     def request = new Request.Builder()

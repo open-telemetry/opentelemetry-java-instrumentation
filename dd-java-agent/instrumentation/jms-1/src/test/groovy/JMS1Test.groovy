@@ -5,7 +5,6 @@ import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.ActiveMQMessageProducer
 import org.apache.activemq.junit.EmbeddedActiveMQBroker
 import spock.lang.Shared
-import spock.lang.Unroll
 
 import javax.jms.Connection
 import javax.jms.Message
@@ -29,7 +28,6 @@ class JMS1Test extends AgentTestRunner {
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
   }
 
-  @Unroll
   def "sending a message to #resourceName generates spans"() {
     setup:
     def producer = session.createProducer(destination)
@@ -147,7 +145,6 @@ class JMS1Test extends AgentTestRunner {
     session.createTemporaryTopic()   | "Temporary Topic"
   }
 
-  @Unroll
   def "sending to a MessageListener on #resourceName generates a span"() {
     setup:
     def lock = new CountDownLatch(1)

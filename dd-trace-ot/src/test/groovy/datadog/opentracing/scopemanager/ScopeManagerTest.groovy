@@ -10,7 +10,6 @@ import io.opentracing.Span
 import io.opentracing.noop.NoopSpan
 import spock.lang.Specification
 import spock.lang.Subject
-import spock.lang.Unroll
 
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
@@ -300,7 +299,6 @@ class ScopeManagerTest extends Specification {
     writer == [[childSpan, span]]
   }
 
-  @Unroll
   def "context takes control (#active)"() {
     setup:
     contexts.each {
@@ -322,7 +320,6 @@ class ScopeManagerTest extends Specification {
     3      | [new AtomicReferenceScope(false), new AtomicReferenceScope(true), new AtomicReferenceScope(false), new AtomicReferenceScope(true)]
   }
 
-  @Unroll
   def "disabled context is ignored (#contexts.size)"() {
     setup:
     contexts.each {
@@ -372,7 +369,6 @@ class ScopeManagerTest extends Specification {
     scopeManager.tlsScope.get() == newScope
   }
 
-  @Unroll
   def "context to threadlocal (#contexts.size)"() {
     setup:
     contexts.each {

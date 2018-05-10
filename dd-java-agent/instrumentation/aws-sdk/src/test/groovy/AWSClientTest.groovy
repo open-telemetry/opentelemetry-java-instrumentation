@@ -15,7 +15,6 @@ import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import ratpack.http.Headers
 import spock.lang.Shared
-import spock.lang.Unroll
 
 import java.util.concurrent.atomic.AtomicReference
 
@@ -81,7 +80,6 @@ class AWSClientTest extends AgentTestRunner {
     false      | 1
   }
 
-  @Unroll
   def "send #operation request with mocked response"() {
     setup:
     responseBody.set(body)

@@ -11,7 +11,6 @@ import ratpack.exec.Blocking
 import ratpack.http.Headers
 import ratpack.http.MediaType
 import spock.lang.Specification
-import spock.lang.Unroll
 
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -180,7 +179,6 @@ class DDApiTest extends Specification {
     v3Agent.close()
   }
 
-  @Unroll
   def "Api Downgrades to v3 if timeout exceeded (#delayTrace, #badPort)"() {
     // This test is unfortunately only exercising the read timeout, not the connect timeout.
     setup:
