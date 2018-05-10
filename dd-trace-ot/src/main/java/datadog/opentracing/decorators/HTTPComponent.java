@@ -13,18 +13,17 @@ public class HTTPComponent extends AbstractDecorator {
   public HTTPComponent() {
     super();
     this.setMatchingTag(Tags.COMPONENT.getKey());
-    this.setSetTag(DDTags.SERVICE_NAME);
+    this.setReplacementTag(DDTags.SERVICE_NAME);
   }
 
   @Override
-  public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
-    // Assign service name
-    if (super.afterSetTag(context, tag, value)) {
+  public boolean shouldSetTag(final DDSpanContext context, final String tag, final Object value) {
+    if (getMatchingValue().equals(value)) {
+      // Assign service name
+      super.shouldSetTag(context, tag, value);
       // Assign span type to WEB
       context.setSpanType("web");
-      return true;
-    } else {
-      return false;
     }
+    return true;
   }
 }

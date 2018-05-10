@@ -1,5 +1,6 @@
 package datadog.opentracing.decorators;
 
+import datadog.opentracing.DDSpanContext;
 import datadog.trace.api.DDTags;
 import io.opentracing.tag.Tags;
 
@@ -10,7 +11,13 @@ public class Status404Decorator extends AbstractDecorator {
     super();
     this.setMatchingTag(Tags.HTTP_STATUS.getKey());
     this.setMatchingValue(404);
-    this.setSetTag(DDTags.RESOURCE_NAME);
-    this.setSetValue("404");
+    this.setReplacementTag(DDTags.RESOURCE_NAME);
+    this.setReplacementValue("404");
+  }
+
+  @Override
+  public boolean shouldSetTag(final DDSpanContext context, final String tag, final Object value) {
+    super.shouldSetTag(context, tag, value);
+    return true;
   }
 }

@@ -73,7 +73,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Configurabl
       callback = new ProducerCallback(callback, scope);
 
       final Span span = scope.span();
-      final String topic = record.topic() == null ? "unknown" : record.topic();
+      final String topic = record.topic() == null ? "kafka" : record.topic();
       if (record.partition() != null) {
         span.setTag("kafka.partition", record.partition());
       }

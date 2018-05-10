@@ -1,6 +1,7 @@
 package datadog.trace
 
 import datadog.opentracing.DDTracer
+import datadog.opentracing.decorators.ServiceNameDecorator
 import datadog.trace.common.DDTraceConfig
 import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.writer.DDAgentWriter
@@ -12,7 +13,14 @@ import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import static datadog.trace.common.DDTraceConfig.*
+import static datadog.trace.common.DDTraceConfig.AGENT_HOST
+import static datadog.trace.common.DDTraceConfig.AGENT_PORT
+import static datadog.trace.common.DDTraceConfig.PREFIX
+import static datadog.trace.common.DDTraceConfig.SERVICE_MAPPING
+import static datadog.trace.common.DDTraceConfig.SERVICE_NAME
+import static datadog.trace.common.DDTraceConfig.SPAN_TAGS
+import static datadog.trace.common.DDTraceConfig.WRITER_TYPE
+import static datadog.trace.common.DDTraceConfig.propToEnvName
 
 class DDTraceConfigTest extends Specification {
   @Rule
@@ -34,18 +42,22 @@ class DDTraceConfigTest extends Specification {
 
     then:
     config.getProperty(SERVICE_NAME) == "unnamed-java-app"
+    config.getProperty(SERVICE_MAPPING) == null
     config.getProperty(WRITER_TYPE) == "DDAgentWriter"
     config.getProperty(AGENT_HOST) == "localhost"
     config.getProperty(AGENT_PORT) == "8126"
+    config.getProperty(SPAN_TAGS) == null
 
     when:
     config = new DDTraceConfig("A different service name")
 
     then:
     config.getProperty(SERVICE_NAME) == "A different service name"
+    config.getProperty(SERVICE_MAPPING) == null
     config.getProperty(WRITER_TYPE) == "DDAgentWriter"
     config.getProperty(AGENT_HOST) == "localhost"
     config.getProperty(AGENT_PORT) == "8126"
+    config.getProperty(SPAN_TAGS) == null
   }
 
   def "specify overrides via system properties"() {
@@ -96,7 +108,28 @@ class DDTraceConfigTest extends Specification {
     tracer.sampler instanceof AllSampler
     tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:8126/v0.3/traces } }"
 
-    tracer.spanContextDecorators.size() == 6
+    tracer.spanContextDecorators.size() == 9
+  }
+
+  def "verify mapping configs on tracer"() {
+    setup:
+    System.setProperty(PREFIX + SERVICE_MAPPING, mapString)
+    System.setProperty(PREFIX + SPAN_TAGS, mapString)
+
+    when:
+    def tracer = new DDTracer()
+    ServiceNameDecorator decorator = tracer.spanContextDecorators.values().flatten().find {
+      it instanceof ServiceNameDecorator
+    }
+
+    then:
+    tracer.spanTags == map
+    decorator.mappings == map
+
+    where:
+    mapString       | map
+    "a:1, a:2, a:3" | [a: "3"]
+    "a:b,c:d"       | [a: "b", c: "d"]
   }
 
   @Unroll
@@ -132,19 +165,19 @@ class DDTraceConfigTest extends Specification {
 
   def "parsing an invalid string returns an empty map"() {
     expect:
-    DDTraceConfig.parseMap(str) == map
+    DDTraceConfig.parseMap(str) == [:]
 
     where:
-    str         | map
-    null        | [:]
-    ""          | [:]
-    "1"         | [:]
-    "a"         | [:]
-    "a:"        | [:]
-    "a,1"       | [:]
-    "in:val:id" | [:]
-    "a:b:c:d"   | [:]
-    "a:b,c,d"   | [:]
-    "!a"        | [:]
+    str         | _
+    null        | _
+    ""          | _
+    "1"         | _
+    "a"         | _
+    "a:"        | _
+    "a,1"       | _
+    "in:val:id" | _
+    "a:b:c:d"   | _
+    "a:b,c,d"   | _
+    "!a"        | _
   }
 }

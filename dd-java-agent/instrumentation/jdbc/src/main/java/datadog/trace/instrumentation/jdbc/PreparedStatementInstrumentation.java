@@ -66,7 +66,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Configu
 
       JDBCMaps.DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
       if (dbInfo == null) {
-        dbInfo = JDBCMaps.DBInfo.UNKNOWN;
+        dbInfo = JDBCMaps.DBInfo.DEFAULT;
       }
       final Scope scope =
           GlobalTracer.get().buildSpan(dbInfo.getType() + ".query").startActive(true);
@@ -77,7 +77,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Configu
       Tags.COMPONENT.set(span, "java-jdbc-prepared_statement");
 
       span.setTag(DDTags.SERVICE_NAME, dbInfo.getType());
-      span.setTag(DDTags.RESOURCE_NAME, sql == null ? JDBCMaps.UNKNOWN_QUERY : sql);
+      span.setTag(DDTags.RESOURCE_NAME, sql == null ? JDBCMaps.DB_QUERY : sql);
       span.setTag(DDTags.SPAN_TYPE, "sql");
       span.setTag("span.origin.type", statement.getClass().getName());
       span.setTag("db.jdbc.url", dbInfo.getUrl());

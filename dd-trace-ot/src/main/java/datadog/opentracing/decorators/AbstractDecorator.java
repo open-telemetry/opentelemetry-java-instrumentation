@@ -1,7 +1,6 @@
 package datadog.opentracing.decorators;
 
 import datadog.opentracing.DDSpanContext;
-import datadog.trace.api.DDTags;
 
 /**
  * Span decorators are called when new tags are written and proceed to various remappings and
@@ -13,27 +12,20 @@ public abstract class AbstractDecorator {
 
   private Object matchingValue;
 
-  private String setTag;
+  private String replacementTag;
 
-  private String setValue;
+  private String replacementValue;
 
-  public boolean afterSetTag(final DDSpanContext context, final String tag, final Object value) {
+  public boolean shouldSetTag(final DDSpanContext context, final String tag, final Object value) {
     if (this.getMatchingValue() == null || this.getMatchingValue().equals(value)) {
-      final String targetTag = getSetTag() == null ? tag : getSetTag();
-      final String targetValue = getSetValue() == null ? String.valueOf(value) : getSetValue();
+      final String targetTag = getReplacementTag() == null ? tag : getReplacementTag();
+      final String targetValue =
+          getReplacementValue() == null ? String.valueOf(value) : getReplacementValue();
 
-      if (targetTag.equals(DDTags.SERVICE_NAME)) {
-        context.setServiceName(targetValue);
-      } else if (targetTag.equals(DDTags.RESOURCE_NAME)) {
-        context.setResourceName(targetValue);
-      } else if (targetTag.equals(DDTags.SPAN_TYPE)) {
-        context.setSpanType(targetValue);
-      } else {
-        context.setTag(targetTag, targetValue);
-      }
-      return true;
-    } else {
+      context.setTag(targetTag, targetValue);
       return false;
+    } else {
+      return true;
     }
   }
 
@@ -53,19 +45,19 @@ public abstract class AbstractDecorator {
     this.matchingValue = value;
   }
 
-  public String getSetTag() {
-    return setTag;
+  public String getReplacementTag() {
+    return replacementTag;
   }
 
-  public void setSetTag(final String targetTag) {
-    this.setTag = targetTag;
+  public void setReplacementTag(final String targetTag) {
+    this.replacementTag = targetTag;
   }
 
-  public String getSetValue() {
-    return setValue;
+  public String getReplacementValue() {
+    return replacementValue;
   }
 
-  public void setSetValue(final String targetValue) {
-    this.setValue = targetValue;
+  public void setReplacementValue(final String targetValue) {
+    this.replacementValue = targetValue;
   }
 }
