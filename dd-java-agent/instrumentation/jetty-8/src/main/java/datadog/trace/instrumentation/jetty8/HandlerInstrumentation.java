@@ -15,6 +15,7 @@ import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
+import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -93,6 +94,10 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
               .withTag("span.origin.type", source.getClass().getName())
               .startActive(false);
+
+      if (scope instanceof TraceScope) {
+        ((TraceScope) scope).setAsyncPropagation(true);
+      }
 
       final Span span = scope.span();
       Tags.HTTP_METHOD.set(span, req.getMethod());
