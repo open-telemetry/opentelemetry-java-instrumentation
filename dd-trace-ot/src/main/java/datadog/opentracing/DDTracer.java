@@ -7,7 +7,6 @@ import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HTTPCodec;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
-import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.interceptor.TraceInterceptor;
 import datadog.trace.api.sampling.PrioritySampling;
@@ -28,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -369,15 +369,7 @@ public class DDTracer implements io.opentracing.Tracer {
 
     @Override
     public DDSpanBuilder withTag(final String tag, final String string) {
-      if (tag.equals(DDTags.SERVICE_NAME)) {
-        return withServiceName(string);
-      } else if (tag.equals(DDTags.RESOURCE_NAME)) {
-        return withResourceName(string);
-      } else if (tag.equals(DDTags.SPAN_TYPE)) {
-        return withSpanType(string);
-      } else {
-        return withTag(tag, (Object) string);
-      }
+      return withTag(tag, (Object) string);
     }
 
     @Override
@@ -523,6 +515,39 @@ public class DDTracer implements io.opentracing.Tracer {
               this.tags,
               parentTrace,
               DDTracer.this);
+
+      // Apply Decorators to handle any tags that may have been set via the builder.
+      for (final Iterator<Map.Entry<String, Object>> it = this.tags.entrySet().iterator();
+          it.hasNext();
+          ) {
+        final Map.Entry<String, Object> tag = it.next();
+        if (tag.getValue() == null) {
+          it.remove();
+          continue;
+        }
+
+        boolean addTag = true;
+
+        // Call decorators
+        final List<AbstractDecorator> decorators =
+            DDTracer.this.getSpanContextDecorators(tag.getKey());
+        if (decorators != null) {
+          for (final AbstractDecorator decorator : decorators) {
+            try {
+              addTag &= decorator.shouldSetTag(context, tag.getKey(), tag.getValue());
+            } catch (final Throwable ex) {
+              log.debug(
+                  "Could not decorate the span decorator={}: {}",
+                  decorator.getClass().getSimpleName(),
+                  ex.getMessage());
+            }
+          }
+        }
+
+        if (!addTag) {
+          it.remove();
+        }
+      }
 
       return context;
     }

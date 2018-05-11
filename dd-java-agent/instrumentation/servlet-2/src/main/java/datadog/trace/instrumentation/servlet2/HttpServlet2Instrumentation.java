@@ -85,6 +85,7 @@ public final class HttpServlet2Instrumentation extends Instrumenter.Configurable
               .asChildOf(extractedContext)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
+              .withTag("servlet.context", req.getContextPath())
               .startActive(true);
 
       if (scope instanceof TraceScope) {

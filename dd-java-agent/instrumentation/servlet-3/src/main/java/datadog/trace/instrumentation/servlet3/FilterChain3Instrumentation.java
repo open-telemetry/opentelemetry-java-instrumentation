@@ -88,6 +88,7 @@ public final class FilterChain3Instrumentation extends Instrumenter.Configurable
               .asChildOf(extractedContext)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
+              .withTag("servlet.context", ((HttpServletRequest) req).getContextPath())
               .startActive(false);
 
       if (scope instanceof TraceScope) {

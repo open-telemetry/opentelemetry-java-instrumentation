@@ -102,12 +102,4 @@ public class TraceConfigInstrumentation extends Instrumenter.Configurable {
     }
     return builder;
   }
-
-  private String getPropOrEnv(final String name) {
-    return System.getProperty(name, System.getenv(propToEnvName(name)));
-  }
-
-  static String propToEnvName(final String name) {
-    return name.toUpperCase().replace(".", "_");
-  }
 }

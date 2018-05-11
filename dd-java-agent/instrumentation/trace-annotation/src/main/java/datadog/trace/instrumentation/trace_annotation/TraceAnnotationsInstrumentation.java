@@ -86,12 +86,4 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Configur
                 .advice(isAnnotatedWith(methodTraceMatcher), TraceAdvice.class.getName()))
         .asDecorator();
   }
-
-  private String getPropOrEnv(final String name) {
-    return System.getProperty(name, System.getenv(propToEnvName(name)));
-  }
-
-  static String propToEnvName(final String name) {
-    return name.toUpperCase().replace(".", "_");
-  }
 }
