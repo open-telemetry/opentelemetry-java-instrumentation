@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -517,12 +516,9 @@ public class DDTracer implements io.opentracing.Tracer {
               DDTracer.this);
 
       // Apply Decorators to handle any tags that may have been set via the builder.
-      for (final Iterator<Map.Entry<String, Object>> it = this.tags.entrySet().iterator();
-          it.hasNext();
-          ) {
-        final Map.Entry<String, Object> tag = it.next();
+      for (final Map.Entry<String, Object> tag : this.tags.entrySet()) {
         if (tag.getValue() == null) {
-          it.remove();
+          context.setTag(tag.getKey(), null);
           continue;
         }
 
@@ -545,7 +541,7 @@ public class DDTracer implements io.opentracing.Tracer {
         }
 
         if (!addTag) {
-          it.remove();
+          context.setTag(tag.getKey(), null);
         }
       }
 

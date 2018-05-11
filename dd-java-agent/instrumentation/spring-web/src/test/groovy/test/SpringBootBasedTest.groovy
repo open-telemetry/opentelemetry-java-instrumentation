@@ -49,10 +49,11 @@ class SpringBootBasedTest extends AgentTestRunner {
     span.context().tags["span.kind"] == "server"
     span.context().tags["span.type"] == "web"
     span.context().tags["component"] == "java-web-servlet"
+    span.context().tags["servlet.context"] == ""
     span.context().tags["http.status_code"] == 200
     span.context().tags["thread.name"] != null
     span.context().tags["thread.id"] != null
-    span.context().tags.size() == 8
+    span.context().tags.size() == 9
   }
 
   def "generates 404 spans"() {
@@ -78,10 +79,11 @@ class SpringBootBasedTest extends AgentTestRunner {
     span0.context().tags["span.kind"] == "server"
     span0.context().tags["span.type"] == "web"
     span0.context().tags["component"] == "java-web-servlet"
+    span0.context().tags["servlet.context"] == ""
     span0.context().tags["http.status_code"] == 404
     span0.context().tags["thread.name"] != null
     span0.context().tags["thread.id"] != null
-    span0.context().tags.size() == 8
+    span0.context().tags.size() == 9
 
     and: // trace 1
     def trace1 = TEST_WRITER.get(1)
@@ -98,10 +100,11 @@ class SpringBootBasedTest extends AgentTestRunner {
     span1.context().tags["span.kind"] == "server"
     span1.context().tags["span.type"] == "web"
     span1.context().tags["component"] == "java-web-servlet"
+    span1.context().tags["servlet.context"] == ""
     span1.context().tags["http.status_code"] == 404
     span1.context().tags["thread.name"] != null
     span1.context().tags["thread.id"] != null
-    span1.context().tags.size() == 8
+    span1.context().tags.size() == 9
   }
 
   def "generates error spans"() {
@@ -129,6 +132,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     span0.context().tags["span.kind"] == "server"
     span0.context().tags["span.type"] == "web"
     span0.context().tags["component"] == "java-web-servlet"
+    span0.context().tags["servlet.context"] == ""
     span0.context().tags["http.status_code"] == 500
     span0.context().tags["thread.name"] != null
     span0.context().tags["thread.id"] != null
@@ -136,7 +140,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     span0.context().tags["error.msg"] == "Request processing failed; nested exception is java.lang.RuntimeException: qwerty"
     span0.context().tags["error.type"] == NestedServletException.getName()
     span0.context().tags["error.stack"] != null
-    span0.context().tags.size() == 12
+    span0.context().tags.size() == 13
 
     and: // trace 1
     def trace1 = TEST_WRITER.get(1)
@@ -152,11 +156,12 @@ class SpringBootBasedTest extends AgentTestRunner {
     span1.context().tags["span.kind"] == "server"
     span1.context().tags["span.type"] == "web"
     span1.context().tags["component"] == "java-web-servlet"
+    span1.context().tags["servlet.context"] == ""
     span1.context().tags["http.status_code"] == 500
     span1.context().getErrorFlag()
     span1.context().tags["thread.name"] != null
     span1.context().tags["thread.id"] != null
-    span1.context().tags.size() == 9
+    span1.context().tags.size() == 10
   }
 
   def "validated form"() {
@@ -179,10 +184,11 @@ class SpringBootBasedTest extends AgentTestRunner {
     span.context().tags["span.kind"] == "server"
     span.context().tags["span.type"] == "web"
     span.context().tags["component"] == "java-web-servlet"
+    span.context().tags["servlet.context"] == ""
     span.context().tags["http.status_code"] == 200
     span.context().tags["thread.name"] != null
     span.context().tags["thread.id"] != null
-    span.context().tags.size() == 8
+    span.context().tags.size() == 9
   }
 
   def "invalid form"() {
@@ -210,6 +216,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     span0.context().tags["span.kind"] == "server"
     span0.context().tags["span.type"] == "web"
     span0.context().tags["component"] == "java-web-servlet"
+    span0.context().tags["servlet.context"] == ""
     span0.context().tags["http.status_code"] == 400
     span0.context().tags["thread.name"] != null
     span0.context().tags["thread.id"] != null
@@ -217,7 +224,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     span0.context().tags["error.msg"].toString().startsWith("Validation failed")
     span0.context().tags["error.type"] == MethodArgumentNotValidException.getName()
     span0.context().tags["error.stack"] != null
-    span0.context().tags.size() == 12
+    span0.context().tags.size() == 13
 
     and: // trace 1
     def trace1 = TEST_WRITER.get(1)
@@ -234,9 +241,10 @@ class SpringBootBasedTest extends AgentTestRunner {
     span1.context().tags["span.kind"] == "server"
     span1.context().tags["span.type"] == "web"
     span1.context().tags["component"] == "java-web-servlet"
+    span1.context().tags["servlet.context"] == ""
     span1.context().tags["http.status_code"] == 400
     span1.context().tags["thread.name"] != null
     span1.context().tags["thread.id"] != null
-    span1.context().tags.size() == 8
+    span1.context().tags.size() == 9
   }
 }

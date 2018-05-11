@@ -58,7 +58,7 @@ class JaxRsClientTest extends AgentTestRunner {
 
     span.context().operationName == "jax-rs.client.call"
     span.serviceName == "unnamed-java-app"
-    span.resourceName == "GET jax-rs.client.call"
+    span.resourceName == "GET /ping"
     span.type == "http"
     !span.context().getErrorFlag()
     span.context().parentId == 0
