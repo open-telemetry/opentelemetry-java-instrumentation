@@ -64,16 +64,12 @@ public final class StatementInstrumentation extends Instrumenter.Configurable {
         return NoopScope.INSTANCE;
       }
 
-      JDBCMaps.DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
-      if (dbInfo == null) {
-        dbInfo = JDBCMaps.DBInfo.DEFAULT;
-      }
+      JDBCMaps.DBInfo dbInfo = JDBCMaps.getDBInfo(connection);
 
       final Scope scope =
           GlobalTracer.get().buildSpan(dbInfo.getType() + ".query").startActive(true);
 
       final Span span = scope.span();
-
       Tags.DB_TYPE.set(span, dbInfo.getType());
       Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
       Tags.COMPONENT.set(span, "java-jdbc-statement");

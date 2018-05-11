@@ -29,7 +29,6 @@ import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
 public final class PreparedStatementInstrumentation extends Instrumenter.Configurable {
-
   public PreparedStatementInstrumentation() {
     super("jdbc");
   }
@@ -64,10 +63,8 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Configu
         return NoopScope.INSTANCE;
       }
 
-      JDBCMaps.DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
-      if (dbInfo == null) {
-        dbInfo = JDBCMaps.DBInfo.DEFAULT;
-      }
+      JDBCMaps.DBInfo dbInfo = JDBCMaps.getDBInfo(connection);
+
       final Scope scope =
           GlobalTracer.get().buildSpan(dbInfo.getType() + ".query").startActive(true);
 
