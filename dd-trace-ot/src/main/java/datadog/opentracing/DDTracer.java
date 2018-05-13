@@ -114,6 +114,15 @@ public class DDTracer implements io.opentracing.Tracer {
     this.sampler = sampler;
     this.spanTags = defaultSpanTags;
 
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread() {
+              @Override
+              public void run() {
+                DDTracer.this.close();
+              }
+            });
+
     registry = new CodecRegistry();
     registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec());
     registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec());
@@ -271,6 +280,7 @@ public class DDTracer implements io.opentracing.Tracer {
   }
 
   public void close() {
+    PendingTrace.close();
     writer.close();
   }
 

@@ -195,8 +195,9 @@ class ScopeManagerTest extends Specification {
     when:
     if (forceGC) {
       continuation = null // Continuation references also hold up traces.
-      PendingTrace.awaitGC()
-      ((DDSpanContext) span.context()).trace.clean()
+      while (!((DDSpanContext) span.context()).trace.clean()) {
+        PendingTrace.awaitGC()
+      }
       writer.waitForTraces(1)
     }
     if (autoClose) {
