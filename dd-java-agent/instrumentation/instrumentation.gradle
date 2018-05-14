@@ -14,11 +14,22 @@ Project instr_project = project
 subprojects { subProj ->
   if (subProj.getParent() == instr_project) {
     apply plugin: "net.bytebuddy.byte-buddy"
+
     subProj.byteBuddy {
       transformation {
-        tasks = ["compileJava"]
-        plugin = "datadog.trace.agent.tooling.muzzle.MuzzleGradlePlugin"
-        classPath = project(':dd-java-agent:agent-tooling').configurations.instrumentationMuzzle
+        // Applying NoOp optimizes build by applying bytebuddy plugin to only compileJava task
+        tasks = ['compileJava']
+        plugin = 'datadog.trace.agent.tooling.muzzle.MuzzleGradlePlugin$NoOp'
+      }
+    }
+
+    subProj.afterEvaluate {
+      subProj.byteBuddy {
+        transformation {
+          tasks = ['compileJava']
+          plugin = 'datadog.trace.agent.tooling.muzzle.MuzzleGradlePlugin'
+          classPath = project(':dd-java-agent:agent-tooling').configurations.instrumentationMuzzle + subProj.configurations.compile + subProj.sourceSets.main.output
+        }
       }
     }
 

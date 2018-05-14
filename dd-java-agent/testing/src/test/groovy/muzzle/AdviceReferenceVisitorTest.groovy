@@ -4,6 +4,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.tooling.muzzle.AdviceReferenceVisitor
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher
+import datadog.trace.agent.tooling.muzzle.Reference
 
 class AdviceReferenceVisitorTest extends AgentTestRunner {
 
@@ -21,8 +22,9 @@ class AdviceReferenceVisitorTest extends AgentTestRunner {
 
   def "match safe classpaths"() {
     setup:
-    ReferenceMatcher refMatcher = new ReferenceMatcher()
-    refMatcher.assertSafeTransformation(AdviceClass.getName())
+    Reference[] refs = AdviceReferenceVisitor.createReferencesFrom(AdviceClass.getName(), this.getClass().getClassLoader()).values().toArray(new Reference[0])
+    ReferenceMatcher refMatcher = new ReferenceMatcher(refs)
+    refMatcher.assertSafeTransformation()
     ClassLoader safeClassloader = new URLClassLoader([TestUtils.createJarWithClasses(AdviceClass$A,
                                                                                      AdviceClass$SomeInterface,
                                                                                      AdviceClass$SomeImplementation)] as URL[],

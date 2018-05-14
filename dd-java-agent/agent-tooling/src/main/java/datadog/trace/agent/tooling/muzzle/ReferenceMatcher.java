@@ -5,6 +5,8 @@ import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADE
 import datadog.trace.agent.tooling.Utils;
 import java.security.ProtectionDomain;
 import java.util.*;
+
+import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
 import net.bytebuddy.description.type.TypeDescription;
@@ -15,16 +17,14 @@ import net.bytebuddy.utility.JavaModule;
  * A bytebuddy matcher that matches if expected references (classes, fields, methods, visibility)
  * are present on the classpath.
  */
+@Slf4j
 public class ReferenceMatcher implements AgentBuilder.RawMatcher {
   // TODO: Cache safe and unsafe classloaders
 
-  // list of unique references (by class name)
-  Map<String, Reference> references = new HashMap<>();
-  Set<String> referenceSources = new HashSet<>();
+  private final Reference[] references;
 
-  // take a list of references
-  public ReferenceMatcher() {
-    // TODO: pass in references
+  public ReferenceMatcher(Reference... references) {
+    this.references = references;
   }
 
   @Override
@@ -37,49 +37,33 @@ public class ReferenceMatcher implements AgentBuilder.RawMatcher {
     return matches(classLoader);
   }
 
+  /**
+   * @param loader Classloader to validate against (or null for bootstrap)
+   * @return true if all references match the classpath of loader
+   */
   public boolean matches(ClassLoader loader) {
     return getMismatchedReferenceSources(loader).size() == 0;
   }
 
+  /**
+   * @param loader Classloader to validate against (or null for bootstrap)
+   * @return A list of all mismatches between this ReferenceMatcher and loader's classpath.
+   */
   public List<Reference.Mismatch> getMismatchedReferenceSources(ClassLoader loader) {
     if (loader == BOOTSTRAP_LOADER) {
       loader = Utils.getBootstrapProxy();
     }
     final List<Reference.Mismatch> mismatchedReferences = new ArrayList<>(0);
-    for (Reference reference : references.values()) {
+    for (Reference reference : references) {
       mismatchedReferences.addAll(reference.checkMatch(loader));
     }
-    // TODO: log mismatches
-    /*
-    if (mismatchedReferences.size() > 0) {
-      System.out.println(mismatchedReferences.size() + " mismatches on classloader " + loader);
-      for (Reference.Mismatch mismatch : mismatchedReferences) {
-        // TODO: log more info about why mismatch occurred. Missing method, missing field, signature mismatch.
-        System.out.println("--" + mismatch.toString());
-      }
-    }
-    */
     return mismatchedReferences;
   }
 
+  /**
+   * Create a bytebuddy matcher which throws a MismatchException when there are mismatches with the classloader under transformation.
+   */
   public Transformer assertSafeTransformation(String... adviceClassNames) {
-    // load or check cache for advice class names
-    for (String adviceClass : adviceClassNames) {
-      if (!referenceSources.contains(adviceClass)) {
-        referenceSources.add(adviceClass);
-        for (Map.Entry<String, Reference> entry :
-            AdviceReferenceVisitor.createReferencesFrom(
-                    adviceClass, ReferenceMatcher.class.getClassLoader())
-                .entrySet()) {
-          if (references.containsKey(entry.getKey())) {
-            references.put(entry.getKey(), references.get(entry.getKey()).merge(entry.getValue()));
-          } else {
-            references.put(entry.getKey(), entry.getValue());
-          }
-        }
-      }
-    }
-
     return new Transformer() {
       @Override
       public DynamicType.Builder<?> transform(
@@ -91,7 +75,6 @@ public class ReferenceMatcher implements AgentBuilder.RawMatcher {
         if (mismatches.size() == 0) {
           return builder;
         } else {
-          // TODO: make mismatch exception type and add more descriptive logging at listener level.
           throw new MismatchException(classLoader, mismatches);
         }
       }

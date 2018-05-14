@@ -8,17 +8,10 @@ import net.bytebuddy.dynamic.DynamicType.Builder;
 
 public class MuzzleGradlePlugin implements Plugin {
   // TODO:
-  // - PR1
-  //   - Make errorprone happy
-  //   - Unit tests
-  //   - Review design and ease of adding future features
-  //     - better checking
-  //     - versionScan
   // - Optimizations
   //   - Cache safe and unsafe classloaders
-  //   - Do reference checking at compile time
+  //   - Do reference generation at compile time
   //   - lazy-load reference muzzle field
-  //   - Also match interfaces which extend Instrumenter
   // - Additional references to check
   //   - Fields
   //   - methods
@@ -29,11 +22,9 @@ public class MuzzleGradlePlugin implements Plugin {
   //   - access flags (including implicit package-private)
   //   - supertypes
   // - Misc
+  //   - Also match interfaces which extend Instrumenter
   //   - Expose config instead of hardcoding datadog namespace (or reconfigure classpath)
-  //   - Throw checked exception for better logging of mismatches
   //   - Run muzzle in matching phase (may require a rewrite of the instrumentation api)
-  //   - Remove ReplaceIsSafeVisitor
-  //   - IntegrationTest: assert all instrumentation has matcher field
   //   - Documentation
 
   private static final TypeDescription InstrumenterTypeDesc =
@@ -57,5 +48,17 @@ public class MuzzleGradlePlugin implements Plugin {
   @Override
   public Builder<?> apply(Builder<?> builder, TypeDescription typeDescription) {
     return builder.visit(new MuzzleVisitor());
+  }
+
+  public static class NoOp implements Plugin {
+    @Override
+    public boolean matches(final TypeDescription target) {
+      return false;
+    }
+
+    @Override
+    public Builder<?> apply(Builder<?> builder, TypeDescription typeDescription) {
+      return builder;
+    }
   }
 }

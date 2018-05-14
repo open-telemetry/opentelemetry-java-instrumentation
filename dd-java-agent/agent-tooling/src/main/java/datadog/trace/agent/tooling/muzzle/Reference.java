@@ -26,6 +26,18 @@ public class Reference {
     return className;
   }
 
+  public String getSuperName() {
+    return superName;
+  }
+
+  public String[] getInterfaces() {
+    return interfaceNames;
+  }
+
+  public Source[] getSources() {
+    return sources;
+  }
+
   /**
    * TODO: doc
    *
@@ -136,6 +148,37 @@ public class Reference {
       String getMismatchDetails() {
         return "Missing class " + className;
       }
+    }
+  }
+
+  public static class Builder {
+    private final String className;
+    private String superName = null;
+    private Set<String> interfaces = new HashSet<>();
+    private Set<Source> sources = new HashSet<>();
+
+    public Builder(final String className) {
+      this.className = className;
+    }
+
+    public Builder withSuperName(String superName) {
+      this.superName = superName;
+      return this;
+    }
+
+    public Builder withInterface(String interfaceName) {
+      interfaces.add(interfaceName);
+      return this;
+    }
+
+    public Builder withSource(String sourceName, int line) {
+      sources.add(new Source(sourceName, line));
+      return this;
+    }
+
+    public Reference build() {
+      return new Reference(
+          sources.toArray(new Source[0]), className, superName, interfaces.toArray(new String[0]));
     }
   }
 }

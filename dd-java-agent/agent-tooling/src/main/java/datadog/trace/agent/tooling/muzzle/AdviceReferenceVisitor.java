@@ -80,9 +80,16 @@ public class AdviceReferenceVisitor extends ClassVisitor {
     }
   }
 
+  /**
+   * Generate all references reachable from a given class.
+   *
+   * @param entryPointClassName Starting point for generating references.
+   * @param loader Classloader used to read class bytes.
+   * @return Map of [referenceClassName -> Reference]
+   */
   public static Map<String, Reference> createReferencesFrom(
       String entryPointClassName, ClassLoader loader) {
-    final Set<String> visitedSources = new HashSet<String>();
+    final Set<String> visitedSources = new HashSet<>();
     final Map<String, Reference> references = new HashMap<>();
 
     final Queue<String> instrumentationQueue = new ArrayDeque<>();
@@ -92,10 +99,7 @@ public class AdviceReferenceVisitor extends ClassVisitor {
       final String className = instrumentationQueue.remove();
       visitedSources.add(className);
       try {
-        final InputStream in =
-            ReferenceMatcher.class
-                .getClassLoader()
-                .getResourceAsStream(Utils.getResourceName(className));
+        final InputStream in = loader.getResourceAsStream(Utils.getResourceName(className));
         try {
           final AdviceReferenceVisitor cv = new AdviceReferenceVisitor(null);
           final ClassReader reader = new ClassReader(in);
@@ -117,7 +121,9 @@ public class AdviceReferenceVisitor extends ClassVisitor {
           }
 
         } finally {
-          in.close();
+          if (in != null) {
+            in.close();
+          }
         }
       } catch (IOException ioe) {
         throw new IllegalStateException(ioe);
