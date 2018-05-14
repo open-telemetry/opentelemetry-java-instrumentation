@@ -5,7 +5,6 @@ import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADE
 import datadog.trace.agent.tooling.Utils;
 import java.security.ProtectionDomain;
 import java.util.*;
-
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
@@ -19,8 +18,8 @@ import net.bytebuddy.utility.JavaModule;
  */
 @Slf4j
 public class ReferenceMatcher implements AgentBuilder.RawMatcher {
-  // TODO: Cache safe and unsafe classloaders
-
+  private final Map<ClassLoader, List<Reference.Mismatch>> mismatchCache =
+      Collections.synchronizedMap(new WeakHashMap<ClassLoader, List<Reference.Mismatch>>());
   private final Reference[] references;
 
   public ReferenceMatcher(Reference... references) {
@@ -61,7 +60,8 @@ public class ReferenceMatcher implements AgentBuilder.RawMatcher {
   }
 
   /**
-   * Create a bytebuddy matcher which throws a MismatchException when there are mismatches with the classloader under transformation.
+   * Create a bytebuddy matcher which throws a MismatchException when there are mismatches with the
+   * classloader under transformation.
    */
   public Transformer assertSafeTransformation(String... adviceClassNames) {
     return new Transformer() {
@@ -71,7 +71,16 @@ public class ReferenceMatcher implements AgentBuilder.RawMatcher {
           TypeDescription typeDescription,
           ClassLoader classLoader,
           JavaModule module) {
-        final List<Reference.Mismatch> mismatches = getMismatchedReferenceSources(classLoader);
+        if (classLoader == BOOTSTRAP_LOADER) {
+          classLoader = Utils.getBootstrapProxy();
+        }
+        List<Reference.Mismatch> mismatches =
+            mismatchCache.get(getMismatchedReferenceSources(classLoader));
+        if (null == mismatches) {
+          // okay if entered by multiple callers during initialization
+          mismatches = getMismatchedReferenceSources(classLoader);
+          mismatchCache.put(classLoader, mismatches);
+        }
         if (mismatches.size() == 0) {
           return builder;
         } else {
