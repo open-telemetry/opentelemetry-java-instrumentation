@@ -72,11 +72,7 @@ public class AdviceReferenceVisitor extends ClassVisitor {
         final String descriptor,
         final boolean isInterface) {
       addReference(
-          new Reference(
-              new Reference.Source[] {new Reference.Source(refSourceClassName, currentLineNumber)},
-              Utils.getClassName(owner),
-              null,
-              null));
+          new Reference.Builder(owner).withSource(refSourceClassName, currentLineNumber).build());
     }
   }
 

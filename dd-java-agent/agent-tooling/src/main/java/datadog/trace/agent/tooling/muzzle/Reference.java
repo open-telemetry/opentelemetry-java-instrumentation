@@ -5,21 +5,31 @@ import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOAD
 import datadog.trace.agent.tooling.Utils;
 import java.util.*;
 
-/** A reference to a single class file. */
+/** An immutable reference to a single class file. */
 public class Reference {
-  private final Source[] sources;
+  private final Set<Source> sources;
   private final String className;
   private final String superName;
-  private final String[] interfaceNames;
+  private final Set<Flag> flags;
+  private final Set<String> interfaces;
+  private final Set<Field> fields;
+  private final Set<Method> methods;
 
-  public Reference(Source[] sources, String className, String superName, String[] interfaces) {
+  private Reference(
+      Set<Source> sources,
+      Set<Flag> flags,
+      String className,
+      String superName,
+      Set<String> interfaces,
+      Set<Field> fields,
+      Set<Method> methods) {
+    this.sources = sources;
+    this.flags = flags;
     this.className = Utils.getClassName(className);
     this.superName = null == superName ? null : Utils.getClassName(superName);
-    this.sources = null == sources ? new Source[0] : sources;
-    this.interfaceNames = new String[interfaces == null ? 0 : interfaces.length];
-    for (int i = 0; i < interfaceNames.length; ++i) {
-      interfaceNames[i] = Utils.getClassName(interfaces[i]);
-    }
+    this.interfaces = interfaces;
+    this.methods = methods;
+    this.fields = fields;
   }
 
   public String getClassName() {
@@ -30,16 +40,30 @@ public class Reference {
     return superName;
   }
 
-  public String[] getInterfaces() {
-    return interfaceNames;
+  public Set<String> getInterfaces() {
+    return interfaces;
   }
 
-  public Source[] getSources() {
+  public Set<Source> getSources() {
     return sources;
   }
 
+  public Set<Flag> getFlags() {
+    return flags;
+  }
+
+  public Set<Method> getMethods() {
+    return this.methods;
+  }
+
+  public Set<Field> getFields() {
+    return this.fields;
+  }
+
   /**
-   * TODO: doc
+   * Create a new reference which combines this reference with another reference.
+   *
+   * <p>Attempts to merge incompatible references will throw an IllegalStateException.
    *
    * @param anotherReference A reference to the same class
    * @return a new Reference which merges the two references
@@ -51,17 +75,27 @@ public class Reference {
     String superName = null == this.superName ? anotherReference.superName : this.superName;
 
     return new Reference(
-        mergeWithoutDuplicates(sources, anotherReference.sources),
+        merge(sources, anotherReference.sources),
+        merge(flags, anotherReference.flags),
         className,
         superName,
-        mergeWithoutDuplicates(interfaceNames, anotherReference.interfaceNames));
+        merge(interfaces, anotherReference.interfaces),
+        merge(fields, anotherReference.fields),
+        merge(methods, anotherReference.methods));
   }
 
-  private <T> T[] mergeWithoutDuplicates(T[] array1, T[] array2) {
+  private static <T> Set<T> merge(Set<T> set1, Set<T> set2) {
     final Set<T> set = new HashSet<>();
-    set.addAll(Arrays.asList(array1));
-    set.addAll(Arrays.asList(array2));
-    return set.toArray(array1);
+    set.addAll(set1);
+    set.addAll(set2);
+    return set;
+  }
+
+  private static Set<Flag> mergeFlags(Set<Flag> flags1, Set<Flag> flags2) {
+    Set<Flag> merged = merge(flags1, flags2);
+    // TODO: Assert flags are non-contradictory and resolve
+    // public > protected > package-private > private
+    return merged;
   }
 
   /**
@@ -78,7 +112,7 @@ public class Reference {
       return new ArrayList<>(0);
     } else {
       final List<Mismatch> mismatches = new ArrayList<>();
-      mismatches.add(new Mismatch.MissingClass(sources, className));
+      mismatches.add(new Mismatch.MissingClass(sources.toArray(new Source[0]), className));
       return mismatches;
     }
   }
@@ -115,7 +149,19 @@ public class Reference {
       return line;
     }
 
-    // FIXME: Override equals and hashCode
+    @Override
+    public boolean equals(Object o) {
+      if (o instanceof Source) {
+        Source other = (Source) o;
+        return name.equals(other.name) && line == other.line;
+      }
+      return false;
+    }
+
+    @Override
+    public int hashCode() {
+      return name.hashCode() + line;
+    }
   }
 
   public abstract static class Mismatch {
@@ -151,11 +197,135 @@ public class Reference {
     }
   }
 
+  /** Expected flag (or lack of flag) on a class, method, or field reference. */
+  public static enum Flag {
+    PUBLIC,
+    PACKAGE_OR_HIGHER,
+    PROTECTED_OR_HIGHER,
+    PRIVATE_OR_HIGHER,
+    NON_FINAL,
+    STATIC,
+    NON_STATIC,
+    INTERFACE,
+    NON_INTERFACE
+  }
+
+  public static class Method {
+    private final Set<Source> sources;
+    private final Set<Flag> flags;
+    private final String name;
+    private final String returnType;
+    private final List<String> parameterTypes;
+
+    public Method(
+        Set<Source> sources,
+        Set<Flag> flags,
+        String name,
+        String returnType,
+        List<String> parameterTypes) {
+      this.sources = sources;
+      this.flags = flags;
+      this.name = name;
+      this.returnType = returnType;
+      this.parameterTypes = parameterTypes;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public Set<Flag> getFlags() {
+      return flags;
+    }
+
+    public String getReturnType() {
+      return returnType;
+    }
+
+    public List<String> getParameterTypes() {
+      return parameterTypes;
+    }
+
+    public Method merge(Method anotherMethod) {
+      // TODO
+      return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o instanceof Method) {
+        Method other = (Method) o;
+        if ((!name.equals(other.name))
+            || (!returnType.equals(other.returnType))
+            || parameterTypes.size() != other.parameterTypes.size()) {
+          return false;
+        }
+        for (int i = 0; i < parameterTypes.size(); ++i) {
+          if (!parameterTypes.get(i).equals(other.parameterTypes.get(i))) {
+            return false;
+          }
+        }
+        return true;
+      }
+      return false;
+    }
+
+    @Override
+    public int hashCode() {
+      // will cause collisions for overloaded method refs but performance hit should be negligable
+      return name.hashCode();
+    }
+  }
+
+  public static class Field {
+    private final Set<Source> sources;
+    private final Set<Flag> flags;
+    private final String name;
+
+    public Field(Set<Source> sources, Set<Flag> flags, String name) {
+      this.sources = sources;
+      this.flags = flags;
+      this.name = name;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public Set<Flag> getFlags() {
+      return flags;
+    }
+
+    public Field merge(Field anotherField) {
+      // TODO: implement
+      // also assert same class
+      return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o instanceof Field) {
+        Field other = (Field) o;
+        return name.equals(other.name);
+      }
+      return false;
+    }
+
+    @Override
+    public int hashCode() {
+      // will cause collisions for overloaded method refs but performance hit should be negligable
+      return name.hashCode();
+    }
+  }
+
   public static class Builder {
+    private final Set<Source> sources = new HashSet<>();
+    private final Set<Flag> flags = new HashSet<>();
     private final String className;
     private String superName = null;
-    private Set<String> interfaces = new HashSet<>();
-    private Set<Source> sources = new HashSet<>();
+    private final Set<String> interfaces = new HashSet<>();
+    private final Set<Field> fields = new HashSet<>();
+    private final Set<Method> methods = new HashSet<>();
 
     public Builder(final String className) {
       this.className = className;
@@ -176,9 +346,24 @@ public class Reference {
       return this;
     }
 
+    public Builder withFlag(Flag flag) {
+      // TODO
+      return this;
+    }
+
+    public Builder withField(String fieldName, Flag... fieldFlags) {
+      // TODO
+      return this;
+    }
+
+    public Builder withMethod(
+        String methodName, Flag[] methodFlags, String returnType, String[] methodArgs) {
+      // TODO
+      return this;
+    }
+
     public Reference build() {
-      return new Reference(
-          sources.toArray(new Source[0]), className, superName, interfaces.toArray(new String[0]));
+      return new Reference(sources, flags, className, superName, interfaces, fields, methods);
     }
   }
 }
