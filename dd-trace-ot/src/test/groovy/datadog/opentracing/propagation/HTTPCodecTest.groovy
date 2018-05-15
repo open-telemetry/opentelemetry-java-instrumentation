@@ -20,6 +20,8 @@ class HTTPCodecTest extends Specification {
   @Shared
   private static final String SAMPLING_PRIORITY_KEY = "x-datadog-sampling-priority"
 
+  HTTPCodec codec = new HTTPCodec(["SOME_HEADER": "some-tag"])
+
   def "inject http headers"() {
     setup:
     def writer = new ListWriter()
@@ -47,7 +49,6 @@ class HTTPCodecTest extends Specification {
 
     final Map<String, String> carrier = new HashMap<>()
 
-    final HTTPCodec codec = new HTTPCodec()
     codec.inject(mockedContext, new TextMapInjectAdapter(carrier))
 
     expect:
@@ -70,13 +71,13 @@ class HTTPCodecTest extends Specification {
       (SPAN_ID_KEY.toUpperCase())             : "2",
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
+      SOME_HEADER                             : "my-interesting-info",
     ]
 
     if (samplingPriority != PrioritySampling.UNSET) {
       actual.put(SAMPLING_PRIORITY_KEY, String.valueOf(samplingPriority))
     }
 
-    final HTTPCodec codec = new HTTPCodec()
     final ExtractedContext context = codec.extract(new TextMapExtractAdapter(actual))
 
     expect:
@@ -84,6 +85,7 @@ class HTTPCodecTest extends Specification {
     context.getSpanId() == 2l
     context.getBaggage().get("k1") == "v1"
     context.getBaggage().get("k2") == "v2"
+    context.getTags() == ["some-tag": "my-interesting-info"]
     context.getSamplingPriority() == samplingPriority
 
     where:
