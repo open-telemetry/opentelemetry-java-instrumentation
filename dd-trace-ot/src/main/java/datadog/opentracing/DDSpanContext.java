@@ -241,7 +241,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
     // Call decorators
     final List<AbstractDecorator> decorators = tracer.getSpanContextDecorators(tag);
-    if (decorators != null && value != null) {
+    if (decorators != null) {
       for (final AbstractDecorator decorator : decorators) {
         try {
           addTag &= decorator.shouldSetTag(this, tag, value);

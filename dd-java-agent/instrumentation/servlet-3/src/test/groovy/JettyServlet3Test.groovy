@@ -108,6 +108,7 @@ class JettyServlet3Test extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" ""
             "http.status_code" 200
             defaultTags()
           }
@@ -147,6 +148,7 @@ class JettyServlet3Test extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" ""
             "http.status_code" 500
             errorTags(RuntimeException, "some $path error")
             defaultTags()
@@ -187,6 +189,7 @@ class JettyServlet3Test extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" ""
             "http.status_code" 500
             "error" true
             defaultTags()

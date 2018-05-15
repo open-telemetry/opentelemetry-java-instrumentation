@@ -52,5 +52,13 @@ public interface Instrumenter {
     }
 
     protected abstract AgentBuilder apply(AgentBuilder agentBuilder);
+
+    protected static String getPropOrEnv(final String name) {
+      return System.getProperty(name, System.getenv(propToEnvName(name)));
+    }
+
+    private static String propToEnvName(final String name) {
+      return name.toUpperCase().replace(".", "_");
+    }
   }
 }

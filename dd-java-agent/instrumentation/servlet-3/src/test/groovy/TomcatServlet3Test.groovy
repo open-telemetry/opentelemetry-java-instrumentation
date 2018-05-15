@@ -44,7 +44,7 @@ class TomcatServlet3Test extends AgentTestRunner {
     if (!applicationDir.exists()) {
       applicationDir.mkdirs()
     }
-    appContext = tomcatServer.addWebapp("", applicationDir.getAbsolutePath())
+    appContext = tomcatServer.addWebapp("/my-context", applicationDir.getAbsolutePath())
     // Speed up startup by disabling jar scanning:
     appContext.getJarScanner().setJarScanFilter(new JarScanFilter() {
       @Override
@@ -84,7 +84,7 @@ class TomcatServlet3Test extends AgentTestRunner {
   def "test #path servlet call"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$PORT/$path")
+      .url("http://localhost:$PORT/my-context/$path")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -95,18 +95,19 @@ class TomcatServlet3Test extends AgentTestRunner {
     assertTraces(writer, 1) {
       trace(0, 1) {
         span(0) {
-          serviceName "unnamed-java-app"
+          serviceName "my-context"
           operationName "servlet.request"
-          resourceName "GET /$path"
+          resourceName "GET /my-context/$path"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           parent()
           tags {
-            "http.url" "http://localhost:$PORT/$path"
+            "http.url" "http://localhost:$PORT/my-context/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/my-context"
             "http.status_code" 200
             defaultTags()
           }
@@ -123,7 +124,7 @@ class TomcatServlet3Test extends AgentTestRunner {
   def "test #path error servlet call"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$PORT/$path?error=true")
+      .url("http://localhost:$PORT/my-context/$path?error=true")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -134,18 +135,19 @@ class TomcatServlet3Test extends AgentTestRunner {
     assertTraces(writer, 1) {
       trace(0, 1) {
         span(0) {
-          serviceName "unnamed-java-app"
+          serviceName "my-context"
           operationName "servlet.request"
-          resourceName "GET /$path"
+          resourceName "GET /my-context/$path"
           spanType DDSpanTypes.WEB_SERVLET
           errored true
           parent()
           tags {
-            "http.url" "http://localhost:$PORT/$path"
+            "http.url" "http://localhost:$PORT/my-context/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/my-context"
             "http.status_code" 500
             errorTags(RuntimeException, "some $path error")
             defaultTags()
@@ -163,7 +165,7 @@ class TomcatServlet3Test extends AgentTestRunner {
   def "test #path error servlet call for non-throwing error"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$PORT/$path?non-throwing-error=true")
+      .url("http://localhost:$PORT/my-context/$path?non-throwing-error=true")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -174,18 +176,19 @@ class TomcatServlet3Test extends AgentTestRunner {
     assertTraces(writer, 1) {
       trace(0, 1) {
         span(0) {
-          serviceName "unnamed-java-app"
+          serviceName "my-context"
           operationName "servlet.request"
-          resourceName "GET /$path"
+          resourceName "GET /my-context/$path"
           spanType DDSpanTypes.WEB_SERVLET
           errored true
           parent()
           tags {
-            "http.url" "http://localhost:$PORT/$path"
+            "http.url" "http://localhost:$PORT/my-context/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/my-context"
             "http.status_code" 500
             "error" true
             defaultTags()

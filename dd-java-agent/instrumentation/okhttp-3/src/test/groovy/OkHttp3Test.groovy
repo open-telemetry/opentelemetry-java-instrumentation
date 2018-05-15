@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
@@ -39,19 +40,20 @@ class OkHttp3Test extends AgentTestRunner {
     and: // span 0
     def span1 = trace[0]
 
-    span1.context().operationName == "http.request"
-    span1.serviceName == "unnamed-java-app"
-    span1.resourceName == "http.request"
-    span1.type == null
+    span1.context().operationName == "okhttp.http"
+    span1.serviceName == "okhttp"
+    span1.resourceName == "okhttp.http"
+    span1.type == DDSpanTypes.WEB_SERVLET
     !span1.context().getErrorFlag()
     span1.context().parentId == 0
 
 
     def tags1 = span1.context().tags
     tags1["component"] == "okhttp"
+    tags1["span.type"] == DDSpanTypes.WEB_SERVLET
     tags1["thread.name"] != null
     tags1["thread.id"] != null
-    tags1.size() == 3
+    tags1.size() == 4
 
     and: // span 1
     def span2 = trace[1]

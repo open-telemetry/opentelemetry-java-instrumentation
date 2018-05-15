@@ -4,10 +4,10 @@ import datadog.opentracing.DDSpan
 
 class TagsAssert {
   private final Map<String, Object> tags
-  private final Set<String> assertedTags = new HashSet<>()
+  private final Set<String> assertedTags = new TreeSet<>()
 
   private TagsAssert(DDSpan span) {
-    this.tags = span.tags
+    this.tags = new TreeMap(span.tags)
   }
 
   static TagsAssert assertTags(DDSpan span,

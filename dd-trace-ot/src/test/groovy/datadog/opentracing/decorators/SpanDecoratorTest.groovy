@@ -53,9 +53,6 @@ class SpanDecoratorTest extends Specification {
   }
 
   def "set operation name"() {
-    setup:
-    tracer.addDecorator(new OperationDecorator())
-
     when:
     Tags.COMPONENT.set(span, component)
 
@@ -68,9 +65,6 @@ class SpanDecoratorTest extends Specification {
   }
 
   def "set resource name"() {
-    setup:
-    tracer.addDecorator(new ResourceNameDecorator())
-
     when:
     span.setTag(DDTags.RESOURCE_NAME, name)
 
@@ -82,9 +76,6 @@ class SpanDecoratorTest extends Specification {
   }
 
   def "set span type"() {
-    setup:
-    tracer.addDecorator(new SpanTypeDecorator())
-
     when:
     span.setTag(DDTags.SPAN_TYPE, type)
 
@@ -96,9 +87,6 @@ class SpanDecoratorTest extends Specification {
   }
 
   def "override operation with DBTypeDecorator"() {
-    setup:
-    tracer.addDecorator(new DBTypeDecorator())
-
     when:
     Tags.DB_TYPE.set(span, type)
 
@@ -119,9 +107,6 @@ class SpanDecoratorTest extends Specification {
   }
 
   def "DBStatementAsResource should not interact on Mongo queries"() {
-    setup:
-    tracer.addDecorator(new DBStatementAsResourceName())
-
     when:
     span.setResourceName("not-change-me")
     Tags.COMPONENT.set(span, "java-mongo")
@@ -144,9 +129,6 @@ class SpanDecoratorTest extends Specification {
   }
 
   def "set 404 as a resource on a 404 issue"() {
-    setup:
-    tracer.addDecorator(new Status404Decorator())
-
     when:
     Tags.HTTP_STATUS.set(span, 404)
 
@@ -155,9 +137,6 @@ class SpanDecoratorTest extends Specification {
   }
 
   def "set 5XX status code as an error"() {
-    setup:
-    tracer.addDecorator(new Status5XXDecorator())
-
     when:
     Tags.HTTP_STATUS.set(span, status)
 
@@ -176,9 +155,6 @@ class SpanDecoratorTest extends Specification {
   }
 
   def "set error flag when error tag reported"() {
-    setup:
-    tracer.addDecorator(new ErrorFlag())
-
     when:
     Tags.ERROR.set(span, error)
 
@@ -189,5 +165,57 @@ class SpanDecoratorTest extends Specification {
     error | _
     true  | _
     false | _
+  }
+
+  def "#attribute decorators apply to builder too"() {
+    setup:
+    def span = tracer.buildSpan("decorator.test").withTag(name, value).start()
+
+    expect:
+    span.context()."$attribute" == value
+
+    where:
+    attribute      | name                 | value
+    "serviceName"  | DDTags.SERVICE_NAME  | "my-service"
+    "resourceName" | DDTags.RESOURCE_NAME | "my-resource"
+    "spanType"     | DDTags.SPAN_TYPE     | "my-span-type"
+  }
+
+  def "decorators apply to builder too"() {
+    when:
+    def span = tracer.buildSpan("decorator.test").withTag("servlet.context", "/my-servlet").start()
+
+    then:
+    span.serviceName == "my-servlet"
+
+    when:
+    span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_STATUS.key, 404).start()
+
+    then:
+    span.resourceName == "404"
+
+    when:
+    span = tracer.buildSpan("decorator.test").withTag("error", "true").start()
+
+    then:
+    span.error
+
+    when:
+    span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_STATUS.key, 500).start()
+
+    then:
+    span.error
+
+    when:
+    span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_URL.key, "http://example.com/path/number123/?param=true").start()
+
+    then:
+    span.resourceName == "/path/?/"
+
+    when:
+    span = tracer.buildSpan("decorator.test").withTag(Tags.DB_STATEMENT.key, "some-statement").start()
+
+    then:
+    span.resourceName == "some-statement"
   }
 }

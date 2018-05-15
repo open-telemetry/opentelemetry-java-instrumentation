@@ -64,7 +64,7 @@ class ApacheHttpClientTest extends Specification {
     final DDSpan localSpan = clientTrace.get(1)
     localSpan.getType() == null
     localSpan.getTags()[Tags.COMPONENT.getKey()] == "apache-httpclient"
-    localSpan.getOperationName() == "http.request"
+    localSpan.getOperationName() == "apache.http"
 
     final DDSpan clientSpan = clientTrace.get(2)
     clientSpan.getOperationName() == "http.request"
@@ -109,7 +109,7 @@ class ApacheHttpClientTest extends Specification {
     // our instrumentation makes 2 spans for apache-httpclient
     final DDSpan localSpan = clientTrace.get(1)
     localSpan.getTags()[Tags.COMPONENT.getKey()] == "apache-httpclient"
-    localSpan.getOperationName() == "http.request"
+    localSpan.getOperationName() == "apache.http"
 
     final DDSpan clientSpan = clientTrace.get(2)
     clientSpan.getOperationName() == "http.request"
