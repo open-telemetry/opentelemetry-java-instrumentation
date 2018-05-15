@@ -22,6 +22,7 @@ import io.opentracing.noop.NoopScopeManager.NoopScope;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -64,7 +65,39 @@ public final class StatementInstrumentation extends Instrumenter.Configurable {
         return NoopScope.INSTANCE;
       }
 
-      JDBCMaps.DBInfo dbInfo = JDBCMaps.getDBInfo(connection);
+      JDBCMaps.DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
+      /**
+       * Logic to get the DBInfo from a JDBC Connection, if the connection was never seen before,
+       * the connectionInfo map will return null and will attempt to extract DBInfo from the
+       * connection. If the DBInfo can't be extracted, then the connection will be stored with the
+       * DEFAULT DBInfo as the value in the connectionInfo map to avoid retry overhead.
+       *
+       * <p>This should be a util method to be shared between PreparedStatementInstrumentation and
+       * StatementInstrumentation class, but java.sql.* are on the platform classloaders in Java 9,
+       * which prevents us from referencing them in the bootstrap utils.
+       */
+      {
+        if (dbInfo == null) {
+          try {
+            final String url = connection.getMetaData().getURL();
+            if (url != null) {
+              // Remove end of url to prevent passwords from leaking:
+              final String sanitizedURL = url.replaceAll("[?;].*", "");
+              final String type = url.split(":", -1)[1];
+              String user = connection.getMetaData().getUserName();
+              if (user != null && user.trim().equals("")) {
+                user = null;
+              }
+              dbInfo = new JDBCMaps.DBInfo(sanitizedURL, type, user);
+            } else {
+              dbInfo = JDBCMaps.DBInfo.DEFAULT;
+            }
+          } catch (SQLException se) {
+            dbInfo = JDBCMaps.DBInfo.DEFAULT;
+          }
+          JDBCMaps.connectionInfo.put(connection, dbInfo);
+        }
+      }
 
       final Scope scope =
           GlobalTracer.get().buildSpan(dbInfo.getType() + ".query").startActive(true);
