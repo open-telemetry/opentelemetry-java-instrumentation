@@ -23,10 +23,6 @@ dependencies {
   testCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3'
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
 
-  // JDBC tests:
-  testCompile group: 'com.h2database', name: 'h2', version: '1.4.196'
-  testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.3.+'
-  testCompile group: 'org.apache.derby', name: 'derby', version: '10.12.1.1'
 }
 
 tasks.withType(Test) {
