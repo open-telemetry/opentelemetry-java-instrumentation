@@ -12,5 +12,7 @@ dependencies {
   // jdbc unit testing
   testCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
   testCompile group: 'org.apache.derby', name: 'derby', version: '10.12.1.1'
+  // not using hsqldb 2.4 because org/hsqldb/jdbc/JDBCDriver : Unsupported major.minor version 52.0
+  testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.3.+'
 
 }
