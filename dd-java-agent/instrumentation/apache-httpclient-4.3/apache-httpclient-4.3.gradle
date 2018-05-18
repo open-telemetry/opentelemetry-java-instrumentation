@@ -13,16 +13,24 @@ versionScan {
     // "org.apache.http.HttpException" : null,
     // "org.apache.http.HttpRequest" : null,
     // "org.apache.http.client.RedirectStrategy" : null,
-    "org.apache.http.client.methods.CloseableHttpResponse" : null,
-    "org.apache.http.client.methods.HttpExecutionAware" : null,
-    "org.apache.http.client.methods.HttpRequestWrapper" : null,
-    "org.apache.http.client.protocol.HttpClientContext" : null,
+    "org.apache.http.client.methods.CloseableHttpResponse": null,
+    "org.apache.http.client.methods.HttpExecutionAware"   : null,
+    "org.apache.http.client.methods.HttpRequestWrapper"   : null,
+    "org.apache.http.client.protocol.HttpClientContext"   : null,
     // "org.apache.http.conn.routing.HttpRoute" : null,
-    "org.apache.http.impl.execchain.ClientExecChain": null
+    "org.apache.http.impl.execchain.ClientExecChain"      : null
   ]
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
 
 dependencies {
   compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3'
@@ -33,4 +41,10 @@ dependencies {
   compile deps.opentracing
   annotationProcessor deps.autoservice
   implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+  testCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3'
+
+
+  latestDepTestCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '+'
 }

@@ -196,14 +196,19 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
 
     void start() {
       executorService.scheduleAtFixedRate(new SpanCleaner(), 0, CLEAN_FREQUENCY, TimeUnit.SECONDS);
-      Runtime.getRuntime()
-          .addShutdownHook(
-              new Thread() {
-                @Override
-                public void run() {
-                  PendingTrace.SpanCleaner.this.close();
-                }
-              });
+      try {
+        Runtime.getRuntime()
+            .addShutdownHook(
+                new Thread() {
+                  @Override
+                  public void run() {
+                    PendingTrace.SpanCleaner.this.close();
+                  }
+                });
+      } catch (final IllegalStateException ex) {
+        // The JVM might be shutting down.
+        log.debug("Error adding shutdown hook.", ex);
+      }
     }
 
     @Override
