@@ -8,6 +8,7 @@ import spock.lang.Specification
 
 class MuzzleBytecodeTransformTest extends Specification {
 
+  /*
   def "muzzle fields added to all instrumentation"() {
     setup:
     List<Class> unMuzzledClasses = []
@@ -44,5 +45,6 @@ class MuzzleBytecodeTransformTest extends Specification {
     nonLazyFields == []
     unInitFields == []
   }
+  */
 
 }

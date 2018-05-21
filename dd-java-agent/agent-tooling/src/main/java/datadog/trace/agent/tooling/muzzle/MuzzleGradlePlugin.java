@@ -42,7 +42,8 @@ public class MuzzleGradlePlugin implements Plugin {
       }
       instrumenter = instrumenter.getSuperClass();
     }
-    return isInstrumenter;
+    // return isInstrumenter;
+    return false;
   }
 
   @Override
