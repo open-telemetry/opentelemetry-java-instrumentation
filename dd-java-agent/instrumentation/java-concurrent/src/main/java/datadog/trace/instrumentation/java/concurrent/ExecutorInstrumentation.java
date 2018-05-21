@@ -137,12 +137,13 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   public static class WrapRunnableAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DatadogWrapper wrapJob(
-        @Advice.Argument(value = 0, readOnly = false) Runnable task) {
+        @Advice.This Object dis, @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       if (scope instanceof TraceScope
           && ((TraceScope) scope).isAsyncPropagating()
           && task != null
-          && !(task instanceof DatadogWrapper)) {
+          && !(task instanceof DatadogWrapper)
+          && (!dis.getClass().getName().startsWith("slick.util.AsyncExecutor"))) {
         task = new RunnableWrapper(task, (TraceScope) scope);
         return (RunnableWrapper) task;
       }
@@ -161,12 +162,13 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   public static class WrapCallableAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DatadogWrapper wrapJob(
-        @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
+        @Advice.This Object dis, @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       if (scope instanceof TraceScope
           && ((TraceScope) scope).isAsyncPropagating()
           && task != null
-          && !(task instanceof DatadogWrapper)) {
+          && !(task instanceof DatadogWrapper)
+          && (!dis.getClass().getName().startsWith("slick.util.AsyncExecutor"))) {
         task = new CallableWrapper<>(task, (TraceScope) scope);
         return (CallableWrapper) task;
       }
@@ -185,9 +187,12 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   public static class WrapCallableCollectionAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Collection<?> wrapJob(
+        @Advice.This Object dis,
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (scope instanceof TraceScope && ((TraceScope) scope).isAsyncPropagating()) {
+      if (scope instanceof TraceScope
+          && ((TraceScope) scope).isAsyncPropagating()
+          && (!dis.getClass().getName().startsWith("slick.util.AsyncExecutor"))) {
         final Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
         for (Callable<?> task : tasks) {
           if (task != null) {
