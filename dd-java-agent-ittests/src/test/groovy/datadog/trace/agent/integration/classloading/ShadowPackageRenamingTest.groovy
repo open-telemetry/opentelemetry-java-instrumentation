@@ -57,7 +57,7 @@ class ShadowPackageRenamingTest extends Specification {
    setup:
    final ClassPath agentClasspath = ClassPath.from(IntegrationTestUtils.getAgentClassLoader())
 
-   final ClassPath bootstrapClasspath = ClassPath.from(IntegrationTestUtils.getBootstrapResourceLocator())
+   final ClassPath bootstrapClasspath = ClassPath.from(IntegrationTestUtils.getBootstrapProxy())
    final Set<String> bootstrapClasses = new HashSet<>()
    final String[] bootstrapPrefixes = IntegrationTestUtils.getBootstrapPackagePrefixes()
    final String[] agentPrefixes = IntegrationTestUtils.getAgentPackagePrefixes()

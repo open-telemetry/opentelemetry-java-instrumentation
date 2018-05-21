@@ -3,6 +3,7 @@ package datadog.trace.agent.test;
 import static datadog.trace.agent.tooling.Utils.BOOTSTRAP_PACKAGE_PREFIXES;
 
 import com.google.common.reflect.ClassPath;
+import datadog.trace.agent.tooling.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -94,6 +95,7 @@ public class SpockRunner extends Sputnik {
       final File bootstrapJar = createBootstrapJar();
       ByteBuddyAgent.getInstrumentation()
           .appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
+      Utils.getBootstrapProxy().addURL(bootstrapJar.toURI().toURL());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

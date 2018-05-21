@@ -4,6 +4,11 @@ whitelistedInstructionClasses += whitelistedBranchClasses += [
   'datadog.trace.agent.tooling.*'
 ]
 
+configurations {
+  // classpath used by the instrumentation muzzle plugin
+  instrumentationMuzzle
+}
+
 dependencies {
   compile project(':dd-java-agent:agent-bootstrap')
   compile deps.bytebuddy
@@ -14,4 +19,7 @@ dependencies {
   compileOnly project(':dd-trace-ot')
 
   testCompile deps.opentracing
+
+  instrumentationMuzzle sourceSets.main.output
+  instrumentationMuzzle configurations.compile
 }

@@ -7,6 +7,8 @@ import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import datadog.trace.agent.tooling.muzzle.Reference.Mismatch;
+import datadog.trace.agent.tooling.muzzle.ReferenceMatcher.MismatchException;
 import java.lang.instrument.Instrumentation;
 import java.util.ServiceLoader;
 import lombok.extern.slf4j.Slf4j;
@@ -82,7 +84,15 @@ public class AgentInstaller {
         final JavaModule module,
         final boolean loaded,
         final Throwable throwable) {
-      log.debug("Failed to handle {} for transformation: {}", typeName, throwable.getMessage());
+      if (throwable instanceof MismatchException) {
+        final MismatchException mismatchException = (MismatchException) throwable;
+        log.debug("{}", mismatchException.getMessage());
+        for (Mismatch mismatch : mismatchException.getMismatches()) {
+          log.debug("--{}", mismatch);
+        }
+      } else {
+        log.debug("Failed to handle {} for transformation: {}", typeName, throwable.getMessage());
+      }
     }
 
     @Override
