@@ -25,10 +25,8 @@ class TestServlet3 {
   static class Async extends AbstractHttpServlet {
     @Override
     void doGet(HttpServletRequest req, HttpServletResponse resp) {
-      Thread initialThread = Thread.currentThread()
       def context = req.startAsync()
       context.start {
-        assert Thread.currentThread() != initialThread
         resp.writer.print("Hello Async")
         context.complete()
       }
