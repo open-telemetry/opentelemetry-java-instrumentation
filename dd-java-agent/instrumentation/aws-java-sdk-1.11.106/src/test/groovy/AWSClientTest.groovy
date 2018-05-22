@@ -1,4 +1,5 @@
 import com.amazonaws.AmazonWebServiceClient
+import com.amazonaws.SDKGlobalConfiguration
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.AnonymousAWSCredentials
 import com.amazonaws.auth.BasicAWSCredentials
@@ -21,6 +22,16 @@ import java.util.concurrent.atomic.AtomicReference
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
 class AWSClientTest extends AgentTestRunner {
+  def setupSpec() {
+    System.setProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY, "my-access-key")
+    System.setProperty(SDKGlobalConfiguration.SECRET_KEY_SYSTEM_PROPERTY, "my-secret-key")
+  }
+
+  def cleanupSpec() {
+    System.clearProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY)
+    System.clearProperty(SDKGlobalConfiguration.SECRET_KEY_SYSTEM_PROPERTY)
+  }
+
   @Shared
   def credentialsProvider = new AWSStaticCredentialsProvider(new AnonymousAWSCredentials())
   @Shared

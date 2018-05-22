@@ -1,10 +1,11 @@
-package datadog.trace.instrumentation.aws;
+package datadog.trace.instrumentation.aws.v0;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
@@ -17,6 +18,10 @@ import java.util.List;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
+/**
+ * This instrumentation might work with versions before 1.11.0, but this was the first version that
+ * is tested. It could possibly be extended earlier.
+ */
 @AutoService(Instrumenter.class)
 public final class AWSClientInstrumentation extends Instrumenter.Configurable {
 
@@ -32,16 +37,15 @@ public final class AWSClientInstrumentation extends Instrumenter.Configurable {
                 .and(
                     named("com.amazonaws.AmazonWebServiceClient")
                         .and(declaresField(named("requestHandler2s")))),
-            classLoaderHasClasses(
-                // aws classes used by opentracing contrib helpers
-                "com.amazonaws.handlers.RequestHandler2",
-                "com.amazonaws.Request",
-                "com.amazonaws.Response",
-                "com.amazonaws.handlers.HandlerContextKey"))
+            classLoaderHasClasses("com.amazonaws.http.client.HttpClientFactory")
+                .and(
+                    not(
+                        classLoaderHasClasses(
+                            "com.amazonaws.client.builder.AwsClientBuilder$EndpointConfiguration"))))
         .transform(
             new HelperInjector(
-                "datadog.trace.instrumentation.aws.TracingRequestHandler",
-                "datadog.trace.instrumentation.aws.SpanDecorator"))
+                "datadog.trace.instrumentation.aws.v0.TracingRequestHandler",
+                "datadog.trace.instrumentation.aws.v0.SpanDecorator"))
         .transform(DDTransformers.defaultTransformers())
         .transform(DDAdvice.create().advice(isConstructor(), AWSClientAdvice.class.getName()))
         .asDecorator();

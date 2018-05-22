@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package datadog.trace.instrumentation.aws;
+package datadog.trace.instrumentation.aws.v106;
 
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
@@ -46,11 +46,6 @@ public class TracingRequestHandler extends RequestHandler2 {
   public TracingRequestHandler(final SpanContext parentContext, final Tracer tracer) {
     this.parentContext = parentContext;
     this.tracer = tracer;
-  }
-
-  @Override
-  public AmazonWebServiceRequest beforeExecution(final AmazonWebServiceRequest request) {
-    return request;
   }
 
   @Override

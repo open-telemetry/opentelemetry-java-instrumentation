@@ -1,15 +1,11 @@
-// This results in download a LOT of modules.  commenting out for now...
-
 apply plugin: 'version-scan'
 
 versionScan {
   group = "com.amazonaws"
   module = "aws-java-sdk-core"
-  versions = "[1.11.0,)"
+  versions = "[1.11.106,)"
   verifyPresent = [
-    "com.amazonaws.http.client.HttpClientFactory"  : null,
-    "com.amazonaws.http.apache.utils.ApacheUtils"  : null,
-    "com.amazonaws.http.request.HttpRequestFactory": null,
+    "com.amazonaws.HandlerContextAware": null,
   ]
 }
 
@@ -27,7 +23,7 @@ testSets {
 testJava8Only += '**/AWSClientTest.class'
 
 dependencies {
-  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.119'
+  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.106'
 
   compile project(':dd-java-agent:agent-tooling')
 
@@ -39,7 +35,11 @@ dependencies {
   testCompile project(':dd-java-agent:testing')
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4.3')
-  testCompile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.119'
+  testCompile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.106'
+}
 
-  latestDepTestCompile group: 'com.amazonaws', name: 'aws-java-sdk', version: '+'
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'com.amazonaws', name: 'aws-java-sdk', version: '+'
+  }
 }
