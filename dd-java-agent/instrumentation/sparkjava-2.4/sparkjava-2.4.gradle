@@ -53,3 +53,9 @@ dependencies {
 
   latestDepTestCompile group: 'com.sparkjava', name: 'spark-core', version: '+'
 }
+
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'com.sparkjava', name: 'spark-core', version: '+'
+  }
+}

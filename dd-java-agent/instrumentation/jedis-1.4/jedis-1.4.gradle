@@ -29,10 +29,16 @@ dependencies {
   compile deps.opentracing
   annotationProcessor deps.autoservice
   implementation deps.autoservice
-  
+
   testCompile project(':dd-java-agent:testing')
   testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   testCompile group: 'redis.clients', name: 'jedis', version: '1.4.0'
 
   latestDepTestCompile group: 'redis.clients', name: 'jedis', version: '+'
+}
+
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'redis.clients', name: 'jedis', version: '+'
+  }
 }
