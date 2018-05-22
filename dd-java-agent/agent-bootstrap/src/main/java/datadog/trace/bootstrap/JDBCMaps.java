@@ -18,25 +18,13 @@ public class JDBCMaps {
   public static final Map<PreparedStatement, String> preparedStatements =
       Collections.synchronizedMap(new WeakHashMap<PreparedStatement, String>());
 
-  private static final boolean RENAME_UNKNOWN =
-      Boolean.valueOf(getPropOrEnv("dd.trace.rename.unknown"));
-
-  public static final String DB_QUERY = RENAME_UNKNOWN ? "DB Query" : "Unknown Query";
+  public static final String DB_QUERY = "DB Query";
 
   @Data
   public static class DBInfo {
-    public static DBInfo DEFAULT =
-        new DBInfo("null", RENAME_UNKNOWN ? "database" : "unknown", null);
+    public static DBInfo DEFAULT = new DBInfo("null", "database", null);
     private final String url;
     private final String type;
     private final String user;
-  }
-
-  private static String getPropOrEnv(final String name) {
-    return System.getProperty(name, System.getenv(propToEnvName(name)));
-  }
-
-  private static String propToEnvName(final String name) {
-    return name.toUpperCase().replace(".", "_");
   }
 }
