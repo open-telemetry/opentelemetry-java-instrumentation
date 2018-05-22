@@ -1,0 +1,72 @@
+apply plugin: 'version-scan'
+
+// Commented out because version scan doesn't catch the combination of tests.
+// HttpClientFactory is only present starting in 1.11.0
+// HandlerContextAware is added in 1.11.106
+// The combination of the two allow us to filter the ranges.
+//
+
+//versionScan {
+//  group = "com.amazonaws"
+//  module = "aws-java-sdk-core"
+//  versions = "[1.11.0,1.11.106)"
+//  verifyPresent = [
+//    "com.amazonaws.http.client.HttpClientFactory": null,
+//  ]
+//  verifyMissing = [
+//    "com.amazonaws.HandlerContextAware",
+//  ]
+//}
+
+//versionScan {
+//  group = "com.amazonaws"
+//  module = "aws-java-sdk-core"
+//  versions = "[1.11.0,)"
+//  verifyPresent = [
+//    "com.amazonaws.http.client.HttpClientFactory": null,
+//  ]
+//}
+
+versionScan {
+  group = "com.amazonaws"
+  module = "aws-java-sdk-core"
+  versions = "[,1.11.106)"
+  verifyMissing = [
+    "com.amazonaws.HandlerContextAware",
+  ]
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+// These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
+testJava8Only += '**/AWSClientTest.class'
+
+dependencies {
+  compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+  // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
+  testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4.3')
+  testCompile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.0'
+}
+
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.105'
+  }
+}
