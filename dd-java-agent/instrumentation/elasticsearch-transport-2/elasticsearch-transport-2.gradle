@@ -11,6 +11,8 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
+testJava8Only += '**/*Test.class'
+
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
