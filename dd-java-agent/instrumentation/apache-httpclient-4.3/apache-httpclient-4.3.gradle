@@ -24,6 +24,9 @@ versionScan {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
+// These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
+testJava8Only += '**/ApacheHttpClientTest.class'
+
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
