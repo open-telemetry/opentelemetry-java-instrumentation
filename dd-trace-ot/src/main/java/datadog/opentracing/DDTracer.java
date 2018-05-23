@@ -116,14 +116,19 @@ public class DDTracer implements io.opentracing.Tracer {
     this.sampler = sampler;
     this.spanTags = defaultSpanTags;
 
-    Runtime.getRuntime()
-        .addShutdownHook(
-            new Thread() {
-              @Override
-              public void run() {
-                DDTracer.this.close();
-              }
-            });
+    try {
+      Runtime.getRuntime()
+          .addShutdownHook(
+              new Thread() {
+                @Override
+                public void run() {
+                  DDTracer.this.close();
+                }
+              });
+    } catch (final IllegalStateException ex) {
+      // The JVM might be shutting down.
+      log.debug("Error adding shutdown hook.", ex);
+    }
 
     registry = new CodecRegistry();
     registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec(taggedHeaders));

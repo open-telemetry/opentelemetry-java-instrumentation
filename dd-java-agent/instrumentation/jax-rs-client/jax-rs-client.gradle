@@ -1,10 +1,10 @@
-apply plugin: 'version-scan'
-
-versionScan {
-  group = "javax.ws.rs"
-  module = "jsr311-api"
-  versions = "(,)"
-}
+//apply plugin: 'version-scan'
+//
+//versionScan {
+//  group = "javax.ws.rs"
+//  module = "jsr311-api"
+//  versions = "(,)"
+//}
 
 apply from: "${rootDir}/gradle/java.gradle"
 

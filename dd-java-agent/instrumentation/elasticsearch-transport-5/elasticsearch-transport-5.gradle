@@ -1,0 +1,54 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "org.elasticsearch.client"
+  module = "transport"
+  versions = "[5.0,6)"
+  legacyGroup = "org.elasticsearch"
+  legacyModule = "elasticsearch"
+  scanDependencies = true
+  verifyPresent = [
+    "org.elasticsearch.percolator.TransportMultiPercolateAction": null,
+  ]
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+testJava8Minimum += '**/*Test.class'
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '5.0.0'
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+  // Ensure no cross interference
+  testCompile project(':dd-java-agent:instrumentation:elasticsearch-rest-5')
+  // Include httpclient instrumentation for testing because it is a dependency for elasticsearch-rest-client.
+  // It doesn't actually work though.  They use HttpAsyncClient, which isn't currently instrumented.
+  // TODO: add HttpAsyncClient instrumentation when that is complete.
+  testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4.3')
+  // TODO: add netty instrumentation when that is complete.
+
+  testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
+  testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
+
+  testCompile group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.0.0'
+  testCompile group: 'org.elasticsearch.client', name: 'transport', version: '5.0.0'
+
+  latestDepTestCompile group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '+'
+  latestDepTestCompile group: 'org.elasticsearch.client', name: 'transport', version: '+'
+}
