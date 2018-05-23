@@ -40,9 +40,13 @@ dependencies {
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '8.0.41'
 
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+}
 
-  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '+'
-  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '+'
-  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '+'
-  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '+'
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'org.eclipse.jetty', name: 'jetty-server', version: '+'
+    force group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '+'
+    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '+'
+    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '+'
+  }
 }

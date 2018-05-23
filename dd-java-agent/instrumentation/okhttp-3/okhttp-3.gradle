@@ -37,6 +37,10 @@ dependencies {
 
   testCompile project(':dd-java-agent:testing')
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.0.0'
+}
 
-  latestDepTestCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '+'
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'com.squareup.okhttp3', name: 'okhttp', version: '+'
+  }
 }

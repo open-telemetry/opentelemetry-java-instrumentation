@@ -32,6 +32,10 @@ dependencies {
 
   testCompile project(':dd-trace-ot')
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
+}
 
-  latestDepTestCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '+'
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'org.mongodb', name: 'mongo-java-driver', version: '+'
+  }
 }
