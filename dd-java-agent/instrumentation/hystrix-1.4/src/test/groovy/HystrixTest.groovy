@@ -10,11 +10,10 @@ import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
 
 class HystrixTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.hystrix.enabled", "true")
-    // Uncomment for debugging:
-//    System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
-  }
+  // Uncomment for debugging:
+  // static {
+  //  System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
+  // }
 
   def "test command #action"() {
     setup:

@@ -28,11 +28,6 @@ public class HystrixCommandInstrumentation extends Instrumenter.Configurable {
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(not(isInterface()).and(hasSuperType(named("com.netflix.hystrix.HystrixCommand"))))
