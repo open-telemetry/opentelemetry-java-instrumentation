@@ -22,11 +22,6 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Configurable 
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   protected AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(failSafe(hasSuperType(named("javax.ws.rs.client.ClientBuilder"))))

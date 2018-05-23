@@ -8,10 +8,6 @@ import play.test.Helpers
 import spock.lang.Shared
 
 class Play26Test extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.play.enabled", "true")
-  }
-
   @Shared
   int port = TestUtils.randomOpenPort()
   @Shared
