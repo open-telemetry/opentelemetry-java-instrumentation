@@ -14,8 +14,8 @@ class TraceAssert {
     size = trace.size()
   }
 
-  static TraceAssert assertTrace(List<DDSpan> trace, int expectedSize,
-                                 @DelegatesTo(value = File, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+  static void assertTrace(List<DDSpan> trace, int expectedSize,
+                          @DelegatesTo(value = File, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     assert trace.size() == expectedSize
     def asserter = new TraceAssert(trace)
     def clone = (Closure) spec.clone()
@@ -30,7 +30,7 @@ class TraceAssert {
     trace.get(index)
   }
 
-  SpanAssert span(int index, @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+  void span(int index, @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     if (index >= size) {
       throw new ArrayIndexOutOfBoundsException(index)
     }

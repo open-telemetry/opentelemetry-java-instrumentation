@@ -78,7 +78,7 @@ public class Elasticsearch5TransportClientInstrumentation extends Instrumenter.C
               .withTag("elasticsearch.request", actionRequest.getClass().getSimpleName())
               .startActive(false);
 
-      actionListener = new TransportActionListener<>(actionListener, scope.span());
+      actionListener = new TransportActionListener<>(actionRequest, actionListener, scope.span());
       return scope;
     }
 

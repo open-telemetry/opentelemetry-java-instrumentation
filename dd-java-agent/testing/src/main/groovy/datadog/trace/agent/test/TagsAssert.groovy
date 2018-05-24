@@ -10,8 +10,8 @@ class TagsAssert {
     this.tags = new TreeMap(span.tags)
   }
 
-  static TagsAssert assertTags(DDSpan span,
-                               @DelegatesTo(value = TagsAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+  static void assertTags(DDSpan span,
+                         @DelegatesTo(value = TagsAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new TagsAssert(span)
     def clone = (Closure) spec.clone()
     clone.delegate = asserter
@@ -25,35 +25,35 @@ class TagsAssert {
     assertedTags.add("thread.name")
     assertedTags.add("thread.id")
 
-    tags["thread.name"] != null
-    tags["thread.id"] != null
+    assert tags["thread.name"] != null
+    assert tags["thread.id"] != null
   }
 
   def errorTags(Class<Throwable> errorType) {
     errorTags(errorType, null)
   }
 
-  def errorTags(Class<Throwable> errorType, String message) {
-    assertedTags.add("error")
-    assertedTags.add("error.type")
-    assertedTags.add("error.stack")
+  def errorTags(Class<Throwable> errorType, Object message) {
+    methodMissing("error", [true].toArray())
+    methodMissing("error.type", [errorType.name].toArray())
+    methodMissing("error.stack", [String].toArray())
 
     if (message != null) {
-      assertedTags.add("error.msg")
-      tags["error.msg"] == message
+      methodMissing("error.msg", [message].toArray())
     }
-
-    tags["error"] == true
-    tags["error.type"] == errorType
-    tags["error.stack"] instanceof String
   }
 
   def methodMissing(String name, args) {
     if (args.length > 1) {
-      throw new IllegalArgumentException(args)
+      throw new IllegalArgumentException(args.toString())
     }
     assertedTags.add(name)
-    assert tags[name] == args[0]
+    def arg = args[0]
+    if (arg instanceof Class) {
+      assert ((Class) arg).isInstance(tags[name])
+    } else {
+      assert tags[name] == arg
+    }
   }
 
   void assertTracesAllVerified() {

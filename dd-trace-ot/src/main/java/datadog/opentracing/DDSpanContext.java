@@ -232,7 +232,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
    * @param value the value of the tag. tags with null values are ignored.
    */
   public synchronized void setTag(final String tag, final Object value) {
-    if (value == null) {
+    if (value == null || (value instanceof String && ((String) value).isEmpty())) {
       tags.remove(tag);
       return;
     }
