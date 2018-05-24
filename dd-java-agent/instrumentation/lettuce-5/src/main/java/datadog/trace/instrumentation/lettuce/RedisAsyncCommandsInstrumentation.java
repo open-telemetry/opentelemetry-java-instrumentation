@@ -15,18 +15,14 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 
 @AutoService(Instrumenter.class)
 public class RedisAsyncCommandsInstrumentation extends Instrumenter.Configurable {
 
-  private static final HelperInjector REDIS_ASYNC_COMMANDS_HELPERS =
-      new HelperInjector(
-          RedisAsyncCommandsInstrumentation.class.getName() + "$RedisAsyncConsumer",
-          RedisAsyncCommandsInstrumentation.class.getName() + "$RedisAsyncExceptionFunction");
+  private static final HelperInjector REDIS_ASYNC_HELPERS =
+      new HelperInjector(RedisAsyncCommandsInstrumentation.class.getPackage().getName() + ".RedisAsyncBiFunction");
   private static final String SERVICE_NAME = "redis";
   private static final String COMPONENT_NAME = SERVICE_NAME + "-client";
 
@@ -35,10 +31,15 @@ public class RedisAsyncCommandsInstrumentation extends Instrumenter.Configurable
   }
 
   @Override
+  protected boolean defaultEnabled() {
+    return false;
+  }
+
+  @Override
   protected AgentBuilder apply(AgentBuilder agentBuilder) {
     return agentBuilder
         .type(named("io.lettuce.core.AbstractRedisAsyncCommands"))
-        .transform(REDIS_ASYNC_COMMANDS_HELPERS)
+        .transform(REDIS_ASYNC_HELPERS)
         .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
@@ -96,56 +97,9 @@ public class RedisAsyncCommandsInstrumentation extends Instrumenter.Configurable
         return;
       }
 
-      // use lettuce's callback interface to ensure no logic is lost
-      asyncCommand.onComplete(new RedisAsyncConsumer<>(scope.span()));
-      // exception callbacks are not part of lettuce's api, so use CompletableFuture's, in the future if
-      // lettuce does add some sort of exception callback handler, we should use that instead.
-      asyncCommand.exceptionally(new RedisAsyncExceptionFunction<>(scope.span()));
+      // close spans on error or normal completion
+      asyncCommand.handleAsync(new RedisAsyncBiFunction<>(scope.span()));
       scope.close();
-    }
-  }
-
-  /**
-   * Callback class to close the span on an error in the RedisFuture returned by the lettuce async
-   * API
-   *
-   * @param <Throwable> the error
-   * @param <R> the object to return as a result of this callback, should be null as we are only
-   *     closing the span and logging the error
-   */
-  public static class RedisAsyncExceptionFunction<Throwable, R extends Object>
-      implements Function<Throwable, R> {
-    private final Span span;
-
-    public RedisAsyncExceptionFunction(Span span) {
-      this.span = span;
-    }
-
-    @Override
-    public R apply(Throwable throwable) {
-      Tags.ERROR.set(this.span, true);
-      this.span.log(Collections.singletonMap("error.object", throwable));
-      this.span.finish();
-      return null;
-    }
-  }
-
-  /**
-   * Callback class to close the span on a normal execution of the RedisFuture returned by the
-   * lettice async API
-   *
-   * @param <T> the object (async result) from lettuce async API computation
-   */
-  public static class RedisAsyncConsumer<T> implements Consumer<T> {
-    private final Span span;
-
-    public RedisAsyncConsumer(Span span) {
-      this.span = span;
-    }
-
-    @Override
-    public void accept(Object o) {
-      this.span.finish();
     }
   }
 }
