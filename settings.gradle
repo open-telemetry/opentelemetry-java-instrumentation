@@ -49,11 +49,6 @@ include ':dd-java-agent:benchmark'
 include ':dd-java-agent:benchmark-integration'
 include ':dd-java-agent:benchmark-integration:jetty-perftest'
 
-// examples
-include ':examples:dropwizard-mongo-client'
-include ':examples:spring-boot-jdbc-redis'
-include ':examples:rest-spark'
-
 def setBuildFile(project) {
   project.buildFileName = "${project.name}.gradle"
   project.children.each {
