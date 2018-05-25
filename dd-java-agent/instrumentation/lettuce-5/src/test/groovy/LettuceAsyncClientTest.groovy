@@ -1,8 +1,8 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.instrumentation.lettuce.RedisAsyncCommandsInstrumentation
-import datadog.trace.instrumentation.lettuce.RedisClientInstrumentation
+import datadog.trace.agent.test.TestUtils
 import io.lettuce.core.ConnectionFuture
 import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisConnectionException
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.RedisURI
 import io.lettuce.core.api.StatefulConnection
@@ -18,6 +18,9 @@ import java.util.function.BiFunction
 import java.util.function.Consumer
 import java.util.function.Function
 
+import static datadog.trace.instrumentation.lettuce.ConnectionFutureAdvice.RESOURCE_NAME_PREFIX
+import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+
 class LettuceAsyncClientTest extends AgentTestRunner {
 
   static {
@@ -26,8 +29,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
   @Shared
   public static final String HOST = "127.0.0.1"
-  public static final int PORT = 6399
-  public static final int INCORRECT_PORT = 9999
+  public static final int PORT = TestUtils.randomOpenPort()
+  public static final int INCORRECT_PORT = TestUtils.randomOpenPort()
   public static final int DB_INDEX = 0
   @Shared
   public static final String DB_ADDR = HOST + ":" + PORT + "/" + DB_INDEX
@@ -69,10 +72,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     redisServer.stop()
   }
 
-  def setup() {
-    TEST_WRITER.start()
-  }
-
   def "connect using get on ConnectionFuture"() {
     setup:
     RedisClient testConnectionClient = RedisClient.create(EMBEDDED_DB_URI)
@@ -83,26 +82,29 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     expect:
     connection != null
-    TEST_WRITER.size() == 1
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName RESOURCE_NAME_PREFIX + DB_ADDR
+          errored false
 
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-    def span = trace[0]
-    span.getServiceName() == RedisClientInstrumentation.SERVICE_NAME
-    span.getOperationName() == "redis.query"
-    span.getType() == RedisClientInstrumentation.SERVICE_NAME
-    span.getResourceName() == RedisClientInstrumentation.RESOURCE_NAME_PREFIX + DB_ADDR
-    !span.context().getErrorFlag()
-
-    def tags = span.context().tags
-    tags[RedisClientInstrumentation.REDIS_URL_TAG_NAME] == DB_ADDR
-    tags[RedisClientInstrumentation.REDIS_DB_INDEX_TAG_NAME] == 0
-    tags["span.kind"] == "client"
-    tags["span.type"] == RedisClientInstrumentation.SERVICE_NAME
-    tags["db.type"] == RedisClientInstrumentation.SERVICE_NAME
-    tags["component"] == RedisClientInstrumentation.COMPONENT_NAME
-    tags["thread.name"] != null
-    tags["thread.id"] != null
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.redis.url" DB_ADDR
+            "db.redis.dbIndex" 0
+            "db.type" "redis"
+            "peer.hostname" HOST
+            "peer.port" PORT
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+    }
   }
 
   def "connect exception inside the connection future"() {
@@ -121,26 +123,30 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     expect:
     TEST_WRITER.waitForTraces(1)
     connection == null
-    TEST_WRITER.size() == 1
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName RESOURCE_NAME_PREFIX + DB_ADDR_NON_EXISTENT
+          errored true
 
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-    def span = trace[0]
-    span.getServiceName() == RedisClientInstrumentation.SERVICE_NAME
-    span.getOperationName() == "redis.query"
-    span.getType() == RedisClientInstrumentation.SERVICE_NAME
-    span.getResourceName() == RedisClientInstrumentation.RESOURCE_NAME_PREFIX + DB_ADDR_NON_EXISTENT
-    span.context().getErrorFlag()
-
-    def tags = span.context().tags
-    tags[RedisClientInstrumentation.REDIS_URL_TAG_NAME] == DB_ADDR_NON_EXISTENT
-    tags[RedisClientInstrumentation.REDIS_DB_INDEX_TAG_NAME] == 0
-    tags["span.kind"] == "client"
-    tags["span.type"] == RedisClientInstrumentation.SERVICE_NAME
-    tags["db.type"] == RedisClientInstrumentation.SERVICE_NAME
-    tags["component"] == RedisClientInstrumentation.COMPONENT_NAME
-    tags["thread.name"] != null
-    tags["thread.id"] != null
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.redis.url" DB_ADDR_NON_EXISTENT
+            "db.redis.dbIndex" 0
+            "db.type" "redis"
+            errorTags(RedisConnectionException, "some error due to incorrect port number")
+            "peer.hostname" HOST
+            "peer.port" INCORRECT_PORT
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+    }
   }
 
   def "set command using Future get with timeout"() {
@@ -151,24 +157,26 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     expect:
     res == "OK"
-    TEST_WRITER.size() == 1
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-    def span = trace[0]
-    span.getServiceName() == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    span.getOperationName() == "redis.query"
-    span.getType() == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    span.getResourceName() == "SET"
-    !span.context().getErrorFlag()
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "SET"
+          errored false
 
-    def tags = span.context().tags
-    tags["span.kind"] == "client"
-    tags["span.type"] == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    tags["db.type"] == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    tags["db.redis.command.args"] == "key<TESTKEY> value<TESTVAL>"
-    tags["component"] == RedisAsyncCommandsInstrumentation.COMPONENT_NAME
-    tags["thread.name"] != null
-    tags["thread.id"] != null
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "db.command.args" "key<TESTKEY> value<TESTVAL>"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+    }
   }
 
   def "get command chained with thenAccept"() {
@@ -188,27 +196,28 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     redisFuture.thenAccept(consumer)
 
     then:
-    conds.await()
     TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.size() == 1
+    conds.await()
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "GET"
+          errored false
 
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-    def span = trace[0]
-    span.getServiceName() == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    span.getOperationName() == "redis.query"
-    span.getType() == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    span.getResourceName() == "GET"
-    !span.context().getErrorFlag()
-
-    def tags = span.context().tags
-    tags["span.kind"] == "client"
-    tags["span.type"] == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    tags["db.type"] == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    tags["db.redis.command.args"] == "key<TESTKEY>"
-    tags["component"] == RedisAsyncCommandsInstrumentation.COMPONENT_NAME
-    tags["thread.name"] != null
-    tags["thread.id"] != null
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "db.command.args" "key<TESTKEY>"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+    }
   }
 
   // to make sure instrumentation's chained completion stages won't interfere with user's, while still
@@ -216,7 +225,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
   def "get non existent key command with handleAsync and chained with thenApply"() {
     setup:
     def conds = new AsyncConditions()
-    final String SUCCESS = "KEY MISSING"
+    final String successStr = "KEY MISSING"
     BiFunction<String, Throwable, String> firstStage = new BiFunction<String, Throwable, String>() {
       @Override
       String apply(String res, Throwable throwable) {
@@ -224,14 +233,14 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           assert res == null
           assert throwable == null
         }
-        return (res == null ? SUCCESS : res)
+        return (res == null ? successStr : res)
       }
     }
     Function<String, Object> secondStage = new Function<String, Object>() {
       @Override
       Object apply(String input) {
         conds.evaluate{
-          assert input == SUCCESS
+          assert input == successStr
         }
         return null
       }
@@ -242,27 +251,29 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     redisFuture.handleAsync(firstStage).thenApply(secondStage)
 
     then:
-    conds.await()
     TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.size() == 1
+    conds.await()
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "GET"
+          errored false
 
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-    def span = trace[0]
-    span.getServiceName() == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    span.getOperationName() == "redis.query"
-    span.getType() == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    span.getResourceName() == "GET"
-    !span.context().getErrorFlag()
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "db.command.args" "key<NON_EXISTENT_KEY>"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+    }
 
-    def tags = span.context().tags
-    tags["span.kind"] == "client"
-    tags["span.type"] == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    tags["db.type"] == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    tags["db.redis.command.args"] == "key<NON_EXISTENT_KEY>"
-    tags["component"] == RedisAsyncCommandsInstrumentation.COMPONENT_NAME
-    tags["thread.name"] != null
-    tags["thread.id"] != null
   }
 
   def "command with no arguments using a biconsumer"() {
@@ -282,28 +293,27 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     redisFuture.whenCompleteAsync(biConsumer)
 
     then:
-    conds.await()
     TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.size() == 1
+    conds.await()
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "RANDOMKEY"
+          errored false
 
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-
-    def span = trace[0]
-    span.getServiceName() == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    span.getOperationName() == "redis.query"
-    span.getType() == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    span.getResourceName() == "RANDOMKEY"
-    !span.context().getErrorFlag()
-
-    def tags = span.context().tags
-    tags["span.kind"] == "client"
-    tags["span.type"] == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    tags["db.type"] == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    tags["db.redis.command.args"] == null
-    tags["component"] == RedisAsyncCommandsInstrumentation.COMPONENT_NAME
-    tags["thread.name"] != null
-    tags["thread.id"] != null
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+    }
   }
 
   def "hash set and then nest apply to hash getall"() {
@@ -315,8 +325,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     hmsetFuture.thenApplyAsync(new Function<String, Object>() {
       @Override
       Object apply(String setResult) {
-        TEST_WRITER.waitForTraces(1)
-        TEST_WRITER.start()
         conds.evaluate {
           assert setResult == "OK"
         }
@@ -343,25 +351,45 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     })
 
     then:
+    TEST_WRITER.waitForTraces(2)
     conds.await()
-    TEST_WRITER.waitForTraces(1)
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
+    assertTraces(TEST_WRITER, 2) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "HMSET"
+          errored false
 
-    def span = trace[0]
-    span.getServiceName() == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    span.getOperationName() == "redis.query"
-    span.getType() == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    span.getResourceName() == "HGETALL"
-    !span.context().getErrorFlag()
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "db.command.args" "key<user> key<firstname> value<John> key<lastname> value<Doe> key<age> value<53>"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "HGETALL"
+          errored false
 
-    def tags = span.context().tags
-    tags["span.kind"] == "client"
-    tags["span.type"] == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    tags["db.type"] == RedisAsyncCommandsInstrumentation.SERVICE_NAME
-    tags["db.redis.command.args"] == "key<user>"
-    tags["component"] == RedisAsyncCommandsInstrumentation.COMPONENT_NAME
-    tags["thread.name"] != null
-    tags["thread.id"] != null
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "db.command.args" "key<user>"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+    }
   }
 }
