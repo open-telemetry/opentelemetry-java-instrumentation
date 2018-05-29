@@ -54,6 +54,7 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
         .build()
     )
     client.addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"), TCP_PORT))
+    client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
   }
 
   def cleanupSpec() {
