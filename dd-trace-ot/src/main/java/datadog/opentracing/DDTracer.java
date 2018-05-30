@@ -126,8 +126,7 @@ public class DDTracer implements io.opentracing.Tracer {
                 }
               });
     } catch (final IllegalStateException ex) {
-      // The JVM might be shutting down.
-      log.debug("Error adding shutdown hook.", ex);
+      // The JVM is already shutting down.
     }
 
     registry = new CodecRegistry();

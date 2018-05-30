@@ -11,8 +11,8 @@ class SpanAssert {
     this.span = span
   }
 
-  static SpanAssert assertSpan(DDSpan span,
-                               @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+  static void assertSpan(DDSpan span,
+                         @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new SpanAssert(span)
     def clone = (Closure) spec.clone()
     clone.delegate = asserter
@@ -51,7 +51,7 @@ class SpanAssert {
     assert span.isError() == errored
   }
 
-  def tags(@DelegatesTo(value = TagsAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
-    return assertTags(span, spec)
+  void tags(@DelegatesTo(value = TagsAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+    assertTags(span, spec)
   }
 }

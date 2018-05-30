@@ -6,9 +6,11 @@ import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.TransportAddress
+import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
 import org.elasticsearch.transport.Netty4Plugin
+import org.elasticsearch.transport.RemoteTransportException
 import org.elasticsearch.transport.client.PreBuiltTransportClient
 import spock.lang.Shared
 
@@ -52,6 +54,8 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
         .build()
     )
     client.addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"), TCP_PORT))
+    client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
+    TEST_WRITER.waitForTraces(1)
   }
 
   def cleanupSpec() {
@@ -91,5 +95,188 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
         }
       }
     }
+  }
+
+  def "test elasticsearch error"() {
+    when:
+    client.prepareGet(indexName, indexType, id).get()
+
+    then:
+    thrown IndexNotFoundException
+
+    and:
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "elasticsearch"
+          resourceName "GetAction"
+          operationName "elasticsearch.query"
+          spanType null
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" "elasticsearch-java"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "elasticsearch.action" "GetAction"
+            "elasticsearch.request" "GetRequest"
+            "elasticsearch.request.indices" indexName
+            errorTags RemoteTransportException, String
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    where:
+    indexName = "invalid-index"
+    indexType = "test-type"
+    id = "1"
+  }
+
+  def "test elasticsearch get"() {
+    setup:
+    def indexResult = client.admin().indices().prepareCreate(indexName).get()
+
+    expect:
+    indexResult.index() == indexName
+
+    when:
+    def emptyResult = client.prepareGet(indexName, indexType, id).get()
+
+    then:
+    !emptyResult.isExists()
+    emptyResult.id == id
+    emptyResult.type == indexType
+    emptyResult.index == indexName
+
+    when:
+    def createResult = client.prepareIndex(indexName, indexType, id).setSource([:]).get()
+
+    then:
+    createResult.id == id
+    createResult.type == indexType
+    createResult.index == indexName
+    createResult.status().status == 201
+
+    when:
+    def result = client.prepareGet(indexName, indexType, id).get()
+
+    then:
+    result.isExists()
+    result.id == id
+    result.type == indexType
+    result.index == indexName
+
+    and:
+    assertTraces(TEST_WRITER, 5) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "elasticsearch"
+          resourceName "CreateIndexAction"
+          operationName "elasticsearch.query"
+          spanType null
+          tags {
+            "$Tags.COMPONENT.key" "elasticsearch-java"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" TCP_PORT
+            "elasticsearch.action" "CreateIndexAction"
+            "elasticsearch.request" "CreateIndexRequest"
+            "elasticsearch.request.indices" indexName
+            defaultTags()
+          }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          serviceName "elasticsearch"
+          resourceName "GetAction"
+          operationName "elasticsearch.query"
+          spanType null
+          tags {
+            "$Tags.COMPONENT.key" "elasticsearch-java"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" TCP_PORT
+            "elasticsearch.action" "GetAction"
+            "elasticsearch.request" "GetRequest"
+            "elasticsearch.request.indices" indexName
+            "elasticsearch.type" indexType
+            "elasticsearch.id" "1"
+            "elasticsearch.version"(-1)
+            defaultTags()
+          }
+        }
+      }
+      trace(2, 1) {
+        span(0) {
+          serviceName "elasticsearch"
+          resourceName "PutMappingAction"
+          operationName "elasticsearch.query"
+          spanType null
+          tags {
+            "$Tags.COMPONENT.key" "elasticsearch-java"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "elasticsearch.action" "PutMappingAction"
+            "elasticsearch.request" "PutMappingRequest"
+            defaultTags()
+          }
+        }
+      }
+      trace(3, 1) {
+        span(0) {
+          serviceName "elasticsearch"
+          resourceName "IndexAction"
+          operationName "elasticsearch.query"
+          spanType null
+          tags {
+            "$Tags.COMPONENT.key" "elasticsearch-java"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" TCP_PORT
+            "elasticsearch.action" "IndexAction"
+            "elasticsearch.request" "IndexRequest"
+            "elasticsearch.request.indices" indexName
+            "elasticsearch.request.write.type" indexType
+            "elasticsearch.request.write.version"(-3)
+            "elasticsearch.response.status" 201
+            "elasticsearch.shard.replication.total" 2
+            "elasticsearch.shard.replication.successful" 1
+            "elasticsearch.shard.replication.failed" 0
+            "elasticsearch.request.description" "index {[test-index][test-type][1], source[{}]}"
+            defaultTags()
+          }
+        }
+      }
+      trace(4, 1) {
+        span(0) {
+          serviceName "elasticsearch"
+          resourceName "GetAction"
+          operationName "elasticsearch.query"
+          spanType null
+          tags {
+            "$Tags.COMPONENT.key" "elasticsearch-java"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" TCP_PORT
+            "elasticsearch.action" "GetAction"
+            "elasticsearch.request" "GetRequest"
+            "elasticsearch.request.indices" indexName
+            "elasticsearch.type" indexType
+            "elasticsearch.id" "1"
+            "elasticsearch.version" 1
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    where:
+    indexName = "test-index"
+    indexType = "test-type"
+    id = "1"
   }
 }

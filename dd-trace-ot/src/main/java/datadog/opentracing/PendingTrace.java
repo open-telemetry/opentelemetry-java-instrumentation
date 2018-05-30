@@ -206,8 +206,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
                   }
                 });
       } catch (final IllegalStateException ex) {
-        // The JVM might be shutting down.
-        log.debug("Error adding shutdown hook.", ex);
+        // The JVM is already shutting down.
       }
     }
 

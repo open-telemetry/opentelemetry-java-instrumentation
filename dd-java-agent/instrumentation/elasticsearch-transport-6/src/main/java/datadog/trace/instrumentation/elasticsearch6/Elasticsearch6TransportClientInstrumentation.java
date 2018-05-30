@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.DDTransformers;
+import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
@@ -49,6 +50,11 @@ public class Elasticsearch6TransportClientInstrumentation extends Instrumenter.C
             // If we want to be more generic, we could instrument the interface instead:
             // .and(hasSuperType(named("org.elasticsearch.client.ElasticsearchClient"))))
             classLoaderHasClasses("org.elasticsearch.client.RestClientBuilder$2"))
+        .transform(
+            new HelperInjector(
+                "com.google.common.base.Preconditions",
+                "com.google.common.base.Joiner",
+                "datadog.trace.instrumentation.elasticsearch6.TransportActionListener"))
         .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
@@ -82,7 +88,7 @@ public class Elasticsearch6TransportClientInstrumentation extends Instrumenter.C
               .withTag("elasticsearch.request", actionRequest.getClass().getSimpleName())
               .startActive(false);
 
-      actionListener = new TransportActionListener<>(actionListener, scope.span());
+      actionListener = new TransportActionListener<>(actionRequest, actionListener, scope.span());
       return scope;
     }
 
