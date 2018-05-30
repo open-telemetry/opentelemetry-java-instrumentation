@@ -48,6 +48,7 @@ public class Elasticsearch2TransportClientInstrumentation extends Instrumenter.C
             classLoaderHasClasses("org.elasticsearch.plugins.SitePlugin"))
         .transform(
             new HelperInjector(
+                "com.google.common.base.Preconditions",
                 "com.google.common.base.Joiner",
                 "datadog.trace.instrumentation.elasticsearch2.TransportActionListener"))
         .transform(DDTransformers.defaultTransformers())

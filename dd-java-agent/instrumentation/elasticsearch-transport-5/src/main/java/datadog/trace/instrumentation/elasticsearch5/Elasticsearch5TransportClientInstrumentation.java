@@ -48,6 +48,7 @@ public class Elasticsearch5TransportClientInstrumentation extends Instrumenter.C
             classLoaderHasClasses("org.elasticsearch.percolator.TransportMultiPercolateAction"))
         .transform(
             new HelperInjector(
+                "com.google.common.base.Preconditions",
                 "com.google.common.base.Joiner",
                 "datadog.trace.instrumentation.elasticsearch5.TransportActionListener"))
         .transform(DDTransformers.defaultTransformers())
