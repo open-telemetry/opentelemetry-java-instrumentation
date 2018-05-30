@@ -59,6 +59,7 @@ public class RedisAsyncCommandsAdvice {
       final Span span = scope.span();
       Tags.ERROR.set(span, true);
       span.log(Collections.singletonMap("error.object", throwable));
+      span.finish();
       scope.close();
       return;
     }
