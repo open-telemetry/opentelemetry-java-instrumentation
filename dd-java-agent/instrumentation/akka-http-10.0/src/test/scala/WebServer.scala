@@ -11,6 +11,7 @@ import datadog.trace.instrumentation.akkahttp.AkkaHttpInstrumentation.{DatadogGr
 
 import scala.concurrent.{Await, Future}
 
+// TODO: rename -> AkkaHttpTestServer
 object WebServer {
   val port = TestUtils.randomOpenPort()
   implicit val system = ActorSystem("my-system")

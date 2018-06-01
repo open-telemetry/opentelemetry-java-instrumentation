@@ -36,6 +36,7 @@ public final class AkkaHttpInstrumentation extends Instrumenter.Configurable {
 
   // TODO: Disable Instrumentation by default
   // TODO: Use test DSL
+  // TODO: remove testWithScala from lagom
   // TODO: Merge into play testing
   // TODO: also check 10.0.8 (play 2.6.0 dep) and latest 10.1
 
@@ -72,6 +73,7 @@ public final class AkkaHttpInstrumentation extends Instrumenter.Configurable {
 
   /** Wrap user's Flow in a datadog graph */
   public static class AkkaHttpAdvice {
+    // TODO: rename to wrapHandler
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void startSpan(
         @Advice.Argument(value = 0, readOnly = false)
