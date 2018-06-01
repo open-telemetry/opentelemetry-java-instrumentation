@@ -178,6 +178,7 @@ public class DDApi {
       objectMapper.writeValue(out, data);
       out.flush();
       out.close();
+
       return httpCon.getResponseCode() == 200;
     } catch (final IOException e) {
       if (retry) {
@@ -208,7 +209,7 @@ public class DDApi {
     return "DDApi { tracesEndpoint=" + tracesEndpoint + " }";
   }
 
-  public static interface ResponseListener {
+  public interface ResponseListener {
     /** Invoked after the api receives a response from the core agent. */
     void onResponse(String endpoint, JsonNode responseJson);
   }
