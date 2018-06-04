@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.lettuce;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.util.Collections;
+import java.util.concurrent.CancellationException;
 import java.util.function.BiFunction;
 
 /**
@@ -26,8 +27,12 @@ public class RedisAsyncBiFunction<T extends Object, U extends Throwable, R exten
   @Override
   public R apply(T t, Throwable throwable) {
     if (throwable != null) {
-      Tags.ERROR.set(this.span, true);
-      this.span.log(Collections.singletonMap("error.object", throwable));
+      if (throwable instanceof CancellationException) {
+        this.span.setTag("db.command.cancelled", true);
+      } else {
+        Tags.ERROR.set(this.span, true);
+        this.span.log(Collections.singletonMap("error.object", throwable));
+      }
     }
     this.span.finish();
     return null;

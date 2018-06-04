@@ -54,4 +54,4 @@ configurations.latestDepTestCompile {
 
 testJava8Only += '**/LettuceAsyncClientTest.class'
 testJava8Only += '**/LettuceSyncClientTest.class'
-
+testJava8Only += '**/LettuceReactiveClientTest.class'

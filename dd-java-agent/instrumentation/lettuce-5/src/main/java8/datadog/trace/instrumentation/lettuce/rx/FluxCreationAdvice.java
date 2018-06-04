@@ -5,12 +5,9 @@ import io.lettuce.core.protocol.RedisCommand;
 import java.util.Map;
 import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
-public class MonoCreationAdvice {
-
-  public static final String MAP_KEY_CMD_NAME = "CMD_NAME";
-  public static final String MAP_KEY_CMD_ARGS = "CMD_ARGS";
+public class FluxCreationAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Map<String, String> extractCommand(
@@ -18,19 +15,20 @@ public class MonoCreationAdvice {
     return LettuceInstrumentationUtil.getCommandInfo(supplier.get());
   }
 
-  // throwables wouldn't matter here, because no spans have been started due to redis command not being
-  // run until the user subscribes to the Mono publisher
-  @Advice.OnMethodExit(suppress = Throwable.class)
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void monitorSpan(
       @Advice.Enter final Map<String, String> commandMap,
-      @Advice.Return(readOnly = false) Mono<?> publisher) {
+      @Advice.Return(readOnly = false) Flux<?> publisher) {
 
     boolean finishSpanOnClose = LettuceInstrumentationUtil.doFinishSpanEarly(commandMap);
-    MonoDualConsumer mdc = new MonoDualConsumer(commandMap, finishSpanOnClose);
-    publisher = publisher.doOnSubscribe(mdc);
-    // register the call back to close the span only if necessary
+    FluxTerminationCancellableRunnable handler =
+        new FluxTerminationCancellableRunnable(commandMap, finishSpanOnClose);
+    publisher = publisher.doOnSubscribe(handler.getOnSubscribeConsumer());
+    // don't register extra callbacks to finish the spans if the command being instrumented is one of those that return
+    // Mono<Void> (In here a flux is created first and then converted to Mono<Void>)
     if (!finishSpanOnClose) {
-      publisher = publisher.doOnSuccessOrError(mdc);
+      publisher = publisher.doOnEach(handler);
+      publisher = publisher.doOnCancel(handler);
     }
   }
 }

@@ -12,8 +12,6 @@ import net.bytebuddy.asm.Advice;
 
 public class ConnectionFutureAdvice {
 
-  public static final String SERVICE_NAME = "redis";
-  public static final String COMPONENT_NAME = SERVICE_NAME + "-client";
   public static final String REDIS_URL_TAG_NAME = "db.redis.url";
   public static final String REDIS_DB_INDEX_TAG_NAME = "db.redis.dbIndex";
   public static final String RESOURCE_NAME_PREFIX = "CONNECT:";
@@ -23,9 +21,9 @@ public class ConnectionFutureAdvice {
     final Scope scope = GlobalTracer.get().buildSpan("redis.query").startActive(false);
 
     final Span span = scope.span();
-    Tags.DB_TYPE.set(span, SERVICE_NAME);
+    Tags.DB_TYPE.set(span, LettuceInstrumentationUtil.SERVICE_NAME);
     Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
-    Tags.COMPONENT.set(span, COMPONENT_NAME);
+    Tags.COMPONENT.set(span, LettuceInstrumentationUtil.COMPONENT_NAME);
 
     final int redisPort = redisURI.getPort();
     Tags.PEER_PORT.set(span, redisPort);
@@ -36,8 +34,8 @@ public class ConnectionFutureAdvice {
     span.setTag(REDIS_URL_TAG_NAME, url);
     span.setTag(REDIS_DB_INDEX_TAG_NAME, redisURI.getDatabase());
     span.setTag(DDTags.RESOURCE_NAME, RESOURCE_NAME_PREFIX + url);
-    span.setTag(DDTags.SERVICE_NAME, SERVICE_NAME);
-    span.setTag(DDTags.SPAN_TYPE, SERVICE_NAME);
+    span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
+    span.setTag(DDTags.SPAN_TYPE, LettuceInstrumentationUtil.SERVICE_NAME);
 
     return scope;
   }

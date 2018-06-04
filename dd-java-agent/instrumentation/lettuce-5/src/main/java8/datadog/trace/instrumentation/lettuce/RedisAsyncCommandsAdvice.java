@@ -8,43 +8,32 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 
 public class RedisAsyncCommandsAdvice {
 
-  private static final String SERVICE_NAME = "redis";
-  private static final String COMPONENT_NAME = SERVICE_NAME + "-client";
-
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope startSpan(@Advice.Argument(0) final RedisCommand command) {
-    final Scope scope = GlobalTracer.get().buildSpan(SERVICE_NAME + ".query").startActive(false);
+    Map<String, String> commandMap = LettuceInstrumentationUtil.getCommandInfo(command);
+    String commandName = commandMap.get(LettuceInstrumentationUtil.MAP_KEY_CMD_NAME);
+    String commandArgs = commandMap.get(LettuceInstrumentationUtil.MAP_KEY_CMD_ARGS);
+    ;
+
+    final Scope scope =
+        GlobalTracer.get()
+            .buildSpan(LettuceInstrumentationUtil.SERVICE_NAME + ".query")
+            .startActive(LettuceInstrumentationUtil.doFinishSpanEarly(commandMap));
 
     final Span span = scope.span();
-    Tags.DB_TYPE.set(span, SERVICE_NAME);
+    Tags.DB_TYPE.set(span, LettuceInstrumentationUtil.SERVICE_NAME);
     Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
-    Tags.COMPONENT.set(span, COMPONENT_NAME);
-
-    String commandName = "Redis Command";
-    String commandArgs = null;
-    if (command != null) {
-      // get the arguments passed into the redis command
-      if (command.getArgs() != null) {
-        commandArgs = command.getArgs().toCommandString();
-      }
-      // get the redis command name (i.e. GET, SET, HMSET, etc)
-      if (command.getType() != null) {
-        commandName = command.getType().name();
-        // if it is an AUTH command, then remove the extracted command arguments since it is the password
-        if ("AUTH".equals(commandName)) {
-          commandArgs = null;
-        }
-      }
-    }
+    Tags.COMPONENT.set(span, LettuceInstrumentationUtil.COMPONENT_NAME);
 
     span.setTag(DDTags.RESOURCE_NAME, commandName);
     span.setTag("db.command.args", commandArgs);
-    span.setTag(DDTags.SERVICE_NAME, SERVICE_NAME);
-    span.setTag(DDTags.SPAN_TYPE, SERVICE_NAME);
+    span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
+    span.setTag(DDTags.SPAN_TYPE, LettuceInstrumentationUtil.SERVICE_NAME);
 
     return scope;
   }

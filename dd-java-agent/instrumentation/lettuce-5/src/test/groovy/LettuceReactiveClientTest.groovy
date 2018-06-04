@@ -1,18 +1,17 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
-import io.lettuce.core.RedisClient
-import io.lettuce.core.RedisConnectionException
+import io.lettuce.core.*
 import io.lettuce.core.api.StatefulConnection
-import io.lettuce.core.api.sync.RedisCommands
+import io.lettuce.core.api.reactive.RedisReactiveCommands
 import redis.embedded.RedisServer
 import spock.lang.Shared
+import spock.util.concurrent.AsyncConditions
 
-import java.util.concurrent.CompletionException
+import java.util.function.Consumer
 
-import static datadog.trace.instrumentation.lettuce.ConnectionFutureAdvice.RESOURCE_NAME_PREFIX
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
-class LettuceSyncClientTest extends AgentTestRunner {
+class LettuceReactiveClientTest extends AgentTestRunner {
 
   static {
     System.setProperty("dd.integration.redis.enabled", "true")
@@ -21,14 +20,9 @@ class LettuceSyncClientTest extends AgentTestRunner {
   @Shared
   public static final String HOST = "127.0.0.1"
   public static final int PORT = TestUtils.randomOpenPort()
-  public static final int INCORRECT_PORT = TestUtils.randomOpenPort()
   public static final int DB_INDEX = 0
   @Shared
   public static final String DB_ADDR = HOST + ":" + PORT + "/" + DB_INDEX
-  @Shared
-  public static final String DB_ADDR_NON_EXISTENT = HOST + ":" + INCORRECT_PORT + "/" + DB_INDEX
-  @Shared
-  public static final String DB_URI_NON_EXISTENT = "redis://" + DB_ADDR_NON_EXISTENT
   public static final String EMBEDDED_DB_URI = "redis://" + DB_ADDR
 
   @Shared
@@ -43,97 +37,36 @@ class LettuceSyncClientTest extends AgentTestRunner {
   RedisClient redisClient = RedisClient.create(EMBEDDED_DB_URI)
 
   @Shared
-  RedisCommands<String, ?> syncCommands = null
-
-  @Shared
-  Map<String, String> testHashMap = [
-          firstname: "John",
-          lastname:  "Doe",
-          age:       "53"
-  ]
+  RedisReactiveCommands<String, ?> reactiveCommands = null
 
   def setupSpec() {
+    println "Using redis: $redisServer.args"
     redisServer.start()
     StatefulConnection connection = redisClient.connect()
-    syncCommands = connection.sync()
+    reactiveCommands = connection.reactive()
   }
 
   def cleanupSpec() {
     redisServer.stop()
   }
-
-  def "connect"() {
+  
+  def "set command with subscribe on a defined consumer"() {
     setup:
-    RedisClient testConnectionClient = RedisClient.create(EMBEDDED_DB_URI)
-    testConnectionClient.connect()
-
-    expect:
-    assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "redis"
-          operationName "redis.query"
-          spanType "redis"
-          resourceName RESOURCE_NAME_PREFIX + DB_ADDR
-          errored false
-
-          tags {
-            defaultTags()
-            "component" "redis-client"
-            "db.redis.url" DB_ADDR
-            "db.redis.dbIndex" 0
-            "db.type" "redis"
-            "peer.hostname" HOST
-            "peer.port" PORT
-            "span.kind" "client"
-            "span.type" "redis"
-          }
+    def conds = new AsyncConditions()
+    Consumer<String> consumer = new Consumer<String>() {
+      @Override
+      void accept(String res) {
+        conds.evaluate {
+          assert res == "OK"
         }
       }
     }
-  }
-
-  def "connect exception"() {
-    setup:
-    RedisClient testConnectionClient = RedisClient.create(DB_URI_NON_EXISTENT)
 
     when:
-    testConnectionClient.connect()
+    reactiveCommands.set("TESTKEY", "TESTVAL").subscribe(consumer)
 
     then:
-    thrown RedisConnectionException
-    assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "redis"
-          operationName "redis.query"
-          spanType "redis"
-          resourceName RESOURCE_NAME_PREFIX + DB_ADDR_NON_EXISTENT
-          errored true
-
-          tags {
-            defaultTags()
-            "component" "redis-client"
-            "db.redis.url" DB_ADDR_NON_EXISTENT
-            "db.redis.dbIndex" 0
-            "db.type" "redis"
-            errorTags CompletionException
-            "peer.hostname" HOST
-            "peer.port" INCORRECT_PORT
-            "span.kind" "client"
-            "span.type" "redis"
-          }
-        }
-      }
-    }
-  }
-
-  def "set command"() {
-    setup:
-    String res = syncCommands.set("TESTKEY", "TESTVAL")
-
-    expect:
-    res == "OK"
+    conds.await()
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
@@ -156,12 +89,15 @@ class LettuceSyncClientTest extends AgentTestRunner {
     }
   }
 
-  def "get command"() {
+  def "get command with lambda function"() {
     setup:
-    String res = syncCommands.get("TESTKEY")
+    def conds = new AsyncConditions()
 
-    expect:
-    res == "TESTVAL"
+    when:
+    reactiveCommands.get("TESTKEY").subscribe { res -> conds.evaluate { assert res == "TESTVAL"} }
+
+    then:
+    conds.await()
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
@@ -184,12 +120,22 @@ class LettuceSyncClientTest extends AgentTestRunner {
     }
   }
 
+  // to make sure instrumentation's chained completion stages won't interfere with user's, while still
+  // recording metrics
   def "get non existent key command"() {
     setup:
-    String res = syncCommands.get("NON_EXISTENT_KEY")
+    def conds = new AsyncConditions()
+    final defaultVal = "NOT THIS VALUE"
 
-    expect:
-    res == null
+    when:
+    reactiveCommands.get("NON_EXISTENT_KEY").defaultIfEmpty(defaultVal).subscribe {
+      res -> conds.evaluate {
+        assert res == defaultVal
+      }
+    }
+
+    then:
+    conds.await()
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
@@ -210,14 +156,22 @@ class LettuceSyncClientTest extends AgentTestRunner {
         }
       }
     }
+
   }
 
   def "command with no arguments"() {
     setup:
-    def keyRetrieved = syncCommands.randomkey()
+    def conds = new AsyncConditions()
 
-    expect:
-    keyRetrieved == "TESTKEY"
+    when:
+    reactiveCommands.randomkey().subscribe {
+      res -> conds.evaluate {
+        assert res == "TESTKEY"
+      }
+    }
+
+    then:
+    conds.await()
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
@@ -239,26 +193,25 @@ class LettuceSyncClientTest extends AgentTestRunner {
     }
   }
 
-  def "list command"() {
+  def "command flux publisher "() {
     setup:
-    long res = syncCommands.lpush("TESTLIST", "TESTLIST ELEMENT")
+    reactiveCommands.command().subscribe()
 
     expect:
-    res == 1
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName "LPUSH"
+          resourceName "COMMAND"
           errored false
 
           tags {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "key<TESTLIST> value<TESTLIST ELEMENT>"
+            "db.command.results.count" 157
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -267,26 +220,26 @@ class LettuceSyncClientTest extends AgentTestRunner {
     }
   }
 
-  def "hash set command"() {
+  def "command cancel after 2 on flux publisher "() {
     setup:
-    def res = syncCommands.hmset("user", testHashMap)
+    reactiveCommands.command().take(2).subscribe()
 
     expect:
-    res == "OK"
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName "HMSET"
+          resourceName "COMMAND"
           errored false
 
           tags {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "key<user> key<firstname> value<John> key<lastname> value<Doe> key<age> value<53>"
+            "db.command.cancelled" true
+            "db.command.results.count" 2
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -295,37 +248,21 @@ class LettuceSyncClientTest extends AgentTestRunner {
     }
   }
 
-  def "hash getall command"() {
+  def "non reactive command should not produce span"() {
     setup:
-    Map<String, String> res = syncCommands.hgetall("user")
+    String res = null
 
-    expect:
-    res == testHashMap
-    assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "redis"
-          operationName "redis.query"
-          spanType "redis"
-          resourceName "HGETALL"
-          errored false
+    when:
+    res = reactiveCommands.digest()
 
-          tags {
-            defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "db.command.args" "key<user>"
-            "span.kind" "client"
-            "span.type" "redis"
-          }
-        }
-      }
-    }
+    then:
+    res != null
+    TEST_WRITER.size() == 0
   }
 
-  def "debug segfault command (returns void) with no argument should produce span"() {
+  def "debug segfault command (returns mono void) with no argument should produce span"() {
     setup:
-    syncCommands.debugSegfault()
+    reactiveCommands.debugSegfault().subscribe()
 
     expect:
     assertTraces(TEST_WRITER, 1) {
@@ -355,9 +292,9 @@ class LettuceSyncClientTest extends AgentTestRunner {
     }
   }
 
-  def "shutdown command (returns void) should produce a span"() {
+  def "shutdown command (returns void) with argument should produce span"() {
     setup:
-    syncCommands.shutdown(false)
+    reactiveCommands.shutdown(false).subscribe()
 
     expect:
     assertTraces(TEST_WRITER, 1) {
@@ -386,4 +323,5 @@ class LettuceSyncClientTest extends AgentTestRunner {
       redisServer.start()
     }
   }
+
 }

@@ -14,7 +14,9 @@ public class RedisAsyncCommandsInstrumentation extends Instrumenter.Configurable
 
   private static final HelperInjector REDIS_ASYNC_HELPERS =
       new HelperInjector(
-          RedisAsyncCommandsInstrumentation.class.getPackage().getName() + ".RedisAsyncBiFunction");
+          RedisAsyncCommandsInstrumentation.class.getPackage().getName() + ".RedisAsyncBiFunction",
+          RedisAsyncCommandsInstrumentation.class.getPackage().getName()
+              + ".LettuceInstrumentationUtil");
 
   public RedisAsyncCommandsInstrumentation() {
     super("redis");

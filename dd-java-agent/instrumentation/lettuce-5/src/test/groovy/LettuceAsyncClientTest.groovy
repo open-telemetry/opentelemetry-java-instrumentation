@@ -2,16 +2,19 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import io.lettuce.core.ConnectionFuture
 import io.lettuce.core.RedisClient
-import io.lettuce.core.RedisConnectionException
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.RedisURI
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.async.RedisAsyncCommands
 import io.lettuce.core.codec.StringCodec
+import io.lettuce.core.protocol.AsyncCommand
 import redis.embedded.RedisServer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
 
+import java.util.concurrent.CancellationException
+import java.util.concurrent.CompletionException
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
@@ -78,7 +81,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     ConnectionFuture connectionFuture = testConnectionClient.connectAsync(StringCodec.UTF8,
       new RedisURI(HOST, PORT, 3, TimeUnit.SECONDS))
     def connection = connectionFuture.get()
-    TEST_WRITER.waitForTraces(1)
 
     expect:
     connection != null
@@ -111,18 +113,15 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     setup:
     RedisClient testConnectionClient = RedisClient.create(DB_URI_NON_EXISTENT)
     StatefulConnection connection = null
-    try {
-      ConnectionFuture connectionFuture = testConnectionClient.connectAsync(StringCodec.UTF8,
-        new RedisURI(HOST, INCORRECT_PORT, 3, TimeUnit.SECONDS))
-      connection = connectionFuture.get()
-    } catch (Exception rce) {
-      // do nothing, this is expected
-      println("caught " + rce.getMessage())
-    }
 
-    expect:
-    TEST_WRITER.waitForTraces(1)
+    when:
+    ConnectionFuture connectionFuture = testConnectionClient.connectAsync(StringCodec.UTF8,
+      new RedisURI(HOST, INCORRECT_PORT, 3, TimeUnit.SECONDS))
+    connection = connectionFuture.get()
+
+    then:
     connection == null
+    thrown ExecutionException
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
@@ -138,7 +137,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             "db.redis.url" DB_ADDR_NON_EXISTENT
             "db.redis.dbIndex" 0
             "db.type" "redis"
-            errorTags(RedisConnectionException, "some error due to incorrect port number")
+            errorTags CompletionException
             "peer.hostname" HOST
             "peer.port" INCORRECT_PORT
             "span.kind" "client"
@@ -153,7 +152,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     setup:
     RedisFuture<String> redisFuture = asyncCommands.set("TESTKEY", "TESTVAL")
     String res = redisFuture.get(3, TimeUnit.SECONDS)
-    TEST_WRITER.waitForTraces(1)
 
     expect:
     res == "OK"
@@ -196,7 +194,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     redisFuture.thenAccept(consumer)
 
     then:
-    TEST_WRITER.waitForTraces(1)
     conds.await()
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
@@ -251,7 +248,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     redisFuture.handleAsync(firstStage).thenApply(secondStage)
 
     then:
-    TEST_WRITER.waitForTraces(1)
     conds.await()
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
@@ -293,7 +289,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     redisFuture.whenCompleteAsync(biConsumer)
 
     then:
-    TEST_WRITER.waitForTraces(1)
     conds.await()
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
@@ -351,7 +346,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     })
 
     then:
-    TEST_WRITER.waitForTraces(2)
     conds.await()
     assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
@@ -390,6 +384,168 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           }
         }
       }
+    }
+  }
+
+  def "command completes exceptionally"() {
+    setup:
+    // turn off auto flush to complete the command exceptionally manually
+    asyncCommands.setAutoFlushCommands(false)
+    def conds = new AsyncConditions()
+    RedisFuture redisFuture = asyncCommands.del("key1", "key2")
+    boolean completedExceptionally = ((AsyncCommand) redisFuture).completeExceptionally(new IllegalStateException("TestException"))
+    redisFuture.exceptionally ({
+      throwable ->
+        conds.evaluate {
+          assert throwable != null
+          assert throwable instanceof IllegalStateException
+          assert throwable.getMessage() == "TestException"
+        }
+        throw throwable
+    })
+
+    when:
+    // now flush and execute the command
+    asyncCommands.flushCommands()
+    redisFuture.get()
+
+    then:
+    conds.await()
+    completedExceptionally == true
+    thrown Exception
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "DEL"
+          errored true
+
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "db.command.args" "key<key1> key<key2>"
+            errorTags(IllegalStateException, "TestException")
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+    }
+
+    cleanup:
+    asyncCommands.setAutoFlushCommands(true)
+  }
+
+  def "cancel command before it finishes"() {
+    setup:
+    asyncCommands.setAutoFlushCommands(false)
+    def conds = new AsyncConditions()
+    RedisFuture redisFuture = asyncCommands.sadd("SKEY", "1", "2")
+    redisFuture.whenCompleteAsync({
+      res, throwable -> conds.evaluate {
+        assert throwable != null
+        assert throwable instanceof CancellationException
+      }
+    })
+
+    when:
+    boolean cancelSuccess = redisFuture.cancel(true)
+    asyncCommands.flushCommands()
+
+    then:
+    conds.await()
+    cancelSuccess == true
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "SADD"
+          errored false
+
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "db.command.args" "key<SKEY> value<1> value<2>"
+            "db.command.cancelled" true
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+    }
+
+    cleanup:
+    asyncCommands.setAutoFlushCommands(true)
+  }
+
+  def "debug segfault command (returns void) with no argument should produce span"() {
+    setup:
+    asyncCommands.debugSegfault()
+
+    expect:
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "DEBUG"
+          errored false
+
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "db.command.args" "SEGFAULT"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+    }
+
+    cleanup:
+    if (!redisServer.active) {
+      redisServer.start()
+    }
+  }
+
+
+  def "shutdown command (returns void) should produce a span"() {
+    setup:
+    asyncCommands.shutdown(false)
+
+    expect:
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "SHUTDOWN"
+          errored false
+
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "db.command.args" "NOSAVE"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+    }
+
+    cleanup:
+    if (!redisServer.active) {
+      redisServer.start()
     }
   }
 }
