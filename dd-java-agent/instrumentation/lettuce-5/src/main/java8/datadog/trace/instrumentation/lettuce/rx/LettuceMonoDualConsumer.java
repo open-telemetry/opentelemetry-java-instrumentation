@@ -13,14 +13,14 @@ import java.util.function.Consumer;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
-public class MonoDualConsumer<R, T, U extends Throwable>
+public class LettuceMonoDualConsumer<R, T, U extends Throwable>
     implements Consumer<R>, BiConsumer<T, Throwable> {
 
   private Span span = null;
   private final Map<String, String> commandMap;
   private final boolean finishSpanOnClose;
 
-  public MonoDualConsumer(Map<String, String> commandMap, boolean finishSpanOnClose) {
+  public LettuceMonoDualConsumer(Map<String, String> commandMap, boolean finishSpanOnClose) {
     this.commandMap = commandMap;
     this.finishSpanOnClose = finishSpanOnClose;
   }

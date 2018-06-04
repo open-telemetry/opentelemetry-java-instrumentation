@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.lettuce;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.google.auto.service.AutoService;
@@ -10,14 +11,16 @@ import datadog.trace.agent.tooling.Instrumenter;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 @AutoService(Instrumenter.class)
-public final class RedisClientInstrumentation extends Instrumenter.Configurable {
+public final class LettuceClientInstrumentation extends Instrumenter.Configurable {
 
   private static final HelperInjector REDIS_ASYNC_HELPERS =
       new HelperInjector(
-          RedisAsyncCommandsInstrumentation.class.getPackage().getName() + ".RedisAsyncBiFunction");
+          LettuceReactiveCommandsInstrumentation.class.getPackage().getName()
+              + ".LettuceInstrumentationUtil",
+          LettuceClientInstrumentation.class.getPackage().getName() + ".LettuceAsyncBiFunction");
 
-  public RedisClientInstrumentation() {
-    super("redis");
+  public LettuceClientInstrumentation() {
+    super("lettuce");
   }
 
   @Override
@@ -28,7 +31,9 @@ public final class RedisClientInstrumentation extends Instrumenter.Configurable 
   @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
-        .type(named("io.lettuce.core.RedisClient"))
+        .type(
+            named("io.lettuce.core.RedisClient"),
+            classLoaderHasClasses("io.lettuce.core.RedisClient"))
         .transform(DDTransformers.defaultTransformers())
         .transform(REDIS_ASYNC_HELPERS)
         .transform(

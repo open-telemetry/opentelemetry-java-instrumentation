@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 
-public class RedisAsyncCommandsAdvice {
+public class LettuceAsyncCommandsAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope startSpan(@Advice.Argument(0) final RedisCommand command) {
@@ -54,7 +54,7 @@ public class RedisAsyncCommandsAdvice {
     }
 
     // close spans on error or normal completion
-    asyncCommand.handleAsync(new RedisAsyncBiFunction<>(scope.span()));
+    asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(scope.span()));
     scope.close();
   }
 }

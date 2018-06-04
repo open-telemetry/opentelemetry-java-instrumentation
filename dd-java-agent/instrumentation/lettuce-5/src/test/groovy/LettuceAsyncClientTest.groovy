@@ -27,7 +27,7 @@ import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 class LettuceAsyncClientTest extends AgentTestRunner {
 
   static {
-    System.setProperty("dd.integration.redis.enabled", "true")
+    System.setProperty("dd.integration.lettuce.enabled", "true")
   }
 
   @Shared
@@ -137,7 +137,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             "db.redis.url" DB_ADDR_NON_EXISTENT
             "db.redis.dbIndex" 0
             "db.type" "redis"
-            errorTags CompletionException
+            errorTags CompletionException, String
             "peer.hostname" HOST
             "peer.port" INCORRECT_PORT
             "span.kind" "client"

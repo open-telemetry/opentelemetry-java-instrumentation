@@ -54,7 +54,7 @@ public class ConnectionFutureAdvice {
     }
 
     // close spans on error or normal completion
-    connectionFuture.handleAsync(new RedisAsyncBiFunction<>(scope.span()));
+    connectionFuture.handleAsync(new LettuceAsyncBiFunction<>(scope.span()));
     scope.close();
   }
 }

@@ -5,9 +5,9 @@ import io.lettuce.core.protocol.RedisCommand;
 import java.util.Map;
 import java.util.function.Supplier;
 import net.bytebuddy.asm.Advice;
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-public class FluxCreationAdvice {
+public class LettuceMonoCreationAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Map<String, String> extractCommand(
@@ -15,20 +15,19 @@ public class FluxCreationAdvice {
     return LettuceInstrumentationUtil.getCommandInfo(supplier.get());
   }
 
-  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+  // throwables wouldn't matter here, because no spans have been started due to redis command not being
+  // run until the user subscribes to the Mono publisher
+  @Advice.OnMethodExit(suppress = Throwable.class)
   public static void monitorSpan(
       @Advice.Enter final Map<String, String> commandMap,
-      @Advice.Return(readOnly = false) Flux<?> publisher) {
+      @Advice.Return(readOnly = false) Mono<?> publisher) {
 
     boolean finishSpanOnClose = LettuceInstrumentationUtil.doFinishSpanEarly(commandMap);
-    FluxTerminationCancellableRunnable handler =
-        new FluxTerminationCancellableRunnable(commandMap, finishSpanOnClose);
-    publisher = publisher.doOnSubscribe(handler.getOnSubscribeConsumer());
-    // don't register extra callbacks to finish the spans if the command being instrumented is one of those that return
-    // Mono<Void> (In here a flux is created first and then converted to Mono<Void>)
+    LettuceMonoDualConsumer mdc = new LettuceMonoDualConsumer(commandMap, finishSpanOnClose);
+    publisher = publisher.doOnSubscribe(mdc);
+    // register the call back to close the span only if necessary
     if (!finishSpanOnClose) {
-      publisher = publisher.doOnEach(handler);
-      publisher = publisher.doOnCancel(handler);
+      publisher = publisher.doOnSuccessOrError(mdc);
     }
   }
 }

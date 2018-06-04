@@ -14,7 +14,7 @@ import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 class LettuceReactiveClientTest extends AgentTestRunner {
 
   static {
-    System.setProperty("dd.integration.redis.enabled", "true")
+    System.setProperty("dd.integration.lettuce.enabled", "true")
   }
 
   @Shared

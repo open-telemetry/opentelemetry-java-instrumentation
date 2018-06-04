@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.lettuce;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.google.auto.service.AutoService;
@@ -10,16 +11,17 @@ import datadog.trace.agent.tooling.Instrumenter;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
 @AutoService(Instrumenter.class)
-public class RedisAsyncCommandsInstrumentation extends Instrumenter.Configurable {
+public class LettuceAsyncCommandsInstrumentation extends Instrumenter.Configurable {
 
   private static final HelperInjector REDIS_ASYNC_HELPERS =
       new HelperInjector(
-          RedisAsyncCommandsInstrumentation.class.getPackage().getName() + ".RedisAsyncBiFunction",
-          RedisAsyncCommandsInstrumentation.class.getPackage().getName()
+          LettuceAsyncCommandsInstrumentation.class.getPackage().getName()
+              + ".LettuceAsyncBiFunction",
+          LettuceAsyncCommandsInstrumentation.class.getPackage().getName()
               + ".LettuceInstrumentationUtil");
 
-  public RedisAsyncCommandsInstrumentation() {
-    super("redis");
+  public LettuceAsyncCommandsInstrumentation() {
+    super("lettuce", "lettuce-5-async");
   }
 
   @Override
@@ -30,7 +32,9 @@ public class RedisAsyncCommandsInstrumentation extends Instrumenter.Configurable
   @Override
   protected AgentBuilder apply(AgentBuilder agentBuilder) {
     return agentBuilder
-        .type(named("io.lettuce.core.AbstractRedisAsyncCommands"))
+        .type(
+            named("io.lettuce.core.AbstractRedisAsyncCommands"),
+            classLoaderHasClasses("io.lettuce.core.RedisClient"))
         .transform(REDIS_ASYNC_HELPERS)
         .transform(DDTransformers.defaultTransformers())
         .transform(
@@ -39,7 +43,7 @@ public class RedisAsyncCommandsInstrumentation extends Instrumenter.Configurable
                     isMethod()
                         .and(named("dispatch"))
                         .and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
-                    RedisAsyncCommandsAdvice.class.getName()))
+                    LettuceAsyncCommandsAdvice.class.getName()))
         .asDecorator();
   }
 }

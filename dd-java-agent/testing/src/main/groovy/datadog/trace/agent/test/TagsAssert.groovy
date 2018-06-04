@@ -40,10 +40,6 @@ class TagsAssert {
 
     if (message != null) {
       methodMissing("error.msg", [message].toArray())
-    } else {
-      // don't make the message check mandatory, in case of exception messages that change on every run,
-      // i.e. random port that is destined to fail every time
-      assertedTags.add("error.msg")
     }
   }
 

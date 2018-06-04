@@ -15,14 +15,13 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Signal;
 import reactor.core.publisher.SignalType;
 
-public class FluxTerminationCancellableRunnable implements Consumer<Signal>, Runnable {
+public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnable {
 
   private Span span = null;
   private int numResults = 0;
   private FluxOnSubscribeConsumer onSubscribeConsumer = null;
 
-  public FluxTerminationCancellableRunnable(
-      Map<String, String> commandMap, boolean finishSpanOnClose) {
+  public LettuceFluxTerminationRunnable(Map<String, String> commandMap, boolean finishSpanOnClose) {
     this.onSubscribeConsumer = new FluxOnSubscribeConsumer(this, commandMap, finishSpanOnClose);
   }
 
@@ -44,7 +43,7 @@ public class FluxTerminationCancellableRunnable implements Consumer<Signal>, Run
     } else {
       LoggerFactory.getLogger(Flux.class)
           .error(
-              "Failed to finish this.span, FluxTerminationCancellableRunnable cannot find this.span because "
+              "Failed to finish this.span, LettuceFluxTerminationRunnable cannot find this.span because "
                   + "it probably wasn't started.");
     }
   }
@@ -66,19 +65,19 @@ public class FluxTerminationCancellableRunnable implements Consumer<Signal>, Run
     } else {
       LoggerFactory.getLogger(Flux.class)
           .error(
-              "Failed to finish this.span to indicate cancellation, FluxTerminationCancellableRunnable cannot find this.span because "
+              "Failed to finish this.span to indicate cancellation, LettuceFluxTerminationRunnable cannot find this.span because "
                   + "it probably wasn't started.");
     }
   }
 
   public static class FluxOnSubscribeConsumer implements Consumer<Subscription> {
 
-    private final FluxTerminationCancellableRunnable owner;
+    private final LettuceFluxTerminationRunnable owner;
     private final Map<String, String> commandMap;
     private final boolean finishSpanOnClose;
 
     public FluxOnSubscribeConsumer(
-        FluxTerminationCancellableRunnable owner,
+        LettuceFluxTerminationRunnable owner,
         Map<String, String> commandMap,
         boolean finishSpanOnClose) {
       this.owner = owner;
