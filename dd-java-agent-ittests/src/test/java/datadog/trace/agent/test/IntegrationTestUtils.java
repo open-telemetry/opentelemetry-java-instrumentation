@@ -70,7 +70,7 @@ public class IntegrationTestUtils {
    * @throws IOException
    */
   public static URL createJarWithClasses(final Class<?>... classes) throws IOException {
-    final File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "", ".jar");
+    final File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "-", ".jar");
     tmpJar.deleteOnExit();
 
     final Manifest manifest = new Manifest();
