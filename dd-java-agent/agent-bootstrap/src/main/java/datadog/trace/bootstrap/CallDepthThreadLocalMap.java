@@ -2,7 +2,6 @@ package datadog.trace.bootstrap;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Utility to track nested instrumentation.
@@ -11,30 +10,27 @@ import java.util.concurrent.atomic.AtomicInteger;
  * #incrementCallDepth at the beginning of each constructor.
  */
 public class CallDepthThreadLocalMap {
-  private static final ThreadLocal<Map<Object, AtomicInteger>> TLS =
-      new ThreadLocal<Map<Object, AtomicInteger>>() {
+  private static final ThreadLocal<Map<Object, Integer>> TLS =
+      new ThreadLocal<Map<Object, Integer>>() {
         @Override
-        public Map<Object, AtomicInteger> initialValue() {
+        public Map<Object, Integer> initialValue() {
           return new HashMap<>();
         }
       };
 
   public static int incrementCallDepth(final Object k) {
-    final Map<Object, AtomicInteger> map = TLS.get();
-    AtomicInteger depth = map.get(k);
+    final Map<Object, Integer> map = TLS.get();
+    Integer depth = map.get(k);
     if (depth == null) {
-      depth = new AtomicInteger(0);
-      map.put(k, depth);
-      return 0;
+      depth = 0;
     } else {
-      return depth.incrementAndGet();
+      depth += 1;
     }
+    map.put(k, depth);
+    return depth;
   }
 
   public static void reset(final Object k) {
-    final Map<Object, AtomicInteger> map = TLS.get();
-    if (map != null) {
-      map.remove(k);
-    }
+    TLS.get().remove(k);
   }
 }
