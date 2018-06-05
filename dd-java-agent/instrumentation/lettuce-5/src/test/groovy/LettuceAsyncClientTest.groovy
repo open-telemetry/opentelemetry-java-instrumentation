@@ -21,7 +21,6 @@ import java.util.function.BiFunction
 import java.util.function.Consumer
 import java.util.function.Function
 
-import static datadog.trace.instrumentation.lettuce.ConnectionFutureAdvice.RESOURCE_NAME_PREFIX
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class LettuceAsyncClientTest extends AgentTestRunner {
@@ -90,7 +89,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName RESOURCE_NAME_PREFIX + DB_ADDR
+          resourceName "CONNECT:" + DB_ADDR
           errored false
 
           tags {
@@ -128,7 +127,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName RESOURCE_NAME_PREFIX + DB_ADDR_NON_EXISTENT
+          resourceName "CONNECT:" + DB_ADDR_NON_EXISTENT
           errored true
 
           tags {

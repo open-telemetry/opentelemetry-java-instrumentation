@@ -12,10 +12,6 @@ import net.bytebuddy.asm.Advice;
 
 public class ConnectionFutureAdvice {
 
-  public static final String REDIS_URL_TAG_NAME = "db.redis.url";
-  public static final String REDIS_DB_INDEX_TAG_NAME = "db.redis.dbIndex";
-  public static final String RESOURCE_NAME_PREFIX = "CONNECT:";
-
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope startSpan(@Advice.Argument(1) final RedisURI redisURI) {
     final Scope scope = GlobalTracer.get().buildSpan("redis.query").startActive(false);
@@ -31,9 +27,9 @@ public class ConnectionFutureAdvice {
     Tags.PEER_HOSTNAME.set(span, redisHost);
 
     final String url = redisHost + ":" + redisPort + "/" + redisURI.getDatabase();
-    span.setTag(REDIS_URL_TAG_NAME, url);
-    span.setTag(REDIS_DB_INDEX_TAG_NAME, redisURI.getDatabase());
-    span.setTag(DDTags.RESOURCE_NAME, RESOURCE_NAME_PREFIX + url);
+    span.setTag("db.redis.url", url);
+    span.setTag("db.redis.dbIndex", redisURI.getDatabase());
+    span.setTag(DDTags.RESOURCE_NAME, "CONNECT:" + url);
     span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
     span.setTag(DDTags.SPAN_TYPE, LettuceInstrumentationUtil.SERVICE_NAME);
 

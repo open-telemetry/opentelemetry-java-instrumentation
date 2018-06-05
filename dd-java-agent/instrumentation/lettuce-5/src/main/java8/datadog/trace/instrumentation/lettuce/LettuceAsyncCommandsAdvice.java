@@ -18,7 +18,6 @@ public class LettuceAsyncCommandsAdvice {
     Map<String, String> commandMap = LettuceInstrumentationUtil.getCommandInfo(command);
     String commandName = commandMap.get(LettuceInstrumentationUtil.MAP_KEY_CMD_NAME);
     String commandArgs = commandMap.get(LettuceInstrumentationUtil.MAP_KEY_CMD_ARGS);
-    ;
 
     final Scope scope =
         GlobalTracer.get()

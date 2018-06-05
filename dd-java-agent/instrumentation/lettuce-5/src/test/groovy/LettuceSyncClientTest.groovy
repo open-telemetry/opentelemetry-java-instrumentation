@@ -9,7 +9,6 @@ import spock.lang.Shared
 
 import java.util.concurrent.CompletionException
 
-import static datadog.trace.instrumentation.lettuce.ConnectionFutureAdvice.RESOURCE_NAME_PREFIX
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class LettuceSyncClientTest extends AgentTestRunner {
@@ -74,7 +73,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName RESOURCE_NAME_PREFIX + DB_ADDR
+          resourceName "CONNECT:" + DB_ADDR
           errored false
 
           tags {
@@ -108,7 +107,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName RESOURCE_NAME_PREFIX + DB_ADDR_NON_EXISTENT
+          resourceName "CONNECT:" + DB_ADDR_NON_EXISTENT
           errored true
 
           tags {
