@@ -39,6 +39,7 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       .build()
     testNode = NodeBuilder.newInstance().clusterName("test-cluster").settings(settings).build()
     testNode.start()
+    TEST_WRITER.clear()
     testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
     TEST_WRITER.waitForTraces(1)
   }
