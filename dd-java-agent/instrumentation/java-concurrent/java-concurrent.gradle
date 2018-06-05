@@ -1,4 +1,7 @@
 apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/test-with-scala.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
 
 dependencies {
   compile project(':dd-trace-api')
