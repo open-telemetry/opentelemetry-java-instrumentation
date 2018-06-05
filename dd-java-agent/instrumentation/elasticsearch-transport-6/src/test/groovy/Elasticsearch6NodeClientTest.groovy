@@ -42,6 +42,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
       .build()
     testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, null), [Netty4Plugin])
     testNode.start()
+    TEST_WRITER.clear()
     testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
     TEST_WRITER.waitForTraces(1)
   }
