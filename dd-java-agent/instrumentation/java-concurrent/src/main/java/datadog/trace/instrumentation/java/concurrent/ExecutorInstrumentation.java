@@ -41,7 +41,6 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   public static final HelperInjector EXEC_HELPER_INJECTOR =
       new HelperInjector(
           ExecutorInstrumentation.class.getName() + "$ConcurrentUtils",
-          ExecutorInstrumentation.class.getName() + "$WrapAdviceUtils",
           ExecutorInstrumentation.class.getName() + "$DatadogWrapper",
           ExecutorInstrumentation.class.getName() + "$CallableWrapper",
           ExecutorInstrumentation.class.getName() + "$RunnableWrapper");
@@ -157,8 +156,108 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
         .asDecorator();
   }
 
-  /** Utils class to provide helper methods to wrap Runnable and Callable */
-  public static class WrapAdviceUtils {
+  public static class WrapRunnableAdvice {
+
+    @SuppressWarnings("unused")
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static DatadogWrapper enterJobSubmit(
+        @Advice.Argument(value = 0, readOnly = false) Runnable task) {
+      final Scope scope = GlobalTracer.get().scopeManager().active();
+      if (DatadogWrapper.shouldWrapTask(task)) {
+        task = new RunnableWrapper(task, (TraceScope) scope);
+        return (RunnableWrapper) task;
+      }
+      return null;
+    }
+
+    @SuppressWarnings("unused")
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void exitJobSubmit(
+        @Advice.Enter final DatadogWrapper wrapper, @Advice.Thrown final Throwable throwable) {
+      DatadogWrapper.cleanUpOnMethodExit(wrapper, throwable);
+    }
+  }
+
+  public static class WrapCallableAdvice {
+
+    @SuppressWarnings("unused")
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static DatadogWrapper enterJobSubmit(
+        @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
+
+      final Scope scope = GlobalTracer.get().scopeManager().active();
+      if (DatadogWrapper.shouldWrapTask(task)) {
+        task = new CallableWrapper<>(task, (TraceScope) scope);
+        return (CallableWrapper) task;
+      }
+      return null;
+    }
+
+    @SuppressWarnings("unused")
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void exitJobSubmit(
+        @Advice.Enter final DatadogWrapper wrapper, @Advice.Thrown final Throwable throwable) {
+      DatadogWrapper.cleanUpOnMethodExit(wrapper, throwable);
+    }
+  }
+
+  public static class WrapCallableCollectionAdvice {
+
+    @SuppressWarnings("unused")
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static Collection<?> wrapJob(
+        @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
+      final Scope scope = GlobalTracer.get().scopeManager().active();
+      if (scope instanceof TraceScope
+          && ((TraceScope) scope).isAsyncPropagating()
+          && tasks != null
+          && DatadogWrapper.isTopLevelCall()) {
+        final Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
+        for (Callable<?> task : tasks) {
+          if (task != null && !(task instanceof CallableWrapper)) {
+            wrappedTasks.add(new CallableWrapper<>(task, (TraceScope) scope));
+          }
+        }
+        tasks = wrappedTasks;
+        return tasks;
+      }
+      return null;
+    }
+
+    @SuppressWarnings("unused")
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void checkCancel(
+        @Advice.Enter final Collection<?> wrappedJobs, @Advice.Thrown final Throwable throwable) {
+      if (null != wrappedJobs) {
+        DatadogWrapper.resetNestedCalls();
+
+        if (null != throwable) {
+          for (final Object wrapper : wrappedJobs) {
+            if (wrapper instanceof DatadogWrapper) {
+              ((DatadogWrapper) wrapper).cancel();
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /** Marker interface for tasks which are wrapped to propagate the trace context. */
+  @Slf4j
+  public abstract static class DatadogWrapper {
+    protected final TraceScope.Continuation continuation;
+
+    public DatadogWrapper(final TraceScope scope) {
+      continuation = scope.capture();
+      log.debug("created continuation {} from scope {}", continuation, scope);
+    }
+
+    public void cancel() {
+      if (null != continuation) {
+        continuation.close();
+        log.debug("canceled continuation {}", continuation);
+      }
+    }
 
     /**
      * Check if given call to executor is nested. We would like to ignore nested calls to execute to
@@ -187,10 +286,10 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     public static boolean shouldWrapTask(Object task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       return (scope instanceof TraceScope
-          && ((TraceScope) scope).isAsyncPropagating()
-          && task != null
-          && !(task instanceof DatadogWrapper)
-          && isTopLevelCall());
+        && ((TraceScope) scope).isAsyncPropagating()
+        && task != null
+        && !(task instanceof DatadogWrapper)
+        && isTopLevelCall());
     }
 
     /**
@@ -201,116 +300,12 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
      */
     @SuppressWarnings("WeakerAccess")
     public static void cleanUpOnMethodExit(
-        final DatadogWrapper wrapper, final Throwable throwable) {
+      final DatadogWrapper wrapper, final Throwable throwable) {
       if (null != wrapper) {
         resetNestedCalls();
         if (null != throwable) {
           wrapper.cancel();
         }
-      }
-    }
-  }
-
-  public static class WrapRunnableAdvice {
-
-    @SuppressWarnings("unused")
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static DatadogWrapper enterJobSubmit(
-        @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (WrapAdviceUtils.shouldWrapTask(task)) {
-        task = new RunnableWrapper(task, (TraceScope) scope);
-        return (RunnableWrapper) task;
-      }
-      return null;
-    }
-
-    @SuppressWarnings("unused")
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exitJobSubmit(
-        @Advice.Enter final DatadogWrapper wrapper, @Advice.Thrown final Throwable throwable) {
-      WrapAdviceUtils.cleanUpOnMethodExit(wrapper, throwable);
-    }
-  }
-
-  public static class WrapCallableAdvice {
-
-    @SuppressWarnings("unused")
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static DatadogWrapper enterJobSubmit(
-        @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
-
-      final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (WrapAdviceUtils.shouldWrapTask(task)) {
-        task = new CallableWrapper<>(task, (TraceScope) scope);
-        return (CallableWrapper) task;
-      }
-      return null;
-    }
-
-    @SuppressWarnings("unused")
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exitJobSubmit(
-        @Advice.Enter final DatadogWrapper wrapper, @Advice.Thrown final Throwable throwable) {
-      WrapAdviceUtils.cleanUpOnMethodExit(wrapper, throwable);
-    }
-  }
-
-  public static class WrapCallableCollectionAdvice {
-
-    @SuppressWarnings("unused")
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Collection<?> wrapJob(
-        @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
-      final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (scope instanceof TraceScope
-          && ((TraceScope) scope).isAsyncPropagating()
-          && tasks != null
-          && WrapAdviceUtils.isTopLevelCall()) {
-        final Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
-        for (Callable<?> task : tasks) {
-          if (task != null && !(task instanceof CallableWrapper)) {
-            wrappedTasks.add(new CallableWrapper<>(task, (TraceScope) scope));
-          }
-        }
-        tasks = wrappedTasks;
-        return tasks;
-      }
-      return null;
-    }
-
-    @SuppressWarnings("unused")
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void checkCancel(
-        @Advice.Enter final Collection<?> wrappedJobs, @Advice.Thrown final Throwable throwable) {
-      if (null != wrappedJobs) {
-        WrapAdviceUtils.resetNestedCalls();
-
-        if (null != throwable) {
-          for (final Object wrapper : wrappedJobs) {
-            if (wrapper instanceof DatadogWrapper) {
-              ((DatadogWrapper) wrapper).cancel();
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /** Marker interface for tasks which are wrapped to propagate the trace context. */
-  @Slf4j
-  public abstract static class DatadogWrapper {
-    protected final TraceScope.Continuation continuation;
-
-    public DatadogWrapper(final TraceScope scope) {
-      continuation = scope.capture();
-      log.debug("created continuation {} from scope {}", continuation, scope);
-    }
-
-    public void cancel() {
-      if (null != continuation) {
-        continuation.close();
-        log.debug("canceled continuation {}", continuation);
       }
     }
   }
