@@ -139,10 +139,13 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
 
   def "test elasticsearch get"() {
     setup:
+    assert TEST_WRITER == []
     def indexResult = client.admin().indices().prepareCreate(indexName).get()
+    TEST_WRITER.waitForTraces(1)
 
     expect:
     indexResult.acknowledged
+    TEST_WRITER.size() == 1
 
     when:
     def emptyResult = client.prepareGet(indexName, indexType, id).get()
