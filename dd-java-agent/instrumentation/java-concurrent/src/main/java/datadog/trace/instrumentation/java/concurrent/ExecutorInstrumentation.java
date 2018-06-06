@@ -112,10 +112,13 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
               public boolean matches(final TypeDescription target) {
                 boolean whitelisted = WHITELISTED_EXECUTORS.contains(target.getName());
 
-                for (String name : WHITELISTED_EXECUTORS_PREFIXES) {
-                  if (target.getName().startsWith(name)) {
-                    whitelisted = true;
-                    break;
+                // Check for possible prefixes match only if not whitelisted already
+                if (!whitelisted) {
+                  for (String name : WHITELISTED_EXECUTORS_PREFIXES) {
+                    if (target.getName().startsWith(name)) {
+                      whitelisted = true;
+                      break;
+                    }
                   }
                 }
 
