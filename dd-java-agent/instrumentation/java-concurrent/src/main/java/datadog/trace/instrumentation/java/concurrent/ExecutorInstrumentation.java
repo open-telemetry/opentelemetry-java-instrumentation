@@ -286,10 +286,10 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     public static boolean shouldWrapTask(Object task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       return (scope instanceof TraceScope
-        && ((TraceScope) scope).isAsyncPropagating()
-        && task != null
-        && !(task instanceof DatadogWrapper)
-        && isTopLevelCall());
+          && ((TraceScope) scope).isAsyncPropagating()
+          && task != null
+          && !(task instanceof DatadogWrapper)
+          && isTopLevelCall());
     }
 
     /**
@@ -300,7 +300,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
      */
     @SuppressWarnings("WeakerAccess")
     public static void cleanUpOnMethodExit(
-      final DatadogWrapper wrapper, final Throwable throwable) {
+        final DatadogWrapper wrapper, final Throwable throwable) {
       if (null != wrapper) {
         resetNestedCalls();
         if (null != throwable) {
