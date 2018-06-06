@@ -142,16 +142,14 @@ public class ClassLoaderMatcher {
           if (cache.containsKey(target)) {
             return cache.get(target);
           }
-          try {
-            for (final String name : names) {
-              Class.forName(name, false, target);
+          for (final String name : names) {
+            if (target.getResource(Utils.getResourceName(name)) == null) {
+              cache.put(target, false);
+              return false;
             }
-            cache.put(target, true);
-            return true;
-          } catch (final ClassNotFoundException e) {
-            cache.put(target, false);
-            return false;
           }
+          cache.put(target, true);
+          return true;
         }
       }
       return false;
