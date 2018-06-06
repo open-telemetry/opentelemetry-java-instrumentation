@@ -9,10 +9,11 @@ import scala.concurrent.duration.Duration
 class SlickUtils {
   import SlickUtils._
 
-  val database = Database.forURL(s"jdbc:${Driver}:mem:test",
+  val database = Database.forURL(Url,
+    user=Username,
     driver="org.h2.Driver",
     keepAliveConnection=true,
-    // Limit numbner of threads to hit Slick-specific case when we need to avoid re-wrapping
+    // Limit number of threads to hit Slick-specific case when we need to avoid re-wrapping
     // wrapped runnables.
     executor=AsyncExecutor("test", numThreads=1, queueSize=1000)
   )
@@ -32,10 +33,12 @@ class SlickUtils {
 
 object SlickUtils {
 
-  var Driver = "h2"
+  val Driver = "h2"
+  val Username = "TESTUSER"
+  val Url = s"jdbc:${Driver}:mem:test"
   val TestValue = 3
   val TestQuery = "SELECT 3"
 
-  var SleepQuery = "CALL SLEEP(3000)"
+  val SleepQuery = "CALL SLEEP(3000)"
 
 }
