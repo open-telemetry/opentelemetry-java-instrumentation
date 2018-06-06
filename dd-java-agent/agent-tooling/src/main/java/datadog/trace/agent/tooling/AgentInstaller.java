@@ -5,6 +5,7 @@ import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import datadog.trace.agent.tooling.muzzle.Reference.Mismatch;
@@ -49,9 +50,15 @@ public class AgentInstaller {
             .or(nameStartsWith("datadog.trace."))
             .or(nameStartsWith("datadog.opentracing."))
             .or(nameStartsWith("datadog.slf4j."))
-            .or(nameStartsWith("java.").and(not(nameStartsWith("java.util.concurrent."))))
+            .or(
+                nameStartsWith("java.")
+                    .and(
+                        not(
+                            named("java.net.URL")
+                                .or(named("java.net.HttpURLConnection"))
+                                .or(nameStartsWith("java.util.concurrent.")))))
             .or(nameStartsWith("com.sun."))
-            .or(nameStartsWith("sun."))
+            .or(nameStartsWith("sun.").and(not(nameStartsWith("sun.net.www.protocol."))))
             .or(nameStartsWith("jdk."))
             .or(nameStartsWith("org.aspectj."))
             .or(nameStartsWith("org.groovy."))
@@ -87,7 +94,7 @@ public class AgentInstaller {
       if (throwable instanceof MismatchException) {
         final MismatchException mismatchException = (MismatchException) throwable;
         log.debug("{}", mismatchException.getMessage());
-        for (Mismatch mismatch : mismatchException.getMismatches()) {
+        for (final Mismatch mismatch : mismatchException.getMismatches()) {
           log.debug("--{}", mismatch);
         }
       } else {

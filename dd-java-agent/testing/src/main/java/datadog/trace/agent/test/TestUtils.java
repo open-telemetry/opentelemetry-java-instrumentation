@@ -1,8 +1,12 @@
 package datadog.trace.agent.test;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
+
 import datadog.trace.agent.tooling.Utils;
 import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.Tracer;
+import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -12,6 +16,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.ServerSocket;
 import java.net.URL;
+import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.jar.JarEntry;
@@ -77,12 +82,16 @@ public class TestUtils {
   }
 
   public static <T extends Object> Object runUnderTrace(
-      final String rootOperationName, final Callable<T> r) {
+      final String rootOperationName, final Callable<T> r) throws Exception {
     final Scope scope = GlobalTracer.get().buildSpan(rootOperationName).startActive(true);
     try {
       return r.call();
     } catch (final Exception e) {
-      throw new IllegalStateException(e);
+      final Span span = scope.span();
+      Tags.ERROR.set(span, true);
+      span.log(Collections.singletonMap(ERROR_OBJECT, e));
+
+      throw e;
     } finally {
       scope.close();
     }
