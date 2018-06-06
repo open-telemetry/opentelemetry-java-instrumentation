@@ -17,7 +17,7 @@ class TagsAssert {
     clone.delegate = asserter
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(asserter)
-    asserter.assertTracesAllVerified()
+    asserter.assertTagsAllVerified()
     asserter
   }
 
@@ -56,7 +56,7 @@ class TagsAssert {
     }
   }
 
-  void assertTracesAllVerified() {
+  void assertTagsAllVerified() {
     assert tags.keySet() == assertedTags
   }
 }
