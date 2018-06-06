@@ -8,21 +8,18 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import java.util.Map;
 import net.bytebuddy.asm.Advice;
 
 public class LettuceAsyncCommandsAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope startSpan(@Advice.Argument(0) final RedisCommand command) {
-    Map<String, String> commandMap = LettuceInstrumentationUtil.getCommandInfo(command);
-    String commandName = commandMap.get(LettuceInstrumentationUtil.MAP_KEY_CMD_NAME);
-    String commandArgs = commandMap.get(LettuceInstrumentationUtil.MAP_KEY_CMD_ARGS);
+    String commandName = LettuceInstrumentationUtil.getCommandName(command);
 
     final Scope scope =
         GlobalTracer.get()
             .buildSpan(LettuceInstrumentationUtil.SERVICE_NAME + ".query")
-            .startActive(LettuceInstrumentationUtil.doFinishSpanEarly(commandMap));
+            .startActive(LettuceInstrumentationUtil.doFinishSpanEarly(commandName));
 
     final Span span = scope.span();
     Tags.DB_TYPE.set(span, LettuceInstrumentationUtil.SERVICE_NAME);
@@ -30,7 +27,6 @@ public class LettuceAsyncCommandsAdvice {
     Tags.COMPONENT.set(span, LettuceInstrumentationUtil.COMPONENT_NAME);
 
     span.setTag(DDTags.RESOURCE_NAME, commandName);
-    span.setTag("db.command.args", commandArgs);
     span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
     span.setTag(DDTags.SPAN_TYPE, LettuceInstrumentationUtil.SERVICE_NAME);
 
@@ -43,8 +39,8 @@ public class LettuceAsyncCommandsAdvice {
       @Advice.Thrown final Throwable throwable,
       @Advice.Return final AsyncCommand<?, ?, ?> asyncCommand) {
 
+    final Span span = scope.span();
     if (throwable != null) {
-      final Span span = scope.span();
       Tags.ERROR.set(span, true);
       span.log(Collections.singletonMap("error.object", throwable));
       span.finish();
@@ -53,7 +49,9 @@ public class LettuceAsyncCommandsAdvice {
     }
 
     // close spans on error or normal completion
-    asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(scope.span()));
+    if (!LettuceInstrumentationUtil.doFinishSpanEarly(span.getBaggageItem(DDTags.RESOURCE_NAME))) {
+      asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(scope.span()));
+    }
     scope.close();
   }
 }

@@ -80,7 +80,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "key<TESTKEY> value<TESTVAL>"
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -111,7 +110,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "key<TESTKEY>"
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -149,7 +147,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "key<NON_EXISTENT_KEY>"
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -278,7 +275,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "SEGFAULT"
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -310,7 +306,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "NOSAVE"
             "span.kind" "client"
             "span.type" "redis"
           }

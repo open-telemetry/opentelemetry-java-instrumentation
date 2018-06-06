@@ -7,7 +7,6 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.slf4j.LoggerFactory;
@@ -17,11 +16,11 @@ public class LettuceMonoDualConsumer<R, T, U extends Throwable>
     implements Consumer<R>, BiConsumer<T, Throwable> {
 
   private Span span = null;
-  private final Map<String, String> commandMap;
+  private final String commandName;
   private final boolean finishSpanOnClose;
 
-  public LettuceMonoDualConsumer(Map<String, String> commandMap, boolean finishSpanOnClose) {
-    this.commandMap = commandMap;
+  public LettuceMonoDualConsumer(String commandName, boolean finishSpanOnClose) {
+    this.commandName = commandName;
     this.finishSpanOnClose = finishSpanOnClose;
   }
 
@@ -53,10 +52,7 @@ public class LettuceMonoDualConsumer<R, T, U extends Throwable>
     Tags.SPAN_KIND.set(this.span, Tags.SPAN_KIND_CLIENT);
     Tags.COMPONENT.set(this.span, LettuceInstrumentationUtil.COMPONENT_NAME);
 
-    this.span.setTag(
-        DDTags.RESOURCE_NAME, this.commandMap.get(LettuceInstrumentationUtil.MAP_KEY_CMD_NAME));
-    this.span.setTag(
-        "db.command.args", this.commandMap.get(LettuceInstrumentationUtil.MAP_KEY_CMD_ARGS));
+    this.span.setTag(DDTags.RESOURCE_NAME, this.commandName);
     this.span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
     this.span.setTag(DDTags.SPAN_TYPE, LettuceInstrumentationUtil.SERVICE_NAME);
     scope.close();

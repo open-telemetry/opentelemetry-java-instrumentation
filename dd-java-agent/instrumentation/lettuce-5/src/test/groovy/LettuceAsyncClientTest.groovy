@@ -167,7 +167,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "key<TESTKEY> value<TESTVAL>"
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -207,7 +206,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "key<TESTKEY>"
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -261,7 +259,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "key<NON_EXISTENT_KEY>"
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -359,7 +356,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "key<user> key<firstname> value<John> key<lastname> value<Doe> key<age> value<53>"
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -377,7 +373,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "key<user>"
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -425,7 +420,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "key<key1> key<key2>"
             errorTags(IllegalStateException, "TestException")
             "span.kind" "client"
             "span.type" "redis"
@@ -470,7 +464,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "key<SKEY> value<1> value<2>"
             "db.command.cancelled" true
             "span.kind" "client"
             "span.type" "redis"
@@ -501,7 +494,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "SEGFAULT"
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -534,7 +526,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
             defaultTags()
             "component" "redis-client"
             "db.type" "redis"
-            "db.command.args" "NOSAVE"
             "span.kind" "client"
             "span.type" "redis"
           }

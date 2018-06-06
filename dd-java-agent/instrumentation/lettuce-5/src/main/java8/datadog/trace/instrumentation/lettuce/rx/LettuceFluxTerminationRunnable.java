@@ -7,7 +7,6 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import java.util.Map;
 import java.util.function.Consumer;
 import org.reactivestreams.Subscription;
 import org.slf4j.LoggerFactory;
@@ -21,8 +20,8 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
   private int numResults = 0;
   private FluxOnSubscribeConsumer onSubscribeConsumer = null;
 
-  public LettuceFluxTerminationRunnable(Map<String, String> commandMap, boolean finishSpanOnClose) {
-    this.onSubscribeConsumer = new FluxOnSubscribeConsumer(this, commandMap, finishSpanOnClose);
+  public LettuceFluxTerminationRunnable(String commandName, boolean finishSpanOnClose) {
+    this.onSubscribeConsumer = new FluxOnSubscribeConsumer(this, commandName, finishSpanOnClose);
   }
 
   public FluxOnSubscribeConsumer getOnSubscribeConsumer() {
@@ -73,15 +72,13 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
   public static class FluxOnSubscribeConsumer implements Consumer<Subscription> {
 
     private final LettuceFluxTerminationRunnable owner;
-    private final Map<String, String> commandMap;
+    private final String commandName;
     private final boolean finishSpanOnClose;
 
     public FluxOnSubscribeConsumer(
-        LettuceFluxTerminationRunnable owner,
-        Map<String, String> commandMap,
-        boolean finishSpanOnClose) {
+        LettuceFluxTerminationRunnable owner, String commandName, boolean finishSpanOnClose) {
       this.owner = owner;
-      this.commandMap = commandMap;
+      this.commandName = commandName;
       this.finishSpanOnClose = finishSpanOnClose;
     }
 
@@ -98,10 +95,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
       Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
       Tags.COMPONENT.set(span, LettuceInstrumentationUtil.COMPONENT_NAME);
 
-      span.setTag(
-          DDTags.RESOURCE_NAME, this.commandMap.get(LettuceInstrumentationUtil.MAP_KEY_CMD_NAME));
-      span.setTag(
-          "db.command.args", this.commandMap.get(LettuceInstrumentationUtil.MAP_KEY_CMD_ARGS));
+      span.setTag(DDTags.RESOURCE_NAME, commandName);
       span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
       span.setTag(DDTags.SPAN_TYPE, LettuceInstrumentationUtil.SERVICE_NAME);
       scope.close();
