@@ -22,7 +22,7 @@ class TraceAssert {
     clone.delegate = asserter
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(asserter)
-    asserter.assertTracesAllVerified()
+    asserter.assertSpansAllVerified()
     asserter
   }
 
@@ -41,7 +41,7 @@ class TraceAssert {
     assertSpan(trace.get(index), spec)
   }
 
-  void assertTracesAllVerified() {
+  void assertSpansAllVerified() {
     assert assertedIndexes.size() == size
   }
 }
