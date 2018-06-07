@@ -10,6 +10,7 @@ import spock.util.concurrent.AsyncConditions
 import java.util.function.Consumer
 
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.AGENT_CRASHING_COMMAND_PREFIX
 
 class LettuceReactiveClientTest extends AgentTestRunner {
 
@@ -201,7 +202,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName "COMMAND"
+          resourceName AGENT_CRASHING_COMMAND_PREFIX + "COMMAND"
           errored false
 
           tags {
@@ -228,7 +229,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName "COMMAND"
+          resourceName AGENT_CRASHING_COMMAND_PREFIX + "COMMAND"
           errored false
 
           tags {
@@ -268,7 +269,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName "DEBUG"
+          resourceName AGENT_CRASHING_COMMAND_PREFIX + "DEBUG"
           errored false
 
           tags {

@@ -10,6 +10,7 @@ import spock.lang.Shared
 import java.util.concurrent.CompletionException
 
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.AGENT_CRASHING_COMMAND_PREFIX
 
 class LettuceSyncClientTest extends AgentTestRunner {
 
@@ -327,7 +328,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName "DEBUG"
+          resourceName AGENT_CRASHING_COMMAND_PREFIX + "DEBUG"
           errored false
 
           tags {

@@ -26,7 +26,8 @@ public class LettuceAsyncCommandsAdvice {
     Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
     Tags.COMPONENT.set(span, LettuceInstrumentationUtil.COMPONENT_NAME);
 
-    span.setTag(DDTags.RESOURCE_NAME, commandName);
+    span.setTag(
+        DDTags.RESOURCE_NAME, LettuceInstrumentationUtil.getCommandResourceName(commandName));
     span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
     span.setTag(DDTags.SPAN_TYPE, LettuceInstrumentationUtil.SERVICE_NAME);
 
@@ -35,6 +36,7 @@ public class LettuceAsyncCommandsAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
+      @Advice.Argument(0) final RedisCommand command,
       @Advice.Enter final Scope scope,
       @Advice.Thrown final Throwable throwable,
       @Advice.Return final AsyncCommand<?, ?, ?> asyncCommand) {
@@ -48,8 +50,9 @@ public class LettuceAsyncCommandsAdvice {
       return;
     }
 
+    String commandName = LettuceInstrumentationUtil.getCommandName(command);
     // close spans on error or normal completion
-    if (!LettuceInstrumentationUtil.doFinishSpanEarly(span.getBaggageItem(DDTags.RESOURCE_NAME))) {
+    if (!LettuceInstrumentationUtil.doFinishSpanEarly(commandName)) {
       asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(scope.span()));
     }
     scope.close();

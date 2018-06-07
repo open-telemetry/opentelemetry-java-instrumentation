@@ -22,6 +22,7 @@ import java.util.function.Consumer
 import java.util.function.Function
 
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.AGENT_CRASHING_COMMAND_PREFIX
 
 class LettuceAsyncClientTest extends AgentTestRunner {
 
@@ -487,7 +488,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName "DEBUG"
+          resourceName AGENT_CRASHING_COMMAND_PREFIX + "DEBUG"
           errored false
 
           tags {

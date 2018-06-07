@@ -52,7 +52,9 @@ public class LettuceMonoDualConsumer<R, T, U extends Throwable>
     Tags.SPAN_KIND.set(this.span, Tags.SPAN_KIND_CLIENT);
     Tags.COMPONENT.set(this.span, LettuceInstrumentationUtil.COMPONENT_NAME);
 
-    this.span.setTag(DDTags.RESOURCE_NAME, this.commandName);
+    // should be command name only, but use workaround to prepend string to agent crashing commands
+    this.span.setTag(
+        DDTags.RESOURCE_NAME, LettuceInstrumentationUtil.getCommandResourceName(this.commandName));
     this.span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
     this.span.setTag(DDTags.SPAN_TYPE, LettuceInstrumentationUtil.SERVICE_NAME);
     scope.close();
