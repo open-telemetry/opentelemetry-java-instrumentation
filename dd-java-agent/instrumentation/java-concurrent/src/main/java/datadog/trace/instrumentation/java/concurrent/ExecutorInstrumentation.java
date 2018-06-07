@@ -265,7 +265,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
      * 'fork' several tasks, but we do not have such executors at the moment. Note: this condition
      * is mutating and needs to be checked right before task is actually wrapped.
      *
-     * @return true iff call is nested
+     * @return true iff call is not nested
      */
     @SuppressWarnings("WeakerAccess")
     public static boolean isTopLevelCall() {
@@ -279,7 +279,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     }
 
     /**
-     * @param task tak object
+     * @param task task object
      * @return true iff given task object should be wrapped
      */
     @SuppressWarnings("WeakerAccess")
@@ -293,7 +293,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
     }
 
     /**
-     * Clean up after job submittion method has exited
+     * Clean up after job submission method has exited
      *
      * @param wrapper task wrapper
      * @param throwable throwable that may have been thrown
