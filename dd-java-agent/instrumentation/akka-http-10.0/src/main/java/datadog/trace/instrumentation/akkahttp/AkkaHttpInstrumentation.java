@@ -38,11 +38,10 @@ public final class AkkaHttpInstrumentation extends Instrumenter.Configurable {
     super("akkahttp");
   }
 
-  // TODO: sync vs async testing
-  // TODO: Use test DSL
-  // TODO: Merge into play testing
-  // TODO: Disable Instrumentation by default
-  // TODO: remove testWithScala from lagom
+  @Override
+  protected boolean defaultEnabled() {
+    return false;
+  }
 
   private static final HelperInjector akkaHttpHelperInjector =
       new HelperInjector(
@@ -58,6 +57,12 @@ public final class AkkaHttpInstrumentation extends Instrumenter.Configurable {
         .type(named("akka.http.scaladsl.HttpExt"))
         .transform(DDTransformers.defaultTransformers())
         .transform(akkaHttpHelperInjector)
+        // Insturmenting akka-streams bindAndHandle api was previously attempted.
+        // This proved difficult as there was no clean way to close the async scope
+        // in the graph logic after the user's requst handler completes.
+        //
+        // Instead, we're instrumenting the bindAndHandle function helpers by
+        // wrapping the scala functions with our own handlers.
         .transform(
             DDAdvice.create()
                 .advice(

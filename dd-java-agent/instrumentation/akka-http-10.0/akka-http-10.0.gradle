@@ -5,13 +5,16 @@ apply plugin: 'org.unbroken-dome.test-sets'
 testSets {
   lagomTest
 }
-compileLagomTestGroovy {
-  classpath = classpath.plus(files(compileLagomTestScala.destinationDir))
-  dependsOn compileLagomTestScala
+
+compileLagomTestJava {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+compileLagomTestGroovy {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
 
 dependencies {
   compileOnly group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
@@ -37,3 +40,4 @@ dependencies {
 }
 
 test.dependsOn lagomTest
+testJava8Minimum += '*Test*.class'

@@ -1,13 +1,9 @@
 import akka.NotUsed
 import akka.stream.javadsl.Source
-import akka.stream.testkit.TestPublisher
 import akka.stream.testkit.javadsl.TestSink
-import com.lightbend.lagom.javadsl.testkit.ServiceTest
-import datadog.opentracing.DDSpan
 import org.junit.After
-import scala.concurrent.duration.FiniteDuration
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS
 import datadog.trace.agent.test.AgentTestRunner
 import play.inject.guice.GuiceApplicationBuilder
 import spock.lang.Shared
@@ -17,8 +13,13 @@ import akka.stream.testkit.TestSubscriber.Probe
 import java.util.function.Function
 
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.*
+import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class LagomTest extends AgentTestRunner {
+  static {
+    System.setProperty("dd.integration.akkahttp.enabled", "true")
+  }
+
   @Shared
   private TestServer server
 
@@ -54,10 +55,8 @@ class LagomTest extends AgentTestRunner {
 
   def "normal request traces" () {
     setup:
-    EchoService service = server.client(EchoService.class)
+    EchoService service = server.client(EchoService)
 
-    // Use a source that never terminates (concat Source.maybe) so we
-    // don't close the upstream, which would close the downstream
     Source<String, NotUsed> input =
       Source.from(Arrays.asList("msg1", "msg2", "msg3"))
       .concat(Source.maybe())
@@ -70,57 +69,64 @@ class LagomTest extends AgentTestRunner {
     probe.expectNext("msg3")
     probe.cancel()
 
-    TEST_WRITER.waitForTraces(1)
-    DDSpan[] akkaTrace = TEST_WRITER.get(0)
-    DDSpan root = akkaTrace[0]
-
     expect:
-    TEST_WRITER.size() == 1
-    akkaTrace.size() == 2
-
-    root.serviceName == "unnamed-java-app"
-    root.operationName == "akkahttp.request"
-    root.resourceName == "GET ws://?/echo"
-    !root.context().getErrorFlag()
-    root.context().tags["http.status_code"] == 101
-    root.context().tags["http.url"] == "ws://localhost:${server.port()}/echo"
-    root.context().tags["http.method"] == "GET"
-    root.context().tags["span.kind"] == "server"
-    root.context().tags["component"] == "akkahttp-action"
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 2) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "akkahttp.request"
+          resourceName  "GET ws://?/echo"
+          errored false
+          tags {
+            defaultTags()
+            "http.status_code" 101
+            "http.url" "ws://localhost:${server.port()}/echo"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "akkahttp-action"
+          }
+        }
+        span(1) {
+          childOf span(0)
+        }
+      }
+    }
   }
 
   def "error traces" () {
     setup:
-    EchoService service = server.client(EchoService.class)
+    EchoService service = server.client(EchoService)
 
-    // Use a source that never terminates (concat Source.maybe) so we
-    // don't close the upstream, which would close the downstream
     Source<String, NotUsed> input =
       Source.from(Arrays.asList("msg1", "msg2", "msg3"))
         .concat(Source.maybe())
     try {
-      Source<String, NotUsed> output = service.error().invoke(input)
-        .toCompletableFuture().get(5, SECONDS)
+      service.error().invoke(input).toCompletableFuture().get(5, SECONDS)
     } catch (Exception e) {
     }
 
-    TEST_WRITER.waitForTraces(1)
-    DDSpan[] akkaTrace = TEST_WRITER.get(0)
-    DDSpan root = akkaTrace[0]
-
     expect:
-    TEST_WRITER.size() == 1
-    akkaTrace.size() == 1
-
-    root.serviceName == "unnamed-java-app"
-    root.operationName == "akkahttp.request"
-    root.resourceName == "GET ws://?/error"
-    root.context().getErrorFlag()
-    root.context().tags["http.status_code"] == 500
-    root.context().tags["http.url"] == "ws://localhost:${server.port()}/error"
-    root.context().tags["http.method"] == "GET"
-    root.context().tags["span.kind"] == "server"
-    root.context().tags["component"] == "akkahttp-action"
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "akkahttp.request"
+          resourceName "GET ws://?/error"
+          errored true
+          tags {
+            defaultTags()
+            "http.status_code" 500
+            "http.url" "ws://localhost:${server.port()}/error"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "akkahttp-action"
+            "error" true
+          }
+        }
+      }
+    }
   }
 
 }
