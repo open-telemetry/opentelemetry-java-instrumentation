@@ -19,7 +19,6 @@ import static ratpack.http.HttpMethod.POST
 class HttpUrlConnectionTest extends AgentTestRunner {
   static {
     System.setProperty("dd.integration.httpurlconnection.enabled", "true")
-    System.setProperty("http.keepAlive", "false")
   }
 
   @Shared
@@ -43,8 +42,14 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           scope.close()
         }
 
-        request.body.then {
-          response.status(200).send(msg)
+        response.status(200)
+        // Ratpack seems to be sending body with HEAD requests - RFC specifically forbids this.
+        // This becomes a major problem with keep-alived requests - client seems to fail to parse
+        // such response peroperly messing up following requests.
+        if (request.method.isHead()) {
+          response.send()
+        } else {
+          response.send(msg)
         }
       }
     }
