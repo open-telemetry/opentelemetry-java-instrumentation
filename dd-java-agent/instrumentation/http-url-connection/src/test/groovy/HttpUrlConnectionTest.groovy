@@ -18,14 +18,16 @@ import static ratpack.http.HttpMethod.POST
 
 class HttpUrlConnectionTest extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.urlconnection.enabled", "true")
+    System.setProperty("dd.integration.httpurlconnection.enabled", "true")
   }
+
+  static final RESPONSE = "<html><body><h1>Hello test.</h1>"
+  static final STATUS = 202
 
   @Shared
   def server = ratpack {
     handlers {
       all {
-        String msg = "<html><body><h1>Hello test.</h1>\n"
         boolean isDDServer = true
         if (context.request.getHeaders().contains("is-dd-server")) {
           isDDServer = Boolean.parseBoolean(context.request.getHeaders().get("is-dd-server"))
@@ -42,7 +44,15 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           scope.close()
         }
 
-        response.status(201).send(msg)
+        response.status(STATUS)
+        // Ratpack seems to be sending body with HEAD requests - RFC specifically forbids this.
+        // This becomes a major problem with keep-alived requests - client seems to fail to parse
+        // such response properly messing up following requests.
+        if (request.method.isHead()) {
+          response.send()
+        } else {
+          response.send(RESPONSE)
+        }
       }
     }
   }
@@ -55,17 +65,17 @@ class HttpUrlConnectionTest extends AgentTestRunner {
       def stream = connection.inputStream
       def lines = stream.readLines()
       stream.close()
-      assert connection.getResponseCode() == 201
-      assert lines == ["<html><body><h1>Hello test.</h1>"]
+      assert connection.getResponseCode() == STATUS
+      assert lines == [RESPONSE]
 
       // call again to ensure the cycling is ok
       connection = server.getAddress().toURL().openConnection()
       assert GlobalTracer.get().scopeManager().active() != null
+      assert connection.getResponseCode() == STATUS // call before input stream to test alternate behavior
       stream = connection.inputStream
       lines = stream.readLines()
       stream.close()
-      assert connection.getResponseCode() == 201
-      assert lines == ["<html><body><h1>Hello test.</h1>"]
+      assert lines == [RESPONSE]
     }
 
     expect:
@@ -100,22 +110,6 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "http.request.response_code"
-          childOf span(0)
-          errored false
-          tags {
-            "$Tags.COMPONENT.key" "HttpURLConnection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
-            "$Tags.HTTP_URL.key" "$server.address"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 201
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
-            defaultTags()
-          }
-        }
-        span(2) {
           operationName "http.request.input_stream"
           childOf span(0)
           errored false
@@ -125,7 +119,23 @@ class HttpUrlConnectionTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
             "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 201
+            "$Tags.HTTP_STATUS.key" STATUS
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" server.address.port
+            defaultTags()
+          }
+        }
+        span(2) {
+          operationName "http.request.response_code"
+          childOf span(0)
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "HttpURLConnection"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             defaultTags()
@@ -141,7 +151,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
             "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 201
+            "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             defaultTags()
@@ -157,7 +167,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
             "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 201
+            "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             defaultTags()
@@ -176,18 +186,18 @@ class HttpUrlConnectionTest extends AgentTestRunner {
       def stream = connection.inputStream
       def lines = stream.readLines()
       stream.close()
-      assert connection.getResponseCode() == 201
-      assert lines == ["<html><body><h1>Hello test.</h1>"]
+      assert connection.getResponseCode() == STATUS
+      assert lines == [RESPONSE]
 
       // call again to ensure the cycling is ok
       connection = server.getAddress().toURL().openConnection()
       connection.addRequestProperty("is-dd-server", "false")
       assert GlobalTracer.get().scopeManager().active() != null
+      assert connection.getResponseCode() == STATUS // call before input stream to test alternate behavior
       stream = connection.inputStream
       lines = stream.readLines()
       stream.close()
-      assert connection.getResponseCode() == 201
-      assert lines == ["<html><body><h1>Hello test.</h1>"]
+      assert lines == [RESPONSE]
     }
 
     expect:
@@ -202,22 +212,6 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "http.request.response_code"
-          childOf span(0)
-          errored false
-          tags {
-            "$Tags.COMPONENT.key" "HttpURLConnection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
-            "$Tags.HTTP_URL.key" "$server.address"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 201
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
-            defaultTags()
-          }
-        }
-        span(2) {
           operationName "http.request.input_stream"
           childOf span(0)
           errored false
@@ -227,7 +221,23 @@ class HttpUrlConnectionTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
             "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 201
+            "$Tags.HTTP_STATUS.key" STATUS
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" server.address.port
+            defaultTags()
+          }
+        }
+        span(2) {
+          operationName "http.request.response_code"
+          childOf span(0)
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "HttpURLConnection"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             defaultTags()
@@ -243,7 +253,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
             "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 201
+            "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             defaultTags()
@@ -259,7 +269,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
             "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 201
+            "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             defaultTags()
@@ -276,7 +286,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
       connection.setRequestMethod(HEAD.name)
       connection.addRequestProperty("is-dd-server", "false")
       assert GlobalTracer.get().scopeManager().active() != null
-      assert connection.getResponseCode() == 201
+      assert connection.getResponseCode() == STATUS
     }
 
     expect:
@@ -300,7 +310,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
             "$Tags.HTTP_METHOD.key" "HEAD"
-            "$Tags.HTTP_STATUS.key" 201
+            "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             defaultTags()
@@ -325,7 +335,12 @@ class HttpUrlConnectionTest extends AgentTestRunner {
       wr.flush()
       wr.close()
 
-      assert connection.getResponseCode() == 201
+      assert connection.getResponseCode() == STATUS
+
+      def stream = connection.inputStream
+      def lines = stream.readLines()
+      stream.close()
+      assert lines == [RESPONSE]
     }
 
     expect:
@@ -333,14 +348,14 @@ class HttpUrlConnectionTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "test-http-server"
-          childOf(TEST_WRITER[1][2])
+          childOf(TEST_WRITER[1][3])
           errored false
           tags {
             defaultTags()
           }
         }
       }
-      trace(1, 3) {
+      trace(1, 4) {
         span(0) {
           operationName "someTrace"
           parent()
@@ -350,6 +365,22 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           }
         }
         span(1) {
+          operationName "http.request.input_stream"
+          childOf span(0)
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "HttpURLConnection"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_METHOD.key" "POST"
+            "$Tags.HTTP_STATUS.key" STATUS
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" server.address.port
+            defaultTags()
+          }
+        }
+        span(2) {
           operationName "http.request.response_code"
           childOf span(0)
           errored false
@@ -359,13 +390,13 @@ class HttpUrlConnectionTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
             "$Tags.HTTP_METHOD.key" "POST"
-            "$Tags.HTTP_STATUS.key" 201
+            "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             defaultTags()
           }
         }
-        span(2) {
+        span(3) {
           operationName "http.request.output_stream"
           childOf span(0)
           errored false
@@ -375,7 +406,6 @@ class HttpUrlConnectionTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
             "$Tags.HTTP_METHOD.key" "POST"
-            "$Tags.HTTP_STATUS.key" 201
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             defaultTags()
@@ -394,8 +424,8 @@ class HttpUrlConnectionTest extends AgentTestRunner {
       def stream = connection.inputStream
       def lines = stream.readLines()
       stream.close()
-      assert connection.getResponseCode() == 201
-      assert lines == ["<html><body><h1>Hello test.</h1>"]
+      assert connection.getResponseCode() == STATUS
+      assert lines == [RESPONSE]
     }
 
     expect:

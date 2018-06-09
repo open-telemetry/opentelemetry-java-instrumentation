@@ -1,13 +1,11 @@
-package datadog.trace.instrumentation.url_connection;
+package datadog.trace.instrumentation.http_url_connection;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.DDAdvice;
@@ -23,22 +21,18 @@ import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.Collections;
 import javax.net.ssl.HttpsURLConnection;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
-import sun.net.www.protocol.ftp.FtpURLConnection;
-import sun.net.www.protocol.mailto.MailToURLConnection;
 
 @AutoService(Instrumenter.class)
-public class UrlConnectionInstrumentation extends Instrumenter.Configurable {
+public class HttpUrlConnectionInstrumentation extends Instrumenter.Configurable {
 
-  public UrlConnectionInstrumentation() {
-    super("urlconnection", "httpurlconnection");
+  public HttpUrlConnectionInstrumentation() {
+    super("httpurlconnection");
   }
 
   @Override
@@ -49,14 +43,10 @@ public class UrlConnectionInstrumentation extends Instrumenter.Configurable {
   @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
-        .type(
-            not(
-                    is(sun.net.www.protocol.jar.JarURLConnection.class)
-                        .or(is(sun.net.www.protocol.file.FileURLConnection.class)))
-                .and(isSubTypeOf(URLConnection.class)))
+        .type(isSubTypeOf(HttpURLConnection.class))
         .transform(
             new HelperInjector(
-                "datadog.trace.instrumentation.url_connection.MessageHeadersInjectAdapter"))
+                "datadog.trace.instrumentation.http_url_connection.MessageHeadersInjectAdapter"))
         .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
@@ -68,36 +58,34 @@ public class UrlConnectionInstrumentation extends Instrumenter.Configurable {
                                 .or(named("getOutputStream"))
                                 .or(named("getInputStream"))
                                 .or(nameStartsWith("getHeaderField"))),
-                    UrlConnectionAdvice.class.getName()))
+                    HttpUrlConnectionAdvice.class.getName()))
         .asDecorator();
   }
 
-  public static class UrlConnectionAdvice {
+  public static class HttpUrlConnectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
-        @Advice.This final URLConnection connection, @Advice.Origin("#m") final String methodName) {
+        @Advice.This final HttpURLConnection connection,
+        @Advice.FieldValue("connected") final boolean connected,
+        @Advice.Origin("#m") final String methodName) {
+
+      final boolean isTraceRequest =
+          Thread.currentThread().getName().equals("dd-agent-writer")
+              || connection.getRequestProperty("Datadog-Meta-Lang") != null;
+      if (isTraceRequest) {
+        return null;
+      }
+
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
+      if (callDepth > 0) {
+        return null;
+      }
+
       String protocol = "url";
       if (connection != null) {
         final URL url = connection.getURL();
         protocol = url.getProtocol();
-      }
-
-      final boolean isValidProtocol =
-          protocol.equals("http")
-              || protocol.equals("https")
-              || protocol.equals("ftp")
-              || protocol.equals("mailto");
-      final boolean isTraceRequest =
-          Thread.currentThread().getName().equals("dd-agent-writer")
-              || (connection != null && connection.getRequestProperty("Datadog-Meta-Lang") != null);
-      if (!isValidProtocol || isTraceRequest) {
-        return null;
-      }
-
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(URLConnection.class);
-      if (callDepth > 0) {
-        return null;
       }
 
       String command = ".request.response_code";
@@ -125,22 +113,17 @@ public class UrlConnectionInstrumentation extends Instrumenter.Configurable {
           Tags.PEER_PORT.set(span, url.getPort());
         } else if (connection instanceof HttpsURLConnection) {
           Tags.PEER_PORT.set(span, 443);
-        } else if (connection instanceof HttpURLConnection) {
+        } else {
           Tags.PEER_PORT.set(span, 80);
-        } else if (connection instanceof FtpURLConnection) {
-          Tags.PEER_PORT.set(span, 21);
-        } else if (connection instanceof MailToURLConnection) {
-          Tags.PEER_PORT.set(span, 25);
         }
 
-        if (connection instanceof HttpURLConnection) {
+        Tags.HTTP_METHOD.set(span, connection.getRequestMethod());
 
-          Tags.HTTP_METHOD.set(span, ((HttpURLConnection) connection).getRequestMethod());
-
+        if (!connected) {
           tracer.inject(
               span.context(),
               Format.Builtin.HTTP_HEADERS,
-              new MessageHeadersInjectAdapter((HttpURLConnection) connection));
+              new MessageHeadersInjectAdapter(connection));
         }
       }
       return scope;
@@ -148,7 +131,7 @@ public class UrlConnectionInstrumentation extends Instrumenter.Configurable {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.This final URLConnection connection,
+        @Advice.FieldValue("responseCode") final int responseCode,
         @Advice.Enter final Scope scope,
         @Advice.Thrown final Throwable throwable) {
 
@@ -161,14 +144,11 @@ public class UrlConnectionInstrumentation extends Instrumenter.Configurable {
       if (throwable != null) {
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-      } else if (connection instanceof HttpURLConnection) {
-        try {
-          Tags.HTTP_STATUS.set(span, ((HttpURLConnection) connection).getResponseCode());
-        } catch (final IOException e) {
-        }
+      } else if (responseCode > 0) {
+        Tags.HTTP_STATUS.set(span, responseCode);
       }
       scope.close();
-      CallDepthThreadLocalMap.reset(URLConnection.class);
+      CallDepthThreadLocalMap.reset(HttpURLConnection.class);
     }
   }
 }

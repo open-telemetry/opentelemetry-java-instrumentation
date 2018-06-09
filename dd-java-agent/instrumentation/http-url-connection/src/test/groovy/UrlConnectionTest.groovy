@@ -10,7 +10,7 @@ import static datadog.trace.agent.test.TestUtils.runUnderTrace
 
 class UrlConnectionTest extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.urlconnection.enabled", "true")
+    System.setProperty("dd.integration.httpurlconnection.enabled", "true")
   }
 
   private static final int INVALID_PORT = TestUtils.randomOpenPort()
@@ -49,9 +49,7 @@ class UrlConnectionTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$url"
-            if (scheme.startsWith("http")) {
-              "$Tags.HTTP_METHOD.key" "GET"
-            }
+            "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" INVALID_PORT
             errorTags ConnectException, "Connection refused (Connection refused)"
@@ -63,7 +61,6 @@ class UrlConnectionTest extends AgentTestRunner {
 
     where:
     scheme  | component
-    "ftp"   | "FtpURLConnection"
     "http"  | "HttpURLConnection"
     "https" | "HttpsURLConnectionImpl"
 

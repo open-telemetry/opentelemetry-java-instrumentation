@@ -1,17 +1,27 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import io.opentracing.tag.Tags
-import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
+import org.elasticsearch.action.search.SearchResponse
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.index.IndexNotFoundException
 import org.elasticsearch.node.Node
 import org.elasticsearch.node.NodeBuilder
+import org.elasticsearch.search.aggregations.bucket.nested.InternalNested
+import org.elasticsearch.search.aggregations.bucket.terms.Terms
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate
+import org.springframework.data.elasticsearch.core.ResultsExtractor
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder
 import spock.lang.Shared
+import springdata.Doc
+
+import java.util.concurrent.atomic.AtomicLong
 
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
-class Elasticsearch2NodeClientTest extends AgentTestRunner {
+class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   static {
     System.setProperty("dd.integration.elasticsearch.enabled", "true")
   }
@@ -23,7 +33,8 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
   static Node testNode
   static File esWorkingDir
 
-  def client = testNode.client()
+  @Shared
+  static ElasticsearchTemplate template
 
   def setupSpec() {
     esWorkingDir = File.createTempFile("test-es-working-dir-", "")
@@ -39,9 +50,8 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       .build()
     testNode = NodeBuilder.newInstance().local(true).clusterName("test-cluster").settings(settings).build()
     testNode.start()
-    TEST_WRITER.clear()
-    testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
-    TEST_WRITER.waitForTraces(1)
+
+    template = new ElasticsearchTemplate(testNode.client())
   }
 
   def cleanupSpec() {
@@ -52,38 +62,9 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     }
   }
 
-  def "test elasticsearch status"() {
-    setup:
-    def result = client.admin().cluster().health(new ClusterHealthRequest(new String[0]))
-
-    def status = result.get().status
-
-    expect:
-    status.name() == "GREEN"
-
-    assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "elasticsearch"
-          resourceName "ClusterHealthAction"
-          operationName "elasticsearch.query"
-          spanType null
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "elasticsearch.action" "ClusterHealthAction"
-            "elasticsearch.request" "ClusterHealthRequest"
-            defaultTags()
-          }
-        }
-      }
-    }
-  }
-
   def "test elasticsearch error"() {
     when:
-    client.prepareGet(indexName, indexType, id).get()
+    template.refresh(indexName)
 
     then:
     thrown IndexNotFoundException
@@ -93,15 +74,15 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"
-          resourceName "GetAction"
+          resourceName "RefreshAction"
           operationName "elasticsearch.query"
           spanType null
           errored true
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "elasticsearch.action" "GetAction"
-            "elasticsearch.request" "GetRequest"
+            "elasticsearch.action" "RefreshAction"
+            "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
             errorTags IndexNotFoundException, "no such index"
             defaultTags()
@@ -112,49 +93,38 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
 
     where:
     indexName = "invalid-index"
-    indexType = "test-type"
-    id = "1"
   }
 
   def "test elasticsearch get"() {
-    setup:
-    assert TEST_WRITER == []
-    def indexResult = client.admin().indices().prepareCreate(indexName).get()
-    TEST_WRITER.waitForTraces(1)
-
     expect:
-    indexResult.acknowledged
-    TEST_WRITER.size() == 1
+    template.createIndex(indexName)
+    template.getClient().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
 
     when:
-    client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
-    def emptyResult = client.prepareGet(indexName, indexType, id).get()
+    NativeSearchQuery query = new NativeSearchQueryBuilder()
+      .withIndices(indexName)
+      .withTypes(indexType)
+      .withIds([id])
+      .build()
 
     then:
-    !emptyResult.isExists()
-    emptyResult.id == id
-    emptyResult.type == indexType
-    emptyResult.index == indexName
+    template.queryForIds(query) == []
 
     when:
-    def createResult = client.prepareIndex(indexName, indexType, id).setSource([:]).get()
+    def result = template.index(IndexQueryBuilder.newInstance()
+      .withObject(new Doc())
+      .withIndexName(indexName)
+      .withType(indexType)
+      .withId(id)
+      .build())
+    template.refresh(Doc)
 
     then:
-    createResult.id == id
-    createResult.type == indexType
-    createResult.index == indexName
-
-    when:
-    def result = client.prepareGet(indexName, indexType, id).get()
-
-    then:
-    result.isExists()
-    result.id == id
-    result.type == indexType
-    result.index == indexName
+    result == id
+    template.queryForList(query, Doc) == [new Doc()]
 
     and:
-    assertTraces(TEST_WRITER, 6) {
+    assertTraces(TEST_WRITER, 7) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"
@@ -189,21 +159,16 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       trace(2, 1) {
         span(0) {
           serviceName "elasticsearch"
-          resourceName "GetAction"
+          resourceName "SearchAction"
           operationName "elasticsearch.query"
           spanType null
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.PEER_HOSTNAME.key" "local"
-            "$Tags.PEER_HOST_IPV4.key" "0.0.0.0"
-            "$Tags.PEER_PORT.key" 0
-            "elasticsearch.action" "GetAction"
-            "elasticsearch.request" "GetRequest"
+            "elasticsearch.action" "SearchAction"
+            "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
-            "elasticsearch.type" indexType
-            "elasticsearch.id" "1"
-            "elasticsearch.version"(-1)
+            "elasticsearch.request.search.types" indexType
             defaultTags()
           }
         }
@@ -247,21 +212,35 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       trace(5, 1) {
         span(0) {
           serviceName "elasticsearch"
-          resourceName "GetAction"
+          resourceName "RefreshAction"
           operationName "elasticsearch.query"
           spanType null
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.PEER_HOSTNAME.key" "local"
-            "$Tags.PEER_HOST_IPV4.key" "0.0.0.0"
-            "$Tags.PEER_PORT.key" 0
-            "elasticsearch.action" "GetAction"
-            "elasticsearch.request" "GetRequest"
+            "elasticsearch.action" "RefreshAction"
+            "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
-            "elasticsearch.type" indexType
-            "elasticsearch.id" "1"
-            "elasticsearch.version" 1
+            "elasticsearch.shard.broadcast.failed" 0
+            "elasticsearch.shard.broadcast.successful" 5
+            "elasticsearch.shard.broadcast.total" 10
+            defaultTags()
+          }
+        }
+      }
+      trace(6, 1) {
+        span(0) {
+          serviceName "elasticsearch"
+          resourceName "SearchAction"
+          operationName "elasticsearch.query"
+          spanType null
+          tags {
+            "$Tags.COMPONENT.key" "elasticsearch-java"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "elasticsearch.action" "SearchAction"
+            "elasticsearch.request" "SearchRequest"
+            "elasticsearch.request.indices" indexName
+            "elasticsearch.request.search.types" indexType
             defaultTags()
           }
         }
@@ -272,5 +251,78 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     indexName = "test-index"
     indexType = "test-type"
     id = "1"
+  }
+
+  def "test results extractor"() {
+    setup:
+    template.createIndex(indexName)
+    testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
+    template.index(IndexQueryBuilder.newInstance()
+      .withObject(new Doc(id: 1, data: "doc a"))
+      .withIndexName(indexName)
+      .withId("a")
+      .build())
+    template.index(IndexQueryBuilder.newInstance()
+      .withObject(new Doc(id: 2, data: "doc b"))
+      .withIndexName(indexName)
+      .withId("b")
+      .build())
+    template.refresh(indexName)
+    TEST_WRITER.waitForTraces(6)
+    TEST_WRITER.clear()
+
+    and:
+    def query = new NativeSearchQueryBuilder().withIndices(indexName).build()
+    def hits = new AtomicLong()
+    List<Map<String, Object>> results = []
+    def bucketTags = [:]
+
+    when:
+    template.query(query, new ResultsExtractor<Doc>() {
+
+      @Override
+      Doc extract(SearchResponse response) {
+        hits.addAndGet(response.getHits().totalHits())
+        results.addAll(response.hits.collect { it.source })
+        if (response.getAggregations() != null) {
+          InternalNested internalNested = response.getAggregations().get("tag")
+          if (internalNested != null) {
+            Terms terms = internalNested.getAggregations().get("count_agg")
+            Collection<Terms.Bucket> buckets = terms.getBuckets()
+            for (Terms.Bucket bucket : buckets) {
+              bucketTags.put(Integer.valueOf(bucket.getKeyAsString()), bucket.getDocCount())
+            }
+          }
+        }
+        return null
+      }
+    })
+
+    then:
+    hits.get() == 2
+    results[0] == [id: "2", data: "doc b"]
+    results[1] == [id: "1", data: "doc a"]
+    bucketTags == [:]
+
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "elasticsearch"
+          resourceName "SearchAction"
+          operationName "elasticsearch.query"
+          tags {
+            "$Tags.COMPONENT.key" "elasticsearch-java"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "elasticsearch.action" "SearchAction"
+            "elasticsearch.request" "SearchRequest"
+            "elasticsearch.request.indices" indexName
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    where:
+    indexName = "test-index-extract"
   }
 }

@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.url_connection;
+package datadog.trace.instrumentation.http_url_connection;
 
 import io.opentracing.propagation.TextMap;
 import java.net.HttpURLConnection;
@@ -15,8 +15,12 @@ public class MessageHeadersInjectAdapter implements TextMap {
 
   @Override
   public void put(final String key, final String value) {
-    if (connection.getRequestProperty(key) == null) {
-      connection.setRequestProperty(key, value);
+    try {
+      if (connection.getRequestProperty(key) == null) {
+        connection.setRequestProperty(key, value);
+      }
+    } catch (final IllegalStateException e) {
+      // Connection is already established. Too late to set headers.
     }
   }
 

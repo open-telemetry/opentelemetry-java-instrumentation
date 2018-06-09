@@ -38,10 +38,13 @@ dependencies {
   // TODO: add netty instrumentation when that is complete.
 
   testCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '2.0.0'
-  testCompile group: 'net.java.dev.jna', name: 'jna', version: '4.5.1'
 
+  testCompile group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '2.0.0.RELEASE'
+
+  testCompile group: 'net.java.dev.jna', name: 'jna', version: '4.5.1'
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
 
   latestDepTestCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '2.+'
+  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '2.+'
 }
