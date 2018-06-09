@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.url_connection;
+package datadog.trace.instrumentation.http_url_connection;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.is;
