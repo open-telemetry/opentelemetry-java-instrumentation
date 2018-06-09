@@ -13,6 +13,7 @@ import org.elasticsearch.action.DocumentRequest;
 import org.elasticsearch.action.IndicesRequest;
 import org.elasticsearch.action.bulk.BulkShardResponse;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.broadcast.BroadcastResponse;
 import org.elasticsearch.action.support.nodes.BaseNodesResponse;
 
@@ -34,6 +35,10 @@ public class TransportActionListener<T extends ActionResponse> implements Action
       if (req.indices() != null) {
         span.setTag("elasticsearch.request.indices", Joiner.on(",").join(req.indices()));
       }
+    }
+    if (request instanceof SearchRequest) {
+      final SearchRequest req = (SearchRequest) request;
+      span.setTag("elasticsearch.request.search.types", Joiner.on(",").join(req.types()));
     }
     if (request instanceof DocumentRequest) {
       final DocumentRequest req = (DocumentRequest) request;

@@ -50,6 +50,9 @@ public class Elasticsearch5TransportClientInstrumentation extends Instrumenter.C
             new HelperInjector(
                 "com.google.common.base.Preconditions",
                 "com.google.common.base.Joiner",
+                "com.google.common.base.Joiner$1",
+                "com.google.common.base.Joiner$2",
+                "com.google.common.base.Joiner$MapJoiner",
                 "datadog.trace.instrumentation.elasticsearch5.TransportActionListener"))
         .transform(DDTransformers.defaultTransformers())
         .transform(
