@@ -17,7 +17,7 @@ class TagsAssert {
     clone.delegate = asserter
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(asserter)
-    asserter.assertTracesAllVerified()
+    asserter.assertTagsAllVerified()
     asserter
   }
 
@@ -51,12 +51,14 @@ class TagsAssert {
     def arg = args[0]
     if (arg instanceof Class) {
       assert ((Class) arg).isInstance(tags[name])
+    } else if (arg instanceof Closure) {
+      assert ((Closure) arg).call(tags[name])
     } else {
       assert tags[name] == arg
     }
   }
 
-  void assertTracesAllVerified() {
+  void assertTagsAllVerified() {
     assert tags.keySet() == assertedTags
   }
 }
