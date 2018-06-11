@@ -1,5 +1,24 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "net.spy"
+  module = 'spymemcached'
+  versions = "[1.12.0,)"
+  scanMethods = true
+  verifyPresent = [
+    "net.spy.memcached.ConnectionFactoryBuilder": "setListenerExecutorService",
+  ]
+}
 
 apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
 
 dependencies {
   compileOnly group: 'net.spy', name: 'spymemcached', version: '2.12.0'
@@ -13,11 +32,14 @@ dependencies {
 
   testCompile project(':dd-java-agent:testing')
 
-  // Include servlet instrumentation for verifying the tomcat requests
-  testCompile project(':dd-java-agent:instrumentation:servlet-3')
-
-
   testCompile group: 'net.spy', name: 'spymemcached', version: '2.12.0'
   testCompile group: 'org.spockframework', name:'spock-core', version:'1.1-groovy-2.4'
   testCompile group: 'org.testcontainers', name:'testcontainers', version:'1.7.3'
 }
+
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'net.spy', name: 'spymemcached', version: '+'
+  }
+}
+
