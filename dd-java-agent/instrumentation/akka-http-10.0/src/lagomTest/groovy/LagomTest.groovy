@@ -27,11 +27,13 @@ class LagomTest extends AgentTestRunner {
   @After
   @Override
   void afterTest() {
-    // FIXME:
-    // skipping error check
-    // bytebuddy is having trouble resolving akka.stream.impl.VirtualProcessor$WrappedSubscription$$SubscriptionState
-    // possibly due to '$$' in class name?
-    // class is on the classpath.
+    // 'akka/stream/impl/VirtualProcessor$WrappedSubscription$PassThrough$.class' declares
+    // itself an implementation of 'VirtualProcessor$WrappedSubscription$$SubscriptionState',
+    // but this interface does not exist on the classpath.
+    // The closest thing on the classpath is 'VirtualProcessor$WrappedSubscription$SubscriptionState' (only one $).
+
+    // Looks like a compiler/packaging issue on akka's end. Or maybe this interface is dynamically generated.
+    // Either way, we're going to error out.
   }
 
   def setupSpec() {

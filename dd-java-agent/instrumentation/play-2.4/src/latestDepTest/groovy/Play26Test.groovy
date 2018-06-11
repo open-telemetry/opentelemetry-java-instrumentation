@@ -1,4 +1,3 @@
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import okhttp3.OkHttpClient
@@ -7,7 +6,13 @@ import play.api.test.TestServer
 import play.test.Helpers
 import spock.lang.Shared
 
+import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+
 class Play26Test extends AgentTestRunner {
+  static {
+    System.setProperty("dd.integration.akkahttp.enabled", "true")
+  }
+
   @Shared
   int port = TestUtils.randomOpenPort()
   @Shared
@@ -32,30 +37,49 @@ class Play26Test extends AgentTestRunner {
       .get()
       .build()
     def response = client.newCall(request).execute()
-    TEST_WRITER.waitForTraces(1)
-    DDSpan[] playTrace = TEST_WRITER.get(0)
-    DDSpan root = playTrace[0]
 
     expect:
-    testServer != null
     response.code() == 200
     response.body().string() == "hello spock"
-
-    // async work is linked to play trace
-    playTrace.size() == 2
-    playTrace[1].operationName == 'TracedWork$.doWork'
-
-    root.traceId == 123
-    root.parentId == 456
-    root.serviceName == "unnamed-java-app"
-    root.operationName == "play.request"
-    root.resourceName == "GET /helloplay/:from"
-    !root.context().getErrorFlag()
-    root.context().tags["http.status_code"] == 200
-    root.context().tags["http.url"] == "/helloplay/:from"
-    root.context().tags["http.method"] == "GET"
-    root.context().tags["span.kind"] == "server"
-    root.context().tags["component"] == "play-action"
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 3) {
+        span(0) {
+          traceId 123
+          parentId 456
+          serviceName "unnamed-java-app"
+          operationName "akkahttp.request"
+          resourceName "GET /helloplay/:from"
+          errored false
+          tags {
+            defaultTags()
+            "http.status_code" 200
+            "http.url" "http://localhost:$port/helloplay/spock"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "akkahttp-action"
+          }
+        }
+        span(1) {
+          childOf span(0)
+          operationName "play.request"
+          resourceName "GET /helloplay/:from"
+          tags {
+            defaultTags()
+            "http.status_code" 200
+            "http.url" "/helloplay/:from"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "play-action"
+          }
+        }
+        span(2) {
+          childOf span(1)
+          operationName 'TracedWork$.doWork'
+        }
+      }
+    }
   }
 
   def "5xx errors trace" () {
@@ -66,23 +90,45 @@ class Play26Test extends AgentTestRunner {
       .get()
       .build()
     def response = client.newCall(request).execute()
-    TEST_WRITER.waitForTraces(1)
-    DDSpan[] playTrace = TEST_WRITER.get(0)
-    DDSpan root = playTrace[0]
 
     expect:
-    testServer != null
     response.code() == 500
-
-    root.serviceName == "unnamed-java-app"
-    root.operationName == "play.request"
-    root.resourceName == "GET /make-error"
-    root.context().getErrorFlag()
-    root.context().tags["http.status_code"] == 500
-    root.context().tags["http.url"] == "/make-error"
-    root.context().tags["http.method"] == "GET"
-    root.context().tags["span.kind"] == "server"
-    root.context().tags["component"] == "play-action"
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 2) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "akkahttp.request"
+          resourceName "GET /make-error"
+          errored true
+          tags {
+            defaultTags()
+            "http.status_code" 500
+            "http.url" "http://localhost:$port/make-error"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "akkahttp-action"
+            "error" true
+          }
+        }
+        span(1) {
+          childOf span(0)
+          operationName "play.request"
+          resourceName "GET /make-error"
+          errored true
+          tags {
+            defaultTags()
+            "http.status_code" 500
+            "http.url" "/make-error"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "play-action"
+            "error" true
+          }
+        }
+      }
+    }
   }
 
   def "error thrown in request" () {
@@ -93,26 +139,49 @@ class Play26Test extends AgentTestRunner {
       .get()
       .build()
     def response = client.newCall(request).execute()
-    TEST_WRITER.waitForTraces(1)
-    DDSpan[] playTrace = TEST_WRITER.get(0)
-    DDSpan root = playTrace[0]
 
     expect:
     testServer != null
     response.code() == 500
-
-    root.context().getErrorFlag()
-    root.context().tags["error.msg"] == "oh no"
-    root.context().tags["error.type"] == RuntimeException.getName()
-
-    root.serviceName == "unnamed-java-app"
-    root.operationName == "play.request"
-    root.resourceName == "GET /exception"
-    root.context().tags["http.status_code"] == 500
-    root.context().tags["http.url"] == "/exception"
-    root.context().tags["http.method"] == "GET"
-    root.context().tags["span.kind"] == "server"
-    root.context().tags["component"] == "play-action"
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 2) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "akkahttp.request"
+          resourceName "GET /exception"
+          errored true
+          tags {
+            defaultTags()
+            "http.status_code" 500
+            "http.url" "http://localhost:$port/exception"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "akkahttp-action"
+            "error" true
+          }
+        }
+        span(1) {
+          childOf span(0)
+          operationName "play.request"
+          resourceName "GET /exception"
+          errored true
+          tags {
+            defaultTags()
+            "http.status_code" 500
+            "http.url" "/exception"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "play-action"
+            "error" true
+            "error.msg" "oh no"
+            "error.type" RuntimeException.getName()
+            "error.stack" tag("error.stack")
+          }
+        }
+      }
+    }
   }
 
   def "4xx errors trace" () {
@@ -123,22 +192,42 @@ class Play26Test extends AgentTestRunner {
       .get()
       .build()
     def response = client.newCall(request).execute()
-    TEST_WRITER.waitForTraces(1)
-    DDSpan[] playTrace = TEST_WRITER.get(0)
-    DDSpan root = playTrace[0]
 
     expect:
-    testServer != null
     response.code() == 404
 
-    root.serviceName == "unnamed-java-app"
-    root.operationName == "play.request"
-    root.resourceName == "404"
-    !root.context().getErrorFlag()
-    root.context().tags["http.status_code"] == 404
-    root.context().tags["http.url"] == null
-    root.context().tags["http.method"] == "GET"
-    root.context().tags["span.kind"] == "server"
-    root.context().tags["component"] == "play-action"
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 2) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "akkahttp.request"
+          resourceName "404"
+          errored false
+          tags {
+            defaultTags()
+            "http.status_code" 404
+            "http.url" "http://localhost:$port/nowhere"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "akkahttp-action"
+          }
+        }
+        span(1) {
+          childOf span(0)
+          operationName "play.request"
+          resourceName "404"
+          errored false
+          tags {
+            defaultTags()
+            "http.status_code" 404
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "play-action"
+          }
+        }
+      }
+    }
   }
 }
