@@ -1,0 +1,69 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "io.lettuce"
+  module = "lettuce-core"
+  versions = "[5.0.0.RELEASE,)"
+  scanDependencies = true
+  verifyPresent = [
+    "io.lettuce.core.RedisClient": null,
+  ]
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+sourceSets {
+  main_java8 {
+    java.srcDirs "${project.projectDir}/src/main/java8"
+  }
+}
+
+compileMain_java8Java {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  main_java8CompileOnly group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
+
+  main_java8Compile project(':dd-java-agent:agent-tooling')
+
+  main_java8Compile deps.bytebuddy
+  main_java8Compile deps.opentracing
+
+  compileOnly sourceSets.main_java8.compileClasspath
+
+  compile sourceSets.main_java8.output
+
+  compileOnly group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+  
+  testCompile project(':dd-java-agent:testing')
+
+  testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
+  testCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
+}
+
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'io.lettuce', name: 'lettuce-core', version: '+'
+  }
+}
+
+testJava8Only += '**/LettuceAsyncClientTest.class'
+testJava8Only += '**/LettuceSyncClientTest.class'
+testJava8Only += '**/LettuceReactiveClientTest.class'
