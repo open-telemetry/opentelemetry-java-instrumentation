@@ -1,0 +1,46 @@
+apply plugin: 'version-scan'
+
+// TODO figure out the earliest version that can be supported, and the latest
+versionScan {
+  group = "org.apache.tomcat.embed"
+  module = 'tomcat-embed-jasper'
+  versions = "[8.0.41,)"
+  verifyPresent = [
+    "org.apache.jasper.servlet.JspServlet": null,
+  ]
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '8.0.41'
+
+  compile project(':dd-trace-ot')
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+  testCompile project(':dd-java-agent:testing')
+
+  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.0.41'
+  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '8.0.41'
+
+  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.10.0'
+}
+
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '+'
+    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '+'
+  }
+}
