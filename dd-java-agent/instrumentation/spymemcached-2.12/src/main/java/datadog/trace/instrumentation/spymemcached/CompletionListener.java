@@ -24,7 +24,7 @@ public abstract class CompletionListener<T> {
    Unfortunately nondeterministic interaction between SpanTypeDecorator and DBTypeDecorator
    pretty much forces this to be "sql".
   */
-  static final String SPAN_TYPE = "sql";
+  static final String SPAN_TYPE = "cache";
   static final String COMPONENT_NAME = "java-spymemcached";
   static final String DB_TYPE = "memcached";
   static final String DB_COMMAND_CANCELLED = "db.command.cancelled";
