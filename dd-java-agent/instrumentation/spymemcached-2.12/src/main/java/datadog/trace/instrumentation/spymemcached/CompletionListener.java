@@ -98,10 +98,8 @@ public abstract class CompletionListener<T> {
     scope.close();
   }
 
-  protected void processResult(Span span, T future)
-      throws ExecutionException, InterruptedException {
-    throw new UnsupportedOperationException("processResult was not implemented");
-  }
+  protected abstract void processResult(Span span, T future)
+      throws ExecutionException, InterruptedException;
 
   protected void setResultTag(Span span, boolean hit) {
     span.setTag(MEMCACHED_RESULT, hit ? HIT : MISS);
