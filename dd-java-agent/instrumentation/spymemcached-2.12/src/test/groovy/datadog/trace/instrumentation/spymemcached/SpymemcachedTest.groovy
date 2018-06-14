@@ -630,9 +630,9 @@ class SpymemcachedTest extends AgentTestRunner {
       tags {
         defaultTags()
         "${DDTags.SPAN_TYPE}" SPAN_TYPE
-        "${Tags.COMPONENT.getKey()}" COMPONENT_NAME
-        "${Tags.SPAN_KIND.getKey()}" Tags.SPAN_KIND_CLIENT
-        "${Tags.DB_TYPE.getKey()}" CompletionListener.DB_TYPE
+        "${Tags.COMPONENT.key}" COMPONENT_NAME
+        "${Tags.SPAN_KIND.key}" Tags.SPAN_KIND_CLIENT
+        "${Tags.DB_TYPE.key}" CompletionListener.DB_TYPE
 
         if (error == "canceled") {
           "${CompletionListener.DB_COMMAND_CANCELLED}" true

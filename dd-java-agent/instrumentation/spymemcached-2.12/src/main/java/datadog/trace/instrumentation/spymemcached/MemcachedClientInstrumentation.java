@@ -85,13 +85,13 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Configura
   public static class AsyncOperationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Boolean methodEnter() {
+    public static boolean methodEnter() {
       return CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class) <= 0;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Boolean shouldInjectListener,
+        @Advice.Enter final boolean shouldInjectListener,
         @Advice.Origin final Method method,
         @Advice.Return final OperationFuture future) {
       if (shouldInjectListener) {
@@ -106,13 +106,13 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Configura
   public static class AsyncGetAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Boolean methodEnter() {
+    public static boolean methodEnter() {
       return CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class) <= 0;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Boolean shouldInjectListener,
+        @Advice.Enter final boolean shouldInjectListener,
         @Advice.Origin final Method method,
         @Advice.Return final GetFuture future) {
       if (shouldInjectListener) {
@@ -127,13 +127,13 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Configura
   public static class AsyncBulkAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Boolean methodEnter() {
+    public static boolean methodEnter() {
       return CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class) <= 0;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Boolean shouldInjectListener,
+        @Advice.Enter final boolean shouldInjectListener,
         @Advice.Origin final Method method,
         @Advice.Return final BulkFuture future) {
       if (shouldInjectListener) {
