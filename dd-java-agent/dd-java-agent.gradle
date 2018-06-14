@@ -32,7 +32,7 @@ def includeShadowJar(subproject, jarname) {
       mergeServiceFiles()
 
       dependencies {
-        exclude(dependency('org.projectlombok:lombok:1.16.20'))
+        exclude(dependency("org.projectlombok:lombok:$versions.lombok"))
       }
 
       // Prevents conflict with other SLF4J instances. Important for premain.
@@ -87,7 +87,7 @@ shadowJar {
   mergeServiceFiles()
 
   dependencies {
-    exclude(dependency('org.projectlombok:lombok:1.16.20'))
+    exclude(dependency("org.projectlombok:lombok:$versions.lombok"))
   }
 }
 

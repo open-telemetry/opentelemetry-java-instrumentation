@@ -10,6 +10,8 @@ import io.opentracing.tag.StringTag
 import io.opentracing.tag.Tags
 import spock.lang.Specification
 
+import static datadog.opentracing.DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME
+
 class SpanDecoratorTest extends Specification {
   def tracer = new DDTracer(new LoggingWriter())
   def span = SpanFactory.newSpanOf(tracer)
@@ -50,6 +52,26 @@ class SpanDecoratorTest extends Specification {
     name            | expected        | mapping
     "some-service"  | "new-service"   | ["some-service": "new-service"]
     "other-service" | "other-service" | ["some-service": "new-service"]
+  }
+
+  def "set service name from servlet.context with context '#context'"() {
+    when:
+    span.setTag(DDTags.SERVICE_NAME, serviceName)
+    span.setTag("servlet.context", context)
+
+    then:
+    span.getServiceName() == expected
+
+    where:
+    context         | serviceName                     | expected
+    "/"             | UNASSIGNED_DEFAULT_SERVICE_NAME | UNASSIGNED_DEFAULT_SERVICE_NAME
+    ""              | UNASSIGNED_DEFAULT_SERVICE_NAME | UNASSIGNED_DEFAULT_SERVICE_NAME
+    "/some-context" | UNASSIGNED_DEFAULT_SERVICE_NAME | "some-context"
+    "other-context" | UNASSIGNED_DEFAULT_SERVICE_NAME | "other-context"
+    "/"             | "my-service"                    | "my-service"
+    ""              | "my-service"                    | "my-service"
+    "/some-context" | "my-service"                    | "my-service"
+    "other-context" | "my-service"                    | "my-service"
   }
 
   def "set operation name"() {
