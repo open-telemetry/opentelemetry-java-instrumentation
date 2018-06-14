@@ -7,6 +7,7 @@ import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HTTPCodec;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
+import datadog.trace.api.CorrelationIdentifier;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.interceptor.TraceInterceptor;
 import datadog.trace.api.sampling.PrioritySampling;
@@ -146,6 +147,8 @@ public class DDTracer implements io.opentracing.Tracer {
       log.debug("Loading decorator: {}", decorator.getClass().getSimpleName());
       addDecorator(decorator);
     }
+
+    CorrelationIdentifier.registerIfAbsent(OTTraceCorrelation.INSTANCE);
 
     log.info("New instance: {}", this);
   }
