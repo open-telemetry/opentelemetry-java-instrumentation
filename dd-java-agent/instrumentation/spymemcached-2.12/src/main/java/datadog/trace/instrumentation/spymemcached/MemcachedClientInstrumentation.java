@@ -94,7 +94,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Configura
         @Advice.Enter final boolean shouldInjectListener,
         @Advice.Origin final Method method,
         @Advice.Return final OperationFuture future) {
-      if (shouldInjectListener) {
+      if (shouldInjectListener && future != null) {
         OperationCompletionListener listener =
             new OperationCompletionListener(GlobalTracer.get(), method.getName());
         future.addListener(listener);
@@ -115,7 +115,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Configura
         @Advice.Enter final boolean shouldInjectListener,
         @Advice.Origin final Method method,
         @Advice.Return final GetFuture future) {
-      if (shouldInjectListener) {
+      if (shouldInjectListener && future != null) {
         GetCompletionListener listener =
             new GetCompletionListener(GlobalTracer.get(), method.getName());
         future.addListener(listener);
@@ -136,7 +136,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Configura
         @Advice.Enter final boolean shouldInjectListener,
         @Advice.Origin final Method method,
         @Advice.Return final BulkFuture future) {
-      if (shouldInjectListener) {
+      if (shouldInjectListener && future != null) {
         BulkGetCompletionListener listener =
             new BulkGetCompletionListener(GlobalTracer.get(), method.getName());
         future.addListener(listener);
