@@ -4,15 +4,15 @@ buildscript {
   }
   dependencies {
     classpath "io.franzbecker:gradle-lombok:1.13"
-    classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.7.2"
-    classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0"
-    classpath "net.ltgt.gradle:gradle-errorprone-plugin:0.0.13"
-    classpath 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin:1.4.5'
+    classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.7.3"
+    classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.1"
+    classpath "net.ltgt.gradle:gradle-errorprone-plugin:0.0.14"
+    classpath 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin:1.5.0'
   }
 }
 
 plugins {
-  id 'com.gradle.build-scan' version '1.13'
+  id 'com.gradle.build-scan' version '1.14'
   id 'com.github.sherter.google-java-format' version '0.6'
 }
 
@@ -53,7 +53,7 @@ buildScan {
   }
 }
 
-ext.gradleWrapperVersion = '4.6'
+ext.gradleWrapperVersion = '4.7'
 task wrapper(type: Wrapper) {
   gradleVersion = gradleWrapperVersion
 }
