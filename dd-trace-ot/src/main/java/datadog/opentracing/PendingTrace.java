@@ -184,7 +184,9 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
         new ThreadFactory() {
           @Override
           public Thread newThread(final Runnable r) {
-            return new Thread(r, "dd-span-cleaner");
+            final Thread thread = new Thread(r, "dd-span-cleaner");
+            thread.setDaemon(true);
+            return thread;
           }
         };
 
