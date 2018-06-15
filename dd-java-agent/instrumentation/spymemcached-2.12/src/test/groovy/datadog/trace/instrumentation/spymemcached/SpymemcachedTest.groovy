@@ -32,6 +32,10 @@ import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 class SpymemcachedTest extends AgentTestRunner {
 
+  static {
+    System.setProperty("dd.integration.spymemcached.enabled", "true")
+  }
+
   @Shared
   def parentOperation = "parent-span"
   @Shared
