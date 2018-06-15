@@ -4,6 +4,8 @@ import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
 import spock.lang.Subject
 
+import java.util.concurrent.TimeUnit
+
 
 class PendingTraceTest extends Specification {
   def writer = new ListWriter()
@@ -150,7 +152,7 @@ class PendingTraceTest extends Specification {
   }
 
 
-  def "child spans created after trace written" () {
+  def "child spans created after trace written"() {
     setup:
     rootSpan.finish()
     // this shouldn't happen, but it's possible users of the api
@@ -163,5 +165,11 @@ class PendingTraceTest extends Specification {
     trace.pendingReferenceCount.get() == 0
     trace.asList() == [rootSpan]
     writer == [[rootSpan]]
+  }
+
+  def "test getCurrentTimeNano"() {
+    expect:
+    // Generous 5 seconds to execute this test
+    Math.abs(TimeUnit.NANOSECONDS.toSeconds(trace.currentTimeNano) - TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())) < 5
   }
 }

@@ -1,6 +1,7 @@
 package datadog.opentracing;
 
 import datadog.opentracing.scopemanager.ContinuableScope;
+import datadog.trace.common.util.Clock;
 import java.io.Closeable;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -29,6 +30,11 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   private final DDTracer tracer;
   private final long traceId;
 
+  /** Trace start time in nano seconds measured up to a millisecond accuracy */
+  private final long startTimeNano;
+  /** Nano second ticks value at trace start */
+  private final long startNanoTicks;
+
   private final ReferenceQueue referenceQueue = new ReferenceQueue();
   private final Set<WeakReference<?>> weakReferences =
       Collections.newSetFromMap(new ConcurrentHashMap<WeakReference<?>, Boolean>());
@@ -41,7 +47,25 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   PendingTrace(final DDTracer tracer, final long traceId) {
     this.tracer = tracer;
     this.traceId = traceId;
+
+    this.startTimeNano = Clock.currentNanoTime();
+    this.startNanoTicks = Clock.currentNanoTicks();
+
     SPAN_CLEANER.pendingTraces.add(this);
+  }
+
+  /**
+   * Current timestamp in nanoseconds.
+   *
+   * <p>Note: it is not possible to get 'real' nanosecond time. This method uses trace start time
+   * (which has millisecond precision) as a reference and it gets time with nanosecond precision
+   * after that. This means time measured within same Trace in different Spans is relatively correct
+   * with nanosecond precision.
+   *
+   * @return timestamp in nanoseconds
+   */
+  public long getCurrentTimeNano() {
+    return startTimeNano + Math.max(0, Clock.currentNanoTicks() - startNanoTicks);
   }
 
   public void registerSpan(final DDSpan span) {

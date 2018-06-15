@@ -32,10 +32,17 @@ public class DDSpan implements Span, MutableSpan {
   /** The context attached to the span */
   private final DDSpanContext context;
 
-  /** Creation time of the span in microseconds. Must be greater than zero. */
+  /**
+   * Creation time of the span in microseconds provided by external clock. Must be greater than
+   * zero.
+   */
   private final long startTimeMicro;
 
-  /** Creation time of span in system relative nanotime (may be negative) */
+  /**
+   * Creation time of span in nanoseconds. We use combination of millisecond-precision clock and
+   * nanosecond-precision offset from start of the trace. See {@link PendingTrace} for details. Must
+   * be greater than zero.
+   */
   private final long startTimeNano;
 
   /**
@@ -54,19 +61,19 @@ public class DDSpan implements Span, MutableSpan {
    * @param context the context used for the span
    */
   DDSpan(final long timestampMicro, final DDSpanContext context) {
-
     this.context = context;
 
-    // record the start time in nano (current milli + nano delta)
     if (timestampMicro <= 0L) {
-      this.startTimeMicro = Clock.currentMicroTime();
-      this.startTimeNano = Clock.currentNanoTicks();
+      // record the start time
+      startTimeMicro = Clock.currentMicroTime();
+      startTimeNano = context.getTrace().getCurrentTimeNano();
     } else {
-      this.startTimeMicro = timestampMicro;
-      // timestamp might have come from an external clock, so don't bother with nanotime.
-      this.startTimeNano = 0;
+      startTimeMicro = timestampMicro;
+      // Timestamp have come from an external clock, so use startTimeNano as a flag
+      startTimeNano = 0;
     }
-    this.context.getTrace().registerSpan(this);
+
+    context.getTrace().registerSpan(this);
   }
 
   @JsonIgnore
@@ -74,16 +81,20 @@ public class DDSpan implements Span, MutableSpan {
     return durationNano.get() != 0;
   }
 
+  private void finishAndAddToTrace(final long durationNano) {
+    // ensure a min duration of 1
+    if (this.durationNano.compareAndSet(0, Math.max(1, durationNano))) {
+      context.getTrace().addSpan(this);
+    } else {
+      log.debug("{} - already finished!", this);
+    }
+  }
+
   @Override
   public final void finish() {
-    if (startTimeNano != 0) {
-      // no external clock was used, so we can rely on nanotime, but still ensure a min duration of 1.
-      if (this.durationNano.compareAndSet(
-          0, Math.max(1, Clock.currentNanoTicks() - startTimeNano))) {
-        context.getTrace().addSpan(this);
-      } else {
-        log.debug("{} - already finished!", this);
-      }
+    if (startTimeNano > 0) {
+      // no external clock was used, so we can rely on nano time
+      finishAndAddToTrace(context.getTrace().getCurrentTimeNano() - startTimeNano);
     } else {
       finish(Clock.currentMicroTime());
     }
@@ -91,13 +102,7 @@ public class DDSpan implements Span, MutableSpan {
 
   @Override
   public final void finish(final long stoptimeMicros) {
-    // Ensure that duration is at least 1.  Less than 1 is possible due to our use of system clock instead of nano time.
-    if (this.durationNano.compareAndSet(
-        0, Math.max(1, TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - this.startTimeMicro)))) {
-      context.getTrace().addSpan(this);
-    } else {
-      log.debug("{} - already finished!", this);
-    }
+    finishAndAddToTrace(TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - startTimeMicro));
   }
 
   /**
@@ -288,7 +293,7 @@ public class DDSpan implements Span, MutableSpan {
   @Override
   @JsonGetter("start")
   public long getStartTime() {
-    return startTimeMicro * 1000L;
+    return startTimeNano > 0 ? startTimeNano : TimeUnit.MICROSECONDS.toNanos(startTimeMicro);
   }
 
   @Override
