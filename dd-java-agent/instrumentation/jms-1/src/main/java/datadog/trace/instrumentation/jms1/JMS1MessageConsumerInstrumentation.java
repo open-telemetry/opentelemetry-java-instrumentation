@@ -22,6 +22,7 @@ import datadog.trace.instrumentation.jms.util.MessagePropertyTextMap;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
+import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
@@ -54,7 +55,7 @@ public final class JMS1MessageConsumerInstrumentation extends Instrumenter.Confi
         .transform(
             DDAdvice.create()
                 .advice(
-                    named("receive").and(takesArguments(0)).and(isPublic()),
+                    named("receive").and(takesArguments(0).or(takesArguments(1))).and(isPublic()),
                     ConsumerAdvice.class.getName())
                 .advice(
                     named("receiveNoWait").and(takesArguments(0)).and(isPublic()),
@@ -75,28 +76,39 @@ public final class JMS1MessageConsumerInstrumentation extends Instrumenter.Confi
         @Advice.Enter final long startTime,
         @Advice.Return final Message message,
         @Advice.Thrown final Throwable throwable) {
-
-      final SpanContext extractedContext =
-          GlobalTracer.get().extract(Format.Builtin.TEXT_MAP, new MessagePropertyTextMap(message));
-
-      final Scope scope =
+      Tracer.SpanBuilder spanBuilder =
           GlobalTracer.get()
               .buildSpan("jms.consume")
-              .asChildOf(extractedContext)
               .withTag(DDTags.SERVICE_NAME, "jms")
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_CONSUMER)
               .withTag(Tags.COMPONENT.getKey(), "jms1")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CONSUMER)
               .withTag("span.origin.type", consumer.getClass().getName())
-              .withStartTimestamp(TimeUnit.MILLISECONDS.toMicros(startTime))
-              .startActive(true);
+              .withStartTimestamp(TimeUnit.MILLISECONDS.toMicros(startTime));
+
+      if (message == null) {
+        spanBuilder = spanBuilder.withTag(DDTags.RESOURCE_NAME, "No message to consume");
+      } else {
+        spanBuilder =
+            spanBuilder.withTag(
+                DDTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));
+
+        final SpanContext extractedContext =
+            GlobalTracer.get()
+                .extract(Format.Builtin.TEXT_MAP, new MessagePropertyTextMap(message));
+        if (extractedContext != null) {
+          spanBuilder = spanBuilder.asChildOf(extractedContext);
+        }
+      }
+
+      final Scope scope = spanBuilder.startActive(true);
       final Span span = scope.span();
 
       if (throwable != null) {
         Tags.ERROR.set(span, Boolean.TRUE);
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       }
-      span.setTag(DDTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));
+
       scope.close();
     }
   }

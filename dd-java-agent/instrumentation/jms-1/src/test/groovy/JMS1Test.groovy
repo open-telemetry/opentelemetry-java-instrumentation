@@ -136,6 +136,84 @@ class JMS1Test extends AgentTestRunner {
     session.createTemporaryTopic()   | "Temporary Topic"
   }
 
+  def "failing to receive message with receiveNoWait on #jmsResourceName works"() {
+    setup:
+    def consumer = session.createConsumer(destination)
+
+    // Receive with timeout
+    TextMessage receivedMessage = consumer.receiveNoWait()
+
+    expect:
+    receivedMessage == null
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) { // Consumer trace
+        span(0) {
+          parent()
+          serviceName "jms"
+          operationName "jms.consume"
+          resourceName "No message to consume"
+          spanType DDSpanTypes.MESSAGE_PRODUCER
+          errored false
+
+          tags {
+            defaultTags()
+            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
+            "${Tags.COMPONENT.key}" "jms1"
+            "${Tags.SPAN_KIND.key}" "consumer"
+            "span.origin.type" ActiveMQMessageConsumer.name
+          }
+        }
+      }
+    }
+
+    cleanup:
+    consumer.close()
+
+    where:
+    destination                      | jmsResourceName
+    session.createQueue("someQueue") | "Queue someQueue"
+    session.createTopic("someTopic") | "Topic someTopic"
+  }
+
+  def "failing to receive message with wait(timeout) on #jmsResourceName works"() {
+    setup:
+    def consumer = session.createConsumer(destination)
+
+    // Receive with timeout
+    TextMessage receivedMessage = consumer.receive(100)
+
+    expect:
+    receivedMessage == null
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) { // Consumer trace
+        span(0) {
+          parent()
+          serviceName "jms"
+          operationName "jms.consume"
+          resourceName "No message to consume"
+          spanType DDSpanTypes.MESSAGE_PRODUCER
+          errored false
+
+          tags {
+            defaultTags()
+            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
+            "${Tags.COMPONENT.key}" "jms1"
+            "${Tags.SPAN_KIND.key}" "consumer"
+            "span.origin.type" ActiveMQMessageConsumer.name
+          }
+        }
+      }
+    }
+
+    cleanup:
+    consumer.close()
+
+    where:
+    destination                      | jmsResourceName
+    session.createQueue("someQueue") | "Queue someQueue"
+    session.createTopic("someTopic") | "Topic someTopic"
+  }
+
   def producerTrace(ListWriterAssert writer, int index, String jmsResourceName) {
     writer.trace(index, 3) {
       span(0) {
