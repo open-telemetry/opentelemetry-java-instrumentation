@@ -120,6 +120,7 @@ public final class HttpServlet3Instrumentation extends Instrumenter.Configurable
           final AtomicBoolean activated = new AtomicBoolean(false);
           // what if async is already finished? This would not be called
           req.getAsyncContext().addListener(new TagSettingAsyncListener(activated, span));
+          scope.close();
         } else {
           Tags.HTTP_STATUS.set(span, resp.getStatus());
           scope.close();

@@ -39,7 +39,8 @@ public class ListWriter extends CopyOnWriteArrayList<List<DDSpan>> implements Wr
       latches.add(latch);
     }
     if (!latch.await(20, TimeUnit.SECONDS)) {
-      throw new TimeoutException("Timeout waiting for " + number + " trace(s).");
+      throw new TimeoutException(
+          "Timeout waiting for " + number + " trace(s). ListWriter.size() == " + size());
     }
   }
 

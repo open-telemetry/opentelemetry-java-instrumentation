@@ -122,6 +122,31 @@ class JettyServlet3Test extends AgentTestRunner {
     "sync"  | "Hello Sync"
   }
 
+  def "servlet instrumentation clears state after async request"() {
+    setup:
+    def request = new Request.Builder()
+      .url("http://localhost:$PORT/async")
+      .get()
+      .build()
+    def numTraces = 5
+    for (int i = 0; i < numTraces; ++i) {
+      client.newCall(request).execute()
+    }
+
+    expect:
+    assertTraces(writer, numTraces) {
+      for (int i = 0; i < numTraces; ++i) {
+        trace(i, 1) {
+          span(0) {
+            serviceName "unnamed-java-app"
+            operationName "servlet.request"
+            resourceName "GET /async"
+          }
+        }
+      }
+    }
+  }
+
   def "test #path error servlet call"() {
     setup:
     def request = new Request.Builder()
