@@ -2,7 +2,6 @@ import akka.NotUsed
 import akka.stream.javadsl.Source
 import akka.stream.testkit.javadsl.TestSink
 import net.bytebuddy.utility.JavaModule
-import org.junit.After
 
 import static java.util.concurrent.TimeUnit.SECONDS
 import datadog.trace.agent.test.AgentTestRunner
@@ -34,9 +33,8 @@ class LagomTest extends AgentTestRunner {
 
       // Looks like a compiler/packaging issue on akka's end. Or maybe this interface is dynamically generated.
       return false
-    } else {
-      return super.onInstrumentationError(typeName, classLoader, module, loaded, throwable)
     }
+    return super.onInstrumentationError(typeName, classLoader, module, loaded, throwable)
   }
 
   def setupSpec() {
@@ -94,6 +92,7 @@ class LagomTest extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
+          operationName 'EchoServiceImpl.tracedMethod'
         }
       }
     }

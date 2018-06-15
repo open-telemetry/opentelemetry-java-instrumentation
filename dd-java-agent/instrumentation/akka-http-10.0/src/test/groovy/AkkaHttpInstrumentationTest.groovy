@@ -103,7 +103,7 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
             "error" true
             "error.type" RuntimeException.name
             "error.msg" errorMessage
-            "error.stack" tag("error.stack")
+            "error.stack" String
           }
         }
       }

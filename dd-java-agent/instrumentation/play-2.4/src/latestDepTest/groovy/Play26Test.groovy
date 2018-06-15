@@ -177,7 +177,7 @@ class Play26Test extends AgentTestRunner {
             "error" true
             "error.msg" "oh no"
             "error.type" RuntimeException.getName()
-            "error.stack" tag("error.stack")
+            "error.stack" String
           }
         }
       }

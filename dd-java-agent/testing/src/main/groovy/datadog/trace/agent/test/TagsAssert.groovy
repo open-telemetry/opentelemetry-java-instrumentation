@@ -61,8 +61,4 @@ class TagsAssert {
   void assertTagsAllVerified() {
     assert tags.keySet() == assertedTags
   }
-
-  Object tag(String tagName) {
-    return tags[tagName]
-  }
 }
