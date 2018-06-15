@@ -1,6 +1,7 @@
 import akka.NotUsed
 import akka.stream.javadsl.Source
 import akka.stream.testkit.javadsl.TestSink
+import net.bytebuddy.utility.JavaModule
 import org.junit.After
 
 import static java.util.concurrent.TimeUnit.SECONDS
@@ -23,17 +24,19 @@ class LagomTest extends AgentTestRunner {
   @Shared
   private TestServer server
 
-
-  @After
   @Override
-  void afterTest() {
-    // 'akka/stream/impl/VirtualProcessor$WrappedSubscription$PassThrough$.class' declares
-    // itself an implementation of 'VirtualProcessor$WrappedSubscription$$SubscriptionState',
-    // but this interface does not exist on the classpath.
-    // The closest thing on the classpath is 'VirtualProcessor$WrappedSubscription$SubscriptionState' (only one $).
+  protected boolean onInstrumentationError(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded, Throwable throwable) {
+    if (throwable.getMessage().contains('Cannot resolve type description for akka.stream.impl.VirtualProcessor$WrappedSubscription$$SubscriptionState')) {
+      // 'akka/stream/impl/VirtualProcessor$WrappedSubscription$PassThrough$.class' declares
+      // itself an implementation of 'VirtualProcessor$WrappedSubscription$$SubscriptionState',
+      // but this interface does not exist on the classpath.
+      // The closest thing on the classpath is 'VirtualProcessor$WrappedSubscription$SubscriptionState' (only one $).
 
-    // Looks like a compiler/packaging issue on akka's end. Or maybe this interface is dynamically generated.
-    // Either way, we're going to error out.
+      // Looks like a compiler/packaging issue on akka's end. Or maybe this interface is dynamically generated.
+      return false
+    } else {
+      return super.onInstrumentationError(typeName, classLoader, module, loaded, throwable)
+    }
   }
 
   def setupSpec() {
@@ -130,5 +133,4 @@ class LagomTest extends AgentTestRunner {
       }
     }
   }
-
 }
