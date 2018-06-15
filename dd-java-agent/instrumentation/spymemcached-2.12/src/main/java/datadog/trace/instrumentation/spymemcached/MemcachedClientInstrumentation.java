@@ -82,6 +82,11 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Configura
         .asDecorator();
   }
 
+  @Override
+  protected boolean defaultEnabled() {
+    return false;
+  }
+
   public static class AsyncOperationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
