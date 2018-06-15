@@ -28,6 +28,8 @@ public class DBTypeDecorator extends AbstractDecorator {
         context.setSpanType("mongodb");
       } else if ("cassandra".equals(value)) {
         context.setSpanType("cassandra");
+      } else if ("memcached".equals(value)) {
+        context.setSpanType("cache");
       } else {
         context.setSpanType("sql");
       }

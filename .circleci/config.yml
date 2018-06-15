@@ -4,7 +4,7 @@ defaults: &defaults
   working_directory: ~/dd-trace-java
   resource_class: large
   docker:
-    - image: circleci/openjdk:8
+    - image: &default_container circleci/openjdk:8
 
 cache_keys: &cache_keys
   # Reset the cache approx every release
@@ -60,6 +60,11 @@ jobs:
 
   default_test_job: &default_test_job
     <<: *defaults
+
+    docker:
+      - image: *default_container
+        # This is used by spymemcached instrumentation tests
+      - image: memcached
 
     steps:
       - checkout
