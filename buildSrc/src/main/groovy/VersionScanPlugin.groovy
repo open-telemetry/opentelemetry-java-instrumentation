@@ -241,6 +241,7 @@ class VersionScanPlugin implements Plugin<Project> {
     list.removeIf {
       def version = it.toString().toLowerCase()
       return version.contains("rc") ||
+        version.contains(".cr") ||
         version.contains("alpha") ||
         version.contains("beta") ||
         version.contains("-b") ||

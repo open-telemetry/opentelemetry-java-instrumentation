@@ -1,3 +1,15 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "io.netty"
+  module = "netty-all"
+  legacyModule = "netty"
+  versions = "[4.1.0.Final,)"
+  verifyPresent = [
+    "io.netty.handler.codec.http2.DefaultHttp2ConnectionDecoder": null,
+  ]
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
 
 apply plugin: 'org.unbroken-dome.test-sets'

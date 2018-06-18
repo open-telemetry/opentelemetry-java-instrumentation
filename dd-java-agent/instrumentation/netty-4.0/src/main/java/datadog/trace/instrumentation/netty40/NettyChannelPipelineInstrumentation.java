@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.netty40;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -49,7 +50,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Configurab
   @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
-        .type(not(isInterface()).and(hasSuperType(named("io.netty.channel.ChannelPipeline"))))
+        .type(
+            not(isInterface()).and(hasSuperType(named("io.netty.channel.ChannelPipeline"))),
+            classLoaderHasClasses("io.netty.channel.local.LocalEventLoop"))
         .transform(
             new HelperInjector(
                 // client helpers
