@@ -56,6 +56,8 @@ class LettuceSyncClientTest extends AgentTestRunner {
     redisServer.start()
     StatefulConnection connection = redisClient.connect()
     syncCommands = connection.sync()
+    TEST_WRITER.waitForTraces(1)
+    TEST_WRITER.clear()
   }
 
   def cleanupSpec() {
