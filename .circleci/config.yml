@@ -131,7 +131,7 @@ jobs:
     docker:
       - image: circleci/openjdk:8-jdk
       - image: datadog/docker-dd-agent
-        env:
+        environment:
           - DD_APM_ENABLED=true
           - DD_BIND_HOST=0.0.0.0
           - DD_API_KEY=invalid_key_but_this_is_fine
