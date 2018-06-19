@@ -9,6 +9,7 @@ include ':dd-java-agent-ittests'
 include ':dd-trace-api'
 
 // instrumentation:
+include ':dd-java-agent:instrumentation:akka-http-10.0'
 include ':dd-java-agent:instrumentation:apache-httpclient-4.3'
 include ':dd-java-agent:instrumentation:aws-java-sdk-1.11.0'
 include ':dd-java-agent:instrumentation:aws-java-sdk-1.11.106'

@@ -1,37 +1,37 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import play.api.test.TestServer
-import play.test.Helpers
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
-class Play26Test extends AgentTestRunner {
+class AkkaHttpInstrumentationTest extends AgentTestRunner {
   static {
     System.setProperty("dd.integration.akkahttp.enabled", "true")
   }
 
   @Shared
-  int port = TestUtils.randomOpenPort()
+  int asyncPort
   @Shared
-  TestServer testServer
+  int syncPort
 
   def setupSpec() {
-    testServer = Helpers.testServer(port, Play26TestUtils.buildTestApp())
-    testServer.start()
+    AkkaHttpTestAsyncWebServer.start()
+    asyncPort = AkkaHttpTestAsyncWebServer.port()
+    AkkaHttpTestSyncWebServer.start()
+    syncPort = AkkaHttpTestSyncWebServer.port()
   }
 
   def cleanupSpec() {
-    testServer.stop()
+    AkkaHttpTestAsyncWebServer.stop()
+    AkkaHttpTestSyncWebServer.stop()
   }
 
-  def "request traces" () {
+  def "#server 200 request trace" () {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
-      .url("http://localhost:$port/helloplay/spock")
+      .url("http://localhost:$port/test")
       .header("x-datadog-trace-id", "123")
       .header("x-datadog-parent-id", "456")
       .get()
@@ -40,20 +40,20 @@ class Play26Test extends AgentTestRunner {
 
     expect:
     response.code() == 200
-    response.body().string() == "hello spock"
+
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
           traceId 123
           parentId 456
           serviceName "unnamed-java-app"
           operationName "akkahttp.request"
-          resourceName "GET /helloplay/:from"
+          resourceName "GET /test"
           errored false
           tags {
             defaultTags()
             "http.status_code" 200
-            "http.url" "http://localhost:$port/helloplay/spock"
+            "http.url" "http://localhost:$port/test"
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
@@ -62,133 +62,104 @@ class Play26Test extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName "play.request"
-          resourceName "GET /helloplay/:from"
-          tags {
-            defaultTags()
-            "http.status_code" 200
-            "http.url" "/helloplay/:from"
-            "http.method" "GET"
-            "span.kind" "server"
-            "span.type" "web"
-            "component" "play-action"
-          }
-        }
-        span(2) {
-          childOf span(1)
-          operationName 'TracedWork$.doWork'
+          assert span(1).operationName.endsWith('.tracedMethod')
         }
       }
     }
+
+    where:
+    server     | port
+    "async"    | asyncPort
+    "sync"     | syncPort
   }
 
-  def "5xx errors trace" () {
+  def "#server exceptions trace for #endpoint" () {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
-      .url("http://localhost:$port/make-error")
+      .url("http://localhost:$port/$endpoint")
       .get()
       .build()
     def response = client.newCall(request).execute()
 
     expect:
     response.code() == 500
+
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 2) {
+      trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"
           operationName "akkahttp.request"
-          resourceName "GET /make-error"
+          resourceName "GET /$endpoint"
           errored true
           tags {
             defaultTags()
             "http.status_code" 500
-            "http.url" "http://localhost:$port/make-error"
+            "http.url" "http://localhost:$port/$endpoint"
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
             "component" "akkahttp-action"
             "error" true
-          }
-        }
-        span(1) {
-          childOf span(0)
-          operationName "play.request"
-          resourceName "GET /make-error"
-          errored true
-          tags {
-            defaultTags()
-            "http.status_code" 500
-            "http.url" "/make-error"
-            "http.method" "GET"
-            "span.kind" "server"
-            "span.type" "web"
-            "component" "play-action"
-            "error" true
-          }
-        }
-      }
-    }
-  }
-
-  def "error thrown in request" () {
-    setup:
-    OkHttpClient client = new OkHttpClient.Builder().build()
-    def request = new Request.Builder()
-      .url("http://localhost:$port/exception")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
-
-    expect:
-    testServer != null
-    response.code() == 500
-    assertTraces(TEST_WRITER, 1) {
-      trace(0, 2) {
-        span(0) {
-          serviceName "unnamed-java-app"
-          operationName "akkahttp.request"
-          resourceName "GET /exception"
-          errored true
-          tags {
-            defaultTags()
-            "http.status_code" 500
-            "http.url" "http://localhost:$port/exception"
-            "http.method" "GET"
-            "span.kind" "server"
-            "span.type" "web"
-            "component" "akkahttp-action"
-            "error" true
-          }
-        }
-        span(1) {
-          childOf span(0)
-          operationName "play.request"
-          resourceName "GET /exception"
-          errored true
-          tags {
-            defaultTags()
-            "http.status_code" 500
-            "http.url" "/exception"
-            "http.method" "GET"
-            "span.kind" "server"
-            "span.type" "web"
-            "component" "play-action"
-            "error" true
-            "error.msg" "oh no"
-            "error.type" RuntimeException.getName()
+            "error.type" RuntimeException.name
+            "error.msg" errorMessage
             "error.stack" String
           }
         }
       }
     }
+
+    where:
+    server     | port       | endpoint         | errorMessage
+    "async"    | asyncPort  | "throw-handler"  | "Oh no handler"
+    "async"    | asyncPort  | "throw-callback" | "Oh no callback"
+    "sync"     | syncPort   | "throw-handler"  | "Oh no handler"
   }
 
-  def "4xx errors trace" () {
+  def "#server 5xx trace" () {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
-      .url("http://localhost:$port/nowhere")
+      .url("http://localhost:$port/server-error")
+      .get()
+      .build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.code() == 500
+
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "akkahttp.request"
+          resourceName "GET /server-error"
+          errored true
+          tags {
+            defaultTags()
+            "http.status_code" 500
+            "http.url" "http://localhost:$port/server-error"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "akkahttp-action"
+            "error" true
+          }
+        }
+      }
+    }
+
+    where:
+    server     | port
+    "async"    | asyncPort
+    "sync"     | syncPort
+  }
+
+  def "#server 4xx trace" () {
+    setup:
+    OkHttpClient client = new OkHttpClient.Builder().build()
+    def request = new Request.Builder()
+      .url("http://localhost:$port/not-found")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -197,7 +168,7 @@ class Play26Test extends AgentTestRunner {
     response.code() == 404
 
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 2) {
+      trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"
           operationName "akkahttp.request"
@@ -206,28 +177,19 @@ class Play26Test extends AgentTestRunner {
           tags {
             defaultTags()
             "http.status_code" 404
-            "http.url" "http://localhost:$port/nowhere"
+            "http.url" "http://localhost:$port/not-found"
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
             "component" "akkahttp-action"
           }
         }
-        span(1) {
-          childOf span(0)
-          operationName "play.request"
-          resourceName "404"
-          errored false
-          tags {
-            defaultTags()
-            "http.status_code" 404
-            "http.method" "GET"
-            "span.kind" "server"
-            "span.type" "web"
-            "component" "play-action"
-          }
-        }
       }
     }
+
+    where:
+    server     | port
+    "async"    | asyncPort
+    "sync"     | syncPort
   }
 }

@@ -1,0 +1,43 @@
+apply from: "${rootDir}/gradle/java.gradle"
+apply from: "${rootDir}/gradle/test-with-scala.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+testSets {
+  lagomTest
+}
+
+compileLagomTestJava {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
+compileLagomTestGroovy {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
+dependencies {
+  compileOnly group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
+
+  compile project(':dd-trace-api')
+  compile project(':dd-java-agent:agent-tooling')
+  compile deps.opentracing
+  compile deps.autoservice
+  annotationProcessor deps.autoservice
+
+  testCompile group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
+  testCompile project(':dd-java-agent:testing')
+  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  testCompile project(':dd-java-agent:instrumentation:trace-annotation')
+
+  lagomTestCompile project(':dd-java-agent:testing')
+  lagomTestCompile project(':dd-java-agent:instrumentation:akka-http-10.0')
+  lagomTestCompile project(':dd-java-agent:instrumentation:trace-annotation')
+  lagomTestCompile project(':dd-java-agent:instrumentation:java-concurrent')
+
+  lagomTestCompile group: 'com.lightbend.lagom', name: 'lagom-javadsl-testkit_2.11', version: '1.4.0'
+}
+
+test.dependsOn lagomTest
+testJava8Minimum += '*Test*.class'

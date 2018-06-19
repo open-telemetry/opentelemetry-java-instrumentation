@@ -42,6 +42,14 @@ class SpanAssert {
     assert span.parentId == 0
   }
 
+  def parentId(long parentId) {
+    assert span.parentId == parentId
+  }
+
+  def traceId(long traceId) {
+    assert span.traceId == traceId
+  }
+
   def childOf(DDSpan parent) {
     assert span.parentId == parent.spanId
     assert span.traceId == parent.traceId

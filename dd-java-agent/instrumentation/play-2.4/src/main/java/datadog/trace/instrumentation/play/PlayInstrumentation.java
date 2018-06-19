@@ -130,6 +130,13 @@ public final class PlayInstrumentation extends Instrumenter.Configurable {
         scope.span().finish();
       }
       scope.close();
+
+      final Span rootSpan = GlobalTracer.get().activeSpan();
+      if (rootSpan != null && !pathOption.isEmpty()) {
+        // set the resource name on the upstream akka/netty span
+        final String path = (String) pathOption.get();
+        rootSpan.setTag(DDTags.RESOURCE_NAME, req.method() + " " + path);
+      }
     }
   }
 
