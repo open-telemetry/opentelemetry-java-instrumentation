@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.jsp;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
@@ -15,79 +14,82 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
-import org.apache.jasper.JspCompilationContext;
-import org.apache.jasper.servlet.JspServletWrapper;
 
 @AutoService(Instrumenter.class)
-public final class JasperJSPInstrumentation extends Instrumenter.Configurable {
+public final class JSPInstrumentation extends Instrumenter.Configurable {
 
-  public JasperJSPInstrumentation() {
-    super("jsp", "tomcat-jsp");
+  public JSPInstrumentation() {
+    super("jsp", "jsp-render");
+  }
+
+  @Override
+  protected boolean defaultEnabled() {
+    return false;
   }
 
   @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
-        .type(
-            named("org.apache.jasper.servlet.JspServletWrapper"),
-            classLoaderHasClasses("org.apache.jasper.servlet.JspServlet"))
+        .type(not(isInterface()).and(hasSuperType(named("javax.servlet.jsp.HttpJspPage"))))
         .transform(DDTransformers.defaultTransformers())
         .transform(
             DDAdvice.create()
                 .advice(
-                    named("service")
+                    named("_jspService")
                         .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
                         .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
                         .and(isPublic()),
-                    JasperJSPAdvice.class.getName()))
+                    HttpJspPageAdvice.class.getName()))
         .asDecorator();
   }
 
-  public static class JasperJSPAdvice {
+  public static class HttpJspPageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(
-        @Advice.Argument(0) final HttpServletRequest req,
-        @Advice.Argument(2) final boolean preCompile) {
+    public static Scope startSpan(@Advice.Argument(0) final HttpServletRequest req) {
       final Scope scope =
           GlobalTracer.get()
-              .buildSpan("jsp.service")
+              .buildSpan("jsp.render")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
               .withTag("servlet.context", req.getContextPath())
               .startActive(true);
 
       final Span span = scope.span();
-      span.setTag("jsp.precompile", preCompile);
+      // get the JSP file name being rendered in an include action
+      Object includeServletPath = req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
+      String resourceName = req.getServletPath();
+      if (includeServletPath != null && includeServletPath instanceof String) {
+        resourceName = includeServletPath.toString();
+      }
+      span.setTag(DDTags.RESOURCE_NAME, resourceName);
 
-      Tags.COMPONENT.set(span, "tomcat-jsp-servlet");
+      Object forwardOrigin = req.getAttribute(RequestDispatcher.FORWARD_SERVLET_PATH);
+      if (forwardOrigin != null && forwardOrigin instanceof String) {
+        span.setTag("jsp.forwardOrigin", forwardOrigin.toString());
+      }
+
+      // add the request URL as a tag to provide better context when looking at spans produced by
+      // actions
+      span.setTag("jsp.requestURL", req.getRequestURL().toString());
+      Tags.COMPONENT.set(span, "jsp-http-servlet");
       Tags.HTTP_METHOD.set(span, req.getMethod());
-      Tags.HTTP_URL.set(span, req.getRequestURL().toString());
+
       return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Argument(1) final HttpServletResponse resp,
-        @Advice.This JspServletWrapper jspServletWrapper,
         @Advice.Enter final Scope scope,
         @Advice.Thrown final Throwable throwable) {
 
       final Span span = scope.span();
-      JspCompilationContext jspCompilationContext = jspServletWrapper.getJspEngineContext();
-      if (jspCompilationContext != null) {
-        span.setTag("jsp.compiler", jspCompilationContext.getCompiler().getClass().getName());
-        span.setTag("jsp.outputDir", jspCompilationContext.getOutputDir());
-        span.setTag("jsp.classFQCN", jspCompilationContext.getFQCN());
-        if (throwable != null) {
-          span.setTag("jsp.classpath", jspCompilationContext.getClassPath());
-        }
-      }
-
       if (throwable != null) {
         if (resp.getStatus() == HttpServletResponse.SC_OK) {
           // exception is thrown in filter chain, but status code is incorrect

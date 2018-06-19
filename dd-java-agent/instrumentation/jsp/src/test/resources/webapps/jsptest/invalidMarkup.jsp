@@ -1,5 +1,5 @@
 <html>
-<head><title>BASIC JSP</title></head>
+<head><title>INVALID MARKUP JSP
 <body>
   <%
     for (int i = 0; i < 3; ++i) {
@@ -8,5 +8,5 @@
   <%
     }
   %>
-</body>
+</boody>
 </html>
