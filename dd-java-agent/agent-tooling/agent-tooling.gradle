@@ -1,8 +1,6 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
-whitelistedInstructionClasses = whitelistedBranchClasses += [
-  'datadog.trace.agent.tooling.*'
-]
+excludedClassesConverage += [ 'datadog.trace.agent.tooling.*' ]
 
 configurations {
   // classpath used by the instrumentation muzzle plugin

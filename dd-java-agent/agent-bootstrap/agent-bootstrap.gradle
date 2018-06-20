@@ -5,9 +5,7 @@ plugins {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
-whitelistedInstructionClasses = whitelistedBranchClasses += [
-  'datadog.trace.bootstrap.*'
-]
+excludedClassesConverage += [ 'datadog.trace.bootstrap.*'  ]
 
 dependencies {
   compile project(':dd-trace-api')

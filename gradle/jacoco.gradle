@@ -13,16 +13,22 @@ jacocoTestReport {
   }
 }
 
-if (project.parent.hasProperty("whitelistedBranchClasses")) {
-  project.ext.whitelistedBranchClasses = parent.whitelistedBranchClasses
+if (project.parent.hasProperty("excludedClassesConverage")) {
+  project.ext.excludedClassesConverage = parent.excludedClassesConverage
 } else {
-  project.ext.whitelistedBranchClasses = []
+  project.ext.excludedClassesConverage = []
 }
 
-if (project.parent.hasProperty("whitelistedInstructionClasses")) {
-  project.ext.whitelistedInstructionClasses = parent.whitelistedInstructionClasses
+if (project.parent.hasProperty("excludedClassesBranchConverage")) {
+  project.ext.excludedClassesBranchConverage = parent.excludedClassesBranchConverage
 } else {
-  project.ext.whitelistedInstructionClasses = []
+  project.ext.excludedClassesBranchConverage = []
+}
+
+if (project.parent.hasProperty("excludedClassesInstructionConverage")) {
+  project.ext.excludedClassesInstructionConverage = parent.excludedClassesInstructionConverage
+} else {
+  project.ext.excludedClassesInstructionConverage = []
 }
 
 // defaults can be overridden per project:
@@ -34,7 +40,7 @@ afterEvaluate {
     violationRules {
       rule {
         element = 'CLASS'
-        excludes = project.whitelistedBranchClasses
+        excludes = project.excludedClassesBranchConverage + project.excludedClassesConverage
         limit {
           counter = 'BRANCH'
           minimum = project.minimumBranchCoverage
@@ -43,7 +49,7 @@ afterEvaluate {
 
       rule {
         element = 'CLASS'
-        excludes = project.whitelistedInstructionClasses
+        excludes = project.excludedClassesInstructionConverage + project.excludedClassesConverage
         limit {
           counter = 'INSTRUCTION'
           minimum = project.minimumInstructionCoverage
