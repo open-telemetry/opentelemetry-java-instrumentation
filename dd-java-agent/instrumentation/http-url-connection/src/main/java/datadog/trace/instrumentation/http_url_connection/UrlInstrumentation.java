@@ -7,8 +7,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
@@ -18,11 +16,13 @@ import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.net.URL;
 import java.util.Collections;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public class UrlInstrumentation extends Instrumenter.Configurable {
+public class UrlInstrumentation extends Instrumenter.Default {
 
   public UrlInstrumentation() {
     super("urlconnection", "httpurlconnection");
@@ -34,16 +34,17 @@ public class UrlInstrumentation extends Instrumenter.Configurable {
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(is(URL.class))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod().and(isPublic()).and(named("openConnection")),
-                    ConnectionErrorAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return is(URL.class);
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod().and(isPublic()).and(named("openConnection")),
+        ConnectionErrorAdvice.class.getName());
+    return transformers;
   }
 
   public static class ConnectionErrorAdvice {

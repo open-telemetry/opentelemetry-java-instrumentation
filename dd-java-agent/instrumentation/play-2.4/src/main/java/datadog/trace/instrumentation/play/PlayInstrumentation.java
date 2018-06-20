@@ -19,8 +19,8 @@ import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.LoggerFactory;
 import play.api.mvc.Action;
 import play.api.mvc.Request;
@@ -31,43 +31,47 @@ import scala.concurrent.Future;
 
 @Slf4j
 @AutoService(Instrumenter.class)
-public final class PlayInstrumentation extends Instrumenter.Configurable {
-  private static final HelperInjector PLAY_HELPERS =
-      new HelperInjector(
-          PlayInstrumentation.class.getName() + "$RequestCallback",
-          PlayInstrumentation.class.getName() + "$RequestError",
-          PlayInstrumentation.class.getName() + "$PlayHeaders");
+public final class PlayInstrumentation extends Instrumenter.Default {
 
   public PlayInstrumentation() {
     super("play");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            hasSuperType(named("play.api.mvc.Action")),
-            classLoaderHasClasses(
-                    "akka.japi.JavaPartialFunction",
-                    "play.api.mvc.Action",
-                    "play.api.mvc.Result",
-                    "scala.Option",
-                    "scala.Tuple2",
-                    "scala.concurrent.Future")
-                .and(classLoaderHasClassWithMethod("play.api.mvc.Request", "tags")))
-        .and(
-            declaresMethod(
-                named("executionContext").and(returns(named("scala.concurrent.ExecutionContext")))))
-        .transform(PLAY_HELPERS)
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("apply")
-                        .and(takesArgument(0, named("play.api.mvc.Request")))
-                        .and(returns(named("scala.concurrent.Future"))),
-                    PlayAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return hasSuperType(named("play.api.mvc.Action"));
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses(
+            "akka.japi.JavaPartialFunction",
+            "play.api.mvc.Action",
+            "play.api.mvc.Result",
+            "scala.Option",
+            "scala.Tuple2",
+            "scala.concurrent.Future")
+        .and(classLoaderHasClassWithMethod("play.api.mvc.Request", "tags"));
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      PlayInstrumentation.class.getName() + "$RequestCallback",
+      PlayInstrumentation.class.getName() + "$RequestError",
+      PlayInstrumentation.class.getName() + "$PlayHeaders"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        named("apply")
+            .and(takesArgument(0, named("play.api.mvc.Request")))
+            .and(returns(named("scala.concurrent.Future"))),
+        PlayAdvice.class.getName());
+    return transformers;
   }
 
   public static class PlayAdvice {

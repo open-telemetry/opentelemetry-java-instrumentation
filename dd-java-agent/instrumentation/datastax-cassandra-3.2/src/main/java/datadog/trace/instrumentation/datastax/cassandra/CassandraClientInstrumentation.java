@@ -8,41 +8,48 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.datastax.driver.core.Session;
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Constructor;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public class CassandraClientInstrumentation extends Instrumenter.Configurable {
+public class CassandraClientInstrumentation extends Instrumenter.Default {
 
   public CassandraClientInstrumentation() {
     super("cassandra");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            named("com.datastax.driver.core.Cluster$Manager"),
-            classLoaderHasClasses("com.datastax.driver.core.Duration"))
-        .transform(
-            new HelperInjector(
-                "datadog.trace.instrumentation.datastax.cassandra.TracingSession",
-                "datadog.trace.instrumentation.datastax.cassandra.TracingSession$1",
-                "datadog.trace.instrumentation.datastax.cassandra.TracingSession$2"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod().and(isPrivate()).and(named("newSession")).and(takesArguments(0)),
-                    CassandraClientAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return named("com.datastax.driver.core.Cluster$Manager");
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses("com.datastax.driver.core.Duration");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "datadog.trace.instrumentation.datastax.cassandra.TracingSession",
+      "datadog.trace.instrumentation.datastax.cassandra.TracingSession$1",
+      "datadog.trace.instrumentation.datastax.cassandra.TracingSession$2"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod().and(isPrivate()).and(named("newSession")).and(takesArguments(0)),
+        CassandraClientAdvice.class.getName());
+    return transformers;
   }
 
   public static class CassandraClientAdvice {

@@ -8,42 +8,43 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.record.TimestampType;
 
 // This is necessary because SourceNodeRecordDeserializer drops the headers.  :-(
 @AutoService(Instrumenter.class)
-public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation
-    extends Instrumenter.Configurable {
+public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation extends Instrumenter.Default {
 
   public KafkaStreamsSourceNodeRecordDeserializerInstrumentation() {
     super("kafka", "kafka-streams");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            named("org.apache.kafka.streams.processor.internals.SourceNodeRecordDeserializer"),
-            classLoaderHasClasses("org.apache.kafka.streams.state.internals.KeyValueIterators"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod()
-                        .and(isPublic())
-                        .and(named("deserialize"))
-                        .and(
-                            takesArgument(
-                                0, named("org.apache.kafka.clients.consumer.ConsumerRecord")))
-                        .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
-                    SaveHeadersAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return named("org.apache.kafka.streams.processor.internals.SourceNodeRecordDeserializer");
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses("org.apache.kafka.streams.state.internals.OrderedBytes");
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod()
+            .and(isPublic())
+            .and(named("deserialize"))
+            .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecord")))
+            .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
+        SaveHeadersAdvice.class.getName());
+    return transformers;
   }
 
   public static class SaveHeadersAdvice {

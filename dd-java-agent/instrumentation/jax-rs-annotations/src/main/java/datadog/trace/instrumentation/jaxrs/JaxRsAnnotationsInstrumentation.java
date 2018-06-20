@@ -7,8 +7,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
@@ -16,43 +14,42 @@ import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.LinkedList;
+import java.util.*;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Configurable {
+public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default {
 
   public JaxRsAnnotationsInstrumentation() {
     super("jax-rs", "jaxrs", "jax-rs-annotations");
   }
 
   @Override
-  protected AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            hasSuperType(
-                isAnnotatedWith(named("javax.ws.rs.Path"))
-                    .or(
-                        failSafe(
-                            hasSuperType(
-                                declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path"))))))))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isAnnotatedWith(
-                        named("javax.ws.rs.Path")
-                            .or(named("javax.ws.rs.DELETE"))
-                            .or(named("javax.ws.rs.GET"))
-                            .or(named("javax.ws.rs.HEAD"))
-                            .or(named("javax.ws.rs.OPTIONS"))
-                            .or(named("javax.ws.rs.POST"))
-                            .or(named("javax.ws.rs.PUT"))),
-                    JaxRsAnnotationsAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return hasSuperType(
+        isAnnotatedWith(named("javax.ws.rs.Path"))
+            .or(
+                failSafe(
+                    hasSuperType(declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path")))))));
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isAnnotatedWith(
+            named("javax.ws.rs.Path")
+                .or(named("javax.ws.rs.DELETE"))
+                .or(named("javax.ws.rs.GET"))
+                .or(named("javax.ws.rs.HEAD"))
+                .or(named("javax.ws.rs.OPTIONS"))
+                .or(named("javax.ws.rs.POST"))
+                .or(named("javax.ws.rs.PUT"))),
+        JaxRsAnnotationsAdvice.class.getName());
+    return transformers;
   }
 
   public static class JaxRsAnnotationsAdvice {

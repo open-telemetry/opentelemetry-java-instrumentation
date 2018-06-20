@@ -7,8 +7,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
@@ -16,12 +14,14 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 import redis.clients.jedis.Protocol.Command;
 
 @AutoService(Instrumenter.class)
-public final class JedisInstrumentation extends Instrumenter.Configurable {
+public final class JedisInstrumentation extends Instrumenter.Default {
 
   private static final String SERVICE_NAME = "redis";
   private static final String COMPONENT_NAME = SERVICE_NAME + "-command";
@@ -31,21 +31,30 @@ public final class JedisInstrumentation extends Instrumenter.Configurable {
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            named("redis.clients.jedis.Protocol"),
-            classLoaderHasClasses("redis.clients.jedis.Protocol$Command"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod()
-                        .and(isPublic())
-                        .and(named("sendCommand"))
-                        .and(takesArgument(1, named("redis.clients.jedis.Protocol$Command"))),
-                    JedisAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return named("redis.clients.jedis.Protocol");
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses("redis.clients.jedis.Protocol$Command");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {};
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod()
+            .and(isPublic())
+            .and(named("sendCommand"))
+            .and(takesArgument(1, named("redis.clients.jedis.Protocol$Command"))),
+        JedisAdvice.class.getName());
+    return transformers;
   }
 
   public static class JedisAdvice {

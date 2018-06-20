@@ -7,25 +7,19 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.instrumentation.java.concurrent.ExecutorInstrumentation.ConcurrentUtils;
 import datadog.trace.instrumentation.java.concurrent.ExecutorInstrumentation.DatadogWrapper;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.*;
 import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
 @AutoService(Instrumenter.class)
-public final class FutureInstrumentation extends Instrumenter.Configurable {
+public final class FutureInstrumentation extends Instrumenter.Default {
 
   /**
    * Only apply executor instrumentation to whitelisted executors. In the future, this restriction
@@ -69,9 +63,9 @@ public final class FutureInstrumentation extends Instrumenter.Configurable {
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(not(isInterface()).and(hasSuperType(named(Future.class.getName()))))
+  public ElementMatcher typeMatcher() {
+    return not(isInterface())
+        .and(hasSuperType(named(Future.class.getName())))
         .and(
             new ElementMatcher<TypeDescription>() {
               @Override
@@ -82,15 +76,25 @@ public final class FutureInstrumentation extends Instrumenter.Configurable {
                 }
                 return whitelisted;
               }
-            })
-        .transform(ExecutorInstrumentation.EXEC_HELPER_INJECTOR)
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("cancel").and(returns(boolean.class)),
-                    CanceledFutureAdvice.class.getName()))
-        .asDecorator();
+            });
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      ExecutorInstrumentation.class.getName() + "$ConcurrentUtils",
+      ExecutorInstrumentation.class.getName() + "$DatadogWrapper",
+      ExecutorInstrumentation.class.getName() + "$CallableWrapper",
+      ExecutorInstrumentation.class.getName() + "$RunnableWrapper"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        named("cancel").and(returns(boolean.class)), CanceledFutureAdvice.class.getName());
+    return transformers;
   }
 
   public static class CanceledFutureAdvice {

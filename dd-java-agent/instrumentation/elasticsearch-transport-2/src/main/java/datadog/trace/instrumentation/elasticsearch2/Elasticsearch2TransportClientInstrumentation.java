@@ -9,9 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
@@ -19,15 +16,17 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.action.Action;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
 
 @AutoService(Instrumenter.class)
-public class Elasticsearch2TransportClientInstrumentation extends Instrumenter.Configurable {
+public class Elasticsearch2TransportClientInstrumentation extends Instrumenter.Default {
 
   public Elasticsearch2TransportClientInstrumentation() {
     super("elasticsearch", "elasticsearch-transport", "elasticsearch-transport-2");
@@ -39,32 +38,40 @@ public class Elasticsearch2TransportClientInstrumentation extends Instrumenter.C
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            not(isInterface()).and(named("org.elasticsearch.client.support.AbstractClient")),
-            // If we want to be more generic, we could instrument the interface instead:
-            // .and(hasSuperType(named("org.elasticsearch.client.ElasticsearchClient"))))
-            classLoaderHasClasses("org.elasticsearch.plugins.SitePlugin"))
-        .transform(
-            new HelperInjector(
-                "com.google.common.base.Preconditions",
-                "com.google.common.base.Joiner",
-                "com.google.common.base.Joiner$1",
-                "com.google.common.base.Joiner$2",
-                "com.google.common.base.Joiner$MapJoiner",
-                "datadog.trace.instrumentation.elasticsearch2.TransportActionListener"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod()
-                        .and(named("execute"))
-                        .and(takesArgument(0, named("org.elasticsearch.action.Action")))
-                        .and(takesArgument(1, named("org.elasticsearch.action.ActionRequest")))
-                        .and(takesArgument(2, named("org.elasticsearch.action.ActionListener"))),
-                    ElasticsearchTransportClientAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    // If we want to be more generic, we could instrument the interface instead:
+    // .and(hasSuperType(named("org.elasticsearch.client.ElasticsearchClient"))))
+    return not(isInterface()).and(named("org.elasticsearch.client.support.AbstractClient"));
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses("org.elasticsearch.plugins.SitePlugin");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "com.google.common.base.Preconditions",
+      "com.google.common.base.Joiner",
+      "com.google.common.base.Joiner$1",
+      "com.google.common.base.Joiner$2",
+      "com.google.common.base.Joiner$MapJoiner",
+      "datadog.trace.instrumentation.elasticsearch2.TransportActionListener"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod()
+            .and(named("execute"))
+            .and(takesArgument(0, named("org.elasticsearch.action.Action")))
+            .and(takesArgument(1, named("org.elasticsearch.action.ActionRequest")))
+            .and(takesArgument(2, named("org.elasticsearch.action.ActionListener"))),
+        ElasticsearchTransportClientAdvice.class.getName());
+    return transformers;
   }
 
   public static class ElasticsearchTransportClientAdvice {

@@ -6,36 +6,39 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.*;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public class HystrixThreadPoolInstrumentation extends Instrumenter.Configurable {
+public class HystrixThreadPoolInstrumentation extends Instrumenter.Default {
 
   public HystrixThreadPoolInstrumentation() {
     super("hystrix");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            named(
-                "com.netflix.hystrix.strategy.concurrency.HystrixContextScheduler$ThreadPoolWorker"),
-            classLoaderHasClasses("com.netflix.hystrix.AbstractCommand"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod().and(named("schedule")).and(takesArguments(1)),
-                    EnableAsyncAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return named(
+        "com.netflix.hystrix.strategy.concurrency.HystrixContextScheduler$ThreadPoolWorker");
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses("com.netflix.hystrix.AbstractCommand");
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod().and(named("schedule")).and(takesArguments(1)),
+        EnableAsyncAdvice.class.getName());
+    return transformers;
   }
 
   public static class EnableAsyncAdvice {

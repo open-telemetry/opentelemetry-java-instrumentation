@@ -9,35 +9,36 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.JDBCMaps;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class ConnectionInstrumentation extends Instrumenter.Configurable {
+public final class ConnectionInstrumentation extends Instrumenter.Default {
 
   public ConnectionInstrumentation() {
     super("jdbc");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(not(isInterface()).and(failSafe(isSubTypeOf(Connection.class))))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    nameStartsWith("prepare")
-                        .and(takesArgument(0, String.class))
-                        .and(returns(PreparedStatement.class)),
-                    ConnectionPrepareAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return not(isInterface()).and(failSafe(isSubTypeOf(Connection.class)));
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        nameStartsWith("prepare")
+            .and(takesArgument(0, String.class))
+            .and(returns(PreparedStatement.class)),
+        ConnectionPrepareAdvice.class.getName());
+    return transformers;
   }
 
   public static class ConnectionPrepareAdvice {

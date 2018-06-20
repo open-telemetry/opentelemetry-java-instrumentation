@@ -10,8 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
@@ -24,16 +22,18 @@ import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class HandlerInstrumentation extends Instrumenter.Configurable {
+public final class HandlerInstrumentation extends Instrumenter.Default {
   public static final String SERVLET_OPERATION_NAME = "jetty.request";
 
   public HandlerInstrumentation() {
@@ -46,29 +46,38 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            not(isInterface())
-                .and(hasSuperType(named("org.eclipse.jetty.server.Handler")))
-                .and(not(named("org.eclipse.jetty.server.handler.HandlerWrapper"))),
-            not(classLoaderHasClasses("org.eclipse.jetty.server.AsyncContext")))
-        .transform(
-            new HelperInjector(
-                "datadog.trace.instrumentation.jetty8.HttpServletRequestExtractAdapter",
-                "datadog.trace.instrumentation.jetty8.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
-                HandlerInstrumentationAdvice.class.getName() + "$TagSettingAsyncListener"))
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("handle")
-                        .and(takesArgument(0, named("java.lang.String")))
-                        .and(takesArgument(1, named("org.eclipse.jetty.server.Request")))
-                        .and(takesArgument(2, named("javax.servlet.http.HttpServletRequest")))
-                        .and(takesArgument(3, named("javax.servlet.http.HttpServletResponse")))
-                        .and(isPublic()),
-                    HandlerInstrumentationAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return not(isInterface())
+        .and(hasSuperType(named("org.eclipse.jetty.server.Handler")))
+        .and(not(named("org.eclipse.jetty.server.handler.HandlerWrapper")));
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return not(classLoaderHasClasses("org.eclipse.jetty.server.AsyncContext"));
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "datadog.trace.instrumentation.jetty8.HttpServletRequestExtractAdapter",
+      "datadog.trace.instrumentation.jetty8.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
+      HandlerInstrumentationAdvice.class.getName() + "$TagSettingAsyncListener"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        named("handle")
+            .and(takesArgument(0, named("java.lang.String")))
+            .and(takesArgument(1, named("org.eclipse.jetty.server.Request")))
+            .and(takesArgument(2, named("javax.servlet.http.HttpServletRequest")))
+            .and(takesArgument(3, named("javax.servlet.http.HttpServletResponse")))
+            .and(isPublic()),
+        HandlerInstrumentationAdvice.class.getName());
+    return transformers;
   }
 
   public static class HandlerInstrumentationAdvice {

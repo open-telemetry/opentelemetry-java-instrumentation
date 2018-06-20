@@ -4,8 +4,6 @@ import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
@@ -14,14 +12,16 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class JSPInstrumentation extends Instrumenter.Configurable {
+public final class JSPInstrumentation extends Instrumenter.Default {
 
   public JSPInstrumentation() {
     super("jsp", "jsp-render");
@@ -33,19 +33,20 @@ public final class JSPInstrumentation extends Instrumenter.Configurable {
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(not(isInterface()).and(hasSuperType(named("javax.servlet.jsp.HttpJspPage"))))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("_jspService")
-                        .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
-                        .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
-                        .and(isPublic()),
-                    HttpJspPageAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return not(isInterface()).and(hasSuperType(named("javax.servlet.jsp.HttpJspPage")));
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        named("_jspService")
+            .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
+            .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
+            .and(isPublic()),
+        HttpJspPageAdvice.class.getName());
+    return transformers;
   }
 
   public static class HttpJspPageAdvice {

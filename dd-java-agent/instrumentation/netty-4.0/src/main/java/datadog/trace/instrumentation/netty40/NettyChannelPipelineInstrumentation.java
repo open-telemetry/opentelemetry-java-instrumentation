@@ -10,9 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.instrumentation.netty40.client.HttpClientRequestTracingHandler;
@@ -29,11 +26,13 @@ import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public class NettyChannelPipelineInstrumentation extends Instrumenter.Configurable {
+public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
   private static final String PACKAGE =
       NettyChannelPipelineInstrumentation.class.getPackage().getName();
@@ -48,32 +47,40 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Configurab
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            not(isInterface()).and(hasSuperType(named("io.netty.channel.ChannelPipeline"))),
-            classLoaderHasClasses("io.netty.channel.local.LocalEventLoop"))
-        .transform(
-            new HelperInjector(
-                // client helpers
-                PACKAGE + ".client.NettyResponseInjectAdapter",
-                PACKAGE + ".client.HttpClientRequestTracingHandler",
-                PACKAGE + ".client.HttpClientResponseTracingHandler",
-                PACKAGE + ".client.HttpClientTracingHandler",
-                // server helpers
-                PACKAGE + ".server.NettyRequestExtractAdapter",
-                PACKAGE + ".server.HttpServerRequestTracingHandler",
-                PACKAGE + ".server.HttpServerResponseTracingHandler",
-                PACKAGE + ".server.HttpServerTracingHandler"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod()
-                        .and(nameStartsWith("add"))
-                        .and(takesArgument(2, named("io.netty.channel.ChannelHandler"))),
-                    ChannelPipelineAddAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return not(isInterface()).and(hasSuperType(named("io.netty.channel.ChannelPipeline")));
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses("io.netty.channel.local.LocalEventLoop");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      // client helpers
+      PACKAGE + ".client.NettyResponseInjectAdapter",
+      PACKAGE + ".client.HttpClientRequestTracingHandler",
+      PACKAGE + ".client.HttpClientResponseTracingHandler",
+      PACKAGE + ".client.HttpClientTracingHandler",
+      // server helpers
+      PACKAGE + ".server.NettyRequestExtractAdapter",
+      PACKAGE + ".server.HttpServerRequestTracingHandler",
+      PACKAGE + ".server.HttpServerResponseTracingHandler",
+      PACKAGE + ".server.HttpServerTracingHandler"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod()
+            .and(nameStartsWith("add"))
+            .and(takesArgument(2, named("io.netty.channel.ChannelHandler"))),
+        ChannelPipelineAddAdvice.class.getName());
+    return transformers;
   }
 
   /**

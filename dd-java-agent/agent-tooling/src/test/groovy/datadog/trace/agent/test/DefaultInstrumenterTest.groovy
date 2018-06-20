@@ -2,12 +2,14 @@ package datadog.trace.agent.test
 
 import datadog.trace.agent.tooling.Instrumenter
 import net.bytebuddy.agent.builder.AgentBuilder
+import net.bytebuddy.description.type.TypeDescription
+import net.bytebuddy.matcher.ElementMatcher
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
 
-class ConfigurableInstrumenterTest extends Specification {
+class DefaultInstrumenterTest extends Specification {
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
   @Rule
@@ -20,8 +22,8 @@ class ConfigurableInstrumenterTest extends Specification {
 
   def "default enabled"() {
     setup:
-    def target = new TestConfigurableInstrumenter("test")
-    target.instrument(null)
+    def target = new TestDefaultInstrumenter("test")
+    target.instrument(new AgentBuilder.Default())
 
     expect:
     target.enabled
@@ -29,20 +31,22 @@ class ConfigurableInstrumenterTest extends Specification {
   }
 
   def "default enabled override"() {
+    setup:
+    target.instrument(new AgentBuilder.Default())
+
     expect:
-    target.instrument(null) == null
     target.enabled == enabled
     target.applyCalled == enabled
 
     where:
     enabled | target
-    true    | new TestConfigurableInstrumenter("test") {
+    true    | new TestDefaultInstrumenter("test") {
       @Override
       protected boolean defaultEnabled() {
         return true
       }
     }
-    false   | new TestConfigurableInstrumenter("test") {
+    false   | new TestDefaultInstrumenter("test") {
       @Override
       protected boolean defaultEnabled() {
         return false
@@ -53,15 +57,15 @@ class ConfigurableInstrumenterTest extends Specification {
   def "default disabled can override to enabled"() {
     setup:
     System.setProperty("dd.integration.test.enabled", "$enabled")
-    def target = new TestConfigurableInstrumenter("test") {
+    def target = new TestDefaultInstrumenter("test") {
       @Override
       protected boolean defaultEnabled() {
         return false
       }
     }
+    target.instrument(new AgentBuilder.Default())
 
     expect:
-    target.instrument(null) == null
     target.enabled == enabled
     target.applyCalled == enabled
 
@@ -72,10 +76,10 @@ class ConfigurableInstrumenterTest extends Specification {
   def "configure default sys prop as #value"() {
     setup:
     System.setProperty("dd.integrations.enabled", value)
-    def target = new TestConfigurableInstrumenter("test")
+    def target = new TestDefaultInstrumenter("test")
+    target.instrument(new AgentBuilder.Default())
 
     expect:
-    target.instrument(null) == null
     target.enabled == enabled
     target.applyCalled == enabled
 
@@ -89,10 +93,10 @@ class ConfigurableInstrumenterTest extends Specification {
   def "configure default env var as #value"() {
     setup:
     environmentVariables.set("DD_INTEGRATIONS_ENABLED", value)
-    def target = new TestConfigurableInstrumenter("test")
+    def target = new TestDefaultInstrumenter("test")
+    target.instrument(new AgentBuilder.Default())
 
     expect:
-    target.instrument(null) == null
     target.enabled == enabled
     target.applyCalled == enabled
 
@@ -107,10 +111,10 @@ class ConfigurableInstrumenterTest extends Specification {
     setup:
     System.setProperty("dd.integrations.enabled", "false")
     System.setProperty("dd.integration.${value}.enabled", "true")
-    def target = new TestConfigurableInstrumenter(name, altName)
+    def target = new TestDefaultInstrumenter(name, altName)
+    target.instrument(new AgentBuilder.Default())
 
     expect:
-    target.instrument(null) == null
     target.enabled == enabled
     target.applyCalled == enabled
 
@@ -129,11 +133,11 @@ class ConfigurableInstrumenterTest extends Specification {
     setup:
     environmentVariables.set("DD_INTEGRATIONS_ENABLED", "false")
     environmentVariables.set("DD_INTEGRATION_${value}_ENABLED", "true")
-    def target = new TestConfigurableInstrumenter(name, altName)
+    def target = new TestDefaultInstrumenter(name, altName)
+    target.instrument(new AgentBuilder.Default())
 
     expect:
     System.getenv("DD_INTEGRATION_${value}_ENABLED") == "true"
-    target.instrument(null) == null
     target.enabled == enabled
     target.applyCalled == enabled
 
@@ -148,27 +152,37 @@ class ConfigurableInstrumenterTest extends Specification {
     "PERIOD_TEST"     | true    | "period.test" | "asdf"
   }
 
-  class TestConfigurableInstrumenter extends Instrumenter.Configurable {
+  class TestDefaultInstrumenter extends Instrumenter.Default {
     boolean applyCalled = false
 
-    TestConfigurableInstrumenter(
+    TestDefaultInstrumenter(
       String instrumentationName) {
       super(instrumentationName)
     }
 
-    TestConfigurableInstrumenter(
+    TestDefaultInstrumenter(
       String instrumentationName, String additionalName) {
       super(instrumentationName, [additionalName])
     }
 
-    @Override
-    protected AgentBuilder apply(AgentBuilder agentBuilder) {
-      applyCalled = true
-      return null
-    }
-
     def getEnabled() {
       return super.enabled
+    }
+
+    @Override
+    ElementMatcher<? super TypeDescription> typeMatcher() {
+      applyCalled = true
+      return new ElementMatcher() {
+        @Override
+        boolean matches(Object target) {
+          return false
+        }
+      }
+    }
+
+    @Override
+    Map<ElementMatcher, String> transformers() {
+      return Collections.emptyMap()
     }
   }
 }
