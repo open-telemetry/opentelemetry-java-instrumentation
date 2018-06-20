@@ -39,7 +39,7 @@ subprojects { subProj ->
   }
 }
 
-whitelistedInstructionClasses += whitelistedBranchClasses += [
+whitelistedInstructionClasses = whitelistedBranchClasses += [
   'datadog.trace.instrumentation.*'
 ]
 

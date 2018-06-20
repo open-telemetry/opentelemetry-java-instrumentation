@@ -1,6 +1,6 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
-whitelistedInstructionClasses += whitelistedBranchClasses += [
+whitelistedInstructionClasses = whitelistedBranchClasses += [
   'datadog.trace.agent.tooling.*'
 ]
 
