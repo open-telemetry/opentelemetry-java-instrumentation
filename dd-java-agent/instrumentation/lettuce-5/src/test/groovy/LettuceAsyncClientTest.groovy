@@ -55,6 +55,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
   RedisClient redisClient = RedisClient.create(EMBEDDED_DB_URI)
 
   @Shared
+  StatefulConnection connection
+  @Shared
   RedisAsyncCommands<String, ?> asyncCommands = null
 
   @Shared
@@ -67,11 +69,14 @@ class LettuceAsyncClientTest extends AgentTestRunner {
   def setupSpec() {
     println "Using redis: $redisServer.args"
     redisServer.start()
-    StatefulConnection connection = redisClient.connect()
+    connection = redisClient.connect()
     asyncCommands = connection.async()
+    TEST_WRITER.waitForTraces(1)
+    TEST_WRITER.clear()
   }
 
   def cleanupSpec() {
+    connection.close()
     redisServer.stop()
   }
 

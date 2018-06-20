@@ -116,7 +116,8 @@ jobs:
     <<: *default_test_job
     environment:
       - JAVA8_HOME: /usr/lib/jvm/java-8-openjdk-amd64
-      - TEST_TASK: test latestDepTest
+      # Tests under Java8 should have complete coverage.
+      - TEST_TASK: test latestDepTest jacocoTestCoverageVerification jacocoTestReport
 
   test_9:
     <<: *default_test_job
@@ -125,13 +126,12 @@ jobs:
       - TEST_TASK: testJava9 latestDepTestJava9
       - INSTALL_ZULU: zulu-9
 
-
   agent_integration_tests:
     <<: *defaults
     docker:
       - image: circleci/openjdk:8-jdk
       - image: datadog/docker-dd-agent
-        env:
+        environment:
           - DD_APM_ENABLED=true
           - DD_BIND_HOST=0.0.0.0
           - DD_API_KEY=invalid_key_but_this_is_fine

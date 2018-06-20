@@ -38,16 +38,21 @@ class LettuceReactiveClientTest extends AgentTestRunner {
   RedisClient redisClient = RedisClient.create(EMBEDDED_DB_URI)
 
   @Shared
+  StatefulConnection connection
+  @Shared
   RedisReactiveCommands<String, ?> reactiveCommands = null
 
   def setupSpec() {
     println "Using redis: $redisServer.args"
     redisServer.start()
-    StatefulConnection connection = redisClient.connect()
+    connection = redisClient.connect()
     reactiveCommands = connection.reactive()
+    TEST_WRITER.waitForTraces(1)
+    TEST_WRITER.clear()
   }
 
   def cleanupSpec() {
+    connection.close()
     redisServer.stop()
   }
   
