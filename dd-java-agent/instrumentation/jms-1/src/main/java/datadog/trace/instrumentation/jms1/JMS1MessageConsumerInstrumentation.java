@@ -26,6 +26,7 @@ import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import javax.jms.Message;
@@ -74,6 +75,7 @@ public final class JMS1MessageConsumerInstrumentation extends Instrumenter.Confi
     public static void stopSpan(
         @Advice.This final MessageConsumer consumer,
         @Advice.Enter final long startTime,
+        @Advice.Origin final Method method,
         @Advice.Return final Message message,
         @Advice.Thrown final Throwable throwable) {
       Tracer.SpanBuilder spanBuilder =
@@ -86,12 +88,14 @@ public final class JMS1MessageConsumerInstrumentation extends Instrumenter.Confi
               .withTag("span.origin.type", consumer.getClass().getName())
               .withStartTimestamp(TimeUnit.MILLISECONDS.toMicros(startTime));
 
+      String resourceNamePrefix = "JMS " + method.getName() + ": ";
       if (message == null) {
-        spanBuilder = spanBuilder.withTag(DDTags.RESOURCE_NAME, "No message to consume");
+        spanBuilder = spanBuilder.withTag(DDTags.RESOURCE_NAME, resourceNamePrefix + "no message");
       } else {
         spanBuilder =
             spanBuilder.withTag(
-                DDTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));
+                DDTags.RESOURCE_NAME,
+                resourceNamePrefix + "consumed from " + toResourceName(message, null));
 
         final SpanContext extractedContext =
             GlobalTracer.get()

@@ -55,7 +55,7 @@ class JMS1Test extends AgentTestRunner {
           childOf TEST_WRITER.firstTrace().get(2)
           serviceName "jms"
           operationName "jms.consume"
-          resourceName "Consumed from $jmsResourceName"
+          resourceName "JMS receive: consumed from $jmsResourceName"
           spanType DDSpanTypes.MESSAGE_PRODUCER
           errored false
 
@@ -98,10 +98,8 @@ class JMS1Test extends AgentTestRunner {
 
     producer.send(message)
     lock.countDown()
-    TEST_WRITER.waitForTraces(2)
 
     expect:
-    messageRef.get().text == messageText
     assertTraces(TEST_WRITER, 2) {
       producerTrace(it, 0, jmsResourceName)
       trace(1, 1) { // Consumer trace
@@ -123,6 +121,8 @@ class JMS1Test extends AgentTestRunner {
         }
       }
     }
+    // This check needs to go after all traces have been accounted for
+    messageRef.get().text == messageText
 
     cleanup:
     producer.close()
@@ -151,7 +151,7 @@ class JMS1Test extends AgentTestRunner {
           parent()
           serviceName "jms"
           operationName "jms.consume"
-          resourceName "No message to consume"
+          resourceName "JMS receiveNoWait: no message"
           spanType DDSpanTypes.MESSAGE_PRODUCER
           errored false
 
@@ -190,7 +190,7 @@ class JMS1Test extends AgentTestRunner {
           parent()
           serviceName "jms"
           operationName "jms.consume"
-          resourceName "No message to consume"
+          resourceName "JMS receive: no message"
           spanType DDSpanTypes.MESSAGE_PRODUCER
           errored false
 
