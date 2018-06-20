@@ -117,7 +117,7 @@ jobs:
     environment:
       - JAVA8_HOME: /usr/lib/jvm/java-8-openjdk-amd64
       # Tests under Java8 should have complete coverage.
-      - TEST_TASK: test latestDepTest jacocoTestCoverageVerification jacocoTestReport
+      - TEST_TASK: test latestDepTest jacocoTestReport jacocoTestCoverageVerification
 
   test_9:
     <<: *default_test_job
