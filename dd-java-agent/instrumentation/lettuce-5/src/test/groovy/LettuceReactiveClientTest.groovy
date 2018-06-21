@@ -3,6 +3,7 @@ import datadog.trace.agent.test.TestUtils
 import io.lettuce.core.*
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.reactive.RedisReactiveCommands
+import io.lettuce.core.api.sync.RedisCommands
 import redis.embedded.RedisServer
 import spock.lang.Shared
 import spock.util.concurrent.AsyncConditions
@@ -18,40 +19,41 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     System.setProperty("dd.integration.lettuce.enabled", "true")
   }
 
-  @Shared
   public static final String HOST = "127.0.0.1"
   public static final int PORT = TestUtils.randomOpenPort()
   public static final int DB_INDEX = 0
-  @Shared
   public static final String DB_ADDR = HOST + ":" + PORT + "/" + DB_INDEX
   public static final String EMBEDDED_DB_URI = "redis://" + DB_ADDR
+  // Disable autoreconnect so we do not get stray traces popping up on server shutdown
+  public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
   @Shared
   RedisServer redisServer = RedisServer.builder()
-  // bind to localhost to avoid firewall popup
+    // bind to localhost to avoid firewall popup
     .setting("bind " + HOST)
-  // set max memory to avoid problems in CI
+    // set max memory to avoid problems in CI
     .setting("maxmemory 128M")
     .port(PORT).build()
 
-  @Shared
   RedisClient redisClient = RedisClient.create(EMBEDDED_DB_URI)
-
-  @Shared
   StatefulConnection connection
-  @Shared
-  RedisReactiveCommands<String, ?> reactiveCommands = null
+  RedisReactiveCommands<String, ?> reactiveCommands
+  RedisCommands<String, ?> syncCommands
 
-  def setupSpec() {
+  def setup() {
     println "Using redis: $redisServer.args"
     redisServer.start()
+    redisClient.setOptions(CLIENT_OPTIONS)
+
     connection = redisClient.connect()
     reactiveCommands = connection.reactive()
+    syncCommands = connection.sync()
+
     TEST_WRITER.waitForTraces(1)
     TEST_WRITER.clear()
   }
 
-  def cleanupSpec() {
+  def cleanup() {
     connection.close()
     redisServer.stop()
   }
@@ -96,6 +98,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
   def "get command with lambda function"() {
     setup:
+    syncCommands.set("TESTKEY", "TESTVAL")
     def conds = new AsyncConditions()
 
     when:
@@ -103,8 +106,25 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "SET"
+          errored false
+
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
@@ -164,6 +184,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
   def "command with no arguments"() {
     setup:
+    syncCommands.set("TESTKEY", "TESTVAL")
     def conds = new AsyncConditions()
 
     when:
@@ -175,8 +196,25 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "SET"
+          errored false
+
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
@@ -287,11 +325,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
         }
       }
     }
-
-    cleanup:
-    if (!redisServer.active) {
-      redisServer.start()
-    }
   }
 
   def "shutdown command (returns void) with argument should produce span"() {
@@ -317,11 +350,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
           }
         }
       }
-    }
-
-    cleanup:
-    if (!redisServer.active) {
-      redisServer.start()
     }
   }
 
