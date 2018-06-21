@@ -1,0 +1,60 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "io.netty"
+  module = "netty-all"
+  legacyModule = "netty"
+  versions = "[4.0.0.Final,4.1.0.Final)"
+  verifyPresent = [
+    "io.netty.channel.local.LocalEventLoop": null,
+  ]
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'io.netty', name: 'netty-all', version: '4.0.0.Final'
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+
+//  testCompile group: 'io.netty', name: 'netty-all', version: '4.0.0.Final'
+  testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.2.0.v20160908'
+  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+  testCompile group: 'org.asynchttpclient', name: 'async-http-client', version: '2.0.0'
+}
+
+// We need to force the dependency to the earliest supported version because other libraries declare newer versions.
+configurations.testCompile {
+  resolutionStrategy {
+    eachDependency { DependencyResolveDetails details ->
+      //specifying a fixed version for all libraries with io.netty' group
+      if (details.requested.group == 'io.netty') {
+        details.useVersion "4.0.0.Final"
+      }
+    }
+  }
+}
+
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'io.netty', name: 'netty-all', version: '4.0.56.Final'
+    force group: 'org.asynchttpclient', name: 'async-http-client', version: '2.0.+'
+  }
+}
+
+testJava8Only += '**/*Test.class'

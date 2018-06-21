@@ -98,7 +98,11 @@ public class AgentInstaller {
           log.debug("--{}", mismatch);
         }
       } else {
-        log.debug("Failed to handle {} for transformation: {}", typeName, throwable.getMessage());
+        log.debug(
+            "Failed to handle {} for transformation on classloader {}: {}",
+            typeName,
+            classLoader,
+            throwable.getMessage());
       }
     }
 

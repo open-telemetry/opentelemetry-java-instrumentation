@@ -124,7 +124,7 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
           Tags.ERROR.set(span, Boolean.TRUE);
           span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
           scope.close();
-          scope.span().finish(); // Finish the span manually since finishSpanOnClose was false
+          span.finish(); // Finish the span manually since finishSpanOnClose was false
         } else if (req.isAsyncStarted()) {
           final AtomicBoolean activated = new AtomicBoolean(false);
           // what if async is already finished? This would not be called
@@ -149,7 +149,7 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
       @Override
       public void onComplete(final AsyncEvent event) throws IOException {
         if (activated.compareAndSet(false, true)) {
-          try (Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+          try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
             Tags.HTTP_STATUS.set(
                 span, ((HttpServletResponse) event.getSuppliedResponse()).getStatus());
           }
@@ -159,7 +159,7 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
       @Override
       public void onTimeout(final AsyncEvent event) throws IOException {
         if (activated.compareAndSet(false, true)) {
-          try (Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+          try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
             Tags.ERROR.set(span, Boolean.TRUE);
             span.setTag("timeout", event.getAsyncContext().getTimeout());
           }
@@ -169,7 +169,7 @@ public final class HandlerInstrumentation extends Instrumenter.Configurable {
       @Override
       public void onError(final AsyncEvent event) throws IOException {
         if (event.getThrowable() != null && activated.compareAndSet(false, true)) {
-          try (Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+          try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
             if (((HttpServletResponse) event.getSuppliedResponse()).getStatus()
                 == HttpServletResponse.SC_OK) {
               // exception is thrown in filter chain, but status code is incorrect

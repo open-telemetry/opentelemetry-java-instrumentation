@@ -43,19 +43,22 @@ class TagsAssert {
     }
   }
 
+  def tag(String name, value) {
+    assertedTags.add(name)
+    if (value instanceof Class) {
+      assert ((Class) value).isInstance(tags[name])
+    } else if (value instanceof Closure) {
+      assert ((Closure) value).call(tags[name])
+    } else {
+      assert tags[name] == value
+    }
+  }
+
   def methodMissing(String name, args) {
-    if (args.length > 1) {
+    if (args.length != 1) {
       throw new IllegalArgumentException(args.toString())
     }
-    assertedTags.add(name)
-    def arg = args[0]
-    if (arg instanceof Class) {
-      assert ((Class) arg).isInstance(tags[name])
-    } else if (arg instanceof Closure) {
-      assert ((Closure) arg).call(tags[name])
-    } else {
-      assert tags[name] == arg
-    }
+    tag(name, args[0])
   }
 
   void assertTagsAllVerified() {
