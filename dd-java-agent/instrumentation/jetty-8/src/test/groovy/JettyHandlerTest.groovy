@@ -2,6 +2,8 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import okhttp3.OkHttpClient
+import org.eclipse.jetty.continuation.Continuation
+import org.eclipse.jetty.continuation.ContinuationSupport
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -10,6 +12,8 @@ import org.eclipse.jetty.server.handler.AbstractHandler
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+
+import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class JettyHandlerTest extends AgentTestRunner {
 
@@ -78,6 +82,52 @@ class JettyHandlerTest extends AgentTestRunner {
     tags["thread.id"] != null
     tags["span.origin.type"] == handler.class.name
     tags.size() == 9
+  }
+
+
+  def "handler instrumentation clears state after async request"() {
+    setup:
+    Handler handler = new AbstractHandler() {
+      @Override
+      void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        final Continuation continuation = ContinuationSupport.getContinuation(request)
+        continuation.suspend()
+        // By the way, this is a terrible async server
+        new Thread() {
+          @Override
+          void run() {
+            continuation.getServletResponse().setContentType("text/plain;charset=utf-8")
+            continuation.getServletResponse().getWriter().println("Hello World")
+            continuation.complete()
+          }
+        }.start()
+
+        baseRequest.setHandled(true)
+      }
+    }
+    server.setHandler(handler)
+    server.start()
+    def request = new okhttp3.Request.Builder()
+      .url("http://localhost:$port/")
+      .get()
+      .build()
+    def numTraces = 10
+    for (int i = 0; i < numTraces; ++i) {
+      assert client.newCall(request).execute().body().string().trim() == "Hello World"
+    }
+
+    expect:
+    assertTraces(TEST_WRITER, numTraces) {
+      for (int i = 0; i < numTraces; ++i) {
+        trace(i, 1) {
+          span(0) {
+            serviceName "unnamed-java-app"
+            operationName "jetty.request"
+            resourceName "GET ${handler.class.name}"
+          }
+        }
+      }
+    }
   }
 
   def "call to jetty with error creates a trace"() {
