@@ -9,7 +9,13 @@ import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 class CassandraClientTest extends AgentTestRunner {
 
   def setupSpec() {
-    EmbeddedCassandraServerHelper.startEmbeddedCassandra(40000L)
+    /*
+     This timeout seems excessive but we've seen tests fail with timeout of 40s.
+     TODO: if we continue to see failures we may want to consider using 'real' Cassandra
+     started in container like we do for memcached. Note: this will complicate things because
+     tests would have to assume they run under shared Cassandra and act accordingly.
+      */
+    EmbeddedCassandraServerHelper.startEmbeddedCassandra(120000L)
   }
 
   def cleanupSpec() {
