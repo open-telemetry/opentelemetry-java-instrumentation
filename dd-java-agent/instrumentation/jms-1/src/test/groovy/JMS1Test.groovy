@@ -55,7 +55,7 @@ class JMS1Test extends AgentTestRunner {
           childOf TEST_WRITER.firstTrace().get(2)
           serviceName "jms"
           operationName "jms.consume"
-          resourceName "JMS receive: consumed from $jmsResourceName"
+          resourceName "Consumed from $jmsResourceName"
           spanType DDSpanTypes.MESSAGE_PRODUCER
           errored false
 
@@ -151,7 +151,7 @@ class JMS1Test extends AgentTestRunner {
           parent()
           serviceName "jms"
           operationName "jms.consume"
-          resourceName "JMS receiveNoWait: no message"
+          resourceName "JMS receiveNoWait"
           spanType DDSpanTypes.MESSAGE_PRODUCER
           errored false
 
@@ -190,7 +190,7 @@ class JMS1Test extends AgentTestRunner {
           parent()
           serviceName "jms"
           operationName "jms.consume"
-          resourceName "JMS receive: no message"
+          resourceName "JMS receive"
           spanType DDSpanTypes.MESSAGE_PRODUCER
           errored false
 

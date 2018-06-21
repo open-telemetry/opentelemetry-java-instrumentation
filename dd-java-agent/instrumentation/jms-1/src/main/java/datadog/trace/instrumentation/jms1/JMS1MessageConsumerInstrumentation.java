@@ -88,14 +88,12 @@ public final class JMS1MessageConsumerInstrumentation extends Instrumenter.Confi
               .withTag("span.origin.type", consumer.getClass().getName())
               .withStartTimestamp(TimeUnit.MILLISECONDS.toMicros(startTime));
 
-      String resourceNamePrefix = "JMS " + method.getName() + ": ";
       if (message == null) {
-        spanBuilder = spanBuilder.withTag(DDTags.RESOURCE_NAME, resourceNamePrefix + "no message");
+        spanBuilder = spanBuilder.withTag(DDTags.RESOURCE_NAME, "JMS " + method.getName());
       } else {
         spanBuilder =
             spanBuilder.withTag(
-                DDTags.RESOURCE_NAME,
-                resourceNamePrefix + "consumed from " + toResourceName(message, null));
+                DDTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));
 
         final SpanContext extractedContext =
             GlobalTracer.get()
