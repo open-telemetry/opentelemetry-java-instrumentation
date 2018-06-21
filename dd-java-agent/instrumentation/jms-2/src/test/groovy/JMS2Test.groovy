@@ -1,6 +1,9 @@
 import com.google.common.io.Files
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.ListWriterAssert
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
+import io.opentracing.tag.Tags
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
 import org.hornetq.api.jms.HornetQJMSClient
@@ -23,7 +26,11 @@ import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
+import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+
 class JMS2Test extends AgentTestRunner {
+  @Shared
+  String messageText = "a message"
   @Shared
   static Session session
 
@@ -62,81 +69,53 @@ class JMS2Test extends AgentTestRunner {
     session.run()
   }
 
-  def "sending a message to #resourceName generates spans"() {
+  def "sending a message to #jmsResourceName generates spans"() {
     setup:
     def producer = session.createProducer(destination)
     def consumer = session.createConsumer(destination)
-    def message = session.createTextMessage("a message")
+    def message = session.createTextMessage(messageText)
 
     producer.send(message)
 
     TextMessage receivedMessage = consumer.receive()
 
     expect:
-    receivedMessage.text == "a message"
-    TEST_WRITER.size() == 2
+    receivedMessage.text == messageText
+    assertTraces(TEST_WRITER, 2) {
+      producerTrace(it, 0, jmsResourceName)
+      trace(1, 1) { // Consumer trace
+        span(0) {
+          childOf TEST_WRITER.firstTrace().get(0)
+          serviceName "jms"
+          operationName "jms.consume"
+          resourceName "Consumed from $jmsResourceName"
+          spanType DDSpanTypes.MESSAGE_PRODUCER
+          errored false
 
-    and: // producer trace
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-
-    def producerSpan = trace[0]
-
-    producerSpan.context().operationName == "jms.produce"
-    producerSpan.serviceName == "jms"
-    producerSpan.resourceName == "Produced for $resourceName"
-    producerSpan.type == DDSpanTypes.MESSAGE_PRODUCER
-    !producerSpan.context().getErrorFlag()
-    producerSpan.context().parentId == 0
-
-
-    def producerTags = producerSpan.context().tags
-    producerTags["span.kind"] == "producer"
-    producerTags["component"] == "jms2"
-
-    producerTags["span.origin.type"] == HornetQMessageProducer.name
-
-    producerTags["thread.name"] != null
-    producerTags["thread.id"] != null
-    producerTags.size() == 6
-
-    and: // consumer trace
-    def consumerTrace = TEST_WRITER.get(1)
-    consumerTrace.size() == 1
-
-    def consumerSpan = consumerTrace[0]
-
-    consumerSpan.context().operationName == "jms.consume"
-    consumerSpan.serviceName == "jms"
-    consumerSpan.resourceName == "Consumed from $resourceName"
-    consumerSpan.type == DDSpanTypes.MESSAGE_CONSUMER
-    !consumerSpan.context().getErrorFlag()
-    consumerSpan.context().parentId == producerSpan.context().spanId
-
-
-    def consumerTags = consumerSpan.context().tags
-    consumerTags["span.kind"] == "consumer"
-    consumerTags["component"] == "jms2"
-
-    consumerTags["span.origin.type"] == HornetQMessageConsumer.name
-
-    consumerTags["thread.name"] != null
-    consumerTags["thread.id"] != null
-    consumerTags.size() == 6
+          tags {
+            defaultTags()
+            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
+            "${Tags.COMPONENT.key}" "jms2"
+            "${Tags.SPAN_KIND.key}" "consumer"
+            "span.origin.type" HornetQMessageConsumer.name
+          }
+        }
+      }
+    }
 
     cleanup:
     producer.close()
     consumer.close()
 
     where:
-    destination                      | resourceName
+    destination                      | jmsResourceName
     session.createQueue("someQueue") | "Queue someQueue"
     session.createTopic("someTopic") | "Topic someTopic"
     session.createTemporaryQueue()   | "Temporary Queue"
     session.createTemporaryTopic()   | "Temporary Topic"
   }
 
-  def "sending to a MessageListener on #resourceName generates a span"() {
+  def "sending to a MessageListener on #jmsResourceName generates a span"() {
     setup:
     def lock = new CountDownLatch(1)
     def messageRef = new AtomicReference<TextMessage>()
@@ -150,72 +129,164 @@ class JMS2Test extends AgentTestRunner {
       }
     }
 
-    def message = session.createTextMessage("a message")
+    def message = session.createTextMessage(messageText)
     producer.send(message)
     lock.countDown()
-    TEST_WRITER.waitForTraces(2)
 
     expect:
-    messageRef.get().text == "a message"
-    TEST_WRITER.size() == 2
+    assertTraces(TEST_WRITER, 2) {
+      producerTrace(it, 0, jmsResourceName)
+      trace(1, 1) { // Consumer trace
+        span(0) {
+          childOf TEST_WRITER.firstTrace().get(0)
+          serviceName "jms"
+          operationName "jms.onMessage"
+          resourceName "Received from $jmsResourceName"
+          spanType DDSpanTypes.MESSAGE_PRODUCER
+          errored false
 
-    and: // producer trace
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-
-    def producerSpan = trace[0]
-
-    producerSpan.context().operationName == "jms.produce"
-    producerSpan.serviceName == "jms"
-    producerSpan.resourceName == "Produced for $resourceName"
-    producerSpan.type == DDSpanTypes.MESSAGE_PRODUCER
-    !producerSpan.context().getErrorFlag()
-    producerSpan.context().parentId == 0
-
-
-    def producerTags = producerSpan.context().tags
-    producerTags["span.kind"] == "producer"
-    producerTags["component"] == "jms2"
-
-    producerTags["span.origin.type"] == HornetQMessageProducer.name
-
-    producerTags["thread.name"] != null
-    producerTags["thread.id"] != null
-    producerTags.size() == 6
-
-    and: // consumer trace
-    def consumerTrace = TEST_WRITER.get(1)
-    consumerTrace.size() == 1
-
-    def consumerSpan = consumerTrace[0]
-
-    consumerSpan.context().operationName == "jms.onMessage"
-    consumerSpan.serviceName == "jms"
-    consumerSpan.resourceName == "Received from $resourceName"
-    consumerSpan.type == DDSpanTypes.MESSAGE_CONSUMER
-    !consumerSpan.context().getErrorFlag()
-    consumerSpan.context().parentId == producerSpan.context().spanId
-
-
-    def consumerTags = consumerSpan.context().tags
-    consumerTags["span.kind"] == "consumer"
-    consumerTags["component"] == "jms2"
-
-    consumerTags["span.origin.type"] != null
-
-    consumerTags["thread.name"] != null
-    consumerTags["thread.id"] != null
-    consumerTags.size() == 6
+          tags {
+            defaultTags()
+            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
+            "${Tags.COMPONENT.key}" "jms2"
+            "${Tags.SPAN_KIND.key}" "consumer"
+            "span.origin.type" { t -> t.contains("JMS2Test") }
+          }
+        }
+      }
+    }
+    // This check needs to go after all traces have been accounted for
+    messageRef.get().text == messageText
 
     cleanup:
     producer.close()
     consumer.close()
 
     where:
-    destination                      | resourceName
+    destination                      | jmsResourceName
     session.createQueue("someQueue") | "Queue someQueue"
     session.createTopic("someTopic") | "Topic someTopic"
     session.createTemporaryQueue()   | "Temporary Queue"
     session.createTemporaryTopic()   | "Temporary Topic"
+  }
+
+  def "failing to receive message with receiveNoWait on #jmsResourceName works"() {
+    setup:
+    def consumer = session.createConsumer(destination)
+
+    // Receive with timeout
+    TextMessage receivedMessage = consumer.receiveNoWait()
+
+    expect:
+    receivedMessage == null
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) { // Consumer trace
+        span(0) {
+          parent()
+          serviceName "jms"
+          operationName "jms.consume"
+          resourceName "JMS receiveNoWait"
+          spanType DDSpanTypes.MESSAGE_PRODUCER
+          errored false
+
+          tags {
+            defaultTags()
+            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
+            "${Tags.COMPONENT.key}" "jms2"
+            "${Tags.SPAN_KIND.key}" "consumer"
+            "span.origin.type" HornetQMessageConsumer.name
+          }
+        }
+      }
+    }
+
+    cleanup:
+    consumer.close()
+
+    where:
+    destination                      | jmsResourceName
+    session.createQueue("someQueue") | "Queue someQueue"
+    session.createTopic("someTopic") | "Topic someTopic"
+  }
+
+  def "failing to receive message with wait(timeout) on #jmsResourceName works"() {
+    setup:
+    def consumer = session.createConsumer(destination)
+
+    // Receive with timeout
+    TextMessage receivedMessage = consumer.receive(100)
+
+    expect:
+    receivedMessage == null
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) { // Consumer trace
+        span(0) {
+          parent()
+          serviceName "jms"
+          operationName "jms.consume"
+          resourceName "JMS receive"
+          spanType DDSpanTypes.MESSAGE_PRODUCER
+          errored false
+
+          tags {
+            defaultTags()
+            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
+            "${Tags.COMPONENT.key}" "jms2"
+            "${Tags.SPAN_KIND.key}" "consumer"
+            "span.origin.type" HornetQMessageConsumer.name
+          }
+        }
+      }
+    }
+
+    cleanup:
+    consumer.close()
+
+    where:
+    destination                      | jmsResourceName
+    session.createQueue("someQueue") | "Queue someQueue"
+    session.createTopic("someTopic") | "Topic someTopic"
+  }
+
+  def producerTrace(ListWriterAssert writer, int index, String jmsResourceName) {
+    writer.trace(index, 1) {
+      span(0) {
+        parent()
+        serviceName "jms"
+        operationName "jms.produce"
+        resourceName "Produced for $jmsResourceName"
+        spanType DDSpanTypes.MESSAGE_PRODUCER
+        errored false
+
+        tags {
+          defaultTags()
+          "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_PRODUCER
+          "${Tags.COMPONENT.key}" "jms2"
+          "${Tags.SPAN_KIND.key}" "producer"
+          "span.origin.type" HornetQMessageProducer.name
+        }
+      }
+    }
+  }
+
+  def consumerTrace(ListWriterAssert writer, int index, String jmsResourceName, origin) {
+    writer.trace(index, 1) {
+      span(0) {
+        childOf TEST_WRITER.firstTrace().get(2)
+        serviceName "jms"
+        operationName "jms.onMessage"
+        resourceName "Received from $jmsResourceName"
+        spanType DDSpanTypes.MESSAGE_PRODUCER
+        errored false
+
+        tags {
+          defaultTags()
+          "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
+          "${Tags.COMPONENT.key}" "jms2"
+          "${Tags.SPAN_KIND.key}" "consumer"
+          "span.origin.type" origin
+        }
+      }
+    }
   }
 }
