@@ -37,6 +37,8 @@ class Elasticsearch5NodeClientTest extends AgentTestRunner {
 
     def settings = Settings.builder()
       .put("path.home", esWorkingDir.path)
+      // Since we use listeners to close spans this should make our span closing deterministic which is good for tests
+      .put("thread_pool.listener.size", 1)
       .put("http.port", HTTP_PORT)
       .put("transport.tcp.port", TCP_PORT)
       .put("transport.type", "netty3")
