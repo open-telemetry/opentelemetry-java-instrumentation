@@ -49,7 +49,10 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     reactiveCommands = connection.reactive()
     syncCommands = connection.sync()
 
-    TEST_WRITER.waitForTraces(1)
+    syncCommands.set("TESTKEY", "TESTVAL")
+
+    // 1 set + 1 connect trace
+    TEST_WRITER.waitForTraces(2)
     TEST_WRITER.clear()
   }
 
@@ -71,7 +74,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     }
 
     when:
-    reactiveCommands.set("TESTKEY", "TESTVAL").subscribe(consumer)
+    reactiveCommands.set("TESTSETKEY", "TESTSETVAL").subscribe(consumer)
 
     then:
     conds.await()
@@ -98,7 +101,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
   def "get command with lambda function"() {
     setup:
-    syncCommands.set("TESTKEY", "TESTVAL")
     def conds = new AsyncConditions()
 
     when:
@@ -106,25 +108,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "redis"
-          operationName "redis.query"
-          spanType "redis"
-          resourceName "SET"
-          errored false
-
-          tags {
-            defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
-            "span.type" "redis"
-          }
-        }
-      }
-      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
@@ -184,7 +169,6 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
   def "command with no arguments"() {
     setup:
-    syncCommands.set("TESTKEY", "TESTVAL")
     def conds = new AsyncConditions()
 
     when:
@@ -196,25 +180,8 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "redis"
-          operationName "redis.query"
-          spanType "redis"
-          resourceName "SET"
-          errored false
-
-          tags {
-            defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
-            "span.type" "redis"
-          }
-        }
-      }
-      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
