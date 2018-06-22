@@ -46,6 +46,8 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
 
     client = TransportClient.builder().settings(
       Settings.builder()
+        // Since we use listeners to close spans this should make our span closing deterministic which is good for tests
+        .put("thread_pool.listener.size", 1)
         .put("cluster.name", "test-cluster")
         .build()
     ).build()
