@@ -53,7 +53,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
     redisServer.start()
     connection = redisClient.connect()
     syncCommands = connection.sync()
-    TEST_WRITER.waitForTraces(1)
+
+    syncCommands.set("TESTKEY", "TESTVAL")
+    syncCommands.hmset("TESTHM", testHashMap)
+
+    // 2 sets + 1 connect trace
+    TEST_WRITER.waitForTraces(3)
     TEST_WRITER.clear()
   }
 
@@ -137,7 +142,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
   def "set command"() {
     setup:
-    String res = syncCommands.set("TESTKEY", "TESTVAL")
+    String res = syncCommands.set("TESTSETKEY", "TESTSETVAL")
 
     expect:
     res == "OK"
@@ -164,30 +169,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
   def "get command"() {
     setup:
-    syncCommands.set("TESTKEY", "TESTVAL")
     String res = syncCommands.get("TESTKEY")
 
     expect:
     res == "TESTVAL"
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "redis"
-          operationName "redis.query"
-          spanType "redis"
-          resourceName "SET"
-          errored false
-
-          tags {
-            defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
-            "span.type" "redis"
-          }
-        }
-      }
-      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
@@ -236,30 +223,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
   def "command with no arguments"() {
     setup:
-    syncCommands.set("TESTKEY", "TESTVAL")
     def keyRetrieved = syncCommands.randomkey()
 
     expect:
-    keyRetrieved == "TESTKEY"
-    assertTraces(TEST_WRITER, 2) {
+    keyRetrieved != null
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "redis"
-          operationName "redis.query"
-          spanType "redis"
-          resourceName "SET"
-          errored false
-
-          tags {
-            defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
-            "span.type" "redis"
-          }
-        }
-      }
-      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
@@ -335,30 +304,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
   def "hash getall command"() {
     setup:
-    syncCommands.hmset("user", testHashMap)
-    Map<String, String> res = syncCommands.hgetall("user")
+    Map<String, String> res = syncCommands.hgetall("TESTHM")
 
     expect:
     res == testHashMap
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "redis"
-          operationName "redis.query"
-          spanType "redis"
-          resourceName "HMSET"
-          errored false
-
-          tags {
-            defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
-            "span.type" "redis"
-          }
-        }
-      }
-      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"

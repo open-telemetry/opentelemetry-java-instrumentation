@@ -72,7 +72,10 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     asyncCommands = connection.async()
     syncCommands = connection.sync()
 
-    TEST_WRITER.waitForTraces(1)
+    syncCommands.set("TESTKEY", "TESTVAL")
+
+    // 1 set + 1 connect trace
+    TEST_WRITER.waitForTraces(2)
     TEST_WRITER.clear()
   }
 
@@ -162,7 +165,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
   def "set command using Future get with timeout"() {
     setup:
-    RedisFuture<String> redisFuture = asyncCommands.set("TESTKEY", "TESTVAL")
+    RedisFuture<String> redisFuture = asyncCommands.set("TESTSETKEY", "TESTSETVAL")
     String res = redisFuture.get(3, TimeUnit.SECONDS)
 
     expect:
@@ -190,8 +193,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
   def "get command chained with thenAccept"() {
     setup:
-    syncCommands.set("TESTKEY", "TESTVAL")
-
     def conds = new AsyncConditions()
     Consumer<String> consumer = new Consumer<String>() {
       @Override
@@ -208,25 +209,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "redis"
-          operationName "redis.query"
-          spanType "redis"
-          resourceName "SET"
-          errored false
-
-          tags {
-            defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
-            "span.type" "redis"
-          }
-        }
-      }
-      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
@@ -301,14 +285,12 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
   def "command with no arguments using a biconsumer"() {
     setup:
-    syncCommands.set("TESTKEY", "TESTVAL")
-
     def conds = new AsyncConditions()
     BiConsumer<String, Throwable> biConsumer = new BiConsumer<String, Throwable>() {
       @Override
       void accept(String keyRetrieved, Throwable throwable) {
         conds.evaluate{
-          assert keyRetrieved == "TESTKEY"
+          assert keyRetrieved != null
         }
       }
     }
@@ -319,25 +301,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "redis"
-          operationName "redis.query"
-          spanType "redis"
-          resourceName "SET"
-          errored false
-
-          tags {
-            defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
-            "span.type" "redis"
-          }
-        }
-      }
-      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
@@ -362,14 +327,15 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     def conds = new AsyncConditions()
 
     when:
-    RedisFuture<String> hmsetFuture = asyncCommands.hmset("user", testHashMap)
+    RedisFuture<String> hmsetFuture = asyncCommands.hmset("TESTHM", testHashMap)
     hmsetFuture.thenApplyAsync(new Function<String, Object>() {
       @Override
       Object apply(String setResult) {
+        TEST_WRITER.waitForTraces(1) // Wait for 'hmset' trace to get written
         conds.evaluate {
           assert setResult == "OK"
         }
-        RedisFuture<Map<String, String>> hmGetAllFuture = asyncCommands.hgetall("user")
+        RedisFuture<Map<String, String>> hmGetAllFuture = asyncCommands.hgetall("TESTHM")
         hmGetAllFuture.exceptionally(new Function<Throwable, Map<String, String>>() {
           @Override
           Map<String, String> apply(Throwable throwable) {
