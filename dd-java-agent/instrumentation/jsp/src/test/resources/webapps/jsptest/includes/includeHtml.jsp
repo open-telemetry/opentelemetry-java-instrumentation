@@ -6,7 +6,7 @@
    <body>
       <center>
          <h2>INCLUDE HTML</h2>
-         <jsp:include page = "../hello.html"/>
+         <jsp:include page = "../common/hello.html"/>
       </center>
    </body>
 </html>

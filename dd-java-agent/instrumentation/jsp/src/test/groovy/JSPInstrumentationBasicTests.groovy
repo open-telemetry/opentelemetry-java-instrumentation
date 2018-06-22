@@ -10,14 +10,14 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
-import org.apache.tomcat.JarScanFilter
-import org.apache.tomcat.JarScanType
-import spock.lang.Shared
+import org.apache.jasper.JasperException
+//import org.apache.tomcat.JarScanFilter
+//import org.apache.tomcat.JarScanType
 import spock.lang.Unroll
 
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
-class JSPInstrumentationTest extends AgentTestRunner {
+class JSPInstrumentationBasicTests extends AgentTestRunner {
 
   static {
     System.setProperty("dd.integration.jsp.enabled", "true")
@@ -35,7 +35,6 @@ class JSPInstrumentationTest extends AgentTestRunner {
   static Context appContext
   static final String JSP_WEBAPP_CONTEXT = "jsptest-context"
 
-  @Shared
   static File baseDir
   static String baseUrl
   static String expectedJspClassFilesDir = "/work/Tomcat/localhost/$JSP_WEBAPP_CONTEXT/org/apache/jsp/"
@@ -53,15 +52,15 @@ class JSPInstrumentationTest extends AgentTestRunner {
     tomcatServer.setBaseDir(baseDir.getAbsolutePath())
 
     appContext = tomcatServer.addWebapp("/$JSP_WEBAPP_CONTEXT",
-      JSPInstrumentationTest.getResource("/webapps/jsptest").getPath())
+      JSPInstrumentationBasicTests.getResource("/webapps/jsptest").getPath())
 
     // Speed up startup by disabling jar scanning:
-    appContext.getJarScanner().setJarScanFilter(new JarScanFilter() {
-      @Override
-      boolean check(JarScanType jarScanType, String jarName) {
-        return false
-      }
-    })
+//    appContext.getJarScanner().setJarScanFilter(new JarScanFilter() {
+//      @Override
+//      boolean check(JarScanType jarScanType, String jarName) {
+//        return false
+//      }
+//    })
 
     tomcatServer.start()
     System.out.println(
@@ -84,21 +83,55 @@ class JSPInstrumentationTest extends AgentTestRunner {
 
     then:
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          parent()
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "servlet.request"
+          resourceName "GET /$JSP_WEBAPP_CONTEXT/$jspFileName"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/$jspFileName"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "http.status_code" 200
+            defaultTags()
+          }
+        }
+        span(1) {
+          childOf span(0)
           serviceName JSP_WEBAPP_CONTEXT
           operationName "jsp.render"
           resourceName "/$jspFileName"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           tags {
-            "http.method" "GET"
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" "/$JSP_WEBAPP_CONTEXT"
             "jsp.requestURL" reqUrl
-            "http.status_code" 200
+            defaultTags()
+          }
+        }
+        span(2) {
+          childOf span(0)
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "jsp.compile"
+          resourceName "/$jspFileName"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "span.kind" "server"
+            "component" "jsp-http-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
           }
         }
@@ -106,11 +139,14 @@ class JSPInstrumentationTest extends AgentTestRunner {
     }
     res.code() == HttpResponseStatus.OK.code()
 
+    cleanup:
+    res.close()
+
     where:
-    test | jspFileName
-    "no java jsp" | "nojava.jsp"
-    "basic loop jsp"|"common/loop.jsp"
-    "invalid HTML markup"|"invalidMarkup.jsp"
+    test | jspFileName | jspClassName | jspClassNamePrefix
+    "no java jsp" | "nojava.jsp" | "nojava_jsp" | ""
+    "basic loop jsp"|"common/loop.jsp" | "loop_jsp" | "common."
+    "invalid HTML markup"|"invalidMarkup.jsp" | "invalidMarkup_jsp" | ""
   }
 
   def "non-erroneous GET with query string"() {
@@ -124,27 +160,64 @@ class JSPInstrumentationTest extends AgentTestRunner {
 
     then:
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          parent()
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "servlet.request"
+          resourceName "GET /$JSP_WEBAPP_CONTEXT/getQuery.jsp"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/getQuery.jsp"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "http.status_code" 200
+            defaultTags()
+          }
+        }
+        span(1) {
+          childOf span(0)
           serviceName JSP_WEBAPP_CONTEXT
           operationName "jsp.render"
           resourceName "/getQuery.jsp"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           tags {
-            "http.method" "GET"
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" "/$JSP_WEBAPP_CONTEXT"
             "jsp.requestURL" reqUrl
-            "http.status_code" 200
+            defaultTags()
+          }
+        }
+        span(2) {
+          childOf span(0)
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "jsp.compile"
+          resourceName "/getQuery.jsp"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "span.kind" "server"
+            "component" "jsp-http-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
           }
         }
       }
     }
     res.code() == HttpResponseStatus.OK.code()
+
+    cleanup:
+    res.close()
   }
 
   def "non-erroneous POST"() {
@@ -161,27 +234,64 @@ class JSPInstrumentationTest extends AgentTestRunner {
 
     then:
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          parent()
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "servlet.request"
+          resourceName "POST /$JSP_WEBAPP_CONTEXT/post.jsp"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/post.jsp"
+            "http.method" "POST"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "http.status_code" 200
+            defaultTags()
+          }
+        }
+        span(1) {
+          childOf span(0)
           serviceName JSP_WEBAPP_CONTEXT
           operationName "jsp.render"
           resourceName "/post.jsp"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           tags {
-            "http.method" "POST"
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" "/$JSP_WEBAPP_CONTEXT"
             "jsp.requestURL" reqUrl
-            "http.status_code" 200
+            defaultTags()
+          }
+        }
+        span(2) {
+          childOf span(0)
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "jsp.compile"
+          resourceName "/post.jsp"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "span.kind" "server"
+            "component" "jsp-http-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "jsp.classFQCN" "org.apache.jsp.post_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
           }
         }
       }
     }
     res.code() == HttpResponseStatus.OK.code()
+
+    cleanup:
+    res.close()
   }
 
   @Unroll
@@ -195,22 +305,57 @@ class JSPInstrumentationTest extends AgentTestRunner {
 
     then:
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
+      trace(0, 3) {
         span(0) {
+          parent()
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "servlet.request"
+          resourceName "GET /$JSP_WEBAPP_CONTEXT/$jspFileName"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored true
+          tags {
+            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/$jspFileName"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "http.status_code" 500
+            errorTags(JasperException, String)
+            defaultTags()
+          }
+        }
+        span(1) {
+          childOf span(0)
           serviceName JSP_WEBAPP_CONTEXT
           operationName "jsp.render"
           resourceName "/$jspFileName"
           spanType DDSpanTypes.WEB_SERVLET
           errored true
           tags {
-            "http.method" "GET"
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" "/$JSP_WEBAPP_CONTEXT"
             "jsp.requestURL" reqUrl
-            "http.status_code" 500
             errorTags(exceptionClass, errorMessage)
+            defaultTags()
+          }
+        }
+        span(2) {
+          childOf span(0)
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "jsp.compile"
+          resourceName "/$jspFileName"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "span.kind" "server"
+            "component" "jsp-http-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "jsp.classFQCN" "org.apache.jsp.$jspClassName"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
           }
         }
@@ -218,11 +363,84 @@ class JSPInstrumentationTest extends AgentTestRunner {
     }
     res.code() == HttpResponseStatus.INTERNAL_SERVER_ERROR.code()
 
+    cleanup:
+    res.close()
+
     where:
-    test | jspFileName | exceptionClass | errorMessage
-    "java runtime error" | "runtimeError.jsp" | ArithmeticException | String
-    "invalid write" | "invalidWrite.jsp" | StringIndexOutOfBoundsException | String
-    "missing query gives null" | "getQuery.jsp" | NullPointerException | null
+    test | jspFileName  | jspClassName | exceptionClass | errorMessage
+    "java runtime error" | "runtimeError.jsp" | "runtimeError_jsp" | ArithmeticException | String
+    "invalid write" | "invalidWrite.jsp" | "invalidWrite_jsp" | StringIndexOutOfBoundsException | String
+    "missing query gives null" | "getQuery.jsp" | "getQuery_jsp" | NullPointerException | null
+  }
+
+  def "non-erroneous include plain HTML GET"() {
+    setup:
+    String reqUrl = baseUrl + "/includes/includeHtml.jsp"
+    Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
+
+    when:
+    Response res = client.newCall(req).execute()
+
+    then:
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 3) {
+        span(0) {
+          parent()
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "servlet.request"
+          resourceName "GET /$JSP_WEBAPP_CONTEXT/includes/includeHtml.jsp"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/includes/includeHtml.jsp"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "http.status_code" 200
+            defaultTags()
+          }
+        }
+        span(1) {
+          childOf span(0)
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "jsp.render"
+          resourceName "/includes/includeHtml.jsp"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "span.kind" "server"
+            "component" "jsp-http-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "jsp.requestURL" reqUrl
+            defaultTags()
+          }
+        }
+        span(2) {
+          childOf span(0)
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "jsp.compile"
+          resourceName "/includes/includeHtml.jsp"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "span.kind" "server"
+            "component" "jsp-http-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+            defaultTags()
+          }
+        }
+      }
+    }
+    res.code() == HttpResponseStatus.OK.code()
+
+    cleanup:
+    res.close()
   }
 
   def "non-erroneous multi GET"() {
@@ -234,312 +452,193 @@ class JSPInstrumentationTest extends AgentTestRunner {
     Response res = client.newCall(req).execute()
 
     then:
-    println(res.body().string())
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 3) {
+      trace(0, 7) {
         span(0) {
+          parent()
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "servlet.request"
+          resourceName "GET /$JSP_WEBAPP_CONTEXT/includes/includeMulti.jsp"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/includes/includeMulti.jsp"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "http.status_code" 200
+            defaultTags()
+          }
+        }
+        span(1) {
+          childOf span(0)
           serviceName JSP_WEBAPP_CONTEXT
           operationName "jsp.render"
           resourceName "/includes/includeMulti.jsp"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           tags {
-            "http.method" "GET"
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" "/$JSP_WEBAPP_CONTEXT"
             "jsp.requestURL" reqUrl
-            "http.status_code" 200
-            defaultTags()
-          }
-        }
-        span(1) {
-          serviceName JSP_WEBAPP_CONTEXT
-          operationName "jsp.render"
-          resourceName "/common/javaLoopH2.jsp"
-          spanType DDSpanTypes.WEB_SERVLET
-          errored false
-          tags {
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
-            "jsp.requestURL" reqUrl
-            "http.status_code" 200
             defaultTags()
           }
         }
         span(2) {
+          childOf span(1)
           serviceName JSP_WEBAPP_CONTEXT
           operationName "jsp.render"
           resourceName "/common/javaLoopH2.jsp"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           tags {
-            "http.method" "GET"
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" "/$JSP_WEBAPP_CONTEXT"
             "jsp.requestURL" reqUrl
-            "http.status_code" 200
-            defaultTags()
-          }
-        }
-      }
-    }
-    res.code() == HttpResponseStatus.OK.code()
-  }
-
-  @Unroll
-  def "non-erroneous GET forward to #forwardTo"() {
-    setup:
-    String reqUrl = baseUrl + "/$forwardFromFileName"
-    Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
-    when:
-    Response res = client.newCall(req).execute()
-
-    then:
-    println(res.body().string())
-    assertTraces(TEST_WRITER, 1) {
-      trace(0, 2) {
-        span(0) {
-          serviceName JSP_WEBAPP_CONTEXT
-          operationName "jsp.render"
-          resourceName "/$forwardFromFileName"
-          spanType DDSpanTypes.WEB_SERVLET
-          errored false
-          tags {
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
-            "jsp.requestURL" reqUrl
-            "http.status_code" 200
-            defaultTags()
-          }
-        }
-        span(1) {
-          serviceName JSP_WEBAPP_CONTEXT
-          operationName "jsp.render"
-          resourceName "/$forwardDestFileName"
-          spanType DDSpanTypes.WEB_SERVLET
-          errored false
-          tags {
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
-            "jsp.forwardOrigin" "/$forwardFromFileName"
-            "jsp.requestURL" baseUrl + "/$forwardDestFileName"
-            "http.status_code" 200
-            defaultTags()
-          }
-        }
-      }
-    }
-    res.code() == HttpResponseStatus.OK.code()
-
-    where:
-    forwardTo | forwardFromFileName | forwardDestFileName
-    "no java jsp" | "forwards/forwardToNoJavaJsp.jsp" | "nojava.jsp"
-    "normal java jsp" | "forwards/forwardToSimpleJava.jsp" | "common/loop.jsp"
-  }
-
-  def "non-erroneous GET forward to plain HTML"() {
-    setup:
-    String reqUrl = baseUrl + "/forwards/forwardToHtml.jsp"
-    Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
-    when:
-    Response res = client.newCall(req).execute()
-
-    then:
-    println(res.body().string())
-    assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName JSP_WEBAPP_CONTEXT
-          operationName "jsp.render"
-          resourceName "/forwards/forwardToHtml.jsp"
-          spanType DDSpanTypes.WEB_SERVLET
-          errored false
-          tags {
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
-            "jsp.requestURL" reqUrl
-            "http.status_code" 200
-            defaultTags()
-          }
-        }
-      }
-    }
-    res.code() == HttpResponseStatus.OK.code()
-  }
-
-  def "non-erroneous GET forwarded to jsp with multiple includes"() {
-    setup:
-    String reqUrl = baseUrl + "/forwards/forwardToIncludeMulti.jsp"
-    Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
-
-    when:
-    Response res = client.newCall(req).execute()
-
-    then:
-    println(res.body().string())
-    assertTraces(TEST_WRITER, 1) {
-      trace(0, 4) {
-        span(0) {
-          serviceName JSP_WEBAPP_CONTEXT
-          operationName "jsp.render"
-          resourceName "/forwards/forwardToIncludeMulti.jsp"
-          spanType DDSpanTypes.WEB_SERVLET
-          errored false
-          tags {
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
-            "jsp.requestURL" reqUrl
-            "http.status_code" 200
-            defaultTags()
-          }
-        }
-        span(1) {
-          serviceName JSP_WEBAPP_CONTEXT
-          operationName "jsp.render"
-          resourceName "/includes/includeMulti.jsp"
-          spanType DDSpanTypes.WEB_SERVLET
-          errored false
-          tags {
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
-            "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
-            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
-            "http.status_code" 200
-            defaultTags()
-          }
-        }
-        span(2) {
-          serviceName JSP_WEBAPP_CONTEXT
-          operationName "jsp.render"
-          resourceName "/common/javaLoopH2.jsp"
-          spanType DDSpanTypes.WEB_SERVLET
-          errored false
-          tags {
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
-            "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
-            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
-            "http.status_code" 200
             defaultTags()
           }
         }
         span(3) {
+          childOf span(1)
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "jsp.compile"
+          resourceName "/common/javaLoopH2.jsp"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "span.kind" "server"
+            "component" "jsp-http-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+            defaultTags()
+          }
+        }
+        span(4) {
+          childOf span(1)
           serviceName JSP_WEBAPP_CONTEXT
           operationName "jsp.render"
           resourceName "/common/javaLoopH2.jsp"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           tags {
-            "http.method" "GET"
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" "/$JSP_WEBAPP_CONTEXT"
-            "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
-            "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
-            "http.status_code" 200
+            "jsp.requestURL" reqUrl
+            defaultTags()
+          }
+        }
+        span(5) {
+          childOf span(1)
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "jsp.compile"
+          resourceName "/common/javaLoopH2.jsp"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "span.kind" "server"
+            "component" "jsp-http-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+            defaultTags()
+          }
+        }
+        span(6) {
+          childOf span(0)
+          serviceName JSP_WEBAPP_CONTEXT
+          operationName "jsp.compile"
+          resourceName "/includes/includeMulti.jsp"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "span.kind" "server"
+            "component" "jsp-http-servlet"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
           }
         }
       }
     }
     res.code() == HttpResponseStatus.OK.code()
+
+    cleanup:
+    res.close()
   }
 
-  def "non-erroneous GET forward to another forward (2 forwards)"() {
+  def "#test compile error should not produce render traces and spans"() {
     setup:
-    String reqUrl = baseUrl + "/forwards/forwardToJspForward.jsp"
+    String reqUrl = baseUrl + "/$jspFileName"
     Request req = new Request.Builder().url(new URL(reqUrl)).get().build()
 
     when:
     Response res = client.newCall(req).execute()
 
     then:
-    println(res.body().string())
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
+          parent()
           serviceName JSP_WEBAPP_CONTEXT
-          operationName "jsp.render"
-          resourceName "/forwards/forwardToJspForward.jsp"
+          operationName "servlet.request"
+          resourceName "GET /$JSP_WEBAPP_CONTEXT/$jspFileName"
           spanType DDSpanTypes.WEB_SERVLET
-          errored false
+          errored true
           tags {
+            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/$jspFileName"
             "http.method" "GET"
             "span.kind" "server"
-            "component" "jsp-http-servlet"
+            "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" "/$JSP_WEBAPP_CONTEXT"
-            "jsp.requestURL" reqUrl
-            "http.status_code" 200
+            "http.status_code" 500
+            errorTags(JasperException, String)
             defaultTags()
           }
         }
         span(1) {
+          childOf span(0)
           serviceName JSP_WEBAPP_CONTEXT
-          operationName "jsp.render"
-          resourceName "/forwards/forwardToSimpleJava.jsp"
+          operationName "jsp.compile"
+          resourceName "/$jspFileName"
           spanType DDSpanTypes.WEB_SERVLET
-          errored false
+          errored true
           tags {
-            "http.method" "GET"
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" "/$JSP_WEBAPP_CONTEXT"
-            "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
-            "jsp.requestURL" baseUrl + "/forwards/forwardToSimpleJava.jsp"
-            "http.status_code" 200
-            defaultTags()
-          }
-        }
-        span(2) {
-          serviceName JSP_WEBAPP_CONTEXT
-          operationName "jsp.render"
-          resourceName "/common/loop.jsp"
-          spanType DDSpanTypes.WEB_SERVLET
-          errored false
-          tags {
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
-            "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
-            "jsp.requestURL" baseUrl + "/common/loop.jsp"
-            "http.status_code" 200
+            "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
+            "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
+            "jsp.javaFile" expectedJspClassFilesDir + jspClassNamePrefix.replace('.', '/') + jspClassName + ".java"
+            "jsp.classpath" String
+            errorTags(JasperException, String)
             defaultTags()
           }
         }
       }
     }
-    res.code() == HttpResponseStatus.OK.code()
+    res.code() == HttpResponseStatus.INTERNAL_SERVER_ERROR.code()
+
+    cleanup:
+    res.close()
+
+    where:
+    test | jspFileName | jspClassName | jspClassNamePrefix
+    "normal" | "compileError.jsp" | "compileError_jsp" | ""
+    "forward"|"forwards/forwardWithCompileError.jsp" | "forwardWithCompileError_jsp" | "forwards."
   }
 }
