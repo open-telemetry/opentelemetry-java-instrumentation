@@ -19,8 +19,8 @@ class UrlConnectionTest extends AgentTestRunner {
     when:
     runUnderTrace("someTrace") {
       URLConnection connection = url.openConnection()
-      connection.setConnectTimeout(10)
-      connection.setReadTimeout(10)
+      connection.setConnectTimeout(10000)
+      connection.setReadTimeout(10000)
       assert GlobalTracer.get().scopeManager().active() != null
       connection.inputStream
     }
