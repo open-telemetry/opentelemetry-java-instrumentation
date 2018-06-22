@@ -1,11 +1,13 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
+import io.lettuce.core.ClientOptions
 import io.lettuce.core.ConnectionFuture
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisFuture
 import io.lettuce.core.RedisURI
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.async.RedisAsyncCommands
+import io.lettuce.core.api.sync.RedisCommands
 import io.lettuce.core.codec.StringCodec
 import io.lettuce.core.protocol.AsyncCommand
 import redis.embedded.RedisServer
@@ -30,34 +32,24 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     System.setProperty("dd.integration.lettuce.enabled", "true")
   }
 
-  @Shared
   public static final String HOST = "127.0.0.1"
   public static final int PORT = TestUtils.randomOpenPort()
   public static final int INCORRECT_PORT = TestUtils.randomOpenPort()
   public static final int DB_INDEX = 0
-  @Shared
   public static final String DB_ADDR = HOST + ":" + PORT + "/" + DB_INDEX
-  @Shared
   public static final String DB_ADDR_NON_EXISTENT = HOST + ":" + INCORRECT_PORT + "/" + DB_INDEX
-  @Shared
   public static final String DB_URI_NON_EXISTENT = "redis://" + DB_ADDR_NON_EXISTENT
   public static final String EMBEDDED_DB_URI = "redis://" + DB_ADDR
+  // Disable autoreconnect so we do not get stray traces popping up on server shutdown
+  public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
   @Shared
   RedisServer redisServer = RedisServer.builder()
-  // bind to localhost to avoid firewall popup
+    // bind to localhost to avoid firewall popup
     .setting("bind " + HOST)
-  // set max memory to avoid problems in CI
+    // set max memory to avoid problems in CI
     .setting("maxmemory 128M")
     .port(PORT).build()
-
-  @Shared
-  RedisClient redisClient = RedisClient.create(EMBEDDED_DB_URI)
-
-  @Shared
-  StatefulConnection connection
-  @Shared
-  RedisAsyncCommands<String, ?> asyncCommands = null
 
   @Shared
   Map<String, String> testHashMap = [
@@ -66,16 +58,25 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           age:       "53"
   ]
 
-  def setupSpec() {
+  RedisClient redisClient = RedisClient.create(EMBEDDED_DB_URI)
+  StatefulConnection connection
+  RedisAsyncCommands<String, ?> asyncCommands
+  RedisCommands<String, ?> syncCommands
+
+  def setup() {
     println "Using redis: $redisServer.args"
     redisServer.start()
+    redisClient.setOptions(CLIENT_OPTIONS)
+
     connection = redisClient.connect()
     asyncCommands = connection.async()
+    syncCommands = connection.sync()
+
     TEST_WRITER.waitForTraces(1)
     TEST_WRITER.clear()
   }
 
-  def cleanupSpec() {
+  def cleanup() {
     connection.close()
     redisServer.stop()
   }
@@ -83,11 +84,14 @@ class LettuceAsyncClientTest extends AgentTestRunner {
   def "connect using get on ConnectionFuture"() {
     setup:
     RedisClient testConnectionClient = RedisClient.create(EMBEDDED_DB_URI)
+    testConnectionClient.setOptions(CLIENT_OPTIONS)
+
+    when:
     ConnectionFuture connectionFuture = testConnectionClient.connectAsync(StringCodec.UTF8,
       new RedisURI(HOST, PORT, 3, TimeUnit.SECONDS))
-    def connection = connectionFuture.get()
+    StatefulConnection connection = connectionFuture.get()
 
-    expect:
+    then:
     connection != null
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
@@ -112,17 +116,20 @@ class LettuceAsyncClientTest extends AgentTestRunner {
         }
       }
     }
+
+    cleanup:
+    connection.close()
   }
 
   def "connect exception inside the connection future"() {
     setup:
     RedisClient testConnectionClient = RedisClient.create(DB_URI_NON_EXISTENT)
-    StatefulConnection connection = null
+    testConnectionClient.setOptions(CLIENT_OPTIONS)
 
     when:
     ConnectionFuture connectionFuture = testConnectionClient.connectAsync(StringCodec.UTF8,
       new RedisURI(HOST, INCORRECT_PORT, 3, TimeUnit.SECONDS))
-    connection = connectionFuture.get()
+    StatefulConnection connection = connectionFuture.get()
 
     then:
     connection == null
@@ -183,6 +190,8 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
   def "get command chained with thenAccept"() {
     setup:
+    syncCommands.set("TESTKEY", "TESTVAL")
+
     def conds = new AsyncConditions()
     Consumer<String> consumer = new Consumer<String>() {
       @Override
@@ -199,8 +208,25 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "SET"
+          errored false
+
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
@@ -271,11 +297,12 @@ class LettuceAsyncClientTest extends AgentTestRunner {
         }
       }
     }
-
   }
 
   def "command with no arguments using a biconsumer"() {
     setup:
+    syncCommands.set("TESTKEY", "TESTVAL")
+
     def conds = new AsyncConditions()
     BiConsumer<String, Throwable> biConsumer = new BiConsumer<String, Throwable>() {
       @Override
@@ -292,8 +319,25 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "SET"
+          errored false
+
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
@@ -433,9 +477,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
         }
       }
     }
-
-    cleanup:
-    asyncCommands.setAutoFlushCommands(true)
   }
 
   def "cancel command before it finishes"() {
@@ -477,9 +518,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
         }
       }
     }
-
-    cleanup:
-    asyncCommands.setAutoFlushCommands(true)
   }
 
   def "debug segfault command (returns void) with no argument should produce span"() {
@@ -505,11 +543,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           }
         }
       }
-    }
-
-    cleanup:
-    if (!redisServer.active) {
-      redisServer.start()
     }
   }
 
@@ -537,11 +570,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           }
         }
       }
-    }
-
-    cleanup:
-    if (!redisServer.active) {
-      redisServer.start()
     }
   }
 }

@@ -1,5 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
+import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisConnectionException
 import io.lettuce.core.api.StatefulConnection
@@ -18,34 +19,24 @@ class LettuceSyncClientTest extends AgentTestRunner {
     System.setProperty("dd.integration.lettuce.enabled", "true")
   }
 
-  @Shared
   public static final String HOST = "127.0.0.1"
   public static final int PORT = TestUtils.randomOpenPort()
   public static final int INCORRECT_PORT = TestUtils.randomOpenPort()
   public static final int DB_INDEX = 0
-  @Shared
   public static final String DB_ADDR = HOST + ":" + PORT + "/" + DB_INDEX
-  @Shared
   public static final String DB_ADDR_NON_EXISTENT = HOST + ":" + INCORRECT_PORT + "/" + DB_INDEX
-  @Shared
   public static final String DB_URI_NON_EXISTENT = "redis://" + DB_ADDR_NON_EXISTENT
   public static final String EMBEDDED_DB_URI = "redis://" + DB_ADDR
+  // Disable autoreconnect so we do not get stray traces popping up on server shutdown
+  public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
   @Shared
   RedisServer redisServer = RedisServer.builder()
-  // bind to localhost to avoid firewall popup
+    // bind to localhost to avoid firewall popup
     .setting("bind " + HOST)
-  // set max memory to avoid problems in CI
+    // set max memory to avoid problems in CI
     .setting("maxmemory 128M")
     .port(PORT).build()
-
-  @Shared
-  RedisClient redisClient = RedisClient.create(EMBEDDED_DB_URI)
-
-  @Shared
-  StatefulConnection connection
-  @Shared
-  RedisCommands<String, ?> syncCommands = null
 
   @Shared
   Map<String, String> testHashMap = [
@@ -54,7 +45,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
           age:       "53"
   ]
 
-  def setupSpec() {
+  RedisClient redisClient = RedisClient.create(EMBEDDED_DB_URI)
+  StatefulConnection connection
+  RedisCommands<String, ?> syncCommands
+
+  def setup() {
     redisServer.start()
     connection = redisClient.connect()
     syncCommands = connection.sync()
@@ -62,7 +57,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     TEST_WRITER.clear()
   }
 
-  def cleanupSpec() {
+  def cleanup() {
     connection.close()
     redisServer.stop()
   }
@@ -70,9 +65,12 @@ class LettuceSyncClientTest extends AgentTestRunner {
   def "connect"() {
     setup:
     RedisClient testConnectionClient = RedisClient.create(EMBEDDED_DB_URI)
-    testConnectionClient.connect()
+    testConnectionClient.setOptions(CLIENT_OPTIONS)
 
-    expect:
+    when:
+    StatefulConnection connection = testConnectionClient.connect()
+
+    then:
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
@@ -96,11 +94,15 @@ class LettuceSyncClientTest extends AgentTestRunner {
         }
       }
     }
+
+    cleanup:
+    connection.close()
   }
 
   def "connect exception"() {
     setup:
     RedisClient testConnectionClient = RedisClient.create(DB_URI_NON_EXISTENT)
+    testConnectionClient.setOptions(CLIENT_OPTIONS)
 
     when:
     testConnectionClient.connect()
@@ -162,12 +164,30 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
   def "get command"() {
     setup:
+    syncCommands.set("TESTKEY", "TESTVAL")
     String res = syncCommands.get("TESTKEY")
 
     expect:
     res == "TESTVAL"
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "SET"
+          errored false
+
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
@@ -216,12 +236,30 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
   def "command with no arguments"() {
     setup:
+    syncCommands.set("TESTKEY", "TESTVAL")
     def keyRetrieved = syncCommands.randomkey()
 
     expect:
     keyRetrieved == "TESTKEY"
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "SET"
+          errored false
+
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
@@ -297,12 +335,30 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
   def "hash getall command"() {
     setup:
+    syncCommands.hmset("user", testHashMap)
     Map<String, String> res = syncCommands.hgetall("user")
 
     expect:
     res == testHashMap
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          spanType "redis"
+          resourceName "HMSET"
+          errored false
+
+          tags {
+            defaultTags()
+            "component" "redis-client"
+            "db.type" "redis"
+            "span.kind" "client"
+            "span.type" "redis"
+          }
+        }
+      }
+      trace(1, 1) {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
@@ -346,11 +402,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
         }
       }
     }
-
-    cleanup:
-    if (!redisServer.active) {
-      redisServer.start()
-    }
   }
 
   def "shutdown command (returns void) should produce a span"() {
@@ -376,11 +427,6 @@ class LettuceSyncClientTest extends AgentTestRunner {
           }
         }
       }
-    }
-
-    cleanup:
-    if (!redisServer.active) {
-      redisServer.start()
     }
   }
 }
