@@ -56,11 +56,12 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
               .buildSpan("jsp.compile")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
-              .withTag(
-                  "servlet.context", jspCompilationContext.getServletContext().getContextPath())
               .startActive(true);
 
       final Span span = scope.span();
+      if (jspCompilationContext.getServletContext() != null) {
+        span.setTag("servlet.context", jspCompilationContext.getServletContext().getContextPath());
+      }
       span.setTag(DDTags.RESOURCE_NAME, jspCompilationContext.getJspFile());
       Tags.COMPONENT.set(span, "jsp-http-servlet");
       return scope;
@@ -74,13 +75,16 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
 
       final Span span = scope.span();
       if (jspCompilationContext != null) {
-        span.setTag("jsp.compiler", jspCompilationContext.getCompiler().getClass().getName());
+        if (jspCompilationContext.getCompiler() != null) {
+          span.setTag("jsp.compiler", jspCompilationContext.getCompiler().getClass().getName());
+        }
         span.setTag("jsp.classFQCN", jspCompilationContext.getFQCN());
         if (throwable != null) {
           span.setTag("jsp.javaFile", jspCompilationContext.getServletJavaFileName());
           span.setTag("jsp.classpath", jspCompilationContext.getClassPath());
         }
       }
+
       if (throwable != null) {
         Tags.ERROR.set(span, Boolean.TRUE);
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));

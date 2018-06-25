@@ -3,7 +3,7 @@ apply plugin: 'version-scan'
 versionScan {
   group = "org.apache.tomcat"
   module = "tomcat-jasper"
-  versions = "[8.0.1,)"
+  versions = "[7.0.0,)"
   scanDependencies = true
   verifyPresent = [
     "org.apache.jasper.servlet.JspServletWrapper": null,
@@ -21,7 +21,8 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'org.apache.tomcat', name: 'tomcat-jasper', version: '7.0.42'
+  // compiling against tomcat 7.0.20 because there seems to be some issues with Tomcat's dependency < 7.0.20
+  compileOnly group: 'org.apache.tomcat', name: 'tomcat-jasper', version: '7.0.20'
   compileOnly group: 'javax.servlet.jsp', name: 'javax.servlet.jsp-api', version: '2.3.0'
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 
@@ -35,10 +36,11 @@ dependencies {
 
   testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:servlet-3')
-  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '7.0.42'
-  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '7.0.42'
-  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-logging-juli', version: '7.0.42'
-  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '7.0.42'
+  // using tomcat 7.0.37 because there seems to be some issues with Tomcat's jar scanning in versions < 7.0.37
+  // https://stackoverflow.com/questions/23484098/org-apache-tomcat-util-bcel-classfile-classformatexception-invalid-byte-tag-in
+  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '7.0.37'
+  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-logging-juli', version: '7.0.37'
+  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '7.0.37'
 
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.10.0'
 }
@@ -49,5 +51,6 @@ configurations.latestDepTestCompile {
     force group: 'javax.servlet', name: 'javax.servlet-api', version: '+'
     force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '+'
     force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '+'
+    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-logging-juli', version: '+'
   }
 }

@@ -7,8 +7,6 @@ import okhttp3.*
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.jasper.JasperException
-//import org.apache.tomcat.JarScanFilter
-//import org.apache.tomcat.JarScanType
 import spock.lang.Unroll
 
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
@@ -17,6 +15,12 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
 
   static {
     System.setProperty("dd.integration.jsp.enabled", "true")
+    // skip jar scanning using environment variables:
+    // http://tomcat.apache.org/tomcat-7.0-doc/config/systemprops.html#JAR_Scanning
+    // having this set allows us to test with old versions of the tomcat api since
+    // JarScanFilter did not exist in the tomcat 7 api
+    System.setProperty("org.apache.catalina.startup.ContextConfig.jarsToSkip", "*")
+    System.setProperty("org.apache.catalina.startup.TldConfig.jarsToSkip", "*")
   }
 
   static final int PORT = TestUtils.randomOpenPort()
@@ -49,14 +53,6 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
 
     appContext = tomcatServer.addWebapp("/$JSP_WEBAPP_CONTEXT",
       JSPInstrumentationForwardTests.getResource("/webapps/jsptest").getPath())
-
-    // Speed up startup by disabling jar scanning:
-//    appContext.getJarScanner().setJarScanFilter(new JarScanFilter() {
-//      @Override
-//      boolean check(JarScanType jarScanType, String jarName) {
-//        return false
-//      }
-//    })
 
     tomcatServer.start()
     System.out.println(
