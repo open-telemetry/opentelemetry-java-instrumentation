@@ -16,6 +16,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -41,6 +43,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       Collections.newSetFromMap(new ConcurrentHashMap<WeakReference<?>, Boolean>());
 
   private final AtomicInteger pendingReferenceCount = new AtomicInteger(0);
+  private final AtomicReference<WeakReference<DDSpan>> rootSpan = new AtomicReference<>();
 
   /** Ensure a trace is never written multiple times */
   private final AtomicBoolean isWritten = new AtomicBoolean(false);
@@ -74,6 +77,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       log.debug("{} - span registered for wrong trace ({})", span, traceId);
       return;
     }
+    rootSpan.compareAndSet(null, new WeakReference<DDSpan>(span));
     synchronized (span) {
       if (null == span.ref) {
         span.ref = new WeakReference<DDSpan>(span, referenceQueue);
@@ -119,6 +123,11 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       log.debug("{} - finished after trace reported.", span);
     }
     expireSpan(span);
+  }
+
+  public DDSpan getRootSpan() {
+    WeakReference<DDSpan> rootRef = rootSpan.get();
+    return rootRef == null ? null : rootRef.get();
   }
 
   /**
