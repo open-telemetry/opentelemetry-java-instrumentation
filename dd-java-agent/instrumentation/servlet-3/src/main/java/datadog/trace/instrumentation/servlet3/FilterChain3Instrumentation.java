@@ -76,11 +76,12 @@ public final class FilterChain3Instrumentation extends Instrumenter.Configurable
         return null;
       }
 
+      final HttpServletRequest httpServletRequest = (HttpServletRequest) req;
       final SpanContext extractedContext =
           GlobalTracer.get()
               .extract(
                   Format.Builtin.HTTP_HEADERS,
-                  new HttpServletRequestExtractAdapter((HttpServletRequest) req));
+                  new HttpServletRequestExtractAdapter(httpServletRequest));
 
       final Scope scope =
           GlobalTracer.get()
@@ -88,7 +89,7 @@ public final class FilterChain3Instrumentation extends Instrumenter.Configurable
               .asChildOf(extractedContext)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
-              .withTag("servlet.context", ((HttpServletRequest) req).getContextPath())
+              .withTag("servlet.context", httpServletRequest.getContextPath())
               .startActive(false);
 
       if (scope instanceof TraceScope) {
@@ -97,8 +98,11 @@ public final class FilterChain3Instrumentation extends Instrumenter.Configurable
 
       final Span span = scope.span();
       Tags.COMPONENT.set(span, "java-web-servlet");
-      Tags.HTTP_METHOD.set(span, ((HttpServletRequest) req).getMethod());
-      Tags.HTTP_URL.set(span, ((HttpServletRequest) req).getRequestURL().toString());
+      Tags.HTTP_METHOD.set(span, httpServletRequest.getMethod());
+      Tags.HTTP_URL.set(span, httpServletRequest.getRequestURL().toString());
+      if (httpServletRequest.getUserPrincipal() != null) {
+        span.setTag("user.principal", httpServletRequest.getUserPrincipal().getName());
+      }
       return scope;
     }
 
@@ -150,7 +154,7 @@ public final class FilterChain3Instrumentation extends Instrumenter.Configurable
       @Override
       public void onComplete(final AsyncEvent event) throws IOException {
         if (activated.compareAndSet(false, true)) {
-          try (Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+          try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
             Tags.HTTP_STATUS.set(
                 span, ((HttpServletResponse) event.getSuppliedResponse()).getStatus());
           }
@@ -160,7 +164,7 @@ public final class FilterChain3Instrumentation extends Instrumenter.Configurable
       @Override
       public void onTimeout(final AsyncEvent event) throws IOException {
         if (activated.compareAndSet(false, true)) {
-          try (Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+          try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
             Tags.ERROR.set(span, Boolean.TRUE);
             span.setTag("timeout", event.getAsyncContext().getTimeout());
           }
@@ -170,7 +174,7 @@ public final class FilterChain3Instrumentation extends Instrumenter.Configurable
       @Override
       public void onError(final AsyncEvent event) throws IOException {
         if (event.getThrowable() != null && activated.compareAndSet(false, true)) {
-          try (Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+          try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
             if (((HttpServletResponse) event.getSuppliedResponse()).getStatus()
                 == HttpServletResponse.SC_OK) {
               // exception is thrown in filter chain, but status code is incorrect

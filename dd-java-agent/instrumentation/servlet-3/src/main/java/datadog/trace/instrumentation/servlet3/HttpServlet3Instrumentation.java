@@ -95,6 +95,9 @@ public final class HttpServlet3Instrumentation extends Instrumenter.Configurable
       Tags.COMPONENT.set(span, "java-web-servlet");
       Tags.HTTP_METHOD.set(span, req.getMethod());
       Tags.HTTP_URL.set(span, req.getRequestURL().toString());
+      if (req.getUserPrincipal() != null) {
+        span.setTag("user.principal", req.getUserPrincipal().getName());
+      }
       return scope;
     }
 

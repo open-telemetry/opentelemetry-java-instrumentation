@@ -71,11 +71,12 @@ public final class FilterChain2Instrumentation extends Instrumenter.Configurable
         return null;
       }
 
+      final HttpServletRequest httpServletRequest = (HttpServletRequest) req;
       final SpanContext extractedContext =
           GlobalTracer.get()
               .extract(
                   Format.Builtin.HTTP_HEADERS,
-                  new HttpServletRequestExtractAdapter((HttpServletRequest) req));
+                  new HttpServletRequestExtractAdapter(httpServletRequest));
 
       final Scope scope =
           GlobalTracer.get()
@@ -83,7 +84,7 @@ public final class FilterChain2Instrumentation extends Instrumenter.Configurable
               .asChildOf(extractedContext)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
-              .withTag("servlet.context", ((HttpServletRequest) req).getContextPath())
+              .withTag("servlet.context", httpServletRequest.getContextPath())
               .startActive(true);
 
       if (scope instanceof TraceScope) {
@@ -92,8 +93,11 @@ public final class FilterChain2Instrumentation extends Instrumenter.Configurable
 
       final Span span = scope.span();
       Tags.COMPONENT.set(span, "java-web-servlet");
-      Tags.HTTP_METHOD.set(span, ((HttpServletRequest) req).getMethod());
-      Tags.HTTP_URL.set(span, ((HttpServletRequest) req).getRequestURL().toString());
+      Tags.HTTP_METHOD.set(span, httpServletRequest.getMethod());
+      Tags.HTTP_URL.set(span, httpServletRequest.getRequestURL().toString());
+      if (httpServletRequest.getUserPrincipal() != null) {
+        span.setTag("user.principal", httpServletRequest.getUserPrincipal().getName());
+      }
       return scope;
     }
 
@@ -107,16 +111,10 @@ public final class FilterChain2Instrumentation extends Instrumenter.Configurable
       if (scope != null) {
         if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
           final Span span = scope.span();
-          final HttpServletRequest req = (HttpServletRequest) request;
-          final HttpServletResponse resp = (HttpServletResponse) response;
 
           if (throwable != null) {
             Tags.ERROR.set(span, Boolean.TRUE);
             span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-          } else {
-            Tags.COMPONENT.set(span, "java-web-servlet");
-            Tags.HTTP_METHOD.set(span, req.getMethod());
-            Tags.HTTP_URL.set(span, req.getRequestURL().toString());
           }
         }
         scope.close();

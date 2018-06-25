@@ -96,6 +96,9 @@ public final class HttpServlet2Instrumentation extends Instrumenter.Configurable
       Tags.COMPONENT.set(span, "java-web-servlet");
       Tags.HTTP_METHOD.set(span, req.getMethod());
       Tags.HTTP_URL.set(span, req.getRequestURL().toString());
+      if (req.getUserPrincipal() != null) {
+        span.setTag("user.principal", req.getUserPrincipal().getName());
+      }
       return scope;
     }
 
@@ -109,16 +112,10 @@ public final class HttpServlet2Instrumentation extends Instrumenter.Configurable
       if (scope != null) {
         if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
           final Span span = scope.span();
-          final HttpServletRequest req = (HttpServletRequest) request;
-          final HttpServletResponse resp = (HttpServletResponse) response;
 
           if (throwable != null) {
             Tags.ERROR.set(span, Boolean.TRUE);
             span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-          } else {
-            Tags.COMPONENT.set(span, "java-web-servlet");
-            Tags.HTTP_METHOD.set(span, req.getMethod());
-            Tags.HTTP_URL.set(span, req.getRequestURL().toString());
           }
         }
         scope.close();
