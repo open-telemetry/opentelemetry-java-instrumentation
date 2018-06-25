@@ -4,8 +4,6 @@ import static io.opentracing.log.Fields.ERROR_OBJECT;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.sampling.PrioritySampling;
@@ -255,7 +253,7 @@ public class DDSpan implements Span, MutableSpan {
   }
 
   /**
-   * Set the sampling priority of the span.
+   * Set the sampling priority of the root span of this span's trace
    *
    * <p>Has no effect if the span priority has been propagated (injected or extracted).
    */
@@ -288,6 +286,16 @@ public class DDSpan implements Span, MutableSpan {
       meta.put(entry.getKey(), String.valueOf(entry.getValue()));
     }
     return meta;
+  }
+
+  /**
+   * Span metrics.
+   *
+   * @return metrics for this span
+   */
+  @JsonGetter
+  public Map<String, Number> getMetrics() {
+    return context.getMetrics();
   }
 
   @Override
@@ -336,8 +344,7 @@ public class DDSpan implements Span, MutableSpan {
   }
 
   @Override
-  @JsonGetter("sampling_priority")
-  @JsonInclude(Include.NON_NULL)
+  @JsonIgnore
   public Integer getSamplingPriority() {
     final int samplingPriority = context.getSamplingPriority();
     if (samplingPriority == PrioritySampling.UNSET) {
