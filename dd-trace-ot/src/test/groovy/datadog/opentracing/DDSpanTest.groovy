@@ -103,6 +103,8 @@ class DDSpanTest extends Specification {
     def total = System.nanoTime() - start
 
     expect:
+    // Generous 5 seconds to execute this test
+    Math.abs(TimeUnit.NANOSECONDS.toSeconds(span.startTime) - TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())) < 5
     span.durationNano > betweenDur
     span.durationNano < total
     span.durationNano % mod > 0 // Very slim chance of a false negative.
@@ -121,6 +123,8 @@ class DDSpanTest extends Specification {
     def total = Math.max(1, System.currentTimeMillis() - start)
 
     expect:
+    // Generous 5 seconds to execute this test
+    Math.abs(TimeUnit.NANOSECONDS.toSeconds(span.startTime) - TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())) < 5
     span.durationNano >= TimeUnit.MILLISECONDS.toNanos(betweenDur)
     span.durationNano <= TimeUnit.MILLISECONDS.toNanos(total)
     span.durationNano % mod == 0 || span.durationNano == 1
@@ -138,6 +142,8 @@ class DDSpanTest extends Specification {
     def total = System.currentTimeMillis() - start + 1
 
     expect:
+    // Generous 5 seconds to execute this test
+    Math.abs(TimeUnit.NANOSECONDS.toSeconds(span.startTime) - TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())) < 5
     span.durationNano >= TimeUnit.MILLISECONDS.toNanos(betweenDur)
     span.durationNano <= TimeUnit.MILLISECONDS.toNanos(total)
     span.durationNano % mod == 0

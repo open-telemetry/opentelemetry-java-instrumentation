@@ -26,7 +26,7 @@ public class Clock {
    *
    * @return The current nanos ticks
    */
-  public static synchronized long currentNanoTicks() {
+  public static long currentNanoTicks() {
     return System.nanoTime();
   }
 
@@ -35,7 +35,17 @@ public class Clock {
    *
    * @return the current epoch time in micros
    */
-  public static synchronized long currentMicroTime() {
+  public static long currentMicroTime() {
     return TimeUnit.MILLISECONDS.toMicros(System.currentTimeMillis());
+  }
+
+  /**
+   * Get the current time in nanos. The actual precision is the millis Note: this will overflow in
+   * ~290 years after epoch
+   *
+   * @return the current epoch time in nanos
+   */
+  public static long currentNanoTime() {
+    return TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis());
   }
 }
