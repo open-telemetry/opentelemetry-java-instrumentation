@@ -1,11 +1,14 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
+import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
-class AkkaHttpInstrumentationTest extends AgentTestRunner {
+class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
   static {
     System.setProperty("dd.integration.akka-http-server.enabled", "true")
   }
@@ -52,12 +55,12 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
           errored false
           tags {
             defaultTags()
-            "http.status_code" 200
-            "http.url" "http://localhost:$port/test"
-            "http.method" "GET"
-            "span.kind" "server"
-            "span.type" "web"
-            "component" "akka-http-server"
+            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.HTTP_URL.key" "http://localhost:$port/test"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+            "$Tags.COMPONENT.key" "akka-http-server"
           }
         }
         span(1) {
@@ -94,16 +97,13 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
           errored true
           tags {
             defaultTags()
-            "http.status_code" 500
-            "http.url" "http://localhost:$port/$endpoint"
-            "http.method" "GET"
-            "span.kind" "server"
-            "span.type" "web"
-            "component" "akka-http-server"
-            "error" true
-            "error.type" RuntimeException.name
-            "error.msg" errorMessage
-            "error.stack" String
+            "$Tags.HTTP_STATUS.key" 500
+            "$Tags.HTTP_URL.key" "http://localhost:$port/$endpoint"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+            "$Tags.COMPONENT.key" "akka-http-server"
+            errorTags RuntimeException, errorMessage
           }
         }
       }
@@ -137,13 +137,13 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
           errored true
           tags {
             defaultTags()
-            "http.status_code" 500
-            "http.url" "http://localhost:$port/server-error"
-            "http.method" "GET"
-            "span.kind" "server"
-            "span.type" "web"
-            "component" "akka-http-server"
-            "error" true
+            "$Tags.HTTP_STATUS.key" 500
+            "$Tags.HTTP_URL.key" "http://localhost:$port/server-error"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+            "$Tags.COMPONENT.key" "akka-http-server"
+            "$Tags.ERROR.key" true
           }
         }
       }
@@ -176,12 +176,12 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
           errored false
           tags {
             defaultTags()
-            "http.status_code" 404
-            "http.url" "http://localhost:$port/not-found"
-            "http.method" "GET"
-            "span.kind" "server"
-            "span.type" "web"
-            "component" "akka-http-server"
+            "$Tags.HTTP_STATUS.key" 404
+            "$Tags.HTTP_URL.key" "http://localhost:$port/not-found"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+            "$Tags.COMPONENT.key" "akka-http-server"
           }
         }
       }

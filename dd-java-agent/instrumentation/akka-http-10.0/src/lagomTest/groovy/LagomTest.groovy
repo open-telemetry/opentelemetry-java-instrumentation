@@ -1,9 +1,11 @@
 import akka.NotUsed
 import akka.stream.javadsl.Source
 import akka.stream.testkit.javadsl.TestSink
+import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
+import io.opentracing.tag.Tags
 import net.bytebuddy.utility.JavaModule
 
-import static java.util.concurrent.TimeUnit.SECONDS
 import datadog.trace.agent.test.AgentTestRunner
 import play.inject.guice.GuiceApplicationBuilder
 import spock.lang.Shared
@@ -64,7 +66,7 @@ class LagomTest extends AgentTestRunner {
       Source.from(Arrays.asList("msg1", "msg2", "msg3"))
       .concat(Source.maybe())
     Source<String, NotUsed> output = service.echo().invoke(input)
-      .toCompletableFuture().get(5, SECONDS)
+      .toCompletableFuture().get()
     Probe<String> probe = output.runWith(TestSink.probe(server.system()), server.materializer())
     probe.request(10)
     probe.expectNext("msg1")
@@ -82,12 +84,12 @@ class LagomTest extends AgentTestRunner {
           errored false
           tags {
             defaultTags()
-            "http.status_code" 101
-            "http.url" "ws://localhost:${server.port()}/echo"
-            "http.method" "GET"
-            "span.kind" "server"
-            "span.type" "web"
-            "component" "akka-http-server"
+            "$Tags.HTTP_STATUS.key" 101
+            "$Tags.HTTP_URL.key" "ws://localhost:${server.port()}/echo"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+            "$Tags.COMPONENT.key" "akka-http-server"
           }
         }
         span(1) {
@@ -106,7 +108,7 @@ class LagomTest extends AgentTestRunner {
       Source.from(Arrays.asList("msg1", "msg2", "msg3"))
         .concat(Source.maybe())
     try {
-      service.error().invoke(input).toCompletableFuture().get(5, SECONDS)
+      service.error().invoke(input).toCompletableFuture().get()
     } catch (Exception e) {
     }
 
@@ -120,13 +122,13 @@ class LagomTest extends AgentTestRunner {
           errored true
           tags {
             defaultTags()
-            "http.status_code" 500
-            "http.url" "ws://localhost:${server.port()}/error"
-            "http.method" "GET"
-            "span.kind" "server"
-            "span.type" "web"
-            "component" "akka-http-server"
-            "error" true
+            "$Tags.HTTP_STATUS.key" 500
+            "$Tags.HTTP_URL.key" "ws://localhost:${server.port()}/error"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+            "$Tags.COMPONENT.key" "akka-http-server"
+            "$Tags.ERROR.key" true
           }
         }
       }
