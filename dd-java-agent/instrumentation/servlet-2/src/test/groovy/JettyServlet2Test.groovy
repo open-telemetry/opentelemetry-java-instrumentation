@@ -5,10 +5,18 @@ import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.util.GlobalTracer
+import okhttp3.Credentials
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import org.eclipse.jetty.http.HttpHeaders
+import org.eclipse.jetty.http.security.Constraint
+import org.eclipse.jetty.security.ConstraintMapping
+import org.eclipse.jetty.security.ConstraintSecurityHandler
+import org.eclipse.jetty.security.HashLoginService
+import org.eclipse.jetty.security.LoginService
+import org.eclipse.jetty.security.authentication.BasicAuthenticator
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 
@@ -34,9 +42,9 @@ class JettyServlet2Test extends AgentTestRunner {
     }
   })
   // Uncomment when debugging:
-    .connectTimeout(1, TimeUnit.HOURS)
-    .writeTimeout(1, TimeUnit.HOURS)
-    .readTimeout(1, TimeUnit.HOURS)
+  //  .connectTimeout(1, TimeUnit.HOURS)
+  //  .writeTimeout(1, TimeUnit.HOURS)
+  //  .readTimeout(1, TimeUnit.HOURS)
     .build()
 
   private Server jettyServer
@@ -55,7 +63,11 @@ class JettyServlet2Test extends AgentTestRunner {
     jettyServer = new Server(PORT)
     servletContext = new ServletContextHandler()
 
+    ConstraintSecurityHandler security = setupAuthentication(jettyServer)
+
+    servletContext.setSecurityHandler(security)
     servletContext.addServlet(TestServlet2.Sync, "/sync")
+    servletContext.addServlet(TestServlet2.Sync, "/auth/sync")
 
     jettyServer.setHandler(servletContext)
     jettyServer.start()
@@ -82,11 +94,13 @@ class JettyServlet2Test extends AgentTestRunner {
 
   def "test #path servlet call"() {
     setup:
-    def request = new Request.Builder()
+    def requestBuilder = new Request.Builder()
       .url("http://localhost:$PORT/$path")
       .get()
-      .build()
-    def response = client.newCall(request).execute()
+    if (auth) {
+      requestBuilder.header(HttpHeaders.AUTHORIZATION, Credentials.basic("user", "password"))
+    }
+    def response = client.newCall(requestBuilder.build()).execute()
 
     expect:
     response.body().string().trim() == expectedResponse
@@ -107,6 +121,9 @@ class JettyServlet2Test extends AgentTestRunner {
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" ""
+            if (auth) {
+              "user.principal" "user"
+            }
             defaultTags()
           }
         }
@@ -114,8 +131,9 @@ class JettyServlet2Test extends AgentTestRunner {
     }
 
     where:
-    path   | expectedResponse
-    "sync" | "Hello Sync"
+    path        | expectedResponse | auth
+    "sync"      | "Hello Sync"     | false
+    "auth/sync" | "Hello Sync"     | true
   }
 
   def "test #path error servlet call"() {
@@ -194,5 +212,38 @@ class JettyServlet2Test extends AgentTestRunner {
     where:
     path   | expectedResponse
     "sync" | "Hello Sync"
+  }
+
+  /**
+   * Setup simple authentication for tests
+   * <p>
+   *     requests to {@code /auth/*} need login 'user' and password 'password'
+   * <p>
+   *     For details @see <a href="http://www.eclipse.org/jetty/documentation/9.3.x/embedded-examples.html">http://www.eclipse.org/jetty/documentation/9.3.x/embedded-examples.html</a>
+   *
+   * @param jettyServer server to attach login service
+   * @return SecurityHandler that can be assigned to servlet
+   */
+  private ConstraintSecurityHandler setupAuthentication(Server jettyServer) {
+    ConstraintSecurityHandler security = new ConstraintSecurityHandler()
+
+    Constraint constraint = new Constraint()
+    constraint.setName("auth")
+    constraint.setAuthenticate(true)
+    constraint.setRoles("role")
+
+    ConstraintMapping mapping = new ConstraintMapping()
+    mapping.setPathSpec("/auth/*")
+    mapping.setConstraint(constraint)
+
+    security.setConstraintMappings(mapping)
+    security.setAuthenticator(new BasicAuthenticator())
+
+    LoginService loginService = new HashLoginService("TestRealm",
+      "src/test/resources/realm.properties")
+    security.setLoginService(loginService)
+    jettyServer.addBean(loginService)
+
+    security
   }
 }
