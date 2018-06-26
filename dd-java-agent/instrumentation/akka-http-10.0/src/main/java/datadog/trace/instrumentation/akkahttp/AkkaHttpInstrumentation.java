@@ -35,7 +35,7 @@ import scala.runtime.AbstractFunction1;
 @AutoService(Instrumenter.class)
 public final class AkkaHttpInstrumentation extends Instrumenter.Configurable {
   public AkkaHttpInstrumentation() {
-    super("akkahttp");
+    super("akka-http", "akka-http-server");
   }
 
   @Override
@@ -122,12 +122,12 @@ public final class AkkaHttpInstrumentation extends Instrumenter.Configurable {
           GlobalTracer.get().extract(Format.Builtin.HTTP_HEADERS, new AkkaHttpHeaders(request));
       final Scope scope =
           GlobalTracer.get()
-              .buildSpan("akkahttp.request")
+              .buildSpan("akka-http.request")
               .asChildOf(extractedContext)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .withTag(Tags.HTTP_METHOD.getKey(), request.method().value())
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
-              .withTag(Tags.COMPONENT.getKey(), "akkahttp-action")
+              .withTag(Tags.COMPONENT.getKey(), "akka-http-server")
               .withTag(Tags.HTTP_URL.getKey(), request.getUri().toString())
               .startActive(false);
 
