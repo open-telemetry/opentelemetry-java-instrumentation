@@ -17,7 +17,7 @@ import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class LagomTest extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.akkahttp.enabled", "true")
+    System.setProperty("dd.integration.akka-http-server.enabled", "true")
   }
 
   @Shared
@@ -77,7 +77,7 @@ class LagomTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"
-          operationName "akkahttp.request"
+          operationName "akka-http.request"
           resourceName  "GET ws://?/echo"
           errored false
           tags {
@@ -87,7 +87,7 @@ class LagomTest extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
-            "component" "akkahttp-action"
+            "component" "akka-http-server"
           }
         }
         span(1) {
@@ -115,7 +115,7 @@ class LagomTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"
-          operationName "akkahttp.request"
+          operationName "akka-http.request"
           resourceName "GET ws://?/error"
           errored true
           tags {
@@ -125,7 +125,7 @@ class LagomTest extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
-            "component" "akkahttp-action"
+            "component" "akka-http-server"
             "error" true
           }
         }

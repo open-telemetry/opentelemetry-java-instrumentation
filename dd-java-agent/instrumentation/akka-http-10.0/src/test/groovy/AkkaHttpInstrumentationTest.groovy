@@ -7,7 +7,7 @@ import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class AkkaHttpInstrumentationTest extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.akkahttp.enabled", "true")
+    System.setProperty("dd.integration.akka-http-server.enabled", "true")
   }
 
   @Shared
@@ -47,7 +47,7 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
           traceId 123
           parentId 456
           serviceName "unnamed-java-app"
-          operationName "akkahttp.request"
+          operationName "akka-http.request"
           resourceName "GET /test"
           errored false
           tags {
@@ -57,7 +57,7 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
-            "component" "akkahttp-action"
+            "component" "akka-http-server"
           }
         }
         span(1) {
@@ -89,7 +89,7 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"
-          operationName "akkahttp.request"
+          operationName "akka-http.request"
           resourceName "GET /$endpoint"
           errored true
           tags {
@@ -99,7 +99,7 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
-            "component" "akkahttp-action"
+            "component" "akka-http-server"
             "error" true
             "error.type" RuntimeException.name
             "error.msg" errorMessage
@@ -132,7 +132,7 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"
-          operationName "akkahttp.request"
+          operationName "akka-http.request"
           resourceName "GET /server-error"
           errored true
           tags {
@@ -142,7 +142,7 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
-            "component" "akkahttp-action"
+            "component" "akka-http-server"
             "error" true
           }
         }
@@ -171,7 +171,7 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"
-          operationName "akkahttp.request"
+          operationName "akka-http.request"
           resourceName "404"
           errored false
           tags {
@@ -181,7 +181,7 @@ class AkkaHttpInstrumentationTest extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
-            "component" "akkahttp-action"
+            "component" "akka-http-server"
           }
         }
       }

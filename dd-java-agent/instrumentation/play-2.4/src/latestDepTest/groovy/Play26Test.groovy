@@ -10,7 +10,7 @@ import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class Play26Test extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.akkahttp.enabled", "true")
+    System.setProperty("dd.integration.akka-http-server.enabled", "true")
   }
 
   @Shared
@@ -47,7 +47,7 @@ class Play26Test extends AgentTestRunner {
           traceId 123
           parentId 456
           serviceName "unnamed-java-app"
-          operationName "akkahttp.request"
+          operationName "akka-http.request"
           resourceName "GET /helloplay/:from"
           errored false
           tags {
@@ -57,7 +57,7 @@ class Play26Test extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
-            "component" "akkahttp-action"
+            "component" "akka-http-server"
           }
         }
         span(1) {
@@ -97,7 +97,7 @@ class Play26Test extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"
-          operationName "akkahttp.request"
+          operationName "akka-http.request"
           resourceName "GET /make-error"
           errored true
           tags {
@@ -107,7 +107,7 @@ class Play26Test extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
-            "component" "akkahttp-action"
+            "component" "akka-http-server"
             "error" true
           }
         }
@@ -147,7 +147,7 @@ class Play26Test extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"
-          operationName "akkahttp.request"
+          operationName "akka-http.request"
           resourceName "GET /exception"
           errored true
           tags {
@@ -157,7 +157,7 @@ class Play26Test extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
-            "component" "akkahttp-action"
+            "component" "akka-http-server"
             "error" true
           }
         }
@@ -200,7 +200,7 @@ class Play26Test extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"
-          operationName "akkahttp.request"
+          operationName "akka-http.request"
           resourceName "404"
           errored false
           tags {
@@ -210,7 +210,7 @@ class Play26Test extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
-            "component" "akkahttp-action"
+            "component" "akka-http-server"
           }
         }
         span(1) {
