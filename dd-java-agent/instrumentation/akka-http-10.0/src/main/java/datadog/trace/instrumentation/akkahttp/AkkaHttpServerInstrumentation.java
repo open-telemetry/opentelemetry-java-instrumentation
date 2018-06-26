@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.akkahttp;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import akka.http.javadsl.model.HttpHeader;
@@ -127,7 +128,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     public static void finishSpan(Span span, Throwable t) {
       Tags.ERROR.set(span, true);
-      span.log(Collections.singletonMap("error.object", t));
+      span.log(Collections.singletonMap(ERROR_OBJECT, t));
       Tags.HTTP_STATUS.set(span, 500);
 
       if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {

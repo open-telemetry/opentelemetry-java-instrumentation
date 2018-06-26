@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.lettuce;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
+
 import datadog.trace.api.DDTags;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
@@ -44,7 +46,7 @@ public class LettuceAsyncCommandsAdvice {
     final Span span = scope.span();
     if (throwable != null) {
       Tags.ERROR.set(span, true);
-      span.log(Collections.singletonMap("error.object", throwable));
+      span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       span.finish();
       scope.close();
       return;

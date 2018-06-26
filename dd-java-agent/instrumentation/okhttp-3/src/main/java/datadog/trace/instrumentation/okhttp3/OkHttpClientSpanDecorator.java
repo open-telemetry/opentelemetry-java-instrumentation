@@ -1,17 +1,15 @@
 package datadog.trace.instrumentation.okhttp3;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
+
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.net.Inet4Address;
 import java.nio.ByteBuffer;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import okhttp3.Connection;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import static io.opentracing.log.Fields.ERROR_OBJECT;
 
 /**
  * Span decorator to add tags, logs and operation name.
