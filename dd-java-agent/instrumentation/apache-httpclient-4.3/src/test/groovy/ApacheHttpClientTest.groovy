@@ -1,18 +1,13 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.RatpackUtils
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.Scope
-import io.opentracing.SpanContext
-import io.opentracing.propagation.Format
-import io.opentracing.propagation.TextMap
 import io.opentracing.tag.Tags
-import io.opentracing.util.GlobalTracer
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.message.BasicHeader
-import ratpack.handling.Context
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
@@ -24,23 +19,9 @@ class ApacheHttpClientTest extends AgentTestRunner {
   def server = ratpack {
     handlers {
       get {
-        String msg = "<html><body><h1>Hello test.</h1>\n"
-        boolean isDDServer = true
-        if (context.request.getHeaders().contains("is-dd-server")) {
-          isDDServer = Boolean.parseBoolean(context.request.getHeaders().get("is-dd-server"))
-        }
-        if (isDDServer) {
-          final SpanContext extractedContext =
-            GlobalTracer.get()
-              .extract(Format.Builtin.HTTP_HEADERS, new RatpackResponseAdapter(context))
-          Scope scope =
-            GlobalTracer.get()
-              .buildSpan("test-http-server")
-              .asChildOf(extractedContext)
-              .startActive(true)
-          scope.close()
-        }
+        RatpackUtils.handleDistributedRequest(context)
 
+        String msg = "<html><body><h1>Hello test.</h1>\n"
         response.status(200).send(msg)
       }
     }
@@ -127,23 +108,5 @@ class ApacheHttpClientTest extends AgentTestRunner {
     clientSpan.getTags()[Tags.PEER_HOSTNAME.getKey()] == "localhost"
     clientSpan.getTags()[Tags.PEER_PORT.getKey()] == server.getAddress().port
     clientSpan.getTags()[Tags.SPAN_KIND.getKey()] == Tags.SPAN_KIND_CLIENT
-  }
-
-  private static class RatpackResponseAdapter implements TextMap {
-    final Context context
-
-    RatpackResponseAdapter(Context context) {
-      this.context = context
-    }
-
-    @Override
-    void put(String key, String value) {
-      context.response.set(key, value)
-    }
-
-    @Override
-    Iterator<Map.Entry<String, String>> iterator() {
-      return context.request.getHeaders().asMultiValueMap().entrySet().iterator()
-    }
   }
 }
