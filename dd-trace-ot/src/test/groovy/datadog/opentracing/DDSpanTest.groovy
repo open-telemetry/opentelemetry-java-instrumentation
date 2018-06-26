@@ -1,6 +1,7 @@
 package datadog.opentracing
 
 import datadog.trace.api.sampling.PrioritySampling
+import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
 
@@ -8,7 +9,7 @@ import java.util.concurrent.TimeUnit
 
 class DDSpanTest extends Specification {
   def writer = new ListWriter()
-  def tracer = new DDTracer(writer)
+  def tracer = new DDTracer(DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME, writer, new RateByServiceSampler())
 
   def "getters and setters"() {
     setup:
@@ -156,5 +157,30 @@ class DDSpanTest extends Specification {
 
     expect:
     span.durationNano == 1
+  }
+
+  def "priority sampling metric set only on root span" () {
+    setup:
+    def parent = tracer.buildSpan("testParent").start()
+    def child1 = tracer.buildSpan("testChild1").asChildOf(parent).start()
+
+    child1.setSamplingPriority(PrioritySampling.SAMPLER_KEEP)
+    child1.context().lockSamplingPriority()
+    parent.setSamplingPriority(PrioritySampling.SAMPLER_DROP)
+    child1.finish()
+    def child2 = tracer.buildSpan("testChild2").asChildOf(parent).start()
+    child2.finish()
+    parent.finish()
+
+    expect:
+    parent.context().samplingPriority == PrioritySampling.SAMPLER_KEEP
+    parent.getMetrics().get(DDSpanContext.PRIORITY_SAMPLING_KEY) == PrioritySampling.SAMPLER_KEEP
+    parent.getMetrics().get(DDSpanContext.SAMPLE_RATE_KEY) == 1.0
+    child1.getSamplingPriority() == parent.getSamplingPriority()
+    child1.getMetrics().get(DDSpanContext.PRIORITY_SAMPLING_KEY) == null
+    child1.getMetrics().get(DDSpanContext.SAMPLE_RATE_KEY) == null
+    child2.getSamplingPriority() == parent.getSamplingPriority()
+    child2.getMetrics().get(DDSpanContext.PRIORITY_SAMPLING_KEY) == null
+    child2.getMetrics().get(DDSpanContext.SAMPLE_RATE_KEY) == null
   }
 }

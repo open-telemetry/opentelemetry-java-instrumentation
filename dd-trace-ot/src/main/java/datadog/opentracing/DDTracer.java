@@ -490,7 +490,7 @@ public class DDTracer implements io.opentracing.Tracer {
         parentSpanId = ddsc.getSpanId();
         baggage = ddsc.getBaggageItems();
         parentTrace = ddsc.getTrace();
-        samplingPriority = ddsc.getSamplingPriority();
+        samplingPriority = PrioritySampling.UNSET;
         if (this.serviceName == null) this.serviceName = ddsc.getServiceName();
         if (this.spanType == null) this.spanType = ddsc.getSpanType();
 

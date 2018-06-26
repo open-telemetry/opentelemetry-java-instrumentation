@@ -9,7 +9,7 @@ import spock.lang.Specification
 
 class DDSpanSerializationTest extends Specification {
 
-  def "serialize spans"() throws Exception {
+  def "serialize spans with sampling #samplingPriority"() throws Exception {
     setup:
     final Map<String, String> baggage = new HashMap<>()
     baggage.put("a-baggage", "value")
@@ -24,9 +24,12 @@ class DDSpanSerializationTest extends Specification {
     expected.put("name", "operation")
     expected.put("duration", 33000)
     expected.put("resource", "operation")
+    final Map<String, Number> metrics = new HashMap<>()
     if (samplingPriority != PrioritySampling.UNSET) {
-      expected.put("sampling_priority", samplingPriority)
+      metrics.put("_sampling_priority_v1", Integer.valueOf(samplingPriority))
+      metrics.put("_sample_rate", Double.valueOf(1.0))
     }
+    expected.put("metrics", metrics)
     expected.put("start", 100000)
     expected.put("span_id", 2l)
     expected.put("parent_id", 0l)
@@ -55,6 +58,9 @@ class DDSpanSerializationTest extends Specification {
     baggage.put(DDTags.SPAN_TYPE, context.getSpanType())
 
     DDSpan span = new DDSpan(100L, context)
+    if (samplingPriority != PrioritySampling.UNSET) {
+      span.context().setMetric("_sample_rate", Double.valueOf(1.0))
+    }
     span.finish(133L)
     ObjectMapper serializer = new ObjectMapper()
 
