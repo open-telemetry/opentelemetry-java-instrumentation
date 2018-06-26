@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.servlet3;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
@@ -41,13 +40,13 @@ public final class HttpServlet3Instrumentation extends Instrumenter.Configurable
   public HttpServlet3Instrumentation() {
     super("servlet", "servlet-3");
   }
-
+  //,
+  //            classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener")
   @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
-            not(isInterface()).and(failSafe(hasSuperType(named("javax.servlet.http.HttpServlet")))),
-            classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"))
+            not(isInterface()).and(failSafe(hasSuperType(named("javax.servlet.http.HttpServlet")))))
         .transform(
             new HelperInjector(
                 "datadog.trace.instrumentation.servlet3.HttpServletRequestExtractAdapter",

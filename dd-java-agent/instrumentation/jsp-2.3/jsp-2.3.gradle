@@ -1,0 +1,56 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "org.apache.tomcat"
+  module = "tomcat-jasper"
+  versions = "[7.0.0,)"
+  scanDependencies = true
+  verifyPresent = [
+    "org.apache.jasper.servlet.JspServletWrapper": null,
+  ]
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  // compiling against tomcat 7.0.20 because there seems to be some issues with Tomcat's dependency < 7.0.20
+  compileOnly group: 'org.apache.tomcat', name: 'tomcat-jasper', version: '7.0.20'
+  compileOnly group: 'javax.servlet.jsp', name: 'javax.servlet.jsp-api', version: '2.3.0'
+  compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+
+  compile project(':dd-trace-ot')
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:servlet-3')
+  // using tomcat 7.0.37 because there seems to be some issues with Tomcat's jar scanning in versions < 7.0.37
+  // https://stackoverflow.com/questions/23484098/org-apache-tomcat-util-bcel-classfile-classformatexception-invalid-byte-tag-in
+  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '7.0.37'
+  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-logging-juli', version: '7.0.37'
+  testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '7.0.37'
+
+  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.10.0'
+}
+
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'javax.servlet.jsp', name: 'javax.servlet.jsp-api', version: '+'
+    force group: 'javax.servlet', name: 'javax.servlet-api', version: '+'
+    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '+'
+    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '+'
+    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-logging-juli', version: '+'
+  }
+}
