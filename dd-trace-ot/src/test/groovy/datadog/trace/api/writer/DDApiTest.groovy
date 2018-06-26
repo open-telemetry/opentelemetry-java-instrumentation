@@ -20,7 +20,6 @@ import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 class DDApiTest extends Specification {
   static mapper = new ObjectMapper(new MessagePackFactory())
 
-  // first test takes longer
   def "sending an empty list of traces returns no errors"() {
     setup:
     def agent = ratpack {

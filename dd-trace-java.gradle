@@ -53,7 +53,7 @@ buildScan {
   }
 }
 
-ext.gradleWrapperVersion = '4.7'
+ext.gradleWrapperVersion = '4.8.1'
 task wrapper(type: Wrapper) {
   gradleVersion = gradleWrapperVersion
 }
