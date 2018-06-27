@@ -41,23 +41,9 @@ def includeShadowJar(subproject, jarname) {
       relocate 'java.util.logging.Logger', 'datadog.trace.bootstrap.PatchLogger'
 
       if (!project.hasProperty("disableShadowRelocate") || !disableShadowRelocate) {
+        // shadow OT impl to prevent casts to implementation
         relocate 'datadog.trace.common', 'datadog.trace.agent.common'
         relocate 'datadog.opentracing', 'datadog.trace.agent.ot'
-
-        relocate('io.opentracing.contrib', 'datadog.trace.agent.opentracing.contrib') {
-          // Don't want to change the annotation we're looking for.
-          exclude 'io.opentracing.contrib.dropwizard.Trace'
-        }
-
-        relocate 'org.yaml', 'datadog.trace.agent.deps.yaml'
-        relocate 'org.msgpack', 'datadog.trace.agent.deps.msgpack'
-        relocate 'com.fasterxml', 'datadog.trace.agent.deps.fasterxml'
-
-        relocate 'net.bytebuddy', 'datadog.trace.agent.deps.bytebuddy'
-        relocate('com.google', 'datadog.trace.agent.deps.google') {
-          // This is used in the Cassandra Cluster.connectAsync signature so we can't relocate it. :fingers_crossed:
-          exclude 'com.google.common.util.concurrent.ListenableFuture'
-        }
       }
     }
   }
