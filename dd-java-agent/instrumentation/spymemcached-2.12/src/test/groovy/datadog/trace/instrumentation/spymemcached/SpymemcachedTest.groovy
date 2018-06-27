@@ -14,7 +14,7 @@ import net.spy.memcached.internal.CheckedOperationTimeoutException
 import net.spy.memcached.ops.Operation
 import net.spy.memcached.ops.OperationQueueFactory
 import org.testcontainers.containers.GenericContainer
-
+import spock.lang.Requires
 import spock.lang.Shared
 
 import java.util.concurrent.ArrayBlockingQueue
@@ -30,6 +30,9 @@ import static CompletionListener.SPAN_TYPE
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
+// Do not run tests locally on Java7 since testcontainers are not compatibly with Java7
+// It is fine to run on CI because CI provides memcached externally, not through testcontainers
+@Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
 class SpymemcachedTest extends AgentTestRunner {
 
   static {
