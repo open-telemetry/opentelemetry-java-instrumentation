@@ -19,7 +19,7 @@ class ShadowPackageRenamingTest extends Specification {
     final String agentGuavaDep =
       ddClass
         .getClassLoader()
-        .loadClass("datadog.trace.agent.deps.google.common.collect.MapMaker")
+        .loadClass("com.google.common.collect.MapMaker")
         .getProtectionDomain()
         .getCodeSource()
         .getLocation()
@@ -99,7 +99,6 @@ class ShadowPackageRenamingTest extends Specification {
    expect:
    duplicateClassFile == []
    badBootstrapPrefixes == []
-    // ListenableFuture is skipped from shadow due to cassandra instrumentation.
-   badAgentPrefixes == ['com.google.common.util.concurrent.ListenableFuture']
+   badAgentPrefixes == []
   }
 }

@@ -16,10 +16,21 @@ public class Utils {
     "datadog.trace.context"
   };
   public static final String[] AGENT_PACKAGE_PREFIXES = {
-    "datadog.trace.agent",
-    "datadog.opentracing",
     "datadog.trace.common",
-    "datadog.trace.instrumentation"
+    "datadog.trace.agent",
+    "datadog.trace.instrumentation",
+    // guava
+    "com.google.auto",
+    "com.google.common",
+    "com.google.thirdparty.publicsuffix",
+    // bytebuddy
+    "net.bytebuddy",
+    // OT contribs for dd trace resolver
+    "io.opentracing.contrib",
+    // jackson
+    "org.msgpack",
+    "com.fasterxml.jackson",
+    "org.yaml.snakeyaml"
   };
 
   private static Method findLoadedClassMethod = null;
