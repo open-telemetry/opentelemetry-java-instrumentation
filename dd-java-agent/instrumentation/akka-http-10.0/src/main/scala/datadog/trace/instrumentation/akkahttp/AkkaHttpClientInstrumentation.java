@@ -3,11 +3,12 @@ package datadog.trace.instrumentation.akkahttp;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
+import akka.NotUsed;
 import akka.http.javadsl.model.headers.RawHeader;
 import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import akka.stream.*;
+import akka.stream.scaladsl.Flow;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.*;
 import datadog.trace.api.DDSpanTypes;
@@ -24,6 +25,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import scala.Tuple2;
 import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
@@ -43,7 +45,8 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Configurab
   private static final HelperInjector HELPER_INJECTOR =
       new HelperInjector(
           AkkaHttpClientInstrumentation.class.getName() + "$OnCompleteHandler",
-          AkkaHttpClientInstrumentation.class.getName() + "$AkkaHttpHeaders");
+          AkkaHttpClientInstrumentation.class.getName() + "$AkkaHttpHeaders",
+          AkkaHttpClientTransformFlow.class.getName());
 
   @Override
   public AgentBuilder apply(final AgentBuilder agentBuilder) {
@@ -56,11 +59,16 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Configurab
                 .advice(
                     named("singleRequest")
                         .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
-                    AkkaHttpClientAdvice.class.getName()))
+                    SingleRequesrAdvice.class.getName()))
+        .transform(
+            DDAdvice.create()
+                .advice(
+                    named("superPool").and(returns(named("akka.stream.scaladsl.Flow"))),
+                    SuperPoolAdvice.class.getName()))
         .asDecorator();
   }
 
-  public static class AkkaHttpClientAdvice {
+  public static class SingleRequesrAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request) {
@@ -90,6 +98,15 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Configurab
         @Advice.Enter final Scope scope) {
       responseFuture.onComplete(new OnCompleteHandler(scope), thiz.system().dispatcher());
       scope.close();
+    }
+  }
+
+  public static class SuperPoolAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static <T> void methodExit(
+        @Advice.Return(readOnly = false)
+            Flow<Tuple2<HttpRequest, T>, Tuple2<Try<HttpResponse>, T>, NotUsed> flow) {
+      flow = AkkaHttpClientTransformFlow.transform(flow);
     }
   }
 
