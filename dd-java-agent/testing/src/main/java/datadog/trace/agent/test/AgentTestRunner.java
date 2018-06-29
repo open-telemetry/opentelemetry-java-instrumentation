@@ -139,13 +139,13 @@ public abstract class AgentTestRunner extends Specification {
     WRITER_PHASER.register();
     INSTRUMENTATION_ERROR_COUNT.set(0);
     ERROR_LISTENER.activateTest(this);
-    assert getTestTracer().activeSpan() == null;
+    assert getTestTracer().activeSpan() == null : "Span is active before test has started";
   }
 
   @After
   public void afterTest() {
     ERROR_LISTENER.deactivateTest(this);
-    assert INSTRUMENTATION_ERROR_COUNT.get() == 0;
+    assert INSTRUMENTATION_ERROR_COUNT.get() == 0 : "Instrumentation errors during test";
   }
 
   @AfterClass
