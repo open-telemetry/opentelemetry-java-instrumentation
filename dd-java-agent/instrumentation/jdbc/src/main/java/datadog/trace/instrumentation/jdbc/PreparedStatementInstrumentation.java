@@ -56,9 +56,13 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
         return null;
       }
       final String sql = JDBCMaps.preparedStatements.get(statement);
-      final Connection connection;
+      Connection connection;
       try {
         connection = statement.getConnection();
+        // unwrap the connection to cache the underlying actual connection and to not cache proxy objects
+        if (connection.isWrapperFor(Connection.class)) {
+          connection = connection.unwrap(Connection.class);
+        }
       } catch (final Throwable e) {
         // Had some problem getting the connection.
         return NoopScope.INSTANCE;

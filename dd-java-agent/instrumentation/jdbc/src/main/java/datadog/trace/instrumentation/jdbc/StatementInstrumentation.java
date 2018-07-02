@@ -57,9 +57,13 @@ public final class StatementInstrumentation extends Instrumenter.Default {
       if (callDepth > 0) {
         return null;
       }
-      final Connection connection;
+      Connection connection;
       try {
         connection = statement.getConnection();
+        if (connection.isWrapperFor(Connection.class)) {
+          // unwrap the connection to cache the underlying actual connection and to not cache proxy objects
+          connection = connection.unwrap(Connection.class);
+        }
       } catch (final Throwable e) {
         // Had some problem getting the connection.
         return NoopScope.INSTANCE;
