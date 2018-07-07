@@ -3,14 +3,18 @@ package datadog.trace.agent.tooling;
 import static datadog.trace.agent.tooling.Utils.getConfigEnabled;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
+import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.utility.JavaModule;
 
 /**
  * Built-in bytebuddy-based instrumentation for the datadog javaagent.
@@ -74,6 +78,13 @@ public interface Instrumenter {
       AgentBuilder.Identified.Extendable advice =
           agentBuilder
               .type(typeMatcher(), classLoaderMatcher())
+              .and(new AgentBuilder.RawMatcher() {
+                @Override
+                public boolean matches(TypeDescription typeDescription, ClassLoader classLoader, JavaModule module, Class<?> classBeingRedefined, ProtectionDomain protectionDomain) {
+                  // Optimization: calling getMuzzleReferenceMatcher() inside this method prevents unnecessary loading of muzzle references during agentBuilder setup.
+                  return getInstrumentationMuzzle().matches(classLoader);
+                }
+              })
               .transform(DDTransformers.defaultTransformers());
       final String[] helperClassNames = helperClassNames();
       if (helperClassNames.length > 0) {
@@ -83,6 +94,16 @@ public interface Instrumenter {
         advice = advice.transform(DDAdvice.create().advice(entry.getKey(), entry.getValue()));
       }
       return advice.asDecorator();
+    }
+
+    /**
+     * This method is implemented dynamically by compile-time bytecode transformations.
+     *
+     * TODO bytecode magic and documentation
+     */
+    // TODO: Make final
+    protected ReferenceMatcher getInstrumentationMuzzle() {
+      return null;
     }
 
     @Override
