@@ -8,10 +8,6 @@ import net.bytebuddy.dynamic.DynamicType.Builder;
 
 public class MuzzleGradlePlugin implements Plugin {
   // TODO:
-  // - Optimizations
-  //   - Cache safe and unsafe classloaders
-  //   - Do reference generation at compile time
-  //   - lazy-load reference muzzle field
   // - Additional references to check
   //   - Fields
   //   - methods
@@ -26,29 +22,38 @@ public class MuzzleGradlePlugin implements Plugin {
   //   - Expose config instead of hardcoding datadog namespace (or reconfigure classpath)
   //   - Run muzzle in matching phase (may require a rewrite of the instrumentation api)
   //   - Documentation
+  //   - Fix TraceConfigInstrumentation
+  //   - assert no muzzle field defined in instrumentation
+  //   - make getMuzzle final in default and remove in gradle plugin
+  //   - pull muzzle field + method names into static constants
 
-  private static final TypeDescription InstrumenterTypeDesc =
-      new TypeDescription.ForLoadedType(Instrumenter.class);
+  private static final TypeDescription DefaultInstrumenterTypeDesc =
+      new TypeDescription.ForLoadedType(Instrumenter.Default.class);
 
   @Override
   public boolean matches(final TypeDescription target) {
-    // AutoService annotation is not retained at runtime. Check for instrumenter supertype
+    // AutoService annotation is not retained at runtime. Check for Instrumenter.Default supertype
     boolean isInstrumenter = false;
     TypeDefinition instrumenter = target;
     while (instrumenter != null) {
-      if (instrumenter.getInterfaces().contains(InstrumenterTypeDesc)) {
+      if (instrumenter.equals(DefaultInstrumenterTypeDesc)) {
         isInstrumenter = true;
         break;
       }
       instrumenter = instrumenter.getSuperClass();
     }
-    // return isInstrumenter;
-    return false;
+    return isInstrumenter;
   }
 
   @Override
   public Builder<?> apply(Builder<?> builder, TypeDescription typeDescription) {
-    return builder.visit(new MuzzleVisitor());
+    if (typeDescription.equals(DefaultInstrumenterTypeDesc)) {
+      // FIXME
+      System.out.println("~~~~FIXME: remove final modifier on Default: " + typeDescription);
+      return builder;
+    } else {
+      return builder.visit(new MuzzleVisitor());
+    }
   }
 
   public static class NoOp implements Plugin {

@@ -24,7 +24,6 @@ class AdviceReferenceVisitorTest extends AgentTestRunner {
     setup:
     Reference[] refs = AdviceReferenceVisitor.createReferencesFrom(AdviceClass.getName(), this.getClass().getClassLoader()).values().toArray(new Reference[0])
     ReferenceMatcher refMatcher = new ReferenceMatcher(refs)
-    refMatcher.assertSafeTransformation()
     ClassLoader safeClassloader = new URLClassLoader([TestUtils.createJarWithClasses(AdviceClass$A,
                                                                                      AdviceClass$SomeInterface,
                                                                                      AdviceClass$SomeImplementation)] as URL[],

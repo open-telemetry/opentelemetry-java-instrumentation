@@ -104,6 +104,11 @@ public class TraceConfigInstrumentation implements Instrumenter {
     private final String className;
     private final Set<String> methodNames;
 
+    /** No-arg constructor only used by muzzle and tests. */
+    public TracerClassInstrumentation() {
+      this("noop", Collections.singleton("noop"));
+    }
+
     public TracerClassInstrumentation(String className, Set<String> methodNames) {
       super("trace", "trace-config");
       this.className = className;

@@ -3,13 +3,14 @@ package datadog.trace.agent.tooling;
 import static datadog.trace.agent.tooling.Utils.getConfigEnabled;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
+import datadog.trace.agent.tooling.muzzle.Reference;
+import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -46,11 +47,13 @@ public interface Instrumenter {
   @Slf4j
   abstract class Default implements Instrumenter {
     private final Set<String> instrumentationNames;
+    private final String instrumentationPrimaryName;
     protected final boolean enabled;
 
     public Default(final String instrumentationName, final String... additionalNames) {
       this.instrumentationNames = new HashSet<>(Arrays.asList(additionalNames));
       instrumentationNames.add(instrumentationName);
+      instrumentationPrimaryName = instrumentationName;
 
       // If default is enabled, we want to enable individually,
       // if default is disabled, we want to disable individually.
@@ -78,13 +81,30 @@ public interface Instrumenter {
       AgentBuilder.Identified.Extendable advice =
           agentBuilder
               .type(typeMatcher(), classLoaderMatcher())
-              .and(new AgentBuilder.RawMatcher() {
-                @Override
-                public boolean matches(TypeDescription typeDescription, ClassLoader classLoader, JavaModule module, Class<?> classBeingRedefined, ProtectionDomain protectionDomain) {
-                  // Optimization: calling getMuzzleReferenceMatcher() inside this method prevents unnecessary loading of muzzle references during agentBuilder setup.
-                  return getInstrumentationMuzzle().matches(classLoader);
-                }
-              })
+              .and(
+                  new AgentBuilder.RawMatcher() {
+                    @Override
+                    public boolean matches(
+                        TypeDescription typeDescription,
+                        ClassLoader classLoader,
+                        JavaModule module,
+                        Class<?> classBeingRedefined,
+                        ProtectionDomain protectionDomain) {
+                      // Optimization: calling getMuzzleReferenceMatcher() inside this method prevents unnecessary loading of muzzle references during agentBuilder setup.
+                      final ReferenceMatcher muzzle = getInstrumentationMuzzle();
+                      if (null != muzzle) {
+                        List<Reference.Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
+                        if (mismatches.size() > 0) {
+                          log.debug("Instrumentation muzzled: {} on {}", instrumentationPrimaryName, classLoader);
+                        }
+                        for (Reference.Mismatch mismatch : mismatches) {
+                          log.debug("-- {}", mismatch);
+                        }
+                        return mismatches.size() == 0;
+                      }
+                      return true;
+                    }
+                  })
               .transform(DDTransformers.defaultTransformers());
       final String[] helperClassNames = helperClassNames();
       if (helperClassNames.length > 0) {
@@ -99,7 +119,7 @@ public interface Instrumenter {
     /**
      * This method is implemented dynamically by compile-time bytecode transformations.
      *
-     * TODO bytecode magic and documentation
+     * <p>TODO bytecode magic and documentation
      */
     // TODO: Make final
     protected ReferenceMatcher getInstrumentationMuzzle() {
