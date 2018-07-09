@@ -36,6 +36,11 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
   }
 
   @Override
+  public String[] helperClassNames() {
+    return new String[] {"datadog.trace.instrumentation.elasticsearch5.RestResponseListener"};
+  }
+
+  @Override
   public ElementMatcher typeMatcher() {
     return not(isInterface()).and(named("org.elasticsearch.client.RestClient"));
   }
