@@ -93,9 +93,13 @@ public interface Instrumenter {
                       // Optimization: calling getMuzzleReferenceMatcher() inside this method prevents unnecessary loading of muzzle references during agentBuilder setup.
                       final ReferenceMatcher muzzle = getInstrumentationMuzzle();
                       if (null != muzzle) {
-                        List<Reference.Mismatch> mismatches = muzzle.getMismatchedReferenceSources(classLoader);
+                        List<Reference.Mismatch> mismatches =
+                            muzzle.getMismatchedReferenceSources(classLoader);
                         if (mismatches.size() > 0) {
-                          log.debug("Instrumentation muzzled: {} on {}", instrumentationPrimaryName, classLoader);
+                          log.debug(
+                              "Instrumentation muzzled: {} on {}",
+                              instrumentationPrimaryName,
+                              classLoader);
                         }
                         for (Reference.Mismatch mismatch : mismatches) {
                           log.debug("-- {}", mismatch);

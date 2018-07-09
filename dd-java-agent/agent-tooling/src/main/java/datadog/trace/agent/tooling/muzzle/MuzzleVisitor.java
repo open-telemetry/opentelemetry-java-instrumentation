@@ -63,12 +63,12 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
       this.instrumentationClassName = name;
       try {
         instrumenter =
-          (Instrumenter.Default)
-            MuzzleVisitor.class
-              .getClassLoader()
-              .loadClass(Utils.getClassName(instrumentationClassName))
-              .getDeclaredConstructor()
-              .newInstance();
+            (Instrumenter.Default)
+                MuzzleVisitor.class
+                    .getClassLoader()
+                    .loadClass(Utils.getClassName(instrumentationClassName))
+                    .getDeclaredConstructor()
+                    .newInstance();
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
@@ -156,7 +156,6 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
             "Ldatadog/trace/agent/tooling/muzzle/ReferenceMatcher;");
         mv.visitJumpInsn(Opcodes.IF_ACMPNE, ret);
 
-
         mv.visitVarInsn(Opcodes.ALOAD, 0);
 
         mv.visitTypeInsn(Opcodes.NEW, "datadog/trace/agent/tooling/muzzle/ReferenceMatcher");
@@ -164,11 +163,11 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
 
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitMethodInsn(
-          Opcodes.INVOKEVIRTUAL,
-          instrumentationClassName,
-          "helperClassNames",
-          "()[Ljava/lang/String;",
-          false);
+            Opcodes.INVOKEVIRTUAL,
+            instrumentationClassName,
+            "helperClassNames",
+            "()[Ljava/lang/String;",
+            false);
 
         final Reference[] references = generateReferences();
         mv.visitIntInsn(Opcodes.BIPUSH, references.length);
