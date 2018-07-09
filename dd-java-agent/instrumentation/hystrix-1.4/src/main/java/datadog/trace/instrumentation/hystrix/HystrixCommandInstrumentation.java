@@ -8,37 +8,35 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Method;
-import java.util.Collections;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.*;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public class HystrixCommandInstrumentation extends Instrumenter.Configurable {
+public class HystrixCommandInstrumentation extends Instrumenter.Default {
 
   public HystrixCommandInstrumentation() {
     super("hystrix");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(not(isInterface()).and(hasSuperType(named("com.netflix.hystrix.HystrixCommand"))))
-        // Not adding a version restriction because this should work with any version and add some benefit.
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod().and(named("run").or(named("getFallback"))),
-                    TraceAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    // Not adding a version restriction because this should work with any version and add some benefit.
+    return not(isInterface()).and(hasSuperType(named("com.netflix.hystrix.HystrixCommand")));
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod().and(named("run").or(named("getFallback"))), TraceAdvice.class.getName());
+    return transformers;
   }
 
   public static class TraceAdvice {

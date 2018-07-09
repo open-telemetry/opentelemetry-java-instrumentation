@@ -8,14 +8,13 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.util.GlobalTracer;
+import java.util.HashMap;
 import java.util.List;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 /**
  * The interface for com.amazonaws.Request changed in 106. The method addHandlerContext which is
@@ -23,28 +22,38 @@ import net.bytebuddy.asm.Advice;
  * bytecode compatible. The instrumentation is the same, but the compiled output is different.
  */
 @AutoService(Instrumenter.class)
-public final class AWSClientInstrumentation extends Instrumenter.Configurable {
+public final class AWSClientInstrumentation extends Instrumenter.Default {
 
   public AWSClientInstrumentation() {
     super("aws-sdk");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            isAbstract()
-                .and(
-                    named("com.amazonaws.AmazonWebServiceClient")
-                        .and(declaresField(named("requestHandler2s")))),
-            classLoaderHasClasses("com.amazonaws.HandlerContextAware"))
-        .transform(
-            new HelperInjector(
-                "datadog.trace.instrumentation.aws.v106.TracingRequestHandler",
-                "datadog.trace.instrumentation.aws.v106.SpanDecorator"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(DDAdvice.create().advice(isConstructor(), AWSClientAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return isAbstract()
+        .and(
+            named("com.amazonaws.AmazonWebServiceClient")
+                .and(declaresField(named("requestHandler2s"))));
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses("com.amazonaws.HandlerContextAware");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "datadog.trace.instrumentation.aws.v106.TracingRequestHandler",
+      "datadog.trace.instrumentation.aws.v106.SpanDecorator"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(isConstructor(), AWSClientAdvice.class.getName());
+    return transformers;
   }
 
   public static class AWSClientAdvice {

@@ -6,37 +6,41 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
-import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.agent.tooling.*;
+import java.util.HashMap;
+import java.util.Map;
 import javax.ws.rs.client.ClientBuilder;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class JaxRsClientInstrumentation extends Instrumenter.Configurable {
+public final class JaxRsClientInstrumentation extends Instrumenter.Default {
 
   public JaxRsClientInstrumentation() {
     super("jax-rs", "jaxrs", "jax-rs-client");
   }
 
   @Override
-  protected AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(failSafe(hasSuperType(named("javax.ws.rs.client.ClientBuilder"))))
-        .transform(
-            new HelperInjector(
-                "datadog.trace.instrumentation.jaxrs.ClientTracingFeature",
-                "datadog.trace.instrumentation.jaxrs.ClientTracingFilter",
-                "datadog.trace.instrumentation.jaxrs.InjectAdapter"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("build").and(returns(hasSuperType(named("javax.ws.rs.client.Client")))),
-                    ClientBuilderAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return failSafe(hasSuperType(named("javax.ws.rs.client.ClientBuilder")));
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "datadog.trace.instrumentation.jaxrs.ClientTracingFeature",
+      "datadog.trace.instrumentation.jaxrs.ClientTracingFilter",
+      "datadog.trace.instrumentation.jaxrs.InjectAdapter"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        named("build").and(returns(hasSuperType(named("javax.ws.rs.client.Client")))),
+        ClientBuilderAdvice.class.getName());
+    return transformers;
   }
 
   public static class ClientBuilderAdvice {

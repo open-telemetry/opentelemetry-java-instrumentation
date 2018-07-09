@@ -5,8 +5,6 @@ import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
@@ -15,12 +13,14 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.jasper.JspCompilationContext;
 
 @AutoService(Instrumenter.class)
-public final class JasperJSPCompilationContextInstrumentation extends Instrumenter.Configurable {
+public final class JasperJSPCompilationContextInstrumentation extends Instrumenter.Default {
 
   public JasperJSPCompilationContextInstrumentation() {
     super("jsp", "jsp-compile");
@@ -32,18 +32,22 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            named("org.apache.jasper.JspCompilationContext"),
-            classLoaderHasClasses("org.apache.jasper.servlet.JspServletWrapper"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("compile").and(takesArguments(0)).and(isPublic()),
-                    JasperJspCompilationContext.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return named("org.apache.jasper.JspCompilationContext");
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses("org.apache.jasper.servlet.JspServletWrapper");
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        named("compile").and(takesArguments(0)).and(isPublic()),
+        JasperJspCompilationContext.class.getName());
+    return transformers;
   }
 
   public static class JasperJspCompilationContext {

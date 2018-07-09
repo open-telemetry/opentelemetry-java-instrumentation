@@ -8,9 +8,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
@@ -20,18 +17,21 @@ import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 @AutoService(Instrumenter.class)
-public final class KafkaProducerInstrumentation extends Instrumenter.Configurable {
-  public static final HelperInjector HELPER_INJECTOR =
-      new HelperInjector(
-          "datadog.trace.instrumentation.kafka_clients.TextMapInjectAdapter",
-          KafkaProducerInstrumentation.class.getName() + "$ProducerCallback");
+public final class KafkaProducerInstrumentation extends Instrumenter.Default {
+  private static final String[] HELPER_CLASS_NAMES =
+      new String[] {
+        "datadog.trace.instrumentation.kafka_clients.TextMapInjectAdapter",
+        KafkaProducerInstrumentation.class.getName() + "$ProducerCallback"
+      };
 
   private static final String OPERATION = "kafka.produce";
   private static final String COMPONENT_NAME = "java-kafka";
@@ -41,26 +41,32 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Configurabl
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            named("org.apache.kafka.clients.producer.KafkaProducer"),
-            classLoaderHasClasses(
-                "org.apache.kafka.common.header.Header", "org.apache.kafka.common.header.Headers"))
-        .transform(HELPER_INJECTOR)
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod()
-                        .and(isPublic())
-                        .and(named("send"))
-                        .and(
-                            takesArgument(
-                                0, named("org.apache.kafka.clients.producer.ProducerRecord")))
-                        .and(takesArgument(1, named("org.apache.kafka.clients.producer.Callback"))),
-                    ProducerAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return named("org.apache.kafka.clients.producer.KafkaProducer");
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses(
+        "org.apache.kafka.common.header.Header", "org.apache.kafka.common.header.Headers");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return HELPER_CLASS_NAMES;
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod()
+            .and(isPublic())
+            .and(named("send"))
+            .and(takesArgument(0, named("org.apache.kafka.clients.producer.ProducerRecord")))
+            .and(takesArgument(1, named("org.apache.kafka.clients.producer.Callback"))),
+        ProducerAdvice.class.getName());
+    return transformers;
   }
 
   public static class ProducerAdvice {

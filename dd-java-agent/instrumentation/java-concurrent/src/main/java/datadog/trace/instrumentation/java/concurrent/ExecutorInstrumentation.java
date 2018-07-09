@@ -8,42 +8,27 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
-import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.agent.tooling.*;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
 @AutoService(Instrumenter.class)
-public final class ExecutorInstrumentation extends Instrumenter.Configurable {
+public final class ExecutorInstrumentation extends Instrumenter.Default {
   public static final String EXEC_NAME = "java_concurrent";
-  public static final HelperInjector EXEC_HELPER_INJECTOR =
-      new HelperInjector(
-          ExecutorInstrumentation.class.getName() + "$ConcurrentUtils",
-          ExecutorInstrumentation.class.getName() + "$DatadogWrapper",
-          ExecutorInstrumentation.class.getName() + "$CallableWrapper",
-          ExecutorInstrumentation.class.getName() + "$RunnableWrapper");
 
   /**
    * Only apply executor instrumentation to whitelisted executors. In the future, this restriction
@@ -102,9 +87,9 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(not(isInterface()).and(hasSuperType(named(Executor.class.getName()))))
+  public ElementMatcher typeMatcher() {
+    return not(isInterface())
+        .and(hasSuperType(named(Executor.class.getName())))
         .and(
             new ElementMatcher<TypeDescription>() {
               @Override
@@ -126,34 +111,32 @@ public final class ExecutorInstrumentation extends Instrumenter.Configurable {
                 }
                 return whitelisted;
               }
-            })
-        .transform(EXEC_HELPER_INJECTOR)
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("execute").and(takesArgument(0, Runnable.class)),
-                    WrapRunnableAdvice.class.getName()))
-        .asDecorator()
-        .type(not(isInterface()).and(hasSuperType(named(ExecutorService.class.getName()))))
-        .transform(EXEC_HELPER_INJECTOR)
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("submit").and(takesArgument(0, Runnable.class)),
-                    WrapRunnableAdvice.class.getName()))
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("submit").and(takesArgument(0, Callable.class)),
-                    WrapCallableAdvice.class.getName()))
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    nameMatches("invoke(Any|All)$").and(takesArgument(0, Callable.class)),
-                    WrapCallableCollectionAdvice.class.getName()))
-        .asDecorator();
+            });
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      ExecutorInstrumentation.class.getName() + "$ConcurrentUtils",
+      ExecutorInstrumentation.class.getName() + "$DatadogWrapper",
+      ExecutorInstrumentation.class.getName() + "$CallableWrapper",
+      ExecutorInstrumentation.class.getName() + "$RunnableWrapper"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        named("execute").and(takesArgument(0, Runnable.class)), WrapRunnableAdvice.class.getName());
+    transformers.put(
+        named("submit").and(takesArgument(0, Runnable.class)), WrapRunnableAdvice.class.getName());
+    transformers.put(
+        named("submit").and(takesArgument(0, Callable.class)), WrapCallableAdvice.class.getName());
+    transformers.put(
+        nameMatches("invoke(Any|All)$").and(takesArgument(0, Callable.class)),
+        WrapCallableCollectionAdvice.class.getName());
+    return transformers;
   }
 
   public static class WrapRunnableAdvice {

@@ -8,47 +8,51 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import com.mongodb.async.client.MongoClientSettings;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class MongoAsyncClientInstrumentation extends Instrumenter.Configurable {
+public final class MongoAsyncClientInstrumentation extends Instrumenter.Default {
 
   public MongoAsyncClientInstrumentation() {
     super("mongo");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            named("com.mongodb.async.client.MongoClientSettings$Builder")
-                .and(
-                    declaresMethod(
-                        named("addCommandListener")
-                            .and(
-                                takesArguments(
-                                    new TypeDescription.Latent(
-                                        "com.mongodb.event.CommandListener",
-                                        Modifier.PUBLIC,
-                                        null,
-                                        Collections.<TypeDescription.Generic>emptyList())))
-                            .and(isPublic()))))
-        .transform(MongoClientInstrumentation.MONGO_HELPER_INJECTOR)
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
-                    MongoAsyncClientAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return named("com.mongodb.async.client.MongoClientSettings$Builder")
+        .and(
+            declaresMethod(
+                named("addCommandListener")
+                    .and(
+                        takesArguments(
+                            new TypeDescription.Latent(
+                                "com.mongodb.event.CommandListener",
+                                Modifier.PUBLIC,
+                                null,
+                                Collections.<TypeDescription.Generic>emptyList())))
+                    .and(isPublic())));
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return MongoClientInstrumentation.HELPERS;
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
+        MongoAsyncClientAdvice.class.getName());
+    return transformers;
   }
 
   public static class MongoAsyncClientAdvice {

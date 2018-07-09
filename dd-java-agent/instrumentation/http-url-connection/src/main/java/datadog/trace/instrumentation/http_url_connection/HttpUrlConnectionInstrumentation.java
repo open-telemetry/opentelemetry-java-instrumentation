@@ -8,9 +8,6 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
@@ -24,12 +21,14 @@ import io.opentracing.util.GlobalTracer;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public class HttpUrlConnectionInstrumentation extends Instrumenter.Configurable {
+public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
   public HttpUrlConnectionInstrumentation() {
     super("httpurlconnection");
@@ -41,25 +40,30 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Configurable 
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(isSubTypeOf(HttpURLConnection.class))
-        .transform(
-            new HelperInjector(
-                "datadog.trace.instrumentation.http_url_connection.MessageHeadersInjectAdapter"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod()
-                        .and(isPublic())
-                        .and(
-                            named("getResponseCode")
-                                .or(named("getOutputStream"))
-                                .or(named("getInputStream"))
-                                .or(nameStartsWith("getHeaderField"))),
-                    HttpUrlConnectionAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return isSubTypeOf(HttpURLConnection.class);
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "datadog.trace.instrumentation.http_url_connection.MessageHeadersInjectAdapter"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod()
+            .and(isPublic())
+            .and(
+                named("getResponseCode")
+                    .or(named("getOutputStream"))
+                    .or(named("getInputStream"))
+                    .or(nameStartsWith("getHeaderField"))),
+        HttpUrlConnectionAdvice.class.getName());
+    return transformers;
   }
 
   public static class HttpUrlConnectionAdvice {

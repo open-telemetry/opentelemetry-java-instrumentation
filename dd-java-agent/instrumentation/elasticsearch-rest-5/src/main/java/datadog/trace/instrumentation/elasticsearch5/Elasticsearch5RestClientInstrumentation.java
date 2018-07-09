@@ -10,8 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
@@ -19,12 +17,14 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.client.ResponseListener;
 
 @AutoService(Instrumenter.class)
-public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Configurable {
+public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Default {
 
   public Elasticsearch5RestClientInstrumentation() {
     super("elasticsearch", "elasticsearch-rest", "elasticsearch-rest-5");
@@ -36,22 +36,23 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Config
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(not(isInterface()).and(named("org.elasticsearch.client.RestClient")))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod()
-                        .and(isPublic())
-                        .and(named("performRequestAsync"))
-                        .and(takesArguments(7))
-                        .and(takesArgument(0, named("java.lang.String"))) // method
-                        .and(takesArgument(1, named("java.lang.String"))) // endpoint
-                        .and(takesArgument(5, named("org.elasticsearch.client.ResponseListener"))),
-                    ElasticsearchRestClientAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return not(isInterface()).and(named("org.elasticsearch.client.RestClient"));
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod()
+            .and(isPublic())
+            .and(named("performRequestAsync"))
+            .and(takesArguments(7))
+            .and(takesArgument(0, named("java.lang.String"))) // method
+            .and(takesArgument(1, named("java.lang.String"))) // endpoint
+            .and(takesArgument(5, named("org.elasticsearch.client.ResponseListener"))),
+        ElasticsearchRestClientAdvice.class.getName());
+    return transformers;
   }
 
   public static class ElasticsearchRestClientAdvice {

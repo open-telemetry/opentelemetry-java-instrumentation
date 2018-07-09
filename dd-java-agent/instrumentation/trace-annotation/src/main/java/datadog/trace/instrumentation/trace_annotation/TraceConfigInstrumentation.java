@@ -6,19 +6,20 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import datadog.trace.agent.tooling.DDAdvice;
 import datadog.trace.agent.tooling.Instrumenter;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
 @AutoService(Instrumenter.class)
-public class TraceConfigInstrumentation extends Instrumenter.Configurable {
+public class TraceConfigInstrumentation extends Instrumenter.Default {
   private static final String CONFIG_NAME = "dd.trace.methods";
 
   static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.\\$]+";
@@ -78,28 +79,59 @@ public class TraceConfigInstrumentation extends Instrumenter.Configurable {
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
+  public AgentBuilder instrument(AgentBuilder agentBuilder) {
     if (classMethodsToTrace.isEmpty()) {
       return agentBuilder;
     }
-    AgentBuilder builder = agentBuilder;
 
     for (final Map.Entry<String, Set<String>> entry : classMethodsToTrace.entrySet()) {
+      TracerClassInstrumentation tracerConfigClass =
+          new TracerClassInstrumentation(entry.getKey(), entry.getValue());
+      agentBuilder = tracerConfigClass.instrument(agentBuilder);
+    }
+    return agentBuilder;
+  }
 
+  // Not Using AutoService to hook up this instrumentation
+  public static class TracerClassInstrumentation extends Default {
+    private final String className;
+    private final Set<String> methodNames;
+
+    public TracerClassInstrumentation(String className, Set<String> methodNames) {
+      super("trace", "trace-config");
+      this.className = className;
+      this.methodNames = methodNames;
+    }
+
+    @Override
+    public ElementMatcher<? super TypeDescription> typeMatcher() {
+      return hasSuperType(named(className));
+    }
+
+    @Override
+    public Map<ElementMatcher, String> transformers() {
       ElementMatcher.Junction<MethodDescription> methodMatchers = null;
-      for (final String methodName : entry.getValue()) {
+      for (final String methodName : methodNames) {
         if (methodMatchers == null) {
           methodMatchers = named(methodName);
         } else {
           methodMatchers = methodMatchers.or(named(methodName));
         }
       }
-      builder =
-          builder
-              .type(hasSuperType(named(entry.getKey())))
-              .transform(DDAdvice.create().advice(methodMatchers, TraceAdvice.class.getName()))
-              .asDecorator();
+
+      Map<ElementMatcher, String> transformers = new HashMap<>();
+      transformers.put(methodMatchers, TraceAdvice.class.getName());
+      return transformers;
     }
-    return builder;
+  }
+
+  @Override
+  public ElementMatcher<? super TypeDescription> typeMatcher() {
+    throw new RuntimeException("TracerConfigInstrumentation must not use TypeMatcher");
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    throw new RuntimeException("TracerConfigInstrumentation must not use transformers.");
   }
 }

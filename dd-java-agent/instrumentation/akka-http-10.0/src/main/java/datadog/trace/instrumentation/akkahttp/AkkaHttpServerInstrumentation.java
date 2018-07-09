@@ -18,13 +18,11 @@ import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
@@ -32,7 +30,7 @@ import scala.runtime.AbstractFunction1;
 
 @Slf4j
 @AutoService(Instrumenter.class)
-public final class AkkaHttpServerInstrumentation extends Instrumenter.Configurable {
+public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
   public AkkaHttpServerInstrumentation() {
     super("akka-http", "akka-http-server");
   }
@@ -42,38 +40,39 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Configurab
     return false;
   }
 
-  private static final HelperInjector akkaHttpHelperInjector =
-      new HelperInjector(
-          AkkaHttpServerInstrumentation.class.getName() + "$DatadogWrapperHelper",
-          AkkaHttpServerInstrumentation.class.getName() + "$DatadogSyncWrapper",
-          AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper",
-          AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper$1",
-          AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper$2",
-          AkkaHttpServerInstrumentation.class.getName() + "$AkkaHttpServerHeaders");
+  @Override
+  public ElementMatcher<? super TypeDescription> typeMatcher() {
+    return named("akka.http.scaladsl.HttpExt");
+  }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(named("akka.http.scaladsl.HttpExt"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(akkaHttpHelperInjector)
-        // Instrumenting akka-streams bindAndHandle api was previously attempted.
-        // This proved difficult as there was no clean way to close the async scope
-        // in the graph logic after the user's request handler completes.
-        //
-        // Instead, we're instrumenting the bindAndHandle function helpers by
-        // wrapping the scala functions with our own handlers.
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("bindAndHandleSync").and(takesArgument(0, named("scala.Function1"))),
-                    AkkaHttpSyncAdvice.class.getName()))
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("bindAndHandleAsync").and(takesArgument(0, named("scala.Function1"))),
-                    AkkaHttpAsyncAdvice.class.getName()))
-        .asDecorator();
+  public String[] helperClassNames() {
+    return new String[] {
+      AkkaHttpServerInstrumentation.class.getName() + "$DatadogWrapperHelper",
+      AkkaHttpServerInstrumentation.class.getName() + "$DatadogSyncWrapper",
+      AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper",
+      AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper$1",
+      AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper$2",
+      AkkaHttpServerInstrumentation.class.getName() + "$AkkaHttpServerHeaders"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    // Instrumenting akka-streams bindAndHandle api was previously attempted.
+    // This proved difficult as there was no clean way to close the async scope
+    // in the graph logic after the user's request handler completes.
+    //
+    // Instead, we're instrumenting the bindAndHandle function helpers by
+    // wrapping the scala functions with our own handlers.
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        named("bindAndHandleSync").and(takesArgument(0, named("scala.Function1"))),
+        AkkaHttpSyncAdvice.class.getName());
+    transformers.put(
+        named("bindAndHandleAsync").and(takesArgument(0, named("scala.Function1"))),
+        AkkaHttpAsyncAdvice.class.getName());
+    return transformers;
   }
 
   public static class AkkaHttpSyncAdvice {

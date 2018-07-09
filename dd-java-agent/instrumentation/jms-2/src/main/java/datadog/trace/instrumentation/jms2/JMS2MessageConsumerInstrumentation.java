@@ -12,9 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
@@ -28,40 +25,51 @@ import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class JMS2MessageConsumerInstrumentation extends Instrumenter.Configurable {
-  public static final HelperInjector JMS2_HELPER_INJECTOR =
-      new HelperInjector(
-          "datadog.trace.instrumentation.jms.util.JmsUtil",
-          "datadog.trace.instrumentation.jms.util.MessagePropertyTextMap");
+public final class JMS2MessageConsumerInstrumentation extends Instrumenter.Default {
+  public static final String[] JMS2_HELPER_CLASS_NAMES =
+      new String[] {
+        "datadog.trace.instrumentation.jms.util.JmsUtil",
+        "datadog.trace.instrumentation.jms.util.MessagePropertyTextMap"
+      };
 
   public JMS2MessageConsumerInstrumentation() {
     super("jms", "jms-2");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            not(isInterface()).and(failSafe(hasSuperType(named("javax.jms.MessageConsumer")))),
-            classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener"))
-        .transform(JMS2_HELPER_INJECTOR)
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("receive").and(takesArguments(0).or(takesArguments(1))).and(isPublic()),
-                    ConsumerAdvice.class.getName())
-                .advice(
-                    named("receiveNoWait").and(takesArguments(0)).and(isPublic()),
-                    ConsumerAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return not(isInterface()).and(failSafe(hasSuperType(named("javax.jms.MessageConsumer"))));
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return JMS2_HELPER_CLASS_NAMES;
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        named("receive").and(takesArguments(0).or(takesArguments(1))).and(isPublic()),
+        ConsumerAdvice.class.getName());
+    transformers.put(
+        named("receiveNoWait").and(takesArguments(0)).and(isPublic()),
+        ConsumerAdvice.class.getName());
+    return transformers;
   }
 
   public static class ConsumerAdvice {

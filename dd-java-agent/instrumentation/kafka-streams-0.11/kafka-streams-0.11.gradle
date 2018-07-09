@@ -5,8 +5,7 @@ versionScan {
   module = "kafka-streams"
   versions = "[0.11.0.0,)"
   verifyPresent = [
-    'org.apache.kafka.streams.state.internals.CacheFunction'        : null,
-    'org.apache.kafka.streams.state.internals.InMemoryKeyValueStore': null,
+    'org.apache.kafka.streams.state.internals.OrderedBytes'         : null
   ]
 }
 

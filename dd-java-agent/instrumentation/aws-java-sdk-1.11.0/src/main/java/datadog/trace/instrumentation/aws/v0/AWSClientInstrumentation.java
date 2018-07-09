@@ -2,53 +2,59 @@ package datadog.trace.instrumentation.aws.v0;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
-import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.util.GlobalTracer;
+import java.util.HashMap;
 import java.util.List;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 /**
  * This instrumentation might work with versions before 1.11.0, but this was the first version that
  * is tested. It could possibly be extended earlier.
  */
 @AutoService(Instrumenter.class)
-public final class AWSClientInstrumentation extends Instrumenter.Configurable {
+public final class AWSClientInstrumentation extends Instrumenter.Default {
 
   public AWSClientInstrumentation() {
     super("aws-sdk");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            isAbstract()
-                .and(
-                    named("com.amazonaws.AmazonWebServiceClient")
-                        .and(declaresField(named("requestHandler2s")))),
-            classLoaderHasClasses("com.amazonaws.http.client.HttpClientFactory")
-                .and(
-                    not(
-                        classLoaderHasClasses(
-                            "com.amazonaws.client.builder.AwsClientBuilder$EndpointConfiguration"))))
-        .transform(
-            new HelperInjector(
-                "datadog.trace.instrumentation.aws.v0.TracingRequestHandler",
-                "datadog.trace.instrumentation.aws.v0.SpanDecorator"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(DDAdvice.create().advice(isConstructor(), AWSClientAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return named("com.amazonaws.AmazonWebServiceClient")
+        .and(declaresField(named("requestHandler2s")));
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses("com.amazonaws.http.client.HttpClientFactory")
+        .and(
+            not(
+                classLoaderHasClasses(
+                    "com.amazonaws.client.builder.AwsClientBuilder$EndpointConfiguration")));
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "datadog.trace.instrumentation.aws.v0.TracingRequestHandler",
+      "datadog.trace.instrumentation.aws.v0.SpanDecorator"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(isConstructor(), AWSClientAdvice.class.getName());
+    return transformers;
   }
 
   public static class AWSClientAdvice {

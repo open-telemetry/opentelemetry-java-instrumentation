@@ -12,8 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
@@ -24,40 +22,50 @@ import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class JMS2MessageProducerInstrumentation extends Instrumenter.Configurable {
+public final class JMS2MessageProducerInstrumentation extends Instrumenter.Default {
 
   public JMS2MessageProducerInstrumentation() {
     super("jms", "jms-2");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            not(isInterface()).and(failSafe(hasSuperType(named("javax.jms.MessageProducer")))),
-            classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener"))
-        .transform(JMS2MessageConsumerInstrumentation.JMS2_HELPER_INJECTOR)
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("send").and(takesArgument(0, named("javax.jms.Message"))).and(isPublic()),
-                    ProducerAdvice.class.getName())
-                .advice(
-                    named("send")
-                        .and(takesArgument(0, named("javax.jms.Destination")))
-                        .and(takesArgument(1, named("javax.jms.Message")))
-                        .and(isPublic()),
-                    ProducerWithDestinationAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return not(isInterface()).and(failSafe(hasSuperType(named("javax.jms.MessageProducer"))));
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return JMS2MessageConsumerInstrumentation.JMS2_HELPER_CLASS_NAMES;
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        named("send").and(takesArgument(0, named("javax.jms.Message"))).and(isPublic()),
+        ProducerAdvice.class.getName());
+    transformers.put(
+        named("send")
+            .and(takesArgument(0, named("javax.jms.Destination")))
+            .and(takesArgument(1, named("javax.jms.Message")))
+            .and(isPublic()),
+        ProducerWithDestinationAdvice.class.getName());
+    return transformers;
   }
 
   public static class ProducerAdvice {

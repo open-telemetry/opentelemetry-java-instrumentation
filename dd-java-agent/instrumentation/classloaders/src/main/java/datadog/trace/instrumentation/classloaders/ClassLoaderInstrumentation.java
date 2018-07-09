@@ -1,23 +1,21 @@
 package datadog.trace.instrumentation.classloaders;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
-import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 
 import com.google.auto.service.AutoService;
 import datadog.opentracing.DDTracer;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Field;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class ClassLoaderInstrumentation extends Instrumenter.Configurable {
+public final class ClassLoaderInstrumentation extends Instrumenter.Default {
 
   public ClassLoaderInstrumentation() {
     super("classloader");
@@ -29,14 +27,15 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Configurable 
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            failSafe(isSubTypeOf(ClassLoader.class)),
-            classLoaderHasClasses("io.opentracing.util.GlobalTracer"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(DDAdvice.create().advice(isConstructor(), ClassloaderAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return isSubTypeOf(ClassLoader.class);
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(isConstructor(), ClassloaderAdvice.class.getName());
+    return transformers;
   }
 
   public static class ClassloaderAdvice {
@@ -60,6 +59,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Configurable 
           field.setAccessible(true);
 
           final Object o = field.get(null);
+          // FIXME: This instrumentation will never work. Referencing class DDTracer will throw an exception.
           if (o instanceof DDTracer) {
             final DDTracer tracer = (DDTracer) o;
             tracer.registerClassLoader(cl);

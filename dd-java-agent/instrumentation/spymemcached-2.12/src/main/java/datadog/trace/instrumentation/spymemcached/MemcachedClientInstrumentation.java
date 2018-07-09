@@ -4,82 +4,80 @@ import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClass
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Method;
-import net.bytebuddy.agent.builder.AgentBuilder;
+import java.util.HashMap;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.BulkFuture;
 import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
 
 @AutoService(Instrumenter.class)
-public final class MemcachedClientInstrumentation extends Instrumenter.Configurable {
+public final class MemcachedClientInstrumentation extends Instrumenter.Default {
 
   private static final String MEMCACHED_PACKAGE = "net.spy.memcached";
   private static final String HELPERS_PACKAGE =
       MemcachedClientInstrumentation.class.getPackage().getName();
 
-  public static final HelperInjector HELPER_INJECTOR =
-      new HelperInjector(
-          HELPERS_PACKAGE + ".CompletionListener",
-          HELPERS_PACKAGE + ".GetCompletionListener",
-          HELPERS_PACKAGE + ".OperationCompletionListener",
-          HELPERS_PACKAGE + ".BulkGetCompletionListener");
+  public static final HelperInjector HELPER_INJECTOR = new HelperInjector();
 
   public MemcachedClientInstrumentation() {
     super("spymemcached");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            named(MEMCACHED_PACKAGE + ".MemcachedClient"),
-            // Target 2.12 that has this method
-            classLoaderHasClassWithMethod(
-                MEMCACHED_PACKAGE + ".ConnectionFactoryBuilder",
-                "setListenerExecutorService",
-                "java.util.concurrent.ExecutorService"))
-        .transform(HELPER_INJECTOR)
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod()
-                        .and(isPublic())
-                        .and(returns(named(MEMCACHED_PACKAGE + ".internal.OperationFuture")))
-                        /*
-                        Flush seems to have a bug when listeners may not be always called.
-                        Also tracing flush is probably of a very limited value.
-                        */
-                        .and(not(named("flush"))),
-                    AsyncOperationAdvice.class.getName()))
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod()
-                        .and(isPublic())
-                        .and(returns(named(MEMCACHED_PACKAGE + ".internal.GetFuture"))),
-                    AsyncGetAdvice.class.getName()))
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod()
-                        .and(isPublic())
-                        .and(returns(named(MEMCACHED_PACKAGE + ".internal.BulkFuture"))),
-                    AsyncBulkAdvice.class.getName()))
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    isMethod().and(isPublic()).and(named("incr").or(named("decr"))),
-                    SyncOperationAdvice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return named(MEMCACHED_PACKAGE + ".MemcachedClient");
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    // Target 2.12 that has this method
+    return classLoaderHasClassWithMethod(
+        MEMCACHED_PACKAGE + ".ConnectionFactoryBuilder",
+        "setListenerExecutorService",
+        "java.util.concurrent.ExecutorService");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      HELPERS_PACKAGE + ".CompletionListener",
+      HELPERS_PACKAGE + ".GetCompletionListener",
+      HELPERS_PACKAGE + ".OperationCompletionListener",
+      HELPERS_PACKAGE + ".BulkGetCompletionListener"
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        isMethod()
+            .and(isPublic())
+            .and(returns(named(MEMCACHED_PACKAGE + ".internal.OperationFuture")))
+            /*
+            Flush seems to have a bug when listeners may not be always called.
+            Also tracing flush is probably of a very limited value.
+            */
+            .and(not(named("flush"))),
+        AsyncOperationAdvice.class.getName());
+    transformers.put(
+        isMethod().and(isPublic()).and(returns(named(MEMCACHED_PACKAGE + ".internal.GetFuture"))),
+        AsyncGetAdvice.class.getName());
+    transformers.put(
+        isMethod().and(isPublic()).and(returns(named(MEMCACHED_PACKAGE + ".internal.BulkFuture"))),
+        AsyncBulkAdvice.class.getName());
+    transformers.put(
+        isMethod().and(isPublic()).and(named("incr").or(named("decr"))),
+        SyncOperationAdvice.class.getName());
+    return transformers;
   }
 
   @Override

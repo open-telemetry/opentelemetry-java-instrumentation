@@ -11,9 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.DDAdvice;
-import datadog.trace.agent.tooling.DDTransformers;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
@@ -25,45 +22,56 @@ import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class HttpServlet2Instrumentation extends Instrumenter.Configurable {
+public final class HttpServlet2Instrumentation extends Instrumenter.Default {
   public static final String SERVLET_OPERATION_NAME = "servlet.request";
-  static final HelperInjector SERVLET2_HELPER_INJECTOR =
-      new HelperInjector(
-          "datadog.trace.instrumentation.servlet2.HttpServletRequestExtractAdapter",
-          "datadog.trace.instrumentation.servlet2.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator");
+  static final String[] HELPERS =
+      new String[] {
+        "datadog.trace.instrumentation.servlet2.HttpServletRequestExtractAdapter",
+        "datadog.trace.instrumentation.servlet2.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator"
+      };
 
   public HttpServlet2Instrumentation() {
     super("servlet", "servlet-2");
   }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(
-            not(isInterface()).and(failSafe(hasSuperType(named("javax.servlet.http.HttpServlet")))),
-            not(classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"))
-                .and(
-                    classLoaderHasClasses(
-                        "javax.servlet.ServletContextEvent", "javax.servlet.FilterChain")))
-        .transform(SERVLET2_HELPER_INJECTOR)
-        .transform(DDTransformers.defaultTransformers())
-        .transform(
-            DDAdvice.create(false) // Can't use the error handler for pre 1.5 classes...
-                .advice(
-                    named("service")
-                        .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
-                        .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
-                        .and(isProtected()),
-                    HttpServlet2Advice.class.getName()))
-        .asDecorator();
+  public ElementMatcher typeMatcher() {
+    return not(isInterface()).and(failSafe(hasSuperType(named("javax.servlet.http.HttpServlet"))));
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    return not(classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"))
+        .and(
+            classLoaderHasClasses(
+                "javax.servlet.ServletContextEvent", "javax.servlet.FilterChain"));
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return HELPERS;
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        named("service")
+            .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
+            .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
+            .and(isProtected()),
+        HttpServlet2Advice.class.getName());
+    return transformers;
   }
 
   public static class HttpServlet2Advice {
