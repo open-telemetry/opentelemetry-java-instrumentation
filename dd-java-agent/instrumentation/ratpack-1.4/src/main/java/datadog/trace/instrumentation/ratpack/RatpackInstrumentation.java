@@ -54,6 +54,8 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
       // service registry helpers
       "datadog.trace.instrumentation.ratpack.impl.RatpackRequestExtractAdapter",
       "datadog.trace.instrumentation.ratpack.impl.RatpackScopeManager",
+      "datadog.trace.instrumentation.ratpack.impl.RatpackScopeManager$RatpackScope",
+      "datadog.trace.instrumentation.ratpack.impl.RatpackServerAdvice",
       "datadog.trace.instrumentation.ratpack.impl.RatpackServerAdvice$RatpackServerRegistryAdvice",
       "datadog.trace.instrumentation.ratpack.impl.TracingHandler"
     };
