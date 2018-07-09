@@ -1,5 +1,13 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
 dependencies {
   compile project(':dd-java-agent:agent-tooling')
 
@@ -12,7 +20,24 @@ dependencies {
   // jdbc unit testing
   testCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
   testCompile group: 'org.apache.derby', name: 'derby', version: '10.12.1.1'
-  // not using hsqldb 2.4 because org/hsqldb/jdbc/JDBCDriver : Unsupported major.minor version 52.0
   testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.3.+'
 
+  testCompile group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '7.0.19'
+  // tomcat needs this to run
+  testCompile group: 'org.apache.tomcat', name: 'tomcat-juli', version: '7.0.19'
+  testCompile group: 'com.zaxxer', name: 'HikariCP', version: '2.4.0'
+  testCompile group: 'com.mchange', name: 'c3p0', version: '0.9.5'
+}
+
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'com.h2database', name: 'h2', version: '+'
+    force group: 'org.apache.derby', name: 'derby', version: '+'
+    force group: 'org.hsqldb', name: 'hsqldb', version: '+'
+
+    force group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '+'
+    force group: 'org.apache.tomcat', name: 'tomcat-juli', version: '+'
+    force group: 'com.zaxxer', name: 'HikariCP', version: '+'
+    force group: 'com.mchange', name: 'c3p0', version: '+'
+  }
 }
