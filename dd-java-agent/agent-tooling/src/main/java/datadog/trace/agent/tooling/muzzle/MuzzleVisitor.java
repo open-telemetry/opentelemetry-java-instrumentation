@@ -170,12 +170,12 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
             false);
 
         final Reference[] references = generateReferences();
-        mv.visitIntInsn(Opcodes.BIPUSH, references.length);
+        mv.visitLdcInsn(references.length);
         mv.visitTypeInsn(Opcodes.ANEWARRAY, "datadog/trace/agent/tooling/muzzle/Reference");
 
         for (int i = 0; i < references.length; ++i) {
           mv.visitInsn(Opcodes.DUP);
-          mv.visitIntInsn(Opcodes.BIPUSH, i);
+          mv.visitLdcInsn(i);
           mv.visitTypeInsn(Opcodes.NEW, "datadog/trace/agent/tooling/muzzle/Reference$Builder");
           mv.visitInsn(Opcodes.DUP);
           mv.visitLdcInsn(references[i].getClassName());
@@ -187,7 +187,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
               false);
           for (Reference.Source source : references[i].getSources()) {
             mv.visitLdcInsn(source.getName());
-            mv.visitIntInsn(Opcodes.BIPUSH, source.getLine());
+            mv.visitLdcInsn(source.getLine());
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
                 "datadog/trace/agent/tooling/muzzle/Reference$Builder",
@@ -228,14 +228,14 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
           }
           for (Reference.Field field : references[i].getFields()) {
             mv.visitLdcInsn(field.getName());
-            mv.visitIntInsn(Opcodes.BIPUSH, field.getFlags().size());
+            mv.visitLdcInsn(field.getFlags().size());
             mv.visitTypeInsn(
                 Opcodes.ANEWARRAY, "datadog/trace/agent/tooling/muzzle/Reference$Flag");
 
             int j = 0;
             for (Reference.Flag flag : field.getFlags()) {
               mv.visitInsn(Opcodes.DUP);
-              mv.visitIntInsn(Opcodes.BIPUSH, j);
+              mv.visitLdcInsn(j);
               mv.visitFieldInsn(
                   Opcodes.GETSTATIC,
                   "datadog/trace/agent/tooling/muzzle/Reference$Flag",
@@ -255,13 +255,13 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
           for (Reference.Method method : references[i].getMethods()) {
             mv.visitLdcInsn(method.getName());
 
-            mv.visitIntInsn(Opcodes.BIPUSH, method.getFlags().size());
+            mv.visitLdcInsn(method.getFlags().size());
             mv.visitTypeInsn(
                 Opcodes.ANEWARRAY, "datadog/trace/agent/tooling/muzzle/Reference$Flag");
             int j = 0;
             for (Reference.Flag flag : method.getFlags()) {
               mv.visitInsn(Opcodes.DUP);
-              mv.visitIntInsn(Opcodes.BIPUSH, j);
+              mv.visitLdcInsn(j);
               mv.visitFieldInsn(
                   Opcodes.GETSTATIC,
                   "datadog/trace/agent/tooling/muzzle/Reference$Flag",
@@ -273,13 +273,13 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
 
             mv.visitLdcInsn(method.getReturnType());
 
-            mv.visitIntInsn(Opcodes.BIPUSH, method.getParameterTypes().size());
+            mv.visitLdcInsn(method.getParameterTypes().size());
             mv.visitTypeInsn(Opcodes.ANEWARRAY, "java/lang/String");
 
             int k = 0;
             for (String parameterType : method.getParameterTypes()) {
               mv.visitInsn(Opcodes.DUP);
-              mv.visitIntInsn(Opcodes.BIPUSH, k);
+              mv.visitLdcInsn(k);
               mv.visitLdcInsn(parameterType);
               mv.visitInsn(Opcodes.AASTORE);
             }
