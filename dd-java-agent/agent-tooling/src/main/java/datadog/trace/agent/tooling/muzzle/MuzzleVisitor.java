@@ -15,11 +15,7 @@ import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.jar.asm.*;
 import net.bytebuddy.pool.TypePool;
 
-/**
- * TODO: update doc Visit a class and add: 1) a private instrumenationMuzzle field and getter AND 2)
- * logic to the end of the instrumentation transformer to assert classpath is safe to apply
- * instrumentation to.
- */
+/** Visit a class and add: a private instrumenationMuzzle field and getter */
 public class MuzzleVisitor implements AsmVisitorWrapper {
   @Override
   public int mergeWriter(int flags) {
@@ -104,7 +100,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
         if (!referenceSources.contains(adviceClass)) {
           referenceSources.add(adviceClass);
           for (Map.Entry<String, Reference> entry :
-              AdviceReferenceVisitor.createReferencesFrom(
+              ReferenceCreator.createReferencesFrom(
                       adviceClass, ReferenceMatcher.class.getClassLoader())
                   .entrySet()) {
             if (references.containsKey(entry.getKey())) {

@@ -123,9 +123,8 @@ public interface Instrumenter {
     /**
      * This method is implemented dynamically by compile-time bytecode transformations.
      *
-     * <p>TODO bytecode magic and documentation
+     * <p>{@see datadog.trace.agent.tooling.muzzle.MuzzleGradlePlugin}
      */
-    // TODO: Make final
     protected ReferenceMatcher getInstrumentationMuzzle() {
       return null;
     }

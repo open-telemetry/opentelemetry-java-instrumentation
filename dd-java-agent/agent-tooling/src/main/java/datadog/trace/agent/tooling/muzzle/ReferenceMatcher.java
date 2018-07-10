@@ -3,19 +3,12 @@ package datadog.trace.agent.tooling.muzzle;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import datadog.trace.agent.tooling.Utils;
-import java.security.ProtectionDomain;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.agent.builder.AgentBuilder;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.utility.JavaModule;
 
-/**
- * A bytebuddy matcher that matches if expected references (classes, fields, methods, visibility)
- * are present on the classpath.
- */
+/** Matches a set of references against a classloader. */
 @Slf4j
-public class ReferenceMatcher implements AgentBuilder.RawMatcher {
+public class ReferenceMatcher {
   private final Map<ClassLoader, List<Reference.Mismatch>> mismatchCache =
       Collections.synchronizedMap(new WeakHashMap<ClassLoader, List<Reference.Mismatch>>());
   private final Reference[] references;
@@ -28,16 +21,6 @@ public class ReferenceMatcher implements AgentBuilder.RawMatcher {
   public ReferenceMatcher(String[] helperClassNames, Reference[] references) {
     this.references = references;
     this.helperClassNames = new HashSet<>(Arrays.asList(helperClassNames));
-  }
-
-  @Override
-  public boolean matches(
-      TypeDescription typeDescription,
-      ClassLoader classLoader,
-      JavaModule module,
-      Class<?> classBeingRedefined,
-      ProtectionDomain protectionDomain) {
-    return matches(classLoader);
   }
 
   /**

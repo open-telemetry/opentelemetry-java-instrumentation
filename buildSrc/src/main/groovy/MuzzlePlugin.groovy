@@ -3,6 +3,11 @@ import org.gradle.api.Project
 
 import java.lang.reflect.Method
 
+/**
+ * POC muzzle task plugin which runs muzzle validation against an instrumentation's compile-time dependencies.
+ *
+ * <p/>TODO: merge this with version scan
+ */
 class MuzzlePlugin implements Plugin<Project> {
   @Override
   void apply(Project project) {
@@ -38,8 +43,8 @@ class MuzzlePlugin implements Plugin<Project> {
 
         final ClassLoader agentCL = new URLClassLoader(ddUrls.toArray(new URL[0]), (ClassLoader) null)
         // find all instrumenters, get muzzle, and assert
-        Method assertionMethod = agentCL.loadClass('datadog.trace.agent.tooling.muzzle.MuzzleGradlePlugin')
-          .getMethod('assertAllInstrumentationIsMuzzled', ClassLoader.class)
+        Method assertionMethod = agentCL.loadClass('datadog.trace.agent.tooling.muzzle.MuzzleVersionScanPlugin')
+          .getMethod('assertInstrumentationNotMuzzled', ClassLoader.class)
         assertionMethod.invoke(null, userCL)
       }
     }
