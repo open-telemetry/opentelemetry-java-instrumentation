@@ -44,7 +44,7 @@ repositories {
 dependencies {
   testCompile deps.junit
   testCompile group: 'org.assertj', name: 'assertj-core', version: '2.9.+'
-  testCompile group: 'org.mockito', name: 'mockito-core', version: '2.7.22'
+  testCompile group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
 
   testCompile deps.spock
   testCompile deps.groovy
@@ -118,7 +118,7 @@ project.ext.testJava8Only = []
 project.ext.testJava8Minimum = []
 
 tasks.withType(Test) {
-  if (name.endsWith("Java7") || name.endsWith("Java9")) {
+  if (name.endsWith("Java7") || name.endsWith("Java9") || name.endsWith("Java10")) {
     return
   }
 
@@ -151,6 +151,21 @@ tasks.withType(Test) {
       }
     }
     tasks.check.dependsOn testJ9
+  }
+
+  def java10Home = System.getenv("JAVA10_HOME")
+  if (java10Home != null) {
+    def testJ10 = task "${cloned.name}Java10"(type: cloned.class) {
+      description "Runs $cloned.name under java 10"
+      // TODO: Pull from environment variable:
+      executable = "$java10Home/bin/java"
+      jvmArgs '--add-opens'
+      jvmArgs 'java.base/jdk.internal.loader=ALL-UNNAMED'
+      project.afterEvaluate {
+        exclude project.testJava8Only
+      }
+    }
+    tasks.check.dependsOn testJ10
   }
 }
 
