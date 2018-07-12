@@ -125,6 +125,13 @@ jobs:
       - TEST_TASK: testJava9 latestDepTestJava9 jacocoTestReport jacocoTestCoverageVerification
       - INSTALL_ZULU: zulu-9
 
+  test_10:
+    <<: *default_test_job
+    environment:
+      - JAVA10_HOME: /usr/lib/jvm/zulu-10-amd64
+      - TEST_TASK: testJava10 latestDepTestJava10 jacocoTestReport jacocoTestCoverageVerification
+      - INSTALL_ZULU: zulu-10
+
   agent_integration_tests:
     <<: *defaults
     docker:
@@ -245,6 +252,12 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - test_10:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
 
       - agent_integration_tests:
           requires:
@@ -265,6 +278,7 @@ workflows:
             - test_7
             - test_8
             - test_9
+            - test_10
             - agent_integration_tests
           filters:
             branches:
@@ -277,6 +291,7 @@ workflows:
             - test_7
             - test_8
             - test_9
+            - test_10
             - agent_integration_tests
           filters:
             branches:

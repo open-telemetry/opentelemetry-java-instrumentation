@@ -38,7 +38,6 @@ description = 'dd-trace-java'
 
 task traceAgentTest {}
 task latestDepTest {}
-task latestDepTestJava9 {}
 
 // Applied here to allow publishing of artifactory build info
 apply from: "${rootDir}/gradle/publish.gradle"
