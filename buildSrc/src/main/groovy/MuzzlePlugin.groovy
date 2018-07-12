@@ -4,7 +4,7 @@ import org.gradle.api.Project
 import java.lang.reflect.Method
 
 /**
- * POC muzzle task plugin which runs muzzle validation against an instrumentation's compile-time dependencies.
+ * muzzle task plugin which runs muzzle validation against an instrumentation's compile-time dependencies.
  *
  * <p/>TODO: merge this with version scan
  */

@@ -90,15 +90,16 @@ public interface Instrumenter {
                         JavaModule module,
                         Class<?> classBeingRedefined,
                         ProtectionDomain protectionDomain) {
-                      // Optimization: calling getMuzzleReferenceMatcher() inside this method prevents unnecessary loading of muzzle references during agentBuilder setup.
+                      // Optimization: calling getInstrumentationMuzzle() inside this method prevents unnecessary loading of muzzle references during agentBuilder setup.
                       final ReferenceMatcher muzzle = getInstrumentationMuzzle();
                       if (null != muzzle) {
                         List<Reference.Mismatch> mismatches =
                             muzzle.getMismatchedReferenceSources(classLoader);
                         if (mismatches.size() > 0) {
                           log.debug(
-                              "Instrumentation muzzled: {} on {}",
+                              "Instrumentation muzzled: {} -- {} on {}",
                               instrumentationPrimaryName,
+                              this.getClass().getName(),
                               classLoader);
                         }
                         for (Reference.Mismatch mismatch : mismatches) {
@@ -148,6 +149,8 @@ public interface Instrumenter {
     protected boolean defaultEnabled() {
       return getConfigEnabled("dd.integrations.enabled", true);
     }
+
+    // TODO: move common config helpers to Utils
 
     public static String getPropOrEnv(final String name) {
       return System.getProperty(name, System.getenv(propToEnvName(name)));
