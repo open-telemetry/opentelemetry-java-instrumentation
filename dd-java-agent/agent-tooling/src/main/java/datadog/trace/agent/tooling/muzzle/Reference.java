@@ -313,7 +313,6 @@ public class Reference {
 
     @Override
     public int hashCode() {
-      // will cause collisions for overloaded method refs but performance hit should be negligable
       return name.hashCode();
     }
   }

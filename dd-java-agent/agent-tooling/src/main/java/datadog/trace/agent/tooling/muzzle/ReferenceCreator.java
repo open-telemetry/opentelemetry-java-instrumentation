@@ -16,6 +16,10 @@ import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 
 /** Visit a class and collect all references made by the visited class. */
+// additional things we could check
+// - annotations on class
+// - outer class
+// - inner class
 public class ReferenceCreator extends ClassVisitor {
   /**
    * Generate all references reachable from a given class.
@@ -97,7 +101,17 @@ public class ReferenceCreator extends ClassVisitor {
       final String superName,
       final String[] interfaces) {
     refSourceClassName = Utils.getClassName(name);
+    // Additional references we could check
+    // - supertype of class and visible from this package
+    // - interfaces of class and visible from this package
     super.visit(version, access, name, signature, superName, interfaces);
+  }
+
+  @Override
+  public FieldVisitor visitField(int access, String name, String descriptor, String signature, Object value) {
+    // Additional references we could check
+    // - type of field + visible from this package
+    return super.visitField(access, name, descriptor, signature, value);
   }
 
   @Override
@@ -107,6 +121,8 @@ public class ReferenceCreator extends ClassVisitor {
       final String descriptor,
       final String signature,
       final String[] exceptions) {
+    // Additional references we could check
+    // - Classes in signature (return type, params) and visible from this package
     return new AdviceReferenceMethodVisitor(
         super.visitMethod(access, name, descriptor, signature, exceptions));
   }
@@ -125,14 +141,48 @@ public class ReferenceCreator extends ClassVisitor {
     }
 
     @Override
+    public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
+      // Additional references we could check
+      // * DONE owner class
+      //   * owner class has a field (name)
+      //   * field is static or non-static
+      //   * field's visibility from this point (NON_PRIVATE?)
+      // * owner class's visibility from this point (NON_PRIVATE?)
+      //
+      // * DONE field-source class (descriptor)
+      //   * field-source visibility from this point (PRIVATE?)
+
+      // owning class has a field
+      addReference(new Reference.Builder(owner)
+        .withSource(refSourceClassName, currentLineNumber)
+        .build());
+      addReference(new Reference.Builder(Type.getType(descriptor).getInternalName())
+        .withSource(refSourceClassName, currentLineNumber)
+        .build());
+      super.visitFieldInsn(opcode, owner, name, descriptor);
+    }
+
+    @Override
     public void visitMethodInsn(
         final int opcode,
         final String owner,
         final String name,
         final String descriptor,
         final boolean isInterface) {
-      addReference(
-          new Reference.Builder(owner).withSource(refSourceClassName, currentLineNumber).build());
+      // Additional references we could check
+      // * DONE name of method owner's class
+      //   * is the owner an interface?
+      //   * owner's access from here (PRIVATE?)
+      //   * method on the owner class
+      //   * is the method static? Is it visible from here?
+      // * Class names from the method descriptor
+      //   * params classes
+      //   * return type
+
+      addReference(new Reference.Builder(owner)
+        .withSource(refSourceClassName, currentLineNumber)
+        .build());
+      super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
     }
   }
 }
