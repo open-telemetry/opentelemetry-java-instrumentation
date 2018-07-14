@@ -14,6 +14,7 @@ Project instr_project = project
 subprojects { subProj ->
   if (subProj.getParent() == instr_project) {
     apply plugin: "net.bytebuddy.byte-buddy"
+    apply plugin: 'muzzle'
 
     subProj.byteBuddy {
       transformation {

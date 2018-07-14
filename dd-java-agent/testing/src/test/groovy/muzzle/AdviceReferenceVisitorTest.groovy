@@ -2,7 +2,7 @@ package muzzle
 
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
-import datadog.trace.agent.tooling.muzzle.AdviceReferenceVisitor
+import datadog.trace.agent.tooling.muzzle.ReferenceCreator
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher
 import datadog.trace.agent.tooling.muzzle.Reference
 
@@ -10,7 +10,7 @@ class AdviceReferenceVisitorTest extends AgentTestRunner {
 
   def "methods body references"() {
     setup:
-    Map<String, Reference> references = AdviceReferenceVisitor.createReferencesFrom(AdviceClass.getName(), this.getClass().getClassLoader())
+    Map<String, Reference> references = ReferenceCreator.createReferencesFrom(AdviceClass.getName(), this.getClass().getClassLoader())
 
     expect:
     references.get('java.lang.Object') != null
@@ -22,9 +22,8 @@ class AdviceReferenceVisitorTest extends AgentTestRunner {
 
   def "match safe classpaths"() {
     setup:
-    Reference[] refs = AdviceReferenceVisitor.createReferencesFrom(AdviceClass.getName(), this.getClass().getClassLoader()).values().toArray(new Reference[0])
+    Reference[] refs = ReferenceCreator.createReferencesFrom(AdviceClass.getName(), this.getClass().getClassLoader()).values().toArray(new Reference[0])
     ReferenceMatcher refMatcher = new ReferenceMatcher(refs)
-    refMatcher.assertSafeTransformation()
     ClassLoader safeClassloader = new URLClassLoader([TestUtils.createJarWithClasses(AdviceClass$A,
                                                                                      AdviceClass$SomeInterface,
                                                                                      AdviceClass$SomeImplementation)] as URL[],

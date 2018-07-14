@@ -6,44 +6,24 @@ import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType.Builder;
 
+/** Bytebuddy gradle plugin which creates muzzle-references at compile time. */
 public class MuzzleGradlePlugin implements Plugin {
-  // TODO:
-  // - Optimizations
-  //   - Cache safe and unsafe classloaders
-  //   - Do reference generation at compile time
-  //   - lazy-load reference muzzle field
-  // - Additional references to check
-  //   - Fields
-  //   - methods
-  //     - visit annotations
-  //     - visit parameter types
-  //     - visit method instructions
-  //     - method invoke type
-  //   - access flags (including implicit package-private)
-  //   - supertypes
-  // - Misc
-  //   - Also match interfaces which extend Instrumenter
-  //   - Expose config instead of hardcoding datadog namespace (or reconfigure classpath)
-  //   - Run muzzle in matching phase (may require a rewrite of the instrumentation api)
-  //   - Documentation
-
-  private static final TypeDescription InstrumenterTypeDesc =
-      new TypeDescription.ForLoadedType(Instrumenter.class);
+  private static final TypeDescription DefaultInstrumenterTypeDesc =
+      new TypeDescription.ForLoadedType(Instrumenter.Default.class);
 
   @Override
   public boolean matches(final TypeDescription target) {
-    // AutoService annotation is not retained at runtime. Check for instrumenter supertype
+    // AutoService annotation is not retained at runtime. Check for Instrumenter.Default supertype
     boolean isInstrumenter = false;
-    TypeDefinition instrumenter = target;
+    TypeDefinition instrumenter = null == target ? null : target.getSuperClass();
     while (instrumenter != null) {
-      if (instrumenter.getInterfaces().contains(InstrumenterTypeDesc)) {
+      if (instrumenter.equals(DefaultInstrumenterTypeDesc)) {
         isInstrumenter = true;
         break;
       }
       instrumenter = instrumenter.getSuperClass();
     }
-    // return isInstrumenter;
-    return false;
+    return isInstrumenter;
   }
 
   @Override
@@ -51,6 +31,7 @@ public class MuzzleGradlePlugin implements Plugin {
     return builder.visit(new MuzzleVisitor());
   }
 
+  /** Compile-time Optimization used by gradle buildscripts. */
   public static class NoOp implements Plugin {
     @Override
     public boolean matches(final TypeDescription target) {

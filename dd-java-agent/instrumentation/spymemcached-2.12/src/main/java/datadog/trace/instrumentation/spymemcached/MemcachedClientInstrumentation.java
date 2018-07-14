@@ -49,6 +49,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       HELPERS_PACKAGE + ".CompletionListener",
+      HELPERS_PACKAGE + ".SyncCompletionListener",
       HELPERS_PACKAGE + ".GetCompletionListener",
       HELPERS_PACKAGE + ".OperationCompletionListener",
       HELPERS_PACKAGE + ".BulkGetCompletionListener"

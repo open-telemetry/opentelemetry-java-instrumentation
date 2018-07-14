@@ -17,9 +17,18 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/**
+ * TraceConfig Instrumentation does not extend Default.
+ *
+ * <p>Instead it directly implements Instrumenter#instrument() and adds one default Instrumenter for
+ * every configured class+method-list.
+ *
+ * <p>If this becomes a more common use case the building logic should be abstracted out into a
+ * super class.
+ */
 @Slf4j
 @AutoService(Instrumenter.class)
-public class TraceConfigInstrumentation extends Instrumenter.Default {
+public class TraceConfigInstrumentation implements Instrumenter {
   private static final String CONFIG_NAME = "dd.trace.methods";
 
   static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.\\$]+";
@@ -38,9 +47,7 @@ public class TraceConfigInstrumentation extends Instrumenter.Default {
   private final Map<String, Set<String>> classMethodsToTrace;
 
   public TraceConfigInstrumentation() {
-    super("trace", "trace-config");
-
-    final String configString = getPropOrEnv(CONFIG_NAME);
+    final String configString = Default.getPropOrEnv(CONFIG_NAME);
     if (configString == null || configString.trim().isEmpty()) {
       classMethodsToTrace = Collections.emptyMap();
 
@@ -97,6 +104,11 @@ public class TraceConfigInstrumentation extends Instrumenter.Default {
     private final String className;
     private final Set<String> methodNames;
 
+    /** No-arg constructor only used by muzzle and tests. */
+    public TracerClassInstrumentation() {
+      this("noop", Collections.singleton("noop"));
+    }
+
     public TracerClassInstrumentation(String className, Set<String> methodNames) {
       super("trace", "trace-config");
       this.className = className;
@@ -128,6 +140,16 @@ public class TraceConfigInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
     throw new RuntimeException("TracerConfigInstrumentation must not use TypeMatcher");
+  }
+
+  @Override
+  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    throw new RuntimeException("TracerConfigInstrumentation must not use classLoaderMatcher");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    throw new RuntimeException("TracerConfigInstrumentation must not use helperClassNames");
   }
 
   @Override

@@ -3,37 +3,24 @@ package datadog.trace.agent.tooling.muzzle;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import datadog.trace.agent.tooling.Utils;
-import java.security.ProtectionDomain;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.agent.builder.AgentBuilder;
-import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.utility.JavaModule;
 
-/**
- * A bytebuddy matcher that matches if expected references (classes, fields, methods, visibility)
- * are present on the classpath.
- */
+/** Matches a set of references against a classloader. */
 @Slf4j
-public class ReferenceMatcher implements AgentBuilder.RawMatcher {
+public class ReferenceMatcher {
   private final Map<ClassLoader, List<Reference.Mismatch>> mismatchCache =
       Collections.synchronizedMap(new WeakHashMap<ClassLoader, List<Reference.Mismatch>>());
   private final Reference[] references;
+  private final Set<String> helperClassNames;
 
   public ReferenceMatcher(Reference... references) {
-    this.references = references;
+    this(new String[0], references);
   }
 
-  @Override
-  public boolean matches(
-      TypeDescription typeDescription,
-      ClassLoader classLoader,
-      JavaModule module,
-      Class<?> classBeingRedefined,
-      ProtectionDomain protectionDomain) {
-    return matches(classLoader);
+  public ReferenceMatcher(String[] helperClassNames, Reference[] references) {
+    this.references = references;
+    this.helperClassNames = new HashSet<>(Arrays.asList(helperClassNames));
   }
 
   /**
@@ -52,54 +39,23 @@ public class ReferenceMatcher implements AgentBuilder.RawMatcher {
     if (loader == BOOTSTRAP_LOADER) {
       loader = Utils.getBootstrapProxy();
     }
-    final List<Reference.Mismatch> mismatchedReferences = new ArrayList<>(0);
-    for (Reference reference : references) {
-      mismatchedReferences.addAll(reference.checkMatch(loader));
-    }
-    return mismatchedReferences;
-  }
-
-  /**
-   * Create a bytebuddy matcher which throws a MismatchException when there are mismatches with the
-   * classloader under transformation.
-   */
-  public Transformer assertSafeTransformation(String... adviceClassNames) {
-    return new Transformer() {
-      @Override
-      public DynamicType.Builder<?> transform(
-          DynamicType.Builder<?> builder,
-          TypeDescription typeDescription,
-          ClassLoader classLoader,
-          JavaModule module) {
-        if (classLoader == BOOTSTRAP_LOADER) {
-          classLoader = Utils.getBootstrapProxy();
-        }
-        List<Reference.Mismatch> mismatches =
-            mismatchCache.get(getMismatchedReferenceSources(classLoader));
+    List<Reference.Mismatch> mismatches = mismatchCache.get(loader);
+    if (null == mismatches) {
+      synchronized (loader) {
+        mismatches = mismatchCache.get(loader);
         if (null == mismatches) {
-          // okay if entered by multiple callers during initialization
-          mismatches = getMismatchedReferenceSources(classLoader);
-          mismatchCache.put(classLoader, mismatches);
-        }
-        if (mismatches.size() == 0) {
-          return builder;
-        } else {
-          throw new MismatchException(classLoader, mismatches);
+          mismatches = new ArrayList<>(0);
+          for (Reference reference : references) {
+            // Don't reference-check helper classes.
+            // They will be injected by the instrumentation's HelperInjector.
+            if (!helperClassNames.contains(reference.getClassName())) {
+              mismatches.addAll(reference.checkMatch(loader));
+            }
+          }
+          mismatchCache.put(loader, mismatches);
         }
       }
-    };
-  }
-
-  public static class MismatchException extends RuntimeException {
-    private final List<Reference.Mismatch> mismatches;
-
-    public MismatchException(ClassLoader classLoader, List<Reference.Mismatch> mismatches) {
-      super(mismatches.size() + " mismatches on classloader: " + classLoader);
-      this.mismatches = mismatches;
     }
-
-    public List<Reference.Mismatch> getMismatches() {
-      return this.mismatches;
-    }
+    return mismatches;
   }
 }

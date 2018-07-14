@@ -8,13 +8,17 @@ import spock.lang.Specification
 
 class MuzzleBytecodeTransformTest extends Specification {
 
-  /*
   def "muzzle fields added to all instrumentation"() {
     setup:
     List<Class> unMuzzledClasses = []
     List<Class> nonLazyFields = []
     List<Class> unInitFields = []
-    for (final Object instrumenter : ServiceLoader.load(IntegrationTestUtils.getAgentClassLoader().loadClass("datadog.trace.agent.tooling.Instrumenter"), IntegrationTestUtils.getAgentClassLoader())) {
+    for (Object instrumenter : ServiceLoader.load(IntegrationTestUtils.getAgentClassLoader().loadClass("datadog.trace.agent.tooling.Instrumenter"), IntegrationTestUtils.getAgentClassLoader())) {
+      if (instrumenter.getClass().getName().endsWith("TraceConfigInstrumentation")) {
+        // TraceConfigInstrumentation doesn't do muzzle checks
+        // check on TracerClassInstrumentation instead
+        instrumenter = IntegrationTestUtils.getAgentClassLoader().loadClass(instrumenter.getClass().getName() + '$TracerClassInstrumentation').newInstance()
+      }
       Field f
       Method m
       try {
@@ -45,6 +49,5 @@ class MuzzleBytecodeTransformTest extends Specification {
     nonLazyFields == []
     unInitFields == []
   }
-  */
 
 }

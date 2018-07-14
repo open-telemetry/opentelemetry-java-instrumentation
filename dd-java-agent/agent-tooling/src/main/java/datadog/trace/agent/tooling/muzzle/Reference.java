@@ -5,7 +5,7 @@ import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOAD
 import datadog.trace.agent.tooling.Utils;
 import java.util.*;
 
-/** An immutable reference to a single class file. */
+/** An immutable reference to a jvm class. */
 public class Reference {
   private final Set<Source> sources;
   private final String className;
