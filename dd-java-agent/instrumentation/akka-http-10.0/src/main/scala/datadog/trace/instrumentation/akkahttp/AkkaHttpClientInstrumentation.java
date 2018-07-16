@@ -98,7 +98,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.This final HttpExt thiz,
         @Advice.Return final Future<HttpResponse> responseFuture,
         @Advice.Enter final Scope scope) {
-      responseFuture.onComplete(new OnCompleteHandler(scope), thiz.system().dispatcher());
+      responseFuture.onComplete(new OnCompleteHandler(scope.span()), thiz.system().dispatcher());
       scope.close();
     }
   }
@@ -113,15 +113,14 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   public static class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void> {
-    private final Scope scope;
+    private final Span span;
 
-    public OnCompleteHandler(Scope scope) {
-      this.scope = scope;
+    public OnCompleteHandler(Span span) {
+      this.span = span;
     }
 
     @Override
     public Void apply(Try<HttpResponse> result) {
-      Span span = scope.span();
       if (result.isSuccess()) {
         Tags.HTTP_STATUS.set(span, result.get().status().intValue());
       } else {
