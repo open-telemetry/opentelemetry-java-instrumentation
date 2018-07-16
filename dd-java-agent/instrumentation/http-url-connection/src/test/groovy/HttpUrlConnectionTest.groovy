@@ -2,8 +2,11 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.RatpackUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
+import io.opentracing.propagation.TextMap
 import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
+import org.springframework.web.client.RestTemplate
+import ratpack.handling.Context
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
@@ -14,7 +17,8 @@ import static ratpack.http.HttpMethod.POST
 
 class HttpUrlConnectionTest extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.httpurlconnection.enabled", "true")
+    System.setProperty("dd.integration.httpurlconnection.enabled", "false")
+    System.setProperty("dd.integration.sun-httpurlconnection.enabled", "true")
   }
 
   static final RESPONSE = "<html><body><h1>Hello test.</h1>"
@@ -422,6 +426,35 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           }
         }
       }
+    }
+  }
+
+  def "rest template"() {
+    when:
+    RestTemplate restTemplate = new RestTemplate()
+    String res = restTemplate.getForObject("https://gturnquist-quoters.cfapps.io/api/random", String.class)
+
+    then:
+    println(res)
+    println(TEST_WRITER.size())
+    println(TEST_WRITER[0].size())
+  }
+
+  private static class RatpackResponseAdapter implements TextMap {
+    final Context context
+
+    RatpackResponseAdapter(Context context) {
+      this.context = context
+    }
+
+    @Override
+    void put(String key, String value) {
+      context.response.set(key, value)
+    }
+
+    @Override
+    Iterator<Map.Entry<String, String>> iterator() {
+      return context.request.getHeaders().asMultiValueMap().entrySet().iterator()
     }
   }
 }
