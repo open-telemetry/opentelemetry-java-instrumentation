@@ -59,7 +59,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Configurab
                 .advice(
                     named("singleRequest")
                         .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
-                    SingleRequesrAdvice.class.getName()))
+                    SingleRequestAdvice.class.getName()))
         .transform(
             DDAdvice.create()
                 .advice(
@@ -68,7 +68,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Configurab
         .asDecorator();
   }
 
-  public static class SingleRequesrAdvice {
+  public static class SingleRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request) {
