@@ -1,9 +1,6 @@
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/test-with-scala.gradle"
 
-// We have actual Scala sources here
-apply plugin: 'scala'
-
 apply plugin: 'org.unbroken-dome.test-sets'
 testSets {
   lagomTest
