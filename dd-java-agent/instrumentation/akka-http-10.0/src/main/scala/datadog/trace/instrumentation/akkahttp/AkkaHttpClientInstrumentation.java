@@ -20,11 +20,13 @@ import io.opentracing.propagation.TextMap;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
 import scala.Tuple2;
 import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
@@ -32,7 +34,7 @@ import scala.util.Try;
 
 @Slf4j
 @AutoService(Instrumenter.class)
-public final class AkkaHttpClientInstrumentation extends Instrumenter.Configurable {
+public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
   public AkkaHttpClientInstrumentation() {
     super("akka-http", "akka-http-client");
   }
@@ -42,30 +44,30 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Configurab
     return false;
   }
 
-  private static final HelperInjector HELPER_INJECTOR =
-      new HelperInjector(
-          AkkaHttpClientInstrumentation.class.getName() + "$OnCompleteHandler",
-          AkkaHttpClientInstrumentation.class.getName() + "$AkkaHttpHeaders",
-          AkkaHttpClientTransformFlow.class.getName());
+  @Override
+  public ElementMatcher<? super TypeDescription> typeMatcher() {
+    return named("akka.http.scaladsl.HttpExt");
+  }
 
   @Override
-  public AgentBuilder apply(final AgentBuilder agentBuilder) {
-    return agentBuilder
-        .type(named("akka.http.scaladsl.HttpExt"))
-        .transform(DDTransformers.defaultTransformers())
-        .transform(HELPER_INJECTOR)
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("singleRequest")
-                        .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
-                    SingleRequestAdvice.class.getName()))
-        .transform(
-            DDAdvice.create()
-                .advice(
-                    named("superPool").and(returns(named("akka.stream.scaladsl.Flow"))),
-                    SuperPoolAdvice.class.getName()))
-        .asDecorator();
+  public String[] helperClassNames() {
+    return new String[] {
+      AkkaHttpClientInstrumentation.class.getName() + "$OnCompleteHandler",
+      AkkaHttpClientInstrumentation.class.getName() + "$AkkaHttpHeaders",
+      AkkaHttpClientTransformFlow.class.getName()
+    };
+  }
+
+  @Override
+  public Map<ElementMatcher, String> transformers() {
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
+    transformers.put(
+        named("singleRequest").and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
+        SingleRequestAdvice.class.getName());
+    transformers.put(
+        named("superPool").and(returns(named("akka.stream.scaladsl.Flow"))),
+        SuperPoolAdvice.class.getName());
+    return transformers;
   }
 
   public static class SingleRequestAdvice {
