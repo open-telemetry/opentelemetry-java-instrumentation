@@ -30,7 +30,7 @@ import static CompletionListener.SPAN_TYPE
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
-// Do not run tests locally on Java7 since testcontainers are not compatibly with Java7
+// Do not run tests locally on Java7 since testcontainers are not compatible with Java7
 // It is fine to run on CI because CI provides memcached externally, not through testcontainers
 @Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
 class SpymemcachedTest extends AgentTestRunner {
