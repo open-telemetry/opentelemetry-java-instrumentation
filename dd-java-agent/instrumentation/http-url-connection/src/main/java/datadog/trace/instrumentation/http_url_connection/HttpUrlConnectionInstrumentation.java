@@ -6,6 +6,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -18,6 +19,7 @@ import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
@@ -41,7 +43,9 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher typeMatcher() {
-    return isSubTypeOf(HttpURLConnection.class);
+    return isSubTypeOf(HttpURLConnection.class)
+        // This class is a simple delegator. Skip because it does not update its `connected` field.
+        .and(not(named("sun.net.www.protocol.https.HttpsURLConnectionImpl")));
   }
 
   @Override
@@ -59,6 +63,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
             .and(isPublic())
             .and(
                 named("getResponseCode")
+                    .or(named("connect"))
                     .or(named("getOutputStream"))
                     .or(named("getInputStream"))
                     .or(nameStartsWith("getHeaderField"))),
@@ -70,13 +75,20 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
-        @Advice.This final HttpURLConnection connection,
-        @Advice.FieldValue("connected") final boolean connected,
-        @Advice.Origin("#m") final String methodName) {
+        @Advice.This final HttpURLConnection thiz,
+        @Advice.FieldValue("connected") final boolean connected) {
 
+      // This works with keep-alive because the "connected" flag is not initialized until the socket cache is checked.
+      // This allows us to use the connected flag to know if this instance has done any io.
+      if (connected) {
+        return null;
+      }
+
+      // AgentWriter uses HttpURLConnection to report to the trace-agent. We don't want to trace those requests.
+      // Check after the connected test above because getRequestProperty will throw an exception if already connected.
       final boolean isTraceRequest =
           Thread.currentThread().getName().equals("dd-agent-writer")
-              || connection.getRequestProperty("Datadog-Meta-Lang") != null;
+              || thiz.getRequestProperty("Datadog-Meta-Lang") != null;
       if (isTraceRequest) {
         return null;
       }
@@ -86,56 +98,38 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      String protocol = "url";
-      if (connection != null) {
-        final URL url = connection.getURL();
-        protocol = url.getProtocol();
-      }
-
-      String command = ".request.response_code";
-      if (methodName.equals("getOutputStream")) {
-        command = ".request.output_stream";
-      } else if (methodName.equals("getInputStream")) {
-        command = ".request.input_stream";
-      }
+      final String protocol = thiz.getURL().getProtocol();
 
       final Tracer tracer = GlobalTracer.get();
       final Scope scope =
           tracer
-              .buildSpan(protocol + command)
+              .buildSpan("http.request")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
               .startActive(true);
 
-      if (connection != null) {
-        final URL url = connection.getURL();
-        final Span span = scope.span();
-        Tags.COMPONENT.set(scope.span(), connection.getClass().getSimpleName());
-        Tags.HTTP_URL.set(span, url.toString());
-        Tags.PEER_HOSTNAME.set(span, url.getHost());
-        if (url.getPort() > 0) {
-          Tags.PEER_PORT.set(span, url.getPort());
-        } else if (connection instanceof HttpsURLConnection) {
-          Tags.PEER_PORT.set(span, 443);
-        } else {
-          Tags.PEER_PORT.set(span, 80);
-        }
-
-        Tags.HTTP_METHOD.set(span, connection.getRequestMethod());
-
-        if (!connected) {
-          tracer.inject(
-              span.context(),
-              Format.Builtin.HTTP_HEADERS,
-              new MessageHeadersInjectAdapter(connection));
-        }
+      final URL url = thiz.getURL();
+      final Span span = scope.span();
+      Tags.COMPONENT.set(scope.span(), thiz.getClass().getSimpleName());
+      Tags.HTTP_URL.set(span, url.toString());
+      Tags.PEER_HOSTNAME.set(span, url.getHost());
+      if (url.getPort() > 0) {
+        Tags.PEER_PORT.set(span, url.getPort());
+      } else if (thiz instanceof HttpsURLConnection) {
+        Tags.PEER_PORT.set(span, 443);
+      } else {
+        Tags.PEER_PORT.set(span, 80);
       }
+      Tags.HTTP_METHOD.set(span, thiz.getRequestMethod());
+
+      tracer.inject(
+          span.context(), Format.Builtin.HTTP_HEADERS, new MessageHeadersInjectAdapter(thiz));
       return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.FieldValue("responseCode") final int responseCode,
+        @Advice.This final HttpURLConnection thiz,
         @Advice.Enter final Scope scope,
         @Advice.Thrown final Throwable throwable) {
 
@@ -144,12 +138,17 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       }
 
       final Span span = scope.span();
-
       if (throwable != null) {
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-      } else if (responseCode > 0) {
-        Tags.HTTP_STATUS.set(span, responseCode);
+      } else {
+        try {
+          // response code field is sometimes not populated until the getResponseCode method is explicitly called.
+          // Calling getResponseCode() here will not trigger additional instrumentation because we have not reset the depth map.
+          Tags.HTTP_STATUS.set(span, thiz.getResponseCode());
+        } catch (IOException ioe) {
+          // ignore
+        }
       }
       scope.close();
       CallDepthThreadLocalMap.reset(HttpURLConnection.class);
