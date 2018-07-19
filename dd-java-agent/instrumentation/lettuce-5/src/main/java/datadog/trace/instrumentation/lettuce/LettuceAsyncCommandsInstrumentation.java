@@ -17,11 +17,6 @@ public class LettuceAsyncCommandsInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public ElementMatcher typeMatcher() {
     return named("io.lettuce.core.AbstractRedisAsyncCommands");
   }

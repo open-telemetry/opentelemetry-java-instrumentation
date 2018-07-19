@@ -27,11 +27,6 @@ import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.AGENT_CRASHING_COMMAND_PREFIX
 
 class LettuceAsyncClientTest extends AgentTestRunner {
-
-  static {
-    System.setProperty("dd.integration.lettuce.enabled", "true")
-  }
-
   public static final String HOST = "127.0.0.1"
   public static final int PORT = TestUtils.randomOpenPort()
   public static final int INCORRECT_PORT = TestUtils.randomOpenPort()
