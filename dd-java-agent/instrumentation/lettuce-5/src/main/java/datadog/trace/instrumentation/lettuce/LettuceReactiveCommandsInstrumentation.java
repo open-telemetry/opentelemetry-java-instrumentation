@@ -5,8 +5,6 @@ import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.instrumentation.lettuce.rx.LettuceFluxCreationAdvice;
-import datadog.trace.instrumentation.lettuce.rx.LettuceMonoCreationAdvice;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -14,13 +12,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default {
 
+  public static final String PACKAGE =
+      LettuceReactiveCommandsInstrumentation.class.getPackage().getName();
+
   public LettuceReactiveCommandsInstrumentation() {
     super("lettuce", "lettuce-5-rx");
-  }
-
-  @Override
-  protected boolean defaultEnabled() {
-    return false;
   }
 
   @Override
@@ -36,18 +32,12 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      LettuceReactiveCommandsInstrumentation.class.getPackage().getName()
-          + ".LettuceInstrumentationUtil",
-      LettuceReactiveCommandsInstrumentation.class.getPackage().getName()
-          + ".rx.LettuceMonoCreationAdvice",
-      LettuceReactiveCommandsInstrumentation.class.getPackage().getName()
-          + ".rx.LettuceMonoDualConsumer",
-      LettuceReactiveCommandsInstrumentation.class.getPackage().getName()
-          + ".rx.LettuceFluxCreationAdvice",
-      LettuceReactiveCommandsInstrumentation.class.getPackage().getName()
-          + ".rx.LettuceFluxTerminationRunnable",
-      LettuceReactiveCommandsInstrumentation.class.getPackage().getName()
-          + ".rx.LettuceFluxTerminationRunnable$FluxOnSubscribeConsumer"
+      PACKAGE + ".LettuceInstrumentationUtil",
+      PACKAGE + ".rx.LettuceMonoCreationAdvice",
+      PACKAGE + ".rx.LettuceMonoDualConsumer",
+      PACKAGE + ".rx.LettuceFluxCreationAdvice",
+      PACKAGE + ".rx.LettuceFluxTerminationRunnable",
+      PACKAGE + ".rx.LettuceFluxTerminationRunnable$FluxOnSubscribeConsumer"
     };
   }
 
@@ -59,14 +49,16 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
             .and(named("createMono"))
             .and(takesArgument(0, named("java.util.function.Supplier")))
             .and(returns(named("reactor.core.publisher.Mono"))),
-        LettuceMonoCreationAdvice.class.getName());
+        // Cannot reference class directly here because this would lead to class load failure on Java7
+        PACKAGE + ".rx.LettuceMonoCreationAdvice");
     transformers.put(
         isMethod()
             .and(nameStartsWith("create"))
             .and(nameEndsWith("Flux"))
             .and(takesArgument(0, named("java.util.function.Supplier")))
             .and(returns(named(("reactor.core.publisher.Flux")))),
-        LettuceFluxCreationAdvice.class.getName());
+        // Cannot reference class directly here because this would lead to class load failure on Java7
+        PACKAGE + ".rx.LettuceFluxCreationAdvice");
 
     return transformers;
   }

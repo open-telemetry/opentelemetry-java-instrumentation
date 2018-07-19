@@ -14,11 +14,6 @@ import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.AGENT_CRASHING_COMMAND_PREFIX
 
 class LettuceReactiveClientTest extends AgentTestRunner {
-
-  static {
-    System.setProperty("dd.integration.lettuce.enabled", "true")
-  }
-
   public static final String HOST = "127.0.0.1"
   public static final int PORT = TestUtils.randomOpenPort()
   public static final int DB_INDEX = 0
@@ -60,7 +55,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     connection.close()
     redisServer.stop()
   }
-  
+
   def "set command with subscribe on a defined consumer"() {
     setup:
     def conds = new AsyncConditions()

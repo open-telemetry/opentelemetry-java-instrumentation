@@ -12,13 +12,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public class LettuceAsyncCommandsInstrumentation extends Instrumenter.Default {
 
+  public static final String PACKAGE =
+      LettuceAsyncCommandsInstrumentation.class.getPackage().getName();
+
   public LettuceAsyncCommandsInstrumentation() {
     super("lettuce", "lettuce-5-async");
-  }
-
-  @Override
-  protected boolean defaultEnabled() {
-    return false;
   }
 
   @Override
@@ -34,9 +32,7 @@ public class LettuceAsyncCommandsInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      LettuceAsyncCommandsInstrumentation.class.getPackage().getName() + ".LettuceAsyncBiFunction",
-      LettuceAsyncCommandsInstrumentation.class.getPackage().getName()
-          + ".LettuceInstrumentationUtil"
+      PACKAGE + ".LettuceAsyncBiFunction", PACKAGE + ".LettuceInstrumentationUtil"
     };
   }
 
@@ -47,7 +43,8 @@ public class LettuceAsyncCommandsInstrumentation extends Instrumenter.Default {
         isMethod()
             .and(named("dispatch"))
             .and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
-        LettuceAsyncCommandsAdvice.class.getName());
+        // Cannot reference class directly here because this would lead to class load failure on Java7
+        PACKAGE + ".LettuceAsyncCommandsAdvice");
     return transformers;
   }
 }
