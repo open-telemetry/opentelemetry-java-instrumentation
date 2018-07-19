@@ -5,16 +5,16 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ExtractedContext implements SpanContext {
-  private final Long traceId;
-  private final Long spanId;
+  private final String traceId;
+  private final String spanId;
   private final int samplingPriority;
   private final Map<String, String> baggage;
   private final Map<String, String> tags;
   private final AtomicBoolean samplingPriorityLocked = new AtomicBoolean(false);
 
   public ExtractedContext(
-      final Long traceId,
-      final Long spanId,
+      final String traceId,
+      final String spanId,
       final int samplingPriority,
       final Map<String, String> baggage,
       final Map<String, String> tags) {
@@ -34,11 +34,11 @@ public class ExtractedContext implements SpanContext {
     samplingPriorityLocked.set(true);
   }
 
-  public Long getTraceId() {
+  public String getTraceId() {
     return traceId;
   }
 
-  public Long getSpanId() {
+  public String getSpanId() {
     return spanId;
   }
 

@@ -48,16 +48,16 @@ public class HTTPCodec implements Codec<TextMap> {
 
     Map<String, String> baggage = Collections.emptyMap();
     Map<String, String> tags = Collections.emptyMap();
-    Long traceId = 0L;
-    Long spanId = 0L;
+    String traceId = "0";
+    String spanId = "0";
     int samplingPriority = PrioritySampling.UNSET;
 
     for (final Map.Entry<String, String> entry : carrier) {
       final String key = entry.getKey().toLowerCase();
       if (key.equalsIgnoreCase(TRACE_ID_KEY)) {
-        traceId = Long.parseLong(entry.getValue());
+        traceId = entry.getValue();
       } else if (key.equalsIgnoreCase(SPAN_ID_KEY)) {
-        spanId = Long.parseLong(entry.getValue());
+        spanId = entry.getValue();
       } else if (key.startsWith(OT_BAGGAGE_PREFIX)) {
         if (baggage.isEmpty()) {
           baggage = new HashMap<>();
@@ -75,7 +75,7 @@ public class HTTPCodec implements Codec<TextMap> {
       }
     }
     ExtractedContext context = null;
-    if (traceId != 0L) {
+    if (!traceId.equals("0")) {
       context = new ExtractedContext(traceId, spanId, samplingPriority, baggage, tags);
       context.lockSamplingPriority();
 

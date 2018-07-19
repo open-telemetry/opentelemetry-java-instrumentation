@@ -35,9 +35,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   private final Map<String, String> baggageItems;
 
   // Not Shared with other span contexts
-  private final long traceId;
-  private final long spanId;
-  private final long parentId;
+  private final String traceId;
+  private final String spanId;
+  private final String parentId;
 
   /** Tags are associated to the current span, they will not propagate to the children span */
   private final Map<String, Object> tags = new ConcurrentHashMap<>();
@@ -67,9 +67,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   private final long threadId = Thread.currentThread().getId();
 
   public DDSpanContext(
-      final long traceId,
-      final long spanId,
-      final long parentId,
+      final String traceId,
+      final String spanId,
+      final String parentId,
       final String serviceName,
       final String operationName,
       final String resourceName,
@@ -111,15 +111,15 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     }
   }
 
-  public long getTraceId() {
+  public String getTraceId() {
     return this.traceId;
   }
 
-  public long getParentId() {
+  public String getParentId() {
     return this.parentId;
   }
 
-  public long getSpanId() {
+  public String getSpanId() {
     return this.spanId;
   }
 

@@ -22,20 +22,20 @@ public class OTTraceCorrelation implements CorrelationIdentifier.Provider {
   }
 
   @Override
-  public long getTraceId() {
+  public String getTraceId() {
     final Span activeSpan = tracer.activeSpan();
     if (activeSpan instanceof DDSpan) {
       return ((DDSpan) activeSpan).getTraceId();
     }
-    return 0;
+    return "0";
   }
 
   @Override
-  public long getSpanId() {
+  public String getSpanId() {
     final Span activeSpan = tracer.activeSpan();
     if (activeSpan instanceof DDSpan) {
       return ((DDSpan) activeSpan).getSpanId();
     }
-    return 0;
+    return "0";
   }
 }

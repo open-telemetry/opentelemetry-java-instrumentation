@@ -118,7 +118,7 @@ public class DDApi {
         return false;
       }
 
-      log.debug("Succesfully sent {} of {} traces to the DD agent.", traces.size(), totalSize);
+      log.debug("Successfully sent {} of {} traces to the DD agent.", traces.size(), totalSize);
 
       try {
         if (null != responseString
@@ -130,7 +130,7 @@ public class DDApi {
           }
         }
       } catch (final IOException e) {
-        log.debug("failed to parse DD agent response: " + responseString, e);
+        log.debug("Failed to parse DD agent response: " + responseString, e);
       }
       return true;
 

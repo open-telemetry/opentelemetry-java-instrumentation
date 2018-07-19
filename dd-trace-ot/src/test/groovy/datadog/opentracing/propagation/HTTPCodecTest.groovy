@@ -28,9 +28,9 @@ class HTTPCodecTest extends Specification {
     def tracer = new DDTracer(writer)
     final DDSpanContext mockedContext =
       new DDSpanContext(
-        1L,
-        2L,
-        0L,
+        "1",
+        "2",
+        "0",
         "fakeService",
         "fakeOperation",
         "fakeResource",
@@ -44,7 +44,7 @@ class HTTPCodecTest extends Specification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, 1L),
+        new PendingTrace(tracer, "1"),
         tracer)
 
     final Map<String, String> carrier = new HashMap<>()
@@ -54,6 +54,96 @@ class HTTPCodecTest extends Specification {
     expect:
     carrier.get(TRACE_ID_KEY) == "1"
     carrier.get(SPAN_ID_KEY) == "2"
+    carrier.get(SAMPLING_PRIORITY_KEY) == (samplingPriority == PrioritySampling.UNSET ? null : String.valueOf(samplingPriority))
+    carrier.get(OT_BAGGAGE_PREFIX + "k1") == "v1"
+    carrier.get(OT_BAGGAGE_PREFIX + "k2") == "v2"
+
+    where:
+    samplingPriority              | _
+    PrioritySampling.UNSET        | _
+    PrioritySampling.SAMPLER_KEEP | _
+  }
+
+  def "inject http headers with larger than Java long IDs"() {
+    String largeTraceId = "9523372036854775807"
+    String largeSpanId = "15815582334751494918"
+    String largeParentId = "15815582334751494914"
+    setup:
+    def writer = new ListWriter()
+    def tracer = new DDTracer(writer)
+    final DDSpanContext mockedContext =
+      new DDSpanContext(
+        largeTraceId,
+        largeSpanId,
+        largeParentId,
+        "fakeService",
+        "fakeOperation",
+        "fakeResource",
+        samplingPriority,
+        new HashMap<String, String>() {
+          {
+            put("k1", "v1")
+            put("k2", "v2")
+          }
+        },
+        false,
+        "fakeType",
+        null,
+        new PendingTrace(tracer, largeTraceId),
+        tracer)
+
+    final Map<String, String> carrier = new HashMap<>()
+
+    codec.inject(mockedContext, new TextMapInjectAdapter(carrier))
+
+    expect:
+    carrier.get(TRACE_ID_KEY) == largeTraceId
+    carrier.get(SPAN_ID_KEY) == largeSpanId
+    carrier.get(SAMPLING_PRIORITY_KEY) == (samplingPriority == PrioritySampling.UNSET ? null : String.valueOf(samplingPriority))
+    carrier.get(OT_BAGGAGE_PREFIX + "k1") == "v1"
+    carrier.get(OT_BAGGAGE_PREFIX + "k2") == "v2"
+
+    where:
+    samplingPriority              | _
+    PrioritySampling.UNSET        | _
+    PrioritySampling.SAMPLER_KEEP | _
+  }
+
+  def "inject http headers with uint 64 max IDs"() {
+    String largeTraceId = "18446744073709551615"
+    String largeSpanId = "18446744073709551614"
+    String largeParentId = "18446744073709551613"
+    setup:
+    def writer = new ListWriter()
+    def tracer = new DDTracer(writer)
+    final DDSpanContext mockedContext =
+      new DDSpanContext(
+        largeTraceId,
+        largeSpanId,
+        largeParentId,
+        "fakeService",
+        "fakeOperation",
+        "fakeResource",
+        samplingPriority,
+        new HashMap<String, String>() {
+          {
+            put("k1", "v1")
+            put("k2", "v2")
+          }
+        },
+        false,
+        "fakeType",
+        null,
+        new PendingTrace(tracer, largeTraceId),
+        tracer)
+
+    final Map<String, String> carrier = new HashMap<>()
+
+    codec.inject(mockedContext, new TextMapInjectAdapter(carrier))
+
+    expect:
+    carrier.get(TRACE_ID_KEY) == largeTraceId
+    carrier.get(SPAN_ID_KEY) == largeSpanId
     carrier.get(SAMPLING_PRIORITY_KEY) == (samplingPriority == PrioritySampling.UNSET ? null : String.valueOf(samplingPriority))
     carrier.get(OT_BAGGAGE_PREFIX + "k1") == "v1"
     carrier.get(OT_BAGGAGE_PREFIX + "k2") == "v2"
@@ -81,8 +171,72 @@ class HTTPCodecTest extends Specification {
     final ExtractedContext context = codec.extract(new TextMapExtractAdapter(actual))
 
     expect:
-    context.getTraceId() == 1l
-    context.getSpanId() == 2l
+    context.getTraceId() == "1"
+    context.getSpanId() == "2"
+    context.getBaggage().get("k1") == "v1"
+    context.getBaggage().get("k2") == "v2"
+    context.getTags() == ["some-tag": "my-interesting-info"]
+    context.getSamplingPriority() == samplingPriority
+
+    where:
+    samplingPriority              | _
+    PrioritySampling.UNSET        | _
+    PrioritySampling.SAMPLER_KEEP | _
+  }
+
+  def "extract http headers with larger than Java long IDs"() {
+    setup:
+    String largeTraceId = "9523372036854775807"
+    String largeSpanId = "15815582334751494918"
+    final Map<String, String> actual = [
+      (TRACE_ID_KEY.toUpperCase())            : largeTraceId,
+      (SPAN_ID_KEY.toUpperCase())             : largeSpanId,
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
+      SOME_HEADER                             : "my-interesting-info",
+    ]
+
+    if (samplingPriority != PrioritySampling.UNSET) {
+      actual.put(SAMPLING_PRIORITY_KEY, String.valueOf(samplingPriority))
+    }
+
+    final ExtractedContext context = codec.extract(new TextMapExtractAdapter(actual))
+
+    expect:
+    context.getTraceId() == largeTraceId
+    context.getSpanId() == largeSpanId
+    context.getBaggage().get("k1") == "v1"
+    context.getBaggage().get("k2") == "v2"
+    context.getTags() == ["some-tag": "my-interesting-info"]
+    context.getSamplingPriority() == samplingPriority
+
+    where:
+    samplingPriority              | _
+    PrioritySampling.UNSET        | _
+    PrioritySampling.SAMPLER_KEEP | _
+  }
+
+  def "extract http headers with uint 64 max IDs"() {
+    setup:
+    String largeTraceId = "18446744073709551615"
+    String largeSpanId = "18446744073709551614"
+    final Map<String, String> actual = [
+      (TRACE_ID_KEY.toUpperCase())            : largeTraceId,
+      (SPAN_ID_KEY.toUpperCase())             : largeSpanId,
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
+      SOME_HEADER                             : "my-interesting-info",
+    ]
+
+    if (samplingPriority != PrioritySampling.UNSET) {
+      actual.put(SAMPLING_PRIORITY_KEY, String.valueOf(samplingPriority))
+    }
+
+    final ExtractedContext context = codec.extract(new TextMapExtractAdapter(actual))
+
+    expect:
+    context.getTraceId() == largeTraceId
+    context.getSpanId() == largeSpanId
     context.getBaggage().get("k1") == "v1"
     context.getBaggage().get("k2") == "v2"
     context.getTags() == ["some-tag": "my-interesting-info"]

@@ -29,7 +29,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   }
 
   private final DDTracer tracer;
-  private final long traceId;
+  private final String traceId;
 
   // TODO: consider moving these time fields into DDTracer to ensure that traces have precise relative time
   /** Trace start time in nano seconds measured up to a millisecond accuracy */
@@ -47,7 +47,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   /** Ensure a trace is never written multiple times */
   private final AtomicBoolean isWritten = new AtomicBoolean(false);
 
-  PendingTrace(final DDTracer tracer, final long traceId) {
+  PendingTrace(final DDTracer tracer, final String traceId) {
     this.tracer = tracer;
     this.traceId = traceId;
 
@@ -72,7 +72,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   }
 
   public void registerSpan(final DDSpan span) {
-    if (span.context().getTraceId() != traceId) {
+    if (!traceId.equals(span.context().getTraceId())) {
       log.debug("{} - span registered for wrong trace ({})", span, traceId);
       return;
     }
@@ -90,7 +90,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   }
 
   private void expireSpan(final DDSpan span) {
-    if (span.context().getTraceId() != traceId) {
+    if (!traceId.equals(span.context().getTraceId())) {
       log.debug("{} - span expired for wrong trace ({})", span, traceId);
       return;
     }
@@ -111,7 +111,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       log.debug("{} - added to trace, but not complete.", span);
       return;
     }
-    if (traceId != span.getTraceId()) {
+    if (!traceId.equals(span.getTraceId())) {
       log.debug("{} - added to a mismatched trace.", span);
       return;
     }

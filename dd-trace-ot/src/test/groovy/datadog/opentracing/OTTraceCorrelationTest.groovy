@@ -24,7 +24,7 @@ class OTTraceCorrelationTest extends Specification {
     scope.close()
 
     expect:
-    0 == traceCorrelation.getTraceId()
+    "0" == traceCorrelation.getTraceId()
   }
 
   def "get trace id with trace"() {
@@ -37,7 +37,7 @@ class OTTraceCorrelationTest extends Specification {
     scope.close()
 
     expect:
-    0 == traceCorrelation.getSpanId()
+    "0" == traceCorrelation.getSpanId()
   }
 
   def "get span id with trace"() {

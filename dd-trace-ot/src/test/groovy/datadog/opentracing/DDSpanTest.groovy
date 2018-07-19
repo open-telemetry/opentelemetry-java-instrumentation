@@ -15,9 +15,9 @@ class DDSpanTest extends Specification {
     setup:
     final DDSpanContext context =
       new DDSpanContext(
-        1L,
-        1L,
-        0L,
+        "1",
+        "1",
+        "0",
         "fakeService",
         "fakeOperation",
         "fakeResource",
@@ -26,7 +26,7 @@ class DDSpanTest extends Specification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, 1L),
+        new PendingTrace(tracer, "1"),
         tracer)
 
     final DDSpan span = new DDSpan(1L, context)

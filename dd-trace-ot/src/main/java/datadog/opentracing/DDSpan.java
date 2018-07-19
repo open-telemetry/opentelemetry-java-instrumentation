@@ -4,11 +4,16 @@ import static io.opentracing.log.Fields.ERROR_OBJECT;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.util.Clock;
 import io.opentracing.Span;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
@@ -110,7 +115,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @JsonIgnore
   public final boolean isRootSpan() {
-    return context.getParentId() == 0;
+    return "0".equals(context.getParentId());
   }
 
   @Override
@@ -317,17 +322,20 @@ public class DDSpan implements Span, MutableSpan {
   }
 
   @JsonGetter("trace_id")
-  public long getTraceId() {
+  @JsonSerialize(using = UInt64IDStringSerializer.class)
+  public String getTraceId() {
     return context.getTraceId();
   }
 
   @JsonGetter("span_id")
-  public long getSpanId() {
+  @JsonSerialize(using = UInt64IDStringSerializer.class)
+  public String getSpanId() {
     return context.getSpanId();
   }
 
   @JsonGetter("parent_id")
-  public long getParentId() {
+  @JsonSerialize(using = UInt64IDStringSerializer.class)
+  public String getParentId() {
     return context.getParentId();
   }
 
@@ -389,5 +397,22 @@ public class DDSpan implements Span, MutableSpan {
         .append(", duration_ns=")
         .append(durationNano)
         .toString();
+  }
+
+  protected static class UInt64IDStringSerializer extends StdSerializer<String> {
+
+    public UInt64IDStringSerializer() {
+      this(null);
+    }
+
+    public UInt64IDStringSerializer(Class<String> stringClass) {
+      super(stringClass);
+    }
+
+    @Override
+    public void serialize(String value, JsonGenerator gen, SerializerProvider provider)
+        throws IOException {
+      gen.writeNumber(value);
+    }
   }
 }
