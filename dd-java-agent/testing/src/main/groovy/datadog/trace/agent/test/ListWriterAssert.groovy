@@ -1,5 +1,6 @@
 package datadog.trace.agent.test
 
+import datadog.opentracing.DDSpan
 import datadog.trace.common.writer.ListWriter
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition
@@ -13,7 +14,7 @@ class ListWriterAssert {
   private final int size
   private final Set<Integer> assertedIndexes = new HashSet<>()
 
-  private ListWriterAssert(writer) {
+  private ListWriterAssert(ListWriter writer) {
     this.writer = writer
     size = writer.size()
   }
@@ -47,6 +48,10 @@ class ListWriterAssert {
       def condition = new Condition(null, "$stackLine", TextPosition.create(stackLine == null ? 0 : stackLine.lineNumber, 0), e.message, null, e)
       throw new ConditionNotSatisfiedError(condition, e)
     }
+  }
+
+  List<DDSpan> trace(int index) {
+    return writer.get(index)
   }
 
   void trace(int index, int expectedSize,

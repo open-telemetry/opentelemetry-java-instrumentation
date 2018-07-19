@@ -16,6 +16,7 @@ tasks.withType(JavaCompile) {
   options.compilerArgs += ['-Xep:FutureReturnValueIgnored:OFF']
   // workaround for: https://github.com/google/error-prone/issues/780
   options.compilerArgs += ['-Xep:ParameterName:OFF']
+  options.compilerArgs += ['-XepDisableWarningsInGeneratedCode']
 }
 
 apply plugin: "eclipse"

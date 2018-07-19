@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package example;
+
+service Greeter {
+  rpc SayHello (Request) returns (Response) {
+  }
+
+  rpc Conversation (stream Response) returns (stream Response) {
+  }
+}
+
+message Request {
+  string name = 1;
+}
+
+message Response {
+  string message = 1;
+}
