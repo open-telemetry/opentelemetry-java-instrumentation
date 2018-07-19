@@ -12,11 +12,13 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class LettuceClientInstrumentation extends Instrumenter.Default {
 
+  public static final String PACKAGE = LettuceClientInstrumentation.class.getPackage().getName();
+
   private static final String[] HELPER_CLASS_NAMES =
       new String[] {
         LettuceReactiveCommandsInstrumentation.class.getPackage().getName()
             + ".LettuceInstrumentationUtil",
-        LettuceClientInstrumentation.class.getPackage().getName() + ".LettuceAsyncBiFunction"
+        PACKAGE + ".LettuceAsyncBiFunction"
       };
 
   public LettuceClientInstrumentation() {
@@ -48,7 +50,8 @@ public final class LettuceClientInstrumentation extends Instrumenter.Default {
             .and(nameStartsWith("connect"))
             .and(nameEndsWith("Async"))
             .and(takesArgument(1, named("io.lettuce.core.RedisURI"))),
-        ConnectionFutureAdvice.class.getName());
+        // Cannot reference class directly here because this would lead to class load failure on Java7
+        PACKAGE + ".ConnectionFutureAdvice");
     return transformers;
   }
 }
