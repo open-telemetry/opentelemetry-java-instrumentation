@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 import javax.net.ssl.HttpsURLConnection;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -50,7 +51,8 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.http_url_connection.MessageHeadersInjectAdapter"
+      "datadog.trace.instrumentation.http_url_connection.MessageHeadersInjectAdapter",
+      HttpUrlConnectionInstrumentation.class.getName() + "$HttpURLState"
     };
   }
 
@@ -75,19 +77,32 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
         @Advice.This final HttpURLConnection thiz,
-        @Advice.FieldValue("connected") final boolean connected) {
+        @Advice.FieldValue("connected") final boolean connected,
+        @Advice.Origin("#m") final String methodName) {
 
-      // This works with keep-alive because the "connected" flag is not initialized until the socket cache is checked.
-      // This allows us to use the connected flag to know if this instance has done any io.
-      if (connected) {
-        return null;
+      final HttpURLState state = HttpURLState.get(thiz);
+      if ("connect".equals(methodName)) {
+        if (connected) {
+          return null;
+        }
+        // We get here in cases where connect() is called first.
+        // We need to inject headers now because after connected=true no more headers can be added.
+
+        // In total there will be two spans:
+        // - one for the connect() which does propagation
+        // - one for the input or output stream (presumably called after connect())
+      } else {
+        if (state.hasDoneIO()) {
+          return null;
+        }
+        state.setHasDoneIO(true);
       }
 
       // AgentWriter uses HttpURLConnection to report to the trace-agent. We don't want to trace those requests.
       // Check after the connected test above because getRequestProperty will throw an exception if already connected.
       final boolean isTraceRequest =
           Thread.currentThread().getName().equals("dd-agent-writer")
-              || thiz.getRequestProperty("Datadog-Meta-Lang") != null;
+              || (!connected && thiz.getRequestProperty("Datadog-Meta-Lang") != null);
       if (isTraceRequest) {
         return null;
       }
@@ -96,8 +111,6 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       if (callDepth > 0) {
         return null;
       }
-
-      final String protocol = thiz.getURL().getProtocol();
 
       final Tracer tracer = GlobalTracer.get();
       final Scope scope =
@@ -140,15 +153,40 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       if (throwable != null) {
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-      } else {
-        if (responseCode > 0) {
-          // responseCode field cache is sometimes not populated.
-          // We can't call getResponseCode() due to some unwanted side-effects (e.g. breaks getOutputStream).
-          Tags.HTTP_STATUS.set(span, responseCode);
-        }
+      } else if (responseCode > 0) {
+        // responseCode field cache is sometimes not populated.
+        // We can't call getResponseCode() due to some unwanted side-effects (e.g. breaks getOutputStream).
+        Tags.HTTP_STATUS.set(span, responseCode);
       }
       scope.close();
       CallDepthThreadLocalMap.reset(HttpURLConnection.class);
+    }
+  }
+
+  public static class HttpURLState {
+    private static final Map<HttpURLConnection, HttpURLState> STATE_MAP =
+        Collections.synchronizedMap(new WeakHashMap<HttpURLConnection, HttpURLState>());
+
+    public static HttpURLState get(HttpURLConnection connection) {
+      HttpURLState state = STATE_MAP.get(connection);
+      if (state == null) {
+        // not thread-safe, but neither is HttpURLConnection
+        state = new HttpURLState();
+        STATE_MAP.put(connection, state);
+      }
+      return state;
+    }
+
+    public boolean hasDoneIO = false;
+
+    private HttpURLState() {}
+
+    public boolean hasDoneIO() {
+      return hasDoneIO;
+    }
+
+    public void setHasDoneIO(boolean value) {
+      this.hasDoneIO = value;
     }
   }
 }

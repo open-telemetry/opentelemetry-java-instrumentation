@@ -295,7 +295,6 @@ class HttpUrlConnectionTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
             "$Tags.HTTP_METHOD.key" "POST"
-            "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             defaultTags()
@@ -339,33 +338,21 @@ class HttpUrlConnectionTest extends AgentTestRunner {
       RestTemplate restTemplate = new RestTemplate()
       String res = restTemplate.getForObject(server.address.toString(), String)
       assert res == RESPONSE
-      String res2 = restTemplate.getForObject(server.address.toString(), String)
-      assert res2 == RESPONSE
     }
 
     expect:
-    assertTraces(TEST_WRITER, 3) {
+    assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
         span(0) {
           operationName "test-http-server"
-          childOf(TEST_WRITER[2][2])
+          childOf(TEST_WRITER[1][2])
           errored false
           tags {
             defaultTags()
           }
         }
       }
-      trace(1, 1) {
-        span(0) {
-          operationName "test-http-server"
-          childOf(TEST_WRITER[2][1])
-          errored false
-          tags {
-            defaultTags()
-          }
-        }
-      }
-      trace(2, 3) {
+      trace(1, 3) {
         span(0) {
           operationName "someTrace"
           parent()
@@ -400,7 +387,6 @@ class HttpUrlConnectionTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
             "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             defaultTags()
