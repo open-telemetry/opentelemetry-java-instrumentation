@@ -107,12 +107,17 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         return null;
       }
 
+      final Tracer tracer = GlobalTracer.get();
+      if (tracer.activeSpan() == null) {
+        // httpurlconnection doesn't play nicely with top-level spans
+        return null;
+      }
+
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
       if (callDepth > 0) {
         return null;
       }
 
-      final Tracer tracer = GlobalTracer.get();
       final Scope scope =
           tracer
               .buildSpan("http.request")

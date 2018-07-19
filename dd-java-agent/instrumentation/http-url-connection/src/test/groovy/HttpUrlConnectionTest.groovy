@@ -332,6 +332,20 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     }
   }
 
+  def "top level httpurlconnection tracing disabled"() {
+    setup:
+    HttpURLConnection connection = server.address.toURL().openConnection()
+    connection.addRequestProperty("is-dd-server", "false")
+    def stream = connection.inputStream
+    def lines = stream.readLines()
+    stream.close()
+    assert connection.getResponseCode() == STATUS
+    assert lines == [RESPONSE]
+
+    expect:
+    assertTraces(TEST_WRITER, 0) {}
+  }
+
   def "rest template"() {
     setup:
     runUnderTrace("someTrace") {
