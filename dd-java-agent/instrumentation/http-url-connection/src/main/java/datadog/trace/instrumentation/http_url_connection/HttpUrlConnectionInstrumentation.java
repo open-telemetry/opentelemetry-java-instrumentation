@@ -19,7 +19,6 @@ import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
@@ -129,7 +128,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.This final HttpURLConnection thiz,
+        @Advice.FieldValue("responseCode") final int responseCode,
         @Advice.Enter final Scope scope,
         @Advice.Thrown final Throwable throwable) {
 
@@ -142,12 +141,10 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       } else {
-        try {
-          // response code field is sometimes not populated until the getResponseCode method is explicitly called.
-          // Calling getResponseCode() here will not trigger additional instrumentation because we have not reset the depth map.
-          Tags.HTTP_STATUS.set(span, thiz.getResponseCode());
-        } catch (IOException ioe) {
-          // ignore
+        if (responseCode > 0) {
+          // responseCode field cache is sometimes not populated.
+          // We can't call getResponseCode() due to some unwanted side-effects (e.g. breaks getOutputStream).
+          Tags.HTTP_STATUS.set(span, responseCode);
         }
       }
       scope.close();
