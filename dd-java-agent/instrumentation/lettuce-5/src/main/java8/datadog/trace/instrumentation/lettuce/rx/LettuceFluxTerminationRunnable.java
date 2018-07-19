@@ -95,7 +95,8 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
       Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
       Tags.COMPONENT.set(span, LettuceInstrumentationUtil.COMPONENT_NAME);
 
-      // should be command name only, but use workaround to prepend string to agent crashing commands
+      // should be command name only, but use workaround to prepend string to agent crashing
+      // commands
       span.setTag(
           DDTags.RESOURCE_NAME,
           LettuceInstrumentationUtil.getCommandResourceName(this.commandName));

@@ -90,7 +90,9 @@ public interface Instrumenter {
                         JavaModule module,
                         Class<?> classBeingRedefined,
                         ProtectionDomain protectionDomain) {
-                      // Optimization: calling getInstrumentationMuzzle() inside this method prevents unnecessary loading of muzzle references during agentBuilder setup.
+                      // Optimization: calling getInstrumentationMuzzle() inside this method
+                      // prevents unnecessary loading of muzzle references during agentBuilder
+                      // setup.
                       final ReferenceMatcher muzzle = getInstrumentationMuzzle();
                       if (null != muzzle) {
                         List<Reference.Mismatch> mismatches =

@@ -61,7 +61,8 @@ public final class StatementInstrumentation extends Instrumenter.Default {
       try {
         connection = statement.getConnection();
         if (connection.isWrapperFor(Connection.class)) {
-          // unwrap the connection to cache the underlying actual connection and to not cache proxy objects
+          // unwrap the connection to cache the underlying actual connection and to not cache proxy
+          // objects
           connection = connection.unwrap(Connection.class);
         }
       } catch (final Throwable e) {

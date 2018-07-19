@@ -23,7 +23,7 @@ import org.spockframework.runtime.Sputnik;
  * Runs a spock test in an agent-friendly way.
  *
  * <ul>
- *   <li> Adds agent bootstrap classes to bootstrap classpath.
+ *   <li>Adds agent bootstrap classes to bootstrap classpath.
  * </ul>
  */
 public class SpockRunner extends Sputnik {

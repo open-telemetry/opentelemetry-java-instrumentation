@@ -59,7 +59,8 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
           field.setAccessible(true);
 
           final Object o = field.get(null);
-          // FIXME: This instrumentation will never work. Referencing class DDTracer will throw an exception.
+          // FIXME: This instrumentation will never work. Referencing class DDTracer will throw an
+          // exception.
           if (o instanceof DDTracer) {
             final DDTracer tracer = (DDTracer) o;
             tracer.registerClassLoader(cl);
