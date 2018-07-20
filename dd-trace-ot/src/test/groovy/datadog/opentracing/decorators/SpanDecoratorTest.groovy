@@ -45,16 +45,22 @@ class SpanDecoratorTest extends Specification {
     tracer = new DDTracer("wrong-service", new LoggingWriter(), new AllSampler(), emptyMap(), mapping, emptyMap())
 
     when:
-    def span = tracer.buildSpan("some span").withTag(DDTags.SERVICE_NAME, name).start()
+    def span = tracer.buildSpan("some span").withTag(tag, name).start()
     span.finish()
 
     then:
     span.getServiceName() == expected
 
     where:
-    name            | expected        | mapping
-    "some-service"  | "new-service"   | ["some-service": "new-service"]
-    "other-service" | "other-service" | ["some-service": "new-service"]
+    tag                   | name            | expected
+    DDTags.SERVICE_NAME   | "some-service"  | "new-service"
+    DDTags.SERVICE_NAME   | "other-service" | "other-service"
+    "service"             | "some-service"  | "new-service"
+    "service"             | "other-service" | "other-service"
+    Tags.PEER_SERVICE.key | "some-service"  | "new-service"
+    Tags.PEER_SERVICE.key | "other-service" | "other-service"
+    
+    mapping = ["some-service": "new-service"]
   }
 
   def "default or configured service name can be remapped without setting tag"() {
