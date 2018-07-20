@@ -57,7 +57,7 @@ class JaxRsClientTest extends AgentTestRunner {
     span.resourceName == "GET /ping"
     span.type == "http"
     !span.context().getErrorFlag()
-    span.context().parentId == 0
+    span.context().parentId == "0"
 
 
     def tags = span.context().tags

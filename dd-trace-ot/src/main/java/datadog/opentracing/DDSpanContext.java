@@ -86,6 +86,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.tracer = tracer;
     this.trace = trace;
 
+    assert traceId != null;
+    assert spanId != null;
+    assert parentId != null;
     this.traceId = traceId;
     this.spanId = spanId;
     this.parentId = parentId;

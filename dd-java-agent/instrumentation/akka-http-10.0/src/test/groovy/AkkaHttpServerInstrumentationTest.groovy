@@ -47,8 +47,8 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 2) {
         span(0) {
-          traceId 123
-          parentId 456
+          traceId "123"
+          parentId "456"
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "GET /test"

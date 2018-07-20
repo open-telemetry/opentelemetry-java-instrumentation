@@ -22,6 +22,11 @@ class HTTPCodecTest extends Specification {
 
   HTTPCodec codec = new HTTPCodec(["SOME_HEADER": "some-tag"])
 
+  private static final byte[] BYTE_ARR_UNIT64_MAX = [
+    (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
+    (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff ] as byte[]
+  private static final BigInteger BIG_INTEGER_UINT64_MAX = (new BigInteger(BYTE_ARR_UNIT64_MAX)).add(BigInteger.ONE.shiftLeft(64))
+
   def "inject http headers"() {
     setup:
     def writer = new ListWriter()
@@ -218,11 +223,10 @@ class HTTPCodecTest extends Specification {
 
   def "extract http headers with uint 64 max IDs"() {
     setup:
-    String largeTraceId = "18446744073709551615"
-    String largeSpanId = "18446744073709551614"
+    String largeSpanId = BIG_INTEGER_UINT64_MAX.subtract(BigInteger.ONE).toString()
     final Map<String, String> actual = [
-      (TRACE_ID_KEY.toUpperCase())            : largeTraceId,
-      (SPAN_ID_KEY.toUpperCase())             : largeSpanId,
+      (TRACE_ID_KEY.toUpperCase())            : BIG_INTEGER_UINT64_MAX.toString(),
+      (SPAN_ID_KEY.toUpperCase())             : BIG_INTEGER_UINT64_MAX.minus(1).toString(),
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
       SOME_HEADER                             : "my-interesting-info",
@@ -235,12 +239,91 @@ class HTTPCodecTest extends Specification {
     final ExtractedContext context = codec.extract(new TextMapExtractAdapter(actual))
 
     expect:
-    context.getTraceId() == largeTraceId
+    context.getTraceId() == BIG_INTEGER_UINT64_MAX.toString()
     context.getSpanId() == largeSpanId
     context.getBaggage().get("k1") == "v1"
     context.getBaggage().get("k2") == "v2"
     context.getTags() == ["some-tag": "my-interesting-info"]
     context.getSamplingPriority() == samplingPriority
+
+    where:
+    samplingPriority              | _
+    PrioritySampling.UNSET        | _
+    PrioritySampling.SAMPLER_KEEP | _
+  }
+
+  def "extract http headers with invalid non-numeric ID"() {
+    setup:
+    final Map<String, String> actual = [
+      (TRACE_ID_KEY.toUpperCase())            : "traceID",
+      (SPAN_ID_KEY.toUpperCase())             : "spanID",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
+      SOME_HEADER                             : "my-interesting-info",
+    ]
+
+    if (samplingPriority != PrioritySampling.UNSET) {
+      actual.put(SAMPLING_PRIORITY_KEY, String.valueOf(samplingPriority))
+    }
+
+    when:
+    codec.extract(new TextMapExtractAdapter(actual))
+
+    then:
+    thrown(IllegalArgumentException)
+
+    where:
+    samplingPriority              | _
+    PrioritySampling.UNSET        | _
+    PrioritySampling.SAMPLER_KEEP | _
+  }
+
+  def "extract http headers with out of range trace ID"() {
+    setup:
+    String outOfRangeTraceId = BIG_INTEGER_UINT64_MAX.add(BigInteger.ONE).toString()
+    final Map<String, String> actual = [
+      (TRACE_ID_KEY.toUpperCase())            : outOfRangeTraceId,
+      (SPAN_ID_KEY.toUpperCase())             : "0",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
+      SOME_HEADER                             : "my-interesting-info",
+    ]
+
+    if (samplingPriority != PrioritySampling.UNSET) {
+      actual.put(SAMPLING_PRIORITY_KEY, String.valueOf(samplingPriority))
+    }
+
+    when:
+    codec.extract(new TextMapExtractAdapter(actual))
+
+    then:
+    thrown(IllegalArgumentException)
+
+    where:
+    samplingPriority              | _
+    PrioritySampling.UNSET        | _
+    PrioritySampling.SAMPLER_KEEP | _
+  }
+
+  def "extract http headers with out of range span ID"() {
+    setup:
+    final Map<String, String> actual = [
+      (TRACE_ID_KEY.toUpperCase())            : "0",
+      (SPAN_ID_KEY.toUpperCase())             : "-1",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
+      SOME_HEADER                             : "my-interesting-info",
+    ]
+
+    if (samplingPriority != PrioritySampling.UNSET) {
+      actual.put(SAMPLING_PRIORITY_KEY, String.valueOf(samplingPriority))
+    }
+
+    when:
+    codec.extract(new TextMapExtractAdapter(actual))
+
+    then:
+    thrown(IllegalArgumentException)
 
     where:
     samplingPriority              | _

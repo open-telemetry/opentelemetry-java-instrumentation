@@ -111,7 +111,7 @@ class KafkaStreamsTest extends AgentTestRunner {
     t1span1.resourceName == "Produce Topic $STREAM_PENDING"
     t1span1.type == "queue"
     !t1span1.context().getErrorFlag()
-    t1span1.context().parentId == 0
+    t1span1.context().parentId == "0"
 
     def t1tags1 = t1span1.context().tags
     t1tags1["component"] == "java-kafka"

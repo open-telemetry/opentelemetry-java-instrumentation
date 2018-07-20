@@ -117,7 +117,7 @@ class DDSpanBuilderTest extends Specification {
     final long expectedParentId = spanId
 
     final DDSpanContext mockedContext = mock(DDSpanContext)
-
+    when(mockedContext.getTraceId()).thenReturn(spanId)
     when(mockedContext.getSpanId()).thenReturn(spanId)
     when(mockedContext.getServiceName()).thenReturn("foo")
     when(mockedContext.getTrace()).thenReturn(new PendingTrace(tracer, "1"))
@@ -135,6 +135,7 @@ class DDSpanBuilderTest extends Specification {
 
     expect:
     actualContext.getParentId() == expectedParentId
+    actualContext.getTraceId() == spanId
   }
 
   def "should inherit the DD parent attributes"() {

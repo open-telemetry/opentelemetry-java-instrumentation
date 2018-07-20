@@ -457,6 +457,7 @@ public class DDTracer implements io.opentracing.Tracer {
     }
 
     private String generateNewId() {
+      // TODO: expand the range of numbers generated to be from 1 to uint 64 MAX
       // Ensure the generated ID is in a valid range:
       return String.valueOf(ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE));
     }

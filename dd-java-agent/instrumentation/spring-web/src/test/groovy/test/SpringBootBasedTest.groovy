@@ -43,7 +43,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     span.context().resourceName == "GET /param/{parameter}/"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     !span.context().getErrorFlag()
-    span.context().parentId == 0
+    span.context().parentId == "0"
     span.context().tags["http.url"] == "http://localhost:$port/param/asdf1234/"
     span.context().tags["http.method"] == "GET"
     span.context().tags["span.kind"] == "server"
@@ -73,7 +73,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     span0.context().resourceName == "404"
     span0.context().spanType == DDSpanTypes.WEB_SERVLET
     !span0.context().getErrorFlag()
-    span0.context().parentId == 0
+    span0.context().parentId == "0"
     span0.context().tags["http.url"] == "http://localhost:$port/invalid"
     span0.context().tags["http.method"] == "GET"
     span0.context().tags["span.kind"] == "server"
@@ -94,7 +94,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     span1.context().resourceName == "404"
     span1.context().spanType == DDSpanTypes.WEB_SERVLET
     !span1.context().getErrorFlag()
-    span1.context().parentId == 0
+    span1.context().parentId == "0"
     span1.context().tags["http.url"] == "http://localhost:$port/error"
     span1.context().tags["http.method"] == "GET"
     span1.context().tags["span.kind"] == "server"
@@ -126,7 +126,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     span0.context().resourceName == "GET /error/{parameter}/"
     span0.context().spanType == DDSpanTypes.WEB_SERVLET
     span0.context().getErrorFlag()
-    span0.context().parentId == 0
+    span0.context().parentId == "0"
     span0.context().tags["http.url"] == "http://localhost:$port/error/qwerty/"
     span0.context().tags["http.method"] == "GET"
     span0.context().tags["span.kind"] == "server"
@@ -150,7 +150,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     span1.context().operationName == "servlet.request"
     span1.context().resourceName == "GET /error"
     span1.context().spanType == DDSpanTypes.WEB_SERVLET
-    span1.context().parentId == 0
+    span1.context().parentId == "0"
     span1.context().tags["http.url"] == "http://localhost:$port/error"
     span1.context().tags["http.method"] == "GET"
     span1.context().tags["span.kind"] == "server"
@@ -178,7 +178,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     span.context().resourceName == "POST /validated"
     span.context().spanType == DDSpanTypes.WEB_SERVLET
     !span.context().getErrorFlag()
-    span.context().parentId == 0
+    span.context().parentId == "0"
     span.context().tags["http.url"] == "http://localhost:$port/validated"
     span.context().tags["http.method"] == "POST"
     span.context().tags["span.kind"] == "server"
@@ -210,7 +210,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     span0.context().resourceName == "POST /validated"
     span0.context().spanType == DDSpanTypes.WEB_SERVLET
     !span0.context().getErrorFlag() // This should be an error once we have the http status code decorator working.
-    span0.context().parentId == 0
+    span0.context().parentId == "0"
     span0.context().tags["http.url"] == "http://localhost:$port/validated"
     span0.context().tags["http.method"] == "POST"
     span0.context().tags["span.kind"] == "server"
@@ -235,7 +235,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     span1.context().resourceName == "POST /error"
     span1.context().spanType == DDSpanTypes.WEB_SERVLET
     !span1.context().getErrorFlag()
-    span1.context().parentId == 0
+    span1.context().parentId == "0"
     span1.context().tags["http.url"] == "http://localhost:$port/error"
     span1.context().tags["http.method"] == "POST"
     span1.context().tags["span.kind"] == "server"

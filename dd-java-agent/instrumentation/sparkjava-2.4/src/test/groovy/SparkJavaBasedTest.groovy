@@ -85,7 +85,7 @@ class SparkJavaBasedTest extends AgentTestRunner {
     context.resourceName == "GET /param/:param"
     context.spanType == DDSpanTypes.WEB_SERVLET
     !context.getErrorFlag()
-    context.parentId == 0
+    context.parentId == "0"
     def tags = context.tags
     tags["http.url"] == "http://localhost:$port/param/asdf1234"
     tags["http.method"] == "GET"

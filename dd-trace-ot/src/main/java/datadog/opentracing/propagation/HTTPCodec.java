@@ -4,6 +4,7 @@ import datadog.opentracing.DDSpanContext;
 import datadog.trace.api.sampling.PrioritySampling;
 import io.opentracing.propagation.TextMap;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Collections;
@@ -19,6 +20,18 @@ public class HTTPCodec implements Codec<TextMap> {
   private static final String TRACE_ID_KEY = "x-datadog-trace-id";
   private static final String SPAN_ID_KEY = "x-datadog-parent-id";
   private static final String SAMPLING_PRIORITY_KEY = "x-datadog-sampling-priority";
+  private static final byte[] BYTE_ARR_UNIT64_MAX = {
+    (byte) 0xff,
+    (byte) 0xff,
+    (byte) 0xff,
+    (byte) 0xff,
+    (byte) 0xff,
+    (byte) 0xff,
+    (byte) 0xff,
+    (byte) 0xff
+  };
+  private static final BigInteger BIG_INTEGER_UINT64_MAX =
+      (new BigInteger(BYTE_ARR_UNIT64_MAX)).add(BigInteger.ONE.shiftLeft(64));
 
   private final Map<String, String> taggedHeaders;
 
@@ -54,28 +67,30 @@ public class HTTPCodec implements Codec<TextMap> {
 
     for (final Map.Entry<String, String> entry : carrier) {
       final String key = entry.getKey().toLowerCase();
-      if (key.equalsIgnoreCase(TRACE_ID_KEY)) {
-        traceId = entry.getValue();
-      } else if (key.equalsIgnoreCase(SPAN_ID_KEY)) {
-        spanId = entry.getValue();
+      final String val = entry.getValue();
+
+      if (TRACE_ID_KEY.equalsIgnoreCase(key)) {
+        traceId = validateUInt64BitsID(val);
+      } else if (SPAN_ID_KEY.equalsIgnoreCase(key)) {
+        spanId = validateUInt64BitsID(val);
       } else if (key.startsWith(OT_BAGGAGE_PREFIX)) {
         if (baggage.isEmpty()) {
           baggage = new HashMap<>();
         }
-        baggage.put(key.replace(OT_BAGGAGE_PREFIX, ""), decode(entry.getValue()));
-      } else if (key.equalsIgnoreCase(SAMPLING_PRIORITY_KEY)) {
-        samplingPriority = Integer.parseInt(entry.getValue());
+        baggage.put(key.replace(OT_BAGGAGE_PREFIX, ""), decode(val));
+      } else if (SAMPLING_PRIORITY_KEY.equalsIgnoreCase(key)) {
+        samplingPriority = Integer.parseInt(val);
       }
 
       if (taggedHeaders.containsKey(key)) {
         if (tags.isEmpty()) {
           tags = new HashMap<>();
         }
-        tags.put(taggedHeaders.get(key), decode(entry.getValue()));
+        tags.put(taggedHeaders.get(key), decode(val));
       }
     }
     ExtractedContext context = null;
-    if (!traceId.equals("0")) {
+    if (!"0".equals(traceId)) {
       context = new ExtractedContext(traceId, spanId, samplingPriority, baggage, tags);
       context.lockSamplingPriority();
 
@@ -103,5 +118,28 @@ public class HTTPCodec implements Codec<TextMap> {
       log.info("Failed to decode value - {}", value);
     }
     return decoded;
+  }
+
+  /**
+   * Helper method to validate an ID String to verify that it is an unsigned 64 bits number and is
+   * within range.
+   *
+   * @param val the String that contains the ID
+   * @return the ID in String format if it passes validations
+   * @throws IllegalArgumentException if val is not a number or if the number is out of range
+   */
+  private String validateUInt64BitsID(String val) throws IllegalArgumentException {
+    try {
+      BigInteger validate = new BigInteger(val);
+      if (validate.compareTo(BigInteger.ZERO) == -1
+          || validate.compareTo(BIG_INTEGER_UINT64_MAX) == 1) {
+        throw new IllegalArgumentException(
+            "ID out of range, must be between 0 and 2^64-1, got: " + val);
+      }
+      return val;
+    } catch (NumberFormatException nfe) {
+      throw new IllegalArgumentException(
+          "Expecting a number for trace ID or span ID, but got: " + val);
+    }
   }
 }
