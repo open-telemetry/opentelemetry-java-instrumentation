@@ -134,6 +134,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
          *   return this.instrumentationMuzzle;
          * }
          */
+        try {
         final MethodVisitor mv =
             visitMethod(
                 Opcodes.ACC_PROTECTED + Opcodes.ACC_SYNCHRONIZED,
@@ -254,12 +255,27 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
                 false);
           }
           for (Reference.Method method : references[i].getMethods()) {
-            mv.visitLdcInsn(method.getName());
+            mv.visitLdcInsn(method.getSources().size());
+            mv.visitTypeInsn(
+              Opcodes.ANEWARRAY, "datadog/trace/agent/tooling/muzzle/Reference$Source");
+            int j = 0;
+            for (Reference.Source source : method.getSources()) {
+              mv.visitInsn(Opcodes.DUP);
+              mv.visitLdcInsn(j);
+
+              mv.visitTypeInsn(Opcodes.NEW, "datadog/trace/agent/tooling/muzzle/Reference$Source");
+              mv.visitInsn(Opcodes.DUP);
+              mv.visitLdcInsn(source.getName());
+              mv.visitLdcInsn(source.getLine());mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "datadog/trace/agent/tooling/muzzle/Reference$Source", "<init>", "(Ljava/lang/String;I)V", false);
+
+              mv.visitInsn(Opcodes.AASTORE);
+              ++j;
+            }
 
             mv.visitLdcInsn(method.getFlags().size());
             mv.visitTypeInsn(
                 Opcodes.ANEWARRAY, "datadog/trace/agent/tooling/muzzle/Reference$Flag");
-            int j = 0;
+            j = 0;
             for (Reference.Flag flag : method.getFlags()) {
               mv.visitInsn(Opcodes.DUP);
               mv.visitLdcInsn(j);
@@ -272,24 +288,40 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
               ++j;
             }
 
-            mv.visitLdcInsn(method.getReturnType());
+            mv.visitLdcInsn(method.getName());
+
+            { // return type
+              mv.visitLdcInsn(method.getReturnType().getDescriptor());
+              mv.visitMethodInsn(Opcodes.INVOKESTATIC,
+                Type.getInternalName(Type.class),
+                "getType",
+                Type.getMethodDescriptor(Type.class.getMethod("getType", String.class)),
+                false);
+            }
 
             mv.visitLdcInsn(method.getParameterTypes().size());
-            mv.visitTypeInsn(Opcodes.ANEWARRAY, "java/lang/String");
-
-            int k = 0;
-            for (String parameterType : method.getParameterTypes()) {
+            mv.visitTypeInsn(Opcodes.ANEWARRAY, Type.getInternalName(Type.class));
+            j = 0;
+            for (Type parameterType : method.getParameterTypes()) {
               mv.visitInsn(Opcodes.DUP);
-              mv.visitLdcInsn(k);
-              mv.visitLdcInsn(parameterType);
+              mv.visitLdcInsn(j);
+
+              mv.visitLdcInsn(parameterType.getDescriptor());
+              mv.visitMethodInsn(Opcodes.INVOKESTATIC,
+                Type.getInternalName(Type.class),
+                "getType",
+                Type.getMethodDescriptor(Type.class.getMethod("getType", String.class)),
+                false);
+
               mv.visitInsn(Opcodes.AASTORE);
+              j++;
             }
 
             mv.visitMethodInsn(
                 Opcodes.INVOKEVIRTUAL,
                 "datadog/trace/agent/tooling/muzzle/Reference$Builder",
                 "withMethod",
-                "(Ljava/lang/String;[Ldatadog/trace/agent/tooling/muzzle/Reference$Flag;Ljava/lang/String;[Ljava/lang/String;)Ldatadog/trace/agent/tooling/muzzle/Reference$Builder;",
+                Type.getMethodDescriptor(Reference.Builder.class.getMethod("withMethod", Reference.Source[].class, Reference.Flag[].class, String.class, Type.class, Type[].class)),
                 false);
           }
           mv.visitMethodInsn(
@@ -327,6 +359,10 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
         mv.visitLocalVariable("this", "L" + instrumentationClassName + ";", null, start, finish, 0);
         mv.visitMaxs(0, 0); // recomputed
         mv.visitEnd();
+        }
+        catch(Exception e) {
+          throw new RuntimeException(e);
+        }
       }
 
       super.visitField(

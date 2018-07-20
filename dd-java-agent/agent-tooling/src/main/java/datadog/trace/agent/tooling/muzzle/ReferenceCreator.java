@@ -1,6 +1,7 @@
 package datadog.trace.agent.tooling.muzzle;
 
 import datadog.trace.agent.tooling.Utils;
+import datadog.trace.agent.tooling.muzzle.Reference.Source;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayDeque;
@@ -21,6 +22,10 @@ import net.bytebuddy.jar.asm.Opcodes;
 // - outer class
 // - inner class
 public class ReferenceCreator extends ClassVisitor {
+  public static Map<String, Reference> createReferencesFrom(String entryPointClassName, ClassLoader loader) {
+    return ReferenceCreator.createReferencesFrom(entryPointClassName, loader, true);
+  }
+
   /**
    * Generate all references reachable from a given class.
    *
@@ -28,8 +33,9 @@ public class ReferenceCreator extends ClassVisitor {
    * @param loader Classloader used to read class bytes.
    * @return Map of [referenceClassName -> Reference]
    */
-  public static Map<String, Reference> createReferencesFrom(
-      String entryPointClassName, ClassLoader loader) {
+  // TODO: document startFromMethodBodies and explain purpose
+  private static Map<String, Reference> createReferencesFrom(
+      String entryPointClassName, ClassLoader loader, boolean startFromMethodBodies) {
     final Set<String> visitedSources = new HashSet<>();
     final Map<String, Reference> references = new HashMap<>();
 
@@ -42,7 +48,9 @@ public class ReferenceCreator extends ClassVisitor {
       try {
         final InputStream in = loader.getResourceAsStream(Utils.getResourceName(className));
         try {
-          final ReferenceCreator cv = new ReferenceCreator(null);
+          final ReferenceCreator cv = new ReferenceCreator(null, startFromMethodBodies);
+          // only start from method bodies on the first pass
+          startFromMethodBodies = false;
           final ClassReader reader = new ClassReader(in);
           reader.accept(cv, ClassReader.SKIP_FRAMES);
 
@@ -75,9 +83,11 @@ public class ReferenceCreator extends ClassVisitor {
 
   private Map<String, Reference> references = new HashMap<>();
   private String refSourceClassName;
+  private boolean createFromMethodBodiesOnly;
 
-  private ReferenceCreator(ClassVisitor classVisitor) {
+  private ReferenceCreator(ClassVisitor classVisitor, boolean createFromMethodBodiesOnly) {
     super(Opcodes.ASM6, classVisitor);
+    this.createFromMethodBodiesOnly = createFromMethodBodiesOnly;
   }
 
   public Map<String, Reference> getReferences() {
@@ -156,9 +166,15 @@ public class ReferenceCreator extends ClassVisitor {
       addReference(new Reference.Builder(owner)
         .withSource(refSourceClassName, currentLineNumber)
         .build());
-      addReference(new Reference.Builder(Type.getType(descriptor).getInternalName())
-        .withSource(refSourceClassName, currentLineNumber)
-        .build());
+      Type fieldType = Type.getType(descriptor);
+      if (fieldType.getSort() == Type.ARRAY) {
+        fieldType = fieldType.getElementType();
+      }
+      if (fieldType.getSort() == Type.OBJECT) {
+        addReference(new Reference.Builder(fieldType.getInternalName())
+          .withSource(refSourceClassName, currentLineNumber)
+          .build());
+      }
       super.visitFieldInsn(opcode, owner, name, descriptor);
     }
 
@@ -171,7 +187,7 @@ public class ReferenceCreator extends ClassVisitor {
         final boolean isInterface) {
       // Additional references we could check
       // * DONE name of method owner's class
-      //   * is the owner an interface?
+      //   * DONE is the owner an interface?
       //   * owner's access from here (PRIVATE?)
       //   * method on the owner class
       //   * is the method static? Is it visible from here?
@@ -179,8 +195,17 @@ public class ReferenceCreator extends ClassVisitor {
       //   * params classes
       //   * return type
 
-      addReference(new Reference.Builder(owner)
+      final Type methodType = Type.getMethodType(descriptor);
+      Source[] sources = new Reference.Source[]{new Reference.Source(refSourceClassName, currentLineNumber)};
+
+      Type ownerType = Type.getType("L"+owner+";");
+      if (ownerType.getSort() == Type.ARRAY) {
+        ownerType = ownerType.getElementType();
+      }
+      addReference(new Reference.Builder(ownerType.getInternalName())
         .withSource(refSourceClassName, currentLineNumber)
+        .withFlag(isInterface ? Reference.Flag.INTERFACE : Reference.Flag.NON_INTERFACE)
+        .withMethod(sources, new Reference.Flag[0], name, methodType.getReturnType(), methodType.getArgumentTypes())
         .build());
       super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
     }
