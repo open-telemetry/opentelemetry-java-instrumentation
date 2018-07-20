@@ -22,10 +22,10 @@ class Netty40ClientTest extends AgentTestRunner {
     System.setProperty("dd.integration.netty.enabled", "true")
   }
 
-  static final PORT = TestUtils.randomOpenPort()
-
   @Shared
-  Server server = new Server(PORT)
+  int port
+  @Shared
+  Server server
   @Shared
   AsyncHttpClient asyncHttpClient = asyncHttpClient()
 //    DefaultAsyncHttpClientConfig.Builder.newInstance().setRequestTimeout(Integer.MAX_VALUE).build())
@@ -34,6 +34,9 @@ class Netty40ClientTest extends AgentTestRunner {
 
 
   def setupSpec() {
+    port = TestUtils.randomOpenPort()
+    server = new Server(port)
+
     Handler handler = [
       handle: { String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response ->
         request.getHeaderNames().each {
@@ -59,7 +62,7 @@ class Netty40ClientTest extends AgentTestRunner {
 
   def "test server request/response"() {
     setup:
-    def responseFuture = asyncHttpClient.prepareGet("http://localhost:$PORT/").execute()
+    def responseFuture = asyncHttpClient.prepareGet("http://localhost:$port/").execute()
     def response = responseFuture.get()
 
     expect:
@@ -79,7 +82,7 @@ class Netty40ClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "netty-client"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "http://localhost:$PORT/"
+            "$Tags.HTTP_URL.key" "http://localhost:$port/"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" Integer
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT

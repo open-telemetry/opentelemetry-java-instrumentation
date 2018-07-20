@@ -14,11 +14,12 @@ class Play26Test extends AgentTestRunner {
   }
 
   @Shared
-  int port = TestUtils.randomOpenPort()
+  int port
   @Shared
   TestServer testServer
 
   def setupSpec() {
+    port = TestUtils.randomOpenPort()
     testServer = Helpers.testServer(port, Play26TestUtils.buildTestApp())
     testServer.start()
   }

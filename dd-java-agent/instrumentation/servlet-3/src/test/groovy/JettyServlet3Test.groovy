@@ -28,10 +28,10 @@ import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class JettyServlet3Test extends AgentTestRunner {
 
-  static final int PORT = TestUtils.randomOpenPort()
-
   // Jetty needs this to ensure consistent ordering for async.
   CountDownLatch latch = new CountDownLatch(1)
+
+  int port
 
   OkHttpClient client = new OkHttpClient.Builder()
     .addNetworkInterceptor(new Interceptor() {
@@ -61,7 +61,8 @@ class JettyServlet3Test extends AgentTestRunner {
   DDTracer tracer = new DDTracer(writer)
 
   def setup() {
-    jettyServer = new Server(PORT)
+    port = TestUtils.randomOpenPort()
+    jettyServer = new Server(port)
     servletContext = new ServletContextHandler()
 
     ConstraintSecurityHandler security = setupAuthentication(jettyServer)
@@ -76,7 +77,7 @@ class JettyServlet3Test extends AgentTestRunner {
     jettyServer.start()
 
     System.out.println(
-      "Jetty server: http://localhost:" + PORT + "/")
+      "Jetty server: http://localhost:" + port + "/")
 
     try {
       GlobalTracer.register(tracer)
@@ -98,7 +99,7 @@ class JettyServlet3Test extends AgentTestRunner {
   def "test #path servlet call"() {
     setup:
     def requestBuilder = new Request.Builder()
-      .url("http://localhost:$PORT/$path")
+      .url("http://localhost:$port/$path")
       .get()
     if (auth) {
       requestBuilder.header(HttpHeaders.AUTHORIZATION, Credentials.basic("user", "password"))
@@ -118,7 +119,7 @@ class JettyServlet3Test extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "http.url" "http://localhost:$PORT/$path"
+            "http.url" "http://localhost:$port/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
@@ -145,7 +146,7 @@ class JettyServlet3Test extends AgentTestRunner {
   def "servlet instrumentation clears state after async request"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$PORT/async")
+      .url("http://localhost:$port/async")
       .get()
       .build()
     def numTraces = 5
@@ -170,7 +171,7 @@ class JettyServlet3Test extends AgentTestRunner {
   def "test #path error servlet call"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$PORT/$path?error=true")
+      .url("http://localhost:$port/$path?error=true")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -188,7 +189,7 @@ class JettyServlet3Test extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "http.url" "http://localhost:$PORT/$path"
+            "http.url" "http://localhost:$port/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
@@ -211,7 +212,7 @@ class JettyServlet3Test extends AgentTestRunner {
   def "test #path non-throwing-error servlet call"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$PORT/$path?non-throwing-error=true")
+      .url("http://localhost:$port/$path?non-throwing-error=true")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -229,7 +230,7 @@ class JettyServlet3Test extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "http.url" "http://localhost:$PORT/$path"
+            "http.url" "http://localhost:$port/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"

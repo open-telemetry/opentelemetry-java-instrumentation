@@ -15,23 +15,25 @@ import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.A
 
 class LettuceSyncClientTest extends AgentTestRunner {
   public static final String HOST = "127.0.0.1"
-  public static final int PORT = TestUtils.randomOpenPort()
-  public static final int INCORRECT_PORT = TestUtils.randomOpenPort()
   public static final int DB_INDEX = 0
-  public static final String DB_ADDR = HOST + ":" + PORT + "/" + DB_INDEX
-  public static final String DB_ADDR_NON_EXISTENT = HOST + ":" + INCORRECT_PORT + "/" + DB_INDEX
-  public static final String DB_URI_NON_EXISTENT = "redis://" + DB_ADDR_NON_EXISTENT
-  public static final String EMBEDDED_DB_URI = "redis://" + DB_ADDR
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
   @Shared
-  RedisServer redisServer = RedisServer.builder()
-    // bind to localhost to avoid firewall popup
-    .setting("bind " + HOST)
-    // set max memory to avoid problems in CI
-    .setting("maxmemory 128M")
-    .port(PORT).build()
+  int port
+  @Shared
+  int incorrectPort
+  @Shared
+  String dbAddr
+  @Shared
+  String dbAddrNonExistent
+  @Shared
+  String dbUriNonExistent
+  @Shared
+  String embeddedDbUri
+
+  @Shared
+  RedisServer redisServer
 
   @Shared
   Map<String, String> testHashMap = [
@@ -40,11 +42,29 @@ class LettuceSyncClientTest extends AgentTestRunner {
           age:       "53"
   ]
 
-  RedisClient redisClient = RedisClient.create(EMBEDDED_DB_URI)
+  RedisClient redisClient
   StatefulConnection connection
   RedisCommands<String, ?> syncCommands
 
+  def setupSpec() {
+    port = TestUtils.randomOpenPort()
+    incorrectPort = TestUtils.randomOpenPort()
+    dbAddr = HOST + ":" + port + "/" + DB_INDEX
+    dbAddrNonExistent = HOST + ":" + incorrectPort + "/" + DB_INDEX
+    dbUriNonExistent = "redis://" + dbAddrNonExistent
+    embeddedDbUri = "redis://" + dbAddr
+
+    redisServer = RedisServer.builder()
+      // bind to localhost to avoid firewall popup
+      .setting("bind " + HOST)
+      // set max memory to avoid problems in CI
+      .setting("maxmemory 128M")
+      .port(port).build()
+  }
+
   def setup() {
+    redisClient = RedisClient.create(embeddedDbUri)
+
     redisServer.start()
     connection = redisClient.connect()
     syncCommands = connection.sync()
@@ -64,7 +84,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
   def "connect"() {
     setup:
-    RedisClient testConnectionClient = RedisClient.create(EMBEDDED_DB_URI)
+    RedisClient testConnectionClient = RedisClient.create(embeddedDbUri)
     testConnectionClient.setOptions(CLIENT_OPTIONS)
 
     when:
@@ -77,17 +97,17 @@ class LettuceSyncClientTest extends AgentTestRunner {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName "CONNECT:" + DB_ADDR
+          resourceName "CONNECT:" + dbAddr
           errored false
 
           tags {
             defaultTags()
             "component" "redis-client"
-            "db.redis.url" DB_ADDR
+            "db.redis.url" dbAddr
             "db.redis.dbIndex" 0
             "db.type" "redis"
             "peer.hostname" HOST
-            "peer.port" PORT
+            "peer.port" port
             "span.kind" "client"
             "span.type" "redis"
           }
@@ -101,7 +121,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
   def "connect exception"() {
     setup:
-    RedisClient testConnectionClient = RedisClient.create(DB_URI_NON_EXISTENT)
+    RedisClient testConnectionClient = RedisClient.create(dbUriNonExistent)
     testConnectionClient.setOptions(CLIENT_OPTIONS)
 
     when:
@@ -115,18 +135,18 @@ class LettuceSyncClientTest extends AgentTestRunner {
           serviceName "redis"
           operationName "redis.query"
           spanType "redis"
-          resourceName "CONNECT:" + DB_ADDR_NON_EXISTENT
+          resourceName "CONNECT:" + dbAddrNonExistent
           errored true
 
           tags {
             defaultTags()
             "component" "redis-client"
-            "db.redis.url" DB_ADDR_NON_EXISTENT
+            "db.redis.url" dbAddrNonExistent
             "db.redis.dbIndex" 0
             "db.type" "redis"
             errorTags CompletionException, String
             "peer.hostname" HOST
-            "peer.port" INCORRECT_PORT
+            "peer.port" incorrectPort
             "span.kind" "client"
             "span.type" "redis"
           }

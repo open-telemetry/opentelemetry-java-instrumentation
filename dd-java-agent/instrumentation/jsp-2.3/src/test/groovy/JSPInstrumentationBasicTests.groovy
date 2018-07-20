@@ -11,6 +11,7 @@ import okhttp3.Response
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.jasper.JasperException
+import spock.lang.Shared
 import spock.lang.Unroll
 
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
@@ -27,7 +28,22 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     System.setProperty("org.apache.catalina.startup.TldConfig.jarsToSkip", "*")
   }
 
-  static final int PORT = TestUtils.randomOpenPort()
+  @Shared
+  int port
+  @Shared
+  Tomcat tomcatServer
+  @Shared
+  Context appContext
+  @Shared
+  String jspWebappContext = "jsptest-context"
+
+  @Shared
+  File baseDir
+  @Shared
+  String baseUrl
+  @Shared
+  String expectedJspClassFilesDir = "/work/Tomcat/localhost/$jspWebappContext/org/apache/jsp/"
+
   OkHttpClient client = new OkHttpClient.Builder()
   // Uncomment when debugging:
 //    .connectTimeout(1, TimeUnit.HOURS)
@@ -35,32 +51,25 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
 //    .readTimeout(1, TimeUnit.HOURS)
     .build()
 
-  static Tomcat tomcatServer
-  static Context appContext
-  static final String JSP_WEBAPP_CONTEXT = "jsptest-context"
-
-  static File baseDir
-  static String baseUrl
-  static String expectedJspClassFilesDir = "/work/Tomcat/localhost/$JSP_WEBAPP_CONTEXT/org/apache/jsp/"
-
   def setupSpec() {
+    port = TestUtils.randomOpenPort()
     tomcatServer = new Tomcat()
-    tomcatServer.setPort(PORT)
+    tomcatServer.setPort(port)
     // comment to debug
     tomcatServer.setSilent(true)
 
     baseDir = Files.createTempDir()
     baseDir.deleteOnExit()
     expectedJspClassFilesDir = baseDir.getCanonicalFile().getAbsolutePath() + expectedJspClassFilesDir
-    baseUrl = "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT"
+    baseUrl = "http://localhost:$port/$jspWebappContext"
     tomcatServer.setBaseDir(baseDir.getAbsolutePath())
 
-    appContext = tomcatServer.addWebapp("/$JSP_WEBAPP_CONTEXT",
+    appContext = tomcatServer.addWebapp("/$jspWebappContext",
       JSPInstrumentationBasicTests.getResource("/webapps/jsptest").getPath())
 
     tomcatServer.start()
     System.out.println(
-      "Tomcat server: http://" + tomcatServer.getHost().getName() + ":" + PORT + "/")
+      "Tomcat server: http://" + tomcatServer.getHost().getName() + ":" + port + "/")
   }
 
   def cleanupSpec() {
@@ -82,25 +91,25 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "servlet.request"
-          resourceName "GET /$JSP_WEBAPP_CONTEXT/$jspFileName"
+          resourceName "GET /$jspWebappContext/$jspFileName"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           tags {
-            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/$jspFileName"
+            "http.url" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
           }
         }
         span(1) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/$jspFileName"
           spanType DDSpanTypes.WEB_SERVLET
@@ -109,14 +118,14 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
           }
         }
         span(2) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/$jspFileName"
           spanType DDSpanTypes.WEB_SERVLET
@@ -125,7 +134,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
@@ -159,25 +168,25 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "servlet.request"
-          resourceName "GET /$JSP_WEBAPP_CONTEXT/getQuery.jsp"
+          resourceName "GET /$jspWebappContext/getQuery.jsp"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           tags {
-            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/getQuery.jsp"
+            "http.url" "http://localhost:$port/$jspWebappContext/getQuery.jsp"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
           }
         }
         span(1) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/getQuery.jsp"
           spanType DDSpanTypes.WEB_SERVLET
@@ -186,14 +195,14 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
           }
         }
         span(2) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/getQuery.jsp"
           spanType DDSpanTypes.WEB_SERVLET
@@ -202,7 +211,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
@@ -233,25 +242,25 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "servlet.request"
-          resourceName "POST /$JSP_WEBAPP_CONTEXT/post.jsp"
+          resourceName "POST /$jspWebappContext/post.jsp"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           tags {
-            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/post.jsp"
+            "http.url" "http://localhost:$port/$jspWebappContext/post.jsp"
             "http.method" "POST"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
           }
         }
         span(1) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/post.jsp"
           spanType DDSpanTypes.WEB_SERVLET
@@ -260,14 +269,14 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
           }
         }
         span(2) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/post.jsp"
           spanType DDSpanTypes.WEB_SERVLET
@@ -276,7 +285,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
@@ -304,18 +313,18 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "servlet.request"
-          resourceName "GET /$JSP_WEBAPP_CONTEXT/$jspFileName"
+          resourceName "GET /$jspWebappContext/$jspFileName"
           spanType DDSpanTypes.WEB_SERVLET
           errored true
           tags {
-            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/$jspFileName"
+            "http.url" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "http.status_code" 500
             errorTags(JasperException, String)
             defaultTags()
@@ -323,7 +332,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/$jspFileName"
           spanType DDSpanTypes.WEB_SERVLET
@@ -332,7 +341,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             errorTags(exceptionClass, errorMessage)
             defaultTags()
@@ -340,7 +349,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/$jspFileName"
           spanType DDSpanTypes.WEB_SERVLET
@@ -349,7 +358,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
@@ -382,25 +391,25 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "servlet.request"
-          resourceName "GET /$JSP_WEBAPP_CONTEXT/includes/includeHtml.jsp"
+          resourceName "GET /$jspWebappContext/includes/includeHtml.jsp"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           tags {
-            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/includes/includeHtml.jsp"
+            "http.url" "http://localhost:$port/$jspWebappContext/includes/includeHtml.jsp"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
           }
         }
         span(1) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/includes/includeHtml.jsp"
           spanType DDSpanTypes.WEB_SERVLET
@@ -409,14 +418,14 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
           }
         }
         span(2) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/includes/includeHtml.jsp"
           spanType DDSpanTypes.WEB_SERVLET
@@ -425,7 +434,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
@@ -452,25 +461,25 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 7) {
         span(0) {
           parent()
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "servlet.request"
-          resourceName "GET /$JSP_WEBAPP_CONTEXT/includes/includeMulti.jsp"
+          resourceName "GET /$jspWebappContext/includes/includeMulti.jsp"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           tags {
-            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/includes/includeMulti.jsp"
+            "http.url" "http://localhost:$port/$jspWebappContext/includes/includeMulti.jsp"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
           }
         }
         span(1) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/includes/includeMulti.jsp"
           spanType DDSpanTypes.WEB_SERVLET
@@ -479,14 +488,14 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
           }
         }
         span(2) {
           childOf span(1)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/common/javaLoopH2.jsp"
           spanType DDSpanTypes.WEB_SERVLET
@@ -495,14 +504,14 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
           }
         }
         span(3) {
           childOf span(1)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/common/javaLoopH2.jsp"
           spanType DDSpanTypes.WEB_SERVLET
@@ -511,7 +520,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
@@ -519,7 +528,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(4) {
           childOf span(1)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/common/javaLoopH2.jsp"
           spanType DDSpanTypes.WEB_SERVLET
@@ -528,14 +537,14 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
           }
         }
         span(5) {
           childOf span(1)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/common/javaLoopH2.jsp"
           spanType DDSpanTypes.WEB_SERVLET
@@ -544,7 +553,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
@@ -552,7 +561,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(6) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/includes/includeMulti.jsp"
           spanType DDSpanTypes.WEB_SERVLET
@@ -561,7 +570,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             defaultTags()
@@ -588,18 +597,18 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           parent()
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "servlet.request"
-          resourceName "GET /$JSP_WEBAPP_CONTEXT/$jspFileName"
+          resourceName "GET /$jspWebappContext/$jspFileName"
           spanType DDSpanTypes.WEB_SERVLET
           errored true
           tags {
-            "http.url" "http://localhost:$PORT/$JSP_WEBAPP_CONTEXT/$jspFileName"
+            "http.url" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "http.status_code" 500
             errorTags(JasperException, String)
             defaultTags()
@@ -607,7 +616,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          serviceName JSP_WEBAPP_CONTEXT
+          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/$jspFileName"
           spanType DDSpanTypes.WEB_SERVLET
@@ -616,7 +625,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" "/$JSP_WEBAPP_CONTEXT"
+            "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
             "jsp.javaFile" expectedJspClassFilesDir + jspClassNamePrefix.replace('.', '/') + jspClassName + ".java"
