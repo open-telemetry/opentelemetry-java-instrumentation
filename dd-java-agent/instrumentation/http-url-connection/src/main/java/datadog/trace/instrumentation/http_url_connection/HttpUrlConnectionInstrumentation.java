@@ -81,6 +81,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         @Advice.Origin("#m") final String methodName) {
 
       final HttpURLState state = HttpURLState.get(thiz);
+      String operationName = "http.request";
       if ("connect".equals(methodName)) {
         if (connected) {
           return null;
@@ -91,6 +92,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         // In total there will be two spans:
         // - one for the connect() which does propagation
         // - one for the input or output stream (presumably called after connect())
+        operationName += ".connect";
       } else {
         if (state.hasDoneIO()) {
           return null;
@@ -98,8 +100,10 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         state.setHasDoneIO(true);
       }
 
-      // AgentWriter uses HttpURLConnection to report to the trace-agent. We don't want to trace those requests.
-      // Check after the connected test above because getRequestProperty will throw an exception if already connected.
+      // AgentWriter uses HttpURLConnection to report to the trace-agent. We don't want to trace
+      // those requests.
+      // Check after the connected test above because getRequestProperty will throw an exception if
+      // already connected.
       final boolean isTraceRequest =
           Thread.currentThread().getName().equals("dd-agent-writer")
               || (!connected && thiz.getRequestProperty("Datadog-Meta-Lang") != null);
@@ -120,7 +124,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
       final Scope scope =
           tracer
-              .buildSpan("http.request")
+              .buildSpan(operationName)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
               .startActive(true);
@@ -160,7 +164,8 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       } else if (responseCode > 0) {
         // responseCode field cache is sometimes not populated.
-        // We can't call getResponseCode() due to some unwanted side-effects (e.g. breaks getOutputStream).
+        // We can't call getResponseCode() due to some unwanted side-effects (e.g. breaks
+        // getOutputStream).
         Tags.HTTP_STATUS.set(span, responseCode);
       }
       scope.close();

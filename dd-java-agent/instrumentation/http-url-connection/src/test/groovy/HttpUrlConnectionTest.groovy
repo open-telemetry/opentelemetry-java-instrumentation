@@ -392,7 +392,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           }
         }
         span(2) {
-          operationName "http.request"
+          operationName "http.request.connect"
           childOf span(0)
           errored false
           tags {
