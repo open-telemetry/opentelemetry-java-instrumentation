@@ -22,33 +22,36 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
     System.setProperty("dd.integration.elasticsearch.enabled", "true")
   }
 
-  static final int HTTP_PORT = TestUtils.randomOpenPort()
-  static final int TCP_PORT = TestUtils.randomOpenPort()
+  @Shared
+  int httpPort
+  @Shared
+  int tcpPort
+  @Shared
+  Node testNode
+  @Shared
+  File esWorkingDir
 
   @Shared
-  static Node testNode
-  static File esWorkingDir
-
-  @Shared
-  static RestClient client
+  RestClient client
 
   def setupSpec() {
-    esWorkingDir = File.createTempFile("test-es-working-dir-", "")
-    esWorkingDir.delete()
-    esWorkingDir.mkdir()
+    httpPort = TestUtils.randomOpenPort()
+    tcpPort = TestUtils.randomOpenPort()
+
+    esWorkingDir = File.createTempDir("test-es-working-dir-", "")
     esWorkingDir.deleteOnExit()
     println "ES work dir: $esWorkingDir"
 
     def settings = Settings.builder()
       .put("path.home", esWorkingDir.path)
-      .put("http.port", HTTP_PORT)
-      .put("transport.tcp.port", TCP_PORT)
+      .put("http.port", httpPort)
+      .put("transport.tcp.port", tcpPort)
       .put("cluster.name", "test-cluster")
       .build()
     testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, null), [Netty4Plugin])
     testNode.start()
 
-    client = RestClient.builder(new HttpHost("localhost", HTTP_PORT))
+    client = RestClient.builder(new HttpHost("localhost", httpPort))
       .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
       .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
       @Override
@@ -107,7 +110,7 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_URL.key" "_cluster/health"
             "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" HTTP_PORT
+            "$Tags.PEER_PORT.key" httpPort
             defaultTags()
           }
         }
