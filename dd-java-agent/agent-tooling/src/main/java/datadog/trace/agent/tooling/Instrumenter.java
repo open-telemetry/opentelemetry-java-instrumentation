@@ -85,17 +85,18 @@ public interface Instrumenter {
                   new AgentBuilder.RawMatcher() {
                     @Override
                     public boolean matches(
-                        TypeDescription typeDescription,
-                        ClassLoader classLoader,
-                        JavaModule module,
-                        Class<?> classBeingRedefined,
-                        ProtectionDomain protectionDomain) {
-                      // Optimization: calling getInstrumentationMuzzle() inside this method
-                      // prevents unnecessary loading of muzzle references during agentBuilder
-                      // setup.
+                        final TypeDescription typeDescription,
+                        final ClassLoader classLoader,
+                        final JavaModule module,
+                        final Class<?> classBeingRedefined,
+                        final ProtectionDomain protectionDomain) {
+                      /* Optimization: calling getInstrumentationMuzzle() inside this method
+                       * prevents unnecessary loading of muzzle references during agentBuilder
+                       * setup.
+                       */
                       final ReferenceMatcher muzzle = getInstrumentationMuzzle();
                       if (null != muzzle) {
-                        List<Reference.Mismatch> mismatches =
+                        final List<Reference.Mismatch> mismatches =
                             muzzle.getMismatchedReferenceSources(classLoader);
                         if (mismatches.size() > 0) {
                           log.debug(
@@ -104,7 +105,7 @@ public interface Instrumenter {
                               this.getClass().getName(),
                               classLoader);
                         }
-                        for (Reference.Mismatch mismatch : mismatches) {
+                        for (final Reference.Mismatch mismatch : mismatches) {
                           log.debug("-- {}", mismatch);
                         }
                         return mismatches.size() == 0;
@@ -117,7 +118,7 @@ public interface Instrumenter {
       if (helperClassNames.length > 0) {
         advice = advice.transform(new HelperInjector(helperClassNames));
       }
-      for (Map.Entry<ElementMatcher, String> entry : transformers().entrySet()) {
+      for (final Map.Entry<ElementMatcher, String> entry : transformers().entrySet()) {
         advice = advice.transform(DDAdvice.create().advice(entry.getKey(), entry.getValue()));
       }
       return advice.asDecorator();

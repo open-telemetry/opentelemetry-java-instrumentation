@@ -15,8 +15,7 @@ public class LettuceMonoCreationAdvice {
   }
 
   // throwables wouldn't matter here, because no spans have been started due to redis command not
-  // being
-  // run until the user subscribes to the Mono publisher
+  // being run until the user subscribes to the Mono publisher
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void monitorSpan(
       @Advice.Enter final String commandName, @Advice.Return(readOnly = false) Mono<?> publisher) {
