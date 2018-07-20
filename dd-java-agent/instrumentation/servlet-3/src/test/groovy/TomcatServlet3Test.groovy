@@ -18,7 +18,7 @@ import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class TomcatServlet3Test extends AgentTestRunner {
 
-  static final int PORT = TestUtils.randomOpenPort()
+  int port
   OkHttpClient client = new OkHttpClient.Builder()
   // Uncomment when debugging:
 //    .connectTimeout(1, TimeUnit.HOURS)
@@ -33,8 +33,9 @@ class TomcatServlet3Test extends AgentTestRunner {
   DDTracer tracer = new DDTracer(writer)
 
   def setup() {
+    port = TestUtils.randomOpenPort()
     tomcatServer = new Tomcat()
-    tomcatServer.setPort(PORT)
+    tomcatServer.setPort(port)
 
     def baseDir = Files.createTempDir()
     baseDir.deleteOnExit()
@@ -61,7 +62,7 @@ class TomcatServlet3Test extends AgentTestRunner {
 
     tomcatServer.start()
     System.out.println(
-      "Tomcat server: http://" + tomcatServer.getHost().getName() + ":" + PORT + "/")
+      "Tomcat server: http://" + tomcatServer.getHost().getName() + ":" + port + "/")
 
 
     try {
@@ -84,7 +85,7 @@ class TomcatServlet3Test extends AgentTestRunner {
   def "test #path servlet call"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$PORT/my-context/$path")
+      .url("http://localhost:$port/my-context/$path")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -102,7 +103,7 @@ class TomcatServlet3Test extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "http.url" "http://localhost:$PORT/my-context/$path"
+            "http.url" "http://localhost:$port/my-context/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
@@ -124,7 +125,7 @@ class TomcatServlet3Test extends AgentTestRunner {
   def "test #path error servlet call"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$PORT/my-context/$path?error=true")
+      .url("http://localhost:$port/my-context/$path?error=true")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -142,7 +143,7 @@ class TomcatServlet3Test extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "http.url" "http://localhost:$PORT/my-context/$path"
+            "http.url" "http://localhost:$port/my-context/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
@@ -165,7 +166,7 @@ class TomcatServlet3Test extends AgentTestRunner {
   def "test #path error servlet call for non-throwing error"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$PORT/my-context/$path?non-throwing-error=true")
+      .url("http://localhost:$port/my-context/$path?non-throwing-error=true")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -183,7 +184,7 @@ class TomcatServlet3Test extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "http.url" "http://localhost:$PORT/my-context/$path"
+            "http.url" "http://localhost:$port/my-context/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"

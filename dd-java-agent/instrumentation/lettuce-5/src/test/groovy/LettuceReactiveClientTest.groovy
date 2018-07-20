@@ -15,27 +15,37 @@ import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.A
 
 class LettuceReactiveClientTest extends AgentTestRunner {
   public static final String HOST = "127.0.0.1"
-  public static final int PORT = TestUtils.randomOpenPort()
   public static final int DB_INDEX = 0
-  public static final String DB_ADDR = HOST + ":" + PORT + "/" + DB_INDEX
-  public static final String EMBEDDED_DB_URI = "redis://" + DB_ADDR
   // Disable autoreconnect so we do not get stray traces popping up on server shutdown
   public static final ClientOptions CLIENT_OPTIONS = ClientOptions.builder().autoReconnect(false).build()
 
   @Shared
-  RedisServer redisServer = RedisServer.builder()
-    // bind to localhost to avoid firewall popup
-    .setting("bind " + HOST)
-    // set max memory to avoid problems in CI
-    .setting("maxmemory 128M")
-    .port(PORT).build()
+  String embeddedDbUri
 
-  RedisClient redisClient = RedisClient.create(EMBEDDED_DB_URI)
+  @Shared
+  RedisServer redisServer
+
+  RedisClient redisClient
   StatefulConnection connection
   RedisReactiveCommands<String, ?> reactiveCommands
   RedisCommands<String, ?> syncCommands
 
+  def setupSpec() {
+    int port = TestUtils.randomOpenPort()
+    String dbAddr = HOST + ":" + port + "/" + DB_INDEX
+    embeddedDbUri = "redis://" + dbAddr
+
+    redisServer = RedisServer.builder()
+      // bind to localhost to avoid firewall popup
+      .setting("bind " + HOST)
+      // set max memory to avoid problems in CI
+      .setting("maxmemory 128M")
+      .port(port).build()
+  }
+
   def setup() {
+    redisClient = RedisClient.create(embeddedDbUri)
+
     println "Using redis: $redisServer.args"
     redisServer.start()
     redisClient.setOptions(CLIENT_OPTIONS)

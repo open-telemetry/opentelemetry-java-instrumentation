@@ -19,27 +19,30 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
     System.setProperty("dd.integration.elasticsearch.enabled", "true")
   }
 
-  static final int HTTP_PORT = TestUtils.randomOpenPort()
-  static final int TCP_PORT = TestUtils.randomOpenPort()
+  @Shared
+  int httpPort
+  @Shared
+  int tcpPort
+  @Shared
+  Node testNode
+  @Shared
+  File esWorkingDir
 
   @Shared
-  static Node testNode
-  static File esWorkingDir
-
-  @Shared
-  static TransportClient client
+  TransportClient client
 
   def setupSpec() {
-    esWorkingDir = File.createTempFile("test-es-working-dir-", "")
-    esWorkingDir.delete()
-    esWorkingDir.mkdir()
+    httpPort = TestUtils.randomOpenPort()
+    tcpPort = TestUtils.randomOpenPort()
+
+    esWorkingDir = File.createTempDir("test-es-working-dir-", "")
     esWorkingDir.deleteOnExit()
     println "ES work dir: $esWorkingDir"
 
     def settings = Settings.builder()
       .put("path.home", esWorkingDir.path)
-      .put("http.port", HTTP_PORT)
-      .put("transport.tcp.port", TCP_PORT)
+      .put("http.port", httpPort)
+      .put("transport.tcp.port", tcpPort)
       .build()
     testNode = NodeBuilder.newInstance().clusterName("test-cluster").settings(settings).build()
     testNode.start()
@@ -51,7 +54,7 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
         .put("cluster.name", "test-cluster")
         .build()
     ).build()
-    client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), TCP_PORT))
+    client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), tcpPort))
     TEST_WRITER.clear()
     client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
     TEST_WRITER.waitForTraces(1)
@@ -87,7 +90,7 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-            "$Tags.PEER_PORT.key" TCP_PORT
+            "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
             defaultTags()
@@ -185,7 +188,7 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "elasticsearch.request.indices" indexName
             "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-            "$Tags.PEER_PORT.key" TCP_PORT
+            "$Tags.PEER_PORT.key" tcpPort
             defaultTags()
           }
         }
@@ -203,7 +206,7 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "elasticsearch.request" "ClusterHealthRequest"
             "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-            "$Tags.PEER_PORT.key" TCP_PORT
+            "$Tags.PEER_PORT.key" tcpPort
             defaultTags()
           }
         }
@@ -219,7 +222,7 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-            "$Tags.PEER_PORT.key" TCP_PORT
+            "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -257,7 +260,7 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-            "$Tags.PEER_PORT.key" TCP_PORT
+            "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -277,7 +280,7 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-            "$Tags.PEER_PORT.key" TCP_PORT
+            "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName

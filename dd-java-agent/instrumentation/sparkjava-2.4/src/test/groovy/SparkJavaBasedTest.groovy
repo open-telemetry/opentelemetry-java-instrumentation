@@ -5,6 +5,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import spark.Spark
 import spark.embeddedserver.jetty.JettyHandler
+import spock.lang.Shared
 
 class SparkJavaBasedTest extends AgentTestRunner {
 
@@ -12,7 +13,9 @@ class SparkJavaBasedTest extends AgentTestRunner {
     System.setProperty("dd.integration.jetty.enabled", "true")
     System.setProperty("dd.integration.sparkjava.enabled", "true")
   }
-  static final int PORT = TestUtils.randomOpenPort()
+
+  @Shared
+  int port
 
   OkHttpClient client = new OkHttpClient.Builder()
   // Uncomment when debugging:
@@ -22,7 +25,8 @@ class SparkJavaBasedTest extends AgentTestRunner {
     .build()
 
   def setupSpec() {
-    TestSparkJavaApplication.initSpark(PORT)
+    port = TestUtils.randomOpenPort()
+    TestSparkJavaApplication.initSpark(port)
   }
 
   def cleanupSpec() {
@@ -32,26 +36,26 @@ class SparkJavaBasedTest extends AgentTestRunner {
   def "valid response"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$PORT/")
+      .url("http://localhost:$port/")
       .get()
       .build()
     def response = client.newCall(request).execute()
 
     expect:
-    PORT != 0
+    port != 0
     response.body().string() == "Hello World"
   }
 
   def "valid response with registered trace"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$PORT/")
+      .url("http://localhost:$port/")
       .get()
       .build()
     def response = client.newCall(request).execute()
 
     expect:
-    PORT != 0
+    port != 0
     response.body().string() == "Hello World"
 
     and:
@@ -63,7 +67,7 @@ class SparkJavaBasedTest extends AgentTestRunner {
   def "generates spans"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$PORT/param/asdf1234")
+      .url("http://localhost:$port/param/asdf1234")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -83,7 +87,7 @@ class SparkJavaBasedTest extends AgentTestRunner {
     !context.getErrorFlag()
     context.parentId == 0
     def tags = context.tags
-    tags["http.url"] == "http://localhost:$PORT/param/asdf1234"
+    tags["http.url"] == "http://localhost:$port/param/asdf1234"
     tags["http.method"] == "GET"
     tags["span.kind"] == "server"
     tags["span.type"] == "web"

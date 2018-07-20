@@ -16,19 +16,22 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     System.setProperty("dd.integration.elasticsearch.enabled", "true")
   }
 
-  static final int HTTP_PORT = TestUtils.randomOpenPort()
-  static final int TCP_PORT = TestUtils.randomOpenPort()
-
   @Shared
-  static Node testNode
-  static File esWorkingDir
+  int httpPort
+  @Shared
+  int tcpPort
+  @Shared
+  Node testNode
+  @Shared
+  File esWorkingDir
 
   def client = testNode.client()
 
   def setupSpec() {
-    esWorkingDir = File.createTempFile("test-es-working-dir-", "")
-    esWorkingDir.delete()
-    esWorkingDir.mkdir()
+    httpPort = TestUtils.randomOpenPort()
+    tcpPort = TestUtils.randomOpenPort()
+
+    esWorkingDir = File.createTempDir("test-es-working-dir-", "")
     esWorkingDir.deleteOnExit()
     println "ES work dir: $esWorkingDir"
 
@@ -36,8 +39,8 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       .put("path.home", esWorkingDir.path)
       // Since we use listeners to close spans this should make our span closing deterministic which is good for tests
       .put("thread_pool.listener.size", 1)
-      .put("http.port", HTTP_PORT)
-      .put("transport.tcp.port", TCP_PORT)
+      .put("http.port", httpPort)
+      .put("transport.tcp.port", tcpPort)
       .build()
     testNode = NodeBuilder.newInstance().local(true).clusterName("test-cluster").settings(settings).build()
     testNode.start()

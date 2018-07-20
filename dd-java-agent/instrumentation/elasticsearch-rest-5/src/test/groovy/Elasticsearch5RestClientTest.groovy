@@ -24,27 +24,30 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
     System.setProperty("dd.integration.elasticsearch.enabled", "true")
   }
 
-  static final int HTTP_PORT = TestUtils.randomOpenPort()
-  static final int TCP_PORT = TestUtils.randomOpenPort()
-
   @Shared
-  static Node testNode
-  static File esWorkingDir
+  int httpPort
+  @Shared
+  int tcpPort
+  @Shared
+  Node testNode
+  @Shared
+  File esWorkingDir
 
   @Shared
   static RestClient client
 
   def setupSpec() {
-    esWorkingDir = File.createTempFile("test-es-working-dir-", "")
-    esWorkingDir.delete()
-    esWorkingDir.mkdir()
+    httpPort = TestUtils.randomOpenPort()
+    tcpPort = TestUtils.randomOpenPort()
+
+    esWorkingDir = File.createTempDir("test-es-working-dir-", "")
     esWorkingDir.deleteOnExit()
     println "ES work dir: $esWorkingDir"
 
     def settings = Settings.builder()
       .put("path.home", esWorkingDir.path)
-      .put("http.port", HTTP_PORT)
-      .put("transport.tcp.port", TCP_PORT)
+      .put("http.port", httpPort)
+      .put("transport.tcp.port", tcpPort)
       .put("transport.type", "netty3")
       .put("http.type", "netty3")
       .put(CLUSTER_NAME_SETTING.getKey(), "test-cluster")
@@ -52,7 +55,7 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
     testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
     testNode.start()
 
-    client = RestClient.builder(new HttpHost("localhost", HTTP_PORT))
+    client = RestClient.builder(new HttpHost("localhost", httpPort))
       .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
       .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
       @Override
@@ -95,7 +98,7 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_URL.key" "_cluster/health"
             "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" HTTP_PORT
+            "$Tags.PEER_PORT.key" httpPort
             defaultTags()
           }
         }
