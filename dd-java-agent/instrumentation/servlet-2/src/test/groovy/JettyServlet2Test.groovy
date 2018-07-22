@@ -1,6 +1,7 @@
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.writer.ListWriter
@@ -31,23 +32,18 @@ class JettyServlet2Test extends AgentTestRunner {
   // Jetty needs this to ensure consistent ordering for async.
   CountDownLatch latch = new CountDownLatch(1)
 
-  int port
-
-  OkHttpClient client = new OkHttpClient.Builder()
+  OkHttpClient client = OkHttpUtils.clientBuilder()
     .addNetworkInterceptor(new Interceptor() {
-    @Override
-    Response intercept(Interceptor.Chain chain) throws IOException {
-      def response = chain.proceed(chain.request())
-      JettyServlet2Test.this.latch.await(10, TimeUnit.SECONDS) // don't block forever or test never fails.
-      return response
-    }
-  })
-  // Uncomment when debugging:
-  //  .connectTimeout(1, TimeUnit.HOURS)
-  //  .writeTimeout(1, TimeUnit.HOURS)
-  //  .readTimeout(1, TimeUnit.HOURS)
+      @Override
+      Response intercept(Interceptor.Chain chain) throws IOException {
+        def response = chain.proceed(chain.request())
+        latch.await(30, TimeUnit.SECONDS) // don't block forever or test never fails.
+        return response
+      }
+    })
     .build()
 
+  int port
   private Server jettyServer
   private ServletContextHandler servletContext
 

@@ -1,6 +1,7 @@
 import com.google.common.io.Files
 import datadog.opentracing.DDTracer
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.common.writer.ListWriter
@@ -18,14 +19,9 @@ import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class TomcatServlet3Test extends AgentTestRunner {
 
-  int port
-  OkHttpClient client = new OkHttpClient.Builder()
-  // Uncomment when debugging:
-//    .connectTimeout(1, TimeUnit.HOURS)
-//    .writeTimeout(1, TimeUnit.HOURS)
-//    .readTimeout(1, TimeUnit.HOURS)
-    .build()
+  OkHttpClient client = OkHttpUtils.client()
 
+  int port
   Tomcat tomcatServer
   Context appContext
 

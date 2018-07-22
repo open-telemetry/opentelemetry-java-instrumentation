@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
@@ -34,12 +35,7 @@ class Netty41ServerTest extends AgentTestRunner {
     System.setProperty("dd.integration.netty.enabled", "true")
   }
 
-  OkHttpClient client = new OkHttpClient.Builder()
-  // Uncomment when debugging:
-//    .connectTimeout(1, TimeUnit.HOURS)
-//    .writeTimeout(1, TimeUnit.HOURS)
-//    .readTimeout(1, TimeUnit.HOURS)
-    .build()
+  OkHttpClient client = OkHttpUtils.client()
 
   def "test server request/response"() {
     setup:

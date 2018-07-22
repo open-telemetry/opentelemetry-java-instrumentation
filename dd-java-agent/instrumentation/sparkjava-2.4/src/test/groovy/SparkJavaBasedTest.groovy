@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import okhttp3.OkHttpClient
@@ -17,12 +18,7 @@ class SparkJavaBasedTest extends AgentTestRunner {
   @Shared
   int port
 
-  OkHttpClient client = new OkHttpClient.Builder()
-  // Uncomment when debugging:
-//    .connectTimeout(1, TimeUnit.HOURS)
-//    .writeTimeout(1, TimeUnit.HOURS)
-//    .readTimeout(1, TimeUnit.HOURS)
-    .build()
+  OkHttpClient client = OkHttpUtils.client()
 
   def setupSpec() {
     port = TestUtils.randomOpenPort()

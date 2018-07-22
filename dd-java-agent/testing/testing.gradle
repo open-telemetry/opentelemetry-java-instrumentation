@@ -5,7 +5,8 @@ minimumInstructionCoverage = 0.6
 excludedClassesConverage += [
   'datadog.trace.agent.test.*Assert',
   'datadog.trace.agent.test.AgentTestRunner.ErrorCountingListener',
-  'datadog.trace.agent.test.TestUtils'
+  'datadog.trace.agent.test.TestUtils',
+  'datadog.trace.agent.test.OkHttpUtils'
 ]
 
 dependencies {
@@ -16,6 +17,8 @@ dependencies {
   compile deps.spock
   compile deps.testLogging
   compile deps.guava
+
+  compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.10.0'
 
   compile project(':dd-trace-ot')
   compile project(':dd-java-agent:agent-tooling')

@@ -4,6 +4,7 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.asynchttpclient.AsyncHttpClient
+import org.asynchttpclient.DefaultAsyncHttpClientConfig
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -13,6 +14,7 @@ import spock.lang.Shared
 
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import java.util.concurrent.TimeUnit
 
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static org.asynchttpclient.Dsl.asyncHttpClient
@@ -27,11 +29,12 @@ class Netty40ClientTest extends AgentTestRunner {
   @Shared
   Server server
   @Shared
-  AsyncHttpClient asyncHttpClient = asyncHttpClient()
-//    DefaultAsyncHttpClientConfig.Builder.newInstance().setRequestTimeout(Integer.MAX_VALUE).build())
+  def clientConfig = DefaultAsyncHttpClientConfig.Builder.newInstance().setRequestTimeout(TimeUnit.MINUTES.toMillis(1).toInteger())
+  @Shared
+  AsyncHttpClient asyncHttpClient = asyncHttpClient(clientConfig)
+
   @Shared
   def headers = new MultiMap()
-
 
   def setupSpec() {
     port = TestUtils.randomOpenPort()
