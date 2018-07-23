@@ -1,5 +1,6 @@
 import com.google.common.io.Files
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import io.netty.handler.codec.http.HttpResponseStatus
@@ -44,12 +45,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
   @Shared
   String expectedJspClassFilesDir = "/work/Tomcat/localhost/$jspWebappContext/org/apache/jsp/"
 
-  OkHttpClient client = new OkHttpClient.Builder()
-  // Uncomment when debugging:
-//    .connectTimeout(1, TimeUnit.HOURS)
-//    .writeTimeout(1, TimeUnit.HOURS)
-//    .readTimeout(1, TimeUnit.HOURS)
-    .build()
+  OkHttpClient client = OkHttpUtils.client()
 
   def setupSpec() {
     port = TestUtils.randomOpenPort()

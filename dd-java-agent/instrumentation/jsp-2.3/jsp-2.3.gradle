@@ -41,8 +41,6 @@ dependencies {
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '7.0.37'
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-logging-juli', version: '7.0.37'
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '7.0.37'
-
-  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.10.0'
 }
 
 configurations.latestDepTestCompile {

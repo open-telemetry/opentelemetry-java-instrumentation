@@ -1,5 +1,6 @@
 import datadog.opentracing.scopemanager.ContextualScopeManager
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.ratpack.impl.RatpackScopeManager
 import io.opentracing.Scope
@@ -19,12 +20,8 @@ class RatpackTest extends AgentTestRunner {
   static {
     System.setProperty("dd.integration.ratpack.enabled", "true")
   }
-  OkHttpClient client = new OkHttpClient.Builder()
-  // Uncomment when debugging:
-//    .connectTimeout(1, TimeUnit.HOURS)
-//    .writeTimeout(1, TimeUnit.HOURS)
-//    .readTimeout(1, TimeUnit.HOURS)
-    .build()
+
+  OkHttpClient client = OkHttpUtils.client()
 
 
   def "test path call"() {
