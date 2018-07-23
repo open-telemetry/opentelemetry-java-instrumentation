@@ -50,7 +50,7 @@ public final class LettuceClientInstrumentation extends Instrumenter.Default {
             .and(nameStartsWith("connect"))
             .and(nameEndsWith("Async"))
             .and(takesArgument(1, named("io.lettuce.core.RedisURI"))),
-        // Cannot reference class directly here because this would lead to class load failure on Java7
+        // Cannot reference class directly here because it would lead to class load failure on Java7
         PACKAGE + ".ConnectionFutureAdvice");
     return transformers;
   }

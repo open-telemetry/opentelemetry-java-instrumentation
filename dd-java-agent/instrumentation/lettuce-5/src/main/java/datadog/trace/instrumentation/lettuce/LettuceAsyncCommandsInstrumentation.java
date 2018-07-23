@@ -43,7 +43,7 @@ public class LettuceAsyncCommandsInstrumentation extends Instrumenter.Default {
         isMethod()
             .and(named("dispatch"))
             .and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
-        // Cannot reference class directly here because this would lead to class load failure on Java7
+        // Cannot reference class directly here because it would lead to class load failure on Java7
         PACKAGE + ".LettuceAsyncCommandsAdvice");
     return transformers;
   }
