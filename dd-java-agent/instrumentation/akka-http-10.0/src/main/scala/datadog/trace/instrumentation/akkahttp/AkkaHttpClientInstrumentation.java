@@ -15,6 +15,7 @@ import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
+import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import io.opentracing.tag.Tags;
@@ -79,31 +80,45 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request) {
-      Scope scope =
+      Tracer.SpanBuilder builder =
           GlobalTracer.get()
               .buildSpan("akka-http.request")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-              .withTag(Tags.HTTP_METHOD.getKey(), request.method().value())
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
-              .withTag(Tags.COMPONENT.getKey(), "akka-http-client")
-              .withTag(Tags.HTTP_URL.getKey(), request.getUri().toString())
-              .startActive(false);
+              .withTag(Tags.COMPONENT.getKey(), "akka-http-client");
+      if (request != null) {
+        builder =
+            builder
+                .withTag(Tags.HTTP_METHOD.getKey(), request.method().value())
+                .withTag(Tags.HTTP_URL.getKey(), request.getUri().toString());
+      }
+      Scope scope = builder.startActive(false);
 
-      AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
-      GlobalTracer.get().inject(scope.span().context(), Format.Builtin.HTTP_HEADERS, headers);
-      // Request is immutable, so we have to assign new value once we update headers
-      request = headers.getRequest();
+      if (request != null) {
+        AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
+        GlobalTracer.get().inject(scope.span().context(), Format.Builtin.HTTP_HEADERS, headers);
+        // Request is immutable, so we have to assign new value once we update headers
+        request = headers.getRequest();
+      }
 
       return scope;
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(value = 0) final HttpRequest request,
         @Advice.This final HttpExt thiz,
         @Advice.Return final Future<HttpResponse> responseFuture,
-        @Advice.Enter final Scope scope) {
-      responseFuture.onComplete(new OnCompleteHandler(scope.span()), thiz.system().dispatcher());
+        @Advice.Enter final Scope scope,
+        @Advice.Thrown final Throwable throwable) {
+      Span span = scope.span();
+      if (throwable == null) {
+        responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
+      } else {
+        Tags.ERROR.set(span, Boolean.TRUE);
+        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+        span.finish();
+      }
       scope.close();
     }
   }

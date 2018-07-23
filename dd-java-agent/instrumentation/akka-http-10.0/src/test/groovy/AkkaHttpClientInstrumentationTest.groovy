@@ -153,6 +153,36 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     }
   }
 
+  def "singleRequest exception trace" () {
+    when:
+    // Passing null causes NPE in singleRequest
+    Http.get(system).singleRequest(null, materializer)
+
+    then:
+    thrown NullPointerException
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          parent()
+          serviceName "unnamed-java-app"
+          operationName "akka-http.request"
+          resourceName "akka-http.request"
+          errored true
+          tags {
+            defaultTags()
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$Tags.COMPONENT.key" "akka-http-client"
+            "$Tags.ERROR.key" true
+            errorTags(NullPointerException)
+          }
+        }
+      }
+    }
+
+  }
+
+
   def "#route pool request trace" () {
     setup:
     def url = server.address.resolve("/" + route).toURL()
