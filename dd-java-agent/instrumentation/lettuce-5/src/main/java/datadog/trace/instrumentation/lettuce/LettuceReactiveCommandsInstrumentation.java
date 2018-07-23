@@ -49,7 +49,7 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
             .and(named("createMono"))
             .and(takesArgument(0, named("java.util.function.Supplier")))
             .and(returns(named("reactor.core.publisher.Mono"))),
-        // Cannot reference class directly here because this would lead to class load failure on Java7
+        // Cannot reference class directly here because it would lead to class load failure on Java7
         PACKAGE + ".rx.LettuceMonoCreationAdvice");
     transformers.put(
         isMethod()
@@ -57,7 +57,7 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
             .and(nameEndsWith("Flux"))
             .and(takesArgument(0, named("java.util.function.Supplier")))
             .and(returns(named(("reactor.core.publisher.Flux")))),
-        // Cannot reference class directly here because this would lead to class load failure on Java7
+        // Cannot reference class directly here because it would lead to class load failure on Java7
         PACKAGE + ".rx.LettuceFluxCreationAdvice");
 
     return transformers;
