@@ -15,7 +15,7 @@ class PendingTraceTest extends Specification {
   def traceId = System.identityHashCode(this)
 
   @Subject
-  PendingTrace trace = new PendingTrace(tracer, traceId)
+  PendingTrace trace = new PendingTrace(tracer, traceId, [:])
 
   DDSpan rootSpan = SpanFactory.newSpanOf(trace)
 
@@ -130,7 +130,7 @@ class PendingTraceTest extends Specification {
 
   def "register span to wrong trace fails"() {
     setup:
-    def otherTrace = new PendingTrace(tracer, traceId - 10)
+    def otherTrace = new PendingTrace(tracer, traceId - 10, [:])
     otherTrace.registerSpan(new DDSpan(0, rootSpan.context()))
 
     expect:
@@ -141,7 +141,7 @@ class PendingTraceTest extends Specification {
 
   def "add span to wrong trace fails"() {
     setup:
-    def otherTrace = new PendingTrace(tracer, traceId - 10)
+    def otherTrace = new PendingTrace(tracer, traceId - 10, [:])
     rootSpan.finish()
     otherTrace.addSpan(rootSpan)
 

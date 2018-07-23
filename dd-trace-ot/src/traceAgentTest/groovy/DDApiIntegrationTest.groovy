@@ -28,7 +28,7 @@ class DDApiIntegrationTest {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new PendingTrace(TRACER, 1L),
+      new PendingTrace(TRACER, 1L, [:]),
       TRACER)
 
     def api = new DDApi(DDAgentWriter.DEFAULT_HOSTNAME, DDAgentWriter.DEFAULT_PORT, v4())

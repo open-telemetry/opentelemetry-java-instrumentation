@@ -56,13 +56,31 @@ class SpanDecoratorTest extends Specification {
     "other-service" | "other-service" | ["some-service": "new-service"]
   }
 
+  def "default or configured service name can be remapped without setting tag"() {
+    setup:
+    tracer = new DDTracer(serviceName, new LoggingWriter(), new AllSampler(), emptyMap(), mapping, emptyMap())
+
+    when:
+    def span = tracer.buildSpan("some span").start()
+    span.finish()
+
+    then:
+    span.serviceName == expected
+
+    where:
+    serviceName                     | expected                        | mapping
+    UNASSIGNED_DEFAULT_SERVICE_NAME | UNASSIGNED_DEFAULT_SERVICE_NAME | ["other-service-name": "other-service"]
+    UNASSIGNED_DEFAULT_SERVICE_NAME | "new-service"                   | [(UNASSIGNED_DEFAULT_SERVICE_NAME): "new-service"]
+    "other-service-name"            | "other-service"                 | ["other-service-name": "other-service"]
+  }
+
   def "set service name from servlet.context with context '#context'"() {
     when:
     span.setTag(DDTags.SERVICE_NAME, serviceName)
     span.setTag("servlet.context", context)
 
     then:
-    span.getServiceName() == expected
+    span.serviceName == expected
 
     where:
     context         | serviceName                     | expected
@@ -76,21 +94,30 @@ class SpanDecoratorTest extends Specification {
     "other-context" | "my-service"                    | "my-service"
   }
 
-  def "default or configured service name can be remapped without setting tag"() {
+  def "set service name from servlet.context with context '#context' for service #serviceName"() {
     setup:
     tracer = new DDTracer(serviceName, new LoggingWriter(), new AllSampler(), emptyMap(), mapping, emptyMap())
 
     when:
     def span = tracer.buildSpan("some span").start()
+    span.setTag("servlet.context", context)
+    span.finish()
 
     then:
     span.serviceName == expected
 
     where:
-    serviceName                     | expected                        | mapping
-    UNASSIGNED_DEFAULT_SERVICE_NAME | UNASSIGNED_DEFAULT_SERVICE_NAME | ["other-service-name": "other-service"]
-    UNASSIGNED_DEFAULT_SERVICE_NAME | "new-service"                   | [(UNASSIGNED_DEFAULT_SERVICE_NAME): "new-service"]
-    "other-service-name"            | "other-service"                 | ["other-service-name": "other-service"]
+    context         | serviceName                     | expected
+    "/"             | UNASSIGNED_DEFAULT_SERVICE_NAME | "new-service"
+    ""              | UNASSIGNED_DEFAULT_SERVICE_NAME | "new-service"
+    "/some-context" | UNASSIGNED_DEFAULT_SERVICE_NAME | "some-context"
+    "other-context" | UNASSIGNED_DEFAULT_SERVICE_NAME | "other-context"
+    "/"             | "my-service"                    | "new-service"
+    ""              | "my-service"                    | "new-service"
+    "/some-context" | "my-service"                    | "new-service"
+    "other-context" | "my-service"                    | "new-service"
+
+    mapping = [(serviceName): "new-service"]
   }
 
   def "set operation name"() {

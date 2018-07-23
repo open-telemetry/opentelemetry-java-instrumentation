@@ -509,7 +509,7 @@ public class DDTracer implements io.opentracing.Tracer {
         if (!ddsc.getTags().isEmpty()) {
           tags.putAll(ddsc.getTags());
         }
-        parentTrace = new PendingTrace(DDTracer.this, traceId);
+        parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
         samplingPriority = ddsc.getSamplingPriority();
 
         // Start a new trace
@@ -517,16 +517,12 @@ public class DDTracer implements io.opentracing.Tracer {
         traceId = generateNewId();
         parentSpanId = 0L;
         baggage = null;
-        parentTrace = new PendingTrace(DDTracer.this, traceId);
+        parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
         samplingPriority = PrioritySampling.UNSET;
       }
 
       if (serviceName == null) {
         serviceName = DDTracer.this.serviceName;
-      }
-
-      if (serviceNameMappings.containsKey(serviceName)) {
-        serviceName = serviceNameMappings.get(serviceName);
       }
 
       final String operationName =
