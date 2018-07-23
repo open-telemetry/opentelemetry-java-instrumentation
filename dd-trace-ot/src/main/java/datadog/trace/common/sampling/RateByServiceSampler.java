@@ -1,4 +1,3 @@
-
 package datadog.trace.common.sampling;
 
 import com.fasterxml.jackson.databind.JsonNode;

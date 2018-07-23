@@ -155,7 +155,8 @@ public class TracingAgent {
 
   private static ClassLoader getPlatformClassLoader()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    // must invoke ClassLoader.getPlatformClassLoader by reflection to remain compatible with java 7 + 8.
+    // must invoke ClassLoader.getPlatformClassLoader by reflection to remain compatible with java 7
+    // + 8.
     final Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
     return (ClassLoader) method.invoke(null);
   }

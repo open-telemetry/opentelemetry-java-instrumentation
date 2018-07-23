@@ -14,7 +14,9 @@ import java.util.concurrent.TimeUnit;
  * <p>The JDK provides two clocks:
  * <li>one in nanoseconds, for precision, but it can only use to measure durations
  * <li>one in milliseconds, for accuracy, useful to provide epoch time
+ *
  *     <p>
+ *
  *     <p>At this time, we are using a millis precision (converted to micros) in order to guarantee
  *     consistency between the span start times and the durations
  */

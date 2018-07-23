@@ -23,7 +23,8 @@ public class LettuceFluxCreationAdvice {
     LettuceFluxTerminationRunnable handler =
         new LettuceFluxTerminationRunnable(commandName, finishSpanOnClose);
     publisher = publisher.doOnSubscribe(handler.getOnSubscribeConsumer());
-    // don't register extra callbacks to finish the spans if the command being instrumented is one of those that return
+    // don't register extra callbacks to finish the spans if the command being instrumented is one
+    // of those that return
     // Mono<Void> (In here a flux is created first and then converted to Mono<Void>)
     if (!finishSpanOnClose) {
       publisher = publisher.doOnEach(handler);

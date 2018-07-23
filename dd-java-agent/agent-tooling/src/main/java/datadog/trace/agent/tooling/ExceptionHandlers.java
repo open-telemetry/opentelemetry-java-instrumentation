@@ -32,7 +32,8 @@ public class ExceptionHandlers {
             public Size apply(final MethodVisitor mv, final Implementation.Context context) {
               // writes the following bytecode:
               // try {
-              //   org.slf4j.LoggerFactory.getLogger((Class)ExceptionLogger.class).debug("exception in instrumentation", t);
+              //   org.slf4j.LoggerFactory.getLogger((Class)ExceptionLogger.class)
+              //     .debug("exception in instrumentation", t);
               // } catch (Throwable t2) {
               // }
               final Label logStart = new Label();
@@ -63,11 +64,13 @@ public class ExceptionHandlers {
               mv.visitLabel(logEnd);
               mv.visitJumpInsn(Opcodes.GOTO, handlerExit);
 
-              // if the runtime can't reach our ExceptionHandler or logger, silently eat the exception
+              // if the runtime can't reach our ExceptionHandler or logger,
+              //   silently eat the exception
               mv.visitLabel(eatException);
               mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] {"java/lang/Throwable"});
               mv.visitInsn(Opcodes.POP);
-              // mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Throwable", "printStackTrace", "()V", false);
+              // mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Throwable",
+              //    "printStackTrace", "()V", false);
 
               mv.visitLabel(handlerExit);
               mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);

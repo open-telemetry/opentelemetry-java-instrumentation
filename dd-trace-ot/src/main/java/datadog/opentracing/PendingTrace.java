@@ -31,7 +31,8 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   private final DDTracer tracer;
   private final long traceId;
 
-  // TODO: consider moving these time fields into DDTracer to ensure that traces have precise relative time
+  // TODO: consider moving these time fields into DDTracer to ensure that traces have precise
+  // relative time
   /** Trace start time in nano seconds measured up to a millisecond accuracy */
   private final long startTimeNano;
   /** Nano second ticks value at trace start */

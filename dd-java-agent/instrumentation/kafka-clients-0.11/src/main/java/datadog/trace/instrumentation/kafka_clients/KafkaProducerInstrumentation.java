@@ -98,7 +98,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
                 Format.Builtin.TEXT_MAP,
                 new TextMapInjectAdapter(record.headers()));
       } catch (final IllegalStateException e) {
-        //headers must be read-only from reused record. try again with new one.
+        // headers must be read-only from reused record. try again with new one.
         record =
             new ProducerRecord<>(
                 record.topic(),

@@ -27,7 +27,8 @@ public class HystrixCommandInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher typeMatcher() {
-    // Not adding a version restriction because this should work with any version and add some benefit.
+    // Not adding a version restriction because this should work with any version and add some
+    // benefit.
     return not(isInterface()).and(hasSuperType(named("com.netflix.hystrix.HystrixCommand")));
   }
 

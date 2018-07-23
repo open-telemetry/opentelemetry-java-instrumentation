@@ -41,7 +41,7 @@ public final class WrappedRequestSpec implements RequestSpec {
    *
    */
   private Action<? super RequestSpec> redirectHandler(ReceivedResponse response) {
-    //handler.handleReceive(response.getStatusCode(), null, span.get());
+    // handler.handleReceive(response.getStatusCode(), null, span.get());
     return (s) -> new WrappedRequestSpec(s, tracer, scope, spanRef);
   }
 

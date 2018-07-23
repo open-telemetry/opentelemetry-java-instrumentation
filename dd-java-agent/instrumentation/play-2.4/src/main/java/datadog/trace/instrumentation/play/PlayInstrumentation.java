@@ -110,7 +110,8 @@ public final class PlayInstrumentation extends Instrumenter.Default {
         @Advice.Thrown final Throwable throwable,
         @Advice.Argument(0) final Request req,
         @Advice.Return(readOnly = false) Future<Result> responseFuture) {
-      // more about routes here: https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md
+      // more about routes here:
+      // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md
       final Option pathOption = req.tags().get("ROUTE_PATTERN");
       if (!pathOption.isEmpty()) {
         final String path = (String) pathOption.get();

@@ -77,13 +77,12 @@ public abstract class AgentTestRunner extends Specification {
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG);
 
-    WRITER_PHASER.register();
     TEST_WRITER =
         new ListWriter() {
           @Override
           public boolean add(final List<DDSpan> trace) {
             final boolean result = super.add(trace);
-            WRITER_PHASER.arrive();
+            WRITER_PHASER.arriveAndDeregister();
             return result;
           }
         };
@@ -137,6 +136,7 @@ public abstract class AgentTestRunner extends Specification {
   @Before
   public void beforeTest() {
     TEST_WRITER.start();
+    WRITER_PHASER.register();
     INSTRUMENTATION_ERROR_COUNT.set(0);
     ERROR_LISTENER.activateTest(this);
     assert getTestTracer().activeSpan() == null;
@@ -159,11 +159,11 @@ public abstract class AgentTestRunner extends Specification {
   public static class ErrorCountingListener implements AgentBuilder.Listener {
     private static final List<AgentTestRunner> activeTests = new CopyOnWriteArrayList<>();
 
-    public void activateTest(AgentTestRunner testRunner) {
+    public void activateTest(final AgentTestRunner testRunner) {
       activeTests.add(testRunner);
     }
 
-    public void deactivateTest(AgentTestRunner testRunner) {
+    public void deactivateTest(final AgentTestRunner testRunner) {
       activeTests.remove(testRunner);
     }
 
@@ -198,7 +198,7 @@ public abstract class AgentTestRunner extends Specification {
         final JavaModule module,
         final boolean loaded,
         final Throwable throwable) {
-      for (AgentTestRunner testRunner : activeTests) {
+      for (final AgentTestRunner testRunner : activeTests) {
         if (testRunner.onInstrumentationError(typeName, classLoader, module, loaded, throwable)) {
           INSTRUMENTATION_ERROR_COUNT.incrementAndGet();
           break;

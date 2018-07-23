@@ -1,0 +1,74 @@
+apply plugin: 'version-scan'
+
+versionScan {
+  group = "io.grpc"
+  module = "grpc-core"
+  versions = "[1.5.0,)"
+  verifyPresent = [
+    "io.grpc.InternalServerInterceptors": null,
+  ]
+}
+
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.6'
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+apply plugin: 'idea'
+apply plugin: 'com.google.protobuf'
+
+def grpcVersion = '1.5.0'
+protobuf {
+  protoc {
+    // Download compiler rather than using locally installed version:
+    artifact = 'com.google.protobuf:protoc:3.3.0'
+  }
+  plugins {
+    grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" }
+  }
+  generateProtoTasks {
+    all()*.plugins { grpc {} }
+  }
+}
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'io.grpc', name: 'grpc-core', version: grpcVersion
+
+  compile project(':dd-trace-ot')
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  compile deps.autoservice
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+
+  testCompile group: 'io.grpc', name: 'grpc-netty', version: grpcVersion
+  testCompile group: 'io.grpc', name: 'grpc-protobuf', version: grpcVersion
+  testCompile group: 'io.grpc', name: 'grpc-stub', version: grpcVersion
+
+  latestDepTestCompile sourceSets.test.output // include the protobuf generated classes
+}
+
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'io.grpc', name: 'grpc-netty', version: '+'
+    force group: 'io.grpc', name: 'grpc-protobuf', version: '+'
+    force group: 'io.grpc', name: 'grpc-stub', version: '+'
+  }
+}
