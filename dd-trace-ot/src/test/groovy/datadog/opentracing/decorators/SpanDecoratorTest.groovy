@@ -5,12 +5,14 @@ import datadog.opentracing.DDTracer
 import datadog.opentracing.SpanFactory
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
+import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.writer.LoggingWriter
 import io.opentracing.tag.StringTag
 import io.opentracing.tag.Tags
 import spock.lang.Specification
 
 import static datadog.opentracing.DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME
+import static java.util.Collections.emptyMap
 
 class SpanDecoratorTest extends Specification {
   def tracer = new DDTracer(new LoggingWriter())
@@ -72,6 +74,23 @@ class SpanDecoratorTest extends Specification {
     ""              | "my-service"                    | "my-service"
     "/some-context" | "my-service"                    | "my-service"
     "other-context" | "my-service"                    | "my-service"
+  }
+
+  def "default or configured service name can be remapped without setting tag"() {
+    setup:
+    tracer = new DDTracer(serviceName, new LoggingWriter(), new AllSampler(), emptyMap(), mapping, emptyMap())
+
+    when:
+    def span = tracer.buildSpan("some span").start()
+
+    then:
+    span.serviceName == expected
+
+    where:
+    serviceName                     | expected                        | mapping
+    UNASSIGNED_DEFAULT_SERVICE_NAME | UNASSIGNED_DEFAULT_SERVICE_NAME | ["other-service-name": "other-service"]
+    UNASSIGNED_DEFAULT_SERVICE_NAME | "new-service"                   | [(UNASSIGNED_DEFAULT_SERVICE_NAME): "new-service"]
+    "other-service-name"            | "other-service"                 | ["other-service-name": "other-service"]
   }
 
   def "set operation name"() {
