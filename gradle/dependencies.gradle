@@ -15,7 +15,7 @@ ext {
     junit      : "4.12",
     logback    : "1.2.3",
     lombok     : "1.18.0",
-    bytebuddy  : "1.8.12",
+    bytebuddy  : "1.8.14",
   ]
 
   deps = [
