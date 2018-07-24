@@ -47,6 +47,7 @@ public class ClassLoaderMatcher {
       final Set<String> classesToSkip = new HashSet<String>();
       classesToSkip.add("org.codehaus.groovy.runtime.callsite.CallSiteClassLoader");
       classesToSkip.add("sun.reflect.DelegatingClassLoader");
+      classesToSkip.add("jdk.internal.reflect.DelegatingClassLoader");
       classesToSkip.add(DatadogClassLoader.class.getName());
       CLASSLOADER_CLASSES_TO_SKIP = Collections.unmodifiableSet(classesToSkip);
     }
