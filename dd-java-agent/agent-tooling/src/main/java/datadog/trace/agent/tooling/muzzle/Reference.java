@@ -1,21 +1,15 @@
 package datadog.trace.agent.tooling.muzzle;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
-import static java.util.Collections.singletonList;
-
 import datadog.trace.agent.tooling.Utils;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import net.bytebuddy.description.type.TypeDefinition;
-import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
-import net.bytebuddy.pool.TypePool;
 
 /** An immutable reference to a jvm class. */
 public class Reference {
@@ -88,7 +82,7 @@ public class Reference {
 
     return new Reference(
         merge(sources, anotherReference.sources),
-        merge(flags, anotherReference.flags),
+        mergeFlags(flags, anotherReference.flags),
         className,
         superName,
         merge(interfaces, anotherReference.interfaces),
@@ -108,39 +102,6 @@ public class Reference {
     // TODO: Assert flags are non-contradictory and resolve
     // public > protected > package-private > private
     return merged;
-  }
-
-  /**
-   * Check this reference against a classloader's classpath.
-   *
-   * @param loader
-   * @return A list of mismatched sources. A list of size 0 means the reference matches the class.
-   */
-  public List<Mismatch> checkMatch(ClassLoader loader) {
-    if (loader == BOOTSTRAP_CLASSLOADER) {
-      throw new IllegalStateException("Cannot directly check against bootstrap classloader");
-    }
-    if (!onClasspath(className, loader)) {
-      return Collections.<Mismatch>singletonList(new Mismatch.MissingClass(sources.toArray(new Source[0]), className));
-    }
-    final List<Mismatch> mismatches = new ArrayList<>(0);
-    try {
-      UnloadedType typeOnClasspath = UnloadedType.of(className, loader);
-      for (Method requiredMethod : this.getMethods()) {
-        mismatches.addAll(typeOnClasspath.checkMatch(requiredMethod));
-      }
-    } catch (Exception e) {
-      // Shouldn't happen. Fail the reference check and add a mismatch for debug logging.
-      mismatches.add(new Mismatch.ReferenceCheckError(e));
-    }
-    return mismatches;
-  }
-
-  private boolean onClasspath(final String className, final ClassLoader loader) {
-    final String resourceName = Utils.getResourceName(className);
-    return loader.getResource(resourceName) != null
-        // we can also reach bootstrap classes
-        || Utils.getBootstrapProxy().getResource(resourceName) != null;
   }
 
   public static class Source {
@@ -212,9 +173,26 @@ public class Reference {
       }
     }
 
-    /**
-     * Fallback mismatch in case an unexpected exception occurs during reference checking.
-     */
+    public static class MissingFlag extends Mismatch {
+      final Flag expectedFlag;
+      final String classMethodOrFieldDesc;
+      final int foundAccess;
+
+      public MissingFlag(
+          Source[] sources, String classMethodOrFieldDesc, Flag expectedFlag, int foundAccess) {
+        super(sources);
+        this.classMethodOrFieldDesc = classMethodOrFieldDesc;
+        this.expectedFlag = expectedFlag;
+        this.foundAccess = foundAccess;
+      }
+
+      @Override
+      String getMismatchDetails() {
+        return classMethodOrFieldDesc + " requires flag " + expectedFlag + " found " + foundAccess;
+      }
+    }
+
+    /** Fallback mismatch in case an unexpected exception occurs during reference checking. */
     public static class ReferenceCheckError extends Mismatch {
       private final Exception referenceCheckExcetpion;
 
@@ -252,16 +230,131 @@ public class Reference {
   }
 
   /** Expected flag (or lack of flag) on a class, method, or field reference. */
-  public static enum Flag {
-    PUBLIC,
-    PACKAGE_OR_HIGHER,
-    PROTECTED_OR_HIGHER,
-    PRIVATE_OR_HIGHER,
-    NON_FINAL,
-    STATIC,
-    NON_STATIC,
-    INTERFACE,
-    NON_INTERFACE
+  public enum Flag {
+    PUBLIC {
+      @Override
+      public boolean supersedes(Flag anotherFlag) {
+        switch (anotherFlag) {
+          case PRIVATE_OR_HIGHER:
+          case PROTECTED_OR_HIGHER:
+          case PACKAGE_OR_HIGHER:
+            return true;
+          default:
+            return false;
+        }
+      }
+
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_PUBLIC & asmFlags) != 0;
+      }
+    },
+    PACKAGE_OR_HIGHER {
+      @Override
+      public boolean supersedes(Flag anotherFlag) {
+        return anotherFlag == PRIVATE_OR_HIGHER;
+      }
+
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_PUBLIC & asmFlags) != 0
+            || ((Opcodes.ACC_PRIVATE & asmFlags) == 0 && (Opcodes.ACC_PROTECTED & asmFlags) == 0);
+      }
+    },
+    PROTECTED_OR_HIGHER {
+      @Override
+      public boolean supersedes(Flag anotherFlag) {
+        return anotherFlag == PRIVATE_OR_HIGHER;
+      }
+
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_PUBLIC & asmFlags) != 0 || (Opcodes.ACC_PROTECTED & asmFlags) != 0;
+      }
+    },
+    PRIVATE_OR_HIGHER {
+      @Override
+      public boolean matches(int asmFlags) {
+        // you can't out-private a private
+        return true;
+      }
+    },
+    NON_FINAL {
+      @Override
+      public boolean contradicts(Flag anotherFlag) {
+        return anotherFlag == FINAL;
+      }
+
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_FINAL & asmFlags) == 0;
+      }
+    },
+    FINAL {
+      @Override
+      public boolean contradicts(Flag anotherFlag) {
+        return anotherFlag == NON_FINAL;
+      }
+
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_FINAL & asmFlags) != 0;
+      }
+    },
+    STATIC {
+      @Override
+      public boolean contradicts(Flag anotherFlag) {
+        return anotherFlag == NON_STATIC;
+      }
+
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_STATIC & asmFlags) != 0;
+      }
+    },
+    NON_STATIC {
+      @Override
+      public boolean contradicts(Flag anotherFlag) {
+        return anotherFlag == STATIC;
+      }
+
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_STATIC & asmFlags) == 0;
+      }
+    },
+    INTERFACE {
+      @Override
+      public boolean contradicts(Flag anotherFlag) {
+        return anotherFlag == NON_INTERFACE;
+      }
+
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_INTERFACE & asmFlags) != 0;
+      }
+    },
+    NON_INTERFACE {
+      @Override
+      public boolean contradicts(Flag anotherFlag) {
+        return anotherFlag == INTERFACE;
+      }
+
+      @Override
+      public boolean matches(int asmFlags) {
+        return (Opcodes.ACC_INTERFACE & asmFlags) == 0;
+      }
+    };
+
+    public boolean contradicts(Flag anotherFlag) {
+      return false;
+    }
+
+    public boolean supersedes(Flag anotherFlag) {
+      return false;
+    }
+
+    public abstract boolean matches(int asmFlags);
   }
 
   public static class Method {
@@ -272,16 +365,22 @@ public class Reference {
     private final List<Type> parameterTypes;
 
     public Method(String name, String descriptor) {
-      this(new Source[0], new Flag[0], name, Type.getMethodType(descriptor).getReturnType(), Type.getMethodType(descriptor).getArgumentTypes());
+      this(
+          new Source[0],
+          new Flag[0],
+          name,
+          Type.getMethodType(descriptor).getReturnType(),
+          Type.getMethodType(descriptor).getArgumentTypes());
     }
 
     public Method(
-      Source[] sources,
-      Flag[] flags,
-      String name,
-      Type returnType,
-      Type[] parameterTypes) {
-      this(new HashSet<>(Arrays.asList(sources)), new HashSet<>(Arrays.asList(flags)), name, returnType, Arrays.asList(parameterTypes));
+        Source[] sources, Flag[] flags, String name, Type returnType, Type[] parameterTypes) {
+      this(
+          new HashSet<>(Arrays.asList(sources)),
+          new HashSet<>(Arrays.asList(flags)),
+          name,
+          returnType,
+          Arrays.asList(parameterTypes));
     }
 
     public Method(
@@ -297,19 +396,30 @@ public class Reference {
       this.parameterTypes = parameterTypes;
     }
 
-    public Set<Source> getSources() { return sources; }
+    public Set<Source> getSources() {
+      return sources;
+    }
 
-    public Set<Flag> getFlags() { return flags; }
+    public Set<Flag> getFlags() {
+      return flags;
+    }
 
-    public String getName() { return name; }
+    public String getName() {
+      return name;
+    }
 
-    public Type getReturnType() { return returnType; }
+    public Type getReturnType() {
+      return returnType;
+    }
 
-    public List<Type> getParameterTypes() { return parameterTypes; }
+    public List<Type> getParameterTypes() {
+      return parameterTypes;
+    }
 
     public Method merge(Method anotherMethod) {
       if (!this.equals(anotherMethod)) {
-        throw new IllegalStateException("Cannot merge incompatible methods " + this + " <> " + anotherMethod);
+        throw new IllegalStateException(
+            "Cannot merge incompatible methods " + this + " <> " + anotherMethod);
       }
 
       final Set<Source> mergedSources = new HashSet<>();
@@ -327,7 +437,8 @@ public class Reference {
     public String toString() {
       // <init>()V
       // toString()Ljava/lang/String;
-      return name + Type.getMethodType(returnType, parameterTypes.toArray(new Type[0])).getDescriptor();
+      return name
+          + Type.getMethodType(returnType, parameterTypes.toArray(new Type[0])).getDescriptor();
     }
 
     @Override
@@ -413,7 +524,7 @@ public class Reference {
     }
 
     public Builder withFlag(Flag flag) {
-      // TODO
+      flags.add(flag);
       return this;
     }
 
@@ -422,7 +533,12 @@ public class Reference {
       return this;
     }
 
-    public Builder withMethod(Source[] sources, Flag[] methodFlags, String methodName, Type returnType, Type... methodArgs) {
+    public Builder withMethod(
+        Source[] sources,
+        Flag[] methodFlags,
+        String methodName,
+        Type returnType,
+        Type... methodArgs) {
       final Method method = new Method(sources, methodFlags, methodName, returnType, methodArgs);
       int existingIndex = methods.indexOf(method);
       if (existingIndex == -1) {
@@ -434,7 +550,14 @@ public class Reference {
     }
 
     public Reference build() {
-      return new Reference(sources, flags, className, superName, interfaces, new HashSet<>(fields), new HashSet<>(methods));
+      return new Reference(
+          sources,
+          flags,
+          className,
+          superName,
+          interfaces,
+          new HashSet<>(fields),
+          new HashSet<>(methods));
     }
   }
 }

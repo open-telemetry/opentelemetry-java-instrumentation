@@ -2,6 +2,7 @@ package datadog.trace.agent.tooling;
 
 import datadog.trace.bootstrap.DatadogClassLoader;
 import datadog.trace.bootstrap.DatadogClassLoader.BootstrapClassLoaderProxy;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 

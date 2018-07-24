@@ -13,6 +13,7 @@ public class TestClasses {
       a.b.aMethod("foo");
       a.b.aMethodWithPrimitives(false);
       a.b.aMethodWithArrays(new String[0]);
+      B.aStaticMethod();
     }
 
     public static class A {
@@ -20,9 +21,28 @@ public class TestClasses {
     }
 
     public static class B {
-      public String aMethod(String s) { return s; }
+      public String aMethod(String s) {
+        return s;
+      }
+
       public void aMethodWithPrimitives(boolean b) {}
-      public Object[] aMethodWithArrays(String[] s) { return s; }
+
+      public Object[] aMethodWithArrays(String[] s) {
+        return s;
+      }
+
+      private void privateStuff() {}
+
+      protected void protectedMethod() {}
+
+      public static void aStaticMethod() {}
+    }
+
+    public static class B2 extends B {
+      public void stuff() {
+        B b = new B();
+        b.protectedMethod();
+      }
     }
 
     public interface SomeInterface {
@@ -40,7 +60,6 @@ public class TestClasses {
       public final int finalField = 0;
     }
 
-    public interface AnotherInterface extends SomeInterface { }
+    public interface AnotherInterface extends SomeInterface {}
   }
-
 }

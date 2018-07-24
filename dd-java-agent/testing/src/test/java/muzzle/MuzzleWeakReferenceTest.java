@@ -4,7 +4,6 @@ import datadog.trace.agent.test.TestUtils;
 import datadog.trace.agent.tooling.muzzle.Reference;
 import datadog.trace.agent.tooling.muzzle.ReferenceCreator;
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
-
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -18,7 +17,12 @@ public class MuzzleWeakReferenceTest {
   public static boolean classLoaderRefIsGarbageCollected() {
     ClassLoader loader = new URLClassLoader(new URL[0], null);
     WeakReference<ClassLoader> clRef = new WeakReference<>(loader);
-    Reference[] refs = ReferenceCreator.createReferencesFrom(TestClasses.MethodBodyAdvice.class.getName(), MuzzleWeakReferenceTest.class.getClassLoader()).values().toArray(new Reference[0]);
+    Reference[] refs =
+        ReferenceCreator.createReferencesFrom(
+                TestClasses.MethodBodyAdvice.class.getName(),
+                MuzzleWeakReferenceTest.class.getClassLoader())
+            .values()
+            .toArray(new Reference[0]);
     ReferenceMatcher refMatcher = new ReferenceMatcher(refs);
     refMatcher.getMismatchedReferenceSources(loader);
     loader = null;
