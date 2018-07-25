@@ -57,6 +57,8 @@ public class DDTracer implements io.opentracing.Tracer {
 
   /** A set of tags that are added to every span */
   private final Map<String, String> spanTags;
+  /** A configured mapping of service names to update with new values */
+  private final Map<String, String> serviceNameMappings;
 
   /** Span context decorators */
   private final Map<String, List<AbstractDecorator>> spanContextDecorators =
@@ -116,6 +118,7 @@ public class DDTracer implements io.opentracing.Tracer {
     this.writer.start();
     this.sampler = sampler;
     this.spanTags = defaultSpanTags;
+    this.serviceNameMappings = serviceNameMappings;
 
     try {
       Runtime.getRuntime()
@@ -506,7 +509,7 @@ public class DDTracer implements io.opentracing.Tracer {
         if (!ddsc.getTags().isEmpty()) {
           tags.putAll(ddsc.getTags());
         }
-        parentTrace = new PendingTrace(DDTracer.this, traceId);
+        parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
         samplingPriority = ddsc.getSamplingPriority();
 
         // Start a new trace
@@ -514,7 +517,7 @@ public class DDTracer implements io.opentracing.Tracer {
         traceId = generateNewId();
         parentSpanId = 0L;
         baggage = null;
-        parentTrace = new PendingTrace(DDTracer.this, traceId);
+        parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
         samplingPriority = PrioritySampling.UNSET;
       }
 

@@ -98,7 +98,7 @@ class URLAsResourceNameTest extends Specification {
         false,
         "fakeType",
         tags,
-        new PendingTrace(tracer, 1L),
+        new PendingTrace(tracer, 1L, [:]),
         tracer)
 
     then:

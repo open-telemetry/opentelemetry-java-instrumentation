@@ -44,7 +44,7 @@ class HTTPCodecTest extends Specification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, 1L),
+        new PendingTrace(tracer, 1L, [:]),
         tracer)
 
     final Map<String, String> carrier = new HashMap<>()

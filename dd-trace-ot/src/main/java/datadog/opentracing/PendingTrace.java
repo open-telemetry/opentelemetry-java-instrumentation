@@ -7,6 +7,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -30,6 +31,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
 
   private final DDTracer tracer;
   private final long traceId;
+  private final Map<String, String> serviceNameMappings;
 
   // TODO: consider moving these time fields into DDTracer to ensure that traces have precise
   // relative time
@@ -48,9 +50,11 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   /** Ensure a trace is never written multiple times */
   private final AtomicBoolean isWritten = new AtomicBoolean(false);
 
-  PendingTrace(final DDTracer tracer, final long traceId) {
+  PendingTrace(
+      final DDTracer tracer, final long traceId, final Map<String, String> serviceNameMappings) {
     this.tracer = tracer;
     this.traceId = traceId;
+    this.serviceNameMappings = serviceNameMappings;
 
     this.startTimeNano = Clock.currentNanoTime();
     this.startNanoTicks = Clock.currentNanoTicks();
@@ -77,7 +81,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       log.debug("{} - span registered for wrong trace ({})", span, traceId);
       return;
     }
-    rootSpan.compareAndSet(null, new WeakReference<DDSpan>(span));
+    rootSpan.compareAndSet(null, new WeakReference<>(span));
     synchronized (span) {
       if (null == span.ref) {
         span.ref = new WeakReference<DDSpan>(span, referenceQueue);
@@ -118,6 +122,10 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     }
 
     if (!isWritten.get()) {
+      if (serviceNameMappings.containsKey(span.getServiceName())) {
+        span.setServiceName(serviceNameMappings.get(span.getServiceName()));
+      }
+
       addFirst(span);
     } else {
       log.debug("{} - finished after trace reported.", span);
@@ -126,7 +134,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   }
 
   public DDSpan getRootSpan() {
-    WeakReference<DDSpan> rootRef = rootSpan.get();
+    final WeakReference<DDSpan> rootRef = rootSpan.get();
     return rootRef == null ? null : rootRef.get();
   }
 
