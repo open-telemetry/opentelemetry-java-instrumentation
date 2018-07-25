@@ -49,7 +49,9 @@ class KafkaStreamsTest extends AgentTestRunner {
     consumerContainer.setupMessageListener(new MessageListener<String, String>() {
       @Override
       void onMessage(ConsumerRecord<String, String> record) {
-        TEST_WRITER.waitForTraces(1) // ensure consistent ordering of traces
+        // ensure consistent ordering of traces
+        // this is the last processing step so we should see 2 traces here
+        TEST_WRITER.waitForTraces(2)
         getTestTracer().activeSpan().setTag("testing", 123)
         records.add(record)
       }
@@ -84,7 +86,6 @@ class KafkaStreamsTest extends AgentTestRunner {
     when:
     String greeting = "TESTING TESTING 123!"
     kafkaTemplate.send(STREAM_PENDING, greeting)
-
 
     then:
     // check that the message was received
@@ -151,7 +152,7 @@ class KafkaStreamsTest extends AgentTestRunner {
     def t2tags2 = t2span2.context().tags
     t2tags2["component"] == "java-kafka"
     t2tags2["span.kind"] == "consumer"
-    t1tags1["span.type"] == "queue"
+    t2tags2["span.type"] == "queue"
     t2tags2["partition"] >= 0
     t2tags2["offset"] == 0
     t2tags2["thread.name"] != null
@@ -172,7 +173,7 @@ class KafkaStreamsTest extends AgentTestRunner {
     def t3tags1 = t3span1.context().tags
     t3tags1["component"] == "java-kafka"
     t3tags1["span.kind"] == "consumer"
-    t2tags2["span.type"] == "queue"
+    t3tags1["span.type"] == "queue"
     t3tags1["partition"] >= 0
     t3tags1["offset"] == 0
     t3tags1["thread.name"] != null
