@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.play;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithMethod;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import akka.japi.JavaPartialFunction;
@@ -193,7 +194,7 @@ public final class PlayInstrumentation extends Instrumenter.Default {
 
     public static void onError(final Span span, final Throwable t) {
       Tags.ERROR.set(span, Boolean.TRUE);
-      span.log(Collections.singletonMap("error.object", t));
+      span.log(Collections.singletonMap(ERROR_OBJECT, t));
       Tags.HTTP_STATUS.set(span, 500);
     }
   }

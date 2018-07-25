@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.lettuce;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
+
 import datadog.trace.api.DDTags;
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisURI;
@@ -44,7 +46,7 @@ public class ConnectionFutureAdvice {
     if (throwable != null) {
       final Span span = scope.span();
       Tags.ERROR.set(span, true);
-      span.log(Collections.singletonMap("error.object", throwable));
+      span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       scope.close();
       return;
     }

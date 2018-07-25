@@ -13,6 +13,8 @@
  */
 package datadog.trace.instrumentation.datastax.cassandra;
 
+import static io.opentracing.log.Fields.*;
+
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Cluster;
@@ -295,15 +297,15 @@ class TracingSession implements Session {
 
   private static Map<String, Object> errorLogs(final Throwable throwable) {
     final Map<String, Object> errorLogs = new HashMap<>(4);
-    errorLogs.put("event", Tags.ERROR.getKey());
-    errorLogs.put("error.kind", throwable.getClass().getName());
-    errorLogs.put("error.object", throwable);
+    errorLogs.put(EVENT, Tags.ERROR.getKey());
+    errorLogs.put(ERROR_KIND, throwable.getClass().getName());
+    errorLogs.put(ERROR_OBJECT, throwable);
 
-    errorLogs.put("message", throwable.getMessage());
+    errorLogs.put(MESSAGE, throwable.getMessage());
 
     final StringWriter sw = new StringWriter();
     throwable.printStackTrace(new PrintWriter(sw));
-    errorLogs.put("stack", sw.toString());
+    errorLogs.put(STACK, sw.toString());
 
     return errorLogs;
   }

@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -69,8 +68,6 @@ public abstract class AgentTestRunner extends Specification {
   private static final Instrumentation instrumentation;
   private static volatile ClassFileTransformer activeTransformer = null;
 
-  protected static final Phaser WRITER_PHASER = new Phaser();
-
   static {
     instrumentation = ByteBuddyAgent.getInstrumentation();
 
@@ -82,7 +79,6 @@ public abstract class AgentTestRunner extends Specification {
           @Override
           public boolean add(final List<DDSpan> trace) {
             final boolean result = super.add(trace);
-            WRITER_PHASER.arriveAndDeregister();
             return result;
           }
         };
@@ -136,16 +132,15 @@ public abstract class AgentTestRunner extends Specification {
   @Before
   public void beforeTest() {
     TEST_WRITER.start();
-    WRITER_PHASER.register();
     INSTRUMENTATION_ERROR_COUNT.set(0);
     ERROR_LISTENER.activateTest(this);
-    assert getTestTracer().activeSpan() == null;
+    assert getTestTracer().activeSpan() == null : "Span is active before test has started";
   }
 
   @After
   public void afterTest() {
     ERROR_LISTENER.deactivateTest(this);
-    assert INSTRUMENTATION_ERROR_COUNT.get() == 0;
+    assert INSTRUMENTATION_ERROR_COUNT.get() == 0 : "Instrumentation errors during test";
   }
 
   @AfterClass

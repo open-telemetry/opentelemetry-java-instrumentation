@@ -13,6 +13,8 @@
  */
 package datadog.trace.instrumentation.aws.v0;
 
+import static io.opentracing.log.Fields.*;
+
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -95,15 +97,15 @@ class SpanDecorator {
 
   private static Map<String, Object> errorLogs(final Throwable throwable) {
     final Map<String, Object> errorLogs = new HashMap<>(4);
-    errorLogs.put("event", Tags.ERROR.getKey());
-    errorLogs.put("error.kind", throwable.getClass().getName());
-    errorLogs.put("error.object", throwable);
+    errorLogs.put(EVENT, Tags.ERROR.getKey());
+    errorLogs.put(ERROR_KIND, throwable.getClass().getName());
+    errorLogs.put(ERROR_OBJECT, throwable);
 
-    errorLogs.put("message", throwable.getMessage());
+    errorLogs.put(MESSAGE, throwable.getMessage());
 
     final StringWriter sw = new StringWriter();
     throwable.printStackTrace(new PrintWriter(sw));
-    errorLogs.put("stack", sw.toString());
+    errorLogs.put(STACK, sw.toString());
 
     return errorLogs;
   }

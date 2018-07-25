@@ -155,12 +155,19 @@ public class TracingAgent {
 
   private static ClassLoader getPlatformClassLoader()
       throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    // must invoke ClassLoader.getPlatformClassLoader by reflection to remain compatible with java 7
-    // + 8.
+    /*
+     Must invoke ClassLoader.getPlatformClassLoader by reflection to remain
+     compatible with java 7 + 8.
+    */
     final Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
     return (ClassLoader) method.invoke(null);
   }
 
+  /**
+   * Main entry point.
+   *
+   * @param args command line agruments
+   */
   public static void main(final String... args) {
     try {
       System.out.println(getAgentVersion());
@@ -184,7 +191,9 @@ public class TracingAgent {
           new InputStreamReader(
               TracingAgent.class.getResourceAsStream("/dd-java-agent.version"), "UTF-8");
       output = new BufferedReader(input);
-      for (int c = output.read(); c != -1; c = output.read()) sb.append((char) c);
+      for (int c = output.read(); c != -1; c = output.read()) {
+        sb.append((char) c);
+      }
     } finally {
       if (null != input) {
         input.close();

@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.lettuce;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
+
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.util.Collections;
@@ -31,7 +33,7 @@ public class LettuceAsyncBiFunction<T extends Object, U extends Throwable, R ext
         this.span.setTag("db.command.cancelled", true);
       } else {
         Tags.ERROR.set(this.span, true);
-        this.span.log(Collections.singletonMap("error.object", throwable));
+        this.span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       }
     }
     this.span.finish();

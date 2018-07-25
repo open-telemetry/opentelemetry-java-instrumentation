@@ -5,8 +5,12 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
+import spock.lang.Shared
 
 class CassandraClientTest extends AgentTestRunner {
+
+  @Shared
+  Cluster cluster
 
   def setupSpec() {
     /*
@@ -16,6 +20,14 @@ class CassandraClientTest extends AgentTestRunner {
      tests would have to assume they run under shared Cassandra and act accordingly.
       */
     EmbeddedCassandraServerHelper.startEmbeddedCassandra(120000L)
+
+    cluster = EmbeddedCassandraServerHelper.getCluster()
+
+    /*
+    Looks like sometimes our requests fail because Cassandra takes to long to respond,
+    Increase this timeout as well to try to cope with this.
+     */
+    cluster.getConfiguration().getSocketOptions().setReadTimeoutMillis(120000)
   }
 
   def cleanupSpec() {
@@ -24,7 +36,6 @@ class CassandraClientTest extends AgentTestRunner {
 
   def "sync traces"() {
     setup:
-    final Cluster cluster = EmbeddedCassandraServerHelper.getCluster()
     final Session session = cluster.newSession()
 
     session.execute("DROP KEYSPACE IF EXISTS sync_test")
@@ -57,7 +68,6 @@ class CassandraClientTest extends AgentTestRunner {
 
   def "async traces"() {
     setup:
-    final Cluster cluster = EmbeddedCassandraServerHelper.getCluster()
     final Session session = cluster.connectAsync().get()
 
     session.executeAsync("DROP KEYSPACE IF EXISTS async_test").get()
