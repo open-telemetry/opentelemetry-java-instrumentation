@@ -340,10 +340,6 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
     private static final Map<Class<?>, Field> fieldCache = new ConcurrentHashMap<>();
     private static final String[] wrapperFields = {"runnable", "callable"};
 
-    public static boolean safeToWrap(final Future<?> f) {
-      return null != getDatadogWrapper(f);
-    }
-
     public static DatadogWrapper getDatadogWrapper(final Future<?> f) {
       final Field field;
       if (fieldCache.containsKey(f.getClass())) {
