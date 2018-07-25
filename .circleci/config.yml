@@ -2,7 +2,7 @@ version: 2
 
 defaults: &defaults
   working_directory: ~/dd-trace-java
-  resource_class: large
+  resource_class: xlarge
   docker:
     - image: &default_container circleci/openjdk:8
 
