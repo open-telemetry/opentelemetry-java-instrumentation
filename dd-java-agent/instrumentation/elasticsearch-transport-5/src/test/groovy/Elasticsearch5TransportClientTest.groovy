@@ -23,6 +23,8 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
     System.setProperty("dd.integration.elasticsearch.enabled", "true")
   }
 
+  public static final long TIMEOUT = 10000; // 10 seconds
+
   @Shared
   int httpPort
   @Shared
@@ -63,7 +65,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
     )
     client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), tcpPort))
     TEST_WRITER.clear()
-    client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
+    client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     TEST_WRITER.waitForTraces(1)
   }
 

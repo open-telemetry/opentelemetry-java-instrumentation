@@ -26,6 +26,8 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
     System.setProperty("dd.integration.elasticsearch.enabled", "true")
   }
 
+  public static final long TIMEOUT = 10000; // 10 seconds
+
   @Shared
   int httpPort
   @Shared
@@ -103,7 +105,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   def "test elasticsearch get"() {
     expect:
     template.createIndex(indexName)
-    template.getClient().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
+    template.getClient().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
 
     when:
     NativeSearchQuery query = new NativeSearchQueryBuilder()
@@ -261,7 +263,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   def "test results extractor"() {
     setup:
     template.createIndex(indexName)
-    testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
+    testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     template.index(IndexQueryBuilder.newInstance()
       .withObject(new Doc(id: 1, data: "doc a"))
       .withIndexName(indexName)

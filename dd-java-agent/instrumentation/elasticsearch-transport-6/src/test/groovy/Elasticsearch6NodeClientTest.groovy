@@ -18,6 +18,8 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
     System.setProperty("dd.integration.elasticsearch.enabled", "true")
   }
 
+  public static final long TIMEOUT = 10000; // 10 seconds
+
   @Shared
   int httpPort
   @Shared
@@ -48,7 +50,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
     testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, null), [Netty4Plugin])
     testNode.start()
     TEST_WRITER.clear()
-    testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
+    testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     TEST_WRITER.waitForTraces(1)
   }
 
