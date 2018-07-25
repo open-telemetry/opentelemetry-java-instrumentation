@@ -118,7 +118,13 @@ artifacts {
 if (project.plugins.hasPlugin('com.github.johnrengelman.shadow')) {
   // Remove the no-deps jar from the archives to prevent publication
   configurations.archives.with {
-    artifacts.remove artifacts.find { it.archiveTask.is jar }
+    artifacts.remove artifacts.find {
+      if (it.hasProperty("delegate")) {
+        it.delegate.archiveTask.is jar
+      } else {
+        it.archiveTask.is jar
+      }
+    }
   }
   artifacts {
     archives shadowJar
