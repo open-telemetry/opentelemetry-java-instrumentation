@@ -24,7 +24,7 @@ public class DDDecoratorsFactory {
         httpDecorator2,
         new OperationDecorator(),
         new ResourceNameDecorator(),
-        new ServiceNameDecorator(mappings),
+        new ServiceNameDecorator(),
         new ServletContextDecorator(),
         new SpanTypeDecorator(),
         new Status5XXDecorator(),

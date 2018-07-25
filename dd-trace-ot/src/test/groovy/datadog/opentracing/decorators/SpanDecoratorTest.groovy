@@ -42,10 +42,11 @@ class SpanDecoratorTest extends Specification {
 
   def "set service name"() {
     setup:
-    tracer.addDecorator(new ServiceNameDecorator(mapping))
+    tracer = new DDTracer("wrong-service", new LoggingWriter(), new AllSampler(), emptyMap(), mapping, emptyMap())
 
     when:
-    span.setTag(DDTags.SERVICE_NAME, name)
+    def span = tracer.buildSpan("some span").withTag(DDTags.SERVICE_NAME, name).start()
+    span.finish()
 
     then:
     span.getServiceName() == expected
