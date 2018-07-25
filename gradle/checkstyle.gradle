@@ -53,7 +53,9 @@ tasks.withType(Test) {
 apply plugin: 'com.github.sherter.google-java-format'
 
 googleJavaFormat {
-  exclude 'gradle-home'
+  source = sourceSets*.allJava
+  include '**/*.java'
+  exclude '**/build/**/*.java'
 }
 
 tasks.withType(Checkstyle) {

@@ -16,6 +16,7 @@ tasks.withType(JavaCompile) {
   options.compilerArgs += ['-Xep:FutureReturnValueIgnored:OFF']
   // workaround for: https://github.com/google/error-prone/issues/780
   options.compilerArgs += ['-Xep:ParameterName:OFF']
+  options.compilerArgs += ['-XepDisableWarningsInGeneratedCode']
 }
 
 apply plugin: "eclipse"
@@ -27,6 +28,23 @@ eclipse {
 }
 if (configurations.find { it.name == 'jmh' }) {
   eclipse.classpath.plusConfigurations += [configurations.jmh]
+}
+
+jar {
+  /*
+  Make Jar build fail on duplicate files
+
+  By default Gradle Jar task can put multiple files with the same name
+  into a Jar. This may lead to confusion. For example if auto-service
+  annotation processing creates files with same name in `scala` and
+  `java` directory this would result in Jar having two files with the
+  same name in it. Which in turn would result in only one of those
+  files being actually considered when that Jar is used leading to very
+  confusing failures.
+
+  Instead we should 'fail early' and avoid building such Jars.
+  */
+  duplicatesStrategy = 'fail'
 }
 
 task packageSources(type: Jar) {
@@ -100,7 +118,13 @@ artifacts {
 if (project.plugins.hasPlugin('com.github.johnrengelman.shadow')) {
   // Remove the no-deps jar from the archives to prevent publication
   configurations.archives.with {
-    artifacts.remove artifacts.find { it.archiveTask.is jar }
+    artifacts.remove artifacts.find {
+      if (it.hasProperty("delegate")) {
+        it.delegate.archiveTask.is jar
+      } else {
+        it.archiveTask.is jar
+      }
+    }
   }
   artifacts {
     archives shadowJar

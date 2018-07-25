@@ -120,7 +120,7 @@ class DDSpanBuilderTest extends Specification {
     when(mockedContext.getTraceId()).thenReturn(spanId)
     when(mockedContext.getSpanId()).thenReturn(spanId)
     when(mockedContext.getServiceName()).thenReturn("foo")
-    when(mockedContext.getTrace()).thenReturn(new PendingTrace(tracer, "1"))
+    when(mockedContext.getTrace()).thenReturn(new PendingTrace(tracer, "1", [:]))
 
     final String expectedName = "fakeName"
 

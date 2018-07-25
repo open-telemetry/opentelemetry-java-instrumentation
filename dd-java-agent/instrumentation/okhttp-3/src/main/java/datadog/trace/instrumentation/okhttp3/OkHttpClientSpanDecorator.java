@@ -1,11 +1,12 @@
 package datadog.trace.instrumentation.okhttp3;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
+
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.net.Inet4Address;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collections;
 import okhttp3.Connection;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -64,7 +65,7 @@ public interface OkHttpClientSpanDecorator {
         @Override
         public void onError(final Throwable throwable, final Span span) {
           Tags.ERROR.set(span, Boolean.TRUE);
-          span.log(errorLogs(throwable));
+          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
         }
 
         @Override
@@ -80,14 +81,6 @@ public interface OkHttpClientSpanDecorator {
           } else {
             Tags.PEER_HOST_IPV6.set(span, connection.socket().getInetAddress().toString());
           }
-        }
-
-        protected Map<String, Object> errorLogs(final Throwable throwable) {
-          final Map<String, Object> errorLogs = new HashMap<>(2);
-          errorLogs.put("event", Tags.ERROR.getKey());
-          errorLogs.put("error.object", throwable);
-
-          return errorLogs;
         }
       };
 }

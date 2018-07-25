@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -69,21 +68,17 @@ public abstract class AgentTestRunner extends Specification {
   private static final Instrumentation instrumentation;
   private static volatile ClassFileTransformer activeTransformer = null;
 
-  protected static final Phaser WRITER_PHASER = new Phaser();
-
   static {
     instrumentation = ByteBuddyAgent.getInstrumentation();
 
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG);
 
-    WRITER_PHASER.register();
     TEST_WRITER =
         new ListWriter() {
           @Override
           public boolean add(final List<DDSpan> trace) {
             final boolean result = super.add(trace);
-            WRITER_PHASER.arrive();
             return result;
           }
         };
@@ -139,13 +134,13 @@ public abstract class AgentTestRunner extends Specification {
     TEST_WRITER.start();
     INSTRUMENTATION_ERROR_COUNT.set(0);
     ERROR_LISTENER.activateTest(this);
-    assert getTestTracer().activeSpan() == null;
+    assert getTestTracer().activeSpan() == null : "Span is active before test has started";
   }
 
   @After
   public void afterTest() {
     ERROR_LISTENER.deactivateTest(this);
-    assert INSTRUMENTATION_ERROR_COUNT.get() == 0;
+    assert INSTRUMENTATION_ERROR_COUNT.get() == 0 : "Instrumentation errors during test";
   }
 
   @AfterClass
@@ -159,11 +154,11 @@ public abstract class AgentTestRunner extends Specification {
   public static class ErrorCountingListener implements AgentBuilder.Listener {
     private static final List<AgentTestRunner> activeTests = new CopyOnWriteArrayList<>();
 
-    public void activateTest(AgentTestRunner testRunner) {
+    public void activateTest(final AgentTestRunner testRunner) {
       activeTests.add(testRunner);
     }
 
-    public void deactivateTest(AgentTestRunner testRunner) {
+    public void deactivateTest(final AgentTestRunner testRunner) {
       activeTests.remove(testRunner);
     }
 
@@ -198,7 +193,7 @@ public abstract class AgentTestRunner extends Specification {
         final JavaModule module,
         final boolean loaded,
         final Throwable throwable) {
-      for (AgentTestRunner testRunner : activeTests) {
+      for (final AgentTestRunner testRunner : activeTests) {
         if (testRunner.onInstrumentationError(typeName, classLoader, module, loaded, throwable)) {
           INSTRUMENTATION_ERROR_COUNT.incrementAndGet();
           break;

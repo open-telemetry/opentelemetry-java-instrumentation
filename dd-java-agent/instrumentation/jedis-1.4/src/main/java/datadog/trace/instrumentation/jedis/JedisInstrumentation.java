@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.jedis;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -82,7 +83,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
       if (throwable != null) {
         final Span span = scope.span();
         Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap("error.object", throwable));
+        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       }
       scope.close();
     }

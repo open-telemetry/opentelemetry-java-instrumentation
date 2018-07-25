@@ -44,6 +44,9 @@ class TagsAssert {
   }
 
   def tag(String name, value) {
+    if (value == null) {
+      return
+    }
     assertedTags.add(name)
     if (value instanceof Class) {
       assert ((Class) value).isInstance(tags[name])

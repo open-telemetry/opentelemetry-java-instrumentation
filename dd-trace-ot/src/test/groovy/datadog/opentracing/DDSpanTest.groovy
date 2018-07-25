@@ -26,7 +26,7 @@ class DDSpanTest extends Specification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, "1"),
+        new PendingTrace(tracer, "1", [:]),
         tracer)
 
     final DDSpan span = new DDSpan(1L, context)
@@ -159,7 +159,7 @@ class DDSpanTest extends Specification {
     span.durationNano == 1
   }
 
-  def "priority sampling metric set only on root span" () {
+  def "priority sampling metric set only on root span"() {
     setup:
     def parent = tracer.buildSpan("testParent").start()
     def child1 = tracer.buildSpan("testChild1").asChildOf(parent).start()

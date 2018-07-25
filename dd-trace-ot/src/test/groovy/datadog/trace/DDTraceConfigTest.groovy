@@ -1,7 +1,6 @@
 package datadog.trace
 
 import datadog.opentracing.DDTracer
-import datadog.opentracing.decorators.ServiceNameDecorator
 import datadog.trace.common.DDTraceConfig
 import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.writer.DDAgentWriter
@@ -119,14 +118,11 @@ class DDTraceConfigTest extends Specification {
 
     when:
     def tracer = new DDTracer()
-    ServiceNameDecorator decorator = tracer.spanContextDecorators.values().flatten().find {
-      it instanceof ServiceNameDecorator
-    }
     def taggedHeaders = tracer.registry.codecs.values().first().taggedHeaders
 
     then:
     tracer.spanTags == map
-    decorator.mappings == map
+    tracer.serviceNameMappings == map
     taggedHeaders == map
 
     where:

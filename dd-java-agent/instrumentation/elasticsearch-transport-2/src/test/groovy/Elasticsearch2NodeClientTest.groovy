@@ -16,6 +16,8 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     System.setProperty("dd.integration.elasticsearch.enabled", "true")
   }
 
+  public static final long TIMEOUT = 10000; // 10 seconds
+
   @Shared
   int httpPort
   @Shared
@@ -38,14 +40,14 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     def settings = Settings.builder()
       .put("path.home", esWorkingDir.path)
       // Since we use listeners to close spans this should make our span closing deterministic which is good for tests
-      .put("thread_pool.listener.size", 1)
+      .put("threadpool.listener.size", 1)
       .put("http.port", httpPort)
       .put("transport.tcp.port", tcpPort)
       .build()
     testNode = NodeBuilder.newInstance().local(true).clusterName("test-cluster").settings(settings).build()
     testNode.start()
     TEST_WRITER.clear()
-    testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
+    testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     TEST_WRITER.waitForTraces(1)
   }
 
@@ -132,7 +134,7 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     TEST_WRITER.size() == 1
 
     when:
-    client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(5000)
+    client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     def emptyResult = client.prepareGet(indexName, indexType, id).get()
 
     then:

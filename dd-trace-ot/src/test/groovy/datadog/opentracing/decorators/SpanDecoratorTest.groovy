@@ -5,12 +5,14 @@ import datadog.opentracing.DDTracer
 import datadog.opentracing.SpanFactory
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
+import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.writer.LoggingWriter
 import io.opentracing.tag.StringTag
 import io.opentracing.tag.Tags
 import spock.lang.Specification
 
 import static datadog.opentracing.DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME
+import static java.util.Collections.emptyMap
 
 class SpanDecoratorTest extends Specification {
   def tracer = new DDTracer(new LoggingWriter())
@@ -40,10 +42,11 @@ class SpanDecoratorTest extends Specification {
 
   def "set service name"() {
     setup:
-    tracer.addDecorator(new ServiceNameDecorator(mapping))
+    tracer = new DDTracer("wrong-service", new LoggingWriter(), new AllSampler(), emptyMap(), mapping, emptyMap())
 
     when:
-    span.setTag(DDTags.SERVICE_NAME, name)
+    def span = tracer.buildSpan("some span").withTag(DDTags.SERVICE_NAME, name).start()
+    span.finish()
 
     then:
     span.getServiceName() == expected
@@ -54,13 +57,31 @@ class SpanDecoratorTest extends Specification {
     "other-service" | "other-service" | ["some-service": "new-service"]
   }
 
+  def "default or configured service name can be remapped without setting tag"() {
+    setup:
+    tracer = new DDTracer(serviceName, new LoggingWriter(), new AllSampler(), emptyMap(), mapping, emptyMap())
+
+    when:
+    def span = tracer.buildSpan("some span").start()
+    span.finish()
+
+    then:
+    span.serviceName == expected
+
+    where:
+    serviceName                     | expected                        | mapping
+    UNASSIGNED_DEFAULT_SERVICE_NAME | UNASSIGNED_DEFAULT_SERVICE_NAME | ["other-service-name": "other-service"]
+    UNASSIGNED_DEFAULT_SERVICE_NAME | "new-service"                   | [(UNASSIGNED_DEFAULT_SERVICE_NAME): "new-service"]
+    "other-service-name"            | "other-service"                 | ["other-service-name": "other-service"]
+  }
+
   def "set service name from servlet.context with context '#context'"() {
     when:
     span.setTag(DDTags.SERVICE_NAME, serviceName)
     span.setTag("servlet.context", context)
 
     then:
-    span.getServiceName() == expected
+    span.serviceName == expected
 
     where:
     context         | serviceName                     | expected
@@ -72,6 +93,32 @@ class SpanDecoratorTest extends Specification {
     ""              | "my-service"                    | "my-service"
     "/some-context" | "my-service"                    | "my-service"
     "other-context" | "my-service"                    | "my-service"
+  }
+
+  def "set service name from servlet.context with context '#context' for service #serviceName"() {
+    setup:
+    tracer = new DDTracer(serviceName, new LoggingWriter(), new AllSampler(), emptyMap(), mapping, emptyMap())
+
+    when:
+    def span = tracer.buildSpan("some span").start()
+    span.setTag("servlet.context", context)
+    span.finish()
+
+    then:
+    span.serviceName == expected
+
+    where:
+    context         | serviceName                     | expected
+    "/"             | UNASSIGNED_DEFAULT_SERVICE_NAME | "new-service"
+    ""              | UNASSIGNED_DEFAULT_SERVICE_NAME | "new-service"
+    "/some-context" | UNASSIGNED_DEFAULT_SERVICE_NAME | "some-context"
+    "other-context" | UNASSIGNED_DEFAULT_SERVICE_NAME | "other-context"
+    "/"             | "my-service"                    | "new-service"
+    ""              | "my-service"                    | "new-service"
+    "/some-context" | "my-service"                    | "new-service"
+    "other-context" | "my-service"                    | "new-service"
+
+    mapping = [(serviceName): "new-service"]
   }
 
   def "set operation name"() {

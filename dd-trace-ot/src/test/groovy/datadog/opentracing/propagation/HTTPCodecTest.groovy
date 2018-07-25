@@ -49,7 +49,7 @@ class HTTPCodecTest extends Specification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, "1"),
+        new PendingTrace(tracer, "1", [:]),
         tracer)
 
     final Map<String, String> carrier = new HashMap<>()
@@ -94,7 +94,7 @@ class HTTPCodecTest extends Specification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, largeTraceId),
+        new PendingTrace(tracer, largeTraceId, [:]),
         tracer)
 
     final Map<String, String> carrier = new HashMap<>()
@@ -139,7 +139,7 @@ class HTTPCodecTest extends Specification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, largeTraceId),
+        new PendingTrace(tracer, largeTraceId, [:]),
         tracer)
 
     final Map<String, String> carrier = new HashMap<>()

@@ -58,8 +58,7 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
      * com.datastax.driver.core.Cluster$Manager.newSession() method is called. The opentracing
      * contribution is a simple wrapper, so we just have to wrap the new session.
      *
-     * @param session The fresh session to patch
-     * @return A new tracing session
+     * @param session The fresh session to patch. This session is replaced with new session
      * @throws Exception
      */
     @Advice.OnMethodExit(suppress = Throwable.class)

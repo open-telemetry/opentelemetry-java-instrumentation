@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.lettuce.rx;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
+
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil;
 import io.opentracing.Scope;
@@ -36,7 +38,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
       }
       if (throwable != null) {
         Tags.ERROR.set(this.span, true);
-        this.span.log(Collections.singletonMap("error.object", throwable));
+        this.span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       }
       this.span.finish();
     } else {
@@ -95,7 +97,8 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
       Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
       Tags.COMPONENT.set(span, LettuceInstrumentationUtil.COMPONENT_NAME);
 
-      // should be command name only, but use workaround to prepend string to agent crashing commands
+      // should be command name only, but use workaround to prepend string to agent crashing
+      // commands
       span.setTag(
           DDTags.RESOURCE_NAME,
           LettuceInstrumentationUtil.getCommandResourceName(this.commandName));

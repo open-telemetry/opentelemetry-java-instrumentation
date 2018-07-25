@@ -5,7 +5,8 @@ minimumInstructionCoverage = 0.6
 excludedClassesConverage += [
   'datadog.trace.agent.test.*Assert',
   'datadog.trace.agent.test.AgentTestRunner.ErrorCountingListener',
-  'datadog.trace.agent.test.TestUtils'
+  'datadog.trace.agent.test.*Utils',
+  'datadog.trace.agent.test.*Utils.*'
 ]
 
 dependencies {
@@ -16,6 +17,10 @@ dependencies {
   compile deps.spock
   compile deps.testLogging
   compile deps.guava
+
+  compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.10.0'
+  // Note: this should be the same version as in java.gradle
+  compileOnly group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.6'
 
   compile project(':dd-trace-ot')
   compile project(':dd-java-agent:agent-tooling')

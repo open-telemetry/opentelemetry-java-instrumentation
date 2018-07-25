@@ -28,7 +28,8 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Default
 
   @Override
   protected boolean defaultEnabled() {
-    // FIXME: Injecting ContextualScopeManager is probably a bug. Verify and check all ratpack helpers before enabling.
+    // FIXME: Injecting ContextualScopeManager is probably a bug. Verify and check all ratpack
+    // helpers before enabling.
     return false;
   }
 

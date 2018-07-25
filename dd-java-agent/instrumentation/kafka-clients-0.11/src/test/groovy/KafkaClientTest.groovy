@@ -44,11 +44,10 @@ class KafkaClientTest extends AgentTestRunner {
     def records = new LinkedBlockingQueue<ConsumerRecord<String, String>>()
 
     // setup a Kafka message listener
-    WRITER_PHASER.register()
     container.setupMessageListener(new MessageListener<String, String>() {
       @Override
       void onMessage(ConsumerRecord<String, String> record) {
-        WRITER_PHASER.arriveAndAwaitAdvance() // ensure consistent ordering of traces
+        TEST_WRITER.waitForTraces(1) // ensure consistent ordering of traces
         records.add(record)
       }
     })

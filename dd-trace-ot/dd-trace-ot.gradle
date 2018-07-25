@@ -11,6 +11,7 @@ minimumBranchCoverage = 0.5
 minimumInstructionCoverage = 0.6
 excludedClassesConverage += [
   'datadog.trace.common.writer.ListWriter',
+  'datadog.trace.common.writer.LoggingWriter',
   'datadog.trace.common.sampling.PrioritySampling'
 ]
 
