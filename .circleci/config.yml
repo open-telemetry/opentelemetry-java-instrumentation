@@ -12,7 +12,6 @@ cache_keys: &cache_keys
     - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
     - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
     - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
-    - dd-trace-java
 
 
 jobs:
@@ -153,7 +152,6 @@ jobs:
             - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
             - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
             - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
-            - dd-trace-java
 
       - run:
           name: Run Trace Agent Tests
