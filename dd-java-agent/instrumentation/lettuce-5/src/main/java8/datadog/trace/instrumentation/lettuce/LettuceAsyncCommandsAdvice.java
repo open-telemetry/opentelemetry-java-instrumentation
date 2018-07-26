@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.lettuce;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
@@ -16,7 +17,7 @@ public class LettuceAsyncCommandsAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope startSpan(@Advice.Argument(0) final RedisCommand command) {
-    String commandName = LettuceInstrumentationUtil.getCommandName(command);
+    final String commandName = LettuceInstrumentationUtil.getCommandName(command);
 
     final Scope scope =
         GlobalTracer.get()
@@ -31,7 +32,7 @@ public class LettuceAsyncCommandsAdvice {
     span.setTag(
         DDTags.RESOURCE_NAME, LettuceInstrumentationUtil.getCommandResourceName(commandName));
     span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
-    span.setTag(DDTags.SPAN_TYPE, LettuceInstrumentationUtil.SERVICE_NAME);
+    span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.REDIS);
 
     return scope;
   }
@@ -52,7 +53,7 @@ public class LettuceAsyncCommandsAdvice {
       return;
     }
 
-    String commandName = LettuceInstrumentationUtil.getCommandName(command);
+    final String commandName = LettuceInstrumentationUtil.getCommandName(command);
     // close spans on error or normal completion
     if (!LettuceInstrumentationUtil.doFinishSpanEarly(commandName)) {
       asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(scope.span()));

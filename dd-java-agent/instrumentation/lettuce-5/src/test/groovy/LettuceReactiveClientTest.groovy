@@ -1,5 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulConnection
@@ -89,7 +91,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
-          spanType "redis"
+          spanType DDSpanTypes.REDIS
           resourceName "SET"
           errored false
 
@@ -98,7 +100,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "component" "redis-client"
             "db.type" "redis"
             "span.kind" "client"
-            "span.type" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
           }
         }
       }
@@ -119,7 +121,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
-          spanType "redis"
+          spanType DDSpanTypes.REDIS
           resourceName "GET"
           errored false
 
@@ -128,7 +130,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "component" "redis-client"
             "db.type" "redis"
             "span.kind" "client"
-            "span.type" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
           }
         }
       }
@@ -157,7 +159,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
-          spanType "redis"
+          spanType DDSpanTypes.REDIS
           resourceName "GET"
           errored false
 
@@ -166,7 +168,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "component" "redis-client"
             "db.type" "redis"
             "span.kind" "client"
-            "span.type" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
           }
         }
       }
@@ -193,7 +195,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
-          spanType "redis"
+          spanType DDSpanTypes.REDIS
           resourceName "RANDOMKEY"
           errored false
 
@@ -202,7 +204,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "component" "redis-client"
             "db.type" "redis"
             "span.kind" "client"
-            "span.type" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
           }
         }
       }
@@ -219,7 +221,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
-          spanType "redis"
+          spanType DDSpanTypes.REDIS
           resourceName AGENT_CRASHING_COMMAND_PREFIX + "COMMAND"
           errored false
 
@@ -229,7 +231,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "db.type" "redis"
             "db.command.results.count" 157
             "span.kind" "client"
-            "span.type" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
           }
         }
       }
@@ -246,7 +248,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
-          spanType "redis"
+          spanType DDSpanTypes.REDIS
           resourceName AGENT_CRASHING_COMMAND_PREFIX + "COMMAND"
           errored false
 
@@ -257,7 +259,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "db.command.cancelled" true
             "db.command.results.count" 2
             "span.kind" "client"
-            "span.type" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
           }
         }
       }
@@ -286,7 +288,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
-          spanType "redis"
+          spanType DDSpanTypes.REDIS
           resourceName AGENT_CRASHING_COMMAND_PREFIX + "DEBUG"
           errored false
 
@@ -295,7 +297,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "component" "redis-client"
             "db.type" "redis"
             "span.kind" "client"
-            "span.type" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
           }
         }
       }
@@ -312,7 +314,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
         span(0) {
           serviceName "redis"
           operationName "redis.query"
-          spanType "redis"
+          spanType DDSpanTypes.REDIS
           resourceName "SHUTDOWN"
           errored false
 
@@ -321,7 +323,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
             "component" "redis-client"
             "db.type" "redis"
             "span.kind" "client"
-            "span.type" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
           }
         }
       }

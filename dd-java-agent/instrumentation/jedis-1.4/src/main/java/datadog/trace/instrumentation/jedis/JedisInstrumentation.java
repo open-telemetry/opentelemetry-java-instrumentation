@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -48,7 +49,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(isPublic())
@@ -72,7 +73,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
       span.setTag(DDTags.RESOURCE_NAME, command.name());
       span.setTag(DDTags.SERVICE_NAME, SERVICE_NAME);
-      span.setTag(DDTags.SPAN_TYPE, SERVICE_NAME);
+      span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.REDIS);
 
       return scope;
     }

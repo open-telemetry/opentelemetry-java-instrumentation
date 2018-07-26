@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.lettuce;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisURI;
@@ -33,7 +34,7 @@ public class ConnectionFutureAdvice {
     span.setTag("db.redis.dbIndex", redisURI.getDatabase());
     span.setTag(DDTags.RESOURCE_NAME, "CONNECT:" + url);
     span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
-    span.setTag(DDTags.SPAN_TYPE, LettuceInstrumentationUtil.SERVICE_NAME);
+    span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.REDIS);
 
     return scope;
   }
