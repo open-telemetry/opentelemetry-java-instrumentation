@@ -93,6 +93,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "GET /$route"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored expectedError
           tags {
             defaultTags()
@@ -137,6 +138,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "GET /test"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored true
           tags {
             defaultTags()
@@ -167,6 +169,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "akka-http.request"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored true
           tags {
             defaultTags()
@@ -219,6 +222,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "GET /$route"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored expectedError
           tags {
             defaultTags()
@@ -264,6 +268,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "GET /test"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored true
           tags {
             defaultTags()

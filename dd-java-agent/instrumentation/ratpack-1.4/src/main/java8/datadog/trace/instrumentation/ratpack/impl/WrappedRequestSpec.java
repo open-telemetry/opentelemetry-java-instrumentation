@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.ratpack.impl;
 
+import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -27,7 +29,11 @@ public final class WrappedRequestSpec implements RequestSpec {
   private final Scope scope;
   private final AtomicReference<Span> spanRef;
 
-  WrappedRequestSpec(RequestSpec spec, Tracer tracer, Scope scope, AtomicReference<Span> spanRef) {
+  WrappedRequestSpec(
+      final RequestSpec spec,
+      final Tracer tracer,
+      final Scope scope,
+      final AtomicReference<Span> spanRef) {
     this.delegate = spec;
     this.tracer = tracer;
     this.scope = scope;
@@ -40,22 +46,22 @@ public final class WrappedRequestSpec implements RequestSpec {
    * a new span is created.
    *
    */
-  private Action<? super RequestSpec> redirectHandler(ReceivedResponse response) {
+  private Action<? super RequestSpec> redirectHandler(final ReceivedResponse response) {
     // handler.handleReceive(response.getStatusCode(), null, span.get());
     return (s) -> new WrappedRequestSpec(s, tracer, scope, spanRef);
   }
 
   @Override
-  public RequestSpec redirects(int maxRedirects) {
+  public RequestSpec redirects(final int maxRedirects) {
     this.delegate.redirects(maxRedirects);
     return this;
   }
 
   @Override
   public RequestSpec onRedirect(
-      Function<? super ReceivedResponse, Action<? super RequestSpec>> function) {
+      final Function<? super ReceivedResponse, Action<? super RequestSpec>> function) {
 
-    Function<? super ReceivedResponse, Action<? super RequestSpec>> wrapped =
+    final Function<? super ReceivedResponse, Action<? super RequestSpec>> wrapped =
         (ReceivedResponse response) -> redirectHandler(response).append(function.apply(response));
 
     this.delegate.onRedirect(wrapped);
@@ -63,7 +69,7 @@ public final class WrappedRequestSpec implements RequestSpec {
   }
 
   @Override
-  public RequestSpec sslContext(SSLContext sslContext) {
+  public RequestSpec sslContext(final SSLContext sslContext) {
     this.delegate.sslContext(sslContext);
     return this;
   }
@@ -74,25 +80,26 @@ public final class WrappedRequestSpec implements RequestSpec {
   }
 
   @Override
-  public RequestSpec maxContentLength(int numBytes) {
+  public RequestSpec maxContentLength(final int numBytes) {
     this.delegate.maxContentLength(numBytes);
     return this;
   }
 
   @Override
-  public RequestSpec headers(Action<? super MutableHeaders> action) throws Exception {
+  public RequestSpec headers(final Action<? super MutableHeaders> action) throws Exception {
     this.delegate.headers(action);
     return this;
   }
 
   @Override
-  public RequestSpec method(HttpMethod method) {
-    Span span =
+  public RequestSpec method(final HttpMethod method) {
+    final Span span =
         tracer
             .buildSpan("ratpack.client-request")
             .asChildOf(scope != null ? scope.span() : null)
             .withTag(Tags.COMPONENT.getKey(), "httpclient")
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
+            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
             .withTag(Tags.HTTP_URL.getKey(), getUri().toString())
             .withTag(Tags.HTTP_METHOD.getKey(), method.getName())
             .start();
@@ -103,7 +110,7 @@ public final class WrappedRequestSpec implements RequestSpec {
   }
 
   @Override
-  public RequestSpec decompressResponse(boolean shouldDecompress) {
+  public RequestSpec decompressResponse(final boolean shouldDecompress) {
     this.delegate.decompressResponse(shouldDecompress);
     return this;
   }
@@ -114,13 +121,13 @@ public final class WrappedRequestSpec implements RequestSpec {
   }
 
   @Override
-  public RequestSpec connectTimeout(Duration duration) {
+  public RequestSpec connectTimeout(final Duration duration) {
     this.delegate.connectTimeout(duration);
     return this;
   }
 
   @Override
-  public RequestSpec readTimeout(Duration duration) {
+  public RequestSpec readTimeout(final Duration duration) {
     this.delegate.readTimeout(duration);
     return this;
   }
@@ -131,7 +138,7 @@ public final class WrappedRequestSpec implements RequestSpec {
   }
 
   @Override
-  public RequestSpec body(Action<? super Body> action) throws Exception {
+  public RequestSpec body(final Action<? super Body> action) throws Exception {
     this.delegate.body(action);
     return this;
   }
