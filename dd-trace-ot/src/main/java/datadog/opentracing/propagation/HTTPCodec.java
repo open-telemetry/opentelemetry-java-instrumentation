@@ -16,22 +16,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HTTPCodec implements Codec<TextMap> {
 
+  // uint 64 bits max value, 2^64 - 1
+  static final BigInteger BIG_INTEGER_UINT64_MAX =
+      (new BigInteger("2")).pow(64).subtract(BigInteger.ONE);
+
   private static final String OT_BAGGAGE_PREFIX = "ot-baggage-";
   private static final String TRACE_ID_KEY = "x-datadog-trace-id";
   private static final String SPAN_ID_KEY = "x-datadog-parent-id";
   private static final String SAMPLING_PRIORITY_KEY = "x-datadog-sampling-priority";
-  private static final byte[] BYTE_ARR_UNIT64_MAX = {
-    (byte) 0xff,
-    (byte) 0xff,
-    (byte) 0xff,
-    (byte) 0xff,
-    (byte) 0xff,
-    (byte) 0xff,
-    (byte) 0xff,
-    (byte) 0xff
-  };
-  private static final BigInteger BIG_INTEGER_UINT64_MAX =
-      (new BigInteger(BYTE_ARR_UNIT64_MAX)).add(BigInteger.ONE.shiftLeft(64));
 
   private final Map<String, String> taggedHeaders;
 
@@ -139,7 +131,7 @@ public class HTTPCodec implements Codec<TextMap> {
       return val;
     } catch (NumberFormatException nfe) {
       throw new IllegalArgumentException(
-          "Expecting a number for trace ID or span ID, but got: " + val);
+          "Expecting a number for trace ID or span ID, but got: " + val, nfe);
     }
   }
 }

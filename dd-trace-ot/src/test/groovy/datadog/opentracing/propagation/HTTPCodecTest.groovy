@@ -10,6 +10,8 @@ import io.opentracing.propagation.TextMapInjectAdapter
 import spock.lang.Shared
 import spock.lang.Specification
 
+import static datadog.opentracing.propagation.HTTPCodec.BIG_INTEGER_UINT64_MAX
+
 class HTTPCodecTest extends Specification {
   @Shared
   private static final String OT_BAGGAGE_PREFIX = "ot-baggage-"
@@ -21,11 +23,6 @@ class HTTPCodecTest extends Specification {
   private static final String SAMPLING_PRIORITY_KEY = "x-datadog-sampling-priority"
 
   HTTPCodec codec = new HTTPCodec(["SOME_HEADER": "some-tag"])
-
-  private static final byte[] BYTE_ARR_UNIT64_MAX = [
-    (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
-    (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff ] as byte[]
-  private static final BigInteger BIG_INTEGER_UINT64_MAX = (new BigInteger(BYTE_ARR_UNIT64_MAX)).add(BigInteger.ONE.shiftLeft(64))
 
   def "inject http headers"() {
     setup:
@@ -270,7 +267,8 @@ class HTTPCodecTest extends Specification {
     codec.extract(new TextMapExtractAdapter(actual))
 
     then:
-    thrown(IllegalArgumentException)
+    def iae = thrown(IllegalArgumentException)
+    assert iae.cause instanceof NumberFormatException
 
     where:
     samplingPriority              | _
