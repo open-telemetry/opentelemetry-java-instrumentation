@@ -9,6 +9,7 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
+import datadog.trace.api.DDSpanTypes;
 import io.opentracing.tag.Tags;
 import java.util.Arrays;
 import java.util.List;
@@ -34,6 +35,7 @@ public class MongoClientInstrumentationTest {
     assertThat(span.context().getSpanType()).isEqualTo("mongodb");
     assertThat(span.context().getResourceName())
         .isEqualTo(span.context().getTags().get("db.statement"));
+    assertThat(span.getSpanType()).isEqualTo(DDSpanTypes.MONGO);
   }
 
   @Test
@@ -53,6 +55,7 @@ public class MongoClientInstrumentationTest {
       final DDSpan span = new DDTracer().buildSpan("foo").start();
       DDTracingCommandListener.decorate(span, cmd);
 
+      assertThat(span.getSpanType()).isEqualTo(DDSpanTypes.MONGO);
       assertThat(span.getTags().get(Tags.DB_STATEMENT.getKey()))
           .isEqualTo(query.toString().replaceAll("secret", "?"));
     }
