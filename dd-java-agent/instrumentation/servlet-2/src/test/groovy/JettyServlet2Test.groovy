@@ -1,11 +1,7 @@
-import datadog.opentracing.DDSpan
-import datadog.opentracing.DDTracer
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.common.writer.ListWriter
-import io.opentracing.util.GlobalTracer
 import okhttp3.Credentials
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -21,45 +17,29 @@ import org.eclipse.jetty.security.authentication.BasicAuthenticator
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 
-import java.lang.reflect.Field
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class JettyServlet2Test extends AgentTestRunner {
 
-  // Jetty needs this to ensure consistent ordering for async.
-  CountDownLatch latch = new CountDownLatch(1)
-
-  OkHttpClient client = OkHttpUtils.clientBuilder()
-    .addNetworkInterceptor(new Interceptor() {
-      @Override
-      Response intercept(Interceptor.Chain chain) throws IOException {
-        def response = chain.proceed(chain.request())
-        latch.await(30, TimeUnit.SECONDS) // don't block forever or test never fails.
-        return response
-      }
-    })
+  OkHttpClient client = OkHttpUtils.clientBuilder().addNetworkInterceptor(new Interceptor() {
+    @Override
+    Response intercept(Interceptor.Chain chain) throws IOException {
+      def response = chain.proceed(chain.request())
+      TEST_WRITER.waitForTraces(1)
+      return response
+    }
+  })
     .build()
 
   int port
   private Server jettyServer
   private ServletContextHandler servletContext
 
-  ListWriter writer = new ListWriter() {
-    @Override
-    void write(final List<DDSpan> trace) {
-      add(trace)
-      JettyServlet2Test.this.latch.countDown()
-    }
-  }
-  DDTracer tracer = new DDTracer(writer)
-
   def setup() {
     port = TestUtils.randomOpenPort()
     jettyServer = new Server(port)
     servletContext = new ServletContextHandler()
+    servletContext.contextPath = "/ctx"
 
     ConstraintSecurityHandler security = setupAuthentication(jettyServer)
 
@@ -72,17 +52,6 @@ class JettyServlet2Test extends AgentTestRunner {
 
     System.out.println(
       "Jetty server: http://localhost:" + port + "/")
-
-    try {
-      GlobalTracer.register(tracer)
-    } catch (final Exception e) {
-      // Force it anyway using reflection
-      final Field field = GlobalTracer.getDeclaredField("tracer")
-      field.setAccessible(true)
-      field.set(null, tracer)
-    }
-    writer.start()
-    assert GlobalTracer.isRegistered()
   }
 
   def cleanup() {
@@ -93,7 +62,7 @@ class JettyServlet2Test extends AgentTestRunner {
   def "test #path servlet call"() {
     setup:
     def requestBuilder = new Request.Builder()
-      .url("http://localhost:$port/$path")
+      .url("http://localhost:$port/ctx/$path")
       .get()
     if (auth) {
       requestBuilder.header(HttpHeaders.AUTHORIZATION, Credentials.basic("user", "password"))
@@ -103,22 +72,22 @@ class JettyServlet2Test extends AgentTestRunner {
     expect:
     response.body().string().trim() == expectedResponse
 
-    assertTraces(writer, 1) {
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
-          serviceName "unnamed-java-app"
+          serviceName "ctx"
           operationName "servlet.request"
-          resourceName "GET /$path"
+          resourceName "GET /ctx/$path"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           parent()
           tags {
-            "http.url" "http://localhost:$port/$path"
+            "http.url" "http://localhost:$port/ctx/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" ""
+            "servlet.context" "/ctx"
             if (auth) {
               "user.principal" "user"
             }
@@ -137,7 +106,7 @@ class JettyServlet2Test extends AgentTestRunner {
   def "test #path error servlet call"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$port/$path?error=true")
+      .url("http://localhost:$port/ctx/$path?error=true")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -145,22 +114,22 @@ class JettyServlet2Test extends AgentTestRunner {
     expect:
     response.body().string().trim() != expectedResponse
 
-    assertTraces(writer, 1) {
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
-          serviceName "unnamed-java-app"
+          serviceName "ctx"
           operationName "servlet.request"
-          resourceName "GET /$path"
+          resourceName "GET /ctx/$path"
           spanType DDSpanTypes.WEB_SERVLET
           errored true
           parent()
           tags {
-            "http.url" "http://localhost:$port/$path"
+            "http.url" "http://localhost:$port/ctx/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" ""
+            "servlet.context" "/ctx"
             errorTags(RuntimeException, "some $path error")
             defaultTags()
           }
@@ -177,7 +146,7 @@ class JettyServlet2Test extends AgentTestRunner {
     // This doesn't actually detect the error because we can't get the status code via the old servlet API.
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$port/$path?non-throwing-error=true")
+      .url("http://localhost:$port/ctx/$path?non-throwing-error=true")
       .get()
       .build()
     def response = client.newCall(request).execute()
@@ -185,22 +154,22 @@ class JettyServlet2Test extends AgentTestRunner {
     expect:
     response.body().string().trim() != expectedResponse
 
-    assertTraces(writer, 1) {
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
-          serviceName "unnamed-java-app"
+          serviceName "ctx"
           operationName "servlet.request"
-          resourceName "GET /$path"
+          resourceName "GET /ctx/$path"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
           parent()
           tags {
-            "http.url" "http://localhost:$port/$path"
+            "http.url" "http://localhost:$port/ctx/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
-            "servlet.context" ""
+            "servlet.context" "/ctx"
             defaultTags()
           }
         }

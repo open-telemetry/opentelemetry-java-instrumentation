@@ -449,10 +449,16 @@ public class DDTracer implements io.opentracing.Tracer {
 
     // Private methods
     private DDSpanBuilder withTag(final String tag, final Object value) {
-      if (this.tags.isEmpty()) {
-        this.tags = new HashMap<>();
+      if (value == null || (value instanceof String && ((String) value).isEmpty())) {
+        if (this.tags.containsKey(tag)) {
+          this.tags.remove(tag);
+        }
+      } else {
+        if (this.tags.isEmpty()) {
+          this.tags = new HashMap<>();
+        }
+        this.tags.put(tag, value);
       }
-      this.tags.put(tag, value);
       return this;
     }
 

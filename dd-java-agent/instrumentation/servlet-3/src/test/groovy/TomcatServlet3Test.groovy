@@ -1,19 +1,14 @@
 import com.google.common.io.Files
-import datadog.opentracing.DDTracer
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.common.writer.ListWriter
-import io.opentracing.util.GlobalTracer
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
-
-import java.lang.reflect.Field
 
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
@@ -24,9 +19,6 @@ class TomcatServlet3Test extends AgentTestRunner {
   int port
   Tomcat tomcatServer
   Context appContext
-
-  ListWriter writer = new ListWriter()
-  DDTracer tracer = new DDTracer(writer)
 
   def setup() {
     port = TestUtils.randomOpenPort()
@@ -59,18 +51,6 @@ class TomcatServlet3Test extends AgentTestRunner {
     tomcatServer.start()
     System.out.println(
       "Tomcat server: http://" + tomcatServer.getHost().getName() + ":" + port + "/")
-
-
-    try {
-      GlobalTracer.register(tracer)
-    } catch (final Exception e) {
-      // Force it anyway using reflection
-      final Field field = GlobalTracer.getDeclaredField("tracer")
-      field.setAccessible(true)
-      field.set(null, tracer)
-    }
-    writer.start()
-    assert GlobalTracer.isRegistered()
   }
 
   def cleanup() {
@@ -89,7 +69,7 @@ class TomcatServlet3Test extends AgentTestRunner {
     expect:
     response.body().string().trim() == expectedResponse
 
-    assertTraces(writer, 1) {
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
           serviceName "my-context"
@@ -129,7 +109,7 @@ class TomcatServlet3Test extends AgentTestRunner {
     expect:
     response.body().string().trim() != expectedResponse
 
-    assertTraces(writer, 1) {
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
           serviceName "my-context"
@@ -170,7 +150,7 @@ class TomcatServlet3Test extends AgentTestRunner {
     expect:
     response.body().string().trim() != expectedResponse
 
-    assertTraces(writer, 1) {
+    assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
           serviceName "my-context"
