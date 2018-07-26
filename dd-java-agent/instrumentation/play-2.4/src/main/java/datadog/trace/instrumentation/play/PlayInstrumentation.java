@@ -128,7 +128,7 @@ public final class PlayInstrumentation extends Instrumenter.Default {
 
       scope.span().setTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER);
       scope.span().setTag(Tags.HTTP_METHOD.getKey(), req.method());
-      scope.span().setTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET);
+      scope.span().setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
       scope.span().setTag(Tags.COMPONENT.getKey(), "play-action");
 
       if (throwable == null) {

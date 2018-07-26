@@ -52,7 +52,7 @@ class RatpackTest extends AgentTestRunner {
     span.context().operationName == "ratpack.handler"
     span.context().resourceName == "GET /"
     span.context().tags["component"] == "handler"
-    span.context().spanType == DDSpanTypes.WEB_SERVLET
+    span.context().spanType == DDSpanTypes.HTTP_SERVER
     !span.context().getErrorFlag()
     span.context().tags["http.url"] == "/"
     span.context().tags["http.method"] == "GET"
@@ -92,7 +92,7 @@ class RatpackTest extends AgentTestRunner {
     span.context().operationName == "ratpack.handler"
     span.context().resourceName == "GET /:foo/:bar?/baz"
     span.context().tags["component"] == "handler"
-    span.context().spanType == DDSpanTypes.WEB_SERVLET
+    span.context().spanType == DDSpanTypes.HTTP_SERVER
     !span.context().getErrorFlag()
     span.context().tags["http.url"] == "/a/b/baz"
     span.context().tags["http.method"] == "GET"
@@ -130,7 +130,7 @@ class RatpackTest extends AgentTestRunner {
     span.context().operationName == "ratpack.handler"
     span.context().resourceName == "GET /"
     span.context().tags["component"] == "handler"
-    span.context().spanType == DDSpanTypes.WEB_SERVLET
+    span.context().spanType == DDSpanTypes.HTTP_SERVER
     span.context().tags["http.url"] == "/"
     span.context().tags["http.method"] == "GET"
     span.context().tags["span.kind"] == "server"
@@ -191,7 +191,7 @@ class RatpackTest extends AgentTestRunner {
     span.context().operationName == "ratpack.handler"
     span.context().resourceName == "GET /"
     span.context().tags["component"] == "handler"
-    span.context().spanType == DDSpanTypes.WEB_SERVLET
+    span.context().spanType == DDSpanTypes.HTTP_SERVER
     !span.context().getErrorFlag()
     span.context().tags["http.url"] == "/"
     span.context().tags["http.method"] == "GET"
@@ -234,7 +234,7 @@ class RatpackTest extends AgentTestRunner {
     nestedSpan.context().operationName == "ratpack.handler"
     nestedSpan.context().resourceName == "GET /nested2"
     nestedSpan.context().tags["component"] == "handler"
-    nestedSpan.context().spanType == DDSpanTypes.WEB_SERVLET
+    nestedSpan.context().spanType == DDSpanTypes.HTTP_SERVER
     !nestedSpan.context().getErrorFlag()
     nestedSpan.context().tags["http.url"] == "/nested2"
     nestedSpan.context().tags["http.method"] == "GET"
@@ -251,7 +251,7 @@ class RatpackTest extends AgentTestRunner {
     nestedSpan2.context().operationName == "ratpack.handler"
     nestedSpan2.context().resourceName == "GET /nested"
     nestedSpan2.context().tags["component"] == "handler"
-    nestedSpan2.context().spanType == DDSpanTypes.WEB_SERVLET
+    nestedSpan2.context().spanType == DDSpanTypes.HTTP_SERVER
     !nestedSpan2.context().getErrorFlag()
     nestedSpan2.context().tags["http.url"] == "/nested"
     nestedSpan2.context().tags["http.method"] == "GET"

@@ -37,7 +37,7 @@ public class JettyHandlerAdvice {
             .buildSpan("jetty.request")
             .asChildOf(extractedContext)
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
-            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
+            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER)
             .withTag("servlet.context", req.getContextPath())
             .withTag("span.origin.type", source.getClass().getName())
             .startActive(false);

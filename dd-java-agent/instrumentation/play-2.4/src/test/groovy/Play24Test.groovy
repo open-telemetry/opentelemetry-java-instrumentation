@@ -1,6 +1,7 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.api.DDSpanTypes
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import play.api.test.TestServer
@@ -51,6 +52,7 @@ class Play24Test extends AgentTestRunner {
     root.serviceName == "unnamed-java-app"
     root.operationName == "play.request"
     root.resourceName == "GET /helloplay/:from"
+    root.spanType == DDSpanTypes.HTTP_SERVER
     !root.context().getErrorFlag()
     root.context().tags["http.status_code"] == 200
     root.context().tags["http.url"] == "/helloplay/:from"
@@ -78,6 +80,7 @@ class Play24Test extends AgentTestRunner {
     root.serviceName == "unnamed-java-app"
     root.operationName == "play.request"
     root.resourceName == "GET /make-error"
+    root.spanType == DDSpanTypes.HTTP_SERVER
     root.context().getErrorFlag()
     root.context().tags["http.status_code"] == 500
     root.context().tags["http.url"] == "/make-error"
@@ -109,6 +112,7 @@ class Play24Test extends AgentTestRunner {
     root.serviceName == "unnamed-java-app"
     root.operationName == "play.request"
     root.resourceName == "GET /exception"
+    root.spanType == DDSpanTypes.HTTP_SERVER
     root.context().tags["http.status_code"] == 500
     root.context().tags["http.url"] == "/exception"
     root.context().tags["http.method"] == "GET"
@@ -135,6 +139,7 @@ class Play24Test extends AgentTestRunner {
     root.serviceName == "unnamed-java-app"
     root.operationName == "play.request"
     root.resourceName == "404"
+    root.spanType == DDSpanTypes.HTTP_SERVER
     !root.context().getErrorFlag()
     root.context().tags["http.status_code"] == 404
     root.context().tags["http.url"] == null

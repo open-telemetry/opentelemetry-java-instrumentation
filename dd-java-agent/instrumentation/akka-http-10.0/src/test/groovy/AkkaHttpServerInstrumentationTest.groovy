@@ -52,6 +52,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "GET /test"
+          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
             defaultTags()
@@ -59,7 +60,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "http://localhost:$port/test"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
           }
         }
@@ -94,6 +95,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "GET /$endpoint"
+          spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {
             defaultTags()
@@ -101,7 +103,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "http://localhost:$port/$endpoint"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
             errorTags RuntimeException, errorMessage
           }
@@ -134,6 +136,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "GET /server-error"
+          spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {
             defaultTags()
@@ -141,7 +144,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "http://localhost:$port/server-error"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
             "$Tags.ERROR.key" true
           }
@@ -173,6 +176,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "404"
+          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
             defaultTags()
@@ -180,7 +184,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "http://localhost:$port/not-found"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
           }
         }
