@@ -1,6 +1,7 @@
 package datadog.opentracing.decorators;
 
 import datadog.opentracing.DDSpanContext;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.tag.Tags;
 
@@ -25,13 +26,13 @@ public class DBTypeDecorator extends AbstractDecorator {
       // Special case: Mongo, set to mongodb
       if ("mongo".equals(value)) {
         // Todo: not sure it's used cos already in the agent mongo helper
-        context.setSpanType("mongodb");
+        context.setSpanType(DDSpanTypes.MONGO);
       } else if ("cassandra".equals(value)) {
-        context.setSpanType("cassandra");
+        context.setSpanType(DDSpanTypes.CASSANDRA);
       } else if ("memcached".equals(value)) {
-        context.setSpanType("cache");
+        context.setSpanType(DDSpanTypes.MEMCACHED);
       } else {
-        context.setSpanType("sql");
+        context.setSpanType(DDSpanTypes.SQL);
       }
       // Works for: mongo, cassandra, jdbc
       context.setOperationName(String.valueOf(value) + ".query");
