@@ -1,5 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
 import org.elasticsearch.client.transport.TransportClient
@@ -89,10 +91,11 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
           serviceName "elasticsearch"
           resourceName "ClusterHealthAction"
           operationName "elasticsearch.query"
-          spanType null
+          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
@@ -119,11 +122,12 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
           serviceName "elasticsearch"
           resourceName "GetAction"
           operationName "elasticsearch.query"
-          spanType null
+          spanType DDSpanTypes.ELASTICSEARCH
           errored true
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -184,10 +188,11 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
           serviceName "elasticsearch"
           resourceName "CreateIndexAction"
           operationName "elasticsearch.query"
-          spanType null
+          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
@@ -203,10 +208,11 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
           serviceName "elasticsearch"
           resourceName "GetAction"
           operationName "elasticsearch.query"
-          spanType null
+          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
@@ -225,10 +231,11 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
           serviceName "elasticsearch"
           resourceName "PutMappingAction"
           operationName "elasticsearch.query"
-          spanType null
+          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
             defaultTags()
@@ -240,10 +247,11 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
           serviceName "elasticsearch"
           resourceName "IndexAction"
           operationName "elasticsearch.query"
-          spanType null
+          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
@@ -266,10 +274,11 @@ class Elasticsearch6TransportClientTest extends AgentTestRunner {
           serviceName "elasticsearch"
           resourceName "GetAction"
           operationName "elasticsearch.query"
-          spanType null
+          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
