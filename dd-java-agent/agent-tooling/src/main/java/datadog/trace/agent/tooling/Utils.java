@@ -2,7 +2,6 @@ package datadog.trace.agent.tooling;
 
 import datadog.trace.bootstrap.DatadogClassLoader;
 import datadog.trace.bootstrap.DatadogClassLoader.BootstrapClassLoaderProxy;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 
@@ -73,25 +72,6 @@ public class Utils {
   /** com/foo/Bar.class -> com.foo.Bar */
   public static String getClassName(final String resourceName) {
     return resourceName.replaceAll("\\.class\\$", "").replace('/', '.');
-  }
-
-  public static boolean isClassLoaded(final String className, final ClassLoader classLoader) {
-    Class<?> loadedClass = findLoadedClass(className, classLoader);
-    return loadedClass != null && loadedClass.getClassLoader() == classLoader;
-  }
-
-  public static Class<?> findLoadedClass(final String className, ClassLoader classLoader) {
-    if (classLoader == ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER) {
-      classLoader = ClassLoader.getSystemClassLoader();
-    }
-    try {
-      findLoadedClassMethod.setAccessible(true);
-      return (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
-    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      throw new IllegalStateException(e);
-    } finally {
-      findLoadedClassMethod.setAccessible(false);
-    }
   }
 
   static boolean getConfigEnabled(final String name, final boolean fallback) {
