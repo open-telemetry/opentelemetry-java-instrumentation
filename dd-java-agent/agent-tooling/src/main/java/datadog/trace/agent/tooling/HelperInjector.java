@@ -65,17 +65,6 @@ public class HelperInjector implements Transformer {
         if (!injectedClassLoaders.contains(classLoader)) {
           try {
             final Map<TypeDescription, byte[]> helperMap = getHelperMap();
-            final Set<String> existingClasses = new HashSet<>();
-            final ClassLoader systemCL = ClassLoader.getSystemClassLoader();
-            if (classLoader != BOOTSTRAP_CLASSLOADER && !classLoader.equals(systemCL)) {
-              // Build a list of existing helper classes.
-              for (final TypeDescription def : helperMap.keySet()) {
-                final String name = def.getName();
-                if (Utils.isClassLoaded(name, systemCL)) {
-                  existingClasses.add(name);
-                }
-              }
-            }
             log.debug("Injecting classes onto classloader {} -> {}", classLoader, helperClassNames);
             if (classLoader == BOOTSTRAP_CLASSLOADER) {
               final Map<TypeDescription, Class<?>> injected =
@@ -89,16 +78,6 @@ public class HelperInjector implements Transformer {
               }
             } else {
               new ClassInjector.UsingReflection(classLoader).inject(helperMap);
-            }
-            if (classLoader != BOOTSTRAP_CLASSLOADER && !classLoader.equals(systemCL)) {
-              for (final TypeDescription def : helperMap.keySet()) {
-                // Ensure we didn't add any helper classes to the system CL.
-                final String name = def.getName();
-                if (!existingClasses.contains(name) && Utils.isClassLoaded(name, systemCL)) {
-                  throw new IllegalStateException(
-                      "Class was erroneously loaded on the System classloader: " + name);
-                }
-              }
             }
           } catch (final Exception e) {
             log.error(

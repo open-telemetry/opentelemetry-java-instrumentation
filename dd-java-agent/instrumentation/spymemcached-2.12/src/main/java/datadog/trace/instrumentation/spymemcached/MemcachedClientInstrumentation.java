@@ -4,7 +4,6 @@ import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClass
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.util.GlobalTracer;
@@ -24,8 +23,6 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
   private static final String MEMCACHED_PACKAGE = "net.spy.memcached";
   private static final String HELPERS_PACKAGE =
       MemcachedClientInstrumentation.class.getPackage().getName();
-
-  public static final HelperInjector HELPER_INJECTOR = new HelperInjector();
 
   public MemcachedClientInstrumentation() {
     super("spymemcached");

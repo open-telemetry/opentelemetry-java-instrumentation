@@ -152,7 +152,6 @@ tasks.withType(Test) {
   if (java7Home != null) {
     def testJ7 = task "${cloned.name}Java7"(type: cloned.class) {
       description "Runs $cloned.name under java 7"
-      // TODO: Pull from environment variable:
       executable = "$java7Home/bin/java"
       afterEvaluate {
         exclude project.testJava8Only
@@ -166,10 +165,7 @@ tasks.withType(Test) {
   if (java9Home != null) {
     def testJ9 = task "${cloned.name}Java9"(type: cloned.class) {
       description "Runs $cloned.name under java 9"
-      // TODO: Pull from environment variable:
       executable = "$java9Home/bin/java"
-      jvmArgs '--add-opens'
-      jvmArgs 'java.base/jdk.internal.loader=ALL-UNNAMED'
       project.afterEvaluate {
         exclude project.testJava8Only
       }
@@ -181,10 +177,7 @@ tasks.withType(Test) {
   if (java10Home != null) {
     def testJ10 = task "${cloned.name}Java10"(type: cloned.class) {
       description "Runs $cloned.name under java 10"
-      // TODO: Pull from environment variable:
       executable = "$java10Home/bin/java"
-      jvmArgs '--add-opens'
-      jvmArgs 'java.base/jdk.internal.loader=ALL-UNNAMED'
       project.afterEvaluate {
         exclude project.testJava8Only
       }
