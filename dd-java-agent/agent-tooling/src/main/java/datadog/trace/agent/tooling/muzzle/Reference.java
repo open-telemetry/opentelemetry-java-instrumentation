@@ -120,11 +120,7 @@ public class Reference {
   private boolean onClasspath(final String className, final ClassLoader loader) {
     final String resourceName = Utils.getResourceName(className);
     return loader.getResource(resourceName) != null
-        // helper classes are not on the resource path because they are loaded with reflection (See
-        // HelperInjector)
-        || (className.startsWith("datadog.trace.")
-            && Utils.findLoadedClass(className, loader) != null)
-        // bootstrap class
+        // we can also reach bootstrap classes
         || Utils.getBootstrapProxy().getResource(resourceName) != null;
   }
 
