@@ -55,7 +55,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
   @Shared
   ActorMaterializer materializer = ActorMaterializer.create(system)
 
-  def pool = Http.get(system).<Integer> superPool(materializer)
+  def pool = Http.get(system).superPool(materializer)
 
   def "#route request trace"() {
     setup:
