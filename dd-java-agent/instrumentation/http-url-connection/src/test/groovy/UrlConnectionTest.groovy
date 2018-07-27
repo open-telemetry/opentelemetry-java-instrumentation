@@ -41,7 +41,7 @@ class UrlConnectionTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "${scheme}.request.input_stream"
+          operationName "http.request"
           childOf span(0)
           errored true
           tags {
@@ -62,7 +62,7 @@ class UrlConnectionTest extends AgentTestRunner {
     where:
     scheme  | component
     "http"  | "HttpURLConnection"
-    "https" | "HttpsURLConnectionImpl"
+    "https" | "DelegateHttpsURLConnection"
 
     url = new URI("$scheme://localhost:$INVALID_PORT").toURL()
   }

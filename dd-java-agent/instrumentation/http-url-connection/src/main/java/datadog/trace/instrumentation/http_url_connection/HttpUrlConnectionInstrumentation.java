@@ -6,6 +6,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -23,6 +24,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 import javax.net.ssl.HttpsURLConnection;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -41,13 +43,16 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher typeMatcher() {
-    return isSubTypeOf(HttpURLConnection.class);
+    return isSubTypeOf(HttpURLConnection.class)
+        // This class is a simple delegator. Skip because it does not update its `connected` field.
+        .and(not(named("sun.net.www.protocol.https.HttpsURLConnectionImpl")));
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.http_url_connection.MessageHeadersInjectAdapter"
+      "datadog.trace.instrumentation.http_url_connection.MessageHeadersInjectAdapter",
+      HttpUrlConnectionInstrumentation.class.getName() + "$HttpURLState"
     };
   }
 
@@ -59,6 +64,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
             .and(isPublic())
             .and(
                 named("getResponseCode")
+                    .or(named("connect"))
                     .or(named("getOutputStream"))
                     .or(named("getInputStream"))
                     .or(nameStartsWith("getHeaderField"))),
@@ -70,14 +76,44 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
-        @Advice.This final HttpURLConnection connection,
+        @Advice.This final HttpURLConnection thiz,
         @Advice.FieldValue("connected") final boolean connected,
         @Advice.Origin("#m") final String methodName) {
 
+      final HttpURLState state = HttpURLState.get(thiz);
+      String operationName = "http.request";
+      if ("connect".equals(methodName)) {
+        if (connected) {
+          return null;
+        }
+        // We get here in cases where connect() is called first.
+        // We need to inject headers now because after connected=true no more headers can be added.
+
+        // In total there will be two spans:
+        // - one for the connect() which does propagation
+        // - one for the input or output stream (presumably called after connect())
+        operationName += ".connect";
+      } else {
+        if (state.hasDoneIO()) {
+          return null;
+        }
+        state.setHasDoneIO(true);
+      }
+
+      // AgentWriter uses HttpURLConnection to report to the trace-agent. We don't want to trace
+      // those requests.
+      // Check after the connected test above because getRequestProperty will throw an exception if
+      // already connected.
       final boolean isTraceRequest =
           Thread.currentThread().getName().equals("dd-agent-writer")
-              || connection.getRequestProperty("Datadog-Meta-Lang") != null;
+              || (!connected && thiz.getRequestProperty("Datadog-Meta-Lang") != null);
       if (isTraceRequest) {
+        return null;
+      }
+
+      final Tracer tracer = GlobalTracer.get();
+      if (tracer.activeSpan() == null) {
+        // httpurlconnection doesn't play nicely with top-level spans
         return null;
       }
 
@@ -86,50 +122,29 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      String protocol = "url";
-      if (connection != null) {
-        final URL url = connection.getURL();
-        protocol = url.getProtocol();
-      }
-
-      String command = ".request.response_code";
-      if (methodName.equals("getOutputStream")) {
-        command = ".request.output_stream";
-      } else if (methodName.equals("getInputStream")) {
-        command = ".request.input_stream";
-      }
-
-      final Tracer tracer = GlobalTracer.get();
       final Scope scope =
           tracer
-              .buildSpan(protocol + command)
+              .buildSpan(operationName)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
               .startActive(true);
 
-      if (connection != null) {
-        final URL url = connection.getURL();
-        final Span span = scope.span();
-        Tags.COMPONENT.set(scope.span(), connection.getClass().getSimpleName());
-        Tags.HTTP_URL.set(span, url.toString());
-        Tags.PEER_HOSTNAME.set(span, url.getHost());
-        if (url.getPort() > 0) {
-          Tags.PEER_PORT.set(span, url.getPort());
-        } else if (connection instanceof HttpsURLConnection) {
-          Tags.PEER_PORT.set(span, 443);
-        } else {
-          Tags.PEER_PORT.set(span, 80);
-        }
-
-        Tags.HTTP_METHOD.set(span, connection.getRequestMethod());
-
-        if (!connected) {
-          tracer.inject(
-              span.context(),
-              Format.Builtin.HTTP_HEADERS,
-              new MessageHeadersInjectAdapter(connection));
-        }
+      final URL url = thiz.getURL();
+      final Span span = scope.span();
+      Tags.COMPONENT.set(scope.span(), thiz.getClass().getSimpleName());
+      Tags.HTTP_URL.set(span, url.toString());
+      Tags.PEER_HOSTNAME.set(span, url.getHost());
+      if (url.getPort() > 0) {
+        Tags.PEER_PORT.set(span, url.getPort());
+      } else if (thiz instanceof HttpsURLConnection) {
+        Tags.PEER_PORT.set(span, 443);
+      } else {
+        Tags.PEER_PORT.set(span, 80);
       }
+      Tags.HTTP_METHOD.set(span, thiz.getRequestMethod());
+
+      tracer.inject(
+          span.context(), Format.Builtin.HTTP_HEADERS, new MessageHeadersInjectAdapter(thiz));
       return scope;
     }
 
@@ -144,15 +159,44 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       }
 
       final Span span = scope.span();
-
       if (throwable != null) {
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       } else if (responseCode > 0) {
+        // responseCode field cache is sometimes not populated.
+        // We can't call getResponseCode() due to some unwanted side-effects (e.g. breaks
+        // getOutputStream).
         Tags.HTTP_STATUS.set(span, responseCode);
       }
       scope.close();
       CallDepthThreadLocalMap.reset(HttpURLConnection.class);
+    }
+  }
+
+  public static class HttpURLState {
+    private static final Map<HttpURLConnection, HttpURLState> STATE_MAP =
+        Collections.synchronizedMap(new WeakHashMap<HttpURLConnection, HttpURLState>());
+
+    public static HttpURLState get(HttpURLConnection connection) {
+      HttpURLState state = STATE_MAP.get(connection);
+      if (state == null) {
+        // not thread-safe, but neither is HttpURLConnection
+        state = new HttpURLState();
+        STATE_MAP.put(connection, state);
+      }
+      return state;
+    }
+
+    public boolean hasDoneIO = false;
+
+    private HttpURLState() {}
+
+    public boolean hasDoneIO() {
+      return hasDoneIO;
+    }
+
+    public void setHasDoneIO(boolean value) {
+      this.hasDoneIO = value;
     }
   }
 }

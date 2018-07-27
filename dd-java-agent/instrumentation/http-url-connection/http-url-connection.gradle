@@ -12,4 +12,6 @@ dependencies {
   implementation deps.autoservice
 
   testCompile project(':dd-java-agent:testing')
+  testCompile group: 'org.springframework', name: 'spring-web', version: '4.3.7.RELEASE'
+
 }
