@@ -42,6 +42,7 @@ public class AgentInstaller {
         new AgentBuilder.Default()
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+            .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(new LoggingListener())
             .with(new DDLocationStrategy())
             .ignore(any(), skipClassLoader())

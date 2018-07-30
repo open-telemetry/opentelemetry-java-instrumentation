@@ -21,11 +21,11 @@ public class ReferenceMatcher {
   private final Reference[] references;
   private final Set<String> helperClassNames;
 
-  public ReferenceMatcher(Reference... references) {
+  public ReferenceMatcher(final Reference... references) {
     this(new String[0], references);
   }
 
-  public ReferenceMatcher(String[] helperClassNames, Reference[] references) {
+  public ReferenceMatcher(final String[] helperClassNames, final Reference[] references) {
     this.references = references;
     this.helperClassNames = new HashSet<>(Arrays.asList(helperClassNames));
   }
@@ -34,7 +34,7 @@ public class ReferenceMatcher {
    * @param loader Classloader to validate against (or null for bootstrap)
    * @return true if all references match the classpath of loader
    */
-  public boolean matches(ClassLoader loader) {
+  public boolean matches(final ClassLoader loader) {
     return getMismatchedReferenceSources(loader).size() == 0;
   }
 
@@ -52,7 +52,7 @@ public class ReferenceMatcher {
         mismatches = mismatchCache.get(loader);
         if (null == mismatches) {
           mismatches = new ArrayList<>(0);
-          for (Reference reference : references) {
+          for (final Reference reference : references) {
             // Don't reference-check helper classes.
             // They will be injected by the instrumentation's HelperInjector.
             if (!helperClassNames.contains(reference.getClassName())) {
