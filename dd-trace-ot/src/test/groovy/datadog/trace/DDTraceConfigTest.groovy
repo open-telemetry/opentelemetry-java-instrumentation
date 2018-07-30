@@ -129,7 +129,7 @@ class DDTraceConfigTest extends Specification {
     where:
     mapString       | map
     "a:1, a:2, a:3" | [a: "3"]
-    "a:b,c:d"       | [a: "b", c: "d"]
+    "a:b,c:d,e:"    | [a: "b", c: "d"]
   }
 
   def "verify single override on #source for #key"() {
@@ -151,20 +151,21 @@ class DDTraceConfigTest extends Specification {
 
   def "parsing valid string returns a map"() {
     expect:
-    parseMap(str) == map
+    parseMap(str, "test") == map
 
     where:
     str                               | map
+    "a:"                              | [:]
     "a:a;"                            | [a: "a;"]
     "a:1, a:2, a:3"                   | [a: "3"]
-    "a:b,c:d"                         | [a: "b", c: "d"]
+    "a:b,c:d,e:"                      | [a: "b", c: "d"]
     "key 1!:va|ue_1,"                 | ["key 1!": "va|ue_1"]
     " key1 :value1 ,\t key2:  value2" | [key1: "value1", key2: "value2"]
   }
 
   def "parsing an invalid string returns an empty map"() {
     expect:
-    parseMap(str) == [:]
+    parseMap(str, "test") == [:]
 
     where:
     str         | _
@@ -172,7 +173,6 @@ class DDTraceConfigTest extends Specification {
     ""          | _
     "1"         | _
     "a"         | _
-    "a:"        | _
     "a,1"       | _
     "in:val:id" | _
     "a:b:c:d"   | _

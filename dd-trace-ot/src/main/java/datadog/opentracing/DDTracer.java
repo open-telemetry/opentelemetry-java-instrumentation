@@ -1,5 +1,9 @@
 package datadog.opentracing;
 
+import static datadog.trace.common.DDTraceConfig.HEADER_TAGS;
+import static datadog.trace.common.DDTraceConfig.SERVICE_MAPPING;
+import static datadog.trace.common.DDTraceConfig.SERVICE_NAME;
+import static datadog.trace.common.DDTraceConfig.SPAN_TAGS;
 import static datadog.trace.common.util.Config.parseMap;
 
 import datadog.opentracing.decorators.AbstractDecorator;
@@ -89,12 +93,12 @@ public class DDTracer implements io.opentracing.Tracer {
 
   public DDTracer(final Properties config) {
     this(
-        config.getProperty(DDTraceConfig.SERVICE_NAME),
+        config.getProperty(SERVICE_NAME),
         Writer.Builder.forConfig(config),
         Sampler.Builder.forConfig(config),
-        parseMap(config.getProperty(DDTraceConfig.SPAN_TAGS)),
-        parseMap(config.getProperty(DDTraceConfig.SERVICE_MAPPING)),
-        parseMap(config.getProperty(DDTraceConfig.HEADER_TAGS)));
+        parseMap(config.getProperty(SPAN_TAGS), SPAN_TAGS),
+        parseMap(config.getProperty(SERVICE_MAPPING), SERVICE_MAPPING),
+        parseMap(config.getProperty(HEADER_TAGS), HEADER_TAGS));
     log.debug("Using config: {}", config);
   }
 
@@ -167,9 +171,9 @@ public class DDTracer implements io.opentracing.Tracer {
         UNASSIGNED_DEFAULT_SERVICE_NAME,
         writer,
         new AllSampler(),
-        parseMap(new DDTraceConfig().getProperty(DDTraceConfig.SPAN_TAGS)),
-        parseMap(new DDTraceConfig().getProperty(DDTraceConfig.SERVICE_MAPPING)),
-        parseMap(new DDTraceConfig().getProperty(DDTraceConfig.HEADER_TAGS)));
+        parseMap(new DDTraceConfig().getProperty(SPAN_TAGS), SPAN_TAGS),
+        parseMap(new DDTraceConfig().getProperty(SERVICE_MAPPING), SPAN_TAGS),
+        parseMap(new DDTraceConfig().getProperty(HEADER_TAGS), SPAN_TAGS));
   }
 
   /**

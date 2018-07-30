@@ -16,12 +16,13 @@ public abstract class Config {
     return name.toUpperCase().replace(".", "_");
   }
 
-  public static Map<String, String> parseMap(final String str) {
+  public static Map<String, String> parseMap(final String str, final String settingName) {
     if (str == null || str.trim().isEmpty()) {
       return Collections.emptyMap();
     }
-    if (!str.matches("(([^,:]+:[^,:]+,)*([^,:]+:[^,:]+),?)?")) {
-      log.warn("Invalid config '{}'. Must match 'key1:value1,key2:value2'.", str);
+    if (!str.matches("(([^,:]+:[^,:]*,)*([^,:]+:[^,:]*),?)?")) {
+      log.warn(
+          "Invalid config for {}: '{}'. Must match 'key1:value1,key2:value2'.", settingName, str);
       return Collections.emptyMap();
     }
 
@@ -31,7 +32,13 @@ public abstract class Config {
     for (final String token : tokens) {
       final String[] keyValue = token.split(":", -1);
       if (keyValue.length == 2) {
-        map.put(keyValue[0].trim(), keyValue[1].trim());
+        final String key = keyValue[0].trim();
+        final String value = keyValue[1].trim();
+        if (value.length() <= 0) {
+          log.warn("Ignoring empty value for key '{}' in config for {}", key, settingName);
+          continue;
+        }
+        map.put(key, value);
       }
     }
     return Collections.unmodifiableMap(map);
