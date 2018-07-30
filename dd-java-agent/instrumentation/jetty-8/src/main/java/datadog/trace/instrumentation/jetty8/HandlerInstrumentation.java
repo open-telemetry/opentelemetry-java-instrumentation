@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.jetty8;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -30,7 +30,7 @@ public final class HandlerInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher typeMatcher() {
     return not(isInterface())
-        .and(hasSuperType(named("org.eclipse.jetty.server.Handler")))
+        .and(safeHasSuperType(named("org.eclipse.jetty.server.Handler")))
         .and(not(named("org.eclipse.jetty.server.handler.HandlerWrapper")));
   }
 

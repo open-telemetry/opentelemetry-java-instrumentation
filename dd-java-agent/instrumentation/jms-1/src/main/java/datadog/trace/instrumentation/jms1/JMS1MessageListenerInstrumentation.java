@@ -1,9 +1,9 @@
 package datadog.trace.instrumentation.jms1;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.instrumentation.jms.util.JmsUtil.toResourceName;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -39,7 +39,7 @@ public final class JMS1MessageListenerInstrumentation extends Instrumenter.Defau
 
   @Override
   public ElementMatcher typeMatcher() {
-    return not(isInterface()).and(hasSuperType(named("javax.jms.MessageListener")));
+    return not(isInterface()).and(safeHasSuperType(named("javax.jms.MessageListener")));
   }
 
   @Override

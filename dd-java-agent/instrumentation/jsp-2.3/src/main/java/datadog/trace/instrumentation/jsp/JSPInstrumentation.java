@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.jsp;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -39,12 +39,12 @@ public final class JSPInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher typeMatcher() {
-    return not(isInterface()).and(hasSuperType(named("javax.servlet.jsp.HttpJspPage")));
+    return not(isInterface()).and(safeHasSuperType(named("javax.servlet.jsp.HttpJspPage")));
   }
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         named("_jspService")
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
@@ -68,14 +68,14 @@ public final class JSPInstrumentation extends Instrumenter.Default {
 
       final Span span = scope.span();
       // get the JSP file name being rendered in an include action
-      Object includeServletPath = req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
+      final Object includeServletPath = req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
       String resourceName = req.getServletPath();
       if (includeServletPath != null && includeServletPath instanceof String) {
         resourceName = includeServletPath.toString();
       }
       span.setTag(DDTags.RESOURCE_NAME, resourceName);
 
-      Object forwardOrigin = req.getAttribute(RequestDispatcher.FORWARD_SERVLET_PATH);
+      final Object forwardOrigin = req.getAttribute(RequestDispatcher.FORWARD_SERVLET_PATH);
       if (forwardOrigin != null && forwardOrigin instanceof String) {
         span.setTag("jsp.forwardOrigin", forwardOrigin.toString());
       }

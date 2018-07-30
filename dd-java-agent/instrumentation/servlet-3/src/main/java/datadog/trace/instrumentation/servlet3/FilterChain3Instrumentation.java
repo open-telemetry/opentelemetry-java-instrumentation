@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.servlet3;
 
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -18,7 +18,7 @@ public final class FilterChain3Instrumentation extends AbstractServlet3Instrumen
 
   @Override
   public ElementMatcher typeMatcher() {
-    return not(isInterface()).and(hasSuperType(named("javax.servlet.FilterChain")));
+    return not(isInterface()).and(safeHasSuperType(named("javax.servlet.FilterChain")));
   }
 
   @Override

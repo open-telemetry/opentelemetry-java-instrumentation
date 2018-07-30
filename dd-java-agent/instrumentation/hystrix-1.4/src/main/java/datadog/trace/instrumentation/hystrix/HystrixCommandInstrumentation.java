@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.hystrix;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -31,7 +31,7 @@ public class HystrixCommandInstrumentation extends Instrumenter.Default {
   public ElementMatcher typeMatcher() {
     // Not adding a version restriction because this should work with any version and add some
     // benefit.
-    return not(isInterface()).and(hasSuperType(named("com.netflix.hystrix.HystrixCommand")));
+    return not(isInterface()).and(safeHasSuperType(named("com.netflix.hystrix.HystrixCommand")));
   }
 
   @Override

@@ -1,8 +1,8 @@
 package datadog.trace.instrumentation.apachehttpclient;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -32,7 +32,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher typeMatcher() {
     return named("org.apache.http.impl.client.HttpClientBuilder")
-        .or(hasSuperType(named("org.apache.http.impl.client.CloseableHttpClient")));
+        .or(safeHasSuperType(named("org.apache.http.impl.client.CloseableHttpClient")));
   }
 
   @Override

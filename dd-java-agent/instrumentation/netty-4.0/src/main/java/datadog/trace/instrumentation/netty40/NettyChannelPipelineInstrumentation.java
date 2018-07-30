@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.netty40;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -48,7 +48,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher typeMatcher() {
-    return not(isInterface()).and(hasSuperType(named("io.netty.channel.ChannelPipeline")));
+    return not(isInterface()).and(safeHasSuperType(named("io.netty.channel.ChannelPipeline")));
   }
 
   @Override
@@ -99,7 +99,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
         @Advice.Enter final int depth,
         @Advice.This final ChannelPipeline pipeline,
         @Advice.Argument(2) final ChannelHandler handler) {
-      if (depth > 0) return;
+      if (depth > 0) {
+        return;
+      }
 
       try {
         // Server pipeline handlers
