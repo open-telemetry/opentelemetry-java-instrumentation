@@ -82,6 +82,34 @@ class DDSpanBuilderTest extends Specification {
     context.tags[DDTags.THREAD_ID] == Thread.currentThread().getId()
   }
 
+  def "setting #name should remove"() {
+    setup:
+    final DDSpan span = tracer.buildSpan("op name")
+      .withTag(name, "tag value")
+      .withTag(name, value)
+      .start()
+
+    expect:
+    span.tags[name] == null
+
+    when:
+    span.setTag(name, "a tag")
+
+    then:
+    span.tags[name] == "a tag"
+
+    when:
+    span.setTag(name, (String) value)
+
+    then:
+    span.tags[name] == null
+
+    where:
+    name        | value
+    "null.tag"  | null
+    "empty.tag" | ""
+  }
+
   def "should build span timestamp in nano"() {
     setup:
     // time in micro
