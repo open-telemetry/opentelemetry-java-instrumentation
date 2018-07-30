@@ -1,8 +1,9 @@
 package datadog.trace.instrumentation.jdbc;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -10,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.JDBCMaps;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +26,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher typeMatcher() {
-    return not(isInterface()).and(isSubTypeOf(Connection.class));
+    return not(isInterface()).and(safeHasSuperType(named("java.sql.Connection")));
   }
 
   @Override
