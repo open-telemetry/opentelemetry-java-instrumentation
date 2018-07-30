@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.jdbc;
 
-import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -27,12 +26,12 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher typeMatcher() {
-    return not(isInterface()).and(failSafe(isSubTypeOf(Connection.class)));
+    return not(isInterface()).and(isSubTypeOf(Connection.class));
   }
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         nameStartsWith("prepare")
             .and(takesArgument(0, String.class))

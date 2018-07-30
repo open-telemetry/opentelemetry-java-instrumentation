@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.jaxrs;
 
-import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -22,7 +21,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher typeMatcher() {
-    return failSafe(hasSuperType(named("javax.ws.rs.client.ClientBuilder")));
+    return hasSuperType(named("javax.ws.rs.client.ClientBuilder"));
   }
 
   @Override

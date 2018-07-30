@@ -3,7 +3,6 @@ package datadog.trace.instrumentation.jms2;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.instrumentation.jms.util.JmsUtil.toResourceName;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static net.bytebuddy.matcher.ElementMatchers.failSafe;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -40,7 +39,7 @@ public final class JMS2MessageProducerInstrumentation extends Instrumenter.Defau
 
   @Override
   public ElementMatcher typeMatcher() {
-    return not(isInterface()).and(failSafe(hasSuperType(named("javax.jms.MessageProducer"))));
+    return not(isInterface()).and(hasSuperType(named("javax.jms.MessageProducer")));
   }
 
   @Override
@@ -55,7 +54,7 @@ public final class JMS2MessageProducerInstrumentation extends Instrumenter.Defau
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         named("send").and(takesArgument(0, named("javax.jms.Message"))).and(isPublic()),
         ProducerAdvice.class.getName());
