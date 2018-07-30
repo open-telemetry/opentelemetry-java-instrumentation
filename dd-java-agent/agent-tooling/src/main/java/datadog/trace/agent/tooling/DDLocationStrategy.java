@@ -12,16 +12,14 @@ import net.bytebuddy.utility.JavaModule;
  * reached.
  */
 public class DDLocationStrategy implements AgentBuilder.LocationStrategy {
-  private static final ClassLoader BOOTSTRAP_RESOURCE_LOCATOR = new ClassLoader(null) {};
-
   @Override
-  public ClassFileLocator classFileLocator(ClassLoader classLoader, JavaModule javaModule) {
-    List<ClassFileLocator> locators = new ArrayList<ClassFileLocator>();
+  public ClassFileLocator classFileLocator(ClassLoader classLoader, final JavaModule javaModule) {
+    final List<ClassFileLocator> locators = new ArrayList<>();
     while (classLoader != null) {
       locators.add(ClassFileLocator.ForClassLoader.of(classLoader));
       classLoader = classLoader.getParent();
     }
-    locators.add(ClassFileLocator.ForClassLoader.of(BOOTSTRAP_RESOURCE_LOCATOR));
+    locators.add(ClassFileLocator.ForClassLoader.of(Utils.getBootstrapProxy()));
     return new ClassFileLocator.Compound(locators.toArray(new ClassFileLocator[0]));
   }
 }
