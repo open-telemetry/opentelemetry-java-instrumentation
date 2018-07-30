@@ -141,14 +141,14 @@ class DDSpanBuilderTest extends Specification {
 
   def "should link to parent span"() {
     setup:
-    final long spanId = 1L
+    final String spanId = "1"
     final long expectedParentId = spanId
 
     final DDSpanContext mockedContext = mock(DDSpanContext)
-
+    when(mockedContext.getTraceId()).thenReturn(spanId)
     when(mockedContext.getSpanId()).thenReturn(spanId)
     when(mockedContext.getServiceName()).thenReturn("foo")
-    when(mockedContext.getTrace()).thenReturn(new PendingTrace(tracer, 1L, [:]))
+    when(mockedContext.getTrace()).thenReturn(new PendingTrace(tracer, "1", [:]))
 
     final String expectedName = "fakeName"
 
@@ -163,6 +163,7 @@ class DDSpanBuilderTest extends Specification {
 
     expect:
     actualContext.getParentId() == expectedParentId
+    actualContext.getTraceId() == spanId
   }
 
   def "should inherit the DD parent attributes"() {
@@ -265,8 +266,8 @@ class DDSpanBuilderTest extends Specification {
 
     where:
     extractedContext                                                  | _
-    new ExtractedContext(1, 2, 0, [:], [:])                           | _
-    new ExtractedContext(3, 4, 1, ["asdf": "qwer"], ["zxcv": "1234"]) | _
+    new ExtractedContext("1", "2", 0, [:], [:])                           | _
+    new ExtractedContext("3", "4", 1, ["asdf": "qwer"], ["zxcv": "1234"]) | _
   }
 
   def "global span tags populated on each span"() {

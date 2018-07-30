@@ -116,7 +116,7 @@ class AWSClientTest extends AgentTestRunner {
     span1.resourceName == "apache.http"
     span1.type == null
     !span1.context().getErrorFlag()
-    span1.context().parentId == 0
+    span1.context().parentId == "0"
 
 
     def tags1 = span1.context().tags
@@ -159,7 +159,7 @@ class AWSClientTest extends AgentTestRunner {
     span.resourceName == "$service.$operation"
     span.type == "web"
     !span.context().getErrorFlag()
-    span.context().parentId == 0
+    span.context().parentId == "0"
 
     def tags = span.context().tags
     tags[Tags.COMPONENT.key] == "java-aws-sdk"

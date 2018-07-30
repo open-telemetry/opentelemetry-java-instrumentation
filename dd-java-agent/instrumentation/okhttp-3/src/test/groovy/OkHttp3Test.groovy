@@ -45,7 +45,7 @@ class OkHttp3Test extends AgentTestRunner {
     span1.resourceName == "okhttp.http"
     span1.type == DDSpanTypes.WEB_SERVLET
     !span1.context().getErrorFlag()
-    span1.context().parentId == 0
+    span1.context().parentId == "0"
 
 
     def tags1 = span1.context().tags

@@ -30,7 +30,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   }
 
   private final DDTracer tracer;
-  private final long traceId;
+  private final String traceId;
   private final Map<String, String> serviceNameMappings;
 
   // TODO: consider moving these time fields into DDTracer to ensure that traces have precise
@@ -51,7 +51,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   private final AtomicBoolean isWritten = new AtomicBoolean(false);
 
   PendingTrace(
-      final DDTracer tracer, final long traceId, final Map<String, String> serviceNameMappings) {
+      final DDTracer tracer, final String traceId, final Map<String, String> serviceNameMappings) {
     this.tracer = tracer;
     this.traceId = traceId;
     this.serviceNameMappings = serviceNameMappings;
@@ -77,7 +77,13 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   }
 
   public void registerSpan(final DDSpan span) {
-    if (span.context().getTraceId() != traceId) {
+    if (traceId == null || span.context() == null) {
+      log.error(
+          "Failed to register span ({}) due to null PendingTrace traceId or null span context",
+          span);
+      return;
+    }
+    if (!traceId.equals(span.context().getTraceId())) {
       log.debug("{} - span registered for wrong trace ({})", span, traceId);
       return;
     }
@@ -95,7 +101,12 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   }
 
   private void expireSpan(final DDSpan span) {
-    if (span.context().getTraceId() != traceId) {
+    if (traceId == null || span.context() == null) {
+      log.error(
+          "Failed to expire span ({}) due to null PendingTrace traceId or null span context", span);
+      return;
+    }
+    if (!traceId.equals(span.context().getTraceId())) {
       log.debug("{} - span expired for wrong trace ({})", span, traceId);
       return;
     }
@@ -116,7 +127,12 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       log.debug("{} - added to trace, but not complete.", span);
       return;
     }
-    if (traceId != span.getTraceId()) {
+    if (traceId == null || span.context() == null) {
+      log.error(
+          "Failed to add span ({}) due to null PendingTrace traceId or null span context", span);
+      return;
+    }
+    if (!traceId.equals(span.getTraceId())) {
       log.debug("{} - added to a mismatched trace.", span);
       return;
     }

@@ -19,7 +19,7 @@ class TraceCorrelationTest extends AgentTestRunner {
     scope.close()
 
     then:
-    CorrelationIdentifier.traceId == 0
-    CorrelationIdentifier.spanId == 0
+    CorrelationIdentifier.traceId == "0"
+    CorrelationIdentifier.spanId == "0"
   }
 }

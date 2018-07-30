@@ -17,9 +17,9 @@ class DDApiIntegrationTest {
     static final WRITER = new ListWriter()
     static final TRACER = new DDTracer(WRITER)
     static final CONTEXT = new DDSpanContext(
-      1L,
-      1L,
-      0L,
+      "1",
+      "1",
+      "0",
       "fakeService",
       "fakeOperation",
       "fakeResource",
@@ -28,7 +28,7 @@ class DDApiIntegrationTest {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new PendingTrace(TRACER, 1L, [:]),
+      new PendingTrace(TRACER, "1", [:]),
       TRACER)
 
     def api = new DDApi(DDAgentWriter.DEFAULT_HOSTNAME, DDAgentWriter.DEFAULT_PORT, v4())

@@ -46,8 +46,8 @@ class Play24Test extends AgentTestRunner {
     playTrace.size() == 2
     playTrace[1].operationName == 'TracedWork$.doWork'
 
-    root.traceId == 123
-    root.parentId == 456
+    root.traceId == "123"
+    root.parentId == "456"
     root.serviceName == "unnamed-java-app"
     root.operationName == "play.request"
     root.resourceName == "GET /helloplay/:from"

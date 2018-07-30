@@ -39,14 +39,14 @@ class SpanAssert {
   }
 
   def parent() {
-    assert span.parentId == 0
+    assert span.parentId == "0"
   }
 
-  def parentId(long parentId) {
+  def parentId(String parentId) {
     assert span.parentId == parentId
   }
 
-  def traceId(long traceId) {
+  def traceId(String traceId) {
     assert span.traceId == traceId
   }
 

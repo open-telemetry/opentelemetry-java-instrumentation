@@ -87,9 +87,9 @@ class URLAsResourceNameTest extends Specification {
     when:
     final DDSpanContext context =
       new DDSpanContext(
-        1L,
-        1L,
-        0L,
+        "1",
+        "1",
+        "0",
         "fakeService",
         "fakeOperation",
         "fakeResource",
@@ -98,7 +98,7 @@ class URLAsResourceNameTest extends Specification {
         false,
         "fakeType",
         tags,
-        new PendingTrace(tracer, 1L, [:]),
+        new PendingTrace(tracer, "1", [:]),
         tracer)
 
     then:

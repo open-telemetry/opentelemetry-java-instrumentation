@@ -16,29 +16,29 @@ public class CorrelationIdentifier {
     }
   }
 
-  public static long getTraceId() {
+  public static String getTraceId() {
     return provider.get().getTraceId();
   }
 
-  public static long getSpanId() {
+  public static String getSpanId() {
     return provider.get().getSpanId();
   }
 
   public interface Provider {
-    long getTraceId();
+    String getTraceId();
 
-    long getSpanId();
+    String getSpanId();
 
     Provider NO_OP =
         new Provider() {
           @Override
-          public long getTraceId() {
-            return 0;
+          public String getTraceId() {
+            return "0";
           }
 
           @Override
-          public long getSpanId() {
-            return 0;
+          public String getSpanId() {
+            return "0";
           }
         };
   }

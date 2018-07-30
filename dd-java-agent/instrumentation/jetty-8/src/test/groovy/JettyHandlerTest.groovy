@@ -66,7 +66,7 @@ class JettyHandlerTest extends AgentTestRunner {
     context.resourceName == "GET ${handler.class.name}"
     context.spanType == DDSpanTypes.WEB_SERVLET
     !context.getErrorFlag()
-    context.parentId == 0
+    context.parentId == "0"
     def tags = context.tags
     tags["http.url"] == "http://localhost:$port/"
     tags["http.method"] == "GET"
@@ -154,7 +154,7 @@ class JettyHandlerTest extends AgentTestRunner {
     context.resourceName == "GET ${handler.class.name}"
     context.spanType == DDSpanTypes.WEB_SERVLET
     context.getErrorFlag()
-    context.parentId == 0
+    context.parentId == "0"
     def tags = context.tags
     tags["http.url"] == "http://localhost:$port/"
     tags["http.method"] == "GET"

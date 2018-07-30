@@ -465,9 +465,10 @@ public class DDTracer implements io.opentracing.Tracer {
       return this;
     }
 
-    private long generateNewId() {
+    private String generateNewId() {
+      // TODO: expand the range of numbers generated to be from 1 to uint 64 MAX
       // Ensure the generated ID is in a valid range:
-      return ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
+      return String.valueOf(ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE));
     }
 
     /**
@@ -477,9 +478,9 @@ public class DDTracer implements io.opentracing.Tracer {
      * @return the context
      */
     private DDSpanContext buildSpanContext() {
-      final long traceId;
-      final long spanId = generateNewId();
-      final long parentSpanId;
+      final String traceId;
+      final String spanId = generateNewId();
+      final String parentSpanId;
       final Map<String, String> baggage;
       final PendingTrace parentTrace;
       final int samplingPriority;
@@ -521,7 +522,7 @@ public class DDTracer implements io.opentracing.Tracer {
         // Start a new trace
       } else {
         traceId = generateNewId();
-        parentSpanId = 0L;
+        parentSpanId = "0";
         baggage = null;
         parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
         samplingPriority = PrioritySampling.UNSET;

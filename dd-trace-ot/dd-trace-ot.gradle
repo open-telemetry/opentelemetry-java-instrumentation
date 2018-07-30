@@ -34,7 +34,9 @@ dependencies {
 
   compile deps.jackson
   compile deps.slf4j
-  compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.2'
+  // any higher versions seems to break ES tests with this exception:
+  // java.lang.NoSuchMethodError: com.fasterxml.jackson.dataformat.smile.SmileGenerator.getOutputContext()
+  compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.14'
 
   testCompile deps.autoservice
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6'

@@ -39,9 +39,9 @@ class DDSpanSerializationTest extends Specification {
     def tracer = new DDTracer(writer)
     final DDSpanContext context =
       new DDSpanContext(
-        1L,
-        2L,
-        0L,
+        "1",
+        "2",
+        "0",
         "service",
         "operation",
         null,
@@ -50,7 +50,7 @@ class DDSpanSerializationTest extends Specification {
         false,
         "type",
         tags,
-        new PendingTrace(tracer, 1L, [:]),
+        new PendingTrace(tracer, "1", [:]),
         tracer)
 
     baggage.put(DDTags.THREAD_NAME, Thread.currentThread().getName())
