@@ -121,7 +121,7 @@ class DDTraceConfigTest extends Specification {
     def taggedHeaders = tracer.registry.codecs.values().first().taggedHeaders
 
     then:
-    tracer.spanTags == map
+    tracer.defaultSpanTags == map
     tracer.serviceNameMappings == map
     taggedHeaders == map
 
