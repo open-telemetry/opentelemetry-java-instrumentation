@@ -53,7 +53,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("io.netty.handler.codec.http2.DefaultHttp2ConnectionDecoder");
+    return classLoaderHasClasses("io.netty.handler.codec.http.HttpHeaderValues");
   }
 
   @Override
@@ -74,7 +74,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(nameStartsWith("add"))
