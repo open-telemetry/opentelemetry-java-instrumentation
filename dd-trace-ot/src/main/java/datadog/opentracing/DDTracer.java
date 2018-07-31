@@ -113,6 +113,10 @@ public class DDTracer implements io.opentracing.Tracer {
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders) {
+    assert defaultSpanTags != null;
+    assert serviceNameMappings != null;
+    assert taggedHeaders != null;
+
     this.serviceName = serviceName;
     this.writer = writer;
     this.writer.start();
