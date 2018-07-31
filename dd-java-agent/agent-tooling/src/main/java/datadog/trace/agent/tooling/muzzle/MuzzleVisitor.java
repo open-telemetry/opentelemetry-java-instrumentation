@@ -12,7 +12,12 @@ import net.bytebuddy.description.field.FieldList;
 import net.bytebuddy.description.method.MethodList;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.Implementation;
-import net.bytebuddy.jar.asm.*;
+import net.bytebuddy.jar.asm.ClassVisitor;
+import net.bytebuddy.jar.asm.ClassWriter;
+import net.bytebuddy.jar.asm.Label;
+import net.bytebuddy.jar.asm.MethodVisitor;
+import net.bytebuddy.jar.asm.Opcodes;
+import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.pool.TypePool;
 
 /** Visit a class and add: a private instrumenationMuzzle field and getter */

@@ -8,13 +8,19 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.*;
+import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -98,7 +104,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
 
                 // Check for possible prefixes match only if not whitelisted already
                 if (!whitelisted) {
-                  for (String name : WHITELISTED_EXECUTORS_PREFIXES) {
+                  for (final String name : WHITELISTED_EXECUTORS_PREFIXES) {
                     if (target.getName().startsWith(name)) {
                       whitelisted = true;
                       break;
@@ -126,7 +132,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         named("execute").and(takesArgument(0, Runnable.class)), WrapRunnableAdvice.class.getName());
     transformers.put(
@@ -141,7 +147,6 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
 
   public static class WrapRunnableAdvice {
 
-    @SuppressWarnings("unused")
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DatadogWrapper enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
@@ -153,7 +158,6 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
       return null;
     }
 
-    @SuppressWarnings("unused")
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
         @Advice.Enter final DatadogWrapper wrapper, @Advice.Thrown final Throwable throwable) {
@@ -163,7 +167,6 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
 
   public static class WrapCallableAdvice {
 
-    @SuppressWarnings("unused")
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DatadogWrapper enterJobSubmit(
         @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
@@ -176,7 +179,6 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
       return null;
     }
 
-    @SuppressWarnings("unused")
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
         @Advice.Enter final DatadogWrapper wrapper, @Advice.Thrown final Throwable throwable) {
@@ -186,7 +188,6 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
 
   public static class WrapCallableCollectionAdvice {
 
-    @SuppressWarnings("unused")
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Collection<?> wrapJob(
         @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
@@ -196,7 +197,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
           && tasks != null
           && DatadogWrapper.isTopLevelCall()) {
         final Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
-        for (Callable<?> task : tasks) {
+        for (final Callable<?> task : tasks) {
           if (task != null && !(task instanceof CallableWrapper)) {
             wrappedTasks.add(new CallableWrapper<>(task, (TraceScope) scope));
           }
@@ -207,7 +208,6 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
       return null;
     }
 
-    @SuppressWarnings("unused")
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void checkCancel(
         @Advice.Enter final Collection<?> wrappedJobs, @Advice.Thrown final Throwable throwable) {
@@ -250,13 +250,11 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
      *
      * @return true iff call is not nested
      */
-    @SuppressWarnings("WeakerAccess")
     public static boolean isTopLevelCall() {
       return CallDepthThreadLocalMap.incrementCallDepth(ExecutorService.class) <= 0;
     }
 
     /** Reset nested calls to executor. */
-    @SuppressWarnings("WeakerAccess")
     public static void resetNestedCalls() {
       CallDepthThreadLocalMap.reset(ExecutorService.class);
     }
@@ -265,8 +263,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
      * @param task task object
      * @return true iff given task object should be wrapped
      */
-    @SuppressWarnings("WeakerAccess")
-    public static boolean shouldWrapTask(Object task) {
+    public static boolean shouldWrapTask(final Object task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       return (scope instanceof TraceScope
           && ((TraceScope) scope).isAsyncPropagating()
@@ -281,7 +278,6 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
      * @param wrapper task wrapper
      * @param throwable throwable that may have been thrown
      */
-    @SuppressWarnings("WeakerAccess")
     public static void cleanUpOnMethodExit(
         final DatadogWrapper wrapper, final Throwable throwable) {
       if (null != wrapper) {
@@ -356,7 +352,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
           if (o instanceof DatadogWrapper) {
             return (DatadogWrapper) o;
           }
-        } catch (IllegalArgumentException | IllegalAccessException e) {
+        } catch (final IllegalArgumentException | IllegalAccessException e) {
         } finally {
           field.setAccessible(false);
         }

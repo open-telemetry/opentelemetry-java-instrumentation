@@ -3,21 +3,21 @@ package datadog.trace.instrumentation.spymemcached;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import java.util.concurrent.ExecutionException;
-import net.spy.memcached.internal.*;
+import net.spy.memcached.internal.BulkGetFuture;
 
 public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<?>>
     implements net.spy.memcached.internal.BulkGetCompletionListener {
-  public BulkGetCompletionListener(Tracer tracer, String methodName) {
+  public BulkGetCompletionListener(final Tracer tracer, final String methodName) {
     super(tracer, methodName, true);
   }
 
   @Override
-  public void onComplete(BulkGetFuture<?> future) {
+  public void onComplete(final BulkGetFuture<?> future) {
     closeAsyncSpan(future);
   }
 
   @Override
-  protected void processResult(Span span, BulkGetFuture<?> future)
+  protected void processResult(final Span span, final BulkGetFuture<?> future)
       throws ExecutionException, InterruptedException {
     /*
     Note: for now we do not have an affective way of representing results of bulk operations,

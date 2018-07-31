@@ -1,9 +1,8 @@
+import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import io.opentracing.Tracer
 
 import java.lang.reflect.Field
-
-import datadog.trace.agent.test.AgentTestRunner
 
 class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null

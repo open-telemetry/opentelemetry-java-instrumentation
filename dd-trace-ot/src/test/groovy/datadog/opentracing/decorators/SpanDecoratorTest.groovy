@@ -59,7 +59,7 @@ class SpanDecoratorTest extends Specification {
     "service"             | "other-service" | "other-service"
     Tags.PEER_SERVICE.key | "some-service"  | "new-service"
     Tags.PEER_SERVICE.key | "other-service" | "other-service"
-    
+
     mapping = ["some-service": "new-service"]
   }
 

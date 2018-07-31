@@ -14,6 +14,7 @@ jacocoTestReport.dependsOn ':dd-java-agent-ittests:test'
  * Note jarname must end in .zip, or its classes will be on the classpath of
  * the dd-java-agent jar.
  */
+
 def includeShadowJar(subproject, jarname) {
   def agent_project = project
   subproject.afterEvaluate {

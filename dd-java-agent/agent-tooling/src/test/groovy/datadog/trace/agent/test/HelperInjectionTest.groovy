@@ -1,15 +1,14 @@
 package datadog.trace.agent.test
 
 import datadog.trace.agent.tooling.AgentInstaller
-
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
-
 import datadog.trace.agent.tooling.HelperInjector
 import datadog.trace.agent.tooling.Utils
 import net.bytebuddy.agent.ByteBuddyAgent
 import spock.lang.Specification
 
 import java.lang.reflect.Method
+
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
 
 class HelperInjectionTest extends Specification {
 

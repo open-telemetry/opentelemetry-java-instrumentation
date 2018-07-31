@@ -55,9 +55,9 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
   @Shared
   ActorMaterializer materializer = ActorMaterializer.create(system)
 
-  def pool = Http.get(system).<Integer>superPool(materializer)
+  def pool = Http.get(system).<Integer> superPool(materializer)
 
-  def "#route request trace" () {
+  def "#route request trace"() {
     setup:
     def url = server.address.resolve("/" + route).toURL()
 
@@ -116,7 +116,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     "error"   | 500            | true          | null
   }
 
-  def "error request trace" () {
+  def "error request trace"() {
     setup:
     def url = new URL("http://localhost:${server.address.port + 1}/test")
 
@@ -153,7 +153,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     }
   }
 
-  def "singleRequest exception trace" () {
+  def "singleRequest exception trace"() {
     when:
     // Passing null causes NPE in singleRequest
     Http.get(system).singleRequest(null, materializer)
@@ -183,14 +183,14 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
   }
 
 
-  def "#route pool request trace" () {
+  def "#route pool request trace"() {
     setup:
     def url = server.address.resolve("/" + route).toURL()
 
     CompletionStage<Pair<Try<HttpResponse>, Integer>> sink = Source
-      .<Pair<HttpRequest, Integer>>single(new Pair(HttpRequest.create(url.toString()), 1))
+      .<Pair<HttpRequest, Integer>> single(new Pair(HttpRequest.create(url.toString()), 1))
       .via(pool)
-      .runWith(Sink.<Pair<Try<HttpResponse>, Integer>>head(), materializer)
+      .runWith(Sink.<Pair<Try<HttpResponse>, Integer>> head(), materializer)
 
     when:
     HttpResponse response = sink.toCompletableFuture().get().first().get()
@@ -242,14 +242,14 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     "error"   | 500            | true          | null
   }
 
-  def "error request pool trace" () {
+  def "error request pool trace"() {
     setup:
     def url = new URL("http://localhost:${server.address.port + 1}/test")
 
     CompletionStage<Pair<Try<HttpResponse>, Integer>> sink = Source
-      .<Pair<HttpRequest, Integer>>single(new Pair(HttpRequest.create(url.toString()), 1))
+      .<Pair<HttpRequest, Integer>> single(new Pair(HttpRequest.create(url.toString()), 1))
       .via(pool)
-      .runWith(Sink.<Pair<Try<HttpResponse>, Integer>>head(), materializer)
+      .runWith(Sink.<Pair<Try<HttpResponse>, Integer>> head(), materializer)
     def response = sink.toCompletableFuture().get().first()
 
     when:

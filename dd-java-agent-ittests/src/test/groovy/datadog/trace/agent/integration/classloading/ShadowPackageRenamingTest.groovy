@@ -54,51 +54,51 @@ class ShadowPackageRenamingTest extends Specification {
   }
 
   def "agent jar contains no bootstrap classes"() {
-   setup:
-   final ClassPath agentClasspath = ClassPath.from(IntegrationTestUtils.getAgentClassLoader())
+    setup:
+    final ClassPath agentClasspath = ClassPath.from(IntegrationTestUtils.getAgentClassLoader())
 
-   final ClassPath bootstrapClasspath = ClassPath.from(IntegrationTestUtils.getBootstrapProxy())
-   final Set<String> bootstrapClasses = new HashSet<>()
-   final String[] bootstrapPrefixes = IntegrationTestUtils.getBootstrapPackagePrefixes()
-   final String[] agentPrefixes = IntegrationTestUtils.getAgentPackagePrefixes()
-   final List<String> badBootstrapPrefixes = []
-   final List<String> badAgentPrefixes = []
-   for (ClassPath.ClassInfo info : bootstrapClasspath.getAllClasses()) {
-     bootstrapClasses.add(info.getName())
-     // make sure all bootstrap classes can be loaded from system
-     ClassLoader.getSystemClassLoader().loadClass(info.getName())
-     boolean goodPrefix = false
-     for (int i = 0; i < bootstrapPrefixes.length; ++i) {
-       if (info.getName().startsWith(bootstrapPrefixes[i])) {
-         goodPrefix = true
-         break
-       }
-     }
-     if (!goodPrefix) {
-       badBootstrapPrefixes.add(info.getName())
-     }
-   }
+    final ClassPath bootstrapClasspath = ClassPath.from(IntegrationTestUtils.getBootstrapProxy())
+    final Set<String> bootstrapClasses = new HashSet<>()
+    final String[] bootstrapPrefixes = IntegrationTestUtils.getBootstrapPackagePrefixes()
+    final String[] agentPrefixes = IntegrationTestUtils.getAgentPackagePrefixes()
+    final List<String> badBootstrapPrefixes = []
+    final List<String> badAgentPrefixes = []
+    for (ClassPath.ClassInfo info : bootstrapClasspath.getAllClasses()) {
+      bootstrapClasses.add(info.getName())
+      // make sure all bootstrap classes can be loaded from system
+      ClassLoader.getSystemClassLoader().loadClass(info.getName())
+      boolean goodPrefix = false
+      for (int i = 0; i < bootstrapPrefixes.length; ++i) {
+        if (info.getName().startsWith(bootstrapPrefixes[i])) {
+          goodPrefix = true
+          break
+        }
+      }
+      if (!goodPrefix) {
+        badBootstrapPrefixes.add(info.getName())
+      }
+    }
 
-   final List<ClassPath.ClassInfo> duplicateClassFile = new ArrayList<>()
-   for (ClassPath.ClassInfo classInfo : agentClasspath.getAllClasses()) {
-     if (bootstrapClasses.contains(classInfo.getName())) {
-       duplicateClassFile.add(classInfo)
-     }
-     boolean goodPrefix = false
-     for (int i = 0; i < agentPrefixes.length; ++i) {
-       if (classInfo.getName().startsWith(agentPrefixes[i])) {
-         goodPrefix = true
-         break
-       }
-     }
-     if (!goodPrefix) {
-       badAgentPrefixes.add(classInfo.getName())
-     }
-   }
+    final List<ClassPath.ClassInfo> duplicateClassFile = new ArrayList<>()
+    for (ClassPath.ClassInfo classInfo : agentClasspath.getAllClasses()) {
+      if (bootstrapClasses.contains(classInfo.getName())) {
+        duplicateClassFile.add(classInfo)
+      }
+      boolean goodPrefix = false
+      for (int i = 0; i < agentPrefixes.length; ++i) {
+        if (classInfo.getName().startsWith(agentPrefixes[i])) {
+          goodPrefix = true
+          break
+        }
+      }
+      if (!goodPrefix) {
+        badAgentPrefixes.add(classInfo.getName())
+      }
+    }
 
-   expect:
-   duplicateClassFile == []
-   badBootstrapPrefixes == []
-   badAgentPrefixes == []
+    expect:
+    duplicateClassFile == []
+    badBootstrapPrefixes == []
+    badAgentPrefixes == []
   }
 }

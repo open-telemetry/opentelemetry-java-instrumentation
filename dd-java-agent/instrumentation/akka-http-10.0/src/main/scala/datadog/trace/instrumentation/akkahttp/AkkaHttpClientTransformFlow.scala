@@ -4,11 +4,10 @@ import java.util.Collections
 
 import akka.NotUsed
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import akka.stream.Supervision
 import akka.stream.scaladsl.Flow
 import datadog.trace.api.{DDSpanTypes, DDTags}
+import io.opentracing.Span
 import io.opentracing.log.Fields.ERROR_OBJECT
-import io.opentracing.{Scope, Span}
 import io.opentracing.propagation.Format
 import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer

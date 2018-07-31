@@ -10,7 +10,12 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.instrumentation.java.concurrent.ExecutorInstrumentation.ConcurrentUtils;
 import datadog.trace.instrumentation.java.concurrent.ExecutorInstrumentation.DatadogWrapper;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
@@ -91,7 +96,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         named("cancel").and(returns(boolean.class)), CanceledFutureAdvice.class.getName());
     return transformers;

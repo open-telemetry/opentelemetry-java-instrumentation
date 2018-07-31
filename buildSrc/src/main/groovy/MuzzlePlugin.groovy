@@ -21,11 +21,11 @@ class MuzzlePlugin implements Plugin<Project> {
         List<URL> userUrls = new ArrayList<>()
         project.getLogger().info("Creating user classpath for: " + project.getName())
         for (File f : project.configurations.compileOnly.getFiles()) {
-          project.getLogger().info( '--' + f)
+          project.getLogger().info('--' + f)
           userUrls.add(f.toURI().toURL())
         }
         for (File f : bootstrapProject.sourceSets.main.runtimeClasspath.getFiles()) {
-          project.getLogger().info( '--' + f)
+          project.getLogger().info('--' + f)
           userUrls.add(f.toURI().toURL())
         }
         final ClassLoader userCL = new URLClassLoader(userUrls.toArray(new URL[0]), (ClassLoader) null)
@@ -33,11 +33,11 @@ class MuzzlePlugin implements Plugin<Project> {
         project.getLogger().info("Creating dd classpath for: " + project.getName())
         Set<URL> ddUrls = new HashSet<>()
         for (File f : toolingProject.sourceSets.main.runtimeClasspath.getFiles()) {
-          project.getLogger().info( '--' + f)
+          project.getLogger().info('--' + f)
           ddUrls.add(f.toURI().toURL())
         }
-        for(File f : project.sourceSets.main.runtimeClasspath.getFiles()) {
-          project.getLogger().info( '--' + f)
+        for (File f : project.sourceSets.main.runtimeClasspath.getFiles()) {
+          project.getLogger().info('--' + f)
           ddUrls.add(f.toURI().toURL())
         }
 

@@ -1,7 +1,11 @@
 package datadog.trace.instrumentation.spymemcached;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithMethod;
-import static net.bytebuddy.matcher.ElementMatchers.*;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -55,7 +59,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(isPublic())
@@ -96,7 +100,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
         @Advice.Origin final Method method,
         @Advice.Return final OperationFuture future) {
       if (shouldInjectListener && future != null) {
-        OperationCompletionListener listener =
+        final OperationCompletionListener listener =
             new OperationCompletionListener(GlobalTracer.get(), method.getName());
         future.addListener(listener);
         CallDepthThreadLocalMap.reset(MemcachedClient.class);
@@ -117,7 +121,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
         @Advice.Origin final Method method,
         @Advice.Return final GetFuture future) {
       if (shouldInjectListener && future != null) {
-        GetCompletionListener listener =
+        final GetCompletionListener listener =
             new GetCompletionListener(GlobalTracer.get(), method.getName());
         future.addListener(listener);
         CallDepthThreadLocalMap.reset(MemcachedClient.class);
@@ -138,7 +142,7 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
         @Advice.Origin final Method method,
         @Advice.Return final BulkFuture future) {
       if (shouldInjectListener && future != null) {
-        BulkGetCompletionListener listener =
+        final BulkGetCompletionListener listener =
             new BulkGetCompletionListener(GlobalTracer.get(), method.getName());
         future.addListener(listener);
         CallDepthThreadLocalMap.reset(MemcachedClient.class);

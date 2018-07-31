@@ -23,7 +23,7 @@ class Play24Test extends AgentTestRunner {
     testServer.stop()
   }
 
-  def "request traces" () {
+  def "request traces"() {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
@@ -59,7 +59,7 @@ class Play24Test extends AgentTestRunner {
     root.context().tags["component"] == "play-action"
   }
 
-  def "5xx errors trace" () {
+  def "5xx errors trace"() {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
@@ -86,7 +86,7 @@ class Play24Test extends AgentTestRunner {
     root.context().tags["component"] == "play-action"
   }
 
-  def "error thrown in request" () {
+  def "error thrown in request"() {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
@@ -116,7 +116,7 @@ class Play24Test extends AgentTestRunner {
     root.context().tags["component"] == "play-action"
   }
 
-  def "4xx errors trace" () {
+  def "4xx errors trace"() {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()

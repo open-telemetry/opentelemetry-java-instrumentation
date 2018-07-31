@@ -3,7 +3,11 @@ package datadog.trace.agent.tooling;
 import datadog.trace.bootstrap.DatadogClassLoader;
 import datadog.trace.bootstrap.PatchLogger;
 import io.opentracing.util.GlobalTracer;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -44,7 +48,7 @@ public class ClassLoaderMatcher {
     private static final Set<String> CLASSLOADER_CLASSES_TO_SKIP;
 
     static {
-      final Set<String> classesToSkip = new HashSet<String>();
+      final Set<String> classesToSkip = new HashSet<>();
       classesToSkip.add("org.codehaus.groovy.runtime.callsite.CallSiteClassLoader");
       classesToSkip.add("sun.reflect.DelegatingClassLoader");
       classesToSkip.add("jdk.internal.reflect.DelegatingClassLoader");
@@ -55,7 +59,7 @@ public class ClassLoaderMatcher {
     private SkipClassLoaderMatcher() {}
 
     @Override
-    public boolean matches(ClassLoader target) {
+    public boolean matches(final ClassLoader target) {
       if (target == BOOTSTRAP_CLASSLOADER) {
         // Don't skip bootstrap loader
         return false;
@@ -63,7 +67,7 @@ public class ClassLoaderMatcher {
       return shouldSkipClass(target) || shouldSkipInstance(target);
     }
 
-    private boolean shouldSkipClass(ClassLoader loader) {
+    private boolean shouldSkipClass(final ClassLoader loader) {
       return CLASSLOADER_CLASSES_TO_SKIP.contains(loader.getClass().getName());
     }
 
@@ -77,7 +81,7 @@ public class ClassLoaderMatcher {
         if (null != cached) {
           return cached.booleanValue();
         }
-        boolean skip = !delegatesToBootstrap(loader);
+        final boolean skip = !delegatesToBootstrap(loader);
         if (skip) {
           log.debug(
               "skipping classloader instance {} of type {}", loader, loader.getClass().getName());
@@ -87,7 +91,7 @@ public class ClassLoaderMatcher {
       }
     }
 
-    private boolean delegatesToBootstrap(ClassLoader loader) {
+    private boolean delegatesToBootstrap(final ClassLoader loader) {
       boolean delegates = true;
       if (!loadsExpectedClass(loader, GlobalTracer.class)) {
         log.debug("loader {} failed to delegate bootstrap opentracing class", loader);
@@ -100,10 +104,10 @@ public class ClassLoaderMatcher {
       return delegates;
     }
 
-    private boolean loadsExpectedClass(ClassLoader loader, Class<?> expectedClass) {
+    private boolean loadsExpectedClass(final ClassLoader loader, final Class<?> expectedClass) {
       try {
         return loader.loadClass(expectedClass.getName()) == expectedClass;
-      } catch (ClassNotFoundException e) {
+      } catch (final ClassNotFoundException e) {
         return false;
       }
     }

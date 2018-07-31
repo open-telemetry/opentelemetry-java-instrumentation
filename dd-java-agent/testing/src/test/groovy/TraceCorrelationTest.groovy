@@ -6,7 +6,7 @@ import io.opentracing.util.GlobalTracer
 
 class TraceCorrelationTest extends AgentTestRunner {
 
-  def "access trace correlation only under trace" () {
+  def "access trace correlation only under trace"() {
     when:
     Scope scope = GlobalTracer.get().buildSpan("myspan").startActive(true)
     DDSpan span = (DDSpan) scope.span()

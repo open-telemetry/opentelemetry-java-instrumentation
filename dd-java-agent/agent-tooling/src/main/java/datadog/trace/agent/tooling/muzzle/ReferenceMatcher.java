@@ -3,7 +3,14 @@ package datadog.trace.agent.tooling.muzzle;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
 import datadog.trace.agent.tooling.Utils;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import lombok.extern.slf4j.Slf4j;
 
 /** Matches a set of references against a classloader. */

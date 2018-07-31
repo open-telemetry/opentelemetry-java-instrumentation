@@ -2,9 +2,9 @@ package muzzle
 
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.tooling.muzzle.Reference
 import datadog.trace.agent.tooling.muzzle.ReferenceCreator
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher
-import datadog.trace.agent.tooling.muzzle.Reference
 
 class AdviceReferenceVisitorTest extends AgentTestRunner {
 
@@ -25,12 +25,12 @@ class AdviceReferenceVisitorTest extends AgentTestRunner {
     Reference[] refs = ReferenceCreator.createReferencesFrom(AdviceClass.getName(), this.getClass().getClassLoader()).values().toArray(new Reference[0])
     ReferenceMatcher refMatcher = new ReferenceMatcher(refs)
     ClassLoader safeClassloader = new URLClassLoader([TestUtils.createJarWithClasses(AdviceClass$A,
-                                                                                     AdviceClass$SomeInterface,
-                                                                                     AdviceClass$SomeImplementation)] as URL[],
-                                                     (ClassLoader) null)
+      AdviceClass$SomeInterface,
+      AdviceClass$SomeImplementation)] as URL[],
+      (ClassLoader) null)
     ClassLoader unsafeClassloader = new URLClassLoader([TestUtils.createJarWithClasses(AdviceClass$SomeInterface,
-                                                                                       AdviceClass$SomeImplementation)] as URL[],
-                                                       (ClassLoader) null)
+      AdviceClass$SomeImplementation)] as URL[],
+      (ClassLoader) null)
 
     expect:
     refMatcher.getMismatchedReferenceSources(safeClassloader).size() == 0

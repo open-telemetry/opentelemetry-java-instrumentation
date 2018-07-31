@@ -30,7 +30,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
     AkkaHttpTestSyncWebServer.stop()
   }
 
-  def "#server 200 request trace" () {
+  def "#server 200 request trace"() {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
@@ -71,12 +71,12 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
     }
 
     where:
-    server     | port
-    "async"    | asyncPort
-    "sync"     | syncPort
+    server  | port
+    "async" | asyncPort
+    "sync"  | syncPort
   }
 
-  def "#server exceptions trace for #endpoint" () {
+  def "#server exceptions trace for #endpoint"() {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
@@ -110,13 +110,13 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
     }
 
     where:
-    server     | port       | endpoint         | errorMessage
-    "async"    | asyncPort  | "throw-handler"  | "Oh no handler"
-    "async"    | asyncPort  | "throw-callback" | "Oh no callback"
-    "sync"     | syncPort   | "throw-handler"  | "Oh no handler"
+    server  | port      | endpoint         | errorMessage
+    "async" | asyncPort | "throw-handler"  | "Oh no handler"
+    "async" | asyncPort | "throw-callback" | "Oh no callback"
+    "sync"  | syncPort  | "throw-handler"  | "Oh no handler"
   }
 
-  def "#server 5xx trace" () {
+  def "#server 5xx trace"() {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
@@ -150,12 +150,12 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
     }
 
     where:
-    server     | port
-    "async"    | asyncPort
-    "sync"     | syncPort
+    server  | port
+    "async" | asyncPort
+    "sync"  | syncPort
   }
 
-  def "#server 4xx trace" () {
+  def "#server 4xx trace"() {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
@@ -188,8 +188,8 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
     }
 
     where:
-    server     | port
-    "async"    | asyncPort
-    "sync"     | syncPort
+    server  | port
+    "async" | asyncPort
+    "sync"  | syncPort
   }
 }

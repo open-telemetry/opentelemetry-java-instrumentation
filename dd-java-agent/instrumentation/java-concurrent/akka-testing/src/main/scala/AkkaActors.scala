@@ -26,26 +26,28 @@ object AkkaActors {
 }
 
 class AkkaActors {
+
   import AkkaActors._
   import Greeter._
+
   implicit val timeout: Timeout = 5.minutes
 
   @Trace
-  def basicTell() : Unit = {
+  def basicTell(): Unit = {
     GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     howdyGreeter ! WhoToGreet("Akka")
     howdyGreeter ! Greet
   }
 
   @Trace
-  def basicAsk() : Unit = {
+  def basicAsk(): Unit = {
     GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     howdyGreeter ! WhoToGreet("Akka")
     howdyGreeter ? Greet
   }
 
   @Trace
-  def basicForward() : Unit = {
+  def basicForward(): Unit = {
     GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     helloGreeter ! WhoToGreet("Akka")
     helloGreeter ? Greet
@@ -54,11 +56,15 @@ class AkkaActors {
 
 object Greeter {
   def props(message: String, receiverActor: ActorRef): Props = Props(new Greeter(message, receiverActor))
+
   final case class WhoToGreet(who: String)
+
   case object Greet
+
 }
 
 class Greeter(message: String, receiverActor: ActorRef) extends Actor {
+
   import Greeter._
   import Receiver._
 
@@ -67,17 +73,20 @@ class Greeter(message: String, receiverActor: ActorRef) extends Actor {
   def receive = {
     case WhoToGreet(who) =>
       greeting = s"$message, $who"
-    case Greet           =>
+    case Greet =>
       receiverActor ! Greeting(greeting)
   }
 }
 
 object Receiver {
   def props: Props = Props[Receiver]
+
   final case class Greeting(greeting: String)
+
 }
 
 class Receiver extends Actor with ActorLogging {
+
   import Receiver._
 
   def receive = {

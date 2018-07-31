@@ -1,6 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
-import io.lettuce.core.*
+import io.lettuce.core.ClientOptions
+import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulConnection
 import io.lettuce.core.api.reactive.RedisReactiveCommands
 import io.lettuce.core.api.sync.RedisCommands
@@ -36,9 +37,9 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     embeddedDbUri = "redis://" + dbAddr
 
     redisServer = RedisServer.builder()
-      // bind to localhost to avoid firewall popup
+    // bind to localhost to avoid firewall popup
       .setting("bind " + HOST)
-      // set max memory to avoid problems in CI
+    // set max memory to avoid problems in CI
       .setting("maxmemory 128M")
       .port(port).build()
   }
@@ -109,7 +110,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     def conds = new AsyncConditions()
 
     when:
-    reactiveCommands.get("TESTKEY").subscribe { res -> conds.evaluate { assert res == "TESTVAL"} }
+    reactiveCommands.get("TESTKEY").subscribe { res -> conds.evaluate { assert res == "TESTVAL" } }
 
     then:
     conds.await()
@@ -143,9 +144,10 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     when:
     reactiveCommands.get("NON_EXISTENT_KEY").defaultIfEmpty(defaultVal).subscribe {
-      res -> conds.evaluate {
-        assert res == defaultVal
-      }
+      res ->
+        conds.evaluate {
+          assert res == defaultVal
+        }
     }
 
     then:
@@ -178,9 +180,10 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     when:
     reactiveCommands.randomkey().subscribe {
-      res -> conds.evaluate {
-        assert res == "TESTKEY"
-      }
+      res ->
+        conds.evaluate {
+          assert res == "TESTKEY"
+        }
     }
 
     then:
