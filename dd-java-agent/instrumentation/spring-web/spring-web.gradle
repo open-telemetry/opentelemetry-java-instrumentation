@@ -33,7 +33,7 @@ dependencies {
 
   testCompile group: 'javax.validation', name: 'validation-api', version: '1.1.0.Final'
   testCompile group: 'org.hibernate', name: 'hibernate-validator', version: '5.4.2.Final'
-  
+
   testCompile group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
 
   testCompile group: 'org.springframework', name: 'spring-web', version: '4.3.14.RELEASE'

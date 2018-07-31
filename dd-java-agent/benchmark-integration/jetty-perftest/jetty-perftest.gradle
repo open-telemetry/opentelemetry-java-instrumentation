@@ -2,7 +2,7 @@ dependencies {
   compile project(':dd-trace-api')
   compile project(':dd-java-agent:benchmark-integration')
   compile deps.opentracing
-  
+
   compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.4.1.v20170120'
   compile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.1.v20170120'
 }

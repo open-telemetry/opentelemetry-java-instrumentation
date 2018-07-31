@@ -6,7 +6,7 @@ versionScan {
   scanMethods = true
   versions = "[3.3,)"
   verifyPresent = [
-   'com.mongodb.async.client.MongoClientSettings$Builder': 'addCommandListener'
+    'com.mongodb.async.client.MongoClientSettings$Builder': 'addCommandListener'
   ]
 }
 

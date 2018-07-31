@@ -1,7 +1,7 @@
 apply from: "${rootDir}/gradle/java.gradle"
 apply plugin: 'scala'
 
-excludedClassesConverage += [ '*' ]
+excludedClassesConverage += ['*']
 
 dependencies {
   compile project(':dd-trace-api')

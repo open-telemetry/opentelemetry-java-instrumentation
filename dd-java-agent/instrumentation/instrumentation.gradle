@@ -40,7 +40,7 @@ subprojects { subProj ->
   }
 }
 
-excludedClassesConverage += [ 'datadog.trace.instrumentation.*' ]
+excludedClassesConverage += ['datadog.trace.instrumentation.*']
 
 dependencies {
   compile(project(':dd-java-agent:agent-tooling')) {
