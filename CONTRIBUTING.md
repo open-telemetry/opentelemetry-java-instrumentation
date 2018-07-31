@@ -22,7 +22,9 @@ Suggested plugins and settings:
 * Editor > Code Style > Java/Groovy > Imports
   * Class count to use import with '*': `10` (some number sufficiently large that is unlikely to matter)
   * Names count to use static import with '*': `10`
+  * With java use the following import layout (groovy should still use the default) to ensure consistency with google-java-format:
+    ![import layout](https://user-images.githubusercontent.com/734411/43430811-28442636-94ae-11e8-86f1-f270ddcba023.png)
 * [Google Java Format](https://plugins.jetbrains.com/plugin/8527-google-java-format)
-* [Save Actions](https://plugins.jetbrains.com/plugin/7642-save-actions)
-  ![Recommended Settings](https://user-images.githubusercontent.com/734411/43379477-fc2c0bb6-940f-11e8-858d-5c251bcac3c8.png)
 * [Lombok](https://plugins.jetbrains.com/plugin/6317-lombok-plugin)
+* [Save Actions](https://plugins.jetbrains.com/plugin/7642-save-actions)
+  ![Recommended Settings](https://user-images.githubusercontent.com/734411/43430944-db84bf8a-94ae-11e8-8cec-0daa064937c4.png)
