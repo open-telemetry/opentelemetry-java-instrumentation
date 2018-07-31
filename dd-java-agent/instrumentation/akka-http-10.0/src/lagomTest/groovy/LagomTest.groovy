@@ -30,7 +30,7 @@ class LagomTest extends AgentTestRunner {
       .withPersistence(false)
       .withCassandra(false)
       .withJdbc(false)
-      .withConfigureBuilder(
+      .configureBuilder(
       new Function<GuiceApplicationBuilder, GuiceApplicationBuilder>() {
         @Override
         GuiceApplicationBuilder apply(GuiceApplicationBuilder builder) {
