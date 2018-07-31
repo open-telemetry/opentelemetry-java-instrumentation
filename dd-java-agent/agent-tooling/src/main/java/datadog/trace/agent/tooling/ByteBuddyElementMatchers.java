@@ -49,8 +49,19 @@ public class ByteBuddyElementMatchers {
   }
 
   /**
-   * An element matcher that matches a super type. Exceptions during matching process are logged and
-   * ignored.
+   * An element matcher that matches a super type. This is different from {@link
+   * net.bytebuddy.matcher.HasSuperTypeMatcher} in the following way:
+   *
+   * <ul>
+   *   <li>Exceptions are logged
+   *   <li>When exception happens the rest of the inheritance subtree is discarded (since ByteBuddy
+   *       cannot load/parse type information for it) but search in other subtrees continues
+   * </ul>
+   *
+   * <p>This is useful because this allows us to see when matcher's check is not complete (i.e. part
+   * of it fails), at the same time it makes best effort instead of failing quickly (like {@code
+   * failSafe(hasSuperType(...))} does) which means the code is more resilient to classpath
+   * inconsistencies
    *
    * @param <T> The type of the matched entity.
    * @see net.bytebuddy.matcher.HasSuperTypeMatcher
