@@ -1,7 +1,8 @@
 package datadog.trace.instrumentation.ratpack.impl;
 
 import io.opentracing.propagation.TextMap;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Map;
 import ratpack.http.Request;
 import ratpack.util.MultiValueMap;
 
@@ -12,8 +13,8 @@ import ratpack.util.MultiValueMap;
 public class RatpackRequestExtractAdapter implements TextMap {
   private final MultiValueMap<String, String> headers;
 
-  RatpackRequestExtractAdapter(Request request) {
-    this.headers = request.getHeaders().asMultiValueMap();
+  RatpackRequestExtractAdapter(final Request request) {
+    headers = request.getHeaders().asMultiValueMap();
   }
 
   @Override
@@ -22,7 +23,7 @@ public class RatpackRequestExtractAdapter implements TextMap {
   }
 
   @Override
-  public void put(String key, String value) {
+  public void put(final String key, final String value) {
     throw new UnsupportedOperationException("This class should be used only with Tracer.inject()!");
   }
 }

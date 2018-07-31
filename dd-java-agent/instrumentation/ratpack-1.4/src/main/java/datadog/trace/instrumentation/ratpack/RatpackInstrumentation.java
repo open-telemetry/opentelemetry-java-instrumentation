@@ -1,7 +1,14 @@
 package datadog.trace.instrumentation.ratpack;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithMethod;
-import static net.bytebuddy.matcher.ElementMatchers.*;
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isStatic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -63,7 +70,7 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         isMethod().and(isStatic()).and(named("buildBaseRegistry")),
         RatpackServerAdvice.RatpackServerRegistryAdvice.class.getName());
@@ -106,7 +113,7 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
 
     @Override
     public Map<ElementMatcher, String> transformers() {
-      Map<ElementMatcher, String> transformers = new HashMap<>();
+      final Map<ElementMatcher, String> transformers = new HashMap<>();
       transformers.put(
           named("register").and(takesArguments(ACTION_TYPE_DESCRIPTION)),
           RatpackServerAdvice.ExecStarterAdvice.class.getName());
@@ -148,7 +155,7 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
 
     @Override
     public Map<ElementMatcher, String> transformers() {
-      Map<ElementMatcher, String> transformers = new HashMap<>();
+      final Map<ElementMatcher, String> transformers = new HashMap<>();
       transformers.put(
           named("fork").and(returns(named("ratpack.exec.ExecStarter"))),
           RatpackServerAdvice.ExecutionAdvice.class.getName());

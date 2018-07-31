@@ -6,7 +6,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.*;
+import datadog.trace.agent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.client.ClientBuilder;
@@ -36,7 +36,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         named("build").and(returns(hasSuperType(named("javax.ws.rs.client.Client")))),
         ClientBuilderAdvice.class.getName());

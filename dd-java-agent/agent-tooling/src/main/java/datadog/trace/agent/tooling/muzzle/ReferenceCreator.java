@@ -3,8 +3,17 @@ package datadog.trace.agent.tooling.muzzle;
 import datadog.trace.agent.tooling.Utils;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
-import net.bytebuddy.jar.asm.*;
+import java.util.ArrayDeque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import net.bytebuddy.jar.asm.ClassReader;
+import net.bytebuddy.jar.asm.ClassVisitor;
+import net.bytebuddy.jar.asm.Label;
+import net.bytebuddy.jar.asm.MethodVisitor;
+import net.bytebuddy.jar.asm.Opcodes;
 
 /** Visit a class and collect all references made by the visited class. */
 public class ReferenceCreator extends ClassVisitor {

@@ -1,7 +1,9 @@
 package datadog.trace.instrumentation.lettuce;
 
 import io.lettuce.core.protocol.RedisCommand;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class LettuceInstrumentationUtil {
 
@@ -30,7 +32,7 @@ public class LettuceInstrumentationUtil {
    * @param commandName a redis command, without any prefixes
    * @return true if finish the span early (the command will not have a return value)
    */
-  public static boolean doFinishSpanEarly(String commandName) {
+  public static boolean doFinishSpanEarly(final String commandName) {
     return nonInstrumentingCommands.contains(commandName);
   }
 
@@ -51,7 +53,7 @@ public class LettuceInstrumentationUtil {
    * @return the redis command with a prefix if it is a command that will crash the trace agent,
    *     otherwise, the original command is returned.
    */
-  public static String getCommandResourceName(String actualCommandName) {
+  public static String getCommandResourceName(final String actualCommandName) {
     if (agentCrashingCommands.contains(actualCommandName)) {
       return AGENT_CRASHING_COMMAND_PREFIX + actualCommandName;
     }
@@ -64,7 +66,7 @@ public class LettuceInstrumentationUtil {
    * @param command the lettuce RedisCommand object
    * @return the redis command as a string
    */
-  public static String getCommandName(RedisCommand command) {
+  public static String getCommandName(final RedisCommand command) {
     String commandName = "Redis Command";
     if (command != null) {
       /*

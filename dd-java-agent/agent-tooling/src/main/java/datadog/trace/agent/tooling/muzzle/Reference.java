@@ -3,7 +3,10 @@ package datadog.trace.agent.tooling.muzzle;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
 
 import datadog.trace.agent.tooling.Utils;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /** An immutable reference to a jvm class. */
 public class Reference {

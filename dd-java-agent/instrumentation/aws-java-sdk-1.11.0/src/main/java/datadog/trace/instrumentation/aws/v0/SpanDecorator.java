@@ -13,7 +13,11 @@
  */
 package datadog.trace.instrumentation.aws.v0;
 
-import static io.opentracing.log.Fields.*;
+import static io.opentracing.log.Fields.ERROR_KIND;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static io.opentracing.log.Fields.EVENT;
+import static io.opentracing.log.Fields.MESSAGE;
+import static io.opentracing.log.Fields.STACK;
 
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;

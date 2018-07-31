@@ -16,7 +16,12 @@
  */
 package datadog.trace.agent;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -91,8 +96,8 @@ public class TracingAgent {
    * @param toolingJar jar to use for the classpath of the datadog classloader
    * @return Datadog Classloader
    */
-  private static ClassLoader createDatadogClassLoader(File bootstrapJar, File toolingJar)
-      throws Exception {
+  private static ClassLoader createDatadogClassLoader(
+      final File bootstrapJar, final File toolingJar) throws Exception {
     final ClassLoader agentParent;
     final String javaVersion = System.getProperty("java.version");
     if (javaVersion.startsWith("1.7") || javaVersion.startsWith("1.8")) {
@@ -101,9 +106,9 @@ public class TracingAgent {
       // platform classloader is parent of system in java 9+
       agentParent = getPlatformClassLoader();
     }
-    Class<?> loaderClass =
+    final Class<?> loaderClass =
         ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.DatadogClassLoader");
-    Constructor constructor =
+    final Constructor constructor =
         loaderClass.getDeclaredConstructor(URL.class, URL.class, ClassLoader.class);
     return (ClassLoader)
         constructor.newInstance(
@@ -111,8 +116,8 @@ public class TracingAgent {
   }
 
   /** Extract sourcePath out of loader to a temporary file named destName. */
-  private static File extractToTmpFile(ClassLoader loader, String sourcePath, String destName)
-      throws Exception {
+  private static File extractToTmpFile(
+      final ClassLoader loader, final String sourcePath, final String destName) throws Exception {
     final String destPrefix;
     final String destSuffix;
     {
@@ -171,7 +176,7 @@ public class TracingAgent {
   public static void main(final String... args) {
     try {
       System.out.println(getAgentVersion());
-    } catch (Exception e) {
+    } catch (final Exception e) {
       System.out.println("Failed to parse agent version");
       e.printStackTrace();
     }

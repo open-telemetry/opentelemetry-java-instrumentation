@@ -3,11 +3,14 @@ package datadog.trace.instrumentation.play;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithMethod;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static net.bytebuddy.matcher.ElementMatchers.*;
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.japi.JavaPartialFunction;
 import com.google.auto.service.AutoService;
-import datadog.trace.agent.tooling.*;
+import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.context.TraceScope;
@@ -18,7 +21,10 @@ import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -66,7 +72,7 @@ public final class PlayInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         named("apply")
             .and(takesArgument(0, named("play.api.mvc.Request")))
@@ -149,7 +155,7 @@ public final class PlayInstrumentation extends Instrumenter.Default {
   public static class PlayHeaders implements TextMap {
     private final Request request;
 
-    public PlayHeaders(Request request) {
+    public PlayHeaders(final Request request) {
       this.request = request;
     }
 
@@ -166,7 +172,7 @@ public final class PlayInstrumentation extends Instrumenter.Default {
     }
 
     @Override
-    public void put(String s, String s1) {
+    public void put(final String s, final String s1) {
       throw new IllegalStateException("play headers can only be extracted");
     }
   }
@@ -174,18 +180,18 @@ public final class PlayInstrumentation extends Instrumenter.Default {
   public static class RequestError extends JavaPartialFunction<Throwable, Object> {
     private final Span span;
 
-    public RequestError(Span span) {
+    public RequestError(final Span span) {
       this.span = span;
     }
 
     @Override
-    public Object apply(Throwable t, boolean isCheck) throws Exception {
+    public Object apply(final Throwable t, final boolean isCheck) throws Exception {
       try {
         if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
           ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(false);
         }
         onError(span, t);
-      } catch (Throwable t2) {
+      } catch (final Throwable t2) {
         LoggerFactory.getLogger(RequestCallback.class).debug("error in play instrumentation", t);
       }
       span.finish();
@@ -203,18 +209,18 @@ public final class PlayInstrumentation extends Instrumenter.Default {
   public static class RequestCallback extends scala.runtime.AbstractFunction1<Result, Result> {
     private final Span span;
 
-    public RequestCallback(Span span) {
+    public RequestCallback(final Span span) {
       this.span = span;
     }
 
     @Override
-    public Result apply(Result result) {
+    public Result apply(final Result result) {
       if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
         ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(false);
       }
       try {
         Tags.HTTP_STATUS.set(span, result.header().status());
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         log.debug("error in play instrumentation", t);
       }
       span.finish();

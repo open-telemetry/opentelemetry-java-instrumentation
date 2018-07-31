@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.trace.api.DDTags;
 import datadog.trace.api.sampling.PrioritySampling;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
@@ -115,15 +118,15 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   }
 
   public String getTraceId() {
-    return this.traceId;
+    return traceId;
   }
 
   public String getParentId() {
-    return this.parentId;
+    return parentId;
   }
 
   public String getSpanId() {
-    return this.spanId;
+    return spanId;
   }
 
   public String getServiceName() {
@@ -135,9 +138,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   }
 
   public String getResourceName() {
-    return this.resourceName == null || this.resourceName.isEmpty()
-        ? this.operationName
-        : this.resourceName;
+    return resourceName == null || resourceName.isEmpty() ? operationName : resourceName;
   }
 
   public void setResourceName(final String resourceName) {
@@ -170,7 +171,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   public void setSamplingPriority(final int newPriority) {
     if (trace != null) {
-      DDSpan rootSpan = trace.getRootSpan();
+      final DDSpan rootSpan = trace.getRootSpan();
       if (null != rootSpan && rootSpan.context() != this) {
         rootSpan.context().setSamplingPriority(newPriority);
         return;
@@ -197,7 +198,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   /** @return the sampling priority of this span's trace, or null if no priority has been set */
   public int getSamplingPriority() {
     if (trace != null) {
-      DDSpan rootSpan = trace.getRootSpan();
+      final DDSpan rootSpan = trace.getRootSpan();
       if (null != rootSpan && rootSpan.context() != this) {
         return rootSpan.context().getSamplingPriority();
       }
@@ -217,7 +218,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
    */
   public boolean lockSamplingPriority() {
     if (trace != null) {
-      DDSpan rootSpan = trace.getRootSpan();
+      final DDSpan rootSpan = trace.getRootSpan();
       if (null != rootSpan && rootSpan.context() != this) {
         return rootSpan.context().lockSamplingPriority();
       }
@@ -236,11 +237,11 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   }
 
   public void setBaggageItem(final String key, final String value) {
-    this.baggageItems.put(key, value);
+    baggageItems.put(key, value);
   }
 
   public String getBaggageItem(final String key) {
-    return this.baggageItems.get(key);
+    return baggageItems.get(key);
   }
 
   public Map<String, String> getBaggageItems() {
@@ -252,17 +253,17 @@ public class DDSpanContext implements io.opentracing.SpanContext {
    */
   @Override
   public Iterable<Map.Entry<String, String>> baggageItems() {
-    return this.baggageItems.entrySet();
+    return baggageItems.entrySet();
   }
 
   @JsonIgnore
   public PendingTrace getTrace() {
-    return this.trace;
+    return trace;
   }
 
   @JsonIgnore
   public DDTracer getTracer() {
-    return this.tracer;
+    return tracer;
   }
 
   public Map<String, Number> getMetrics() {
@@ -270,7 +271,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     return metrics == null ? EMPTY_METRICS : metrics;
   }
 
-  public void setMetric(String key, Number value) {
+  public void setMetric(final String key, final Number value) {
     if (metrics.get() == null) {
       metrics.compareAndSet(null, new ConcurrentHashMap<String, Number>());
     }
@@ -306,7 +307,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     }
 
     if (addTag) {
-      this.tags.put(tag, value);
+      tags.put(tag, value);
     }
   }
 
