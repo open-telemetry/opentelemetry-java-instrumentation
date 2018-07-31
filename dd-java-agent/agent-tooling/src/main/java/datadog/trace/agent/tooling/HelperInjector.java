@@ -30,9 +30,10 @@ public class HelperInjector implements Transformer {
    * Construct HelperInjector.
    *
    * @param helperClassNames binary names of the helper classes to inject. These class names must be
-   *     resolvable by the classloader returned by DDAdvice#getAgentClassLoader(). Classes are
-   *     injected in the order provided. This is important if there is interdependency between
-   *     helper classes that requires them to be injected in a specific order.
+   *     resolvable by the classloader returned by
+   *     datadog.trace.agent.tooling.Utils#getAgentClassLoader(). Classes are injected in the order
+   *     provided. This is important if there is interdependency between helper classes that
+   *     requires them to be injected in a specific order.
    */
   public HelperInjector(final String... helperClassNames) {
     this.helperClassNames = new LinkedHashSet<>(Arrays.asList(helperClassNames));
