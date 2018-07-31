@@ -2,11 +2,11 @@ apply plugin: 'version-scan'
 
 versionScan {
   group = "io.netty"
-  module = "netty-all"
+  module = "netty-codec-http"
   legacyModule = "netty"
   versions = "[4.0.0.Final,4.1.0.Final)"
   verifyPresent = [
-    "io.netty.channel.local.LocalEventLoop": null,
+    "io.netty.handler.codec.spdy.SpdyOrHttpChooser": null,
   ]
 }
 
@@ -21,7 +21,7 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'io.netty', name: 'netty-all', version: '4.0.0.Final'
+  compileOnly group: 'io.netty', name: 'netty-codec-http', version: '4.0.0.Final'
 
   compile project(':dd-java-agent:agent-tooling')
 
