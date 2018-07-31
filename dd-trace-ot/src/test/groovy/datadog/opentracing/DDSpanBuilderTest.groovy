@@ -265,7 +265,7 @@ class DDSpanBuilderTest extends Specification {
     span.context().@tags == extractedContext.tags
 
     where:
-    extractedContext                                                  | _
+    extractedContext                                                      | _
     new ExtractedContext("1", "2", 0, [:], [:])                           | _
     new ExtractedContext("3", "4", 1, ["asdf": "qwer"], ["zxcv": "1234"]) | _
   }

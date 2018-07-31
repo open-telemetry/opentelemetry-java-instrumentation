@@ -1,21 +1,19 @@
 package datadog.trace.agent.test
 
-import datadog.trace.bootstrap.ExceptionLogger
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.core.read.ListAppender
 import datadog.trace.agent.tooling.ExceptionHandlers
+import datadog.trace.bootstrap.ExceptionLogger
 import net.bytebuddy.agent.ByteBuddyAgent
+import net.bytebuddy.agent.builder.AgentBuilder
 import net.bytebuddy.dynamic.ClassFileLocator
+import org.slf4j.LoggerFactory
+import spock.lang.Shared
+import spock.lang.Specification
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod
 import static net.bytebuddy.matcher.ElementMatchers.named
-
-import net.bytebuddy.agent.builder.AgentBuilder
-import spock.lang.Specification
-import spock.lang.Shared
-
-import org.slf4j.LoggerFactory
-import ch.qos.logback.classic.Logger
-import ch.qos.logback.core.read.ListAppender
-import ch.qos.logback.classic.Level
 
 class ExceptionHandlerTest extends Specification {
   @Shared
@@ -25,7 +23,7 @@ class ExceptionHandlerTest extends Specification {
     AgentBuilder builder = new AgentBuilder.Default()
       .disableClassFormatChanges()
       .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-      .type(named(getClass().getName()+'$SomeClass'))
+      .type(named(getClass().getName() + '$SomeClass'))
       .transform(
       new AgentBuilder.Transformer.ForAdvice()
         .with(new AgentBuilder.LocationStrategy.Simple(ClassFileLocator.ForClassLoader.of(BadAdvice.getClassLoader())))
@@ -68,11 +66,11 @@ class ExceptionHandlerTest extends Specification {
     testAppender.list.get(testAppender.list.size() - 1).getMessage() == "Failed to handle exception in instrumentation"
   }
 
-  def "exception on non-delegating classloader" () {
+  def "exception on non-delegating classloader"() {
     setup:
     int initLogEvents = testAppender.list.size()
-    URL[] classpath = [ SomeClass.getProtectionDomain().getCodeSource().getLocation(),
-                         GroovyObject.getProtectionDomain().getCodeSource().getLocation() ]
+    URL[] classpath = [SomeClass.getProtectionDomain().getCodeSource().getLocation(),
+                       GroovyObject.getProtectionDomain().getCodeSource().getLocation()]
     URLClassLoader loader = new URLClassLoader(classpath, (ClassLoader) null)
     when:
     loader.loadClass(LoggerFactory.getName())

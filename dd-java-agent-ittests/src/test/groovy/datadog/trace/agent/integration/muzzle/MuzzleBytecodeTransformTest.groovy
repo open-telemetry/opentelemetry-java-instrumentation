@@ -1,10 +1,10 @@
 package datadog.trace.agent.integration.muzzle
 
 import datadog.trace.agent.test.IntegrationTestUtils
-import java.lang.reflect.Field
-import java.lang.reflect.Method
 import spock.lang.Specification
 
+import java.lang.reflect.Field
+import java.lang.reflect.Method
 
 class MuzzleBytecodeTransformTest extends Specification {
 
@@ -33,7 +33,7 @@ class MuzzleBytecodeTransformTest extends Specification {
         if (f.get(instrumenter) == null) {
           unInitFields.add(instrumenter.getClass())
         }
-      } catch(NoSuchFieldException | NoSuchMethodException e) {
+      } catch (NoSuchFieldException | NoSuchMethodException e) {
         unMuzzledClasses.add(instrumenter.getClass())
       } finally {
         if (null != f) {

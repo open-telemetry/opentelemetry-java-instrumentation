@@ -1,20 +1,20 @@
 import akka.NotUsed
 import akka.stream.javadsl.Source
+import akka.stream.testkit.TestSubscriber.Probe
 import akka.stream.testkit.javadsl.TestSink
+import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import net.bytebuddy.utility.JavaModule
-
-import datadog.trace.agent.test.AgentTestRunner
 import play.inject.guice.GuiceApplicationBuilder
 import spock.lang.Shared
 
-import akka.stream.testkit.TestSubscriber.Probe
-
 import java.util.function.Function
 
-import static com.lightbend.lagom.javadsl.testkit.ServiceTest.*
+import static com.lightbend.lagom.javadsl.testkit.ServiceTest.TestServer
+import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup
+import static com.lightbend.lagom.javadsl.testkit.ServiceTest.startServer
 import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 
 class LagomTest extends AgentTestRunner {
@@ -41,30 +41,31 @@ class LagomTest extends AgentTestRunner {
 
   def setupSpec() {
     server = startServer(defaultSetup()
-                         .withCluster(false)
-                         .withPersistence(false)
-                         .withCassandra(false)
-                         .withJdbc(false)
-                         .withConfigureBuilder(
-        new Function<GuiceApplicationBuilder, GuiceApplicationBuilder>() {
-          @Override
-          GuiceApplicationBuilder apply(GuiceApplicationBuilder builder) {
-            return builder
-              .bindings(new ServiceTestModule())
-          }}))
+      .withCluster(false)
+      .withPersistence(false)
+      .withCassandra(false)
+      .withJdbc(false)
+      .withConfigureBuilder(
+      new Function<GuiceApplicationBuilder, GuiceApplicationBuilder>() {
+        @Override
+        GuiceApplicationBuilder apply(GuiceApplicationBuilder builder) {
+          return builder
+            .bindings(new ServiceTestModule())
+        }
+      }))
   }
 
   def cleanupSpec() {
     server.stop()
   }
 
-  def "normal request traces" () {
+  def "normal request traces"() {
     setup:
     EchoService service = server.client(EchoService)
 
     Source<String, NotUsed> input =
       Source.from(Arrays.asList("msg1", "msg2", "msg3"))
-      .concat(Source.maybe())
+        .concat(Source.maybe())
     Source<String, NotUsed> output = service.echo().invoke(input)
       .toCompletableFuture().get()
     Probe<String> probe = output.runWith(TestSink.probe(server.system()), server.materializer())
@@ -80,7 +81,7 @@ class LagomTest extends AgentTestRunner {
         span(0) {
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
-          resourceName  "GET ws://?/echo"
+          resourceName "GET ws://?/echo"
           errored false
           tags {
             defaultTags()
@@ -100,7 +101,7 @@ class LagomTest extends AgentTestRunner {
     }
   }
 
-  def "error traces" () {
+  def "error traces"() {
     setup:
     EchoService service = server.client(EchoService)
 

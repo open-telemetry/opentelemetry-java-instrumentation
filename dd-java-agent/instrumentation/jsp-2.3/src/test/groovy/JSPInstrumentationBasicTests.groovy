@@ -144,10 +144,10 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     res.close()
 
     where:
-    test | jspFileName | jspClassName | jspClassNamePrefix
-    "no java jsp" | "nojava.jsp" | "nojava_jsp" | ""
-    "basic loop jsp"|"common/loop.jsp" | "loop_jsp" | "common."
-    "invalid HTML markup"|"invalidMarkup.jsp" | "invalidMarkup_jsp" | ""
+    test                  | jspFileName         | jspClassName        | jspClassNamePrefix
+    "no java jsp"         | "nojava.jsp"        | "nojava_jsp"        | ""
+    "basic loop jsp"      | "common/loop.jsp"   | "loop_jsp"          | "common."
+    "invalid HTML markup" | "invalidMarkup.jsp" | "invalidMarkup_jsp" | ""
   }
 
   def "non-erroneous GET with query string"() {
@@ -368,10 +368,10 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     res.close()
 
     where:
-    test | jspFileName  | jspClassName | exceptionClass | errorMessage
-    "java runtime error" | "runtimeError.jsp" | "runtimeError_jsp" | ArithmeticException | String
-    "invalid write" | "invalidWrite.jsp" | "invalidWrite_jsp" | StringIndexOutOfBoundsException | String
-    "missing query gives null" | "getQuery.jsp" | "getQuery_jsp" | NullPointerException | null
+    test                       | jspFileName        | jspClassName       | exceptionClass                  | errorMessage
+    "java runtime error"       | "runtimeError.jsp" | "runtimeError_jsp" | ArithmeticException             | String
+    "invalid write"            | "invalidWrite.jsp" | "invalidWrite_jsp" | StringIndexOutOfBoundsException | String
+    "missing query gives null" | "getQuery.jsp"     | "getQuery_jsp"     | NullPointerException            | null
   }
 
   def "non-erroneous include plain HTML GET"() {
@@ -638,8 +638,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     res.close()
 
     where:
-    test | jspFileName | jspClassName | jspClassNamePrefix
-    "normal" | "compileError.jsp" | "compileError_jsp" | ""
-    "forward"|"forwards/forwardWithCompileError.jsp" | "forwardWithCompileError_jsp" | "forwards."
+    test      | jspFileName                            | jspClassName                  | jspClassNamePrefix
+    "normal"  | "compileError.jsp"                     | "compileError_jsp"            | ""
+    "forward" | "forwards/forwardWithCompileError.jsp" | "forwardWithCompileError_jsp" | "forwards."
   }
 }

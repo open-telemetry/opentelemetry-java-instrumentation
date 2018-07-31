@@ -22,11 +22,11 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.locks.ReentrantLock
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static CompletionListener.COMPONENT_NAME
 import static CompletionListener.OPERATION_NAME
 import static CompletionListener.SERVICE_NAME
 import static CompletionListener.SPAN_TYPE
+import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
@@ -124,16 +124,16 @@ class SpymemcachedTest extends AgentTestRunner {
 
     // Add some keys to test on later:
     def valuesToSet = [
-      "test-get": "get test",
-      "test-get-2": "get test 2",
-      "test-append": "append test",
+      "test-get"    : "get test",
+      "test-get-2"  : "get test 2",
+      "test-append" : "append test",
       "test-prepend": "prepend test",
-      "test-delete": "delete test",
+      "test-delete" : "delete test",
       "test-replace": "replace test",
-      "test-touch": "touch test",
-      "test-cas": "cas test",
-      "test-decr": "200",
-      "test-incr": "100"
+      "test-touch"  : "touch test",
+      "test-cas"    : "cas test",
+      "test-decr"   : "200",
+      "test-incr"   : "100"
     ]
     runUnderTrace("setup") {
       valuesToSet.each { k, v -> assert memcached.set(key(k), expiration, v).get() }
@@ -152,7 +152,7 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 2) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null,"hit")
+        getSpan(it, 1, "get", null, "hit")
       }
     }
   }
@@ -167,7 +167,7 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 2) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null,"miss")
+        getSpan(it, 1, "get", null, "miss")
       }
     }
   }
@@ -223,7 +223,7 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 2) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "getBulk", null,null)
+        getSpan(it, 1, "getBulk", null, null)
       }
     }
   }
@@ -271,7 +271,7 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 3) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null,"hit")
+        getSpan(it, 1, "get", null, "hit")
         getSpan(it, 2, "add")
       }
     }
@@ -305,7 +305,7 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 3) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null,"miss")
+        getSpan(it, 1, "get", null, "miss")
         getSpan(it, 2, "delete")
       }
     }
@@ -337,7 +337,7 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 3) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null,"hit")
+        getSpan(it, 1, "get", null, "hit")
         getSpan(it, 2, "replace")
       }
     }
@@ -370,7 +370,7 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 4) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null,"hit")
+        getSpan(it, 1, "get", null, "hit")
         getSpan(it, 2, "append")
         getSpan(it, 3, "gets")
       }
@@ -389,7 +389,7 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 4) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null,"hit")
+        getSpan(it, 1, "get", null, "hit")
         getSpan(it, 2, "prepend")
         getSpan(it, 3, "gets")
       }
@@ -503,7 +503,7 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 3) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null,"hit")
+        getSpan(it, 1, "get", null, "hit")
         getSpan(it, 2, "decr")
       }
     }
@@ -552,7 +552,7 @@ class SpymemcachedTest extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 3) {
         getParentSpan(it, 0)
-        getSpan(it, 1, "get", null,"hit")
+        getSpan(it, 1, "get", null, "hit")
         getSpan(it, 2, "incr")
       }
     }
@@ -590,7 +590,7 @@ class SpymemcachedTest extends AgentTestRunner {
     keyPrefix + k
   }
 
-  def longString(char c='s' as char) {
+  def longString(char c = 's' as char) {
     char[] chars = new char[250]
     Arrays.fill(chars, 's' as char)
     return new String(chars)
@@ -622,7 +622,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
   }
 
-  def getSpan(TraceAssert trace, int index, String operation, String error=null, String result=null) {
+  def getSpan(TraceAssert trace, int index, String operation, String error = null, String result = null) {
     return trace.span(index) {
       if (index > 0) {
         childOf(trace.span(0))
@@ -632,7 +632,7 @@ class SpymemcachedTest extends AgentTestRunner {
       operationName OPERATION_NAME
       resourceName operation
       spanType SPAN_TYPE
-      errored (error != null && error != "canceled")
+      errored(error != null && error != "canceled")
 
       tags {
         defaultTags()

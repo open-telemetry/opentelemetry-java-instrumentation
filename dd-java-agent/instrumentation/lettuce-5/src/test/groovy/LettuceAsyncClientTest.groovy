@@ -50,9 +50,9 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
   @Shared
   Map<String, String> testHashMap = [
-          firstname: "John",
-          lastname:  "Doe",
-          age:       "53"
+    firstname: "John",
+    lastname : "Doe",
+    age      : "53"
   ]
 
   RedisClient redisClient
@@ -254,7 +254,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     BiFunction<String, Throwable, String> firstStage = new BiFunction<String, Throwable, String>() {
       @Override
       String apply(String res, Throwable throwable) {
-        conds.evaluate{
+        conds.evaluate {
           assert res == null
           assert throwable == null
         }
@@ -264,7 +264,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     Function<String, Object> secondStage = new Function<String, Object>() {
       @Override
       Object apply(String input) {
-        conds.evaluate{
+        conds.evaluate {
           assert input == successStr
         }
         return null
@@ -304,7 +304,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     BiConsumer<String, Throwable> biConsumer = new BiConsumer<String, Throwable>() {
       @Override
       void accept(String keyRetrieved, Throwable throwable) {
-        conds.evaluate{
+        conds.evaluate {
           assert keyRetrieved != null
         }
       }
@@ -419,7 +419,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     def conds = new AsyncConditions()
     RedisFuture redisFuture = asyncCommands.del("key1", "key2")
     boolean completedExceptionally = ((AsyncCommand) redisFuture).completeExceptionally(new IllegalStateException("TestException"))
-    redisFuture.exceptionally ({
+    redisFuture.exceptionally({
       throwable ->
         conds.evaluate {
           assert throwable != null
@@ -466,10 +466,11 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     def conds = new AsyncConditions()
     RedisFuture redisFuture = asyncCommands.sadd("SKEY", "1", "2")
     redisFuture.whenCompleteAsync({
-      res, throwable -> conds.evaluate {
-        assert throwable != null
-        assert throwable instanceof CancellationException
-      }
+      res, throwable ->
+        conds.evaluate {
+          assert throwable != null
+          assert throwable instanceof CancellationException
+        }
     })
 
     when:

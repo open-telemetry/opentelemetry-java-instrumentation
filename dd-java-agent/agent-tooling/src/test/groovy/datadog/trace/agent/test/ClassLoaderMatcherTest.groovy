@@ -1,9 +1,8 @@
 package datadog.trace.agent.test
 
-import datadog.trace.bootstrap.DatadogClassLoader
 import datadog.trace.agent.tooling.ClassLoaderMatcher
+import datadog.trace.bootstrap.DatadogClassLoader
 import spock.lang.Specification
-
 
 class ClassLoaderMatcherTest extends Specification {
 
@@ -24,7 +23,7 @@ class ClassLoaderMatcherTest extends Specification {
 
   def "does not skip empty classloader"() {
     setup:
-    final ClassLoader emptyLoader = new ClassLoader(){}
+    final ClassLoader emptyLoader = new ClassLoader() {}
     expect:
     !ClassLoaderMatcher.skipClassLoader().matches(emptyLoader)
   }
@@ -37,9 +36,10 @@ class ClassLoaderMatcherTest extends Specification {
   /*
    * A URLClassloader which only delegates java.* classes
    */
+
   private static class NonDelegatingClassLoader extends URLClassLoader {
     NonDelegatingClassLoader() {
-      super(new URL[0], (ClassLoader)null)
+      super(new URL[0], (ClassLoader) null)
     }
 
     @Override

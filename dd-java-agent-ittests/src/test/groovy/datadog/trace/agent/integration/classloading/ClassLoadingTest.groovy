@@ -9,10 +9,10 @@ import static datadog.trace.agent.test.IntegrationTestUtils.createJarWithClasses
 class ClassLoadingTest extends Specification {
 
   /** Assert that we can instrument classloaders which cannot resolve agent advice classes. */
-  def "instrument classloader without agent classes" () {
+  def "instrument classloader without agent classes"() {
     setup:
     final URL[] classpath = [createJarWithClasses(ClassToInstrument, Trace)]
-    final URLClassLoader loader = new URLClassLoader(classpath, (ClassLoader)null)
+    final URLClassLoader loader = new URLClassLoader(classpath, (ClassLoader) null)
 
     when:
     loader.loadClass("datadog.agent.TracingAgent")

@@ -28,7 +28,7 @@ class Play26Test extends AgentTestRunner {
     testServer.stop()
   }
 
-  def "request traces" () {
+  def "request traces"() {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
@@ -83,7 +83,7 @@ class Play26Test extends AgentTestRunner {
     }
   }
 
-  def "5xx errors trace" () {
+  def "5xx errors trace"() {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
@@ -132,7 +132,7 @@ class Play26Test extends AgentTestRunner {
     }
   }
 
-  def "error thrown in request" () {
+  def "error thrown in request"() {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
@@ -185,7 +185,7 @@ class Play26Test extends AgentTestRunner {
     }
   }
 
-  def "4xx errors trace" () {
+  def "4xx errors trace"() {
     setup:
     OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()

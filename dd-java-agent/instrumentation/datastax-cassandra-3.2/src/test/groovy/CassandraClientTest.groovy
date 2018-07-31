@@ -40,7 +40,7 @@ class CassandraClientTest extends AgentTestRunner {
 
     session.execute("DROP KEYSPACE IF EXISTS sync_test")
     session.execute(
-        "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}")
+      "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}")
     session.execute("CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )")
     session.execute("INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')")
     session.execute("SELECT * FROM sync_test.users where name = 'alice' ALLOW FILTERING")
@@ -72,15 +72,15 @@ class CassandraClientTest extends AgentTestRunner {
 
     session.executeAsync("DROP KEYSPACE IF EXISTS async_test").get()
     session
-        .executeAsync(
-            "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}")
-        .get()
+      .executeAsync(
+      "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}")
+      .get()
     session.executeAsync("CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )").get()
     session.executeAsync("INSERT INTO async_test.users (id, name) values (uuid(), 'alice')").get()
     TEST_WRITER.waitForTraces(4)
     session
-        .executeAsync("SELECT * FROM async_test.users where name = 'alice' ALLOW FILTERING")
-        .get()
+      .executeAsync("SELECT * FROM async_test.users where name = 'alice' ALLOW FILTERING")
+      .get()
     TEST_WRITER.waitForTraces(5)
 
     def query = "SELECT * FROM async_test.users where name = 'alice' ALLOW FILTERING"

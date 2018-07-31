@@ -4,7 +4,9 @@ import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import io.netty.handler.codec.http.HttpResponseStatus
-import okhttp3.*
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.jasper.JasperException
@@ -174,9 +176,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     res.close()
 
     where:
-    forwardTo | forwardFromFileName | forwardDestFileName | jspForwardFromClassName | jspForwardFromClassPrefix | jspForwardDestClassName | jspForwardDestClassPrefix
-    "no java jsp" | "forwards/forwardToNoJavaJsp.jsp" | "nojava.jsp" | "forwardToNoJavaJsp_jsp" | "forwards." | "nojava_jsp" | ""
-    "normal java jsp" | "forwards/forwardToSimpleJava.jsp" | "common/loop.jsp" | "forwardToSimpleJava_jsp" | "forwards." | "loop_jsp" | "common."
+    forwardTo         | forwardFromFileName                | forwardDestFileName | jspForwardFromClassName   | jspForwardFromClassPrefix | jspForwardDestClassName | jspForwardDestClassPrefix
+    "no java jsp"     | "forwards/forwardToNoJavaJsp.jsp"  | "nojava.jsp"        | "forwardToNoJavaJsp_jsp"  | "forwards."               | "nojava_jsp"            | ""
+    "normal java jsp" | "forwards/forwardToSimpleJava.jsp" | "common/loop.jsp"   | "forwardToSimpleJava_jsp" | "forwards."               | "loop_jsp"              | "common."
   }
 
   def "non-erroneous GET forward to plain HTML"() {
