@@ -43,14 +43,14 @@ class OkHttp3Test extends AgentTestRunner {
     span1.context().operationName == "okhttp.http"
     span1.serviceName == "okhttp"
     span1.resourceName == "okhttp.http"
-    span1.type == DDSpanTypes.WEB_SERVLET
+    span1.type == DDSpanTypes.HTTP_CLIENT
     !span1.context().getErrorFlag()
     span1.context().parentId == "0"
 
 
     def tags1 = span1.context().tags
     tags1["component"] == "okhttp"
-    tags1["span.type"] == DDSpanTypes.WEB_SERVLET
+    tags1["span.type"] == DDSpanTypes.HTTP_CLIENT
     tags1["thread.name"] != null
     tags1["thread.id"] != null
     tags1.size() == 4
@@ -61,7 +61,7 @@ class OkHttp3Test extends AgentTestRunner {
     span2.context().operationName == "okhttp.http"
     span2.serviceName == "okhttp"
     span2.resourceName == "GET /ping"
-    span2.type == "web"
+    span2.type == DDSpanTypes.HTTP_CLIENT
     !span2.context().getErrorFlag()
     span2.context().parentId == span1.spanId
 
@@ -69,6 +69,7 @@ class OkHttp3Test extends AgentTestRunner {
     def tags2 = span2.context().tags
     tags2[Tags.COMPONENT.key] == "okhttp"
     tags2[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_CLIENT
+    tags2[DDTags.SPAN_TYPE] == DDSpanTypes.HTTP_CLIENT
     tags2[Tags.HTTP_METHOD.key] == "GET"
     tags2[Tags.HTTP_URL.key] == "http://localhost:$server.address.port/ping"
     tags2[Tags.PEER_HOSTNAME.key] == "localhost"

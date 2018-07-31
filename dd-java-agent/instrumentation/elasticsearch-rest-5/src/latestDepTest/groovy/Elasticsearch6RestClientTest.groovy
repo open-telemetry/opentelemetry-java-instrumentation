@@ -1,5 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import groovy.json.JsonSlurper
 import io.opentracing.tag.Tags
 import org.apache.http.HttpHost
@@ -86,11 +88,12 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           serviceName "elasticsearch"
           resourceName "ClusterHealthAction"
           operationName "elasticsearch.query"
-          spanType null
+          spanType DDSpanTypes.ELASTICSEARCH
           parent()
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
             defaultTags()
@@ -102,11 +105,12 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           serviceName "elasticsearch"
           resourceName "GET _cluster/health"
           operationName "elasticsearch.rest.query"
-          spanType null
+          spanType DDSpanTypes.ELASTICSEARCH
           parent()
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_URL.key" "_cluster/health"
             "$Tags.PEER_HOSTNAME.key" "localhost"

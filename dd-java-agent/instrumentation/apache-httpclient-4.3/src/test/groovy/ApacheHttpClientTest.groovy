@@ -87,6 +87,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "http.request"
           resourceName "GET /"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           tags {
             defaultTags()
@@ -149,6 +150,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "http.request"
           resourceName "GET /"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           tags {
             defaultTags()

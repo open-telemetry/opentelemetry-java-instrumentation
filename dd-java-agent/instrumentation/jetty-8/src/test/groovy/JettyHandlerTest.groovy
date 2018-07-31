@@ -64,14 +64,14 @@ class JettyHandlerTest extends AgentTestRunner {
     context.serviceName == "unnamed-java-app"
     context.operationName == "jetty.request"
     context.resourceName == "GET ${handler.class.name}"
-    context.spanType == DDSpanTypes.WEB_SERVLET
+    context.spanType == DDSpanTypes.HTTP_SERVER
     !context.getErrorFlag()
     context.parentId == "0"
     def tags = context.tags
     tags["http.url"] == "http://localhost:$port/"
     tags["http.method"] == "GET"
     tags["span.kind"] == "server"
-    tags["span.type"] == "web"
+    tags["span.type"] == DDSpanTypes.HTTP_SERVER
     tags["component"] == "jetty-handler"
     tags["http.status_code"] == 200
     tags["thread.name"] != null
@@ -152,14 +152,14 @@ class JettyHandlerTest extends AgentTestRunner {
     context.serviceName == "unnamed-java-app"
     context.operationName == "jetty.request"
     context.resourceName == "GET ${handler.class.name}"
-    context.spanType == DDSpanTypes.WEB_SERVLET
+    context.spanType == DDSpanTypes.HTTP_SERVER
     context.getErrorFlag()
     context.parentId == "0"
     def tags = context.tags
     tags["http.url"] == "http://localhost:$port/"
     tags["http.method"] == "GET"
     tags["span.kind"] == "server"
-    tags["span.type"] == "web"
+    tags["span.type"] == DDSpanTypes.HTTP_SERVER
     tags["component"] == "jetty-handler"
     tags["http.status_code"] == 500
     tags["thread.name"] != null

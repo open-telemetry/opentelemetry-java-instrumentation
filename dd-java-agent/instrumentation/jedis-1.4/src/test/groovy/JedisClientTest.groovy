@@ -1,5 +1,6 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.jedis.JedisInstrumentation
 import io.opentracing.tag.Tags
@@ -47,6 +48,7 @@ class JedisClientTest extends AgentTestRunner {
     setTrace.getServiceName() == JedisInstrumentation.SERVICE_NAME
     setTrace.getOperationName() == "redis.query"
     setTrace.getResourceName() == "SET"
+    setTrace.getSpanType() == DDSpanTypes.REDIS
     setTrace.getTags().get(Tags.COMPONENT.getKey()) == JedisInstrumentation.COMPONENT_NAME
     setTrace.getTags().get(Tags.DB_TYPE.getKey()) == JedisInstrumentation.SERVICE_NAME
     setTrace.getTags().get(Tags.SPAN_KIND.getKey()) == Tags.SPAN_KIND_CLIENT
@@ -66,6 +68,7 @@ class JedisClientTest extends AgentTestRunner {
     getSpan.getServiceName() == JedisInstrumentation.SERVICE_NAME
     getSpan.getOperationName() == "redis.query"
     getSpan.getResourceName() == "GET"
+    getSpan.getSpanType() == DDSpanTypes.REDIS
     getSpan.getTags().get(Tags.COMPONENT.getKey()) == JedisInstrumentation.COMPONENT_NAME
     getSpan.getTags().get(Tags.DB_TYPE.getKey()) == JedisInstrumentation.SERVICE_NAME
     getSpan.getTags().get(Tags.SPAN_KIND.getKey()) == Tags.SPAN_KIND_CLIENT
@@ -85,6 +88,7 @@ class JedisClientTest extends AgentTestRunner {
     randomKeySpan.getServiceName() == JedisInstrumentation.SERVICE_NAME
     randomKeySpan.getOperationName() == "redis.query"
     randomKeySpan.getResourceName() == "RANDOMKEY"
+    randomKeySpan.getSpanType() == DDSpanTypes.REDIS
     randomKeySpan.getTags().get(Tags.COMPONENT.getKey()) == JedisInstrumentation.COMPONENT_NAME
     randomKeySpan.getTags().get(Tags.DB_TYPE.getKey()) == JedisInstrumentation.SERVICE_NAME
     randomKeySpan.getTags().get(Tags.SPAN_KIND.getKey()) == Tags.SPAN_KIND_CLIENT

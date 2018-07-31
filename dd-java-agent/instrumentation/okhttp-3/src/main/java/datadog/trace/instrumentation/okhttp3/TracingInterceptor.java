@@ -1,5 +1,9 @@
 package datadog.trace.instrumentation.okhttp3;
 
+import static datadog.trace.instrumentation.okhttp3.TracingCallFactory.COMPONENT_NAME;
+
+import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import io.opentracing.tag.Tags;
@@ -21,19 +25,7 @@ import okhttp3.Response;
  * use. This instrumentation fails to properly infer parent span when doing simultaneously
  * asynchronous calls.
  *
- * <p>
- *
- * <p>
- *
- * <p>
- *
  * <p>Initialization via {@link TracingInterceptor#addTracing(OkHttpClient.Builder, Tracer, List)}
- *
- * <p>
- *
- * <p>
- *
- * <p>
  *
  * <p>or instantiate the interceptor and add it to {@link
  * OkHttpClient.Builder#addInterceptor(Interceptor)} and {@link
@@ -97,7 +89,9 @@ public class TracingInterceptor implements Interceptor {
       final Scope scope =
           tracer
               .buildSpan("http.request")
-              .withTag(Tags.COMPONENT.getKey(), TracingCallFactory.COMPONENT_NAME)
+              .withTag(Tags.COMPONENT.getKey(), COMPONENT_NAME)
+              .withTag(DDTags.SERVICE_NAME, COMPONENT_NAME)
+              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
               .startActive(true);
 
       final Request.Builder requestBuilder = chain.request().newBuilder();

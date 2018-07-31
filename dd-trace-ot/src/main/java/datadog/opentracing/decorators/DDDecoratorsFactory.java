@@ -8,20 +8,15 @@ import java.util.Map;
 public class DDDecoratorsFactory {
   public static List<AbstractDecorator> createBuiltinDecorators(
       final Map<String, String> mappings) {
-    final HTTPComponent httpDecorator1 = new HTTPComponent();
-    httpDecorator1.setMatchingTag("component");
-    httpDecorator1.setMatchingValue("okhttp");
-
-    final HTTPComponent httpDecorator2 = new HTTPComponent();
-    httpDecorator2.setMatchingTag("component");
-    httpDecorator2.setMatchingValue("java-aws-sdk");
+    final HTTPComponent httpDecorator = new HTTPComponent();
+    httpDecorator.setMatchingTag("component");
+    httpDecorator.setMatchingValue("java-aws-sdk");
 
     return Arrays.asList(
         new DBStatementAsResourceName(),
         new DBTypeDecorator(),
         new ErrorFlag(),
-        httpDecorator1,
-        httpDecorator2,
+        httpDecorator,
         new OperationDecorator(),
         new PeerServiceDecorator(),
         new ResourceNameDecorator(),

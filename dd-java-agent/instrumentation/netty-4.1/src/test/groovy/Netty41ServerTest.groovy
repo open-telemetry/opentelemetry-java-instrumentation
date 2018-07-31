@@ -57,7 +57,7 @@ class Netty41ServerTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "netty.request"
           resourceName "GET /"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
             "$Tags.COMPONENT.key" "netty"
@@ -67,7 +67,7 @@ class Netty41ServerTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" Integer
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             defaultTags()
           }
         }
@@ -103,7 +103,7 @@ class Netty41ServerTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "netty.request"
           resourceName name
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           errored error
           tags {
             "$Tags.COMPONENT.key" "netty"
@@ -113,7 +113,7 @@ class Netty41ServerTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" Integer
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             if (error) {
               tag("error", true)
             }

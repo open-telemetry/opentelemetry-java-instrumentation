@@ -19,8 +19,8 @@ import ratpack.http.Status;
  */
 public final class TracingHandler implements Handler {
   @Override
-  public void handle(Context ctx) {
-    Request request = ctx.getRequest();
+  public void handle(final Context ctx) {
+    final Request request = ctx.getRequest();
 
     final SpanContext extractedContext =
         GlobalTracer.get()
@@ -32,7 +32,7 @@ public final class TracingHandler implements Handler {
             .asChildOf(extractedContext)
             .withTag(Tags.COMPONENT.getKey(), "handler")
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
-            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
+            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER)
             .withTag(Tags.HTTP_METHOD.getKey(), request.getMethod().getName())
             .withTag(Tags.HTTP_URL.getKey(), request.getUri())
             .startActive(true);
@@ -40,9 +40,9 @@ public final class TracingHandler implements Handler {
     ctx.getResponse()
         .beforeSend(
             response -> {
-              Span span = scope.span();
+              final Span span = scope.span();
               span.setTag(DDTags.RESOURCE_NAME, getResourceName(ctx));
-              Status status = response.getStatus();
+              final Status status = response.getStatus();
               if (status != null) {
                 if (status.is5xx()) {
                   Tags.ERROR.set(span, true);
@@ -55,7 +55,7 @@ public final class TracingHandler implements Handler {
     ctx.next();
   }
 
-  private static String getResourceName(Context ctx) {
+  private static String getResourceName(final Context ctx) {
     String description = ctx.getPathBinding().getDescription();
     if (description == null || description.isEmpty()) {
       description = ctx.getRequest().getUri();

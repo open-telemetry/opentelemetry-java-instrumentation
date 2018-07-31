@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.lettuce.rx;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil;
 import io.opentracing.Scope;
@@ -22,7 +23,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
   private int numResults = 0;
   private FluxOnSubscribeConsumer onSubscribeConsumer = null;
 
-  public LettuceFluxTerminationRunnable(String commandName, boolean finishSpanOnClose) {
+  public LettuceFluxTerminationRunnable(final String commandName, final boolean finishSpanOnClose) {
     this.onSubscribeConsumer = new FluxOnSubscribeConsumer(this, commandName, finishSpanOnClose);
   }
 
@@ -30,7 +31,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
     return onSubscribeConsumer;
   }
 
-  private void finishSpan(boolean isCommandCancelled, Throwable throwable) {
+  private void finishSpan(final boolean isCommandCancelled, final Throwable throwable) {
     if (this.span != null) {
       this.span.setTag("db.command.results.count", this.numResults);
       if (isCommandCancelled) {
@@ -50,7 +51,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
   }
 
   @Override
-  public void accept(Signal signal) {
+  public void accept(final Signal signal) {
     if (SignalType.ON_COMPLETE.equals(signal.getType())
         || SignalType.ON_ERROR.equals(signal.getType())) {
       finishSpan(false, signal.getThrowable());
@@ -78,14 +79,16 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
     private final boolean finishSpanOnClose;
 
     public FluxOnSubscribeConsumer(
-        LettuceFluxTerminationRunnable owner, String commandName, boolean finishSpanOnClose) {
+        final LettuceFluxTerminationRunnable owner,
+        final String commandName,
+        final boolean finishSpanOnClose) {
       this.owner = owner;
       this.commandName = commandName;
       this.finishSpanOnClose = finishSpanOnClose;
     }
 
     @Override
-    public void accept(Subscription subscription) {
+    public void accept(final Subscription subscription) {
       final Scope scope =
           GlobalTracer.get()
               .buildSpan(LettuceInstrumentationUtil.SERVICE_NAME + ".query")
@@ -103,7 +106,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
           DDTags.RESOURCE_NAME,
           LettuceInstrumentationUtil.getCommandResourceName(this.commandName));
       span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
-      span.setTag(DDTags.SPAN_TYPE, LettuceInstrumentationUtil.SERVICE_NAME);
+      span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.REDIS);
       scope.close();
     }
   }

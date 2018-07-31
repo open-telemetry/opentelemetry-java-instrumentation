@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -47,7 +48,7 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(isPublic())
@@ -72,6 +73,7 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
           GlobalTracer.get()
               .buildSpan("elasticsearch.rest.query")
               .withTag(DDTags.SERVICE_NAME, "elasticsearch")
+              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.ELASTICSEARCH)
               .withTag(Tags.HTTP_METHOD.getKey(), method)
               .withTag(Tags.HTTP_URL.getKey(), endpoint)
               .withTag(Tags.COMPONENT.getKey(), "elasticsearch-java")

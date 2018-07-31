@@ -108,7 +108,7 @@ jobs:
     <<: *default_test_job
     environment:
       - JAVA7_HOME: /usr/lib/jvm/zulu-7-amd64
-      - TEST_TASK: testJava7 jacocoTestReport jacocoTestCoverageVerification
+      - TEST_TASK: testJava7
       - INSTALL_ZULU: zulu-7
 
   test_8:
@@ -121,14 +121,14 @@ jobs:
     <<: *default_test_job
     environment:
       - JAVA9_HOME: /usr/lib/jvm/zulu-9-amd64
-      - TEST_TASK: testJava9 latestDepTestJava9 jacocoTestReport jacocoTestCoverageVerification
+      - TEST_TASK: testJava9 latestDepTestJava9
       - INSTALL_ZULU: zulu-9
 
   test_10:
     <<: *default_test_job
     environment:
       - JAVA10_HOME: /usr/lib/jvm/zulu-10-amd64
-      - TEST_TASK: testJava10 latestDepTestJava10 jacocoTestReport jacocoTestCoverageVerification
+      - TEST_TASK: testJava10 latestDepTestJava10
       - INSTALL_ZULU: zulu-10
 
   agent_integration_tests:

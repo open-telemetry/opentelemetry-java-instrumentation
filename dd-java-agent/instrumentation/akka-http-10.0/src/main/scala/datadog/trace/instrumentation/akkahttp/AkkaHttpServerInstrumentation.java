@@ -110,7 +110,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
               .asChildOf(extractedContext)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .withTag(Tags.HTTP_METHOD.getKey(), request.method().value())
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
+              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER)
               .withTag(Tags.COMPONENT.getKey(), "akka-http-server")
               .withTag(Tags.HTTP_URL.getKey(), request.getUri().toString())
               .startActive(false);

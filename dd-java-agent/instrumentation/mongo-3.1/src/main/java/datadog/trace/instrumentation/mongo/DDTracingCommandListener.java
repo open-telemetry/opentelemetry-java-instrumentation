@@ -6,6 +6,7 @@ import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -107,7 +108,7 @@ public class DDTracingCommandListener implements CommandListener {
 
     // dd-specific tags
     span.setTag(DDTags.RESOURCE_NAME, mongoCmd);
-    span.setTag(DDTags.SPAN_TYPE, "mongodb");
+    span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.MONGO);
     span.setTag(DDTags.SERVICE_NAME, "mongo");
   }
 

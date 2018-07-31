@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.lettuce.rx;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil;
 import io.opentracing.Scope;
@@ -21,13 +22,13 @@ public class LettuceMonoDualConsumer<R, T, U extends Throwable>
   private final String commandName;
   private final boolean finishSpanOnClose;
 
-  public LettuceMonoDualConsumer(String commandName, boolean finishSpanOnClose) {
+  public LettuceMonoDualConsumer(final String commandName, final boolean finishSpanOnClose) {
     this.commandName = commandName;
     this.finishSpanOnClose = finishSpanOnClose;
   }
 
   @Override
-  public void accept(T t, Throwable throwable) {
+  public void accept(final T t, final Throwable throwable) {
     if (this.span != null) {
       if (throwable != null) {
         Tags.ERROR.set(this.span, true);
@@ -43,7 +44,7 @@ public class LettuceMonoDualConsumer<R, T, U extends Throwable>
   }
 
   @Override
-  public void accept(R r) {
+  public void accept(final R r) {
     final Scope scope =
         GlobalTracer.get()
             .buildSpan(LettuceInstrumentationUtil.SERVICE_NAME + ".query")
@@ -58,7 +59,7 @@ public class LettuceMonoDualConsumer<R, T, U extends Throwable>
     this.span.setTag(
         DDTags.RESOURCE_NAME, LettuceInstrumentationUtil.getCommandResourceName(this.commandName));
     this.span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
-    this.span.setTag(DDTags.SPAN_TYPE, LettuceInstrumentationUtil.SERVICE_NAME);
+    this.span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.REDIS);
     scope.close();
   }
 }

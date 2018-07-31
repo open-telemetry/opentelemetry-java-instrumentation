@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.bootstrap.JDBCMaps;
@@ -40,7 +41,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         nameStartsWith("execute").and(takesArguments(0)).and(isPublic()),
         PreparedStatementAdvice.class.getName());
@@ -96,7 +97,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
             } else {
               dbInfo = JDBCMaps.DBInfo.DEFAULT;
             }
-          } catch (SQLException se) {
+          } catch (final SQLException se) {
             dbInfo = JDBCMaps.DBInfo.DEFAULT;
           }
           JDBCMaps.connectionInfo.put(connection, dbInfo);
@@ -113,7 +114,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
 
       span.setTag(DDTags.SERVICE_NAME, dbInfo.getType());
       span.setTag(DDTags.RESOURCE_NAME, sql == null ? JDBCMaps.DB_QUERY : sql);
-      span.setTag(DDTags.SPAN_TYPE, "sql");
+      span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.SQL);
       span.setTag("span.origin.type", statement.getClass().getName());
       span.setTag("db.jdbc.url", dbInfo.getUrl());
 
