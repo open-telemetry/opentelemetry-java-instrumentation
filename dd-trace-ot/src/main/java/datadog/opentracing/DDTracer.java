@@ -56,7 +56,7 @@ public class DDTracer implements io.opentracing.Tracer {
   final ContextualScopeManager scopeManager = new ContextualScopeManager();
 
   /** A set of tags that are added to every span */
-  private final Map<String, String> spanTags;
+  private final Map<String, String> defaultSpanTags;
   /** A configured mapping of service names to update with new values */
   private final Map<String, String> serviceNameMappings;
 
@@ -113,11 +113,15 @@ public class DDTracer implements io.opentracing.Tracer {
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders) {
+    assert defaultSpanTags != null;
+    assert serviceNameMappings != null;
+    assert taggedHeaders != null;
+
     this.serviceName = serviceName;
     this.writer = writer;
     this.writer.start();
     this.sampler = sampler;
-    this.spanTags = defaultSpanTags;
+    this.defaultSpanTags = defaultSpanTags;
     this.serviceNameMappings = serviceNameMappings;
 
     try {
@@ -126,7 +130,7 @@ public class DDTracer implements io.opentracing.Tracer {
               new Thread() {
                 @Override
                 public void run() {
-                  DDTracer.this.close();
+                  close();
                 }
               });
     } catch (final IllegalStateException ex) {
@@ -287,8 +291,8 @@ public class DDTracer implements io.opentracing.Tracer {
       }
     }
     traceCount.incrementAndGet();
-    if (!writtenTrace.isEmpty() && this.sampler.sample(writtenTrace.get(0))) {
-      this.writer.write(writtenTrace);
+    if (!writtenTrace.isEmpty() && sampler.sample(writtenTrace.get(0))) {
+      writer.write(writtenTrace);
     }
   }
 
@@ -301,14 +305,14 @@ public class DDTracer implements io.opentracing.Tracer {
   public String toString() {
     return "DDTracer-"
         + Integer.toHexString(hashCode())
-        + "{ service-name="
+        + "{ serviceName="
         + serviceName
         + ", writer="
         + writer
         + ", sampler="
         + sampler
-        + ", tags="
-        + spanTags
+        + ", defaultSpanTags="
+        + defaultSpanTags
         + '}';
   }
 
@@ -333,10 +337,7 @@ public class DDTracer implements io.opentracing.Tracer {
     private final String operationName;
 
     // Builder attributes
-    private Map<String, Object> tags =
-        spanTags.isEmpty()
-            ? Collections.<String, Object>emptyMap()
-            : new HashMap<String, Object>(spanTags);
+    private Map<String, Object> tags = new HashMap<String, Object>(defaultSpanTags);
     private long timestampMicro;
     private SpanContext parent;
     private String serviceName;
@@ -352,14 +353,14 @@ public class DDTracer implements io.opentracing.Tracer {
 
     @Override
     public SpanBuilder ignoreActiveSpan() {
-      this.ignoreScope = true;
+      ignoreScope = true;
       return this;
     }
 
     private DDSpan startSpan() {
-      final DDSpan span = new DDSpan(this.timestampMicro, buildSpanContext());
-      if (DDTracer.this.sampler instanceof RateByServiceSampler) {
-        ((RateByServiceSampler) DDTracer.this.sampler).initializeSamplingPriority(span);
+      final DDSpan span = new DDSpan(timestampMicro, buildSpanContext());
+      if (sampler instanceof RateByServiceSampler) {
+        ((RateByServiceSampler) sampler).initializeSamplingPriority(span);
       }
       return span;
     }
@@ -402,7 +403,7 @@ public class DDTracer implements io.opentracing.Tracer {
 
     @Override
     public DDSpanBuilder withStartTimestamp(final long timestampMicroseconds) {
-      this.timestampMicro = timestampMicroseconds;
+      timestampMicro = timestampMicroseconds;
       return this;
     }
 
@@ -417,7 +418,7 @@ public class DDTracer implements io.opentracing.Tracer {
     }
 
     public DDSpanBuilder withErrorFlag() {
-      this.errorFlag = true;
+      errorFlag = true;
       return this;
     }
 
@@ -440,7 +441,7 @@ public class DDTracer implements io.opentracing.Tracer {
 
     @Override
     public DDSpanBuilder asChildOf(final SpanContext spanContext) {
-      this.parent = spanContext;
+      parent = spanContext;
       return this;
     }
 
@@ -453,14 +454,9 @@ public class DDTracer implements io.opentracing.Tracer {
     // Private methods
     private DDSpanBuilder withTag(final String tag, final Object value) {
       if (value == null || (value instanceof String && ((String) value).isEmpty())) {
-        if (this.tags.containsKey(tag)) {
-          this.tags.remove(tag);
-        }
+        tags.remove(tag);
       } else {
-        if (this.tags.isEmpty()) {
-          this.tags = new HashMap<>();
-        }
-        this.tags.put(tag, value);
+        tags.put(tag, value);
       }
       return this;
     }
@@ -486,11 +482,13 @@ public class DDTracer implements io.opentracing.Tracer {
       final int samplingPriority;
 
       final DDSpanContext context;
-      SpanContext parentContext = this.parent;
+      SpanContext parentContext = parent;
       if (parentContext == null && !ignoreScope) {
         // use the Scope as parent unless overridden or ignored.
         final Scope scope = scopeManager.active();
-        if (scope != null) parentContext = scope.span().context();
+        if (scope != null) {
+          parentContext = scope.span().context();
+        }
       }
 
       // Propagate internal trace
@@ -501,8 +499,12 @@ public class DDTracer implements io.opentracing.Tracer {
         baggage = ddsc.getBaggageItems();
         parentTrace = ddsc.getTrace();
         samplingPriority = PrioritySampling.UNSET;
-        if (this.serviceName == null) this.serviceName = ddsc.getServiceName();
-        if (this.spanType == null) this.spanType = ddsc.getSpanType();
+        if (serviceName == null) {
+          serviceName = ddsc.getServiceName();
+        }
+        if (spanType == null) {
+          spanType = ddsc.getSpanType();
+        }
 
         // Propagate external trace
       } else if (parentContext instanceof ExtractedContext) {
@@ -510,8 +512,8 @@ public class DDTracer implements io.opentracing.Tracer {
         traceId = ddsc.getTraceId();
         parentSpanId = ddsc.getSpanId();
         baggage = ddsc.getBaggage();
-        if (this.tags.isEmpty() && !ddsc.getTags().isEmpty()) {
-          this.tags = new HashMap<>();
+        if (tags.isEmpty() && !ddsc.getTags().isEmpty()) {
+          tags = new HashMap<>();
         }
         if (!ddsc.getTags().isEmpty()) {
           tags.putAll(ddsc.getTags());
@@ -532,8 +534,7 @@ public class DDTracer implements io.opentracing.Tracer {
         serviceName = DDTracer.this.serviceName;
       }
 
-      final String operationName =
-          this.operationName != null ? this.operationName : this.resourceName;
+      final String operationName = this.operationName != null ? this.operationName : resourceName;
 
       // some attributes are inherited from the parent
       context =
@@ -543,17 +544,17 @@ public class DDTracer implements io.opentracing.Tracer {
               parentSpanId,
               serviceName,
               operationName,
-              this.resourceName,
+              resourceName,
               samplingPriority,
               baggage,
               errorFlag,
               spanType,
-              this.tags,
+              tags,
               parentTrace,
               DDTracer.this);
 
       // Apply Decorators to handle any tags that may have been set via the builder.
-      for (final Map.Entry<String, Object> tag : this.tags.entrySet()) {
+      for (final Map.Entry<String, Object> tag : tags.entrySet()) {
         if (tag.getValue() == null) {
           context.setTag(tag.getKey(), null);
           continue;
@@ -562,8 +563,7 @@ public class DDTracer implements io.opentracing.Tracer {
         boolean addTag = true;
 
         // Call decorators
-        final List<AbstractDecorator> decorators =
-            DDTracer.this.getSpanContextDecorators(tag.getKey());
+        final List<AbstractDecorator> decorators = getSpanContextDecorators(tag.getKey());
         if (decorators != null) {
           for (final AbstractDecorator decorator : decorators) {
             try {
