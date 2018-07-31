@@ -11,10 +11,12 @@ public class LoggingWriter implements Writer {
 
   @Override
   public void write(final List<DDSpan> trace) {
-    try {
-      log.info("write(trace): {}", serializer.writeValueAsString(trace));
-    } catch (final Exception e) {
-      log.error("error writing(trace): {}", trace);
+    if (log.isInfoEnabled()) {
+      try {
+        log.info("write(trace): {}", serializer.writeValueAsString(trace));
+      } catch (final Exception e) {
+        log.error("error writing(trace): {}", trace);
+      }
     }
   }
 

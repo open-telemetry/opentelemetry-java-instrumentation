@@ -19,7 +19,8 @@ import static datadog.trace.common.DDTraceConfig.SERVICE_MAPPING
 import static datadog.trace.common.DDTraceConfig.SERVICE_NAME
 import static datadog.trace.common.DDTraceConfig.SPAN_TAGS
 import static datadog.trace.common.DDTraceConfig.WRITER_TYPE
-import static datadog.trace.common.DDTraceConfig.propToEnvName
+import static datadog.trace.common.util.Config.parseMap
+import static datadog.trace.common.util.Config.propToEnvName
 
 class DDTraceConfigTest extends Specification {
   @Rule
@@ -150,7 +151,7 @@ class DDTraceConfigTest extends Specification {
 
   def "parsing valid string returns a map"() {
     expect:
-    DDTraceConfig.parseMap(str) == map
+    parseMap(str) == map
 
     where:
     str                               | map
@@ -163,7 +164,7 @@ class DDTraceConfigTest extends Specification {
 
   def "parsing an invalid string returns an empty map"() {
     expect:
-    DDTraceConfig.parseMap(str) == [:]
+    parseMap(str) == [:]
 
     where:
     str         | _
