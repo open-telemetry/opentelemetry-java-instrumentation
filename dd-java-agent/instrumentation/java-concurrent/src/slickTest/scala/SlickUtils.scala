@@ -3,19 +3,20 @@ import datadog.trace.context.TraceScope
 import io.opentracing.util.GlobalTracer
 import slick.jdbc.H2Profile.api._
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 class SlickUtils {
+
   import SlickUtils._
 
   val database = Database.forURL(Url,
-    user=Username,
-    driver="org.h2.Driver",
-    keepAliveConnection=true,
+    user = Username,
+    driver = "org.h2.Driver",
+    keepAliveConnection = true,
     // Limit number of threads to hit Slick-specific case when we need to avoid re-wrapping
     // wrapped runnables.
-    executor=AsyncExecutor("test", numThreads=1, queueSize=1000)
+    executor = AsyncExecutor("test", numThreads = 1, queueSize = 1000)
   )
   Await.result(database.run(sqlu"""CREATE ALIAS SLEEP FOR "java.lang.Thread.sleep(long)""""), Duration.Inf)
 

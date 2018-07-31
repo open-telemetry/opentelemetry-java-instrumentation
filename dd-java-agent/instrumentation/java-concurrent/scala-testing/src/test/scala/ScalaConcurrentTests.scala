@@ -12,7 +12,7 @@ class ScalaConcurrentTests {
     * @return Number of expected spans in the trace
     */
   @Trace
-  def traceWithFutureAndCallbacks() : Integer = {
+  def traceWithFutureAndCallbacks(): Integer = {
     GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     val goodFuture: Future[Integer] = Future {
       tracedChild("goodFuture")
@@ -33,7 +33,7 @@ class ScalaConcurrentTests {
   }
 
   @Trace
-  def tracedAcrossThreadsWithNoTrace() :Integer = {
+  def tracedAcrossThreadsWithNoTrace(): Integer = {
     GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     val goodFuture: Future[Integer] = Future {
       1
@@ -53,7 +53,7 @@ class ScalaConcurrentTests {
     * @return Number of expected spans in the trace
     */
   @Trace
-  def traceWithPromises() : Integer = {
+  def traceWithPromises(): Integer = {
     GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     val keptPromise = Promise[Boolean]()
     val brokenPromise = Promise[Boolean]()
@@ -86,7 +86,7 @@ class ScalaConcurrentTests {
     * @return Number of expected spans in the trace
     */
   @Trace
-  def tracedWithFutureFirstCompletions() :Integer = {
+  def tracedWithFutureFirstCompletions(): Integer = {
     GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     val completedVal = Future.firstCompletedOf(
       List(
@@ -114,7 +114,7 @@ class ScalaConcurrentTests {
     GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
     val f: Future[String] = Future {
       tracedChild("timeoutChild")
-      while(true) {
+      while (true) {
         // never actually finish
       }
       "done"

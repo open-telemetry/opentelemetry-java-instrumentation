@@ -1,21 +1,19 @@
-import play.api.mvc.Action
-import play.api.routing.{HandlerDef, Router}
-import play.api.mvc._
-import play.api.routing.sird._
 import java.lang.reflect.Field
 
 import datadog.trace.api.Trace
-import play.api.libs.typedmap.TypedKey
 import play.api.mvc.request.RequestAttrKey
+import play.api.mvc.{Action, _}
+import play.api.routing.sird._
+import play.api.routing.{HandlerDef, Router}
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 
 object Play26TestUtils {
   def buildTestApp(): play.Application = {
     // build play.api.Application with desired setting and pass into play.Application for testing
-    val apiApp :play.api.Application = new play.api.inject.guice.GuiceApplicationBuilder()
+    val apiApp: play.api.Application = new play.api.inject.guice.GuiceApplicationBuilder()
       .requireAtInjectOnConstructors(true)
       .router(
         Router.from {

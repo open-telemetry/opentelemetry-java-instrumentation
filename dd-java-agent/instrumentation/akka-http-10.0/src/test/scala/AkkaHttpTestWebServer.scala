@@ -1,8 +1,8 @@
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.HttpMethods.GET
+import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.Trace
@@ -37,7 +37,7 @@ object AkkaHttpTestAsyncWebServer {
       }
   }
 
-  private var binding :ServerBinding = null
+  private var binding: ServerBinding = null
 
   def start(): Unit = synchronized {
     if (null == binding) {
@@ -77,7 +77,7 @@ object AkkaHttpTestSyncWebServer {
       HttpResponse(entity = "Not found unit test.", status = StatusCodes.NotFound)
   }
 
-  private var binding :ServerBinding = null
+  private var binding: ServerBinding = null
 
   def start(): Unit = synchronized {
     if (null == binding) {
