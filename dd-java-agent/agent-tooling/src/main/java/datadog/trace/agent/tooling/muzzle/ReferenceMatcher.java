@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.jar.asm.ClassReader;
 import net.bytebuddy.jar.asm.ClassVisitor;
+import net.bytebuddy.jar.asm.FieldVisitor;
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
@@ -130,6 +131,7 @@ public class ReferenceMatcher {
     private final List<UnloadedType> unloadedInterfaces = new ArrayList<>();
     private int flags;
     private final List<Method> methods = new ArrayList<>();
+    private final List<Field> fields = new ArrayList<>();
 
     public static UnloadedType of(String className, ClassLoader classLoader) throws Exception {
       className = Utils.getInternalName(className);
@@ -189,23 +191,48 @@ public class ReferenceMatcher {
       return mismatches;
     }
 
-    public List<Reference.Mismatch> checkMatch(Reference.Method method) {
+    public List<Reference.Mismatch> checkMatch(Reference.Field fieldRef) {
       final List<Reference.Mismatch> mismatches = new ArrayList<>(0);
-      // does the method exist?
-      Method unloadedMethod = findMethod(method, true);
+      final Field unloadedField = findField(fieldRef, true);
+      if (unloadedField == null) {
+        mismatches.add(
+            new Reference.Mismatch.MissingField(
+                fieldRef.getSources().toArray(new Reference.Source[0]),
+                className,
+                fieldRef.getName(),
+                fieldRef.getType().getInternalName()));
+      } else {
+        for (Reference.Flag flag : fieldRef.getFlags()) {
+          if (!flag.matches(unloadedField.getFlags())) {
+            final String desc = this.getClassName() + "#" + unloadedField.signature;
+            mismatches.add(
+                new Mismatch.MissingFlag(
+                    fieldRef.getSources().toArray(new Source[0]),
+                    desc,
+                    flag,
+                    unloadedField.getFlags()));
+          }
+        }
+      }
+      return mismatches;
+    }
+
+    public List<Reference.Mismatch> checkMatch(Reference.Method methodRef) {
+      final List<Reference.Mismatch> mismatches = new ArrayList<>(0);
+      final Method unloadedMethod = findMethod(methodRef, true);
       if (unloadedMethod == null) {
         mismatches.add(
             new Reference.Mismatch.MissingMethod(
-                method.getSources().toArray(new Reference.Source[0]),
+                methodRef.getSources().toArray(new Reference.Source[0]),
                 className,
-                method.toString()));
+                methodRef.toString()));
       } else {
-        for (Reference.Flag flag : method.getFlags()) {
+        for (Reference.Flag flag : methodRef.getFlags()) {
           if (!flag.matches(unloadedMethod.getFlags())) {
             final String desc = this.getClassName() + "#" + unloadedMethod.signature;
             mismatches.add(
                 new Mismatch.MissingFlag(
-                    method.getSources().toArray(new Source[0]),
+                    methodRef.getSources().toArray(new Source[0]),
                     desc,
                     flag,
                     unloadedMethod.getFlags()));
@@ -243,10 +270,32 @@ public class ReferenceMatcher {
       return null;
     }
 
-    public boolean hasField(Reference.Field field) {
-      // TODO does the field exist?
-      // TODO are the expected field flags present (static, public, etc)
-      throw new RuntimeException("TODO");
+    private Field findField(Reference.Field fieldRef, boolean includePrivateFields) {
+      final Field key = new Field(0, fieldRef.getName(), fieldRef.getType().getDescriptor());
+      final int index = fields.indexOf(key);
+      if (index != -1) {
+        final Field foundField = fields.get(index);
+        if (foundField.is(Opcodes.ACC_PRIVATE)) {
+          return includePrivateFields ? foundField : null;
+        } else {
+          return foundField;
+        }
+      } else {
+        Field superField = null;
+        if (unloadedSuper != null) {
+          superField = unloadedSuper.findField(fieldRef, false);
+          if (superField != null) {
+            return superField;
+          }
+        }
+        for (UnloadedType unloadedInterface : unloadedInterfaces) {
+          superField = unloadedInterface.findField(fieldRef, false);
+          if (superField != null) {
+            return superField;
+          }
+        }
+      }
+      return null;
     }
 
     @Override
@@ -265,14 +314,19 @@ public class ReferenceMatcher {
     }
 
     @Override
+    public FieldVisitor visitField(
+        int access, String name, String descriptor, String signature, Object value) {
+      fields.add(new Field(access, name, descriptor));
+      return super.visitField(access, name, descriptor, signature, value);
+    }
+
+    @Override
     public MethodVisitor visitMethod(
         final int access,
         final String name,
         final String descriptor,
         final String signature,
         final String[] exceptions) {
-      // Additional references we could check
-      // - Classes in signature (return type, params) and visible from this package
       methods.add(new Method(access, name, descriptor));
       return super.visitMethod(access, name, descriptor, signature, exceptions);
     }
@@ -304,7 +358,45 @@ public class ReferenceMatcher {
       @Override
       public boolean equals(Object o) {
         if (o instanceof Method) {
-          return signature.toString().equals(((Method) o).signature);
+          return signature.equals(((Method) o).signature);
+        }
+        return false;
+      }
+
+      @Override
+      public int hashCode() {
+        return signature.hashCode();
+      }
+    }
+
+    private static class Field {
+      private final int flags;
+      // name + typeDesc
+      private final String signature;
+
+      public Field(int flags, String name, String typeDesc) {
+        this.flags = flags;
+        this.signature = name + typeDesc;
+      }
+
+      private int getFlags() {
+        return flags;
+      }
+
+      public boolean is(int flag) {
+        boolean result = (flags & flag) != 0;
+        return result;
+      }
+
+      @Override
+      public String toString() {
+        return new StringBuilder("Unloaded: ").append(signature).toString();
+      }
+
+      @Override
+      public boolean equals(Object o) {
+        if (o instanceof Field) {
+          return signature.equals(((Field) o).signature);
         }
         return false;
       }

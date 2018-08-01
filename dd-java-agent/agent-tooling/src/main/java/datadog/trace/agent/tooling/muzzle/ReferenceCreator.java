@@ -107,6 +107,24 @@ public class ReferenceCreator extends ClassVisitor {
   }
 
   /**
+   * Compute the minimum required access for FROM class to access a field on the TO class.
+   *
+   * @return A reference flag with the required level of access.
+   */
+  private static Reference.Flag computeMinimumFieldAccess(Type from, Type to) {
+    if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
+      return Reference.Flag.PRIVATE_OR_HIGHER;
+    } else if (internalPackageName(from.getInternalName())
+        .equals(internalPackageName(to.getInternalName()))) {
+      return Reference.Flag.PACKAGE_OR_HIGHER;
+    } else {
+      // Additional references: check the type hierarchy of FROM to distinguish public from
+      // protected
+      return Reference.Flag.PROTECTED_OR_HIGHER;
+    }
+  }
+
+  /**
    * Compute the minimum required access for FROM class to access METHODTYPE on the TO class.
    *
    * @return A reference flag with the required level of access.
@@ -163,7 +181,10 @@ public class ReferenceCreator extends ClassVisitor {
   public FieldVisitor visitField(
       int access, String name, String descriptor, String signature, Object value) {
     // Additional references we could check
-    // - type of field + visible from this package
+    // - annotations on field
+
+    // intentionally not creating refs to fields here.
+    // Will create refs in method instructions to include line numbers.
     return super.visitField(access, name, descriptor, signature, value);
   }
 
@@ -197,25 +218,46 @@ public class ReferenceCreator extends ClassVisitor {
     public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
       // Additional references we could check
       // * DONE owner class
-      //   * owner class has a field (name)
-      //   * field is static or non-static
-      //   * field's visibility from this point (NON_PRIVATE?)
-      // * owner class's visibility from this point (NON_PRIVATE?)
+      //   * DONE owner class has a field (name)
+      //   * DONE field is static or non-static
+      //   * DONE field's visibility from this point (NON_PRIVATE?)
+      // * DONE owner class's visibility from this point (NON_PRIVATE?)
       //
       // * DONE field-source class (descriptor)
-      //   * field-source visibility from this point (PRIVATE?)
+      //   * DONE field-source visibility from this point (PRIVATE?)
 
-      // owning class has a field
+      final Type ownerType = Type.getType("L" + owner + ";");
+      final Type fieldType = Type.getType(descriptor);
+
+      List<Reference.Flag> fieldFlags = new ArrayList<>();
+      fieldFlags.add(computeMinimumFieldAccess(refSourceType, ownerType));
+      fieldFlags.add(
+          opcode == Opcodes.GETSTATIC || opcode == Opcodes.PUTSTATIC
+              ? Reference.Flag.STATIC
+              : Reference.Flag.NON_STATIC);
+
       addReference(
-          new Reference.Builder(owner).withSource(refSourceClassName, currentLineNumber).build());
-      Type fieldType = Type.getType(descriptor);
-      if (fieldType.getSort() == Type.ARRAY) {
-        fieldType = fieldType.getElementType();
+          new Reference.Builder(ownerType.getInternalName())
+              .withSource(refSourceClassName, currentLineNumber)
+              .withFlag(computeMinimumClassAccess(refSourceType, ownerType))
+              .withField(
+                  new Reference.Source[] {
+                    new Reference.Source(refSourceClassName, currentLineNumber)
+                  },
+                  fieldFlags.toArray(new Reference.Flag[0]),
+                  name,
+                  fieldType)
+              .build());
+
+      Type underlyingFieldType = fieldType;
+      while (underlyingFieldType.getSort() == Type.ARRAY) {
+        underlyingFieldType = underlyingFieldType.getElementType();
       }
-      if (fieldType.getSort() == Type.OBJECT) {
+      if (underlyingFieldType.getSort() == Type.OBJECT) {
         addReference(
-            new Reference.Builder(fieldType.getInternalName())
+            new Reference.Builder(underlyingFieldType.getInternalName())
                 .withSource(refSourceClassName, currentLineNumber)
+                .withFlag(computeMinimumClassAccess(refSourceType, underlyingFieldType))
                 .build());
       }
       super.visitFieldInsn(opcode, owner, name, descriptor);
@@ -241,7 +283,7 @@ public class ReferenceCreator extends ClassVisitor {
 
       { // ref for method return type
         Type returnType = methodType.getReturnType();
-        if (returnType.getSort() == Type.ARRAY) {
+        while (returnType.getSort() == Type.ARRAY) {
           returnType = returnType.getElementType();
         }
         if (returnType.getSort() == Type.OBJECT) {
@@ -254,7 +296,7 @@ public class ReferenceCreator extends ClassVisitor {
       }
       // refs for method param types
       for (Type paramType : methodType.getArgumentTypes()) {
-        if (paramType.getSort() == Type.ARRAY) {
+        while (paramType.getSort() == Type.ARRAY) {
           paramType = paramType.getElementType();
         }
         if (paramType.getSort() == Type.OBJECT) {
@@ -267,9 +309,6 @@ public class ReferenceCreator extends ClassVisitor {
       }
 
       Type ownerType = Type.getType("L" + owner + ";");
-      if (ownerType.getSort() == Type.ARRAY) {
-        ownerType = ownerType.getElementType();
-      }
 
       final List<Reference.Flag> methodFlags = new ArrayList<>();
       methodFlags.add(

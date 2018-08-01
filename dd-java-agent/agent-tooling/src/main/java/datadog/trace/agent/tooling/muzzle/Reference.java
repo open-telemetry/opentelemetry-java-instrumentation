@@ -67,9 +67,7 @@ public class Reference {
   }
 
   /**
-   * Create a new reference which combines this reference with another reference.
-   *
-   * <p>Attempts to merge incompatible references will throw an IllegalStateException.
+   * Create a new reference which combines this reference with another reference of the same type.
    *
    * @param anotherReference A reference to the same class
    * @return a new Reference which merges the two references
@@ -209,6 +207,24 @@ public class Reference {
         final PrintWriter pw = new PrintWriter(sw);
         referenceCheckExcetpion.printStackTrace(pw);
         return sw.toString();
+      }
+    }
+
+    public static class MissingField extends Mismatch {
+      private final String className;
+      private final String fieldName;
+      private final String fieldDesc;
+
+      public MissingField(Source[] sources, String className, String fieldName, String fieldDesc) {
+        super(sources);
+        this.className = className;
+        this.fieldName = fieldName;
+        this.fieldDesc = fieldDesc;
+      }
+
+      @Override
+      String getMismatchDetails() {
+        return "Missing field " + className + "#" + fieldName + fieldDesc;
       }
     }
 
@@ -418,8 +434,7 @@ public class Reference {
 
     public Method merge(Method anotherMethod) {
       if (!this.equals(anotherMethod)) {
-        throw new IllegalStateException(
-            "Cannot merge incompatible methods " + this + " <> " + anotherMethod);
+        throw new IllegalStateException("illegal merge " + this + " != " + anotherMethod);
       }
 
       final Set<Source> mergedSources = new HashSet<>();
@@ -459,25 +474,45 @@ public class Reference {
     private final Set<Source> sources;
     private final Set<Flag> flags;
     private final String name;
+    private final Type type;
 
-    public Field(Set<Source> sources, Set<Flag> flags, String name) {
-      this.sources = sources;
-      this.flags = flags;
+    public Field(Source[] sources, Flag[] flags, String name, Type fieldType) {
+      this.sources = new HashSet<>(Arrays.asList(sources));
+      this.flags = new HashSet<>(Arrays.asList(flags));
       this.name = name;
+      this.type = fieldType;
     }
 
     public String getName() {
       return name;
     }
 
+    public Set<Source> getSources() {
+      return sources;
+    }
+
     public Set<Flag> getFlags() {
       return flags;
     }
 
+    public Type getType() {
+      return type;
+    }
+
     public Field merge(Field anotherField) {
-      // TODO: implement
-      // also assert same class
-      return this;
+      if (!this.equals(anotherField) || (!type.equals(anotherField.type))) {
+        throw new IllegalStateException("illegal merge " + this + " != " + anotherField);
+      }
+      return new Field(
+          Reference.merge(sources, anotherField.sources).toArray(new Source[0]),
+          mergeFlags(flags, anotherField.flags).toArray(new Flag[0]),
+          name,
+          type);
+    }
+
+    @Override
+    public String toString() {
+      return "FieldRef:" + name + type.getInternalName();
     }
 
     @Override
@@ -528,8 +563,15 @@ public class Reference {
       return this;
     }
 
-    public Builder withField(String fieldName, Flag... fieldFlags) {
-      // TODO
+    public Builder withField(
+        Source[] sources, Flag[] fieldFlags, String fieldName, Type fieldType) {
+      final Field field = new Field(sources, fieldFlags, fieldName, fieldType);
+      int existingIndex = fields.indexOf(field);
+      if (existingIndex == -1) {
+        fields.add(field);
+      } else {
+        fields.set(existingIndex, field.merge(fields.get(existingIndex)));
+      }
       return this;
     }
 

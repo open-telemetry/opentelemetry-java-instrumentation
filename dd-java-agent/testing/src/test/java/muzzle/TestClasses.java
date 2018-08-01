@@ -14,10 +14,14 @@ public class TestClasses {
       a.b.aMethodWithPrimitives(false);
       a.b.aMethodWithArrays(new String[0]);
       B.aStaticMethod();
+      A.staticB.aMethod("bar");
     }
 
     public static class A {
       public B b = new B();
+      protected Object protectedField = null;
+      private Object privateField = null;
+      public static B staticB = new B();
     }
 
     public static class B {
@@ -44,6 +48,8 @@ public class TestClasses {
         b.protectedMethod();
       }
     }
+
+    public static class A2 extends A {}
 
     public interface SomeInterface {
       void someMethod();

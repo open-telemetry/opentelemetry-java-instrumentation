@@ -27,6 +27,7 @@ class ReferenceCreatorTest extends AgentTestRunner {
     references.get('java.lang.Object').getFlags().contains(Reference.Flag.PUBLIC)
     references.get('muzzle.TestClasses$MethodBodyAdvice$B').getFlags().contains(Reference.Flag.PACKAGE_OR_HIGHER)
 
+    // method refs
     Set<Reference.Method> bMethods = references.get('muzzle.TestClasses$MethodBodyAdvice$B').getMethods()
     findMethod(bMethods, "aMethod", "(Ljava/lang/String;)Ljava/lang/String;") != null
     findMethod(bMethods, "aMethodWithPrimitives", "(Z)V") != null
@@ -35,6 +36,15 @@ class ReferenceCreatorTest extends AgentTestRunner {
 
     findMethod(bMethods, "aMethod", "(Ljava/lang/String;)Ljava/lang/String;").getFlags().contains(Reference.Flag.NON_STATIC)
     findMethod(bMethods, "aStaticMethod", "()V").getFlags().contains(Reference.Flag.STATIC)
+
+    // field refs
+    references.get('muzzle.TestClasses$MethodBodyAdvice$B').getFields().isEmpty()
+    Set<Reference.Field> aFieldRefs = references.get('muzzle.TestClasses$MethodBodyAdvice$A').getFields()
+    findField(aFieldRefs, "b").getFlags().contains(Reference.Flag.PACKAGE_OR_HIGHER)
+    findField(aFieldRefs, "b").getFlags().contains(Reference.Flag.NON_STATIC)
+    findField(aFieldRefs, "staticB").getFlags().contains(Reference.Flag.PACKAGE_OR_HIGHER)
+    findField(aFieldRefs, "staticB").getFlags().contains(Reference.Flag.STATIC)
+    aFieldRefs.size() == 2
   }
 
   def "protected ref test"() {
@@ -47,10 +57,19 @@ class ReferenceCreatorTest extends AgentTestRunner {
     findMethod(bMethods, "protectedMethod", "()V").getFlags().contains(Reference.Flag.PROTECTED_OR_HIGHER)
   }
 
-  private static findMethod(Set<Reference.Method> methods, String methodName, String methodDesc) {
+  private static Reference.Method findMethod(Set<Reference.Method> methods, String methodName, String methodDesc) {
     for (Reference.Method method : methods) {
       if (method == new Reference.Method(methodName, methodDesc)) {
         return method
+      }
+    }
+    return null
+  }
+
+  private static Reference.Field findField(Set<Reference.Field> fields, String fieldName) {
+    for (Reference.Field field : fields) {
+      if (field.getName().equals(fieldName)) {
+        return field
       }
     }
     return null
