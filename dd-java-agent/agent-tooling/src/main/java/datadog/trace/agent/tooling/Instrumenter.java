@@ -51,7 +51,7 @@ public interface Instrumenter {
     protected final boolean enabled;
 
     public Default(final String instrumentationName, final String... additionalNames) {
-      this.instrumentationNames = new HashSet<>(Arrays.asList(additionalNames));
+      instrumentationNames = new HashSet<>(Arrays.asList(additionalNames));
       instrumentationNames.add(instrumentationName);
       instrumentationPrimaryName = instrumentationName;
 
@@ -72,56 +72,75 @@ public interface Instrumenter {
     }
 
     @Override
-    public AgentBuilder instrument(final AgentBuilder agentBuilder) {
+    public AgentBuilder instrument(final AgentBuilder parentAgentBuilder) {
       if (!enabled) {
         log.debug("Instrumentation {} is disabled", this);
-        return agentBuilder;
+        return parentAgentBuilder;
       }
 
-      AgentBuilder.Identified.Extendable advice =
-          agentBuilder
+      AgentBuilder.Identified.Extendable agentBuilder =
+          parentAgentBuilder
               .type(typeMatcher(), classLoaderMatcher())
-              .and(
-                  new AgentBuilder.RawMatcher() {
-                    @Override
-                    public boolean matches(
-                        final TypeDescription typeDescription,
-                        final ClassLoader classLoader,
-                        final JavaModule module,
-                        final Class<?> classBeingRedefined,
-                        final ProtectionDomain protectionDomain) {
-                      /* Optimization: calling getInstrumentationMuzzle() inside this method
-                       * prevents unnecessary loading of muzzle references during agentBuilder
-                       * setup.
-                       */
-                      final ReferenceMatcher muzzle = getInstrumentationMuzzle();
-                      if (null != muzzle) {
-                        final List<Reference.Mismatch> mismatches =
-                            muzzle.getMismatchedReferenceSources(classLoader);
-                        if (mismatches.size() > 0) {
-                          log.debug(
-                              "Instrumentation muzzled: {} -- {} on {}",
-                              instrumentationPrimaryName,
-                              this.getClass().getName(),
-                              classLoader);
-                        }
-                        for (final Reference.Mismatch mismatch : mismatches) {
-                          log.debug("-- {}", mismatch);
-                        }
-                        return mismatches.size() == 0;
-                      }
-                      return true;
-                    }
-                  })
+              .and(new MuzzleMatcher())
               .transform(DDTransformers.defaultTransformers());
+      agentBuilder = injectHelperClasses(agentBuilder);
+      agentBuilder = applyInstrumentationTransformers(agentBuilder);
+      return agentBuilder.asDecorator();
+    }
+
+    private AgentBuilder.Identified.Extendable injectHelperClasses(
+        AgentBuilder.Identified.Extendable agentBuilder) {
       final String[] helperClassNames = helperClassNames();
       if (helperClassNames.length > 0) {
-        advice = advice.transform(new HelperInjector(helperClassNames));
+        agentBuilder = agentBuilder.transform(new HelperInjector(helperClassNames));
       }
+      return agentBuilder;
+    }
+
+    private AgentBuilder.Identified.Extendable applyInstrumentationTransformers(
+        AgentBuilder.Identified.Extendable agentBuilder) {
       for (final Map.Entry<ElementMatcher, String> entry : transformers().entrySet()) {
-        advice = advice.transform(DDAdvice.create().advice(entry.getKey(), entry.getValue()));
+        agentBuilder =
+            agentBuilder.transform(
+                new AgentBuilder.Transformer.ForAdvice()
+                    .include(Utils.getAgentClassLoader())
+                    .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
+                    .advice(entry.getKey(), entry.getValue()));
       }
-      return advice.asDecorator();
+      return agentBuilder;
+    }
+
+    /** Matches classes for which instrumentation is not muzzled. */
+    private class MuzzleMatcher implements AgentBuilder.RawMatcher {
+      @Override
+      public boolean matches(
+          final TypeDescription typeDescription,
+          final ClassLoader classLoader,
+          final JavaModule module,
+          final Class<?> classBeingRedefined,
+          final ProtectionDomain protectionDomain) {
+        /* Optimization: calling getInstrumentationMuzzle() inside this method
+         * prevents unnecessary loading of muzzle references during agentBuilder
+         * setup.
+         */
+        final ReferenceMatcher muzzle = getInstrumentationMuzzle();
+        if (null != muzzle) {
+          final List<Reference.Mismatch> mismatches =
+              muzzle.getMismatchedReferenceSources(classLoader);
+          if (mismatches.size() > 0) {
+            log.debug(
+                "Instrumentation muzzled: {} -- {} on {}",
+                instrumentationPrimaryName,
+                getClass().getName(),
+                classLoader);
+          }
+          for (final Reference.Mismatch mismatch : mismatches) {
+            log.debug("-- {}", mismatch);
+          }
+          return mismatches.size() == 0;
+        }
+        return true;
+      }
     }
 
     /**

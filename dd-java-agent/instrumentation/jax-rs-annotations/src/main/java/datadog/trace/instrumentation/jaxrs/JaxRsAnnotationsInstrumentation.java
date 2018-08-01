@@ -1,8 +1,7 @@
 package datadog.trace.instrumentation.jaxrs;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
-import static net.bytebuddy.matcher.ElementMatchers.failSafe;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -31,16 +30,14 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
 
   @Override
   public ElementMatcher typeMatcher() {
-    return hasSuperType(
+    return safeHasSuperType(
         isAnnotatedWith(named("javax.ws.rs.Path"))
-            .or(
-                failSafe(
-                    hasSuperType(declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path")))))));
+            .or(safeHasSuperType(declaresMethod(isAnnotatedWith(named("javax.ws.rs.Path"))))));
   }
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         isAnnotatedWith(
             named("javax.ws.rs.Path")

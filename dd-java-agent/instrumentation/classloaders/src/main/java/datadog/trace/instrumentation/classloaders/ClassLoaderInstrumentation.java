@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.classloaders;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 
 import com.google.auto.service.AutoService;
 import datadog.opentracing.DDTracer;
@@ -28,12 +27,12 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher typeMatcher() {
-    return isSubTypeOf(ClassLoader.class);
+    return safeHasSuperType(named("java.lang.ClassLoader"));
   }
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(isConstructor(), ClassloaderAdvice.class.getName());
     return transformers;
   }

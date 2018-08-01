@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.jaxrs;
 
-import static net.bytebuddy.matcher.ElementMatchers.failSafe;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -22,7 +21,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher typeMatcher() {
-    return failSafe(hasSuperType(named("javax.ws.rs.client.ClientBuilder")));
+    return safeHasSuperType(named("javax.ws.rs.client.ClientBuilder"));
   }
 
   @Override
@@ -38,7 +37,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
   public Map<ElementMatcher, String> transformers() {
     final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
-        named("build").and(returns(hasSuperType(named("javax.ws.rs.client.Client")))),
+        named("build").and(returns(safeHasSuperType(named("javax.ws.rs.client.Client")))),
         ClientBuilderAdvice.class.getName());
     return transformers;
   }

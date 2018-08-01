@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.ratpack;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.ratpack.RatpackInstrumentation.CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -35,7 +35,7 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Default
 
   @Override
   public ElementMatcher typeMatcher() {
-    return not(isInterface()).and(hasSuperType(named("ratpack.http.client.HttpClient")));
+    return not(isInterface()).and(safeHasSuperType(named("ratpack.http.client.HttpClient")));
   }
 
   @Override
@@ -63,7 +63,7 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Default
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         named("request")
             .and(

@@ -6,7 +6,6 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
-import net.bytebuddy.utility.JavaModule
 import play.inject.guice.GuiceApplicationBuilder
 import spock.lang.Shared
 
@@ -25,27 +24,13 @@ class LagomTest extends AgentTestRunner {
   @Shared
   private TestServer server
 
-  @Override
-  protected boolean onInstrumentationError(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded, Throwable throwable) {
-    if (throwable.getMessage().contains('Cannot resolve type description for akka.stream.impl.VirtualProcessor$WrappedSubscription$$SubscriptionState')) {
-      // 'akka/stream/impl/VirtualProcessor$WrappedSubscription$PassThrough$.class' declares
-      // itself an implementation of 'VirtualProcessor$WrappedSubscription$$SubscriptionState',
-      // but this interface does not exist on the classpath.
-      // The closest thing on the classpath is 'VirtualProcessor$WrappedSubscription$SubscriptionState' (only one $).
-
-      // Looks like a compiler/packaging issue on akka's end. Or maybe this interface is dynamically generated.
-      return false
-    }
-    return super.onInstrumentationError(typeName, classLoader, module, loaded, throwable)
-  }
-
   def setupSpec() {
     server = startServer(defaultSetup()
       .withCluster(false)
       .withPersistence(false)
       .withCassandra(false)
       .withJdbc(false)
-      .withConfigureBuilder(
+      .configureBuilder(
       new Function<GuiceApplicationBuilder, GuiceApplicationBuilder>() {
         @Override
         GuiceApplicationBuilder apply(GuiceApplicationBuilder builder) {

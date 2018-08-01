@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -95,7 +95,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher typeMatcher() {
     return not(isInterface())
-        .and(hasSuperType(named(Executor.class.getName())))
+        .and(safeHasSuperType(named(Executor.class.getName())))
         .and(
             new ElementMatcher<TypeDescription>() {
               @Override

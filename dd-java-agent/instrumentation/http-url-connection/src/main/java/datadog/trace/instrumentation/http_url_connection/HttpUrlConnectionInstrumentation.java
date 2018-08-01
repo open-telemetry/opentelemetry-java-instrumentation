@@ -1,9 +1,9 @@
 package datadog.trace.instrumentation.http_url_connection;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -43,7 +43,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher typeMatcher() {
-    return isSubTypeOf(HttpURLConnection.class)
+    return safeHasSuperType(named("java.net.HttpURLConnection"))
         // This class is a simple delegator. Skip because it does not update its `connected` field.
         .and(not(named("sun.net.www.protocol.https.HttpsURLConnectionImpl")));
   }
@@ -58,7 +58,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(isPublic())
@@ -177,7 +177,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     private static final Map<HttpURLConnection, HttpURLState> STATE_MAP =
         Collections.synchronizedMap(new WeakHashMap<HttpURLConnection, HttpURLState>());
 
-    public static HttpURLState get(HttpURLConnection connection) {
+    public static HttpURLState get(final HttpURLConnection connection) {
       HttpURLState state = STATE_MAP.get(connection);
       if (state == null) {
         // not thread-safe, but neither is HttpURLConnection
@@ -195,8 +195,8 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       return hasDoneIO;
     }
 
-    public void setHasDoneIO(boolean value) {
-      this.hasDoneIO = value;
+    public void setHasDoneIO(final boolean value) {
+      hasDoneIO = value;
     }
   }
 }

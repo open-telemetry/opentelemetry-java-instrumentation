@@ -1,9 +1,8 @@
 package datadog.trace.instrumentation.springweb;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithField;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static net.bytebuddy.matcher.ElementMatchers.failSafe;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -39,7 +38,7 @@ public final class SpringWebInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher typeMatcher() {
     return not(isInterface())
-        .and(failSafe(hasSuperType(named("org.springframework.web.servlet.HandlerAdapter"))));
+        .and(safeHasSuperType(named("org.springframework.web.servlet.HandlerAdapter")));
   }
 
   @Override
@@ -50,7 +49,7 @@ public final class SpringWebInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(isPublic())
@@ -74,7 +73,7 @@ public final class SpringWebInstrumentation extends Instrumenter.Default {
 
     @Override
     public Map<ElementMatcher, String> transformers() {
-      Map<ElementMatcher, String> transformers = new HashMap<>();
+      final Map<ElementMatcher, String> transformers = new HashMap<>();
       transformers.put(
           isMethod()
               .and(isProtected())

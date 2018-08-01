@@ -1,8 +1,7 @@
 package datadog.trace.instrumentation.servlet2;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
-import static net.bytebuddy.matcher.ElementMatchers.failSafe;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -24,7 +23,7 @@ public final class FilterChain2Instrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher typeMatcher() {
-    return not(isInterface()).and(failSafe(hasSuperType(named("javax.servlet.FilterChain"))));
+    return not(isInterface()).and(safeHasSuperType(named("javax.servlet.FilterChain")));
   }
 
   @Override

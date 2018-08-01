@@ -41,7 +41,7 @@ public class Elasticsearch2TransportClientInstrumentation extends Instrumenter.D
   @Override
   public ElementMatcher typeMatcher() {
     // If we want to be more generic, we could instrument the interface instead:
-    // .and(hasSuperType(named("org.elasticsearch.client.ElasticsearchClient"))))
+    // .and(safeHasSuperType(named("org.elasticsearch.client.ElasticsearchClient"))))
     return not(isInterface()).and(named("org.elasticsearch.client.support.AbstractClient"));
   }
 

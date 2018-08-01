@@ -1,8 +1,8 @@
 package datadog.trace.instrumentation.trace_annotation;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.trace_annotation.TraceConfigInstrumentation.PACKAGE_CLASS_NAME_REGEX;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -79,12 +79,12 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
 
   @Override
   public ElementMatcher typeMatcher() {
-    return hasSuperType(declaresMethod(isAnnotatedWith(methodTraceMatcher)));
+    return safeHasSuperType(declaresMethod(isAnnotatedWith(methodTraceMatcher)));
   }
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(isAnnotatedWith(methodTraceMatcher), TraceAdvice.class.getName());
     return transformers;
   }

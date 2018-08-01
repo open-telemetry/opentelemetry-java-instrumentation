@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.ratpack;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithMethod;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -91,7 +91,7 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
 
     @Override
     public ElementMatcher typeMatcher() {
-      return not(isInterface()).and(hasSuperType(named("ratpack.exec.ExecStarter")));
+      return not(isInterface()).and(safeHasSuperType(named("ratpack.exec.ExecStarter")));
     }
 
     @Override
@@ -136,7 +136,7 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
     @Override
     public ElementMatcher typeMatcher() {
       return named("ratpack.exec.Execution")
-          .or(not(isInterface()).and(hasSuperType(named("ratpack.exec.Execution"))));
+          .or(not(isInterface()).and(safeHasSuperType(named("ratpack.exec.Execution"))));
     }
 
     @Override

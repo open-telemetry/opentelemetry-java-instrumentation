@@ -1,10 +1,9 @@
 package datadog.trace.instrumentation.jms2;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.instrumentation.jms.util.JmsUtil.toResourceName;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static net.bytebuddy.matcher.ElementMatchers.failSafe;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -47,7 +46,7 @@ public final class JMS2MessageConsumerInstrumentation extends Instrumenter.Defau
 
   @Override
   public ElementMatcher typeMatcher() {
-    return not(isInterface()).and(failSafe(hasSuperType(named("javax.jms.MessageConsumer"))));
+    return not(isInterface()).and(safeHasSuperType(named("javax.jms.MessageConsumer")));
   }
 
   @Override
@@ -62,7 +61,7 @@ public final class JMS2MessageConsumerInstrumentation extends Instrumenter.Defau
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         named("receive").and(takesArguments(0).or(takesArguments(1))).and(isPublic()),
         ConsumerAdvice.class.getName());

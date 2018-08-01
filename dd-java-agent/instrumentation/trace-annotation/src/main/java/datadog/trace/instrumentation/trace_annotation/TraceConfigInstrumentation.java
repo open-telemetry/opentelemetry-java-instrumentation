@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.trace_annotation;
 
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
@@ -92,7 +92,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
     }
 
     for (final Map.Entry<String, Set<String>> entry : classMethodsToTrace.entrySet()) {
-      TracerClassInstrumentation tracerConfigClass =
+      final TracerClassInstrumentation tracerConfigClass =
           new TracerClassInstrumentation(entry.getKey(), entry.getValue());
       agentBuilder = tracerConfigClass.instrument(agentBuilder);
     }
@@ -109,7 +109,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
       this("noop", Collections.singleton("noop"));
     }
 
-    public TracerClassInstrumentation(String className, Set<String> methodNames) {
+    public TracerClassInstrumentation(final String className, final Set<String> methodNames) {
       super("trace", "trace-config");
       this.className = className;
       this.methodNames = methodNames;
@@ -117,7 +117,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
 
     @Override
     public ElementMatcher<? super TypeDescription> typeMatcher() {
-      return hasSuperType(named(className));
+      return safeHasSuperType(named(className));
     }
 
     @Override
@@ -131,7 +131,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
         }
       }
 
-      Map<ElementMatcher, String> transformers = new HashMap<>();
+      final Map<ElementMatcher, String> transformers = new HashMap<>();
       transformers.put(methodMatchers, TraceAdvice.class.getName());
       return transformers;
     }
