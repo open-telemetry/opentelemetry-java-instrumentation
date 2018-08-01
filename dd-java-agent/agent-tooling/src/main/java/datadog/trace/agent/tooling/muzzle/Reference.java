@@ -102,6 +102,11 @@ public class Reference {
     return merged;
   }
 
+  @Override
+  public String toString() {
+    return "Reference<" + className + ">";
+  }
+
   public static class Source {
     private final String name;
     private final int line;
@@ -193,16 +198,25 @@ public class Reference {
     /** Fallback mismatch in case an unexpected exception occurs during reference checking. */
     public static class ReferenceCheckError extends Mismatch {
       private final Exception referenceCheckExcetpion;
+      private final Reference referenceBeingChecked;
+      private final ClassLoader classLoaderBeingChecked;
 
-      public ReferenceCheckError(Exception e) {
+      public ReferenceCheckError(
+          Exception e, Reference referenceBeingChecked, ClassLoader classLoaderBeingChecked) {
         super(new Source[0]);
         this.referenceCheckExcetpion = e;
+        this.referenceBeingChecked = referenceBeingChecked;
+        this.classLoaderBeingChecked = classLoaderBeingChecked;
       }
 
       @Override
       String getMismatchDetails() {
         final StringWriter sw = new StringWriter();
-        sw.write("Failed to generate reference check: ");
+        sw.write("Failed to generate reference check for: ");
+        sw.write(referenceBeingChecked.toString());
+        sw.write(" on classloader ");
+        sw.write(classLoaderBeingChecked.toString());
+        sw.write("\n");
         // add exception message and stack trace
         final PrintWriter pw = new PrintWriter(sw);
         referenceCheckExcetpion.printStackTrace(pw);

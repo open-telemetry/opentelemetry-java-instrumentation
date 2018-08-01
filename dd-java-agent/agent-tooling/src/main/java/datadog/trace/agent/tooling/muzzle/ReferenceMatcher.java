@@ -101,7 +101,7 @@ public class ReferenceMatcher {
       }
     } catch (Exception e) {
       // Shouldn't happen. Fail the reference check and add a mismatch for debug logging.
-      mismatches.add(new Mismatch.ReferenceCheckError(e));
+      mismatches.add(new Mismatch.ReferenceCheckError(e, reference, loader));
     }
     return mismatches;
   }
@@ -134,6 +134,12 @@ public class ReferenceMatcher {
     private final List<Field> fields = new ArrayList<>();
 
     public static UnloadedType of(String className, ClassLoader classLoader) throws Exception {
+      if (classLoader != Utils.getBootstrapProxy()) {
+        // getResource delegation won't see our bootstrap classes so do the delegation here.
+        if (Utils.getBootstrapProxy().getResource(Utils.getResourceName(className)) != null) {
+          return of(className, Utils.getBootstrapProxy());
+        }
+      }
       className = Utils.getInternalName(className);
       Map<String, UnloadedType> classLoaderCache = typeCache.get(classLoader);
       if (classLoaderCache == null) {
