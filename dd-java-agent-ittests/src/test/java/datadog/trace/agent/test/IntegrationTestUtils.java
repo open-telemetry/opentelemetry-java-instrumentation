@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.UUID;
@@ -155,5 +156,15 @@ public class IntegrationTestUtils {
             .loadClass("datadog.trace.agent.tooling.Utils")
             .getField("AGENT_PACKAGE_PREFIXES");
     return (String[]) f.get(null);
+  }
+
+  public static void awaitGC() {
+    System.gc(); // For good measure.
+    Object obj = new Object();
+    final WeakReference ref = new WeakReference<>(obj);
+    obj = null;
+    while (ref.get() != null) {
+      System.gc();
+    }
   }
 }

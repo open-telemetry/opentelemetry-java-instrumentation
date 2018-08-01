@@ -51,7 +51,7 @@ public interface Instrumenter {
     protected final boolean enabled;
 
     public Default(final String instrumentationName, final String... additionalNames) {
-      this.instrumentationNames = new HashSet<>(Arrays.asList(additionalNames));
+      instrumentationNames = new HashSet<>(Arrays.asList(additionalNames));
       instrumentationNames.add(instrumentationName);
       instrumentationPrimaryName = instrumentationName;
 
@@ -131,7 +131,7 @@ public interface Instrumenter {
             log.debug(
                 "Instrumentation muzzled: {} -- {} on {}",
                 instrumentationPrimaryName,
-                this.getClass().getName(),
+                getClass().getName(),
                 classLoader);
           }
           for (final Reference.Mismatch mismatch : mismatches) {
