@@ -466,8 +466,11 @@ public class Reference {
     public String toString() {
       // <init>()V
       // toString()Ljava/lang/String;
-      return name
-          + Type.getMethodType(returnType, parameterTypes.toArray(new Type[0])).getDescriptor();
+      return name + getDescriptor();
+    }
+
+    public String getDescriptor() {
+      return Type.getMethodType(returnType, parameterTypes.toArray(new Type[0])).getDescriptor();
     }
 
     @Override

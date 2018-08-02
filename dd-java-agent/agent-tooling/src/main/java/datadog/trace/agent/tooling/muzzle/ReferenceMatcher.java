@@ -4,6 +4,7 @@ import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOAD
 import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
+import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.Utils;
 import datadog.trace.agent.tooling.muzzle.Reference.Mismatch;
 import datadog.trace.agent.tooling.muzzle.Reference.Source;
@@ -15,14 +16,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.jar.asm.ClassReader;
-import net.bytebuddy.jar.asm.ClassVisitor;
-import net.bytebuddy.jar.asm.FieldVisitor;
-import net.bytebuddy.jar.asm.MethodVisitor;
-import net.bytebuddy.jar.asm.Opcodes;
-import net.bytebuddy.jar.asm.Type;
+import net.bytebuddy.description.field.FieldDescription;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.pool.TypePool;
 
 /** Matches a set of references against a classloader. */
 @Slf4j
@@ -82,335 +80,158 @@ public class ReferenceMatcher {
    * @param loader
    * @return A list of mismatched sources. A list of size 0 means the reference matches the class.
    */
-  private static List<Reference.Mismatch> checkMatch(Reference reference, ClassLoader loader) {
-    if (loader == BOOTSTRAP_CLASSLOADER) {
-      throw new IllegalStateException("Cannot directly check against bootstrap classloader");
-    }
-    if (!onClasspath(reference.getClassName(), loader)) {
-      return Collections.<Mismatch>singletonList(
-          new Mismatch.MissingClass(
-              reference.getSources().toArray(new Source[0]), reference.getClassName()));
-    }
+  public static List<Reference.Mismatch> checkMatch(Reference reference, ClassLoader loader) {
+    final TypePool typePool =
+        TypePool.Default.of(AgentInstaller.LOCATION_STRATEGY.classFileLocator(loader));
     final List<Mismatch> mismatches = new ArrayList<>(0);
     try {
-      ReferenceMatcher.UnloadedType typeOnClasspath =
-          ReferenceMatcher.UnloadedType.of(reference.getClassName(), loader);
-      mismatches.addAll(typeOnClasspath.checkMatch(reference));
-      for (Reference.Method requiredMethod : reference.getMethods()) {
-        mismatches.addAll(typeOnClasspath.checkMatch(requiredMethod));
+      final TypePool.Resolution resolution =
+          typePool.describe(Utils.getClassName(reference.getClassName()));
+      if (!resolution.isResolved()) {
+        return Collections.<Mismatch>singletonList(
+            new Mismatch.MissingClass(
+                reference.getSources().toArray(new Source[0]), reference.getClassName()));
       }
+      return checkMatch(reference, resolution.resolve());
     } catch (Exception e) {
-      // Shouldn't happen. Fail the reference check and add a mismatch for debug logging.
-      mismatches.add(new Mismatch.ReferenceCheckError(e, reference, loader));
+      if (e.getMessage().startsWith("Cannot resolve type description for ")) {
+        // bytebuddy throws an illegal state exception with this message if it cannot resolve types
+        // TODO: handle missing type resolutions without catching bytebuddy's exceptions
+        final String className = e.getMessage().replace("Cannot resolve type description for ", "");
+        mismatches.add(
+            new Mismatch.MissingClass(reference.getSources().toArray(new Source[0]), className));
+      } else {
+        // Shouldn't happen. Fail the reference check and add a mismatch for debug logging.
+        mismatches.add(new Mismatch.ReferenceCheckError(e, reference, loader));
+      }
     }
     return mismatches;
   }
 
-  private static boolean onClasspath(final String className, final ClassLoader loader) {
-    final String resourceName = Utils.getResourceName(className);
-    return loader.getResource(resourceName) != null
-        // we can also reach bootstrap classes
-        || Utils.getBootstrapProxy().getResource(resourceName) != null;
-  }
+  public static List<Reference.Mismatch> checkMatch(
+      Reference reference, TypeDescription typeOnClasspath) {
+    final List<Mismatch> mismatches = new ArrayList<>(0);
 
-  /**
-   * A representation of a jvm class created from a byte array without loading the class in
-   * question.
-   *
-   * <p>Used to compare an expected Reference with the actual runtime class without causing
-   * classloads.
-   */
-  public static class UnloadedType extends ClassVisitor {
-    private static final Map<ClassLoader, Map<String, UnloadedType>> typeCache =
-        Collections.synchronizedMap(new WeakHashMap<ClassLoader, Map<String, UnloadedType>>());
-
-    private String superName = null;
-    private String className = null;
-    private String[] interfaceNames = new String[0];
-    private UnloadedType unloadedSuper = null;
-    private final List<UnloadedType> unloadedInterfaces = new ArrayList<>();
-    private int flags;
-    private final List<Method> methods = new ArrayList<>();
-    private final List<Field> fields = new ArrayList<>();
-
-    public static UnloadedType of(String className, ClassLoader classLoader) throws Exception {
-      if (classLoader != Utils.getBootstrapProxy()) {
-        // getResource delegation won't see our bootstrap classes so do the delegation here.
-        if (Utils.getBootstrapProxy().getResource(Utils.getResourceName(className)) != null) {
-          return of(className, Utils.getBootstrapProxy());
-        }
+    for (Reference.Flag flag : reference.getFlags()) {
+      if (!flag.matches(typeOnClasspath.getModifiers())) {
+        final String desc = reference.getClassName();
+        mismatches.add(
+            new Mismatch.MissingFlag(
+                reference.getSources().toArray(new Source[0]),
+                desc,
+                flag,
+                typeOnClasspath.getModifiers()));
       }
-      className = Utils.getInternalName(className);
-      Map<String, UnloadedType> classLoaderCache = typeCache.get(classLoader);
-      if (classLoaderCache == null) {
-        synchronized (classLoader) {
-          classLoaderCache = typeCache.get(classLoader);
-          if (classLoaderCache == null) {
-            classLoaderCache = new ConcurrentHashMap<>();
-            typeCache.put(classLoader, classLoaderCache);
-          }
-        }
-      }
-      UnloadedType unloadedType = classLoaderCache.get(className);
-      if (unloadedType == null) {
-        final InputStream in = classLoader.getResourceAsStream(Utils.getResourceName(className));
-        unloadedType = new UnloadedType(null);
-        final ClassReader reader = new ClassReader(in);
-        reader.accept(unloadedType, ClassReader.SKIP_CODE);
-        if (unloadedType.superName != null) {
-          unloadedType.unloadedSuper = UnloadedType.of(unloadedType.superName, classLoader);
-        }
-        for (String interfaceName : unloadedType.interfaceNames) {
-          unloadedType.unloadedInterfaces.add(UnloadedType.of(interfaceName, classLoader));
-        }
-        classLoaderCache.put(className, unloadedType);
-      }
-      return unloadedType;
     }
 
-    private UnloadedType(ClassVisitor cv) {
-      super(Opcodes.ASM6, cv);
-    }
-
-    public String getClassName() {
-      return className;
-    }
-
-    public String getSuperName() {
-      return superName;
-    }
-
-    public int getFlags() {
-      return flags;
-    }
-
-    public List<Reference.Mismatch> checkMatch(Reference reference) {
-      final List<Reference.Mismatch> mismatches = new ArrayList<>(0);
-      for (Reference.Flag flag : reference.getFlags()) {
-        if (!flag.matches(getFlags())) {
-          final String desc = this.getClassName();
-          mismatches.add(
-              new Mismatch.MissingFlag(
-                  reference.getSources().toArray(new Source[0]), desc, flag, getFlags()));
-        }
-      }
-      return mismatches;
-    }
-
-    public List<Reference.Mismatch> checkMatch(Reference.Field fieldRef) {
-      final List<Reference.Mismatch> mismatches = new ArrayList<>(0);
-      final Field unloadedField = findField(fieldRef, true);
-      if (unloadedField == null) {
+    for (Reference.Field fieldRef : reference.getFields()) {
+      FieldDescription.InDefinedShape fieldDescription = findField(fieldRef, typeOnClasspath);
+      if (fieldDescription == null) {
         mismatches.add(
             new Reference.Mismatch.MissingField(
                 fieldRef.getSources().toArray(new Reference.Source[0]),
-                className,
+                reference.getClassName(),
                 fieldRef.getName(),
                 fieldRef.getType().getInternalName()));
       } else {
         for (Reference.Flag flag : fieldRef.getFlags()) {
-          if (!flag.matches(unloadedField.getFlags())) {
-            final String desc = this.getClassName() + "#" + unloadedField.signature;
+          if (!flag.matches(fieldDescription.getModifiers())) {
+            final String desc =
+                reference.getClassName()
+                    + "#"
+                    + fieldRef.getName()
+                    + fieldRef.getType().getInternalName();
             mismatches.add(
                 new Mismatch.MissingFlag(
                     fieldRef.getSources().toArray(new Source[0]),
                     desc,
                     flag,
-                    unloadedField.getFlags()));
+                    fieldDescription.getModifiers()));
           }
         }
       }
-      return mismatches;
     }
 
-    public List<Reference.Mismatch> checkMatch(Reference.Method methodRef) {
-      final List<Reference.Mismatch> mismatches = new ArrayList<>(0);
-      final Method unloadedMethod = findMethod(methodRef, true);
-      if (unloadedMethod == null) {
+    for (Reference.Method methodRef : reference.getMethods()) {
+      final MethodDescription.InDefinedShape methodDescription =
+          findMethod(methodRef, typeOnClasspath);
+      if (methodDescription == null) {
         mismatches.add(
             new Reference.Mismatch.MissingMethod(
                 methodRef.getSources().toArray(new Reference.Source[0]),
-                className,
-                methodRef.toString()));
+                methodRef.getName(),
+                methodRef.getDescriptor()));
       } else {
         for (Reference.Flag flag : methodRef.getFlags()) {
-          if (!flag.matches(unloadedMethod.getFlags())) {
-            final String desc = this.getClassName() + "#" + unloadedMethod.signature;
+          if (!flag.matches(methodDescription.getModifiers())) {
+            final String desc =
+                reference.getClassName() + "#" + methodRef.getName() + methodRef.getDescriptor();
             mismatches.add(
                 new Mismatch.MissingFlag(
                     methodRef.getSources().toArray(new Source[0]),
                     desc,
                     flag,
-                    unloadedMethod.getFlags()));
+                    methodDescription.getModifiers()));
           }
         }
       }
-      return mismatches;
     }
 
-    private Method findMethod(Reference.Method method, boolean includePrivateMethods) {
-      Method unloadedMethod =
-          new Method(
-              0,
-              method.getName(),
-              Type.getMethodType(
-                      method.getReturnType(), method.getParameterTypes().toArray(new Type[0]))
-                  .getDescriptor());
-      for (Method meth : methods) {
-        if (meth.equals(unloadedMethod)) {
-          if (meth.is(Opcodes.ACC_PRIVATE)) {
-            return includePrivateMethods ? meth : null;
-          } else {
-            return meth;
-          }
-        }
-      }
-      if (null != unloadedSuper) {
-        final Method meth = unloadedSuper.findMethod(method, false);
-        if (null != meth) return meth;
-      }
-      for (UnloadedType unloadedInterface : unloadedInterfaces) {
-        final Method meth = unloadedInterface.findMethod(method, false);
-        if (null != meth) return meth;
-      }
-      return null;
-    }
+    return mismatches;
+  }
 
-    private Field findField(Reference.Field fieldRef, boolean includePrivateFields) {
-      final Field key = new Field(0, fieldRef.getName(), fieldRef.getType().getDescriptor());
-      final int index = fields.indexOf(key);
-      if (index != -1) {
-        final Field foundField = fields.get(index);
-        if (foundField.is(Opcodes.ACC_PRIVATE)) {
-          return includePrivateFields ? foundField : null;
-        } else {
-          return foundField;
-        }
-      } else {
-        Field superField = null;
-        if (unloadedSuper != null) {
-          superField = unloadedSuper.findField(fieldRef, false);
-          if (superField != null) {
-            return superField;
-          }
-        }
-        for (UnloadedType unloadedInterface : unloadedInterfaces) {
-          superField = unloadedInterface.findField(fieldRef, false);
-          if (superField != null) {
-            return superField;
-          }
-        }
-      }
-      return null;
-    }
-
-    @Override
-    public void visit(
-        final int version,
-        final int access,
-        final String name,
-        final String signature,
-        final String superName,
-        final String[] interfaces) {
-      className = Utils.getClassName(name);
-      if (null != superName) this.superName = Utils.getClassName(superName);
-      if (null != interfaces) this.interfaceNames = interfaces;
-      this.flags = access;
-      super.visit(version, access, name, signature, superName, interfaces);
-    }
-
-    @Override
-    public FieldVisitor visitField(
-        int access, String name, String descriptor, String signature, Object value) {
-      fields.add(new Field(access, name, descriptor));
-      return super.visitField(access, name, descriptor, signature, value);
-    }
-
-    @Override
-    public MethodVisitor visitMethod(
-        final int access,
-        final String name,
-        final String descriptor,
-        final String signature,
-        final String[] exceptions) {
-      methods.add(new Method(access, name, descriptor));
-      return super.visitMethod(access, name, descriptor, signature, exceptions);
-    }
-
-    private static class Method {
-      private final int flags;
-      // name + descriptor
-      private final String signature;
-
-      public Method(int flags, String name, String desc) {
-        this.flags = flags;
-        this.signature = name + desc;
-      }
-
-      public boolean is(int flag) {
-        boolean result = (flags & flag) != 0;
-        return result;
-      }
-
-      public int getFlags() {
-        return flags;
-      }
-
-      @Override
-      public String toString() {
-        return new StringBuilder("Unloaded: ").append(signature).toString();
-      }
-
-      @Override
-      public boolean equals(Object o) {
-        if (o instanceof Method) {
-          return signature.equals(((Method) o).signature);
-        }
-        return false;
-      }
-
-      @Override
-      public int hashCode() {
-        return signature.hashCode();
+  private static FieldDescription.InDefinedShape findField(
+      Reference.Field fieldRef, TypeDescription typeOnClasspath) {
+    for (FieldDescription.InDefinedShape fieldType : typeOnClasspath.getDeclaredFields()) {
+      if (fieldType.getName().equals(fieldRef.getName())
+          && fieldType
+              .getType()
+              .asErasure()
+              .getInternalName()
+              .equals(fieldRef.getType().getInternalName())) {
+        return fieldType;
       }
     }
-
-    private static class Field {
-      private final int flags;
-      // name + typeDesc
-      private final String signature;
-
-      public Field(int flags, String name, String typeDesc) {
-        this.flags = flags;
-        this.signature = name + typeDesc;
-      }
-
-      private int getFlags() {
-        return flags;
-      }
-
-      public boolean is(int flag) {
-        boolean result = (flags & flag) != 0;
-        return result;
-      }
-
-      @Override
-      public String toString() {
-        return new StringBuilder("Unloaded: ").append(signature).toString();
-      }
-
-      @Override
-      public boolean equals(Object o) {
-        if (o instanceof Field) {
-          return signature.equals(((Field) o).signature);
-        }
-        return false;
-      }
-
-      @Override
-      public int hashCode() {
-        return signature.hashCode();
+    if (typeOnClasspath.getSuperClass() != null) {
+      FieldDescription.InDefinedShape fieldOnSupertype =
+          findField(fieldRef, typeOnClasspath.getSuperClass().asErasure());
+      if (fieldOnSupertype != null) {
+        return fieldOnSupertype;
       }
     }
+    for (TypeDescription.Generic interfaceType : typeOnClasspath.getInterfaces()) {
+      FieldDescription.InDefinedShape fieldOnSupertype =
+          findField(fieldRef, interfaceType.asErasure());
+      if (fieldOnSupertype != null) {
+        return fieldOnSupertype;
+      }
+    }
+    return null;
+  }
+
+  private static MethodDescription.InDefinedShape findMethod(
+      Reference.Method methodRef, TypeDescription typeOnClasspath) {
+    for (MethodDescription.InDefinedShape methodDescription :
+        typeOnClasspath.getDeclaredMethods()) {
+      if (methodDescription.getInternalName().equals(methodRef.getName())
+          && methodDescription.getDescriptor().equals(methodRef.getDescriptor())) {
+        return methodDescription;
+      }
+    }
+    if (typeOnClasspath.getSuperClass() != null) {
+      MethodDescription.InDefinedShape methodOnSupertype =
+          findMethod(methodRef, typeOnClasspath.getSuperClass().asErasure());
+      if (methodOnSupertype != null) {
+        return methodOnSupertype;
+      }
+    }
+    for (TypeDescription.Generic interfaceType : typeOnClasspath.getInterfaces()) {
+      MethodDescription.InDefinedShape methodOnSupertype =
+          findMethod(methodRef, interfaceType.asErasure());
+      if (methodOnSupertype != null) {
+        return methodOnSupertype;
+      }
+    }
+    return null;
   }
 }

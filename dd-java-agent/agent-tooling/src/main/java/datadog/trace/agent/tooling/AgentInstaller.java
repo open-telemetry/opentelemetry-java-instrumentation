@@ -20,6 +20,7 @@ import net.bytebuddy.utility.JavaModule;
 
 @Slf4j
 public class AgentInstaller {
+  public static final DDLocationStrategy LOCATION_STRATEGY = new DDLocationStrategy();
   private static volatile Instrumentation INSTRUMENTATION;
 
   public static Instrumentation getInstrumentation() {
@@ -47,7 +48,7 @@ public class AgentInstaller {
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(new LoggingListener())
-            .with(new DDLocationStrategy())
+            .with(LOCATION_STRATEGY)
             .ignore(any(), skipClassLoader())
             .or(nameStartsWith("datadog.trace."))
             .or(nameStartsWith("datadog.opentracing."))

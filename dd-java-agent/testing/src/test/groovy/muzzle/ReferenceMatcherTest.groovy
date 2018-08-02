@@ -1,11 +1,12 @@
 package muzzle
 
+import static datadog.trace.agent.tooling.muzzle.Reference.Flag.*
+import static datadog.trace.agent.tooling.muzzle.Reference.Mismatch.*
+
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
-import datadog.trace.agent.tooling.Utils
 import datadog.trace.agent.tooling.muzzle.Reference
 import datadog.trace.agent.tooling.muzzle.Reference.Source
-import datadog.trace.agent.tooling.muzzle.Reference.Flag
 import datadog.trace.agent.tooling.muzzle.ReferenceCreator
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher
 
@@ -35,8 +36,8 @@ class ReferenceMatcherTest extends AgentTestRunner {
     ReferenceMatcher refMatcher = new ReferenceMatcher(refs)
 
     expect:
-    refMatcher.getMismatchedReferenceSources(safeClasspath).size() == 0
-    refMatcher.getMismatchedReferenceSources(unsafeClasspath).size() == 1
+    getMismatchClassSet(refMatcher.getMismatchedReferenceSources(safeClasspath)) == new HashSet<>()
+    getMismatchClassSet(refMatcher.getMismatchedReferenceSources(unsafeClasspath)) == new HashSet<>([MissingClass])
   }
 
   def "matching does not hold a strong reference to classloaders"() {
@@ -44,111 +45,68 @@ class ReferenceMatcherTest extends AgentTestRunner {
     MuzzleWeakReferenceTest.classLoaderRefIsGarbageCollected()
   }
 
-  def "match classes"() {
-    ReferenceMatcher.UnloadedType unloadedB = ReferenceMatcher.UnloadedType.of(MethodBodyAdvice.B.getName(), MethodBodyAdvice.B.getClassLoader())
-    Reference ref
-
-    when:
-    ref = new Reference.Builder(Utils.getInternalName(MethodBodyAdvice.B.getName()))
-      .withFlag(Flag.NON_INTERFACE)
-      .build()
-    then:
-    unloadedB.checkMatch(ref).size() == 0
-
-    when:
-    ref = new Reference.Builder(Utils.getInternalName(MethodBodyAdvice.B.getName()))
-      .withFlag(Flag.INTERFACE)
-      .build()
-    then:
-    unloadedB.checkMatch(ref).size() == 1
-  }
-
-  def "match methods"() {
+  def "matching ref #referenceName #referenceFlags against #classToCheck produces #expectedMismatches"() {
     setup:
-    ReferenceMatcher.UnloadedType unloadedB = ReferenceMatcher.UnloadedType.of(MethodBodyAdvice.B.getName(), MethodBodyAdvice.B.getClassLoader())
-    ReferenceMatcher.UnloadedType unloadedB2 = ReferenceMatcher.UnloadedType.of(MethodBodyAdvice.B2.getName(), MethodBodyAdvice.B2.getClassLoader())
-    ReferenceMatcher.UnloadedType unloadedInterface = ReferenceMatcher.UnloadedType.of(MethodBodyAdvice.AnotherInterface.getName(), MethodBodyAdvice.AnotherInterface.getClassLoader())
-    Reference.Method methodRef
+    Reference.Builder builder = new Reference.Builder(referenceName)
+    for (Reference.Flag refFlag : referenceFlags) {
+      builder = builder.withFlag(refFlag)
+    }
+    Reference ref = builder.build()
 
-    // match method declared in the class
-    when:
-    methodRef = new Reference.Method("aMethod", "(Ljava/lang/String;)Ljava/lang/String;")
-    then:
-    unloadedB.checkMatch(methodRef).size() == 0
+    expect:
+    getMismatchClassSet(ReferenceMatcher.checkMatch(ref, this.getClass().getClassLoader())) == new HashSet<Object>(expectedMismatches)
 
-    // match method declared in the supertype
-    when:
-    methodRef = new Reference.Method("hashCode", "()I")
-    then:
-    unloadedB.checkMatch(methodRef).size() == 0
-
-    // match method declared in interface
-    when:
-    methodRef = new Reference.Method("someMethod", "()V")
-    then:
-    unloadedInterface.checkMatch(methodRef).size() == 0
-
-    // match private method in the class
-    when:
-    methodRef = new Reference.Method("privateStuff", "()V")
-    then:
-    unloadedB.checkMatch(methodRef).size() == 0
-
-    // fail to match private method in superclass
-    when:
-    methodRef = new Reference.Method("privateStuff", "()V")
-    then:
-    unloadedB2.checkMatch(methodRef).size() == 1
-
-    // static method flag mismatch
-    when:
-    methodRef = new Reference.Method(new Source[0], [Flag.NON_STATIC] as Flag[], "aStaticMethod", Type.getType("V"))
-    then:
-    unloadedB2.checkMatch(methodRef).size() == 1
-
-    // missing method mismatch
-    when:
-    methodRef = new Reference.Method(new Source[0], new Flag[0], "missingTestMethod", Type.VOID_TYPE, new Type[0])
-    then:
-    unloadedB.checkMatch(methodRef).size() == 1
+    where:
+    referenceName                | referenceFlags  | classToCheck       | expectedMismatches
+    MethodBodyAdvice.B.getName() | [NON_INTERFACE] | MethodBodyAdvice.B | []
+    MethodBodyAdvice.B.getName() | [INTERFACE]     | MethodBodyAdvice.B | [MissingFlag]
   }
 
-  def "match fields" () {
-    ReferenceMatcher.UnloadedType unloadedA = ReferenceMatcher.UnloadedType.of(MethodBodyAdvice.A.getName(), MethodBodyAdvice.A.getClassLoader())
-    ReferenceMatcher.UnloadedType unloadedA2 = ReferenceMatcher.UnloadedType.of(MethodBodyAdvice.A2.getName(), MethodBodyAdvice.A2.getClassLoader())
-    Reference.Field fieldRef
+  def "method match #methodTestDesc"() {
+    setup:
+    Type methodType = Type.getMethodType(methodDesc)
+    Reference reference = new Reference.Builder(classToCheck.getName())
+      .withMethod(new Source[0], methodFlags as Reference.Flag[], methodName, methodType.getReturnType(), methodType.getArgumentTypes())
+      .build()
 
-    when:
-    fieldRef = new Reference.Field(new Source[0], new Flag[0], "missingField", Type.getType("Ljava/lang/String;"))
-    then:
-    unloadedA.checkMatch(fieldRef).size() == 1
+    expect:
+    getMismatchClassSet(ReferenceMatcher.checkMatch(reference, this.getClass().getClassLoader())) == new HashSet<Object>(expectedMismatches)
 
-    when:
-    // wrong field type sig should create a mismatch
-    fieldRef = new Reference.Field(new Source[0], new Flag[0], "privateField", Type.getType("Ljava/lang/String;"))
-    then:
-    unloadedA.checkMatch(fieldRef).size() == 1
+    where:
+    methodName      | methodDesc                               | methodFlags           | classToCheck                   | expectedMismatches | methodTestDesc
+    "aMethod"       | "(Ljava/lang/String;)Ljava/lang/String;" | []                    | MethodBodyAdvice.B             | []                 | "match method declared in class"
+    "hashCode"      | "()I"                                    | []                    | MethodBodyAdvice.B             | []                 | "match method declared in superclass"
+    "someMethod"    | "()V"                                    | []                    | MethodBodyAdvice.SomeInterface | []                 | "match method declared in interface"
+    "privateStuff"  | "()V"                                    | [PRIVATE_OR_HIGHER]   | MethodBodyAdvice.B             | []                 | "match private method"
+    "privateStuff"  | "()V"                                    | [PROTECTED_OR_HIGHER] | MethodBodyAdvice.B2            | [MissingFlag]      | "fail match private in supertype"
+    "aStaticMethod" | "()V"                                    | [NON_STATIC]          | MethodBodyAdvice.B             | [MissingFlag]      | "static method mismatch"
+    "missingMethod" | "()V"                                    | []                    | MethodBodyAdvice.B             | [MissingMethod]    | "missing method mismatch"
+  }
 
-    when:
-    fieldRef = new Reference.Field(new Source[0], new Flag[0], "privateField", Type.getType("Ljava/lang/Object;"))
-    then:
-    unloadedA.checkMatch(fieldRef).size() == 0
-    unloadedA2.checkMatch(fieldRef).size() == 1
+  def "field match #fieldTestDesc"() {
+    setup:
+    Reference reference = new Reference.Builder(classToCheck.getName())
+      .withField(new Source[0], fieldFlags as Reference.Flag[], fieldName, Type.getType(fieldType))
+      .build()
 
-    when:
-    fieldRef = new Reference.Field(new Source[0], [Flag.NON_STATIC, Flag.PROTECTED_OR_HIGHER] as Flag[], "protectedField", Type.getType("Ljava/lang/Object;"))
-    then:
-    unloadedA.checkMatch(fieldRef).size() == 0
-    unloadedA2.checkMatch(fieldRef).size() == 0
+    expect:
+    getMismatchClassSet(ReferenceMatcher.checkMatch(reference, this.getClass().getClassLoader())) == new HashSet<Object>(expectedMismatches)
 
-    when:
-    fieldRef = new Reference.Field(new Source[0], [Flag.STATIC] as Flag[], "protectedField", Type.getType("Ljava/lang/Object;"))
-    then:
-    unloadedA.checkMatch(fieldRef).size() == 1
+    where:
+    fieldName        | fieldType                                        | fieldFlags                    | classToCheck        | expectedMismatches | fieldTestDesc
+    "missingField"   | "Ljava/lang/String;"                             | []                            | MethodBodyAdvice.A  | [MissingField]     | "mismatch missing field"
+    "privateField"   | "Ljava/lang/String;"                             | []                            | MethodBodyAdvice.A  | [MissingField]     | "mismatch field type signature"
+    "privateField"   | "Ljava/lang/Object;"                             | [PRIVATE_OR_HIGHER]           | MethodBodyAdvice.A  | []                 | "match private field"
+    "privateField"   | "Ljava/lang/Object;"                             | [PROTECTED_OR_HIGHER]         | MethodBodyAdvice.A2 | [MissingFlag]      | "mismatch private field in supertype"
+    "protectedField" | "Ljava/lang/Object;"                             | [STATIC]                      | MethodBodyAdvice.A  | [MissingFlag]      | "mismatch static field"
+    "staticB"        | Type.getType(MethodBodyAdvice.B).getDescriptor() | [STATIC, PROTECTED_OR_HIGHER] | MethodBodyAdvice.A  | []                 | "match static field"
+  }
 
-    when:
-    fieldRef = new Reference.Field(new Source[0], [Flag.PROTECTED_OR_HIGHER, Flag.STATIC] as Flag[], "staticB", Type.getType(MethodBodyAdvice.B))
-    then:
-    unloadedA.checkMatch(fieldRef).size() == 0
+  private static Set<Class> getMismatchClassSet(List<Reference.Mismatch> mismatches) {
+    final Set<Class> mismatchClasses = new HashSet<>(mismatches.size())
+    for (Reference.Mismatch mismatch : mismatches) {
+      mismatchClasses.add(mismatch.getClass())
+    }
+    return mismatchClasses
   }
 }
