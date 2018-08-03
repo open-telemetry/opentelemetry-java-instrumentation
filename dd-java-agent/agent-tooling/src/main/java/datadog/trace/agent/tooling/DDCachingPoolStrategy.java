@@ -20,8 +20,6 @@ public class DDCachingPoolStrategy implements PoolStrategy {
       synchronized (key) {
         cache = typePoolCache.get(key);
         if (null == cache) {
-          // new TypePool.Default.WithLazyResolution(TypePool.CacheProvider.Simple.withObjectType(),
-          // classFileLocator, TypePool.Default.ReaderMode.FAST);
           cache = TypePool.CacheProvider.Simple.withObjectType();
           typePoolCache.put(key, cache);
         }
