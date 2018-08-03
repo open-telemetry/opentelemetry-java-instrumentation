@@ -45,6 +45,40 @@ class ReferenceMatcherTest extends AgentTestRunner {
     MuzzleWeakReferenceTest.classLoaderRefIsGarbageCollected()
   }
 
+  private static class CountingClassLoader extends URLClassLoader{
+    int count = 0
+
+    CountingClassLoader(URL[] urls, ClassLoader parent) {
+      super(urls, (ClassLoader) parent)
+    }
+
+    @Override
+    URL getResource(String name) {
+      count++
+      return super.getResource(name)
+    }
+  }
+
+  def "muzzle type pool caches"() {
+    setup:
+    ClassLoader cl = new CountingClassLoader(
+      [TestUtils.createJarWithClasses(MethodBodyAdvice.A,
+        MethodBodyAdvice.B,
+        MethodBodyAdvice.SomeInterface,
+        MethodBodyAdvice.SomeImplementation)] as URL[],
+      (ClassLoader) null)
+    Reference[] refs = ReferenceCreator.createReferencesFrom(MethodBodyAdvice.getName(), this.getClass().getClassLoader()).values().toArray(new Reference[0])
+    ReferenceMatcher refMatcher1 = new ReferenceMatcher(refs)
+    ReferenceMatcher refMatcher2 = new ReferenceMatcher(refs)
+    assert getMismatchClassSet(refMatcher1.getMismatchedReferenceSources(cl)) == new HashSet<>()
+    int countAfterFirstMatch = cl.count
+    // the second matcher should be able to used cached type descriptions from the first
+    assert getMismatchClassSet(refMatcher2.getMismatchedReferenceSources(cl)) == new HashSet<>()
+
+    expect:
+    cl.count == countAfterFirstMatch
+  }
+
   def "matching ref #referenceName #referenceFlags against #classToCheck produces #expectedMismatches"() {
     setup:
     Reference.Builder builder = new Reference.Builder(referenceName)

@@ -82,7 +82,8 @@ public class ReferenceMatcher {
    */
   public static List<Reference.Mismatch> checkMatch(Reference reference, ClassLoader loader) {
     final TypePool typePool =
-        TypePool.Default.of(AgentInstaller.LOCATION_STRATEGY.classFileLocator(loader));
+        AgentInstaller.POOL_STRATEGY.typePool(
+            AgentInstaller.LOCATION_STRATEGY.classFileLocator(loader), loader);
     final List<Mismatch> mismatches = new ArrayList<>(0);
     try {
       final TypePool.Resolution resolution =

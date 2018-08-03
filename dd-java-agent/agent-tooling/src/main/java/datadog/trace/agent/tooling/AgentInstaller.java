@@ -21,6 +21,7 @@ import net.bytebuddy.utility.JavaModule;
 @Slf4j
 public class AgentInstaller {
   public static final DDLocationStrategy LOCATION_STRATEGY = new DDLocationStrategy();
+  public static final AgentBuilder.PoolStrategy POOL_STRATEGY = new DDCachingPoolStrategy();
   private static volatile Instrumentation INSTRUMENTATION;
 
   public static Instrumentation getInstrumentation() {
@@ -47,6 +48,7 @@ public class AgentInstaller {
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
+            .with(POOL_STRATEGY)
             .with(new LoggingListener())
             .with(LOCATION_STRATEGY)
             .ignore(any(), skipClassLoader())

@@ -20,7 +20,7 @@ public class DDLocationStrategy implements AgentBuilder.LocationStrategy {
   public ClassFileLocator classFileLocator(ClassLoader classLoader, final JavaModule javaModule) {
     final List<ClassFileLocator> locators = new ArrayList<>();
     while (classLoader != null) {
-      locators.add(ClassFileLocator.ForClassLoader.of(classLoader));
+      locators.add(ClassFileLocator.ForClassLoader.WeaklyReferenced.of(classLoader));
       classLoader = classLoader.getParent();
     }
     locators.add(ClassFileLocator.ForClassLoader.of(Utils.getBootstrapProxy()));
