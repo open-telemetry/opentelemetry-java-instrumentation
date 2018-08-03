@@ -14,6 +14,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.jar.asm.ClassVisitor;
 import net.bytebuddy.jar.asm.ClassWriter;
+import net.bytebuddy.jar.asm.FieldVisitor;
 import net.bytebuddy.jar.asm.Label;
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
@@ -22,6 +23,9 @@ import net.bytebuddy.pool.TypePool;
 
 /** Visit a class and add: a private instrumenationMuzzle field and getter */
 public class MuzzleVisitor implements AsmVisitorWrapper {
+  public static final String MUZZLE_FIELD_NAME = "instrumentationMuzzle";
+  public static final String MUZZLE_METHOD_NAME = "getInstrumentationMuzzle";
+
   @Override
   public int mergeWriter(int flags) {
     return flags | ClassWriter.COMPUTE_MAXS;
@@ -77,12 +81,30 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
     }
 
     @Override
+    public FieldVisitor visitField(
+        int access, String name, String descriptor, String signature, Object value) {
+      if (MUZZLE_FIELD_NAME.equals(name)) {
+        // muzzle field has been generated
+        // by previous compilation
+        // ignore and recompute in visitEnd
+        return null;
+      }
+      return super.visitField(access, name, descriptor, signature, value);
+    }
+
+    @Override
     public MethodVisitor visitMethod(
         final int access,
         final String name,
         final String descriptor,
         final String signature,
         final String[] exceptions) {
+      if (MUZZLE_METHOD_NAME.equals(name)) {
+        // muzzle getter has been generated
+        // by previous compilation
+        // ignore and recompute in visitEnd
+        return null;
+      }
       MethodVisitor methodVisitor =
           super.visitMethod(access, name, descriptor, signature, exceptions);
       if ("<init>".equals(name)) {
@@ -136,9 +158,9 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
          */
         try {
           final MethodVisitor mv =
-              visitMethod(
+              super.visitMethod(
                   Opcodes.ACC_PROTECTED + Opcodes.ACC_SYNCHRONIZED,
-                  "getInstrumentationMuzzle",
+                  MUZZLE_METHOD_NAME,
                   "()Ldatadog/trace/agent/tooling/muzzle/ReferenceMatcher;",
                   null,
                   null);
@@ -154,7 +176,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
           mv.visitFieldInsn(
               Opcodes.GETFIELD,
               instrumentationClassName,
-              "instrumentationMuzzle",
+              MUZZLE_FIELD_NAME,
               "Ldatadog/trace/agent/tooling/muzzle/ReferenceMatcher;");
           mv.visitJumpInsn(Opcodes.IF_ACMPNE, ret);
 
@@ -404,7 +426,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
           mv.visitFieldInsn(
               Opcodes.PUTFIELD,
               instrumentationClassName,
-              "instrumentationMuzzle",
+              MUZZLE_FIELD_NAME,
               "Ldatadog/trace/agent/tooling/muzzle/ReferenceMatcher;");
 
           mv.visitLabel(ret);
@@ -413,7 +435,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
           mv.visitFieldInsn(
               Opcodes.GETFIELD,
               instrumentationClassName,
-              "instrumentationMuzzle",
+              MUZZLE_FIELD_NAME,
               "Ldatadog/trace/agent/tooling/muzzle/ReferenceMatcher;");
           mv.visitInsn(Opcodes.ARETURN);
           mv.visitLabel(finish);
@@ -429,7 +451,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
 
       super.visitField(
           Opcodes.ACC_PRIVATE + Opcodes.ACC_VOLATILE,
-          "instrumentationMuzzle",
+          MUZZLE_FIELD_NAME,
           Type.getDescriptor(ReferenceMatcher.class),
           null,
           null);
@@ -450,7 +472,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
           super.visitFieldInsn(
               Opcodes.PUTFIELD,
               instrumentationClassName,
-              "instrumentationMuzzle",
+              MUZZLE_FIELD_NAME,
               Type.getDescriptor(ReferenceMatcher.class));
         }
         super.visitInsn(opcode);
