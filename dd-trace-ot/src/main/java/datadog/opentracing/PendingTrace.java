@@ -22,12 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
-  private static final SpanCleaner SPAN_CLEANER;
-
-  static {
-    SPAN_CLEANER = new SpanCleaner();
-    SPAN_CLEANER.start();
-  }
+  private static final SpanCleaner SPAN_CLEANER = new SpanCleaner();
 
   private final DDTracer tracer;
   private final String traceId;
@@ -56,8 +51,8 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     this.traceId = traceId;
     this.serviceNameMappings = serviceNameMappings;
 
-    this.startTimeNano = Clock.currentNanoTime();
-    this.startNanoTicks = Clock.currentNanoTicks();
+    startTimeNano = Clock.currentNanoTime();
+    startNanoTicks = Clock.currentNanoTicks();
 
     SPAN_CLEANER.pendingTraces.add(this);
   }
@@ -198,7 +193,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     if (isWritten.compareAndSet(false, true)) {
       SPAN_CLEANER.pendingTraces.remove(this);
       if (!isEmpty()) {
-        log.debug("Writing {} spans to {}.", this.size(), tracer.writer);
+        log.debug("Writing {} spans to {}.", size(), tracer.writer);
         tracer.write(this);
       }
     }
@@ -254,20 +249,8 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     private final Set<PendingTrace> pendingTraces =
         Collections.newSetFromMap(new ConcurrentHashMap<PendingTrace, Boolean>());
 
-    void start() {
-      executorService.scheduleAtFixedRate(new SpanCleaner(), 0, CLEAN_FREQUENCY, TimeUnit.SECONDS);
-      try {
-        Runtime.getRuntime()
-            .addShutdownHook(
-                new Thread() {
-                  @Override
-                  public void run() {
-                    PendingTrace.SpanCleaner.this.close();
-                  }
-                });
-      } catch (final IllegalStateException ex) {
-        // The JVM is already shutting down.
-      }
+    public SpanCleaner() {
+      executorService.scheduleAtFixedRate(this, 0, CLEAN_FREQUENCY, TimeUnit.SECONDS);
     }
 
     @Override
@@ -285,6 +268,9 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       } catch (final InterruptedException e) {
         log.info("Writer properly closed and async writer interrupted.");
       }
+
+      // Make sure that whatever was left over gets cleaned up
+      run();
     }
   }
 }

@@ -6,7 +6,6 @@ import spock.lang.Subject
 
 import java.util.concurrent.TimeUnit
 
-
 class PendingTraceTest extends Specification {
   def writer = new ListWriter()
   def tracer = new DDTracer(writer)
