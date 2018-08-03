@@ -53,6 +53,9 @@ class MuzzlePlugin implements Plugin<Project> {
     project.tasks.muzzle.dependsOn(toolingProject.tasks.compileJava)
     project.afterEvaluate {
       project.tasks.muzzle.dependsOn(project.tasks.compileJava)
+      if (project.tasks.getNames().contains("compileScala")) {
+        project.tasks.muzzle.dependsOn(project.tasks.compileScala)
+      }
     }
   }
 }
