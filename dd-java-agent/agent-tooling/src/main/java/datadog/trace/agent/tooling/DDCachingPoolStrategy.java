@@ -9,22 +9,25 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.pool.TypePool;
 
 public class DDCachingPoolStrategy implements PoolStrategy {
-  private static final Map<ClassLoader, TypePool> typePoolCache =
-      Collections.synchronizedMap(new WeakHashMap<ClassLoader, TypePool>());
+  private static final Map<ClassLoader, TypePool.CacheProvider> typePoolCache =
+      Collections.synchronizedMap(new WeakHashMap<ClassLoader, TypePool.CacheProvider>());
 
   @Override
   public TypePool typePool(ClassFileLocator classFileLocator, ClassLoader classLoader) {
     final ClassLoader key = null == classLoader ? Utils.getBootstrapProxy() : classLoader;
-    TypePool cachedPool = typePoolCache.get(key);
-    if (null == cachedPool) {
+    TypePool.CacheProvider cache = typePoolCache.get(key);
+    if (null == cache) {
       synchronized (key) {
-        cachedPool = typePoolCache.get(key);
-        if (null == cachedPool) {
-          cachedPool = Default.FAST.typePool(classFileLocator, classLoader);
-          typePoolCache.put(key, cachedPool);
+        cache = typePoolCache.get(key);
+        if (null == cache) {
+          // new TypePool.Default.WithLazyResolution(TypePool.CacheProvider.Simple.withObjectType(),
+          // classFileLocator, TypePool.Default.ReaderMode.FAST);
+          cache = TypePool.CacheProvider.Simple.withObjectType();
+          typePoolCache.put(key, cache);
         }
       }
     }
-    return cachedPool;
+    return new TypePool.Default.WithLazyResolution(
+        cache, classFileLocator, TypePool.Default.ReaderMode.FAST);
   }
 }

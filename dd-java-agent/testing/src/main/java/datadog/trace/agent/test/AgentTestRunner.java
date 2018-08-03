@@ -140,7 +140,8 @@ public abstract class AgentTestRunner extends Specification {
   @After
   public void afterTest() {
     ERROR_LISTENER.deactivateTest(this);
-    assert INSTRUMENTATION_ERROR_COUNT.get() == 0 : "Instrumentation errors during test";
+    assert INSTRUMENTATION_ERROR_COUNT.get() == 0
+        : INSTRUMENTATION_ERROR_COUNT.get() + " Instrumentation errors during test";
   }
 
   @AfterClass

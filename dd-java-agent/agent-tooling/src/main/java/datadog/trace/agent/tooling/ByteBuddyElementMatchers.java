@@ -2,13 +2,15 @@ package datadog.trace.agent.tooling;
 
 import static net.bytebuddy.matcher.ElementMatchers.erasure;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.build.HashCodeAndEqualsPlugin;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 
@@ -89,7 +91,7 @@ public class ByteBuddyElementMatchers {
       // in {@code getSuperClass} calls
       TypeDefinition typeDefinition = target;
       while (typeDefinition != null) {
-        if (matcher.matches(typeDefinition.asGenericType())
+        if (safeMatches(typeDefinition.asGenericType())
             || hasInterface(typeDefinition, checkedInterfaces)) {
           return true;
         }
@@ -98,11 +100,20 @@ public class ByteBuddyElementMatchers {
       return false;
     }
 
+    private boolean safeMatches(TypeDescription.Generic target) {
+      try {
+        return matcher.matches(target);
+      } catch (final Exception e) {
+        log.debug(matcher + ": Exception trying to get match generic type description:", e);
+      }
+      return false;
+    }
+
     private TypeDefinition safeGetSuperClass(final TypeDefinition typeDefinition) {
       try {
         return typeDefinition.getSuperClass();
       } catch (final Exception e) {
-        log.info("Exception trying to get next type definition:", e);
+        log.debug("Exception trying to get next type definition:", e);
         return null;
       }
     }
@@ -118,7 +129,7 @@ public class ByteBuddyElementMatchers {
         final TypeDefinition typeDefinition, final Set<TypeDescription> checkedInterfaces) {
       for (final TypeDefinition interfaceType : safeGetInterfaces(typeDefinition)) {
         if (checkedInterfaces.add(interfaceType.asErasure())
-            && (matcher.matches(interfaceType.asGenericType())
+            && (safeMatch(interfaceType.asGenericType())
                 || hasInterface(interfaceType, checkedInterfaces))) {
           return true;
         }
@@ -126,13 +137,27 @@ public class ByteBuddyElementMatchers {
       return false;
     }
 
-    private TypeList.Generic safeGetInterfaces(final TypeDefinition typeDefinition) {
+    private boolean safeMatch(TypeDescription.Generic target) {
       try {
-        return typeDefinition.getInterfaces();
+        return matcher.matches(target);
       } catch (final Exception e) {
-        log.info("Exception trying to get interfaces:", e);
-        return new TypeList.Generic.Empty();
+        log.debug(matcher + ": Exception while matching:", e);
       }
+      return false;
+    }
+
+    private List<TypeDefinition> safeGetInterfaces(final TypeDefinition typeDefinition) {
+      final List<TypeDefinition> interfaceTypes = new ArrayList<>();
+      try {
+        final Iterator<TypeDescription.Generic> interfaceIter =
+            typeDefinition.getInterfaces().iterator();
+        while (interfaceIter.hasNext()) {
+          interfaceTypes.add(interfaceIter.next());
+        }
+      } catch (final Exception e) {
+        log.debug("Exception trying to get interfaces:", e);
+      }
+      return interfaceTypes;
     }
 
     @Override
