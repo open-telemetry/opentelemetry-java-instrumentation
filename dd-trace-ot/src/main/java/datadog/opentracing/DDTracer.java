@@ -29,6 +29,7 @@ import io.opentracing.ScopeManager;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing API. */
 @Slf4j
-public class DDTracer implements io.opentracing.Tracer {
+public class DDTracer implements io.opentracing.Tracer, Closeable {
 
   public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
@@ -302,6 +303,7 @@ public class DDTracer implements io.opentracing.Tracer {
     }
   }
 
+  @Override
   public void close() {
     PendingTrace.close();
     writer.close();

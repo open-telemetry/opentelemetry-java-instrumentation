@@ -9,10 +9,13 @@ excludedClassesConverage += ['datadog.trace.bootstrap.*']
 
 dependencies {
   compile project(':dd-trace-api')
+  compile group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.13'
   compile deps.opentracing
   compile deps.slf4j
   compile group: 'org.slf4j', name: 'slf4j-simple', version: versions.slf4j
   // ^ Generally a bad idea for libraries, but we're shadowing.
+
+  testCompile project(':dd-java-agent:testing')
 }
 
 jar {

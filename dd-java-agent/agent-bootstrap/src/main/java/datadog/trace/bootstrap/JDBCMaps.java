@@ -1,10 +1,10 @@
 package datadog.trace.bootstrap;
 
+import static datadog.trace.bootstrap.WeakMapManager.newWeakMap;
+
+import com.blogspot.mydailyjava.weaklockfree.WeakConcurrentMap;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.util.Collections;
-import java.util.Map;
-import java.util.WeakHashMap;
 import lombok.Data;
 
 /**
@@ -13,10 +13,9 @@ import lombok.Data;
  * <p>In the bootstrap project to ensure visibility by all classes.
  */
 public class JDBCMaps {
-  public static final Map<Connection, DBInfo> connectionInfo =
-      Collections.synchronizedMap(new WeakHashMap<Connection, DBInfo>());
-  public static final Map<PreparedStatement, String> preparedStatements =
-      Collections.synchronizedMap(new WeakHashMap<PreparedStatement, String>());
+  public static final WeakConcurrentMap<Connection, DBInfo> connectionInfo = newWeakMap();
+  public static final WeakConcurrentMap<PreparedStatement, String> preparedStatements =
+      newWeakMap();
 
   public static final String DB_QUERY = "DB Query";
 

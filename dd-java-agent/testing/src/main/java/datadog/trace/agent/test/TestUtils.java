@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.ServerSocket;
 import java.net.URL;
@@ -202,6 +203,15 @@ public class TestUtils {
     } catch (final IOException ioe) {
       ioe.printStackTrace();
       return -1;
+    }
+  }
+
+  public static void awaitGC() {
+    Object obj = new Object();
+    final WeakReference ref = new WeakReference<>(obj);
+    obj = null;
+    while (ref.get() != null) {
+      System.gc();
     }
   }
 }
