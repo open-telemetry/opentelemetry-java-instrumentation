@@ -64,8 +64,6 @@ public class SunHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final MessageHeader header, @Advice.This final HttpClient client) {
       final Tracer tracer = GlobalTracer.get();
       final Span span = tracer.activeSpan();
-      // Use the active span, not the one created in SpanStartAdvice,
-      // since we aren't sure that span will complete.
 
       if (span != null) {
         tracer.inject(

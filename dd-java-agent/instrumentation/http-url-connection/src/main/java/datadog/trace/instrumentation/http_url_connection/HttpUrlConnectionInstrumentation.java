@@ -75,13 +75,11 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
           if (connected) {
             return null;
           }
-          // We get here in cases where connect() is called first.
-          // We need to inject headers now because after connected=true no more headers can be
-          // added.
-
-          // In total there will be two spans:
-          // - one for the connect() which does propagation
-          // - one for the input or output stream (presumably called after connect())
+          /*
+           * Ideally, we would like to only have a single span for each of the output and input streams,
+           * but since headers are also sent on connect(), there wouldn't be a span to mark as parent if
+           * we don't create a span here.
+           */
           operationName += ".connect";
           break;
 
@@ -102,10 +100,11 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
           break;
       }
 
-      // AgentWriter uses HttpURLConnection to report to the trace-agent. We don't want to trace
-      // those requests.
-      // Check after the connected test above because getRequestProperty will throw an exception if
-      // already connected.
+      /*
+       * AgentWriter uses HttpURLConnection to report to the trace-agent. We don't want to trace
+       * those requests. Check after the connected test above because getRequestProperty will
+       * throw an exception if already connected.
+       */
       final boolean isTraceRequest =
           Thread.currentThread().getName().equals("dd-agent-writer")
               || (!connected && thiz.getRequestProperty("Datadog-Meta-Lang") != null);
@@ -115,7 +114,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
       final Tracer tracer = GlobalTracer.get();
       if (tracer.activeSpan() == null) {
-        // httpurlconnection doesn't play nicely with top-level spans
+        // We don't want this as a top level span.
         return null;
       }
 
@@ -163,9 +162,11 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       } else if (responseCode > 0) {
-        // responseCode field cache is sometimes not populated.
-        // We can't call getResponseCode() due to some unwanted side-effects (e.g. breaks
-        // getOutputStream).
+        /*
+         * responseCode field cache is sometimes not populated.
+         * We can't call getResponseCode() due to some unwanted side-effects
+         * (e.g. breaks getOutputStream).
+         */
         Tags.HTTP_STATUS.set(span, responseCode);
       }
       scope.close();
@@ -180,9 +181,14 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     public static HttpURLState get(final HttpURLConnection connection) {
       HttpURLState state = STATE_MAP.get(connection);
       if (state == null) {
-        // not thread-safe, but neither is HttpURLConnection
-        state = new HttpURLState();
-        STATE_MAP.put(connection, state);
+        synchronized (connection) {
+          // might not be a good idea to synchronize on a method parameter...
+          state = STATE_MAP.get(connection);
+          if (state == null) {
+            state = new HttpURLState();
+            STATE_MAP.put(connection, state);
+          }
+        }
       }
       return state;
     }
