@@ -41,7 +41,7 @@ class UrlConnectionTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "http.request"
+          operationName "http.request.input-stream"
           childOf span(0)
           errored true
           tags {

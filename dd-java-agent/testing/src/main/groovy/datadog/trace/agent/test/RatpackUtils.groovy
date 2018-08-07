@@ -1,6 +1,5 @@
 package datadog.trace.agent.test
 
-import io.opentracing.Scope
 import io.opentracing.SpanContext
 import io.opentracing.propagation.Format
 import io.opentracing.propagation.TextMap
@@ -18,12 +17,12 @@ class RatpackUtils {
       final SpanContext extractedContext =
         GlobalTracer.get()
           .extract(Format.Builtin.HTTP_HEADERS, new RatpackResponseAdapter(context))
-      Scope scope =
-        GlobalTracer.get()
-          .buildSpan("test-http-server")
-          .asChildOf(extractedContext)
-          .startActive(true)
-      scope.close()
+      def builder = GlobalTracer.get()
+        .buildSpan("test-http-server")
+      if (extractedContext != null) {
+        builder.asChildOf(extractedContext)
+      }
+      builder.start().finish()
     }
   }
 

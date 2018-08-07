@@ -4,7 +4,6 @@ import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperT
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -16,13 +15,11 @@ import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 import javax.net.ssl.HttpsURLConnection;
@@ -50,26 +47,16 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      "datadog.trace.instrumentation.http_url_connection.MessageHeadersInjectAdapter",
-      HttpUrlConnectionInstrumentation.class.getName() + "$HttpURLState"
-    };
+    return new String[] {HttpUrlConnectionInstrumentation.class.getName() + "$HttpURLState"};
   }
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+    return Collections.<ElementMatcher, String>singletonMap(
         isMethod()
             .and(isPublic())
-            .and(
-                named("getResponseCode")
-                    .or(named("connect"))
-                    .or(named("getOutputStream"))
-                    .or(named("getInputStream"))
-                    .or(nameStartsWith("getHeaderField"))),
+            .and(named("connect").or(named("getOutputStream")).or(named("getInputStream"))),
         HttpUrlConnectionAdvice.class.getName());
-    return transformers;
   }
 
   public static class HttpUrlConnectionAdvice {
@@ -82,28 +69,42 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
       final HttpURLState state = HttpURLState.get(thiz);
       String operationName = "http.request";
-      if ("connect".equals(methodName)) {
-        if (connected) {
-          return null;
-        }
-        // We get here in cases where connect() is called first.
-        // We need to inject headers now because after connected=true no more headers can be added.
 
-        // In total there will be two spans:
-        // - one for the connect() which does propagation
-        // - one for the input or output stream (presumably called after connect())
-        operationName += ".connect";
-      } else {
-        if (state.hasDoneIO()) {
-          return null;
-        }
-        state.setHasDoneIO(true);
+      switch (methodName) {
+        case "connect":
+          if (connected) {
+            return null;
+          }
+          /*
+           * Ideally, we would like to only have a single span for each of the output and input streams,
+           * but since headers are also sent on connect(), there wouldn't be a span to mark as parent if
+           * we don't create a span here.
+           */
+          operationName += ".connect";
+          break;
+
+        case "getOutputStream":
+          if (state.calledOutputStream) {
+            return null;
+          }
+          state.calledOutputStream = true;
+          operationName += ".output-stream";
+          break;
+
+        case "getInputStream":
+          if (state.calledInputStream) {
+            return null;
+          }
+          state.calledInputStream = true;
+          operationName += ".input-stream";
+          break;
       }
 
-      // AgentWriter uses HttpURLConnection to report to the trace-agent. We don't want to trace
-      // those requests.
-      // Check after the connected test above because getRequestProperty will throw an exception if
-      // already connected.
+      /*
+       * AgentWriter uses HttpURLConnection to report to the trace-agent. We don't want to trace
+       * those requests. Check after the connected test above because getRequestProperty will
+       * throw an exception if already connected.
+       */
       final boolean isTraceRequest =
           Thread.currentThread().getName().equals("dd-agent-writer")
               || (!connected && thiz.getRequestProperty("Datadog-Meta-Lang") != null);
@@ -113,7 +114,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
       final Tracer tracer = GlobalTracer.get();
       if (tracer.activeSpan() == null) {
-        // httpurlconnection doesn't play nicely with top-level spans
+        // We don't want this as a top level span.
         return null;
       }
 
@@ -143,8 +144,6 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       }
       Tags.HTTP_METHOD.set(span, thiz.getRequestMethod());
 
-      tracer.inject(
-          span.context(), Format.Builtin.HTTP_HEADERS, new MessageHeadersInjectAdapter(thiz));
       return scope;
     }
 
@@ -163,9 +162,11 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
       } else if (responseCode > 0) {
-        // responseCode field cache is sometimes not populated.
-        // We can't call getResponseCode() due to some unwanted side-effects (e.g. breaks
-        // getOutputStream).
+        /*
+         * responseCode field cache is sometimes not populated.
+         * We can't call getResponseCode() due to some unwanted side-effects
+         * (e.g. breaks getOutputStream).
+         */
         Tags.HTTP_STATUS.set(span, responseCode);
       }
       scope.close();
@@ -180,23 +181,21 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     public static HttpURLState get(final HttpURLConnection connection) {
       HttpURLState state = STATE_MAP.get(connection);
       if (state == null) {
-        // not thread-safe, but neither is HttpURLConnection
-        state = new HttpURLState();
-        STATE_MAP.put(connection, state);
+        synchronized (connection) {
+          // might not be a good idea to synchronize on a method parameter...
+          state = STATE_MAP.get(connection);
+          if (state == null) {
+            state = new HttpURLState();
+            STATE_MAP.put(connection, state);
+          }
+        }
       }
       return state;
     }
 
-    public boolean hasDoneIO = false;
+    public boolean calledOutputStream = false;
+    public boolean calledInputStream = false;
 
     private HttpURLState() {}
-
-    public boolean hasDoneIO() {
-      return hasDoneIO;
-    }
-
-    public void setHasDoneIO(final boolean value) {
-      hasDoneIO = value;
-    }
   }
 }

@@ -57,7 +57,12 @@ public class AgentInstaller {
                                 .or(named("java.net.HttpURLConnection"))
                                 .or(nameStartsWith("java.util.concurrent.")))))
             .or(nameStartsWith("com.sun."))
-            .or(nameStartsWith("sun.").and(not(nameStartsWith("sun.net.www.protocol."))))
+            .or(
+                nameStartsWith("sun.")
+                    .and(
+                        not(
+                            nameStartsWith("sun.net.www.protocol.")
+                                .or(named("sun.net.www.http.HttpClient")))))
             .or(nameStartsWith("jdk."))
             .or(nameStartsWith("org.aspectj."))
             .or(nameStartsWith("org.groovy."))
