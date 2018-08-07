@@ -1,7 +1,10 @@
 package test
 
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.TraceAssert
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
+import io.opentracing.tag.Tags
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.embedded.LocalServerPort
 import org.springframework.boot.test.context.SpringBootTest
@@ -36,7 +39,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     restTemplate.getForObject("http://localhost:$port/param/asdf1234/", String) == "Hello asdf1234"
 
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
           operationName "servlet.request"
           resourceName "GET /param/{parameter}/"
@@ -53,6 +56,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        controllerSpan(it, 1, "TestController.withParam")
       }
     }
   }
@@ -66,7 +70,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     response.get("error") == "Not Found"
 
     assertTraces(TEST_WRITER, 2) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
           operationName "servlet.request"
           resourceName "404"
@@ -83,8 +87,9 @@ class SpringBootBasedTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        controllerSpan(it, 1, "ResourceHttpRequestHandler.handleRequest")
       }
-      trace(1, 1) {
+      trace(1, 2) {
         span(0) {
           operationName "servlet.request"
           resourceName "404"
@@ -101,6 +106,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        controllerSpan(it, 1, "BasicErrorController.error")
       }
     }
   }
@@ -108,7 +114,7 @@ class SpringBootBasedTest extends AgentTestRunner {
   def "generates error spans"() {
     setup:
     def response = restTemplate.getForObject("http://localhost:$port/error/qwerty/", Map)
-    
+
     expect:
     response.get("status") == 500
     response.get("error") == "Internal Server Error"
@@ -116,7 +122,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     response.get("message") == "qwerty"
 
     assertTraces(TEST_WRITER, 2) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
           operationName "servlet.request"
           resourceName "GET /error/{parameter}/"
@@ -134,8 +140,9 @@ class SpringBootBasedTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        controllerSpan(it, 1, "TestController.withError", RuntimeException)
       }
-      trace(1, 1) {
+      trace(1, 2) {
         span(0) {
           operationName "servlet.request"
           resourceName "GET /error"
@@ -153,6 +160,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        controllerSpan(it, 1, "BasicErrorController.error")
       }
     }
   }
@@ -162,7 +170,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     restTemplate.postForObject("http://localhost:$port/validated", new TestForm("bob", 20), String) == "Hello bob Person(Name: bob, Age: 20)"
 
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
           operationName "servlet.request"
           resourceName "POST /validated"
@@ -179,6 +187,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        controllerSpan(it, 1, "TestController.withValidation")
       }
     }
   }
@@ -194,7 +203,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     response.get("message") == "Validation failed for object='testForm'. Error count: 1"
 
     assertTraces(TEST_WRITER, 2) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
           operationName "servlet.request"
           resourceName "POST /validated"
@@ -215,8 +224,9 @@ class SpringBootBasedTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        controllerSpan(it, 1, "TestController.withValidation", MethodArgumentNotValidException)
       }
-      trace(1, 1) {
+      trace(1, 2) {
         span(0) {
           operationName "servlet.request"
           resourceName "POST /error"
@@ -233,6 +243,26 @@ class SpringBootBasedTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        controllerSpan(it, 1, "BasicErrorController.error")
+      }
+    }
+  }
+
+  def controllerSpan(TraceAssert trace, int index, String name, Class<Throwable> errorType = null) {
+    trace.span(index) {
+      serviceName "unnamed-java-app"
+      operationName name
+      resourceName name
+      childOf(trace.span(0))
+      errored errorType != null
+      tags {
+        "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+        "$Tags.COMPONENT.key" "spring-web-controller"
+        if (errorType) {
+          "error.msg" String
+          errorTags(errorType)
+        }
+        defaultTags()
       }
     }
   }
