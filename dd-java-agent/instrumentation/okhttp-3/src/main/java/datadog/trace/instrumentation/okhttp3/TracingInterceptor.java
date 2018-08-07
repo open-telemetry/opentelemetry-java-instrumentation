@@ -12,12 +12,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
-import java.util.logging.Logger;
 import okhttp3.Dispatcher;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.slf4j.LoggerFactory;
 
 /**
  * OkHttp interceptor to trace client requests. Interceptor adds span context into outgoing
@@ -34,7 +34,6 @@ import okhttp3.Response;
  * @author Pavol Loffay
  */
 public class TracingInterceptor implements Interceptor {
-  private static final Logger log = Logger.getLogger(TracingInterceptor.class.getName());
 
   private final Tracer tracer;
   private final List<OkHttpClientSpanDecorator> decorators;
@@ -120,7 +119,8 @@ public class TracingInterceptor implements Interceptor {
                     tracer, tagWrapper.getSpan().context(), decorators)
                 .intercept(chain);
       } else {
-        log.severe("tag is null or not an instance of TagWrapper, skipping decorator onResponse()");
+        LoggerFactory.getLogger(TracingInterceptor.class.getName())
+            .error("tag is null or not an instance of TagWrapper, skipping decorator onResponse()");
       }
     }
 

@@ -4,8 +4,7 @@ import static io.opentracing.log.Fields.ERROR_OBJECT;
 
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
-import java.net.Inet4Address;
-import java.nio.ByteBuffer;
+import java.net.Inet6Address;
 import java.util.Collections;
 import okhttp3.Connection;
 import okhttp3.Request;
@@ -75,12 +74,12 @@ public interface OkHttpClientSpanDecorator {
           Tags.PEER_HOSTNAME.set(span, connection.socket().getInetAddress().getHostName());
           Tags.PEER_PORT.set(span, connection.socket().getPort());
 
-          if (connection.socket().getInetAddress() instanceof Inet4Address) {
-            final byte[] address = connection.socket().getInetAddress().getAddress();
-            Tags.PEER_HOST_IPV4.set(span, ByteBuffer.wrap(address).getInt());
-          } else {
-            Tags.PEER_HOST_IPV6.set(span, connection.socket().getInetAddress().toString());
+          final String address = connection.socket().getInetAddress().getHostAddress();
+          String ipvKey = Tags.PEER_HOST_IPV4.getKey();
+          if (connection.socket().getInetAddress() instanceof Inet6Address) {
+            ipvKey = Tags.PEER_HOST_IPV6.getKey();
           }
+          span.setTag(ipvKey, address);
         }
       };
 }
