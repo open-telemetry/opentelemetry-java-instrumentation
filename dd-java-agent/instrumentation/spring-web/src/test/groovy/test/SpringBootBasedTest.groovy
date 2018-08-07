@@ -10,6 +10,8 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.util.NestedServletException
 
+import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class SpringBootBasedTest extends AgentTestRunner {
 
@@ -32,211 +34,206 @@ class SpringBootBasedTest extends AgentTestRunner {
   def "generates spans"() {
     expect:
     restTemplate.getForObject("http://localhost:$port/param/asdf1234/", String) == "Hello asdf1234"
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.size() == 1
 
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-    def span = trace[0]
-
-    span.context().operationName == "servlet.request"
-    span.context().resourceName == "GET /param/{parameter}/"
-    span.context().spanType == DDSpanTypes.WEB_SERVLET
-    !span.context().getErrorFlag()
-    span.context().parentId == "0"
-    span.context().tags["http.url"] == "http://localhost:$port/param/asdf1234/"
-    span.context().tags["http.method"] == "GET"
-    span.context().tags["span.kind"] == "server"
-    span.context().tags["span.type"] == "web"
-    span.context().tags["component"] == "java-web-servlet"
-    span.context().tags["http.status_code"] == 200
-    span.context().tags["thread.name"] != null
-    span.context().tags["thread.id"] != null
-    span.context().tags.size() == 8
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "servlet.request"
+          resourceName "GET /param/{parameter}/"
+          spanType DDSpanTypes.WEB_SERVLET
+          parent()
+          errored false
+          tags {
+            "http.url" "http://localhost:$port/param/asdf1234/"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "java-web-servlet"
+            "http.status_code" 200
+            defaultTags()
+          }
+        }
+      }
+    }
   }
 
   def "generates 404 spans"() {
+    setup:
     def response = restTemplate.getForObject("http://localhost:$port/invalid", Map)
+
     expect:
     response.get("status") == 404
     response.get("error") == "Not Found"
-    TEST_WRITER.waitForTraces(2)
-    TEST_WRITER.size() == 2
 
-    and: // trace 0
-    def trace0 = TEST_WRITER.get(0)
-    trace0.size() == 1
-    def span0 = trace0[0]
-
-    span0.context().operationName == "servlet.request"
-    span0.context().resourceName == "404"
-    span0.context().spanType == DDSpanTypes.WEB_SERVLET
-    !span0.context().getErrorFlag()
-    span0.context().parentId == "0"
-    span0.context().tags["http.url"] == "http://localhost:$port/invalid"
-    span0.context().tags["http.method"] == "GET"
-    span0.context().tags["span.kind"] == "server"
-    span0.context().tags["span.type"] == "web"
-    span0.context().tags["component"] == "java-web-servlet"
-    span0.context().tags["http.status_code"] == 404
-    span0.context().tags["thread.name"] != null
-    span0.context().tags["thread.id"] != null
-    span0.context().tags.size() == 8
-
-    and: // trace 1
-    def trace1 = TEST_WRITER.get(1)
-    trace1.size() == 1
-    def span1 = trace1[0]
-
-    span1.context().operationName == "servlet.request"
-    span1.context().resourceName == "404"
-    span1.context().spanType == DDSpanTypes.WEB_SERVLET
-    !span1.context().getErrorFlag()
-    span1.context().parentId == "0"
-    span1.context().tags["http.url"] == "http://localhost:$port/error"
-    span1.context().tags["http.method"] == "GET"
-    span1.context().tags["span.kind"] == "server"
-    span1.context().tags["span.type"] == "web"
-    span1.context().tags["component"] == "java-web-servlet"
-    span1.context().tags["http.status_code"] == 404
-    span1.context().tags["thread.name"] != null
-    span1.context().tags["thread.id"] != null
-    span1.context().tags.size() == 8
+    assertTraces(TEST_WRITER, 2) {
+      trace(0, 1) {
+        span(0) {
+          operationName "servlet.request"
+          resourceName "404"
+          spanType DDSpanTypes.WEB_SERVLET
+          parent()
+          errored false
+          tags {
+            "http.url" "http://localhost:$port/invalid"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "java-web-servlet"
+            "http.status_code" 404
+            defaultTags()
+          }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          operationName "servlet.request"
+          resourceName "404"
+          spanType DDSpanTypes.WEB_SERVLET
+          parent()
+          errored false
+          tags {
+            "http.url" "http://localhost:$port/error"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "java-web-servlet"
+            "http.status_code" 404
+            defaultTags()
+          }
+        }
+      }
+    }
   }
 
   def "generates error spans"() {
-    expect:
+    setup:
     def response = restTemplate.getForObject("http://localhost:$port/error/qwerty/", Map)
+    
+    expect:
     response.get("status") == 500
     response.get("error") == "Internal Server Error"
     response.get("exception") == "java.lang.RuntimeException"
     response.get("message") == "qwerty"
-    TEST_WRITER.waitForTraces(2)
-    TEST_WRITER.size() == 2
 
-    and: // trace 0
-    def trace0 = TEST_WRITER.get(0)
-    trace0.size() == 1
-    def span0 = trace0[0]
-
-    span0.context().operationName == "servlet.request"
-    span0.context().resourceName == "GET /error/{parameter}/"
-    span0.context().spanType == DDSpanTypes.WEB_SERVLET
-    span0.context().getErrorFlag()
-    span0.context().parentId == "0"
-    span0.context().tags["http.url"] == "http://localhost:$port/error/qwerty/"
-    span0.context().tags["http.method"] == "GET"
-    span0.context().tags["span.kind"] == "server"
-    span0.context().tags["span.type"] == "web"
-    span0.context().tags["component"] == "java-web-servlet"
-    span0.context().tags["http.status_code"] == 500
-    span0.context().tags["thread.name"] != null
-    span0.context().tags["thread.id"] != null
-    span0.context().tags["error"] == true
-    span0.context().tags["error.msg"] == "Request processing failed; nested exception is java.lang.RuntimeException: qwerty"
-    span0.context().tags["error.type"] == NestedServletException.getName()
-    span0.context().tags["error.stack"] != null
-    span0.context().tags.size() == 12
-
-    and: // trace 1
-    def trace1 = TEST_WRITER.get(1)
-    trace1.size() == 1
-    def span1 = trace1[0]
-
-    span1.context().operationName == "servlet.request"
-    span1.context().resourceName == "GET /error"
-    span1.context().spanType == DDSpanTypes.WEB_SERVLET
-    span1.context().parentId == "0"
-    span1.context().tags["http.url"] == "http://localhost:$port/error"
-    span1.context().tags["http.method"] == "GET"
-    span1.context().tags["span.kind"] == "server"
-    span1.context().tags["span.type"] == "web"
-    span1.context().tags["component"] == "java-web-servlet"
-    span1.context().tags["http.status_code"] == 500
-    span1.context().getErrorFlag()
-    span1.context().tags["thread.name"] != null
-    span1.context().tags["thread.id"] != null
-    span1.context().tags.size() == 9
+    assertTraces(TEST_WRITER, 2) {
+      trace(0, 1) {
+        span(0) {
+          operationName "servlet.request"
+          resourceName "GET /error/{parameter}/"
+          spanType DDSpanTypes.WEB_SERVLET
+          parent()
+          errored true
+          tags {
+            "http.url" "http://localhost:$port/error/qwerty/"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "java-web-servlet"
+            "http.status_code" 500
+            errorTags NestedServletException, "Request processing failed; nested exception is java.lang.RuntimeException: qwerty"
+            defaultTags()
+          }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          operationName "servlet.request"
+          resourceName "GET /error"
+          spanType DDSpanTypes.WEB_SERVLET
+          parent()
+          errored true
+          tags {
+            "http.url" "http://localhost:$port/error"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "java-web-servlet"
+            "http.status_code" 500
+            "error" true
+            defaultTags()
+          }
+        }
+      }
+    }
   }
 
   def "validated form"() {
     expect:
     restTemplate.postForObject("http://localhost:$port/validated", new TestForm("bob", 20), String) == "Hello bob Person(Name: bob, Age: 20)"
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.size() == 1
 
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-    def span = trace[0]
-
-    span.context().operationName == "servlet.request"
-    span.context().resourceName == "POST /validated"
-    span.context().spanType == DDSpanTypes.WEB_SERVLET
-    !span.context().getErrorFlag()
-    span.context().parentId == "0"
-    span.context().tags["http.url"] == "http://localhost:$port/validated"
-    span.context().tags["http.method"] == "POST"
-    span.context().tags["span.kind"] == "server"
-    span.context().tags["span.type"] == "web"
-    span.context().tags["component"] == "java-web-servlet"
-    span.context().tags["http.status_code"] == 200
-    span.context().tags["thread.name"] != null
-    span.context().tags["thread.id"] != null
-    span.context().tags.size() == 8
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "servlet.request"
+          resourceName "POST /validated"
+          spanType DDSpanTypes.WEB_SERVLET
+          parent()
+          errored false
+          tags {
+            "http.url" "http://localhost:$port/validated"
+            "http.method" "POST"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "java-web-servlet"
+            "http.status_code" 200
+            defaultTags()
+          }
+        }
+      }
+    }
   }
 
   def "invalid form"() {
-    expect:
+    setup:
     def response = restTemplate.postForObject("http://localhost:$port/validated", new TestForm("bill", 5), Map, Map)
+
+    expect:
     response.get("status") == 400
     response.get("error") == "Bad Request"
     response.get("exception") == "org.springframework.web.bind.MethodArgumentNotValidException"
     response.get("message") == "Validation failed for object='testForm'. Error count: 1"
-    TEST_WRITER.waitForTraces(2)
-    TEST_WRITER.size() == 2
 
-    and: // trace 0
-    def trace0 = TEST_WRITER.get(0)
-    trace0.size() == 1
-    def span0 = trace0[0]
-
-    span0.context().operationName == "servlet.request"
-    span0.context().resourceName == "POST /validated"
-    span0.context().spanType == DDSpanTypes.WEB_SERVLET
-    !span0.context().getErrorFlag() // This should be an error once we have the http status code decorator working.
-    span0.context().parentId == "0"
-    span0.context().tags["http.url"] == "http://localhost:$port/validated"
-    span0.context().tags["http.method"] == "POST"
-    span0.context().tags["span.kind"] == "server"
-    span0.context().tags["span.type"] == "web"
-    span0.context().tags["component"] == "java-web-servlet"
-    span0.context().tags["http.status_code"] == 400
-    span0.context().tags["thread.name"] != null
-    span0.context().tags["thread.id"] != null
-//    span0.context().tags["error"] == true // This should be an error once we have the http status code decorator working.
-    span0.context().tags["error.msg"].toString().startsWith("Validation failed")
-    span0.context().tags["error.type"] == MethodArgumentNotValidException.getName()
-    span0.context().tags["error.stack"] != null
-    span0.context().tags.size() == 12
-
-    and: // trace 1
-    def trace1 = TEST_WRITER.get(1)
-    trace1.size() == 1
-    def span1 = trace1[0]
-
-    span1.context().operationName == "servlet.request"
-    span1.context().resourceName == "POST /error"
-    span1.context().spanType == DDSpanTypes.WEB_SERVLET
-    !span1.context().getErrorFlag()
-    span1.context().parentId == "0"
-    span1.context().tags["http.url"] == "http://localhost:$port/error"
-    span1.context().tags["http.method"] == "POST"
-    span1.context().tags["span.kind"] == "server"
-    span1.context().tags["span.type"] == "web"
-    span1.context().tags["component"] == "java-web-servlet"
-    span1.context().tags["http.status_code"] == 400
-    span1.context().tags["thread.name"] != null
-    span1.context().tags["thread.id"] != null
-    span1.context().tags.size() == 8
+    assertTraces(TEST_WRITER, 2) {
+      trace(0, 1) {
+        span(0) {
+          operationName "servlet.request"
+          resourceName "POST /validated"
+          spanType DDSpanTypes.WEB_SERVLET
+          parent()
+          errored false
+          tags {
+            "http.url" "http://localhost:$port/validated"
+            "http.method" "POST"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "java-web-servlet"
+            "http.status_code" 400
+            "error" false
+            "error.msg" String
+            "error.type" MethodArgumentNotValidException.name
+            "error.stack" String
+            defaultTags()
+          }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          operationName "servlet.request"
+          resourceName "POST /error"
+          spanType DDSpanTypes.WEB_SERVLET
+          parent()
+          errored false
+          tags {
+            "http.url" "http://localhost:$port/error"
+            "http.method" "POST"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "java-web-servlet"
+            "http.status_code" 400
+            defaultTags()
+          }
+        }
+      }
+    }
   }
 }
