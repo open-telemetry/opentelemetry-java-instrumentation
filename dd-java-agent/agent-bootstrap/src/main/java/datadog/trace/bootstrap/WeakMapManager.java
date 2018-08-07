@@ -8,6 +8,26 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Provides instances of {@link WeakConcurrentMap} and retains reference to them to allow a single
+ * thread to clean void weak references out for all instances. Cleaning is done every second.
+ */
+
+// Comparison with using WeakConcurrentMap vs Guava's implementation:
+// Cleaning:
+// * `WeakConcurrentMap`: centralized but we have to maintain out own code and thread for it
+// * `Guava`: inline on application's thread, with constant max delay
+// Jar Size:
+// * `WeakConcurrentMap`: small
+// * `Guava`: large, but we may use other features, like immutable collections - and we already ship
+//            Guava as part of distribution now, so using Guava for this doesn’t increase size.
+// Must go on bootstrap classpath:
+// * `WeakConcurrentMap`: version conflict is unlikely, so we can directly inject for now
+// * `Guava`: need to implement shadow copy (might eventually be necessary for other dependencies)
+// Used by other javaagents for similar purposes:
+// * `WeakConcurrentMap`: anecdotally used by other agents
+// * `Guava`: specifically agent use is unknown at the moment, but Guava is a well known library
+//            backed by big company with many-many users
 public class WeakMapManager {
   private static final long CLEAN_FREQUENCY_SECONDS = 1;
   private static final List<WeakConcurrentMap> maps = new CopyOnWriteArrayList<>();
