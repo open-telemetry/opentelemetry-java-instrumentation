@@ -1,8 +1,8 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.ListWriterAssert
-import datadog.trace.agent.test.RatpackUtils
-import datadog.trace.agent.test.TraceAssert
+import datadog.trace.agent.test.asserts.ListWriterAssert
+import datadog.trace.agent.test.asserts.TraceAssert
+import datadog.trace.agent.test.utils.RatpackUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -15,7 +15,7 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.message.BasicHeader
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
 class ApacheHttpClientTest extends AgentTestRunner {

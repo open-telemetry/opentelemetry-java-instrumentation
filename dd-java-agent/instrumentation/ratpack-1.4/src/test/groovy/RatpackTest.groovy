@@ -1,6 +1,6 @@
 import datadog.opentracing.scopemanager.ContextualScopeManager
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.OkHttpUtils
+import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.ratpack.impl.RatpackScopeManager
 import io.opentracing.Scope

@@ -1,8 +1,8 @@
-package datadog.trace.agent.test
+package datadog.trace.agent.test.asserts
 
 import datadog.opentracing.DDSpan
 
-import static datadog.trace.agent.test.SpanAssert.assertSpan
+import static SpanAssert.assertSpan
 
 class TraceAssert {
   private final List<DDSpan> trace
@@ -23,7 +23,6 @@ class TraceAssert {
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(asserter)
     asserter.assertSpansAllVerified()
-    asserter
   }
 
   DDSpan span(int index) {

@@ -1,7 +1,7 @@
 package test
 
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TraceAssert
+import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -13,7 +13,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.util.NestedServletException
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class SpringBootBasedTest extends AgentTestRunner {

@@ -1,4 +1,4 @@
-package datadog.trace.agent.test
+package datadog.trace.agent.test.asserts
 
 import datadog.opentracing.DDSpan
 
@@ -18,7 +18,6 @@ class TagsAssert {
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(asserter)
     asserter.assertTagsAllVerified()
-    asserter
   }
 
   def defaultTags() {

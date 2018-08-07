@@ -5,7 +5,7 @@ import dd.test.trace.annotation.SayTracedHello
 
 import java.util.concurrent.Callable
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class TraceAnnotationsTest extends AgentTestRunner {
 

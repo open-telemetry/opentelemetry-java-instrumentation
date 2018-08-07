@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.RatpackUtils
+import datadog.trace.agent.test.utils.RatpackUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.propagation.TextMap
@@ -9,8 +9,8 @@ import org.springframework.web.client.RestTemplate
 import ratpack.handling.Context
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 import static ratpack.http.HttpMethod.HEAD
 import static ratpack.http.HttpMethod.POST

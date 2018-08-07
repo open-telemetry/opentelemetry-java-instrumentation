@@ -1,4 +1,4 @@
-package datadog.trace.agent.test
+package datadog.trace.agent.test.utils
 
 import okhttp3.OkHttpClient
 

@@ -14,7 +14,7 @@ import org.elasticsearch.node.NodeBuilder
 import org.elasticsearch.transport.RemoteTransportException
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class Elasticsearch2TransportClientTest extends AgentTestRunner {
   static {

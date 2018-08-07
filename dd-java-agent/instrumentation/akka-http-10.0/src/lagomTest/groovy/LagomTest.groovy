@@ -14,7 +14,7 @@ import java.util.function.Function
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.TestServer
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.startServer
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class LagomTest extends AgentTestRunner {
   static {

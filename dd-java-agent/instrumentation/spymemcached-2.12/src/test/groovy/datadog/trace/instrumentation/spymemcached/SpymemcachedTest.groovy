@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.spymemcached
 
 import com.google.common.util.concurrent.MoreExecutors
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TraceAssert
+import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -26,8 +26,8 @@ import java.util.concurrent.locks.ReentrantLock
 import static CompletionListener.COMPONENT_NAME
 import static CompletionListener.OPERATION_NAME
 import static CompletionListener.SERVICE_NAME
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 // Do not run tests locally on Java7 since testcontainers are not compatible with Java7

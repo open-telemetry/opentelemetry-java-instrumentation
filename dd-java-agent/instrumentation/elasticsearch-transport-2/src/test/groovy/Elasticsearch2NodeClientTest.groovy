@@ -11,7 +11,7 @@ import org.elasticsearch.node.Node
 import org.elasticsearch.node.NodeBuilder
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class Elasticsearch2NodeClientTest extends AgentTestRunner {
   static {

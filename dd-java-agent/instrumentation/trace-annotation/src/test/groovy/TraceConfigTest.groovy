@@ -3,8 +3,8 @@ import datadog.trace.instrumentation.trace_annotation.TraceConfigInstrumentation
 
 import java.util.concurrent.Callable
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.TestUtils.withSystemProperty
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class TraceConfigTest extends AgentTestRunner {
 

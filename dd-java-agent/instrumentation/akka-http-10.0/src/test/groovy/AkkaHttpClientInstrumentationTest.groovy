@@ -8,7 +8,7 @@ import akka.stream.StreamTcpException
 import akka.stream.javadsl.Sink
 import akka.stream.javadsl.Source
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.RatpackUtils
+import datadog.trace.agent.test.utils.RatpackUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -18,7 +18,7 @@ import spock.lang.Shared
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.ExecutionException
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
 
 class AkkaHttpClientInstrumentationTest extends AgentTestRunner {

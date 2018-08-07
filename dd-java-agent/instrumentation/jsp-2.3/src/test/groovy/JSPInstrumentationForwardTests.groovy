@@ -1,7 +1,7 @@
 import com.google.common.io.Files
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
 import io.netty.handler.codec.http.HttpResponseStatus
 import okhttp3.OkHttpClient
@@ -13,7 +13,7 @@ import org.apache.jasper.JasperException
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class JSPInstrumentationForwardTests extends AgentTestRunner {
 

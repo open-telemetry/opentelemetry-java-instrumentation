@@ -5,8 +5,8 @@ import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class UrlConnectionTest extends AgentTestRunner {
   static {
