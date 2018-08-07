@@ -8,6 +8,7 @@ import java.net.URL;
 public class Utils {
   /* packages which will be loaded on the bootstrap classloader*/
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
+    "com.blogspot.mydailyjava.weaklockfree",
     "io.opentracing",
     "datadog.slf4j",
     "datadog.trace.bootstrap",
@@ -34,13 +35,13 @@ public class Utils {
 
   private static Method findLoadedClassMethod = null;
 
-  private static BootstrapClassLoaderProxy unitTestBootstrapProxy =
+  private static final BootstrapClassLoaderProxy unitTestBootstrapProxy =
       new BootstrapClassLoaderProxy(new URL[0], null);
 
   static {
     try {
       findLoadedClassMethod = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
-    } catch (NoSuchMethodException | SecurityException e) {
+    } catch (final NoSuchMethodException | SecurityException e) {
       throw new IllegalStateException(e);
     }
   }
