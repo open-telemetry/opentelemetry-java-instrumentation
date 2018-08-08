@@ -1,10 +1,10 @@
 package datadog.trace.agent.tooling;
 
-import static datadog.trace.bootstrap.WeakMapManager.newWeakMap;
+import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 
-import com.blogspot.mydailyjava.weaklockfree.WeakConcurrentMap;
 import datadog.trace.bootstrap.DatadogClassLoader;
 import datadog.trace.bootstrap.PatchLogger;
+import datadog.trace.bootstrap.WeakMap;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
 import java.util.HashSet;
@@ -44,7 +44,7 @@ public class ClassLoaderMatcher {
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
     public static final SkipClassLoaderMatcher INSTANCE = new SkipClassLoaderMatcher();
     /* Cache of classloader-instance -> (true|false). True = skip instrumentation. False = safe to instrument. */
-    private static final WeakConcurrentMap<ClassLoader, Boolean> SKIP_CACHE = newWeakMap();
+    private static final WeakMap<ClassLoader, Boolean> SKIP_CACHE = newWeakMap();
     private static final Set<String> CLASSLOADER_CLASSES_TO_SKIP;
 
     static {
@@ -131,7 +131,7 @@ public class ClassLoaderMatcher {
   public static class ClassLoaderHasClassMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
-    private final WeakConcurrentMap<ClassLoader, Boolean> cache = newWeakMap();
+    private final WeakMap<ClassLoader, Boolean> cache = newWeakMap();
 
     private final String[] names;
 
@@ -163,7 +163,7 @@ public class ClassLoaderMatcher {
   public static class ClassLoaderHasClassWithFieldMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
-    private final WeakConcurrentMap<ClassLoader, Boolean> cache = newWeakMap();
+    private final WeakMap<ClassLoader, Boolean> cache = newWeakMap();
 
     private final String className;
     private final String fieldName;
@@ -201,7 +201,7 @@ public class ClassLoaderMatcher {
   public static class ClassLoaderHasClassWithMethodMatcher
       extends ElementMatcher.Junction.AbstractBase<ClassLoader> {
 
-    private final WeakConcurrentMap<ClassLoader, Boolean> cache = newWeakMap();
+    private final WeakMap<ClassLoader, Boolean> cache = newWeakMap();
 
     private final String className;
     private final String methodName;

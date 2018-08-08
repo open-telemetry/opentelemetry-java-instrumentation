@@ -1,10 +1,10 @@
 package datadog.trace.agent.tooling.muzzle;
 
-import static datadog.trace.bootstrap.WeakMapManager.newWeakMap;
+import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
-import com.blogspot.mydailyjava.weaklockfree.WeakConcurrentMap;
 import datadog.trace.agent.tooling.Utils;
+import datadog.trace.bootstrap.WeakMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -15,8 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 /** Matches a set of references against a classloader. */
 @Slf4j
 public class ReferenceMatcher {
-  private final WeakConcurrentMap<ClassLoader, List<Reference.Mismatch>> mismatchCache =
-      newWeakMap();
+  private final WeakMap<ClassLoader, List<Reference.Mismatch>> mismatchCache = newWeakMap();
   private final Reference[] references;
   private final Set<String> helperClassNames;
 
