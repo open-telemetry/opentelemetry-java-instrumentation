@@ -239,7 +239,6 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
           public Thread newThread(final Runnable r) {
             final Thread thread = new Thread(r, "dd-span-cleaner");
             thread.setDaemon(true);
-            thread.setPriority(Thread.MIN_PRIORITY);
             return thread;
           }
         };

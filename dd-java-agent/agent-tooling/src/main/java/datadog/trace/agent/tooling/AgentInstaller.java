@@ -8,6 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import datadog.trace.bootstrap.WeakMap;
 import java.lang.instrument.Instrumentation;
 import java.util.ServiceLoader;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,8 @@ public class AgentInstaller {
   public static ResettableClassFileTransformer installBytebuddyAgent(
       final Instrumentation inst, final AgentBuilder.Listener... listeners) {
     INSTRUMENTATION = inst;
+    registerWeakMapProvider();
+
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()
@@ -78,6 +81,12 @@ public class AgentInstaller {
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
 
     return agentBuilder.installOn(inst);
+  }
+
+  private static void registerWeakMapProvider() {
+    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent());
+    //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent.Inline());
+    //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.Guava());
   }
 
   @Slf4j

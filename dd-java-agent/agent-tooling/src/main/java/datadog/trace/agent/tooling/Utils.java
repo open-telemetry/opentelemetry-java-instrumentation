@@ -8,7 +8,6 @@ import java.net.URL;
 public class Utils {
   /* packages which will be loaded on the bootstrap classloader*/
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
-    "com.blogspot.mydailyjava.weaklockfree",
     "io.opentracing",
     "datadog.slf4j",
     "datadog.trace.bootstrap",
@@ -23,6 +22,8 @@ public class Utils {
     "com.google.auto",
     "com.google.common",
     "com.google.thirdparty.publicsuffix",
+    // WeakConcurrentMap
+    "com.blogspot.mydailyjava.weaklockfree",
     // bytebuddy
     "net.bytebuddy",
     // OT contribs for dd trace resolver

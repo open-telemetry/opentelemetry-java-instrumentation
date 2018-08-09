@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import lombok.extern.slf4j.Slf4j;
 
 public interface WeakMap<K, V> {
 
@@ -19,9 +20,6 @@ public interface WeakMap<K, V> {
     private static final AtomicReference<Supplier> provider =
         new AtomicReference<>(Supplier.DEFAULT);
 
-    /* The interface would be better defined as a Supplier, because we don't want throw an exception,
-     * but that wasn't introduced until Java 8 and we must be compatible with 7.
-     */
     public static void registerIfAbsent(final Supplier provider) {
       if (provider != null && provider != Supplier.DEFAULT) {
         Provider.provider.compareAndSet(Supplier.DEFAULT, provider);
@@ -38,40 +36,42 @@ public interface WeakMap<K, V> {
 
     Supplier DEFAULT = new Default();
 
+    @Slf4j
     class Default implements Supplier {
 
       @Override
       public <K, V> WeakMap<K, V> get() {
-        return new Adapter<>(Collections.synchronizedMap(new WeakHashMap<K, V>()));
+        log.warn("WeakMap.Supplier not registered. Returning a synchronized WeakHashMap.");
+        return new MapAdapter<>(Collections.synchronizedMap(new WeakHashMap<K, V>()));
       }
+    }
+  }
 
-      private static class Adapter<K, V> implements WeakMap<K, V> {
-        private final Map<K, V> map;
+  class MapAdapter<K, V> implements WeakMap<K, V> {
+    private final Map<K, V> map;
 
-        private Adapter(final Map<K, V> map) {
-          this.map = map;
-        }
+    public MapAdapter(final Map<K, V> map) {
+      this.map = map;
+    }
 
-        @Override
-        public int size() {
-          return map.size();
-        }
+    @Override
+    public int size() {
+      return map.size();
+    }
 
-        @Override
-        public boolean containsKey(final K key) {
-          return map.containsKey(key);
-        }
+    @Override
+    public boolean containsKey(final K key) {
+      return map.containsKey(key);
+    }
 
-        @Override
-        public V get(final K key) {
-          return map.get(key);
-        }
+    @Override
+    public V get(final K key) {
+      return map.get(key);
+    }
 
-        @Override
-        public void put(final K key, final V value) {
-          map.put(key, value);
-        }
-      }
+    @Override
+    public void put(final K key, final V value) {
+      map.put(key, value);
     }
   }
 }

@@ -5,7 +5,6 @@ import com.google.common.collect.MapMaker;
 import datadog.trace.bootstrap.WeakMap;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -35,12 +34,14 @@ class WeakMapSuppliers {
    * single thread to clean void weak references out for all instances. Cleaning is done every
    * second.
    */
-  static class WCMManaged implements WeakMap.Supplier {
+  static class WeakConcurrent implements WeakMap.Supplier {
     private static final long CLEAN_FREQUENCY_SECONDS = 1;
-    private static final Queue<WeakReference<WeakConcurrentMap>> maps =
+    private static final long SHUTDOWN_WAIT_SECONDS = 5;
+
+    private static final Queue<WeakReference<WeakConcurrentMap>> SUPPLIED_MAPS =
         new ConcurrentLinkedQueue<>();
 
-    private static final ThreadFactory weakMapCleanerThreadFactory =
+    private static final ThreadFactory THREAD_FACTORY =
         new ThreadFactory() {
           @Override
           public Thread newThread(final Runnable r) {
@@ -51,14 +52,14 @@ class WeakMapSuppliers {
           }
         };
 
-    private static final ScheduledExecutorService cleaner =
-        Executors.newScheduledThreadPool(1, weakMapCleanerThreadFactory);
+    private static final ScheduledExecutorService CLEANER =
+        Executors.newScheduledThreadPool(1, THREAD_FACTORY);
 
-    private static final Runnable runnable = new Cleaner();
+    private static final Runnable RUNNABLE = new Cleaner();
 
     static {
-      cleaner.scheduleAtFixedRate(
-          runnable, CLEAN_FREQUENCY_SECONDS, CLEAN_FREQUENCY_SECONDS, TimeUnit.SECONDS);
+      CLEANER.scheduleAtFixedRate(
+          RUNNABLE, CLEAN_FREQUENCY_SECONDS, CLEAN_FREQUENCY_SECONDS, TimeUnit.SECONDS);
 
       try {
         Runtime.getRuntime()
@@ -67,8 +68,8 @@ class WeakMapSuppliers {
                   @Override
                   public void run() {
                     try {
-                      cleaner.shutdownNow();
-                      cleaner.awaitTermination(5, TimeUnit.SECONDS);
+                      CLEANER.shutdownNow();
+                      CLEANER.awaitTermination(SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS);
                     } catch (final InterruptedException e) {
                       // Don't bother waiting then...
                     }
@@ -80,7 +81,7 @@ class WeakMapSuppliers {
     }
 
     public static void cleanMaps() {
-      for (final Iterator<WeakReference<WeakConcurrentMap>> iterator = maps.iterator();
+      for (final Iterator<WeakReference<WeakConcurrentMap>> iterator = SUPPLIED_MAPS.iterator();
           iterator.hasNext(); ) {
         final WeakConcurrentMap map = iterator.next().get();
         if (map == null) {
@@ -94,7 +95,7 @@ class WeakMapSuppliers {
     @Override
     public <K, V> WeakMap<K, V> get() {
       final WeakConcurrentMap<K, V> map = new WeakConcurrentMap<>(false);
-      maps.add(new WeakReference<WeakConcurrentMap>(map));
+      SUPPLIED_MAPS.add(new WeakReference<WeakConcurrentMap>(map));
       return new Adapter<>(map);
     }
 
@@ -133,40 +134,12 @@ class WeakMapSuppliers {
         map.put(key, value);
       }
     }
-  }
 
-  static class WCMInline implements WeakMap.Supplier {
-
-    @Override
-    public <K, V> WeakMap<K, V> get() {
-      return new Adapter<>(new WeakConcurrentMap.WithInlinedExpunction<K, V>());
-    }
-
-    private static class Adapter<K, V> implements WeakMap<K, V> {
-      private final WeakConcurrentMap<K, V> map;
-
-      private Adapter(final WeakConcurrentMap<K, V> map) {
-        this.map = map;
-      }
+    static class Inline implements WeakMap.Supplier {
 
       @Override
-      public int size() {
-        return map.approximateSize();
-      }
-
-      @Override
-      public boolean containsKey(final K key) {
-        return map.containsKey(key);
-      }
-
-      @Override
-      public V get(final K key) {
-        return map.get(key);
-      }
-
-      @Override
-      public void put(final K key, final V value) {
-        map.put(key, value);
+      public <K, V> WeakMap<K, V> get() {
+        return new Adapter<>(new WeakConcurrentMap.WithInlinedExpunction<K, V>());
       }
     }
   }
@@ -175,35 +148,7 @@ class WeakMapSuppliers {
 
     @Override
     public <K, V> WeakMap<K, V> get() {
-      return new Adapter<>(new MapMaker().weakKeys().<K, V>makeMap());
-    }
-
-    private static class Adapter<K, V> implements WeakMap<K, V> {
-      private final Map<K, V> map;
-
-      private Adapter(final Map<K, V> map) {
-        this.map = map;
-      }
-
-      @Override
-      public int size() {
-        return map.size();
-      }
-
-      @Override
-      public boolean containsKey(final K key) {
-        return map.containsKey(key);
-      }
-
-      @Override
-      public V get(final K key) {
-        return map.get(key);
-      }
-
-      @Override
-      public void put(final K key, final V value) {
-        map.put(key, value);
-      }
+      return new WeakMap.MapAdapter<>(new MapMaker().weakKeys().<K, V>makeMap());
     }
   }
 }
