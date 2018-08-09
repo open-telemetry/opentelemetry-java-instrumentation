@@ -22,7 +22,6 @@ import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
@@ -35,9 +34,9 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.Controller;
 
 @AutoService(Instrumenter.class)
-public final class SpringWebInstrumentation extends Instrumenter.Default {
+public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
 
-  public SpringWebInstrumentation() {
+  public HandlerAdapterInstrumentation() {
     super("spring-web");
   }
 
@@ -55,15 +54,13 @@ public final class SpringWebInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+    return Collections.<ElementMatcher, String>singletonMap(
         isMethod()
             .and(isPublic())
             .and(nameStartsWith("handle"))
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArguments(3)),
         ControllerAdvice.class.getName());
-    return transformers;
   }
 
   public static class ControllerAdvice {
