@@ -325,7 +325,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   public String toString() {
     final StringBuilder s =
         new StringBuilder()
-            .append("Span [ t_id=")
+            .append("DDSpan [ t_id=")
             .append(traceId)
             .append(", s_id=")
             .append(spanId)

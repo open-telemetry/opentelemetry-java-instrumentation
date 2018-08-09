@@ -48,7 +48,7 @@ public class ContinuableScope implements Scope, TraceScope {
     this.continuation = continuation;
     this.spanUnderScope = spanUnderScope;
     this.finishOnClose = finishOnClose;
-    this.toRestore = scopeManager.tlsScope.get();
+    toRestore = scopeManager.tlsScope.get();
     scopeManager.tlsScope.set(this);
   }
 
@@ -94,6 +94,11 @@ public class ContinuableScope implements Scope, TraceScope {
     } else {
       return null;
     }
+  }
+
+  @Override
+  public String toString() {
+    return super.toString() + "->" + spanUnderScope;
   }
 
   public class Continuation implements Closeable, TraceScope.Continuation {

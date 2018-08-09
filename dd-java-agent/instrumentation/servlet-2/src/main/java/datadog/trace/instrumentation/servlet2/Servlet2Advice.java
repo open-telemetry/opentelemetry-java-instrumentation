@@ -39,6 +39,9 @@ public class Servlet2Advice {
         GlobalTracer.get()
             .buildSpan("servlet.request")
             .asChildOf(extractedContext)
+            .withTag(Tags.COMPONENT.getKey(), "java-web-servlet")
+            .withTag(Tags.HTTP_METHOD.getKey(), httpServletRequest.getMethod())
+            .withTag(Tags.HTTP_URL.getKey(), httpServletRequest.getRequestURL().toString())
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
             .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
             .withTag("servlet.context", httpServletRequest.getContextPath())
@@ -48,12 +51,8 @@ public class Servlet2Advice {
       ((TraceScope) scope).setAsyncPropagation(true);
     }
 
-    final Span span = scope.span();
-    Tags.COMPONENT.set(span, "java-web-servlet");
-    Tags.HTTP_METHOD.set(span, httpServletRequest.getMethod());
-    Tags.HTTP_URL.set(span, httpServletRequest.getRequestURL().toString());
     if (httpServletRequest.getUserPrincipal() != null) {
-      span.setTag("user.principal", httpServletRequest.getUserPrincipal().getName());
+      scope.span().setTag("user.principal", httpServletRequest.getUserPrincipal().getName());
     }
     return scope;
   }

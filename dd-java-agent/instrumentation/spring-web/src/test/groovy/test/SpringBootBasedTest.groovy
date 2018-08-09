@@ -30,8 +30,27 @@ class SpringBootBasedTest extends AgentTestRunner {
     restTemplate.getForObject("http://localhost:$port/", String) == "Hello World"
 
     and:
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.size() == 1
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 2) {
+        span(0) {
+          operationName "servlet.request"
+          resourceName "GET /"
+          spanType DDSpanTypes.WEB_SERVLET
+          parent()
+          errored false
+          tags {
+            "http.url" "http://localhost:$port/"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "component" "java-web-servlet"
+            "http.status_code" 200
+            defaultTags()
+          }
+        }
+        controllerSpan(it, 1, "TestController.greeting")
+      }
+    }
   }
 
   def "generates spans"() {
