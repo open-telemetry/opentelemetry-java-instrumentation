@@ -38,9 +38,6 @@ class WeakMapSuppliers {
     private static final long CLEAN_FREQUENCY_SECONDS = 1;
     private static final long SHUTDOWN_WAIT_SECONDS = 5;
 
-    private static final Queue<WeakReference<WeakConcurrentMap>> SUPPLIED_MAPS =
-        new ConcurrentLinkedQueue<>();
-
     private static final ThreadFactory THREAD_FACTORY =
         new ThreadFactory() {
           @Override
@@ -55,12 +52,7 @@ class WeakMapSuppliers {
     private static final ScheduledExecutorService CLEANER =
         Executors.newScheduledThreadPool(1, THREAD_FACTORY);
 
-    private static final Runnable RUNNABLE = new Cleaner();
-
     static {
-      CLEANER.scheduleAtFixedRate(
-          RUNNABLE, CLEAN_FREQUENCY_SECONDS, CLEAN_FREQUENCY_SECONDS, TimeUnit.SECONDS);
-
       try {
         Runtime.getRuntime()
             .addShutdownHook(
@@ -80,8 +72,24 @@ class WeakMapSuppliers {
       }
     }
 
-    public static void cleanMaps() {
-      for (final Iterator<WeakReference<WeakConcurrentMap>> iterator = SUPPLIED_MAPS.iterator();
+    private final Queue<WeakReference<WeakConcurrentMap>> suppliedMaps =
+        new ConcurrentLinkedQueue<>();
+
+    private final Runnable runnable =
+        new Runnable() {
+          @Override
+          public void run() {
+            cleanMaps();
+          }
+        };
+
+    WeakConcurrent() {
+      CLEANER.scheduleAtFixedRate(
+          runnable, CLEAN_FREQUENCY_SECONDS, CLEAN_FREQUENCY_SECONDS, TimeUnit.SECONDS);
+    }
+
+    public void cleanMaps() {
+      for (final Iterator<WeakReference<WeakConcurrentMap>> iterator = suppliedMaps.iterator();
           iterator.hasNext(); ) {
         final WeakConcurrentMap map = iterator.next().get();
         if (map == null) {
@@ -95,16 +103,8 @@ class WeakMapSuppliers {
     @Override
     public <K, V> WeakMap<K, V> get() {
       final WeakConcurrentMap<K, V> map = new WeakConcurrentMap<>(false);
-      SUPPLIED_MAPS.add(new WeakReference<WeakConcurrentMap>(map));
+      suppliedMaps.add(new WeakReference<WeakConcurrentMap>(map));
       return new Adapter<>(map);
-    }
-
-    private static class Cleaner implements Runnable {
-
-      @Override
-      public void run() {
-        cleanMaps();
-      }
     }
 
     private static class Adapter<K, V> implements WeakMap<K, V> {

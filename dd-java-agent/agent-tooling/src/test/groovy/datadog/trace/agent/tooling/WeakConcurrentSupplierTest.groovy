@@ -16,11 +16,11 @@ class WeakConcurrentSupplierTest extends Specification {
     def map1 = WeakMap.Provider.newWeakMap().map
 
     then:
-    supplier.SUPPLIED_MAPS.iterator().next().get() == map1
+    supplier.suppliedMaps.iterator().next().get() == map1
 
     when:
     def map2 = WeakMap.Provider.newWeakMap().map
-    def iterator = supplier.SUPPLIED_MAPS.iterator()
+    def iterator = supplier.suppliedMaps.iterator()
 
     then:
     iterator.next().get() == map1
