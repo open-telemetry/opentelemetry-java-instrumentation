@@ -68,6 +68,7 @@ public class AgentInstaller {
             .or(nameStartsWith("org.groovy."))
             .or(nameStartsWith("com.p6spy."))
             .or(nameStartsWith("org.slf4j."))
+            .or(nameStartsWith("com.newrelic."))
             .or(nameContains("javassist"))
             .or(nameContains(".asm."))
             .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"));

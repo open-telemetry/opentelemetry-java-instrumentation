@@ -87,6 +87,7 @@ public class DDSpan implements Span, MutableSpan {
   private void finishAndAddToTrace(final long durationNano) {
     // ensure a min duration of 1
     if (this.durationNano.compareAndSet(0, Math.max(1, durationNano))) {
+      log.debug("Finished: {}", this);
       context.getTrace().addSpan(this);
     } else {
       log.debug("{} - already finished!", this);
@@ -149,7 +150,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan setTag(final String tag, final String value) {
-    this.context().setTag(tag, (Object) value);
+    context().setTag(tag, (Object) value);
     return this;
   }
 
@@ -158,7 +159,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan setTag(final String tag, final boolean value) {
-    this.context().setTag(tag, (Object) value);
+    context().setTag(tag, (Object) value);
     return this;
   }
 
@@ -167,7 +168,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan setTag(final String tag, final Number value) {
-    this.context().setTag(tag, (Object) value);
+    context().setTag(tag, (Object) value);
     return this;
   }
 
@@ -176,7 +177,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpanContext context() {
-    return this.context;
+    return context;
   }
 
   /* (non-Javadoc)
@@ -184,7 +185,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final String getBaggageItem(final String key) {
-    return this.context.getBaggageItem(key);
+    return context.getBaggageItem(key);
   }
 
   /* (non-Javadoc)
@@ -192,7 +193,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan setBaggageItem(final String key, final String value) {
-    this.context.setBaggageItem(key, value);
+    context.setBaggageItem(key, value);
     return this;
   }
 
@@ -201,7 +202,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan setOperationName(final String operationName) {
-    this.context().setOperationName(operationName);
+    context().setOperationName(operationName);
     return this;
   }
 
@@ -247,13 +248,13 @@ public class DDSpan implements Span, MutableSpan {
 
   @Override
   public final DDSpan setServiceName(final String serviceName) {
-    this.context().setServiceName(serviceName);
+    context().setServiceName(serviceName);
     return this;
   }
 
   @Override
   public final DDSpan setResourceName(final String resourceName) {
-    this.context().setResourceName(resourceName);
+    context().setResourceName(resourceName);
     return this;
   }
 
@@ -264,13 +265,13 @@ public class DDSpan implements Span, MutableSpan {
    */
   @Override
   public final DDSpan setSamplingPriority(final int newPriority) {
-    this.context().setSamplingPriority(newPriority);
+    context().setSamplingPriority(newPriority);
     return this;
   }
 
   @Override
   public final DDSpan setSpanType(final String type) {
-    this.context().setSpanType(type);
+    context().setSpanType(type);
     return this;
   }
 
@@ -371,7 +372,7 @@ public class DDSpan implements Span, MutableSpan {
   @Override
   @JsonIgnore
   public Map<String, Object> getTags() {
-    return this.context().getTags();
+    return context().getTags();
   }
 
   @JsonGetter
@@ -405,12 +406,13 @@ public class DDSpan implements Span, MutableSpan {
       this(null);
     }
 
-    public UInt64IDStringSerializer(Class<String> stringClass) {
+    public UInt64IDStringSerializer(final Class<String> stringClass) {
       super(stringClass);
     }
 
     @Override
-    public void serialize(String value, JsonGenerator gen, SerializerProvider provider)
+    public void serialize(
+        final String value, final JsonGenerator gen, final SerializerProvider provider)
         throws IOException {
       gen.writeNumber(value);
     }
