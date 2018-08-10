@@ -87,6 +87,7 @@ class JettyServlet3Test extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "span.origin.type" "TestServlet3\$$origin"
             "span.type" DDSpanTypes.WEB_SERVLET
             "http.status_code" 200
             if (auth) {
@@ -99,11 +100,11 @@ class JettyServlet3Test extends AgentTestRunner {
     }
 
     where:
-    path         | expectedResponse | auth
-    "async"      | "Hello Async"    | false
-    "sync"       | "Hello Sync"     | false
-    "auth/async" | "Hello Async"    | true
-    "auth/sync"  | "Hello Sync"     | true
+    path         | expectedResponse | auth  | origin
+    "async"      | "Hello Async"    | false | "Async"
+    "sync"       | "Hello Sync"     | false | "Sync"
+    "auth/async" | "Hello Async"    | true  | "Async"
+    "auth/sync"  | "Hello Sync"     | true  | "Sync"
   }
 
   def "servlet instrumentation clears state after async request"() {
@@ -157,6 +158,7 @@ class JettyServlet3Test extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "TestServlet3\$Sync"
             "http.status_code" 500
             errorTags(RuntimeException, "some $path error")
             defaultTags()
@@ -197,6 +199,7 @@ class JettyServlet3Test extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "TestServlet3\$Sync"
             "http.status_code" 500
             "error" true
             defaultTags()
