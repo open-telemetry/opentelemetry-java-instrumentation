@@ -73,5 +73,10 @@ public interface WeakMap<K, V> {
     public void put(final K key, final V value) {
       map.put(key, value);
     }
+
+    @Override
+    public String toString() {
+      return map.toString();
+    }
   }
 }

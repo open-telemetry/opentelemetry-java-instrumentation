@@ -1,6 +1,7 @@
 package datadog.trace.agent.tooling;
 
 import com.blogspot.mydailyjava.weaklockfree.WeakConcurrentMap;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.MapMaker;
 import datadog.trace.bootstrap.WeakMap;
 import java.lang.ref.WeakReference;
@@ -35,8 +36,10 @@ class WeakMapSuppliers {
    * second.
    */
   static class WeakConcurrent implements WeakMap.Supplier {
-    private static final long CLEAN_FREQUENCY_SECONDS = 1;
+
     private static final long SHUTDOWN_WAIT_SECONDS = 5;
+
+    @VisibleForTesting static final long CLEAN_FREQUENCY_SECONDS = 1;
 
     private static final ThreadFactory THREAD_FACTORY =
         new ThreadFactory() {
@@ -49,28 +52,7 @@ class WeakMapSuppliers {
           }
         };
 
-    private static final ScheduledExecutorService CLEANER =
-        Executors.newScheduledThreadPool(1, THREAD_FACTORY);
-
-    static {
-      try {
-        Runtime.getRuntime()
-            .addShutdownHook(
-                new Thread() {
-                  @Override
-                  public void run() {
-                    try {
-                      CLEANER.shutdownNow();
-                      CLEANER.awaitTermination(SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS);
-                    } catch (final InterruptedException e) {
-                      // Don't bother waiting then...
-                    }
-                  }
-                });
-      } catch (final IllegalStateException ex) {
-        // The JVM is already shutting down.
-      }
-    }
+    private final ScheduledExecutorService cleanerExecutorService;
 
     private final Queue<WeakReference<WeakConcurrentMap>> suppliedMaps =
         new ConcurrentLinkedQueue<>();
@@ -79,24 +61,41 @@ class WeakMapSuppliers {
         new Runnable() {
           @Override
           public void run() {
-            cleanMaps();
+            for (final Iterator<WeakReference<WeakConcurrentMap>> iterator =
+                    suppliedMaps.iterator();
+                iterator.hasNext(); ) {
+              final WeakConcurrentMap map = iterator.next().get();
+              if (map == null) {
+                iterator.remove();
+              } else {
+                map.expungeStaleEntries();
+              }
+            }
           }
         };
 
     WeakConcurrent() {
-      CLEANER.scheduleAtFixedRate(
+      cleanerExecutorService = Executors.newScheduledThreadPool(1, THREAD_FACTORY);
+      cleanerExecutorService.scheduleAtFixedRate(
           runnable, CLEAN_FREQUENCY_SECONDS, CLEAN_FREQUENCY_SECONDS, TimeUnit.SECONDS);
-    }
 
-    public void cleanMaps() {
-      for (final Iterator<WeakReference<WeakConcurrentMap>> iterator = suppliedMaps.iterator();
-          iterator.hasNext(); ) {
-        final WeakConcurrentMap map = iterator.next().get();
-        if (map == null) {
-          iterator.remove();
-        } else {
-          map.expungeStaleEntries();
-        }
+      try {
+        Runtime.getRuntime()
+            .addShutdownHook(
+                new Thread() {
+                  @Override
+                  public void run() {
+                    try {
+                      cleanerExecutorService.shutdownNow();
+                      cleanerExecutorService.awaitTermination(
+                          SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS);
+                    } catch (final InterruptedException e) {
+                      // Don't bother waiting then...
+                    }
+                  }
+                });
+      } catch (final IllegalStateException ex) {
+        // The JVM is already shutting down.
       }
     }
 
@@ -149,6 +148,11 @@ class WeakMapSuppliers {
     @Override
     public <K, V> WeakMap<K, V> get() {
       return new WeakMap.MapAdapter<>(new MapMaker().weakKeys().<K, V>makeMap());
+    }
+
+    public <K, V> WeakMap<K, V> get(int concurrencyLevel) {
+      return new WeakMap.MapAdapter<>(
+          new MapMaker().concurrencyLevel(concurrencyLevel).weakKeys().<K, V>makeMap());
     }
   }
 }
