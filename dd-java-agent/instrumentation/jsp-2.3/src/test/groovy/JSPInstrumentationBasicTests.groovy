@@ -98,6 +98,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
@@ -114,6 +115,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
@@ -175,6 +177,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
@@ -191,6 +194,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "getQuery_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
@@ -249,6 +253,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
@@ -265,6 +270,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "post_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
@@ -320,6 +326,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 500
             errorTags(JasperException, String)
@@ -337,6 +344,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             errorTags(exceptionClass, errorMessage)
@@ -398,6 +406,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
@@ -414,6 +423,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "includeHtml_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
@@ -468,6 +478,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
@@ -484,6 +495,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
@@ -500,6 +512,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
@@ -533,6 +546,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
@@ -604,6 +618,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 500
             errorTags(JasperException, String)
