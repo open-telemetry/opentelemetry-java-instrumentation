@@ -78,7 +78,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return safeHasSuperType(declaresMethod(isAnnotatedWith(methodTraceMatcher)));
   }
 

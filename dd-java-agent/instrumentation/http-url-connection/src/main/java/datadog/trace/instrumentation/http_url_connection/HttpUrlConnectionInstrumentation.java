@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import javax.net.ssl.HttpsURLConnection;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
@@ -39,7 +40,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return safeHasSuperType(named("java.net.HttpURLConnection"))
         // This class is a simple delegator. Skip because it does not update its `connected` field.
         .and(not(named("sun.net.www.protocol.https.HttpsURLConnectionImpl")));

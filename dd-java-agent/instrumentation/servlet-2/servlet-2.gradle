@@ -6,8 +6,8 @@ versionScan {
   versions = "[2.3,)"
   verifyPresent = [
     "javax.servlet.ServletContextEvent": null,
-    "javax.servlet.FilterChain"        : null,
   ]
+  // Code should also verify against what servlet-3 instrumentation is using.
 }
 
 apply from: "${rootDir}/gradle/java.gradle"

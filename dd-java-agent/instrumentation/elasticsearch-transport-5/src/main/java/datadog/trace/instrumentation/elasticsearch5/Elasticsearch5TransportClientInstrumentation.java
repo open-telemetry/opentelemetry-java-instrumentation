@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.action.Action;
 import org.elasticsearch.action.ActionListener;
@@ -39,14 +40,14 @@ public class Elasticsearch5TransportClientInstrumentation extends Instrumenter.D
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     // If we want to be more generic, we could instrument the interface instead:
     // .and(safeHasSuperType(named("org.elasticsearch.client.ElasticsearchClient"))))
     return not(isInterface()).and(named("org.elasticsearch.client.support.AbstractClient"));
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     return classLoaderHasClasses("org.elasticsearch.percolator.TransportMultiPercolateAction");
   }
 

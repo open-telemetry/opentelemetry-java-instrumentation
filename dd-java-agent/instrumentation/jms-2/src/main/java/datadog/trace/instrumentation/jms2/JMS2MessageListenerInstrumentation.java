@@ -28,6 +28,7 @@ import java.util.Map;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
@@ -38,12 +39,12 @@ public final class JMS2MessageListenerInstrumentation extends Instrumenter.Defau
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface()).and(safeHasSuperType(named("javax.jms.MessageListener")));
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     return classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener");
   }
 

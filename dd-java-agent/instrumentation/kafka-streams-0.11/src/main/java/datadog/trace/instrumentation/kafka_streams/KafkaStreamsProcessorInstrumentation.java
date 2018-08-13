@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
 
@@ -41,12 +42,12 @@ public class KafkaStreamsProcessorInstrumentation {
     }
 
     @Override
-    public ElementMatcher typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.apache.kafka.streams.processor.internals.PartitionGroup");
     }
 
     @Override
-    public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
       return classLoaderHasClasses("org.apache.kafka.streams.state.internals.OrderedBytes");
     }
 
@@ -57,7 +58,7 @@ public class KafkaStreamsProcessorInstrumentation {
 
     @Override
     public Map<ElementMatcher, String> transformers() {
-      Map<ElementMatcher, String> transformers = new HashMap<>();
+      final Map<ElementMatcher, String> transformers = new HashMap<>();
       transformers.put(
           isMethod()
               .and(isPackagePrivate())
@@ -103,12 +104,12 @@ public class KafkaStreamsProcessorInstrumentation {
     }
 
     @Override
-    public ElementMatcher typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.apache.kafka.streams.processor.internals.StreamTask");
     }
 
     @Override
-    public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
       return classLoaderHasClasses(
           "org.apache.kafka.common.header.Header", "org.apache.kafka.common.header.Headers");
     }
@@ -120,7 +121,7 @@ public class KafkaStreamsProcessorInstrumentation {
 
     @Override
     public Map<ElementMatcher, String> transformers() {
-      Map<ElementMatcher, String> transformers = new HashMap<>();
+      final Map<ElementMatcher, String> transformers = new HashMap<>();
       transformers.put(
           isMethod().and(isPublic()).and(named("process")).and(takesArguments(0)),
           StopSpanAdvice.class.getName());

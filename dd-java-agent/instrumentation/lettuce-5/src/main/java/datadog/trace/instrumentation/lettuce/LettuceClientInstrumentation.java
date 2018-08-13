@@ -13,6 +13,7 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
@@ -32,12 +33,12 @@ public final class LettuceClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.lettuce.core.RedisClient");
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     return classLoaderHasClasses("io.lettuce.core.RedisClient");
   }
 

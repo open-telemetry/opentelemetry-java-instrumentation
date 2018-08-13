@@ -93,7 +93,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
         .and(safeHasSuperType(named(Executor.class.getName())))
         .and(

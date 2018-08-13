@@ -28,7 +28,7 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.mongodb.MongoClientOptions$Builder")
         .and(
             declaresMethod(
@@ -50,7 +50,7 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
         MongoClientAdvice.class.getName());

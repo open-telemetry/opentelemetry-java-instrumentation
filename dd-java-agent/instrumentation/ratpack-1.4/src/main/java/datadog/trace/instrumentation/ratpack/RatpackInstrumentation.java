@@ -43,12 +43,12 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("ratpack.server.internal.ServerRegistry");
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     return CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE;
   }
 
@@ -90,12 +90,12 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
     }
 
     @Override
-    public ElementMatcher typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return not(isInterface()).and(safeHasSuperType(named("ratpack.exec.ExecStarter")));
     }
 
     @Override
-    public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
       return CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE;
     }
 
@@ -134,13 +134,13 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
     }
 
     @Override
-    public ElementMatcher typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return named("ratpack.exec.Execution")
           .or(not(isInterface()).and(safeHasSuperType(named("ratpack.exec.Execution"))));
     }
 
     @Override
-    public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
       return CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE;
     }
 

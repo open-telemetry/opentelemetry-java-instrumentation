@@ -12,6 +12,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.record.TimestampType;
@@ -25,18 +26,18 @@ public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation extends Ins
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.kafka.streams.processor.internals.SourceNodeRecordDeserializer");
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     return classLoaderHasClasses("org.apache.kafka.streams.state.internals.OrderedBytes");
   }
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(isPublic())

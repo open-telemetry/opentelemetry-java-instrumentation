@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
@@ -25,12 +26,12 @@ public class OkHttp3Instrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("okhttp3.OkHttpClient");
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     return classLoaderHasClasses(
         "okhttp3.Request",
         "okhttp3.Response",
@@ -60,7 +61,7 @@ public class OkHttp3Instrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         isConstructor().and(takesArgument(0, named("okhttp3.OkHttpClient$Builder"))),
         OkHttp3Advice.class.getName());

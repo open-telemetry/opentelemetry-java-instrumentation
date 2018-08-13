@@ -12,6 +12,7 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
@@ -28,14 +29,14 @@ public final class HandlerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
         .and(safeHasSuperType(named("org.eclipse.jetty.server.Handler")))
         .and(not(named("org.eclipse.jetty.server.handler.HandlerWrapper")));
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     return not(classLoaderHasClasses("org.eclipse.jetty.server.AsyncContext"));
   }
 

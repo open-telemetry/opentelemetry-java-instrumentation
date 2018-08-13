@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
@@ -29,7 +30,7 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return isAbstract()
         .and(
             named("com.amazonaws.AmazonWebServiceClient")
@@ -37,7 +38,7 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     return classLoaderHasClasses("com.amazonaws.HandlerContextAware");
   }
 
@@ -51,7 +52,7 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(isConstructor(), AWSClientAdvice.class.getName());
     return transformers;
   }
