@@ -13,6 +13,9 @@ public class MuzzleGradlePlugin implements Plugin {
 
   @Override
   public boolean matches(final TypeDescription target) {
+    if (target.isAbstract()) {
+      return false;
+    }
     // AutoService annotation is not retained at runtime. Check for Instrumenter.Default supertype
     boolean isInstrumenter = false;
     TypeDefinition instrumenter = null == target ? null : target.getSuperClass();
@@ -27,7 +30,7 @@ public class MuzzleGradlePlugin implements Plugin {
   }
 
   @Override
-  public Builder<?> apply(Builder<?> builder, TypeDescription typeDescription) {
+  public Builder<?> apply(final Builder<?> builder, final TypeDescription typeDescription) {
     return builder.visit(new MuzzleVisitor());
   }
 
@@ -39,7 +42,7 @@ public class MuzzleGradlePlugin implements Plugin {
     }
 
     @Override
-    public Builder<?> apply(Builder<?> builder, TypeDescription typeDescription) {
+    public Builder<?> apply(final Builder<?> builder, final TypeDescription typeDescription) {
       return builder;
     }
   }
