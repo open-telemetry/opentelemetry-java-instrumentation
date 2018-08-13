@@ -6,7 +6,6 @@ import io.opentracing.Span;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.io.IOException;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.client.ClientRequestContext;
@@ -18,10 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Priority(Priorities.HEADER_DECORATOR)
 public class ClientTracingFilter implements ClientRequestFilter, ClientResponseFilter {
-  private static final String PROPERTY_NAME = ClientTracingFilter.class.getName() + ".span";
+  public static final String SPAN_PROPERTY_NAME = "datadog.trace.jaxrs.span"; // Copied elsewhere
 
   @Override
-  public void filter(final ClientRequestContext requestContext) throws IOException {
+  public void filter(final ClientRequestContext requestContext) {
 
     final Span span =
         GlobalTracer.get()
@@ -41,14 +40,14 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
             span.context(),
             Format.Builtin.HTTP_HEADERS,
             new InjectAdapter(requestContext.getHeaders()));
-    requestContext.setProperty(PROPERTY_NAME, span);
+
+    requestContext.setProperty(SPAN_PROPERTY_NAME, span);
   }
 
   @Override
   public void filter(
-      final ClientRequestContext requestContext, final ClientResponseContext responseContext)
-      throws IOException {
-    final Object spanObj = requestContext.getProperty(PROPERTY_NAME);
+      final ClientRequestContext requestContext, final ClientResponseContext responseContext) {
+    final Object spanObj = requestContext.getProperty(SPAN_PROPERTY_NAME);
     if (spanObj instanceof Span) {
       final Span span = (Span) spanObj;
       Tags.HTTP_STATUS.set(span, responseContext.getStatus());

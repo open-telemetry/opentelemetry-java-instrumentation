@@ -10,9 +10,10 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 
 // add all subprojects under 'instrumentation' to the agent's dependencies
+def skip = ["connection-error-handling"]
 Project instr_project = project
 subprojects { subProj ->
-  if (subProj.getParent() == instr_project) {
+  if (!skip.contains(name)) {
     apply plugin: "net.bytebuddy.byte-buddy"
     apply plugin: 'muzzle'
 
