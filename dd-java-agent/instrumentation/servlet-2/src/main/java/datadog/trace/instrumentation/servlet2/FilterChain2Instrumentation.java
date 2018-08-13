@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.servlet2;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -12,31 +11,15 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Map;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class FilterChain2Instrumentation extends Instrumenter.Default {
-
-  public FilterChain2Instrumentation() {
-    super("servlet", "servlet-2");
-  }
+public final class FilterChain2Instrumentation extends AbstractServlet2Instrumentation {
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface()).and(safeHasSuperType(named("javax.servlet.FilterChain")));
-  }
-
-  @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
-    return not(classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"))
-        .and(
-            classLoaderHasClasses(
-                "javax.servlet.ServletContextEvent", "javax.servlet.ServletRequest"));
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return HttpServlet2Instrumentation.HELPERS;
   }
 
   @Override

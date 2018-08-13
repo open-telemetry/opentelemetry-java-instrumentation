@@ -46,7 +46,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("akka.http.scaladsl.HttpExt");
   }
 

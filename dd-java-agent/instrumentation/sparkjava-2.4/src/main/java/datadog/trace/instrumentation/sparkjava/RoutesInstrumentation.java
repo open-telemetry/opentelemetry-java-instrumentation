@@ -13,6 +13,7 @@ import io.opentracing.util.GlobalTracer;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import spark.route.HttpMethod;
 import spark.routematch.RouteMatch;
@@ -30,13 +31,13 @@ public class RoutesInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("spark.route.Routes");
   }
 
   @Override
   public Map<ElementMatcher, String> transformers() {
-    Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         named("find")
             .and(takesArgument(0, named("spark.route.HttpMethod")))

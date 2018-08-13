@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.spy.memcached.MemcachedClient;
 import net.spy.memcached.internal.BulkFuture;
@@ -33,12 +34,12 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named(MEMCACHED_PACKAGE + ".MemcachedClient");
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     // Target 2.12 that has this method
     return classLoaderHasClassWithMethod(
         MEMCACHED_PACKAGE + ".ConnectionFactoryBuilder",

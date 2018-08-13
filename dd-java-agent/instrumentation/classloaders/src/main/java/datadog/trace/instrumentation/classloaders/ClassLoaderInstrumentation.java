@@ -26,7 +26,7 @@ public final class ClassLoaderInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return safeHasSuperType(named("java.lang.ClassLoader"));
   }
 

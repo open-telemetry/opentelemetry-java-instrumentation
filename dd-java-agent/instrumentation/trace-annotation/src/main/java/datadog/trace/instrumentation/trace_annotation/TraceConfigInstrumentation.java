@@ -116,7 +116,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
     }
 
     @Override
-    public ElementMatcher<? super TypeDescription> typeMatcher() {
+    public ElementMatcher<TypeDescription> typeMatcher() {
       return safeHasSuperType(named(className));
     }
 
@@ -138,12 +138,12 @@ public class TraceConfigInstrumentation implements Instrumenter {
   }
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     throw new RuntimeException("TracerConfigInstrumentation must not use TypeMatcher");
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     throw new RuntimeException("TracerConfigInstrumentation must not use classLoaderMatcher");
   }
 

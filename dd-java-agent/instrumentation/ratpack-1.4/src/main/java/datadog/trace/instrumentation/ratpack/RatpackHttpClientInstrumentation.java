@@ -34,12 +34,12 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Default
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface()).and(safeHasSuperType(named("ratpack.http.client.HttpClient")));
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     return CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE;
   }
 

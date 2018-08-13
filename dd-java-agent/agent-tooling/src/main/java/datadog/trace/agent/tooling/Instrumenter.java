@@ -158,7 +158,7 @@ public interface Instrumenter {
     }
 
     @Override
-    public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+    public ElementMatcher<ClassLoader> classLoaderMatcher() {
       return any();
     }
 

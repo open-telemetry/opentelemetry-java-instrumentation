@@ -46,12 +46,12 @@ public final class JMS1MessageConsumerInstrumentation extends Instrumenter.Defau
   }
 
   @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface()).and(safeHasSuperType(named("javax.jms.MessageConsumer")));
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     return not(classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener"));
   }
 

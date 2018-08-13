@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.http.impl.execchain.ClientExecChain;
 
@@ -30,13 +31,13 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher typeMatcher() {
+  public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.http.impl.client.HttpClientBuilder")
         .or(safeHasSuperType(named("org.apache.http.impl.client.CloseableHttpClient")));
   }
 
   @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
+  public ElementMatcher<ClassLoader> classLoaderMatcher() {
     return classLoaderHasClasses(
         "org.apache.http.HttpException",
         "org.apache.http.HttpRequest",
