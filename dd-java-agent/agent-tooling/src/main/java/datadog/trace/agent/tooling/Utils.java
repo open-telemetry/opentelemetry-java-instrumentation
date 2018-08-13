@@ -22,6 +22,8 @@ public class Utils {
     "com.google.auto",
     "com.google.common",
     "com.google.thirdparty.publicsuffix",
+    // WeakConcurrentMap
+    "com.blogspot.mydailyjava.weaklockfree",
     // bytebuddy
     "net.bytebuddy",
     // OT contribs for dd trace resolver
@@ -34,13 +36,13 @@ public class Utils {
 
   private static Method findLoadedClassMethod = null;
 
-  private static BootstrapClassLoaderProxy unitTestBootstrapProxy =
+  private static final BootstrapClassLoaderProxy unitTestBootstrapProxy =
       new BootstrapClassLoaderProxy(new URL[0], null);
 
   static {
     try {
       findLoadedClassMethod = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
-    } catch (NoSuchMethodException | SecurityException e) {
+    } catch (final NoSuchMethodException | SecurityException e) {
       throw new IllegalStateException(e);
     }
   }

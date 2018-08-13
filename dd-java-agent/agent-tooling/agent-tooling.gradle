@@ -9,6 +9,7 @@ configurations {
 
 dependencies {
   compile project(':dd-java-agent:agent-bootstrap')
+  compile group: 'com.blogspot.mydailyjava', name: 'weak-lock-free', version: '0.13'
   compile deps.bytebuddy
   compile deps.bytebuddyagent
   annotationProcessor deps.autoservice
@@ -17,6 +18,7 @@ dependencies {
   compileOnly project(':dd-trace-ot')
 
   testCompile deps.opentracing
+  testCompile project(':dd-java-agent:testing')
 
   instrumentationMuzzle sourceSets.main.output
   instrumentationMuzzle configurations.compile

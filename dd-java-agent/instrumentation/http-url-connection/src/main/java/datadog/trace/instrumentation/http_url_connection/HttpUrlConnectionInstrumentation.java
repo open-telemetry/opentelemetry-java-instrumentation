@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.http_url_connection;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -12,6 +13,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
+import datadog.trace.bootstrap.WeakMap;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -21,7 +23,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
-import java.util.WeakHashMap;
 import javax.net.ssl.HttpsURLConnection;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -175,8 +176,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   }
 
   public static class HttpURLState {
-    private static final Map<HttpURLConnection, HttpURLState> STATE_MAP =
-        Collections.synchronizedMap(new WeakHashMap<HttpURLConnection, HttpURLState>());
+    private static final WeakMap<HttpURLConnection, HttpURLState> STATE_MAP = newWeakMap();
 
     public static HttpURLState get(final HttpURLConnection connection) {
       HttpURLState state = STATE_MAP.get(connection);
