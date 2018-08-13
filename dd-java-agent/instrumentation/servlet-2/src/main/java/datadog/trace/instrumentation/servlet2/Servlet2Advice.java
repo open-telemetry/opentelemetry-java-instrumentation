@@ -13,7 +13,6 @@ import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
 import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 
@@ -58,10 +57,7 @@ public class Servlet2Advice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Argument(0) final ServletRequest request,
-      @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final Scope scope,
-      @Advice.Thrown final Throwable throwable) {
+      @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
 
     if (scope != null) {
       final Span span = scope.span();
