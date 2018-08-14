@@ -1,5 +1,6 @@
 package datadog.trace.agent.tooling;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.failSafe;
 import static datadog.trace.agent.tooling.Utils.getConfigEnabled;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
@@ -80,29 +81,19 @@ public interface Instrumenter {
 
       AgentBuilder.Identified.Extendable agentBuilder =
           parentAgentBuilder
-              .type(safeTypeMatcher(typeMatcher()), classLoaderMatcher())
+              .type(
+                  failSafe(
+                      typeMatcher(),
+                      "Instrumentation type matcher unexpected exception: " + getClass().getName()),
+                  failSafe(
+                      classLoaderMatcher(),
+                      "Instrumentation class loader matcher unexpected exception: "
+                          + getClass().getName()))
               .and(new MuzzleMatcher())
               .transform(DDTransformers.defaultTransformers());
       agentBuilder = injectHelperClasses(agentBuilder);
       agentBuilder = applyInstrumentationTransformers(agentBuilder);
       return agentBuilder.asDecorator();
-    }
-
-    /** Wrap an ElementMatcher in a try-catch exception and log any exceptions. */
-    private ElementMatcher<? super TypeDescription> safeTypeMatcher(
-        final ElementMatcher<? super TypeDescription> instrumentationMatcher) {
-      return new ElementMatcher<TypeDescription>() {
-        @Override
-        public boolean matches(TypeDescription target) {
-          try {
-            return instrumentationMatcher.matches(target);
-          } catch (Exception e) {
-            log.debug(
-                "Instrumentation matcher unexpected exception: " + instrumentationPrimaryName, e);
-            return false;
-          }
-        }
-      };
     }
 
     private AgentBuilder.Identified.Extendable injectHelperClasses(
@@ -151,7 +142,7 @@ public interface Instrumenter {
                   instrumentationPrimaryName,
                   getClass().getName(),
                   classLoader);
-              for (Reference.Mismatch mismatch : mismatches) {
+              for (final Reference.Mismatch mismatch : mismatches) {
                 log.debug("-- {}", mismatch);
               }
             }
@@ -159,7 +150,7 @@ public interface Instrumenter {
             log.debug(
                 "Applying instrumentation: {} -- {} on {}",
                 instrumentationPrimaryName,
-                this.getClass().getName(),
+                getClass().getName(),
                 classLoader);
           }
           return mismatches.size() == 0;
