@@ -129,8 +129,8 @@ public class ByteBuddyElementMatchers {
     }
 
     /**
-     * TypeDefinition#getInterfaces() may throw an exception during iteration if an interface is
-     * absent from the classpath.
+     * TypeDefinition#getInterfaces() produces an interator which may throw an exception during
+     * iteration if an interface is absent from the classpath.
      *
      * <p>This method exists to allow getting interfaces even if the lookup on one fails.
      */
