@@ -80,12 +80,29 @@ public interface Instrumenter {
 
       AgentBuilder.Identified.Extendable agentBuilder =
           parentAgentBuilder
-              .type(typeMatcher(), classLoaderMatcher())
+              .type(safeTypeMatcher(typeMatcher()), classLoaderMatcher())
               .and(new MuzzleMatcher())
               .transform(DDTransformers.defaultTransformers());
       agentBuilder = injectHelperClasses(agentBuilder);
       agentBuilder = applyInstrumentationTransformers(agentBuilder);
       return agentBuilder.asDecorator();
+    }
+
+    /** Wrap an ElementMatcher in a try-catch exception and log any exceptions. */
+    private ElementMatcher<? super TypeDescription> safeTypeMatcher(
+        final ElementMatcher<? super TypeDescription> instrumentationMatcher) {
+      return new ElementMatcher<TypeDescription>() {
+        @Override
+        public boolean matches(TypeDescription target) {
+          try {
+            return instrumentationMatcher.matches(target);
+          } catch (Exception e) {
+            log.debug(
+                "Instrumentation matcher unexpected exception: " + instrumentationPrimaryName, e);
+            return false;
+          }
+        }
+      };
     }
 
     private AgentBuilder.Identified.Extendable injectHelperClasses(
