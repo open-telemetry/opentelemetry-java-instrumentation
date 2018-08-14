@@ -91,20 +91,11 @@ public class ByteBuddyElementMatchers {
       // in {@code getSuperClass} calls
       TypeDefinition typeDefinition = target;
       while (typeDefinition != null) {
-        if (safeMatches(typeDefinition.asGenericType())
+        if (matcher.matches(typeDefinition.asGenericType())
             || hasInterface(typeDefinition, checkedInterfaces)) {
           return true;
         }
         typeDefinition = safeGetSuperClass(typeDefinition);
-      }
-      return false;
-    }
-
-    private boolean safeMatches(TypeDescription.Generic target) {
-      try {
-        return matcher.matches(target);
-      } catch (final Exception e) {
-        log.debug(matcher + ": Exception trying to get match generic type description:", e);
       }
       return false;
     }
@@ -129,7 +120,7 @@ public class ByteBuddyElementMatchers {
         final TypeDefinition typeDefinition, final Set<TypeDescription> checkedInterfaces) {
       for (final TypeDefinition interfaceType : safeGetInterfaces(typeDefinition)) {
         if (checkedInterfaces.add(interfaceType.asErasure())
-            && (safeMatch(interfaceType.asGenericType())
+            && (matcher.matches(interfaceType.asGenericType())
                 || hasInterface(interfaceType, checkedInterfaces))) {
           return true;
         }
@@ -137,15 +128,12 @@ public class ByteBuddyElementMatchers {
       return false;
     }
 
-    private boolean safeMatch(TypeDescription.Generic target) {
-      try {
-        return matcher.matches(target);
-      } catch (final Exception e) {
-        log.debug(matcher + ": Exception while matching:", e);
-      }
-      return false;
-    }
-
+    /**
+     * TypeDefinition#getInterfaces() may throw an exception during iteration if an interface is
+     * absent from the classpath.
+     *
+     * <p>This method exists to allow getting interfaces even if the lookup on one fails.
+     */
     private List<TypeDefinition> safeGetInterfaces(final TypeDefinition typeDefinition) {
       final List<TypeDefinition> interfaceTypes = new ArrayList<>();
       try {

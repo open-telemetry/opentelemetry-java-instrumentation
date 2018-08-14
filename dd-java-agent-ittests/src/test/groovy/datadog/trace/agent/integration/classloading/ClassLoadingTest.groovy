@@ -71,6 +71,7 @@ class ClassLoadingTest extends Specification {
 
     then:
     // ClassToInstrumentChild won't cause an additional getResource() because its TypeDescription is created from transformation bytes.
+    loader.count > 0
     loader.count == countAfterFirstLoad
   }
 
