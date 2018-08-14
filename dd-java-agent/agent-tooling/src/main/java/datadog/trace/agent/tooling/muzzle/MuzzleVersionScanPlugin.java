@@ -82,5 +82,71 @@ public class MuzzleVersionScanPlugin {
     }
   }
 
+  public static void printMuzzleReferences() {
+    for (Instrumenter instrumenter :
+        ServiceLoader.load(Instrumenter.class, MuzzleGradlePlugin.class.getClassLoader())) {
+      if (instrumenter instanceof Instrumenter.Default) {
+        try {
+          final Method getMuzzleMethod =
+              instrumenter.getClass().getDeclaredMethod("getInstrumentationMuzzle");
+          final ReferenceMatcher muzzle;
+          try {
+            getMuzzleMethod.setAccessible(true);
+            muzzle = (ReferenceMatcher) getMuzzleMethod.invoke(instrumenter);
+          } finally {
+            getMuzzleMethod.setAccessible(false);
+          }
+          System.out.println(instrumenter.getClass().getName());
+          for (Reference ref : muzzle.getReferences()) {
+            System.out.println(prettyPrint("  ", ref));
+          }
+        } catch (Exception e) {
+          System.out.println(
+              "Unexpected exception printing references for " + instrumenter.getClass().getName());
+          throw new RuntimeException(e);
+        }
+      } else {
+        throw new RuntimeException(
+            "class "
+                + instrumenter.getClass().getName()
+                + " is not a default instrumenter. No refs to print.");
+      }
+    }
+  }
+
+  private static String prettyPrint(String prefix, Reference ref) {
+    final StringBuilder builder = new StringBuilder(prefix).append(ref.getClassName());
+    if (ref.getSuperName() != null) {
+      builder.append(" extends<").append(ref.getSuperName()).append(">");
+    }
+    if (ref.getInterfaces().size() > 0) {
+      builder.append(" implements ");
+      for (String iface : ref.getInterfaces()) {
+        builder.append(" <").append(iface).append(">");
+      }
+    }
+    for (final Reference.Source source : ref.getSources()) {
+      builder.append("\n").append(prefix).append(prefix);
+      builder.append("Source: ").append(source.toString());
+    }
+    for (final Reference.Field field : ref.getFields()) {
+      builder.append("\n").append(prefix).append(prefix);
+      builder.append("Field: ");
+      for (Reference.Flag flag : field.getFlags()) {
+        builder.append(flag).append(" ");
+      }
+      builder.append(field.toString());
+    }
+    for (final Reference.Method method : ref.getMethods()) {
+      builder.append("\n").append(prefix).append(prefix);
+      builder.append("Method: ");
+      for (Reference.Flag flag : method.getFlags()) {
+        builder.append(flag).append(" ");
+      }
+      builder.append(method.toString());
+    }
+    return builder.toString();
+  }
+
   private MuzzleVersionScanPlugin() {}
 }

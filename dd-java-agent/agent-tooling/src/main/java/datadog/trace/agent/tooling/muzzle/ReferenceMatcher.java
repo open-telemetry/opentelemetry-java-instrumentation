@@ -1,6 +1,5 @@
 package datadog.trace.agent.tooling.muzzle;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
 import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
@@ -9,13 +8,12 @@ import datadog.trace.agent.tooling.Utils;
 import datadog.trace.agent.tooling.muzzle.Reference.Mismatch;
 import datadog.trace.agent.tooling.muzzle.Reference.Source;
 import datadog.trace.bootstrap.WeakMap;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.WeakHashMap;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
@@ -36,6 +34,10 @@ public class ReferenceMatcher {
   public ReferenceMatcher(final String[] helperClassNames, final Reference[] references) {
     this.references = references;
     this.helperClassNames = new HashSet<>(Arrays.asList(helperClassNames));
+  }
+
+  public Reference[] getReferences() {
+    return references;
   }
 
   /**
