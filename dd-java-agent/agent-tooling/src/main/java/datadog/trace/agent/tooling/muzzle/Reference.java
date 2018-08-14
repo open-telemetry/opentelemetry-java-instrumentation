@@ -84,8 +84,8 @@ public class Reference {
         className,
         superName,
         merge(interfaces, anotherReference.interfaces),
-        merge(fields, anotherReference.fields),
-        merge(methods, anotherReference.methods));
+        mergeFields(fields, anotherReference.fields),
+        mergeMethods(methods, anotherReference.methods));
   }
 
   private static <T> Set<T> merge(Set<T> set1, Set<T> set2) {
@@ -93,6 +93,32 @@ public class Reference {
     set.addAll(set1);
     set.addAll(set2);
     return set;
+  }
+
+  private static Set<Method> mergeMethods(Set<Method> methods1, Set<Method> methods2) {
+    List<Method> merged = new ArrayList<>(methods1);
+    for (Method method : methods2) {
+      int i = merged.indexOf(method);
+      if (i == -1) {
+        merged.add(method);
+      } else {
+        merged.set(i, merged.get(i).merge(method));
+      }
+    }
+    return new HashSet<>(merged);
+  }
+
+  private static Set<Field> mergeFields(Set<Field> fields1, Set<Field> fields2) {
+    List<Field> merged = new ArrayList<>(fields1);
+    for (Field field : fields2) {
+      int i = merged.indexOf(field);
+      if (i == -1) {
+        merged.add(field);
+      } else {
+        merged.set(i, merged.get(i).merge(field));
+      }
+    }
+    return new HashSet<>(merged);
   }
 
   private static Set<Flag> mergeFlags(Set<Flag> flags1, Set<Flag> flags2) {
@@ -144,8 +170,15 @@ public class Reference {
     }
   }
 
+  /**
+   * A mismatch between a Reference and a runtime class.
+   *
+   * <p>This class' toString returns a human-readable description of the mismatch along with
+   * source-code locations of the instrumentation which caused the mismatch.
+   */
   public abstract static class Mismatch {
-    final Source[] mismatchSources;
+    /** Instrumentation sources which caused the mismatch. */
+    private final Source[] mismatchSources;
 
     Mismatch(Source[] mismatchSources) {
       this.mismatchSources = mismatchSources;
@@ -160,10 +193,11 @@ public class Reference {
       }
     }
 
+    /** Human-readable string describing the mismatch. */
     abstract String getMismatchDetails();
 
     public static class MissingClass extends Mismatch {
-      final String className;
+      private final String className;
 
       public MissingClass(Source[] sources, String className) {
         super(sources);
@@ -177,9 +211,9 @@ public class Reference {
     }
 
     public static class MissingFlag extends Mismatch {
-      final Flag expectedFlag;
-      final String classMethodOrFieldDesc;
-      final int foundAccess;
+      private final Flag expectedFlag;
+      private final String classMethodOrFieldDesc;
+      private final int foundAccess;
 
       public MissingFlag(
           Source[] sources, String classMethodOrFieldDesc, Flag expectedFlag, int foundAccess) {
@@ -197,14 +231,14 @@ public class Reference {
 
     /** Fallback mismatch in case an unexpected exception occurs during reference checking. */
     public static class ReferenceCheckError extends Mismatch {
-      private final Exception referenceCheckExcetpion;
+      private final Exception referenceCheckException;
       private final Reference referenceBeingChecked;
       private final ClassLoader classLoaderBeingChecked;
 
       public ReferenceCheckError(
           Exception e, Reference referenceBeingChecked, ClassLoader classLoaderBeingChecked) {
         super(new Source[0]);
-        this.referenceCheckExcetpion = e;
+        this.referenceCheckException = e;
         this.referenceBeingChecked = referenceBeingChecked;
         this.classLoaderBeingChecked = classLoaderBeingChecked;
       }
@@ -219,7 +253,7 @@ public class Reference {
         sw.write("\n");
         // add exception message and stack trace
         final PrintWriter pw = new PrintWriter(sw);
-        referenceCheckExcetpion.printStackTrace(pw);
+        referenceCheckException.printStackTrace(pw);
         return sw.toString();
       }
     }
@@ -243,8 +277,8 @@ public class Reference {
     }
 
     public static class MissingMethod extends Mismatch {
-      final String className;
-      final String method;
+      private final String className;
+      private final String method;
 
       public MissingMethod(Source[] sources, String className, String method) {
         super(sources);
@@ -299,7 +333,7 @@ public class Reference {
 
       @Override
       public boolean matches(int asmFlags) {
-        return (Opcodes.ACC_PUBLIC & asmFlags) != 0 || (Opcodes.ACC_PROTECTED & asmFlags) != 0;
+        return PUBLIC.matches(asmFlags) || (Opcodes.ACC_PROTECTED & asmFlags) != 0;
       }
     },
     PRIVATE_OR_HIGHER {
@@ -464,8 +498,6 @@ public class Reference {
 
     @Override
     public String toString() {
-      // <init>()V
-      // toString()Ljava/lang/String;
       return name + getDescriptor();
     }
 
@@ -476,7 +508,8 @@ public class Reference {
     @Override
     public boolean equals(Object o) {
       if (o instanceof Method) {
-        return toString().equals(o.toString());
+        final Method m = (Method) o;
+        return name.equals(m.name) && getDescriptor().equals(m.getDescriptor());
       }
       return false;
     }

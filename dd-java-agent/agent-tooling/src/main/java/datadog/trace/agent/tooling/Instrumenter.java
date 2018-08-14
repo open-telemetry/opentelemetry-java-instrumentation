@@ -132,7 +132,7 @@ public interface Instrumenter {
               log.debug(
                   "Instrumentation muzzled: {} -- {} on {}",
                   instrumentationPrimaryName,
-                  this.getClass().getName(),
+                  getClass().getName(),
                   classLoader);
               for (Reference.Mismatch mismatch : mismatches) {
                 log.debug("-- {}", mismatch);

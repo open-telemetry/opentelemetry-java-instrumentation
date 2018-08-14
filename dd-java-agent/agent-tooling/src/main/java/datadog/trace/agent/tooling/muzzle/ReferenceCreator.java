@@ -26,6 +26,14 @@ import net.bytebuddy.jar.asm.Type;
 // - inner class
 // - cast opcodes in method bodies
 public class ReferenceCreator extends ClassVisitor {
+  /**
+   * Classes in this namespace will be scanned and used to create references.
+   *
+   * <p>For now we're hardcoding this to the instrumentation package so we only create references
+   * from the method advice and helper classes.
+   */
+  private static String REFERENCE_CREATION_PACKAGE = "datadog.trace.instrumentation.";
+
   public static Map<String, Reference> createReferencesFrom(
       String entryPointClassName, ClassLoader loader) {
     return ReferenceCreator.createReferencesFrom(entryPointClassName, loader, true);
@@ -63,7 +71,7 @@ public class ReferenceCreator extends ClassVisitor {
           for (Map.Entry<String, Reference> entry : instrumentationReferences.entrySet()) {
             // Don't generate references created outside of the datadog instrumentation package.
             if (!visitedSources.contains(entry.getKey())
-                && entry.getKey().startsWith("datadog.trace.instrumentation.")) {
+                && entry.getKey().startsWith(REFERENCE_CREATION_PACKAGE)) {
               instrumentationQueue.add(entry.getKey());
             }
             if (references.containsKey(entry.getKey())) {
@@ -86,6 +94,11 @@ public class ReferenceCreator extends ClassVisitor {
     return references;
   }
 
+  /**
+   * Get the package of an internal class name.
+   *
+   * <p>foo/bar/Baz -> foo/bar/
+   */
   private static String internalPackageName(String internalName) {
     return internalName.replaceAll("/[^/]+$", "");
   }
@@ -137,6 +150,17 @@ public class ReferenceCreator extends ClassVisitor {
       // protected
       return Reference.Flag.PROTECTED_OR_HIGHER;
     }
+  }
+
+  /**
+   * @return If TYPE is an array, return the underlying type. If TYPE is not an array simply return
+   *     the type.
+   */
+  private static Type underlyingType(Type type) {
+    while (type.getSort() == Type.ARRAY) {
+      type = type.getElementType();
+    }
+    return type;
   }
 
   private Map<String, Reference> references = new HashMap<>();
@@ -249,10 +273,7 @@ public class ReferenceCreator extends ClassVisitor {
                   fieldType)
               .build());
 
-      Type underlyingFieldType = fieldType;
-      while (underlyingFieldType.getSort() == Type.ARRAY) {
-        underlyingFieldType = underlyingFieldType.getElementType();
-      }
+      final Type underlyingFieldType = underlyingType(fieldType);
       if (underlyingFieldType.getSort() == Type.OBJECT) {
         addReference(
             new Reference.Builder(underlyingFieldType.getInternalName())
@@ -282,10 +303,7 @@ public class ReferenceCreator extends ClassVisitor {
       final Type methodType = Type.getMethodType(descriptor);
 
       { // ref for method return type
-        Type returnType = methodType.getReturnType();
-        while (returnType.getSort() == Type.ARRAY) {
-          returnType = returnType.getElementType();
-        }
+        final Type returnType = underlyingType(methodType.getReturnType());
         if (returnType.getSort() == Type.OBJECT) {
           addReference(
               new Reference.Builder(returnType.getInternalName())
@@ -296,9 +314,7 @@ public class ReferenceCreator extends ClassVisitor {
       }
       // refs for method param types
       for (Type paramType : methodType.getArgumentTypes()) {
-        while (paramType.getSort() == Type.ARRAY) {
-          paramType = paramType.getElementType();
-        }
+        paramType = underlyingType(paramType);
         if (paramType.getSort() == Type.OBJECT) {
           addReference(
               new Reference.Builder(paramType.getInternalName())
