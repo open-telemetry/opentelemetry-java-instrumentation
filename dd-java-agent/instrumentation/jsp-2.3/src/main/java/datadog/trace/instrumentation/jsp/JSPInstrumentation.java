@@ -58,12 +58,14 @@ public final class JSPInstrumentation extends Instrumenter.Default {
   public static class HttpJspPageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(@Advice.Argument(0) final HttpServletRequest req) {
+    public static Scope startSpan(
+        @Advice.This final Object obj, @Advice.Argument(0) final HttpServletRequest req) {
       final Scope scope =
           GlobalTracer.get()
               .buildSpan("jsp.render")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
+              .withTag("span.origin.type", obj.getClass().getSimpleName())
               .withTag("servlet.context", req.getContextPath())
               .startActive(true);
 

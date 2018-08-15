@@ -22,7 +22,8 @@ import net.bytebuddy.asm.Advice;
 public class Servlet3Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static Scope startSpan(@Advice.Argument(0) final ServletRequest req) {
+  public static Scope startSpan(
+      @Advice.This final Object servlet, @Advice.Argument(0) final ServletRequest req) {
     if (GlobalTracer.get().activeSpan() != null || !(req instanceof HttpServletRequest)) {
       // Tracing might already be applied by the FilterChain.  If so ignore this.
       return null;
@@ -44,6 +45,7 @@ public class Servlet3Advice {
             .withTag(Tags.HTTP_URL.getKey(), httpServletRequest.getRequestURL().toString())
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
             .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
+            .withTag("span.origin.type", servlet.getClass().getName())
             .withTag("servlet.context", httpServletRequest.getContextPath())
             .startActive(false);
 

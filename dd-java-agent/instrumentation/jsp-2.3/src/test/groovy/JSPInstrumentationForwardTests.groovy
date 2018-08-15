@@ -96,6 +96,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
@@ -112,6 +113,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" jspForwardFromClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
@@ -128,6 +130,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" jspForwardDestClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/$forwardFromFileName"
             "jsp.requestURL" baseUrl + "/$forwardDestFileName"
@@ -205,6 +208,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
@@ -221,6 +225,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "forwardToHtml_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
@@ -275,6 +280,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
@@ -291,6 +297,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "forwardToIncludeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
@@ -307,6 +314,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
             "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
@@ -324,6 +332,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
             "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
@@ -358,6 +367,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToIncludeMulti.jsp"
             "jsp.requestURL" baseUrl + "/includes/includeMulti.jsp"
@@ -447,6 +457,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
             defaultTags()
@@ -463,6 +474,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "forwardToJspForward_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()
@@ -479,6 +491,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "forwardToSimpleJava_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
             "jsp.requestURL" baseUrl + "/forwards/forwardToSimpleJava.jsp"
@@ -496,6 +509,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "loop_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.forwardOrigin" "/forwards/forwardToJspForward.jsp"
             "jsp.requestURL" baseUrl + "/common/loop.jsp"
@@ -585,6 +599,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 500
             errorTags(JasperException, String)
@@ -602,6 +617,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "forwardToCompileError_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             errorTags(JasperException, String)
@@ -677,6 +693,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 404
             defaultTags()
@@ -693,6 +710,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" "forwardToNonExistent_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
             defaultTags()

@@ -1,6 +1,5 @@
-import datadog.opentracing.DDSpanContext
 import datadog.trace.agent.test.AgentTestRunner
-import io.opentracing.util.GlobalTracer
+import io.opentracing.tag.Tags
 
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -10,26 +9,43 @@ import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 
+import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.TestUtils.runUnderTrace
+
 class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 
-  def "span named '#resourceName' from annotations on class"() {
+  def "span named '#name' from annotations on class"() {
     setup:
-    def scope = GlobalTracer.get().buildSpan("test").startActive(false)
-    DDSpanContext spanContext = scope.span().context()
-    obj.call()
+    runUnderTrace("test") {
+      obj.call()
+    }
 
     expect:
-    spanContext.resourceName == resourceName
-
-    cleanup:
-    scope.close()
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 2) {
+        span(0) {
+          operationName "test"
+          resourceName name
+          parent()
+          tags {
+            "$Tags.COMPONENT.key" "jax-rs"
+            defaultTags()
+          }
+        }
+        span(1) {
+          operationName "${className}.call"
+          resourceName "${className}.call"
+          childOf span(0)
+          tags {
+            "$Tags.COMPONENT.key" "jax-rs-controller"
+            defaultTags()
+          }
+        }
+      }
+    }
 
     where:
-    resourceName                | obj
-    "test"                      | new Jax() {
-      // invalid because no annotations
-      void call() {}
-    }
+    name                        | obj
     "/a"                        | new Jax() {
       @Path("/a")
       void call() {}
@@ -37,10 +53,6 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     "GET /b"                    | new Jax() {
       @GET
       @Path("/b")
-      void call() {}
-    }
-    "test"                      | new InterfaceWithPath() {
-      // invalid because no annotations
       void call() {}
     }
     "POST /c"                   | new InterfaceWithPath() {
@@ -52,10 +64,6 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
       @HEAD
       void call() {}
     }
-    "test"                      | new AbstractClassWithPath() {
-      // invalid because no annotations
-      void call() {}
-    }
     "POST /abstract/d"          | new AbstractClassWithPath() {
       @POST
       @Path("/d")
@@ -63,10 +71,6 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     }
     "PUT /abstract"             | new AbstractClassWithPath() {
       @PUT
-      void call() {}
-    }
-    "test"                      | new ChildClassWithPath() {
-      // invalid because no annotations
       void call() {}
     }
     "OPTIONS /abstract/child/e" | new ChildClassWithPath() {
@@ -79,6 +83,43 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
       void call() {}
     }
     "POST /abstract/child"      | new ChildClassWithPath()
+
+    className = getName(obj.class)
+  }
+
+  def "no annotations has no effect"() {
+    setup:
+    runUnderTrace("test") {
+      obj.call()
+    }
+
+    expect:
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "test"
+          resourceName "test"
+          tags {
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    where:
+    obj | _
+    new Jax() {
+      void call() {}
+    }   | _
+    new InterfaceWithPath() {
+      void call() {}
+    }   | _
+    new AbstractClassWithPath() {
+      void call() {}
+    }   | _
+    new ChildClassWithPath() {
+      void call() {}
+    }   | _
   }
 
   interface Jax {
@@ -101,5 +142,19 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
   class ChildClassWithPath extends AbstractClassWithPath {
     @POST
     void call() {}
+  }
+
+  def getName(Class clazz) {
+    String className = clazz.getSimpleName()
+    if (className.isEmpty()) {
+      className = clazz.getName()
+      if (clazz.getPackage() != null) {
+        final String pkgName = clazz.getPackage().getName()
+        if (!pkgName.isEmpty()) {
+          className = clazz.getName().replace(pkgName, "").substring(1)
+        }
+      }
+    }
+    return className
   }
 }

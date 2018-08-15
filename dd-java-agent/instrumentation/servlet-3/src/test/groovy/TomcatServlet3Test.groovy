@@ -6,6 +6,7 @@ import datadog.trace.api.DDSpanTypes
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.apache.catalina.Context
+import org.apache.catalina.core.ApplicationFilterChain
 import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
@@ -84,6 +85,7 @@ class TomcatServlet3Test extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" ApplicationFilterChain.name
             "servlet.context" "/my-context"
             "http.status_code" 200
             defaultTags()
@@ -124,6 +126,7 @@ class TomcatServlet3Test extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" ApplicationFilterChain.name
             "servlet.context" "/my-context"
             "http.status_code" 500
             errorTags(RuntimeException, "some $path error")
@@ -165,6 +168,7 @@ class TomcatServlet3Test extends AgentTestRunner {
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.WEB_SERVLET
+            "span.origin.type" ApplicationFilterChain.name
             "servlet.context" "/my-context"
             "http.status_code" 500
             "error" true

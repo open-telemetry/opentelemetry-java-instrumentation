@@ -43,6 +43,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 200
             defaultTags()
@@ -70,6 +71,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 200
             defaultTags()
@@ -101,6 +103,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 404
             defaultTags()
@@ -120,6 +123,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 404
             defaultTags()
@@ -153,6 +157,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 500
             errorTags NestedServletException, "Request processing failed; nested exception is java.lang.RuntimeException: qwerty"
@@ -173,6 +178,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 500
             "error" true
@@ -201,6 +207,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "http.method" "POST"
             "span.kind" "server"
             "span.type" "web"
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 200
             defaultTags()
@@ -234,6 +241,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "http.method" "POST"
             "span.kind" "server"
             "span.type" "web"
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 400
             "error" false
@@ -257,6 +265,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "http.method" "POST"
             "span.kind" "server"
             "span.type" "web"
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 400
             defaultTags()

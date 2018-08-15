@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.jaxrs;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -9,10 +10,12 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
+import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -55,11 +58,11 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   public static class JaxRsAnnotationsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void nameSpan(@Advice.This final Object obj, @Advice.Origin final Method method) {
-      // TODO: do we need caching for this?
+    public static Scope nameSpan(@Advice.Origin final Method method) {
 
+      // TODO: do we need caching for this?
       final LinkedList<Path> classPaths = new LinkedList<>();
-      Class<?> target = obj.getClass();
+      Class<?> target = method.getDeclaringClass();
       while (target != Object.class) {
         final Path annotation = target.getAnnotation(Path.class);
         if (annotation != null) {
@@ -93,6 +96,40 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         scope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
         Tags.COMPONENT.set(scope.span(), "jax-rs");
       }
+
+      // Now create a span representing the method execution.
+
+      final Class<?> clazz = method.getDeclaringClass();
+      final String methodName = method.getName();
+
+      String className = clazz.getSimpleName();
+      if (className.isEmpty()) {
+        className = clazz.getName();
+        if (clazz.getPackage() != null) {
+          final String pkgName = clazz.getPackage().getName();
+          if (!pkgName.isEmpty()) {
+            className = clazz.getName().replace(pkgName, "").substring(1);
+          }
+        }
+      }
+
+      final String operationName = className + "." + methodName;
+
+      return GlobalTracer.get()
+          .buildSpan(operationName)
+          .withTag(Tags.COMPONENT.getKey(), "jax-rs-controller")
+          .startActive(true);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void stopSpan(
+        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
+      if (throwable != null) {
+        final Span span = scope.span();
+        Tags.ERROR.set(span, true);
+        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+      }
+      scope.close();
     }
   }
 }
