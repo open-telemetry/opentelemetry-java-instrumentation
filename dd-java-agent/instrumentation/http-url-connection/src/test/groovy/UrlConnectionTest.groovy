@@ -36,7 +36,7 @@ class UrlConnectionTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            errorTags ConnectException, "Connection refused (Connection refused)"
+            errorTags ConnectException, String
             defaultTags()
           }
         }
@@ -52,7 +52,7 @@ class UrlConnectionTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" INVALID_PORT
-            errorTags ConnectException, "Connection refused (Connection refused)"
+            errorTags ConnectException, String
             defaultTags()
           }
         }

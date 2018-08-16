@@ -9,7 +9,7 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.1'
+  compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
   compileOnly group: 'javax.annotation', name: 'javax.annotation-api', version: '1.2'
 
 
@@ -22,14 +22,15 @@ dependencies {
 
   testCompile project(':dd-java-agent:testing')
 
-//  testCompile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.1'
+  testCompile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
 
   testCompile group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.25.1'
-  testCompile group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.2.2'
-  testCompile group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.5.0.Final'
+  testCompile group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.1.16'
+  testCompile group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.26.Final'
 
 //  testCompile group: 'com.sun.jersey', name: 'jersey-core', version: '1.19.4'
 //  testCompile group: 'com.sun.jersey', name: 'jersey-servlet', version: '1.19.4'
 //  testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.7.1'
-//  testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
+
+  testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
 }
