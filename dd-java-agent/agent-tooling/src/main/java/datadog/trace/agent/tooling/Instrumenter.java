@@ -1,5 +1,6 @@
 package datadog.trace.agent.tooling;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.failSafe;
 import static datadog.trace.agent.tooling.Utils.getConfigEnabled;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
@@ -80,7 +81,14 @@ public interface Instrumenter {
 
       AgentBuilder.Identified.Extendable agentBuilder =
           parentAgentBuilder
-              .type(typeMatcher(), classLoaderMatcher())
+              .type(
+                  failSafe(
+                      typeMatcher(),
+                      "Instrumentation type matcher unexpected exception: " + getClass().getName()),
+                  failSafe(
+                      classLoaderMatcher(),
+                      "Instrumentation class loader matcher unexpected exception: "
+                          + getClass().getName()))
               .and(new MuzzleMatcher())
               .transform(DDTransformers.defaultTransformers());
       agentBuilder = injectHelperClasses(agentBuilder);
@@ -128,14 +136,22 @@ public interface Instrumenter {
           final List<Reference.Mismatch> mismatches =
               muzzle.getMismatchedReferenceSources(classLoader);
           if (mismatches.size() > 0) {
+            if (log.isDebugEnabled()) {
+              log.debug(
+                  "Instrumentation muzzled: {} -- {} on {}",
+                  instrumentationPrimaryName,
+                  getClass().getName(),
+                  classLoader);
+              for (final Reference.Mismatch mismatch : mismatches) {
+                log.debug("-- {}", mismatch);
+              }
+            }
+          } else {
             log.debug(
-                "Instrumentation muzzled: {} -- {} on {}",
+                "Applying instrumentation: {} -- {} on {}",
                 instrumentationPrimaryName,
                 getClass().getName(),
                 classLoader);
-          }
-          for (final Reference.Mismatch mismatch : mismatches) {
-            log.debug("-- {}", mismatch);
           }
           return mismatches.size() == 0;
         }

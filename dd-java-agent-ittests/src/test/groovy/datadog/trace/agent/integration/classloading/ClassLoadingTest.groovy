@@ -56,6 +56,7 @@ class ClassLoadingTest extends Specification {
     @Override
     URL getResource(String name) {
       count++
+      return super.getResource(name)
     }
   }
 
@@ -65,10 +66,13 @@ class ClassLoadingTest extends Specification {
 
     when:
     loader.loadClass(ClassToInstrument.getName())
+    int countAfterFirstLoad = loader.count
     loader.loadClass(ClassToInstrumentChild.getName())
 
     then:
-    loader.count == 2
+    // ClassToInstrumentChild won't cause an additional getResource() because its TypeDescription is created from transformation bytes.
+    loader.count > 0
+    loader.count == countAfterFirstLoad
   }
 
   def "make sure that ByteBuddy doesn't resue cached type descriptions between different classloaders"() {
@@ -81,8 +85,9 @@ class ClassLoadingTest extends Specification {
     loader2.loadClass(ClassToInstrument.getName())
 
     then:
-    loader1.count == 1
-    loader2.count == 1
+    loader1.count > 0
+    loader2.count > 0
+    loader1.count == loader2.count
   }
 
   def "can find bootstrap resources"() {

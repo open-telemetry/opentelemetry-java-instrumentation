@@ -76,6 +76,11 @@ public class Utils {
     return resourceName.replaceAll("\\.class\\$", "").replace('/', '.');
   }
 
+  /** com.foo.Bar -> com/foo/Bar */
+  public static String getInternalName(final String resourceName) {
+    return resourceName.replaceAll("\\.class\\$", "").replace('.', '/');
+  }
+
   static boolean getConfigEnabled(final String name, final boolean fallback) {
     final String property =
         System.getProperty(

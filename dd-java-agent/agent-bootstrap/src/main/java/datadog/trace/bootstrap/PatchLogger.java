@@ -99,6 +99,20 @@ public class PatchLogger {
       String msg,
       Throwable thrown) {}
 
+  public void severe(String msg) {}
+
+  public void warning(String msg) {}
+
+  public void info(String msg) {}
+
+  public void config(String msg) {}
+
+  public void fine(String msg) {}
+
+  public void finer(String msg) {}
+
+  public void finest(String msg) {}
+
   public void throwing(String sourceClass, String sourceMethod, Throwable thrown) {}
 
   public void setLevel(Level newLevel) throws SecurityException {}

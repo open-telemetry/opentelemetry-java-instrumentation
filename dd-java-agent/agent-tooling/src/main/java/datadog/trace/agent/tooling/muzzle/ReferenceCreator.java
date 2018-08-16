@@ -4,28 +4,51 @@ import datadog.trace.agent.tooling.Utils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import net.bytebuddy.jar.asm.ClassReader;
 import net.bytebuddy.jar.asm.ClassVisitor;
+import net.bytebuddy.jar.asm.FieldVisitor;
 import net.bytebuddy.jar.asm.Label;
 import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
+import net.bytebuddy.jar.asm.Type;
 
 /** Visit a class and collect all references made by the visited class. */
+// Additional things we could check
+// - annotations on class
+// - outer class
+// - inner class
+// - cast opcodes in method bodies
 public class ReferenceCreator extends ClassVisitor {
+  /**
+   * Classes in this namespace will be scanned and used to create references.
+   *
+   * <p>For now we're hardcoding this to the instrumentation package so we only create references
+   * from the method advice and helper classes.
+   */
+  private static String REFERENCE_CREATION_PACKAGE = "datadog.trace.instrumentation.";
+
+  public static Map<String, Reference> createReferencesFrom(
+      String entryPointClassName, ClassLoader loader) {
+    return ReferenceCreator.createReferencesFrom(entryPointClassName, loader, true);
+  }
+
   /**
    * Generate all references reachable from a given class.
    *
    * @param entryPointClassName Starting point for generating references.
    * @param loader Classloader used to read class bytes.
+   * @param startFromMethodBodies if true only create refs from method bodies.
    * @return Map of [referenceClassName -> Reference]
    */
-  public static Map<String, Reference> createReferencesFrom(
-      String entryPointClassName, ClassLoader loader) {
+  private static Map<String, Reference> createReferencesFrom(
+      String entryPointClassName, ClassLoader loader, boolean startFromMethodBodies) {
     final Set<String> visitedSources = new HashSet<>();
     final Map<String, Reference> references = new HashMap<>();
 
@@ -38,7 +61,9 @@ public class ReferenceCreator extends ClassVisitor {
       try {
         final InputStream in = loader.getResourceAsStream(Utils.getResourceName(className));
         try {
-          final ReferenceCreator cv = new ReferenceCreator(null);
+          final ReferenceCreator cv = new ReferenceCreator(null, startFromMethodBodies);
+          // only start from method bodies on the first pass
+          startFromMethodBodies = false;
           final ClassReader reader = new ClassReader(in);
           reader.accept(cv, ClassReader.SKIP_FRAMES);
 
@@ -46,7 +71,7 @@ public class ReferenceCreator extends ClassVisitor {
           for (Map.Entry<String, Reference> entry : instrumentationReferences.entrySet()) {
             // Don't generate references created outside of the datadog instrumentation package.
             if (!visitedSources.contains(entry.getKey())
-                && entry.getKey().startsWith("datadog.trace.instrumentation.")) {
+                && entry.getKey().startsWith(REFERENCE_CREATION_PACKAGE)) {
               instrumentationQueue.add(entry.getKey());
             }
             if (references.containsKey(entry.getKey())) {
@@ -69,11 +94,83 @@ public class ReferenceCreator extends ClassVisitor {
     return references;
   }
 
+  /**
+   * Get the package of an internal class name.
+   *
+   * <p>foo/bar/Baz -> foo/bar/
+   */
+  private static String internalPackageName(String internalName) {
+    return internalName.replaceAll("/[^/]+$", "");
+  }
+
+  /**
+   * Compute the minimum required access for FROM class to access the TO class.
+   *
+   * @return A reference flag with the required level of access.
+   */
+  private static Reference.Flag computeMinimumClassAccess(Type from, Type to) {
+    if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
+      return Reference.Flag.PRIVATE_OR_HIGHER;
+    } else if (internalPackageName(from.getInternalName())
+        .equals(internalPackageName(to.getInternalName()))) {
+      return Reference.Flag.PACKAGE_OR_HIGHER;
+    } else {
+      return Reference.Flag.PUBLIC;
+    }
+  }
+
+  /**
+   * Compute the minimum required access for FROM class to access a field on the TO class.
+   *
+   * @return A reference flag with the required level of access.
+   */
+  private static Reference.Flag computeMinimumFieldAccess(Type from, Type to) {
+    if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
+      return Reference.Flag.PRIVATE_OR_HIGHER;
+    } else if (internalPackageName(from.getInternalName())
+        .equals(internalPackageName(to.getInternalName()))) {
+      return Reference.Flag.PACKAGE_OR_HIGHER;
+    } else {
+      // Additional references: check the type hierarchy of FROM to distinguish public from
+      // protected
+      return Reference.Flag.PROTECTED_OR_HIGHER;
+    }
+  }
+
+  /**
+   * Compute the minimum required access for FROM class to access METHODTYPE on the TO class.
+   *
+   * @return A reference flag with the required level of access.
+   */
+  private static Reference.Flag computeMinimumMethodAccess(Type from, Type to, Type methodType) {
+    if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
+      return Reference.Flag.PRIVATE_OR_HIGHER;
+    } else {
+      // Additional references: check the type hierarchy of FROM to distinguish public from
+      // protected
+      return Reference.Flag.PROTECTED_OR_HIGHER;
+    }
+  }
+
+  /**
+   * @return If TYPE is an array, return the underlying type. If TYPE is not an array simply return
+   *     the type.
+   */
+  private static Type underlyingType(Type type) {
+    while (type.getSort() == Type.ARRAY) {
+      type = type.getElementType();
+    }
+    return type;
+  }
+
   private Map<String, Reference> references = new HashMap<>();
   private String refSourceClassName;
+  private Type refSourceType;
+  private boolean createFromMethodBodiesOnly;
 
-  private ReferenceCreator(ClassVisitor classVisitor) {
+  private ReferenceCreator(ClassVisitor classVisitor, boolean createFromMethodBodiesOnly) {
     super(Opcodes.ASM6, classVisitor);
+    this.createFromMethodBodiesOnly = createFromMethodBodiesOnly;
   }
 
   public Map<String, Reference> getReferences() {
@@ -97,7 +194,22 @@ public class ReferenceCreator extends ClassVisitor {
       final String superName,
       final String[] interfaces) {
     refSourceClassName = Utils.getClassName(name);
+    refSourceType = Type.getType("L" + name + ";");
+    // Additional references we could check
+    // - supertype of class and visible from this package
+    // - interfaces of class and visible from this package
     super.visit(version, access, name, signature, superName, interfaces);
+  }
+
+  @Override
+  public FieldVisitor visitField(
+      int access, String name, String descriptor, String signature, Object value) {
+    // Additional references we could check
+    // - annotations on field
+
+    // intentionally not creating refs to fields here.
+    // Will create refs in method instructions to include line numbers.
+    return super.visitField(access, name, descriptor, signature, value);
   }
 
   @Override
@@ -107,6 +219,8 @@ public class ReferenceCreator extends ClassVisitor {
       final String descriptor,
       final String signature,
       final String[] exceptions) {
+    // Additional references we could check
+    // - Classes in signature (return type, params) and visible from this package
     return new AdviceReferenceMethodVisitor(
         super.visitMethod(access, name, descriptor, signature, exceptions));
   }
@@ -125,14 +239,113 @@ public class ReferenceCreator extends ClassVisitor {
     }
 
     @Override
+    public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
+      // Additional references we could check
+      // * DONE owner class
+      //   * DONE owner class has a field (name)
+      //   * DONE field is static or non-static
+      //   * DONE field's visibility from this point (NON_PRIVATE?)
+      // * DONE owner class's visibility from this point (NON_PRIVATE?)
+      //
+      // * DONE field-source class (descriptor)
+      //   * DONE field-source visibility from this point (PRIVATE?)
+
+      final Type ownerType = Type.getType("L" + owner + ";");
+      final Type fieldType = Type.getType(descriptor);
+
+      List<Reference.Flag> fieldFlags = new ArrayList<>();
+      fieldFlags.add(computeMinimumFieldAccess(refSourceType, ownerType));
+      fieldFlags.add(
+          opcode == Opcodes.GETSTATIC || opcode == Opcodes.PUTSTATIC
+              ? Reference.Flag.STATIC
+              : Reference.Flag.NON_STATIC);
+
+      addReference(
+          new Reference.Builder(ownerType.getInternalName())
+              .withSource(refSourceClassName, currentLineNumber)
+              .withFlag(computeMinimumClassAccess(refSourceType, ownerType))
+              .withField(
+                  new Reference.Source[] {
+                    new Reference.Source(refSourceClassName, currentLineNumber)
+                  },
+                  fieldFlags.toArray(new Reference.Flag[0]),
+                  name,
+                  fieldType)
+              .build());
+
+      final Type underlyingFieldType = underlyingType(fieldType);
+      if (underlyingFieldType.getSort() == Type.OBJECT) {
+        addReference(
+            new Reference.Builder(underlyingFieldType.getInternalName())
+                .withSource(refSourceClassName, currentLineNumber)
+                .withFlag(computeMinimumClassAccess(refSourceType, underlyingFieldType))
+                .build());
+      }
+      super.visitFieldInsn(opcode, owner, name, descriptor);
+    }
+
+    @Override
     public void visitMethodInsn(
         final int opcode,
         final String owner,
         final String name,
         final String descriptor,
         final boolean isInterface) {
+      // Additional references we could check
+      // * DONE name of method owner's class
+      //   * DONE is the owner an interface?
+      //   * DONE owner's access from here (PRIVATE?)
+      //   * DONE method on the owner class
+      //   * DONE is the method static? Is it visible from here?
+      // * Class names from the method descriptor
+      //   * params classes
+      //   * return type
+      final Type methodType = Type.getMethodType(descriptor);
+
+      { // ref for method return type
+        final Type returnType = underlyingType(methodType.getReturnType());
+        if (returnType.getSort() == Type.OBJECT) {
+          addReference(
+              new Reference.Builder(returnType.getInternalName())
+                  .withSource(refSourceClassName, currentLineNumber)
+                  .withFlag(computeMinimumClassAccess(refSourceType, returnType))
+                  .build());
+        }
+      }
+      // refs for method param types
+      for (Type paramType : methodType.getArgumentTypes()) {
+        paramType = underlyingType(paramType);
+        if (paramType.getSort() == Type.OBJECT) {
+          addReference(
+              new Reference.Builder(paramType.getInternalName())
+                  .withSource(refSourceClassName, currentLineNumber)
+                  .withFlag(computeMinimumClassAccess(refSourceType, paramType))
+                  .build());
+        }
+      }
+
+      Type ownerType = Type.getType("L" + owner + ";");
+
+      final List<Reference.Flag> methodFlags = new ArrayList<>();
+      methodFlags.add(
+          opcode == Opcodes.INVOKESTATIC ? Reference.Flag.STATIC : Reference.Flag.NON_STATIC);
+      methodFlags.add(computeMinimumMethodAccess(refSourceType, ownerType, methodType));
+
       addReference(
-          new Reference.Builder(owner).withSource(refSourceClassName, currentLineNumber).build());
+          new Reference.Builder(ownerType.getInternalName())
+              .withSource(refSourceClassName, currentLineNumber)
+              .withFlag(isInterface ? Reference.Flag.INTERFACE : Reference.Flag.NON_INTERFACE)
+              .withFlag(computeMinimumClassAccess(refSourceType, ownerType))
+              .withMethod(
+                  new Reference.Source[] {
+                    new Reference.Source(refSourceClassName, currentLineNumber)
+                  },
+                  methodFlags.toArray(new Reference.Flag[0]),
+                  name,
+                  methodType.getReturnType(),
+                  methodType.getArgumentTypes())
+              .build());
+      super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
     }
   }
 }
