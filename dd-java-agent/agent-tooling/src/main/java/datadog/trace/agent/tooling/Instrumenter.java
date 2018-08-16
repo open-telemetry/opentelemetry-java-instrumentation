@@ -140,7 +140,7 @@ public interface Instrumenter {
               log.debug(
                   "Instrumentation muzzled: {} -- {} on {}",
                   instrumentationPrimaryName,
-                  getClass().getName(),
+                  Instrumenter.Default.this.getClass().getName(),
                   classLoader);
               for (final Reference.Mismatch mismatch : mismatches) {
                 log.debug("-- {}", mismatch);
@@ -150,7 +150,7 @@ public interface Instrumenter {
             log.debug(
                 "Applying instrumentation: {} -- {} on {}",
                 instrumentationPrimaryName,
-                getClass().getName(),
+                Instrumenter.Default.this.getClass().getName(),
                 classLoader);
           }
           return mismatches.size() == 0;
