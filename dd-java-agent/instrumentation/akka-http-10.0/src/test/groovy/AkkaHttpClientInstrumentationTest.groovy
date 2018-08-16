@@ -8,18 +8,18 @@ import akka.stream.StreamTcpException
 import akka.stream.javadsl.Sink
 import akka.stream.javadsl.Source
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.RatpackUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import scala.util.Try
+import spock.lang.AutoCleanup
 import spock.lang.Shared
 
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.ExecutionException
 
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
+import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
   static {
@@ -29,23 +29,20 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
   private static final String MESSAGE = "an\nmultiline\nhttp\nresponse"
   private static final long TIMEOUT = 10000L
 
+  @AutoCleanup
   @Shared
-  def server = ratpack {
+  def server = httpServer {
     handlers {
       prefix("success") {
-        all {
-          RatpackUtils.handleDistributedRequest(context)
+        handleDistributedRequest()
 
-          response.status(200).send(MESSAGE)
-        }
+        response.status(200).send(MESSAGE)
       }
 
       prefix("error") {
-        all {
-          RatpackUtils.handleDistributedRequest(context)
+        handleDistributedRequest()
 
-          throw new RuntimeException("error")
-        }
+        throw new RuntimeException("error")
       }
     }
   }
@@ -98,7 +95,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
           tags {
             defaultTags()
             "$Tags.HTTP_STATUS.key" expectedStatus
-            "$Tags.HTTP_URL.key" "${server.address}$route"
+            "$Tags.HTTP_URL.key" "${server.address}/$route"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
@@ -227,7 +224,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
           tags {
             defaultTags()
             "$Tags.HTTP_STATUS.key" expectedStatus
-            "$Tags.HTTP_URL.key" "${server.address}$route"
+            "$Tags.HTTP_URL.key" "${server.address}/$route"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT

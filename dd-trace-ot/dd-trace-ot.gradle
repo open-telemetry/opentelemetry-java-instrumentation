@@ -38,6 +38,7 @@ dependencies {
   // java.lang.NoSuchMethodError: com.fasterxml.jackson.dataformat.smile.SmileGenerator.getOutputContext()
   compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.14'
 
+  testCompile project(":dd-java-agent:testing")
   testCompile deps.autoservice
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6'
   testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'

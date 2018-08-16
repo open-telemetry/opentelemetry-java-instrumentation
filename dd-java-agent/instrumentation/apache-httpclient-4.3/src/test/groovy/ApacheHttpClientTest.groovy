@@ -2,7 +2,6 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.agent.test.utils.RatpackUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -13,37 +12,30 @@ import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.message.BasicHeader
+import spock.lang.AutoCleanup
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
+import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class ApacheHttpClientTest extends AgentTestRunner {
 
+  @AutoCleanup
   @Shared
-  def server = ratpack {
+  def server = httpServer {
     handlers {
       prefix("success") {
-        get {
-          RatpackUtils.handleDistributedRequest(context)
-
-          String msg = "<html><body><h1>Hello test.</h1>\n"
-          response.status(200).send(msg)
-        }
+        handleDistributedRequest()
+        String msg = "<html><body><h1>Hello test.</h1>\n"
+        response.status(200).send(msg)
       }
       prefix("redirect") {
-        get {
-          RatpackUtils.handleDistributedRequest(context)
-
-          redirect(server.address.resolve("/success").toURL().toString())
-        }
+        handleDistributedRequest()
+        redirect(server.address.resolve("/success").toURL().toString())
       }
       prefix("another-redirect") {
-        get {
-          RatpackUtils.handleDistributedRequest(context)
-
-          redirect(server.address.resolve("/redirect").toURL().toString())
-        }
+        handleDistributedRequest()
+        redirect(server.address.resolve("/redirect").toURL().toString())
       }
     }
   }

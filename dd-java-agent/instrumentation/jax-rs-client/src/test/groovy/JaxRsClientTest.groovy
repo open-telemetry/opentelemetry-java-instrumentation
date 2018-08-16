@@ -5,7 +5,8 @@ import io.opentracing.tag.Tags
 import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
 import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
-import ratpack.http.Headers
+import spock.lang.AutoCleanup
+import spock.lang.Shared
 
 import javax.ws.rs.client.AsyncInvoker
 import javax.ws.rs.client.Client
@@ -13,16 +14,16 @@ import javax.ws.rs.client.Invocation
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
-import java.util.concurrent.atomic.AtomicReference
 
-import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
+import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class JaxRsClientTest extends AgentTestRunner {
-  def receivedHeaders = new AtomicReference<Headers>()
-  def server = ratpack {
+
+  @AutoCleanup
+  @Shared
+  def server = httpServer {
     handlers {
       all {
-        receivedHeaders.set(request.headers)
         response.status(200).send("pong")
       }
     }
@@ -71,11 +72,8 @@ class JaxRsClientTest extends AgentTestRunner {
     tags[DDTags.THREAD_ID] != null
     tags.size() == 8
 
-    receivedHeaders.get().get("x-datadog-trace-id") == "$span.traceId"
-    receivedHeaders.get().get("x-datadog-parent-id") == "$span.spanId"
-
-    cleanup:
-    server.close()
+    server.lastRequest.headers.get("x-datadog-trace-id") == "$span.traceId"
+    server.lastRequest.headers.get("x-datadog-parent-id") == "$span.spanId"
 
     where:
     builder                     | async | lib

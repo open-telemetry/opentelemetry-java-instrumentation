@@ -9,12 +9,12 @@ import com.amazonaws.services.s3.S3ClientOptions
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
-import ratpack.http.Headers
+import spock.lang.AutoCleanup
 import spock.lang.Shared
 
 import java.util.concurrent.atomic.AtomicReference
 
-import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
+import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class AWSClientTest extends AgentTestRunner {
   def setupSpec() {
@@ -28,14 +28,12 @@ class AWSClientTest extends AgentTestRunner {
   }
 
   @Shared
-  def receivedHeaders = new AtomicReference<Headers>()
-  @Shared
   def responseBody = new AtomicReference<String>()
+  @AutoCleanup
   @Shared
-  def server = ratpack {
+  def server = httpServer {
     handlers {
       all {
-        receivedHeaders.set(request.headers)
         response.status(200).send(responseBody.get())
       }
     }
@@ -148,8 +146,8 @@ class AWSClientTest extends AgentTestRunner {
     tags["thread.id"] != null
     tags.size() == 13
 
-    receivedHeaders.get().get("x-datadog-trace-id") == "$span.traceId"
-    receivedHeaders.get().get("x-datadog-parent-id") == "$span.spanId"
+    server.lastRequest.headers.get("x-datadog-trace-id") == "$span.traceId"
+    server.lastRequest.headers.get("x-datadog-parent-id") == "$span.spanId"
 
     where:
     service | operation           | method | url                  | handlerCount | call                                                                                                                                   | body               | params                                              | client
