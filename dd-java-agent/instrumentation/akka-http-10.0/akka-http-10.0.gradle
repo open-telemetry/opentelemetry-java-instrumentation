@@ -41,6 +41,3 @@ dependencies {
 
 test.dependsOn lagomTest
 testJava8Minimum += '*Test*.class'
-
-// These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
-testJava8Only += '**/AkkaHttpClientInstrumentationTest.class'

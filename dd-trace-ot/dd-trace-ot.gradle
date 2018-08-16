@@ -15,9 +15,6 @@ excludedClassesConverage += [
   'datadog.trace.common.sampling.PrioritySampling'
 ]
 
-// These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
-testJava8Only += 'datadog/trace/api/writer/DDApiTest.class'
-
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
