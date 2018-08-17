@@ -15,9 +15,6 @@ excludedClassesConverage += [
   'datadog.trace.common.sampling.PrioritySampling'
 ]
 
-// These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
-testJava8Only += 'datadog/trace/api/writer/DDApiTest.class'
-
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
@@ -38,6 +35,7 @@ dependencies {
   // java.lang.NoSuchMethodError: com.fasterxml.jackson.dataformat.smile.SmileGenerator.getOutputContext()
   compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.14'
 
+  testCompile project(":dd-java-agent:testing")
   testCompile deps.autoservice
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6'
   testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'

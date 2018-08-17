@@ -1,4 +1,4 @@
-package datadog.trace.agent.test
+package datadog.trace.agent.test.asserts
 
 import datadog.opentracing.DDSpan
 import datadog.trace.common.writer.ListWriter
@@ -7,7 +7,7 @@ import org.spockframework.runtime.Condition
 import org.spockframework.runtime.ConditionNotSatisfiedError
 import org.spockframework.runtime.model.TextPosition
 
-import static datadog.trace.agent.test.TraceAssert.assertTrace
+import static TraceAssert.assertTrace
 
 class ListWriterAssert {
   private final ListWriter writer

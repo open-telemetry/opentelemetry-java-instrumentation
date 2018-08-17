@@ -3,22 +3,17 @@ import datadog.trace.api.DDSpanTypes
 import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import ratpack.http.Headers
 
-import java.util.concurrent.atomic.AtomicReference
-
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
-import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class OkHttp3Test extends AgentTestRunner {
 
   def "sending a request creates spans and sends headers"() {
     setup:
-    def receivedHeaders = new AtomicReference<Headers>()
-    def server = ratpack {
+    def server = httpServer {
       handlers {
         all {
-          receivedHeaders.set(request.headers)
           response.status(200).send("pong")
         }
       }
@@ -69,8 +64,8 @@ class OkHttp3Test extends AgentTestRunner {
       }
     }
 
-    receivedHeaders.get().get("x-datadog-trace-id") == TEST_WRITER[0][1].traceId
-    receivedHeaders.get().get("x-datadog-parent-id") == TEST_WRITER[0][1].spanId
+    server.lastRequest.headers.get("x-datadog-trace-id") == TEST_WRITER[0][1].traceId
+    server.lastRequest.headers.get("x-datadog-parent-id") == TEST_WRITER[0][1].spanId
 
     cleanup:
     server.close()

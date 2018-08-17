@@ -32,7 +32,9 @@ dependencies {
   annotationProcessor deps.autoservice
   implementation deps.autoservice
 
-  testCompile project(':dd-java-agent:testing')
+  testCompile(project(':dd-java-agent:testing')) {
+    exclude group: 'org.eclipse.jetty', module: 'jetty-server'
+  }
   testCompile project(':dd-java-agent:instrumentation:jetty-8') // See if there's any conflicts.
   testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.2.0.v20160908'
   testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.2.0.v20160908'

@@ -1,8 +1,5 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
-// These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
-testJava8Only += '**/*Test.class'
-
 dependencies {
   compile project(':dd-java-agent:agent-tooling')
 

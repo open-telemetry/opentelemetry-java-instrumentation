@@ -12,7 +12,7 @@ import org.elasticsearch.node.Node
 import org.elasticsearch.transport.Netty4Plugin
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 class Elasticsearch6NodeClientTest extends AgentTestRunner {

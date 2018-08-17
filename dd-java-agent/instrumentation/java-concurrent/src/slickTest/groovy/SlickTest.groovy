@@ -4,7 +4,7 @@ import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class SlickTest extends AgentTestRunner {
 

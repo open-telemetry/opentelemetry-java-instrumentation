@@ -21,7 +21,7 @@ import springdata.Doc
 
 import java.util.concurrent.atomic.AtomicLong
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   static {

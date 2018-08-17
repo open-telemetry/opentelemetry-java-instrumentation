@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
 import okhttp3.OkHttpClient
 import okhttp3.Request

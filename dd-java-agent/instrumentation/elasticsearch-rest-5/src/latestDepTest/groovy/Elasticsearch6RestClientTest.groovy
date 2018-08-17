@@ -17,7 +17,7 @@ import org.elasticsearch.node.Node
 import org.elasticsearch.transport.Netty4Plugin
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class Elasticsearch6RestClientTest extends AgentTestRunner {
   static {

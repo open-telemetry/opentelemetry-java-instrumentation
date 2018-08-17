@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
 import okhttp3.OkHttpClient
 import org.eclipse.jetty.continuation.Continuation
@@ -14,7 +14,7 @@ import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class JettyHandlerTest extends AgentTestRunner {
 

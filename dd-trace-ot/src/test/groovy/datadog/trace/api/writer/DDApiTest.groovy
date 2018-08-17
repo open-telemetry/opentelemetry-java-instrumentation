@@ -7,22 +7,19 @@ import datadog.opentracing.SpanFactory
 import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.DDApi.ResponseListener
 import org.msgpack.jackson.dataformat.MessagePackFactory
-import ratpack.exec.Blocking
-import ratpack.http.Headers
-import ratpack.http.MediaType
 import spock.lang.Specification
 
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
-import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
+import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class DDApiTest extends Specification {
   static mapper = new ObjectMapper(new MessagePackFactory())
 
   def "sending an empty list of traces returns no errors"() {
     setup:
-    def agent = ratpack {
+    def agent = httpServer {
       handlers {
         put("v0.4/traces") {
           def status = request.contentLength > 0 ? 200 : 500
@@ -42,7 +39,7 @@ class DDApiTest extends Specification {
 
   def "non-200 response results in false returned"() {
     setup:
-    def agent = ratpack {
+    def agent = httpServer {
       handlers {
         put("v0.4/traces") {
           response.status(404).send()
@@ -61,18 +58,10 @@ class DDApiTest extends Specification {
 
   def "content is sent as MSGPACK"() {
     setup:
-    def requestContentType = new AtomicReference<MediaType>()
-    def requestHeaders = new AtomicReference<Headers>()
-    def requestBody = new AtomicReference<byte[]>()
-    def agent = ratpack {
+    def agent = httpServer {
       handlers {
         put("v0.4/traces") {
-          requestContentType.set(request.contentType)
-          requestHeaders.set(request.headers)
-          request.body.then {
-            requestBody.set(it.bytes)
-            response.send()
-          }
+          response.send()
         }
       }
     }
@@ -81,12 +70,12 @@ class DDApiTest extends Specification {
     expect:
     client.tracesEndpoint == "http://localhost:${agent.address.port}/v0.4/traces"
     client.sendTraces(traces)
-    requestContentType.get().type == "application/msgpack"
-    requestHeaders.get().get("Datadog-Meta-Lang") == "java"
-    requestHeaders.get().get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown")
-    requestHeaders.get().get("Datadog-Meta-Tracer-Version") == "Stubbed-Test-Version"
-    requestHeaders.get().get("X-Datadog-Trace-Count") == "${traces.size()}"
-    convertList(requestBody.get()) == expectedRequestBody
+    agent.lastRequest.contentType == "application/msgpack"
+    agent.lastRequest.headers.get("Datadog-Meta-Lang") == "java"
+    agent.lastRequest.headers.get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown")
+    agent.lastRequest.headers.get("Datadog-Meta-Tracer-Version") == "Stubbed-Test-Version"
+    agent.lastRequest.headers.get("X-Datadog-Trace-Count") == "${traces.size()}"
+    convertList(agent.lastRequest.body) == expectedRequestBody
 
     cleanup:
     agent.close()
@@ -128,14 +117,12 @@ class DDApiTest extends Specification {
   def "Api ResponseListeners see 200 responses"() {
     setup:
     def agentResponse = new AtomicReference<String>(null)
-    def requestHeaders = new AtomicReference<Headers>()
     ResponseListener responseListener = { String endpoint, JsonNode responseJson ->
       agentResponse.set(responseJson.toString())
     }
-    def agent = ratpack {
+    def agent = httpServer {
       handlers {
         put("v0.4/traces") {
-          requestHeaders.set(request.headers)
           def status = request.contentLength > 0 ? 200 : 500
           response.status(status).send('{"hello":"test"}')
         }
@@ -150,10 +137,10 @@ class DDApiTest extends Specification {
     client.sendTraces([])
     then:
     agentResponse.get() == '{"hello":"test"}'
-    requestHeaders.get().get("Datadog-Meta-Lang") == "java"
-    requestHeaders.get().get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown")
-    requestHeaders.get().get("Datadog-Meta-Tracer-Version") == "Stubbed-Test-Version"
-    requestHeaders.get().get("X-Datadog-Trace-Count") == "3" // false data shows the value provided via traceCounter.
+    agent.lastRequest.headers.get("Datadog-Meta-Lang") == "java"
+    agent.lastRequest.headers.get("Datadog-Meta-Lang-Version") == System.getProperty("java.version", "unknown")
+    agent.lastRequest.headers.get("Datadog-Meta-Tracer-Version") == "Stubbed-Test-Version"
+    agent.lastRequest.headers.get("X-Datadog-Trace-Count") == "3" // false data shows the value provided via traceCounter.
     traceCounter.get() == 0
 
     cleanup:
@@ -162,7 +149,7 @@ class DDApiTest extends Specification {
 
   def "Api Downgrades to v3 if v0.4 not available"() {
     setup:
-    def v3Agent = ratpack {
+    def v3Agent = httpServer {
       handlers {
         put("v0.3/traces") {
           def status = request.contentLength > 0 ? 200 : 500
@@ -183,18 +170,16 @@ class DDApiTest extends Specification {
   def "Api Downgrades to v3 if timeout exceeded (#delayTrace, #badPort)"() {
     // This test is unfortunately only exercising the read timeout, not the connect timeout.
     setup:
-    def agent = ratpack {
+    def agent = httpServer {
       handlers {
         put("v0.3/traces") {
           def status = request.contentLength > 0 ? 200 : 500
           response.status(status).send()
         }
         put("v0.4/traces") {
-          Blocking.exec {
-            Thread.sleep(delayTrace)
-            def status = request.contentLength > 0 ? 200 : 500
-            response.status(status).send()
-          }
+          Thread.sleep(delayTrace)
+          def status = request.contentLength > 0 ? 200 : 500
+          response.status(status).send()
         }
       }
     }

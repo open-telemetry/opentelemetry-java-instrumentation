@@ -1,19 +1,15 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.RatpackUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
-import io.opentracing.propagation.TextMap
 import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
 import org.springframework.web.client.RestTemplate
-import ratpack.handling.Context
+import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static ratpack.groovy.test.embed.GroovyEmbeddedApp.ratpack
-import static ratpack.http.HttpMethod.HEAD
-import static ratpack.http.HttpMethod.POST
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class HttpUrlConnectionTest extends AgentTestRunner {
   static {
@@ -23,26 +19,14 @@ class HttpUrlConnectionTest extends AgentTestRunner {
   static final RESPONSE = "<html><body><h1>Hello test.</h1>"
   static final STATUS = 202
 
+  @AutoCleanup
   @Shared
-  def server = ratpack {
+  def server = httpServer {
     handlers {
       all {
-        RatpackUtils.handleDistributedRequest(context)
+        handleDistributedRequest()
 
-        request.body.then {
-          if (it != null) {
-            println "RECEIVED: $it.text"
-          }
-          response.status(STATUS)
-          // Ratpack seems to be sending body with HEAD requests - RFC specifically forbids this.
-          // This becomes a major problem with keep-alived requests - client seems to fail to parse
-          // such response properly messing up following requests.
-          if (request.method.isHead()) {
-            response.send()
-          } else {
-            response.send(RESPONSE)
-          }
-        }
+        response.status(STATUS).send(RESPONSE)
       }
     }
   }
@@ -73,26 +57,8 @@ class HttpUrlConnectionTest extends AgentTestRunner {
 
     expect:
     assertTraces(TEST_WRITER, 3) {
-      trace(0, 1) {
-        span(0) {
-          operationName "test-http-server"
-          childOf(TEST_WRITER[2][2])
-          errored false
-          tags {
-            defaultTags()
-          }
-        }
-      }
-      trace(1, 1) {
-        span(0) {
-          operationName "test-http-server"
-          childOf(TEST_WRITER[2][1])
-          errored false
-          tags {
-            defaultTags()
-          }
-        }
-      }
+      server.distributedRequestTrace(it, 0, TEST_WRITER[2][2])
+      server.distributedRequestTrace(it, 1, TEST_WRITER[2][1])
       trace(2, 3) {
         span(0) {
           operationName "someTrace"
@@ -221,7 +187,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     setup:
     runUnderTrace("someTrace") {
       HttpURLConnection connection = server.address.toURL().openConnection()
-      connection.setRequestMethod(HEAD.name)
+      connection.setRequestMethod("HEAD")
       connection.addRequestProperty("is-dd-server", "false")
       assert GlobalTracer.get().scopeManager().active() != null
       assert connection.getResponseCode() == STATUS
@@ -310,7 +276,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     setup:
     runUnderTrace("someTrace") {
       HttpURLConnection connection = server.address.toURL().openConnection()
-      connection.setRequestMethod(POST.name)
+      connection.setRequestMethod("POST")
 
       String urlParameters = "q=ASDF&w=&e=&r=12345&t="
 
@@ -331,16 +297,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
 
     expect:
     assertTraces(TEST_WRITER, 2) {
-      trace(0, 1) {
-        span(0) {
-          operationName "test-http-server"
-          childOf(TEST_WRITER[1][1])
-          errored false
-          tags {
-            defaultTags()
-          }
-        }
-      }
+      server.distributedRequestTrace(it, 0, TEST_WRITER[1][1])
       trace(1, 3) {
         span(0) {
           operationName "someTrace"
@@ -432,21 +389,12 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     runUnderTrace("someTrace") {
       RestTemplate restTemplate = new RestTemplate()
       String res = restTemplate.postForObject(server.address.toString(), "Hello", String)
-      assert res == RESPONSE
+      assert res == "$RESPONSE"
     }
 
     expect:
     assertTraces(TEST_WRITER, 2) {
-      trace(0, 1) {
-        span(0) {
-          operationName "test-http-server"
-          childOf(TEST_WRITER[1][2])
-          errored false
-          tags {
-            defaultTags()
-          }
-        }
-      }
+      server.distributedRequestTrace(it, 0, TEST_WRITER[1][2])
       trace(1, 4) {
         span(0) {
           operationName "someTrace"
@@ -503,24 +451,6 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           }
         }
       }
-    }
-  }
-
-  private static class RatpackResponseAdapter implements TextMap {
-    final Context context
-
-    RatpackResponseAdapter(Context context) {
-      this.context = context
-    }
-
-    @Override
-    void put(String key, String value) {
-      context.response.set(key, value)
-    }
-
-    @Override
-    Iterator<Map.Entry<String, String>> iterator() {
-      return context.request.getHeaders().asMultiValueMap().entrySet().iterator()
     }
   }
 }

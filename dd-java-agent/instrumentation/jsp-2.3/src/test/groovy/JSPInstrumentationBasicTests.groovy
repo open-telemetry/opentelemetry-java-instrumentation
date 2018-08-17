@@ -1,9 +1,8 @@
 import com.google.common.io.Files
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
-import io.netty.handler.codec.http.HttpResponseStatus
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -12,10 +11,11 @@ import okhttp3.Response
 import org.apache.catalina.Context
 import org.apache.catalina.startup.Tomcat
 import org.apache.jasper.JasperException
+import org.eclipse.jetty.http.HttpStatus
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class JSPInstrumentationBasicTests extends AgentTestRunner {
 
@@ -140,7 +140,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpResponseStatus.OK.code()
+    res.code() == HttpStatus.OK_200
 
     cleanup:
     res.close()
@@ -219,7 +219,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpResponseStatus.OK.code()
+    res.code() == HttpStatus.OK_200
 
     cleanup:
     res.close()
@@ -295,7 +295,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpResponseStatus.OK.code()
+    res.code() == HttpStatus.OK_200
 
     cleanup:
     res.close()
@@ -370,7 +370,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpResponseStatus.INTERNAL_SERVER_ERROR.code()
+    res.code() == HttpStatus.INTERNAL_SERVER_ERROR_500
 
     cleanup:
     res.close()
@@ -448,7 +448,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpResponseStatus.OK.code()
+    res.code() == HttpStatus.OK_200
 
     cleanup:
     res.close()
@@ -588,7 +588,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpResponseStatus.OK.code()
+    res.code() == HttpStatus.OK_200
 
     cleanup:
     res.close()
@@ -647,7 +647,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
       }
     }
-    res.code() == HttpResponseStatus.INTERNAL_SERVER_ERROR.code()
+    res.code() == HttpStatus.INTERNAL_SERVER_ERROR_500
 
     cleanup:
     res.close()

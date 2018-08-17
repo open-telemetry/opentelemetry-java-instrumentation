@@ -1,8 +1,8 @@
-package datadog.trace.agent.test
+package datadog.trace.agent.test.asserts
 
 import datadog.opentracing.DDSpan
 
-import static datadog.trace.agent.test.TagsAssert.assertTags
+import static TagsAssert.assertTags
 
 class SpanAssert {
   private final DDSpan span
@@ -18,7 +18,6 @@ class SpanAssert {
     clone.delegate = asserter
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(asserter)
-    asserter
   }
 
   def serviceName(String name) {

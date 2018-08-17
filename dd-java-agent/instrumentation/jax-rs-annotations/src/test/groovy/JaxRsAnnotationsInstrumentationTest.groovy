@@ -9,8 +9,8 @@ import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 

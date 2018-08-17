@@ -7,7 +7,7 @@ import play.api.test.TestServer
 import play.test.Helpers
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class Play26Test extends AgentTestRunner {
   static {

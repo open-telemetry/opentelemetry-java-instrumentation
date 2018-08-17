@@ -19,9 +19,6 @@ testSets {
   }
 }
 
-// These classes use Ratpack which requires Java 8. (Currently also incompatible with Java 9.)
-testJava8Only += '**/AWSClientTest.class'
-
 dependencies {
   compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.106'
 

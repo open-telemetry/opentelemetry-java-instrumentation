@@ -5,8 +5,8 @@ import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class UrlConnectionTest extends AgentTestRunner {
   static {
@@ -36,7 +36,7 @@ class UrlConnectionTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            errorTags ConnectException, "Connection refused (Connection refused)"
+            errorTags ConnectException, String
             defaultTags()
           }
         }
@@ -52,7 +52,7 @@ class UrlConnectionTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" INVALID_PORT
-            errorTags ConnectException, "Connection refused (Connection refused)"
+            errorTags ConnectException, String
             defaultTags()
           }
         }

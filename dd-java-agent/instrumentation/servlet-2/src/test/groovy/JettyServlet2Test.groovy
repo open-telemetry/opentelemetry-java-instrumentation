@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
 import okhttp3.Credentials
 import okhttp3.Interceptor
@@ -17,7 +17,7 @@ import org.eclipse.jetty.security.authentication.BasicAuthenticator
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class JettyServlet2Test extends AgentTestRunner {
 

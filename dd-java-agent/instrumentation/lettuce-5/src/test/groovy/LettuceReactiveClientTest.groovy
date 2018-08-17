@@ -13,7 +13,7 @@ import spock.util.concurrent.AsyncConditions
 
 import java.util.function.Consumer
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.AGENT_CRASHING_COMMAND_PREFIX
 
 class LettuceReactiveClientTest extends AgentTestRunner {

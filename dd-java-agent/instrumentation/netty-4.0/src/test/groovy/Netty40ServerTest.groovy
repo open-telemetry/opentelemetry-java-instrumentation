@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.OkHttpUtils
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.netty.bootstrap.ServerBootstrap
@@ -28,7 +28,7 @@ import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-import static datadog.trace.agent.test.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class Netty40ServerTest extends AgentTestRunner {
   static {
