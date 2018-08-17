@@ -1,18 +1,20 @@
 package server
 
 import datadog.opentracing.DDTracer
+import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.common.writer.ListWriter
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import spock.lang.Shared
-import spock.lang.Specification
 
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
-class ServerTest extends Specification {
+/* Don't actually need AgentTestRunner, but it messes up the classloader for AgentTestRunnerTest if this runs first. */
+
+class ServerTest extends AgentTestRunner {
   @Shared
   def client = OkHttpUtils.client()
 
