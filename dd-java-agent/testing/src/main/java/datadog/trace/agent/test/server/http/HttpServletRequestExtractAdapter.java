@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
  *
  * @author Pavol Loffay
  */
+// FIXME:  This code is duplicated in several places.  Extract to a common dependency.
 public class HttpServletRequestExtractAdapter implements TextMap {
 
   private final Map<String, List<String>> headers;
