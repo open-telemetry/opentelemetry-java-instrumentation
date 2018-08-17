@@ -1,6 +1,5 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
@@ -59,7 +58,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
     response.getStatusLine().getStatusCode() == 200
     // one trace on the server, one trace on the client
     assertTraces(TEST_WRITER, 2) {
-      serverTrace(it, 0, TEST_WRITER[1][1])
+      server.distributedRequestTrace(it, 0, TEST_WRITER[1][1])
       trace(1, 2) {
         clientParentSpan(it, 0)
         successClientSpan(it, 1, span(0))
@@ -82,8 +81,8 @@ class ApacheHttpClientTest extends AgentTestRunner {
     response.getStatusLine().getStatusCode() == 200
     // two traces on the server, one trace on the client
     assertTraces(TEST_WRITER, 3) {
-      serverTrace(it, 0, TEST_WRITER[2][2])
-      serverTrace(it, 1, TEST_WRITER[2][1])
+      server.distributedRequestTrace(it, 0, TEST_WRITER[2][2])
+      server.distributedRequestTrace(it, 1, TEST_WRITER[2][1])
       trace(2, 3) {
         clientParentSpan(it, 0)
         successClientSpan(it, 1, span(0))
@@ -106,8 +105,8 @@ class ApacheHttpClientTest extends AgentTestRunner {
     response.getStatusLine().getStatusCode() == 200
     // two traces on the server, one trace on the client
     assertTraces(TEST_WRITER, 3) {
-      serverTrace(it, 0, TEST_WRITER[2][2])
-      serverTrace(it, 1, TEST_WRITER[2][1])
+      server.distributedRequestTrace(it, 0, TEST_WRITER[2][2])
+      server.distributedRequestTrace(it, 1, TEST_WRITER[2][1])
       trace(2, 3) {
         clientParentSpan(it, 0)
         successClientSpan(it, 1, span(0))
@@ -131,8 +130,8 @@ class ApacheHttpClientTest extends AgentTestRunner {
     def exception = thrown(ClientProtocolException)
     // two traces on the server, one trace on the client
     assertTraces(TEST_WRITER, 3) {
-      serverTrace(it, 0, TEST_WRITER[2][2])
-      serverTrace(it, 1, TEST_WRITER[2][1])
+      server.distributedRequestTrace(it, 0, TEST_WRITER[2][2])
+      server.distributedRequestTrace(it, 1, TEST_WRITER[2][1])
       trace(2, 3) {
         clientParentSpan(it, 0, exception)
         redirectClientSpan(it, 1, span(0))
@@ -156,21 +155,6 @@ class ApacheHttpClientTest extends AgentTestRunner {
       trace(0, 2) {
         clientParentSpan(it, 0)
         successClientSpan(it, 1, span(0))
-      }
-    }
-  }
-
-  def serverTrace(ListWriterAssert writer, int index, DDSpan parent) {
-    writer.trace(index, 1) {
-      span(0) {
-        childOf parent
-        serviceName "unnamed-java-app"
-        operationName "test-http-server"
-        resourceName "test-http-server"
-        errored false
-        tags {
-          defaultTags()
-        }
       }
     }
   }

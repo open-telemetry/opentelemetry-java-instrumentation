@@ -74,16 +74,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     }
 
     assertTraces(TEST_WRITER, 2) {
-      trace(0, 1) {
-        span(0) {
-          operationName "test-http-server"
-          childOf(TEST_WRITER[1][0])
-          errored false
-          tags {
-            defaultTags()
-          }
-        }
-      }
+      server.distributedRequestTrace(it, 0, TEST_WRITER[1][0])
       trace(1, 1) {
         span(0) {
           parent()
@@ -203,16 +194,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     }
 
     assertTraces(TEST_WRITER, 2) {
-      trace(0, 1) {
-        span(0) {
-          operationName "test-http-server"
-          childOf(TEST_WRITER[1][0])
-          errored false
-          tags {
-            defaultTags()
-          }
-        }
-      }
+      server.distributedRequestTrace(it, 0, TEST_WRITER[1][0])
       trace(1, 1) {
         span(0) {
           parent()

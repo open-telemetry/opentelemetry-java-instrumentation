@@ -3,10 +3,9 @@ apply from: "${rootDir}/gradle/java.gradle"
 minimumBranchCoverage = 0.5
 minimumInstructionCoverage = 0.6
 excludedClassesConverage += [
-  'datadog.trace.agent.test.*Assert',
+  'datadog.trace.agent.test.asserts.*Assert',
   'datadog.trace.agent.test.AgentTestRunner.ErrorCountingListener',
-  'datadog.trace.agent.test.*Utils',
-  'datadog.trace.agent.test.*Utils.*'
+  'datadog.trace.agent.test.OkHttpUtils'
 ]
 
 dependencies {

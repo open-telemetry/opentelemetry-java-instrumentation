@@ -1,7 +1,10 @@
 package datadog.trace.agent.test.server.http
 
+import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.asserts.ListWriterAssert
 import io.opentracing.SpanContext
+import io.opentracing.Tracer
 import io.opentracing.propagation.Format
 import io.opentracing.util.GlobalTracer
 import org.eclipse.jetty.http.HttpMethods
@@ -34,6 +37,8 @@ class TestHttpServer implements AutoCloseable {
 
   private final Server internalServer
   private HandlersSpec handlers
+
+  public Tracer tracer = GlobalTracer.get()
 
 
   final URI address
@@ -86,6 +91,23 @@ class TestHttpServer implements AutoCloseable {
     clone.delegate = handlers
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(handlers)
+  }
+
+  static distributedRequestTrace(ListWriterAssert traces, int index, DDSpan parentSpan = null) {
+    traces.trace(index, 1) {
+      span(0) {
+        operationName "test-http-server"
+        errored false
+        if (parentSpan == null) {
+          parent()
+        } else {
+          childOf(parentSpan)
+        }
+        tags {
+          defaultTags()
+        }
+      }
+    }
   }
 
   private class HandlersSpec {
@@ -180,7 +202,7 @@ class TestHttpServer implements AutoCloseable {
     }
   }
 
-  static class HandlerApi {
+  class HandlerApi {
     private final Request req
     private final HttpServletResponse resp
 
@@ -210,9 +232,8 @@ class TestHttpServer implements AutoCloseable {
       }
       if (isDDServer) {
         final SpanContext extractedContext =
-          GlobalTracer.get()
-            .extract(Format.Builtin.HTTP_HEADERS, new HttpServletRequestExtractAdapter(req))
-        def builder = GlobalTracer.get()
+          tracer.extract(Format.Builtin.HTTP_HEADERS, new HttpServletRequestExtractAdapter(req))
+        def builder = tracer
           .buildSpan("test-http-server")
         if (extractedContext != null) {
           builder.asChildOf(extractedContext)
@@ -263,7 +284,7 @@ class TestHttpServer implements AutoCloseable {
 
       ResponseApi status(int status) {
         this.status = status
-        this
+        return this
       }
 
       void send() {

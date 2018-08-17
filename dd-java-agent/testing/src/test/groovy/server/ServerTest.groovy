@@ -1,12 +1,15 @@
 package server
 
+import datadog.opentracing.DDTracer
 import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.common.writer.ListWriter
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import spock.lang.Shared
 import spock.lang.Specification
 
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class ServerTest extends Specification {
@@ -84,6 +87,9 @@ class ServerTest extends Specification {
         post("/post") {
           response.send("/post response")
         }
+        put("/put") {
+          response.send("/put response")
+        }
         prefix("/base") {
           response.send("${request.path} response")
         }
@@ -116,6 +122,7 @@ class ServerTest extends Specification {
     method | path
     "get"  | "get"
     "post" | "post"
+    "put"  | "put"
     "get"  | "base"
     "post" | "base"
     "get"  | "base/get"
@@ -277,6 +284,39 @@ class ServerTest extends Specification {
     then:
     response.code() == 200
     response.body().string().trim() == ""
+
+    cleanup:
+    server.stop()
+  }
+
+  def "server handles distributed request"() {
+    setup:
+    def server = httpServer {
+      handlers {
+        all {
+          handleDistributedRequest()
+          response.send("done")
+        }
+      }
+    }
+    def writer = new ListWriter()
+    server.tracer = new DDTracer(writer)
+
+    when:
+    def request = new Request.Builder()
+      .url("$server.address")
+      .get()
+      .build()
+
+    def response = client.newCall(request).execute()
+
+    then:
+    response.code() == 200
+    response.body().string().trim() == "done"
+
+    assertTraces(writer, 1) {
+      server.distributedRequestTrace(it, 0)
+    }
 
     cleanup:
     server.stop()

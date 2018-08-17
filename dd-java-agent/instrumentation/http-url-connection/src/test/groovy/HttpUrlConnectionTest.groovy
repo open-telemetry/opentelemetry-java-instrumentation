@@ -57,26 +57,8 @@ class HttpUrlConnectionTest extends AgentTestRunner {
 
     expect:
     assertTraces(TEST_WRITER, 3) {
-      trace(0, 1) {
-        span(0) {
-          operationName "test-http-server"
-          childOf(TEST_WRITER[2][2])
-          errored false
-          tags {
-            defaultTags()
-          }
-        }
-      }
-      trace(1, 1) {
-        span(0) {
-          operationName "test-http-server"
-          childOf(TEST_WRITER[2][1])
-          errored false
-          tags {
-            defaultTags()
-          }
-        }
-      }
+      server.distributedRequestTrace(it, 0, TEST_WRITER[2][2])
+      server.distributedRequestTrace(it, 1, TEST_WRITER[2][1])
       trace(2, 3) {
         span(0) {
           operationName "someTrace"
@@ -315,16 +297,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
 
     expect:
     assertTraces(TEST_WRITER, 2) {
-      trace(0, 1) {
-        span(0) {
-          operationName "test-http-server"
-          childOf(TEST_WRITER[1][1])
-          errored false
-          tags {
-            defaultTags()
-          }
-        }
-      }
+      server.distributedRequestTrace(it, 0, TEST_WRITER[1][1])
       trace(1, 3) {
         span(0) {
           operationName "someTrace"
@@ -421,16 +394,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
 
     expect:
     assertTraces(TEST_WRITER, 2) {
-      trace(0, 1) {
-        span(0) {
-          operationName "test-http-server"
-          childOf(TEST_WRITER[1][2])
-          errored false
-          tags {
-            defaultTags()
-          }
-        }
-      }
+      server.distributedRequestTrace(it, 0, TEST_WRITER[1][2])
       trace(1, 4) {
         span(0) {
           operationName "someTrace"
