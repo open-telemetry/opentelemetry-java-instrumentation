@@ -5,6 +5,10 @@ import java.net.URLClassLoader;
 
 /** Classloader used to run the core datadog agent. */
 public class DatadogClassLoader extends URLClassLoader {
+  static {
+    ClassLoader.registerAsParallelCapable();
+  }
+
   // Calling java.lang.instrument.Instrumentation#appendToBootstrapClassLoaderSearch
   // adds a jar to the bootstrap class lookup, but not to the resource lookup.
   // As a workaround, we keep a reference to the bootstrap jar
@@ -22,6 +26,12 @@ public class DatadogClassLoader extends URLClassLoader {
   public DatadogClassLoader(URL bootstrapJarLocation, URL agentJarLocation, ClassLoader parent) {
     super(new URL[] {agentJarLocation}, parent);
     bootstrapProxy = new BootstrapClassLoaderProxy(new URL[] {bootstrapJarLocation}, null);
+  }
+
+  /** Public for testing only */
+  @Override
+  public Object getClassLoadingLock(String className) {
+    return super.getClassLoadingLock(className);
   }
 
   @Override
@@ -45,6 +55,10 @@ public class DatadogClassLoader extends URLClassLoader {
    * <p>This class is thread safe.
    */
   public static final class BootstrapClassLoaderProxy extends URLClassLoader {
+    static {
+      ClassLoader.registerAsParallelCapable();
+    }
+
     public BootstrapClassLoaderProxy(URL[] urls, ClassLoader parent) {
       super(urls, parent);
     }
