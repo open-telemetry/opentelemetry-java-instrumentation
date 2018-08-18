@@ -60,11 +60,15 @@ class JettyServlet3Test extends AgentTestRunner {
     jettyServer.destroy()
   }
 
-  def "test #path servlet call"() {
+  def "test #path servlet call (auth: #auth, distributed tracing: #distributedTracing)"() {
     setup:
     def requestBuilder = new Request.Builder()
       .url("http://localhost:$port/$path")
       .get()
+    if (distributedTracing) {
+      requestBuilder.header("x-datadog-trace-id", "123")
+      requestBuilder.header("x-datadog-parent-id", "456")
+    }
     if (auth) {
       requestBuilder.header(HttpHeaders.AUTHORIZATION, Credentials.basic("user", "password"))
     }
@@ -76,12 +80,17 @@ class JettyServlet3Test extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
+          if (distributedTracing) {
+            traceId "123"
+            parentId "456"
+          } else {
+            parent()
+          }
           serviceName "unnamed-java-app"
           operationName "servlet.request"
           resourceName "GET /$path"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
-          parent()
           tags {
             "http.url" "http://localhost:$port/$path"
             "http.method" "GET"
@@ -100,11 +109,15 @@ class JettyServlet3Test extends AgentTestRunner {
     }
 
     where:
-    path         | expectedResponse | auth  | origin
-    "async"      | "Hello Async"    | false | "Async"
-    "sync"       | "Hello Sync"     | false | "Sync"
-    "auth/async" | "Hello Async"    | true  | "Async"
-    "auth/sync"  | "Hello Sync"     | true  | "Sync"
+    path         | expectedResponse | auth  | origin  | distributedTracing
+    "async"      | "Hello Async"    | false | "Async" | false
+    "sync"       | "Hello Sync"     | false | "Sync"  | false
+    "auth/async" | "Hello Async"    | true  | "Async" | false
+    "auth/sync"  | "Hello Sync"     | true  | "Sync"  | false
+    "async"      | "Hello Async"    | false | "Async" | true
+    "sync"       | "Hello Sync"     | false | "Sync"  | true
+    "auth/async" | "Hello Async"    | true  | "Async" | true
+    "auth/sync"  | "Hello Sync"     | true  | "Sync"  | true
   }
 
   def "servlet instrumentation clears state after async request"() {

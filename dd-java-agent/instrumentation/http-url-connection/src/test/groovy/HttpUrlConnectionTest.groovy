@@ -31,7 +31,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     }
   }
 
-  def "trace request with propagation"() {
+  def "trace request with propagation (useCaches: #useCaches)"() {
     setup:
     runUnderTrace("someTrace") {
       HttpURLConnection connection = server.address.toURL().openConnection()
@@ -107,7 +107,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     useCaches << [false, true]
   }
 
-  def "trace request without propagation"() {
+  def "trace request without propagation (useCaches: #useCaches)"() {
     setup:
     runUnderTrace("someTrace") {
       HttpURLConnection connection = server.address.toURL().openConnection()
