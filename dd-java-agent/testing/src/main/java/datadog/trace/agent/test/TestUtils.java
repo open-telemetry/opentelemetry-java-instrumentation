@@ -212,6 +212,7 @@ public class TestUtils {
     obj = null;
     while (ref.get() != null) {
       System.gc();
+      System.runFinalization();
     }
   }
 }

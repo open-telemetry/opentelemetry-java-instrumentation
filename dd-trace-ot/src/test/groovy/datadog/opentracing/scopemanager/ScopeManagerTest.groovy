@@ -3,7 +3,7 @@ package datadog.opentracing.scopemanager
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
-import datadog.opentracing.PendingTrace
+import datadog.trace.agent.test.TestUtils
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.Scope
 import io.opentracing.Span
@@ -149,7 +149,7 @@ class ScopeManagerTest extends Specification {
     continuation.activate()
     if (forceGC) {
       continuation = null // Continuation references also hold up traces.
-      PendingTrace.awaitGC()
+      TestUtils.awaitGC()
       ((DDSpanContext) scope.span().context()).trace.clean()
     }
     if (autoClose) {
@@ -196,7 +196,7 @@ class ScopeManagerTest extends Specification {
     if (forceGC) {
       continuation = null // Continuation references also hold up traces.
       while (!((DDSpanContext) span.context()).trace.clean()) {
-        PendingTrace.awaitGC()
+        TestUtils.awaitGC()
       }
       writer.waitForTraces(1)
     }
