@@ -1,10 +1,13 @@
 package datadog.trace.bootstrap
 
 import spock.lang.Specification
+import spock.lang.Timeout
 
 import java.util.concurrent.Phaser
+import java.util.concurrent.TimeUnit
 
 class DatadogClassLoaderTest extends Specification {
+  @Timeout(value = 60, unit = TimeUnit.SECONDS)
   def "DD classloader does not lock classloading around instance" () {
     setup:
     def className1 = 'some/class/Name1'
@@ -15,7 +18,7 @@ class DatadogClassLoaderTest extends Specification {
     final Phaser acquireLockFromMainThreadPhase = new Phaser(2)
 
     when:
-    final Thread thread = new Thread() {
+    final Thread thread1 = new Thread() {
       @Override
       void run() {
         synchronized (ddLoader.getClassLoadingLock(className1)) {
@@ -24,13 +27,20 @@ class DatadogClassLoaderTest extends Specification {
         }
       }
     }
-    thread.start()
+    thread1.start()
 
-    threadHoldLockPhase.arriveAndAwaitAdvance()
-    synchronized (ddLoader.getClassLoadingLock(className2)) {
-      acquireLockFromMainThreadPhase.arrive()
+    final Thread thread2 = new Thread() {
+      @Override
+      void run() {
+        threadHoldLockPhase.arriveAndAwaitAdvance()
+        synchronized (ddLoader.getClassLoadingLock(className2)) {
+          acquireLockFromMainThreadPhase.arrive()
+        }
+      }
     }
-    thread.join()
+    thread2.start()
+    thread1.join()
+    thread2.join()
     boolean applicationDidNotDeadlock = true
 
     then:

@@ -28,12 +28,6 @@ public class DatadogClassLoader extends URLClassLoader {
     bootstrapProxy = new BootstrapClassLoaderProxy(new URL[] {bootstrapJarLocation}, null);
   }
 
-  /** Public for testing only */
-  @Override
-  public Object getClassLoadingLock(String className) {
-    return super.getClassLoadingLock(className);
-  }
-
   @Override
   public URL getResource(String resourceName) {
     final URL bootstrapResource = bootstrapProxy.getResource(resourceName);
