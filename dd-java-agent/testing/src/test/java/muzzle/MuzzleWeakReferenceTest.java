@@ -16,17 +16,17 @@ public class MuzzleWeakReferenceTest {
    */
   public static boolean classLoaderRefIsGarbageCollected() {
     ClassLoader loader = new URLClassLoader(new URL[0], null);
-    WeakReference<ClassLoader> clRef = new WeakReference<>(loader);
-    Reference[] refs =
+    final WeakReference<ClassLoader> clRef = new WeakReference<>(loader);
+    final Reference[] refs =
         ReferenceCreator.createReferencesFrom(
                 TestClasses.MethodBodyAdvice.class.getName(),
                 MuzzleWeakReferenceTest.class.getClassLoader())
             .values()
             .toArray(new Reference[0]);
-    ReferenceMatcher refMatcher = new ReferenceMatcher(refs);
+    final ReferenceMatcher refMatcher = new ReferenceMatcher(refs);
     refMatcher.getMismatchedReferenceSources(loader);
     loader = null;
-    TestUtils.awaitGC();
+    TestUtils.awaitGC(clRef);
     return clRef.get() == null;
   }
 }

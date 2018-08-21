@@ -5,6 +5,7 @@ import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
 import spock.lang.Subject
 
+import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 
 class PendingTraceTest extends Specification {
@@ -105,9 +106,10 @@ class PendingTraceTest extends Specification {
     writer == []
 
     when:
+    def childRef = new WeakReference<>(child)
     child = null
-    while (!trace.clean()) {
-      TestUtils.awaitGC()
+    TestUtils.awaitGC(childRef)
+    while (trace.clean()) {
     }
 
     then:

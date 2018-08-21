@@ -39,7 +39,7 @@ class ClassLoadingTest extends Specification {
     loader.loadClass(ClassToInstrument.getName())
     loader = null
 
-    IntegrationTestUtils.awaitGC()
+    IntegrationTestUtils.awaitGC(ref)
 
     then:
     null == ref.get()
