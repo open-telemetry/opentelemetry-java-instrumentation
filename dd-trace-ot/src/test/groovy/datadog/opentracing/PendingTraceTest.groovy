@@ -1,5 +1,6 @@
 package datadog.opentracing
 
+import datadog.trace.agent.test.TestUtils
 import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
 import spock.lang.Subject
@@ -106,7 +107,7 @@ class PendingTraceTest extends Specification {
     when:
     child = null
     while (!trace.clean()) {
-      trace.awaitGC()
+      TestUtils.awaitGC()
     }
 
     then:

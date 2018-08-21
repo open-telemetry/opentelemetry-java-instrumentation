@@ -213,20 +213,6 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     return count > 0;
   }
 
-  /**
-   * This method ensures that garbage collection takes place, unlike <code>{@link System#gc()}
-   * </code>. Useful for testing.
-   */
-  public static void awaitGC() {
-    System.gc(); // For good measure.
-    Object obj = new Object();
-    final WeakReference ref = new WeakReference<>(obj);
-    obj = null;
-    while (ref.get() != null) {
-      System.gc();
-    }
-  }
-
   static void close() {
     SPAN_CLEANER.close();
   }

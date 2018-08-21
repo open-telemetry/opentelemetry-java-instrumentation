@@ -59,13 +59,16 @@ class TomcatServlet3Test extends AgentTestRunner {
     tomcatServer.destroy()
   }
 
-  def "test #path servlet call"() {
+  def "test #path servlet call (distributed tracing: #distributedTracing)"() {
     setup:
-    def request = new Request.Builder()
+    def requestBuilder = new Request.Builder()
       .url("http://localhost:$port/my-context/$path")
       .get()
-      .build()
-    def response = client.newCall(request).execute()
+    if (distributedTracing) {
+      requestBuilder.header("x-datadog-trace-id", "123")
+      requestBuilder.header("x-datadog-parent-id", "456")
+    }
+    def response = client.newCall(requestBuilder.build()).execute()
 
     expect:
     response.body().string().trim() == expectedResponse
@@ -73,12 +76,17 @@ class TomcatServlet3Test extends AgentTestRunner {
     assertTraces(TEST_WRITER, 1) {
       trace(0, 1) {
         span(0) {
+          if (distributedTracing) {
+            traceId "123"
+            parentId "456"
+          } else {
+            parent()
+          }
           serviceName "my-context"
           operationName "servlet.request"
           resourceName "GET /my-context/$path"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
-          parent()
           tags {
             "http.url" "http://localhost:$port/my-context/$path"
             "http.method" "GET"
@@ -95,9 +103,11 @@ class TomcatServlet3Test extends AgentTestRunner {
     }
 
     where:
-    path    | expectedResponse
-    "async" | "Hello Async"
-    "sync"  | "Hello Sync"
+    path    | expectedResponse | distributedTracing
+    "async" | "Hello Async"    | false
+    "sync"  | "Hello Sync"     | false
+    "async" | "Hello Async"    | true
+    "sync"  | "Hello Sync"     | true
   }
 
   def "test #path error servlet call"() {
