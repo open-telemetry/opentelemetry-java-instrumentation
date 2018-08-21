@@ -6,14 +6,14 @@ muzzle {
     module = "httpclient"
     versions = "[4.3,)"
   }
-  pass {
-    group = "commons-httpclient"
-    module = "commons-httpclient"
-    versions = "[4.3,)"
-  }
   fail {
     group = "org.apache.httpcomponents"
     module = "httpclient"
+    versions = "[,4.3)"
+  }
+  fail {
+    group = "commons-httpclient"
+    module = "commons-httpclient"
     versions = "[,4.3)"
   }
 }

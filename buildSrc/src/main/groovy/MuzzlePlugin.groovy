@@ -48,7 +48,7 @@ class MuzzlePlugin implements Plugin<Project> {
       group = 'Muzzle'
       description = "Run instrumentation muzzle on compile time dependencies"
       doLast {
-        if (project.muzzle.passDirectives.size() == 0) {
+        if (!project.muzzle.directives.any { it.assertPass }) {
           project.getLogger().info('No muzzle pass directives configured. Asserting pass against instrumentation compile-time dependencies')
           final ClassLoader userCL = createCompileDepsClassLoader(project, bootstrapProject)
           final ClassLoader agentCL = createDDClassloader(project, toolingProject)
@@ -72,14 +72,10 @@ class MuzzlePlugin implements Plugin<Project> {
     project.tasks.compileMuzzle.dependsOn(toolingProject.tasks.compileJava)
     project.afterEvaluate {
       project.tasks.compileMuzzle.dependsOn(project.tasks.compileJava)
-      if (project.tasks.getNames().contains("compileScala")) {
+      if (project.tasks.getNames().contains('compileScala')) {
         project.tasks.compileMuzzle.dependsOn(project.tasks.compileScala)
       }
     }
-    // TODO: consider:
-    // project.tasks.withType(ScalaCompile) { Task scalaTask ->
-    //   project.tasks.compileMuzzle.dependsOn(scalaTask)
-    // }
     project.tasks.muzzle.dependsOn(project.tasks.compileMuzzle)
     project.tasks.printReferences.dependsOn(project.tasks.compileMuzzle)
 
@@ -101,18 +97,11 @@ class MuzzlePlugin implements Plugin<Project> {
       // use runAfter to set up task finalizers in version order
       Task runAfter = project.tasks.muzzle
 
-      for (MuzzleDirective pass : project.muzzle.passDirectives) {
-        project.getLogger().info("configured pass directive: ${pass.group}:${pass.module}:${pass.versions}")
+      for (MuzzleDirective muzzleDirective : project.muzzle.directives) {
+        project.getLogger().info("configured ${muzzleDirective.assertPass ? 'pass' : 'fail'} directive: ${muzzleDirective.group}:${muzzleDirective.module}:${muzzleDirective.versions}")
 
-        muzzleDirectiveToArtifacts(pass, system, session).collect() { Artifact singleVersion ->
-          runAfter = addMuzzleTask(pass, true, singleVersion, project, runAfter, bootstrapProject, toolingProject)
-        }
-      }
-      for (MuzzleDirective fail : project.muzzle.failDirectives) {
-        project.getLogger().info("configured fail directive: ${fail.group}:${fail.module}:${fail.versions}")
-
-        muzzleDirectiveToArtifacts(fail, system, session).collect() { Artifact singleVersion ->
-          runAfter = addMuzzleTask(fail, false, singleVersion, project, runAfter, bootstrapProject, toolingProject)
+        muzzleDirectiveToArtifacts(muzzleDirective, system, session).collect() { Artifact singleVersion ->
+          runAfter = addMuzzleTask(muzzleDirective, singleVersion, project, runAfter, bootstrapProject, toolingProject)
         }
       }
     }
@@ -202,13 +191,13 @@ class MuzzlePlugin implements Plugin<Project> {
    *
    * @return The created muzzle task.
    */
-  private static Task addMuzzleTask(MuzzleDirective directive, boolean assertPass, Artifact versionArtifact, Project instrumentationProject, Task runAfter, Project bootstrapProject, Project toolingProject) {
-    def taskName = "muzzle-Assert${assertPass ? "Pass" : "Fail"}-$versionArtifact.groupId-$versionArtifact.artifactId-$versionArtifact.version"
+  private static Task addMuzzleTask(MuzzleDirective muzzleDirective, Artifact versionArtifact, Project instrumentationProject, Task runAfter, Project bootstrapProject, Project toolingProject) {
+    def taskName = "muzzle-Assert${muzzleDirective.assertPass ? "Pass" : "Fail"}-$versionArtifact.groupId-$versionArtifact.artifactId-$versionArtifact.version"
     def config = instrumentationProject.configurations.create(taskName)
     config.dependencies.add(instrumentationProject.dependencies.create("$versionArtifact.groupId:$versionArtifact.artifactId:$versionArtifact.version") {
       transitive = true
     })
-    for (String additionalDependency : directive.additionalDependencies) {
+    for (String additionalDependency : muzzleDirective.additionalDependencies) {
       config.dependencies.add(instrumentationProject.dependencies.create(additionalDependency) {
         transitive = true
       })
@@ -221,7 +210,7 @@ class MuzzlePlugin implements Plugin<Project> {
         // find all instrumenters, get muzzle, and assert
         Method assertionMethod = agentCL.loadClass('datadog.trace.agent.tooling.muzzle.MuzzleVersionScanPlugin')
           .getMethod('assertInstrumentationMuzzled', ClassLoader.class, boolean.class)
-        assertionMethod.invoke(null, userCL, assertPass)
+        assertionMethod.invoke(null, userCL, muzzleDirective.assertPass)
       }
     }
     runAfter.finalizedBy(muzzleTask)
@@ -282,6 +271,7 @@ class MuzzleDirective {
   String module
   String versions
   List<String> additionalDependencies = new ArrayList<>()
+  boolean assertPass
   void extraDependency(String compileString) {
     additionalDependencies.add(compileString)
   }
@@ -291,27 +281,25 @@ class MuzzleDirective {
  * Muzzle extension containing all pass and fail directives.
  */
 class MuzzleExtension {
-  // TODO: merge pass and fail directives into single collection
-  final List<MuzzleDirective> passDirectives
-  final List<MuzzleDirective> failDirectives
+  final List<MuzzleDirective> directives = new ArrayList<>()
   private final ObjectFactory objectFactory
 
   @javax.inject.Inject
   MuzzleExtension(final ObjectFactory objectFactory) {
     this.objectFactory = objectFactory
-    passDirectives = new ArrayList<>()
-    failDirectives = new ArrayList<>()
   }
 
   void pass(Action<? super MuzzleDirective> action) {
     final MuzzleDirective pass = objectFactory.newInstance(MuzzleDirective)
     action.execute(pass)
-    passDirectives.add(pass)
+    pass.assertPass = true
+    directives.add(pass)
   }
 
   void fail(Action<? super MuzzleDirective> action) {
     final MuzzleDirective fail = objectFactory.newInstance(MuzzleDirective)
     action.execute(fail)
-    failDirectives.add(fail)
+    fail.assertPass = false
+    directives.add(fail)
   }
 }
