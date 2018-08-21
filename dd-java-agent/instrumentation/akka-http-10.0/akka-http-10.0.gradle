@@ -16,6 +16,20 @@ compileLagomTestGroovy {
   targetCompatibility = 1.8
 }
 
+
+muzzle {
+  pass {
+    group = 'com.typesafe.akka'
+    module = 'akka-http_2.11'
+    versions = "[10.0.0,10.0.12)"
+  }
+  pass {
+    group = 'com.typesafe.akka'
+    module = 'akka-http_2.12'
+    versions = "[10.0.0,10.0.12)"
+  }
+}
+
 dependencies {
   compileOnly group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.0.0'
 

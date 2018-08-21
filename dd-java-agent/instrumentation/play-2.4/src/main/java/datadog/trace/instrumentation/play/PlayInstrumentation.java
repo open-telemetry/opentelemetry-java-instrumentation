@@ -1,8 +1,6 @@
 package datadog.trace.instrumentation.play;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithMethod;
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -48,18 +46,6 @@ public final class PlayInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return safeHasSuperType(named("play.api.mvc.Action"));
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses(
-            "akka.japi.JavaPartialFunction",
-            "play.api.mvc.Action",
-            "play.api.mvc.Result",
-            "scala.Option",
-            "scala.Tuple2",
-            "scala.concurrent.Future")
-        .and(classLoaderHasClassWithMethod("play.api.mvc.Request", "tags"));
   }
 
   @Override
