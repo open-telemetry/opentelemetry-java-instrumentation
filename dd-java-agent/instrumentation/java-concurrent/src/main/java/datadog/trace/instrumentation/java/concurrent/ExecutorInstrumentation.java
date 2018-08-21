@@ -79,7 +79,18 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
       "akka.dispatch.PinnedDispatcher",
       "akka.dispatch.ExecutionContexts$sameThreadExecutionContext$",
       "akka.dispatch.ExecutionContexts$sameThreadExecutionContext$",
-      "play.api.libs.streams.Execution$trampoline$"
+      "play.api.libs.streams.Execution$trampoline$",
+      "io.netty.channel.MultithreadEventLoopGroup",
+      "io.netty.util.concurrent.MultithreadEventExecutorGroup",
+      "io.netty.util.concurrent.AbstractEventExecutorGroup",
+      "io.netty.channel.epoll.EpollEventLoopGroup",
+      "io.netty.channel.nio.NioEventLoopGroup",
+      "io.netty.util.concurrent.GlobalEventExecutor",
+      "io.netty.util.concurrent.AbstractScheduledEventExecutor",
+      "io.netty.util.concurrent.AbstractEventExecutor",
+      "io.netty.util.concurrent.SingleThreadEventExecutor",
+      "io.netty.channel.nio.NioEventLoop",
+      "io.netty.channel.SingleThreadEventLoop",
     };
     WHITELISTED_EXECUTORS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(whitelist)));
 

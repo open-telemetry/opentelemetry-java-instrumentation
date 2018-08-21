@@ -6,6 +6,7 @@ import static io.opentracing.log.Fields.ERROR_OBJECT;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.netty41.AttributeKeys;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
@@ -55,7 +56,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     }
 
     final Span span = scope.span();
-    ctx.channel().attr(HttpServerTracingHandler.attributeKey).set(span);
+    ctx.channel().attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).set(span);
 
     try {
       ctx.fireChannelRead(msg);

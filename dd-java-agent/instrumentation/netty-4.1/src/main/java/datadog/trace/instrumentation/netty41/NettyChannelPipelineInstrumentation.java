@@ -7,11 +7,13 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
+import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.netty41.client.HttpClientRequestTracingHandler;
 import datadog.trace.instrumentation.netty41.client.HttpClientResponseTracingHandler;
 import datadog.trace.instrumentation.netty41.client.HttpClientTracingHandler;
@@ -26,6 +28,8 @@ import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.opentracing.Scope;
+import io.opentracing.util.GlobalTracer;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -34,9 +38,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
-
-  private static final String PACKAGE =
-      NettyChannelPipelineInstrumentation.class.getPackage().getName();
 
   public NettyChannelPipelineInstrumentation() {
     super("netty", "netty-4.1");
@@ -60,16 +61,17 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      packageName + ".AttributeKeys",
       // client helpers
-      PACKAGE + ".client.NettyResponseInjectAdapter",
-      PACKAGE + ".client.HttpClientRequestTracingHandler",
-      PACKAGE + ".client.HttpClientResponseTracingHandler",
-      PACKAGE + ".client.HttpClientTracingHandler",
+      packageName + ".client.NettyResponseInjectAdapter",
+      packageName + ".client.HttpClientRequestTracingHandler",
+      packageName + ".client.HttpClientResponseTracingHandler",
+      packageName + ".client.HttpClientTracingHandler",
       // server helpers
-      PACKAGE + ".server.NettyRequestExtractAdapter",
-      PACKAGE + ".server.HttpServerRequestTracingHandler",
-      PACKAGE + ".server.HttpServerResponseTracingHandler",
-      PACKAGE + ".server.HttpServerTracingHandler"
+      packageName + ".server.NettyRequestExtractAdapter",
+      packageName + ".server.HttpServerRequestTracingHandler",
+      packageName + ".server.HttpServerResponseTracingHandler",
+      packageName + ".server.HttpServerTracingHandler"
     };
   }
 
@@ -81,6 +83,9 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
             .and(nameStartsWith("add"))
             .and(takesArgument(2, named("io.netty.channel.ChannelHandler"))),
         ChannelPipelineAddAdvice.class.getName());
+    transformers.put(
+        isMethod().and(named("connect")).and(returns(named("io.netty.channel.ChannelFuture"))),
+        ChannelPipelineConnectAdvice.class.getName());
     return transformers;
   }
 
@@ -135,6 +140,20 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
         // Prevented adding duplicate handlers.
       } finally {
         CallDepthThreadLocalMap.reset(ChannelPipeline.class);
+      }
+    }
+  }
+
+  public static class ChannelPipelineConnectAdvice {
+    @Advice.OnMethodEnter
+    public static void addParentSpan(@Advice.This final ChannelPipeline pipeline) {
+      final Scope scope = GlobalTracer.get().scopeManager().active();
+
+      if (scope instanceof TraceScope) {
+        pipeline
+            .channel()
+            .attr(AttributeKeys.PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY)
+            .set(((TraceScope) scope).capture());
       }
     }
   }
