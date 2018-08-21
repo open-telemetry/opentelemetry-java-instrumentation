@@ -105,14 +105,14 @@ class MuzzlePlugin implements Plugin<Project> {
         project.getLogger().info("configured pass directive: ${pass.group}:${pass.module}:${pass.versions}")
 
         muzzleDirectiveToArtifacts(pass, system, session).collect() { Artifact singleVersion ->
-          runAfter = addMuzzleTask(true, singleVersion, project, runAfter, bootstrapProject, toolingProject)
+          runAfter = addMuzzleTask(pass, true, singleVersion, project, runAfter, bootstrapProject, toolingProject)
         }
       }
       for (MuzzleDirective fail : project.muzzle.failDirectives) {
         project.getLogger().info("configured fail directive: ${fail.group}:${fail.module}:${fail.versions}")
 
         muzzleDirectiveToArtifacts(fail, system, session).collect() { Artifact singleVersion ->
-          runAfter = addMuzzleTask(false, singleVersion, project, runAfter, bootstrapProject, toolingProject)
+          runAfter = addMuzzleTask(fail, false, singleVersion, project, runAfter, bootstrapProject, toolingProject)
         }
       }
     }
@@ -202,12 +202,17 @@ class MuzzlePlugin implements Plugin<Project> {
    *
    * @return The created muzzle task.
    */
-  private static Task addMuzzleTask(boolean assertPass, Artifact versionArtifact, Project instrumentationProject, Task runAfter, Project bootstrapProject, Project toolingProject) {
+  private static Task addMuzzleTask(MuzzleDirective directive, boolean assertPass, Artifact versionArtifact, Project instrumentationProject, Task runAfter, Project bootstrapProject, Project toolingProject) {
     def taskName = "muzzle-Assert${assertPass ? "Pass" : "Fail"}-$versionArtifact.groupId-$versionArtifact.artifactId-$versionArtifact.version"
     def config = instrumentationProject.configurations.create(taskName)
     config.dependencies.add(instrumentationProject.dependencies.create("$versionArtifact.groupId:$versionArtifact.artifactId:$versionArtifact.version") {
       transitive = true
     })
+    for (String additionalDependency : directive.additionalDependencies) {
+      config.dependencies.add(instrumentationProject.dependencies.create(additionalDependency) {
+        transitive = true
+      })
+    }
 
     def muzzleTask = instrumentationProject.task(taskName) {
       doLast {
@@ -276,6 +281,10 @@ class MuzzleDirective {
   String group
   String module
   String versions
+  List<String> additionalDependencies = new ArrayList<>()
+  void extraDependency(String compileString) {
+    additionalDependencies.add(compileString)
+  }
 }
 
 /**

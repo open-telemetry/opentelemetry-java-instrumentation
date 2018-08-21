@@ -21,12 +21,16 @@ muzzle {
   pass {
     group = 'com.typesafe.akka'
     module = 'akka-http_2.11'
-    versions = "[10.0.0,10.0.12)"
+    versions = "[10.0.0,)"
+    // later versions of akka-http expect streams to be provided
+    extraDependency 'com.typesafe.akka:akka-stream_2.11:2.4.14'
   }
   pass {
     group = 'com.typesafe.akka'
     module = 'akka-http_2.12'
-    versions = "[10.0.0,10.0.12)"
+    versions = "[10.0.0,)"
+    // later versions of akka-http expect streams to be provided
+    extraDependency 'com.typesafe.akka:akka-stream_2.12:2.4.14'
   }
 }
 
