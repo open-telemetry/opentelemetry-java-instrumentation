@@ -103,6 +103,13 @@ class MuzzlePlugin implements Plugin<Project> {
         muzzleDirectiveToArtifacts(muzzleDirective, system, session).collect() { Artifact singleVersion ->
           runAfter = addMuzzleTask(muzzleDirective, singleVersion, project, runAfter, bootstrapProject, toolingProject)
         }
+        if (muzzleDirective.assertInverse) {
+          inverseOf(muzzleDirective, system, session).collect() { MuzzleDirective inverseDirective ->
+            muzzleDirectiveToArtifacts(inverseDirective, system, session).collect() { Artifact singleVersion ->
+              runAfter = addMuzzleTask(inverseDirective, singleVersion, project, runAfter, bootstrapProject, toolingProject)
+            }
+          }
+        }
       }
     }
   }
@@ -178,6 +185,41 @@ class MuzzlePlugin implements Plugin<Project> {
 
     return allVersionArtifacts
   }
+
+  /**
+   * Create a list of muzzle directives which assert the opposite of the given MuzzleDirective.
+   */
+  private static List<MuzzleDirective> inverseOf(MuzzleDirective muzzleDirective, RepositorySystem system, RepositorySystemSession session) {
+    List<MuzzleDirective> inverseDirectives = new ArrayList<>()
+
+    final Artifact allVerisonsArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", "[,)")
+    final Artifact directiveArtifact = new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", muzzleDirective.versions)
+
+
+    final VersionRangeRequest allRangeRequest = new VersionRangeRequest()
+    allRangeRequest.setRepositories(MUZZLE_REPOS)
+    allRangeRequest.setArtifact(allVerisonsArtifact)
+    final VersionRangeResult allRangeResult = system.resolveVersionRange(session, allRangeRequest)
+
+    final VersionRangeRequest rangeRequest = new VersionRangeRequest()
+    rangeRequest.setRepositories(MUZZLE_REPOS)
+    rangeRequest.setArtifact(directiveArtifact)
+    final VersionRangeResult rangeResult = system.resolveVersionRange(session, rangeRequest)
+
+    filterVersion(allRangeResult.versions).collect { version ->
+      if (!rangeResult.versions.contains(version)) {
+        final MuzzleDirective inverseDirective = new MuzzleDirective()
+        inverseDirective.group = muzzleDirective.group
+        inverseDirective.module = muzzleDirective.module
+        inverseDirective.versions = "$version"
+        inverseDirective.assertPass = !muzzleDirective.assertPass
+        inverseDirectives.add(inverseDirective)
+      }
+    }
+
+    return inverseDirectives
+  }
+
 
   /**
    * Configure a muzzle task to pass or fail a given version.
@@ -272,6 +314,7 @@ class MuzzleDirective {
   String versions
   List<String> additionalDependencies = new ArrayList<>()
   boolean assertPass
+  boolean assertInverse = false
   void extraDependency(String compileString) {
     additionalDependencies.add(compileString)
   }
