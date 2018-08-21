@@ -2,9 +2,12 @@ package datadog.trace.agent.tooling.muzzle;
 
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.bootstrap.WeakMap;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.WeakHashMap;
 
 /**
  * Entry point for muzzle version scan gradle plugin.
@@ -15,7 +18,19 @@ import java.util.ServiceLoader;
  * <p>Additionally, after a successful muzzle validation run each instrumenter's helper injector.
  */
 public class MuzzleVersionScanPlugin {
-  public static void assertInstrumentationNotMuzzled(ClassLoader cl) throws Exception {
+  static {
+    // prevent WeakMap from logging warning while plugin is running
+    WeakMap.Provider.registerIfAbsent(
+        new WeakMap.Supplier() {
+          @Override
+          public <K, V> WeakMap<K, V> get() {
+            return new WeakMap.MapAdapter<>(Collections.synchronizedMap(new WeakHashMap<K, V>()));
+          }
+        });
+  }
+
+  public static void assertInstrumentationMuzzled(ClassLoader cl, boolean assertPass)
+      throws Exception {
     // muzzle validate all instrumenters
     for (Instrumenter instrumenter :
         ServiceLoader.load(Instrumenter.class, MuzzleGradlePlugin.class.getClassLoader())) {
@@ -36,7 +51,12 @@ public class MuzzleVersionScanPlugin {
         m.setAccessible(true);
         ReferenceMatcher muzzle = (ReferenceMatcher) m.invoke(instrumenter);
         List<Reference.Mismatch> mismatches = muzzle.getMismatchedReferenceSources(cl);
-        if (mismatches.size() > 0) {
+        boolean passed = mismatches.size() == 0;
+        if (mismatches.size() > 0) {}
+        if (passed && !assertPass) {
+          System.err.println("MUZZLE PASSED BUT FAILURE WAS EXPECTED");
+          throw new RuntimeException("Instrumentation unexpectedly passed Muzzle validation");
+        } else if (!passed && assertPass) {
           System.err.println(
               "FAILED MUZZLE VALIDATION: " + instrumenter.getClass().getName() + " mismatches:");
           for (Reference.Mismatch mismatch : mismatches) {
@@ -51,33 +71,35 @@ public class MuzzleVersionScanPlugin {
       }
     }
     // run helper injector on all instrumenters
-    for (Instrumenter instrumenter :
-        ServiceLoader.load(Instrumenter.class, MuzzleGradlePlugin.class.getClassLoader())) {
-      if (instrumenter.getClass().getName().endsWith("TraceConfigInstrumentation")) {
-        // TraceConfigInstrumentation doesn't do muzzle checks
-        // check on TracerClassInstrumentation instead
-        instrumenter =
-            (Instrumenter)
-                MuzzleGradlePlugin.class
-                    .getClassLoader()
-                    .loadClass(instrumenter.getClass().getName() + "$TracerClassInstrumentation")
-                    .getDeclaredConstructor()
-                    .newInstance();
-      }
-      try {
-        // Ratpack injects the scope manager as a helper.
-        // This is likely a bug, but we'll grandfather it out of the helper checks for now.
-        if (!instrumenter.getClass().getName().contains("Ratpack")) {
-          // verify helper injector works
-          final String[] helperClassNames = instrumenter.helperClassNames();
-          if (helperClassNames.length > 0) {
-            new HelperInjector(helperClassNames).transform(null, null, cl, null);
-          }
+    if (assertPass) {
+      for (Instrumenter instrumenter :
+          ServiceLoader.load(Instrumenter.class, MuzzleGradlePlugin.class.getClassLoader())) {
+        if (instrumenter.getClass().getName().endsWith("TraceConfigInstrumentation")) {
+          // TraceConfigInstrumentation doesn't do muzzle checks
+          // check on TracerClassInstrumentation instead
+          instrumenter =
+              (Instrumenter)
+                  MuzzleGradlePlugin.class
+                      .getClassLoader()
+                      .loadClass(instrumenter.getClass().getName() + "$TracerClassInstrumentation")
+                      .getDeclaredConstructor()
+                      .newInstance();
         }
-      } catch (Exception e) {
-        System.err.println(
-            "FAILED HELPER INJECTION. Are Helpers being injected in the correct order?");
-        throw e;
+        try {
+          // Ratpack injects the scope manager as a helper.
+          // This is likely a bug, but we'll grandfather it out of the helper checks for now.
+          if (!instrumenter.getClass().getName().contains("Ratpack")) {
+            // verify helper injector works
+            final String[] helperClassNames = instrumenter.helperClassNames();
+            if (helperClassNames.length > 0) {
+              new HelperInjector(helperClassNames).transform(null, null, cl, null);
+            }
+          }
+        } catch (Exception e) {
+          System.err.println(
+              "FAILED HELPER INJECTION. Are Helpers being injected in the correct order?");
+          throw e;
+        }
       }
     }
   }
