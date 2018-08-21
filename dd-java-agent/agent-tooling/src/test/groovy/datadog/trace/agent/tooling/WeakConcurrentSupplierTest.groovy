@@ -45,8 +45,9 @@ class WeakConcurrentSupplierTest extends Specification {
     def ref = new WeakReference(map)
 
     when:
+    def mapRef = new WeakReference<>(map)
     map = null
-    TestUtils.awaitGC()
+    TestUtils.awaitGC(mapRef)
 
     then:
     ref.get() == null
@@ -68,8 +69,9 @@ class WeakConcurrentSupplierTest extends Specification {
     map.size() == 1
 
     when:
+    def keyRef = new WeakReference<>(key)
     key = null
-    TestUtils.awaitGC()
+    TestUtils.awaitGC(keyRef)
 
     if (name == "WeakConcurrent") {
       // Sleep enough time for cleanup thread to get scheduled.

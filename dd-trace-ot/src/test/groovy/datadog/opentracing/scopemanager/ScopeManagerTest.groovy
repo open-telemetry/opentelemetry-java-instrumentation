@@ -11,6 +11,7 @@ import io.opentracing.noop.NoopSpan
 import spock.lang.Specification
 import spock.lang.Subject
 
+import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
@@ -149,8 +150,9 @@ class ScopeManagerTest extends Specification {
     continuation.activate()
     if (forceGC) {
       continuation = null // Continuation references also hold up traces.
-      TestUtils.awaitGC()
-      ((DDSpanContext) scope.span().context()).trace.clean()
+      TestUtils.awaitGC() // The goal here is to make sure that continuation DOES NOT get GCed
+      while (((DDSpanContext) scope.span().context()).trace.clean()) {
+      }
     }
     if (autoClose) {
       if (continuation != null) {
@@ -194,10 +196,9 @@ class ScopeManagerTest extends Specification {
 
     when:
     if (forceGC) {
+      def continuationRef = new WeakReference<>(continuation)
       continuation = null // Continuation references also hold up traces.
-      while (!((DDSpanContext) span.context()).trace.clean()) {
-        TestUtils.awaitGC()
-      }
+      TestUtils.awaitGC(continuationRef)
       writer.waitForTraces(1)
     }
     if (autoClose) {
