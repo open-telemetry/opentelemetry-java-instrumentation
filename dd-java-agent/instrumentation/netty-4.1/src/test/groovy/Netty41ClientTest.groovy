@@ -14,9 +14,6 @@ import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
 class Netty41ClientTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.netty.enabled", "true")
-  }
 
   @AutoCleanup
   @Shared

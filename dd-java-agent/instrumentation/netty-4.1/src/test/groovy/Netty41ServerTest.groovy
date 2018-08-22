@@ -31,9 +31,6 @@ import okhttp3.Request
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class Netty41ServerTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.netty.enabled", "true")
-  }
 
   OkHttpClient client = OkHttpUtils.client()
 

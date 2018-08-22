@@ -43,11 +43,6 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface()).and(safeHasSuperType(named("io.netty.channel.ChannelPipeline")));
   }
