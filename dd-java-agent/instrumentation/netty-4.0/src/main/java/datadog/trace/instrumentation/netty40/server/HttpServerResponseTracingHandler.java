@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.netty40.server;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 
+import datadog.trace.instrumentation.netty40.AttributeKeys;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
@@ -14,7 +15,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
 
   @Override
   public void write(final ChannelHandlerContext ctx, final Object msg, final ChannelPromise prm) {
-    final Span span = ctx.channel().attr(HttpServerTracingHandler.attributeKey).get();
+    final Span span = ctx.channel().attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).get();
     if (span == null || !(msg instanceof HttpResponse)) {
       ctx.write(msg, prm);
       return;

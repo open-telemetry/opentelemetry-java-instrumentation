@@ -5,6 +5,7 @@ import static io.opentracing.log.Fields.ERROR_OBJECT;
 
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
+import datadog.trace.instrumentation.netty40.AttributeKeys;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
@@ -47,7 +48,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
         .inject(
             span.context(), Format.Builtin.HTTP_HEADERS, new NettyResponseInjectAdapter(request));
 
-    ctx.channel().attr(HttpClientTracingHandler.attributeKey).set(span);
+    ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).set(span);
 
     try {
       ctx.write(msg, prm);

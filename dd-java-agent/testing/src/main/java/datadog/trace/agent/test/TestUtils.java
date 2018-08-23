@@ -3,6 +3,7 @@ package datadog.trace.agent.test;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 
 import datadog.trace.agent.tooling.Utils;
+import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -85,6 +86,8 @@ public class TestUtils {
   public static <T extends Object> Object runUnderTrace(
       final String rootOperationName, final Callable<T> r) throws Exception {
     final Scope scope = GlobalTracer.get().buildSpan(rootOperationName).startActive(true);
+    ((TraceScope) scope).setAsyncPropagation(true);
+
     try {
       return r.call();
     } catch (final Exception e) {
@@ -94,6 +97,7 @@ public class TestUtils {
 
       throw e;
     } finally {
+      ((TraceScope) scope).setAsyncPropagation(false);
       scope.close();
     }
   }

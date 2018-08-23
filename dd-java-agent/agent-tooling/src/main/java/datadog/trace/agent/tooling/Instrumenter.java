@@ -51,6 +51,9 @@ public interface Instrumenter {
     private final String instrumentationPrimaryName;
     protected final boolean enabled;
 
+    protected final String packageName =
+        getClass().getPackage() == null ? "" : getClass().getPackage().getName();
+
     public Default(final String instrumentationName, final String... additionalNames) {
       instrumentationNames = new HashSet<>(Arrays.asList(additionalNames));
       instrumentationNames.add(instrumentationName);
