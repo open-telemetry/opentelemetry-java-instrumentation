@@ -94,7 +94,7 @@ class PendingTraceTest extends Specification {
     traceCount.get() == 1
   }
 
-  def "trace reported when unfinished child discarded"() {
+  def "trace does not report when unfinished child discarded"() {
     when:
     def child = tracer.buildSpan("child").asChildOf(rootSpan).start()
     rootSpan.finish()
@@ -116,7 +116,7 @@ class PendingTraceTest extends Specification {
     trace.pendingReferenceCount.get() == 0
     trace.weakReferences.size() == 0
     trace.asList() == [rootSpan]
-    writer == [[rootSpan]]
+    writer == []
     traceCount.get() == 1
   }
 

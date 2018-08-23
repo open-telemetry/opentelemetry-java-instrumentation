@@ -297,10 +297,15 @@ public class DDTracer implements io.opentracing.Tracer, Closeable {
         }
       }
     }
-    traceCount.incrementAndGet();
+    incrementTraceCount();
     if (!writtenTrace.isEmpty() && sampler.sample(writtenTrace.get(0))) {
       writer.write(writtenTrace);
     }
+  }
+
+  /** Increment the reported trace count, but do not write a trace. */
+  void incrementTraceCount() {
+    traceCount.incrementAndGet();
   }
 
   @Override
