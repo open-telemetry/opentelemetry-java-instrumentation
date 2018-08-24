@@ -3,6 +3,7 @@ package datadog.opentracing
 import datadog.trace.api.interceptor.MutableSpan
 import datadog.trace.api.interceptor.TraceInterceptor
 import datadog.trace.common.writer.ListWriter
+import datadog.trace.context.TracerBridge
 import spock.lang.Specification
 
 import java.util.concurrent.atomic.AtomicBoolean
@@ -142,5 +143,23 @@ class TraceInterceptorTest extends Specification {
     tags["thread.name"] != null
     tags["thread.id"] != null
     tags.size() == 6
+  }
+
+  def "register interceptor through bridge" () {
+    setup:
+    def interceptor = new TraceInterceptor() {
+      @Override
+      Collection<? extends MutableSpan> onTraceComplete(Collection<? extends MutableSpan> trace) {
+        return trace
+      }
+
+      @Override
+      int priority() {
+        return 38
+      }
+    }
+
+    expect:
+    TracerBridge.addTraceInterceptor(interceptor)
   }
 }

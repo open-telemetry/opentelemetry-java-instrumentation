@@ -1,6 +1,6 @@
 package datadog.trace.api;
 
-import java.util.concurrent.atomic.AtomicReference;
+import datadog.trace.context.TracerBridge;
 
 /**
  * Utility class to access the active trace and span ids.
@@ -8,20 +8,12 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>Intended for use with MDC frameworks.
  */
 public class CorrelationIdentifier {
-  private static final AtomicReference<Provider> provider = new AtomicReference<>(Provider.NO_OP);
-
-  public static void registerIfAbsent(Provider p) {
-    if (p != null && p != Provider.NO_OP) {
-      provider.compareAndSet(Provider.NO_OP, p);
-    }
-  }
-
   public static String getTraceId() {
-    return provider.get().getTraceId();
+    return TracerBridge.get().getTraceId();
   }
 
   public static String getSpanId() {
-    return provider.get().getSpanId();
+    return TracerBridge.get().getSpanId();
   }
 
   public interface Provider {

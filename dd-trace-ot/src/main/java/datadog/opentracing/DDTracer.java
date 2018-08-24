@@ -13,7 +13,6 @@ import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HTTPCodec;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
-import datadog.trace.api.CorrelationIdentifier;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.interceptor.TraceInterceptor;
 import datadog.trace.api.sampling.PrioritySampling;
@@ -24,6 +23,7 @@ import datadog.trace.common.sampling.Sampler;
 import datadog.trace.common.writer.DDAgentWriter;
 import datadog.trace.common.writer.DDApi;
 import datadog.trace.common.writer.Writer;
+import datadog.trace.context.TracerBridge;
 import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
 import io.opentracing.Span;
@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing API. */
 @Slf4j
-public class DDTracer implements io.opentracing.Tracer, Closeable {
+public class DDTracer implements io.opentracing.Tracer, Closeable, TracerBridge.Provider {
 
   public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
@@ -162,7 +162,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable {
       addDecorator(decorator);
     }
 
-    CorrelationIdentifier.registerIfAbsent(OTTraceCorrelation.INSTANCE);
+    TracerBridge.registerIfAbsent(this);
 
     log.info("New instance: {}", this);
   }
@@ -202,17 +202,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable {
     spanContextDecorators.put(decorator.getMatchingTag(), list);
   }
 
-  /**
-   * Add a new interceptor to the tracer. Interceptors with duplicate priority to existing ones are
-   * ignored.
-   *
-   * @param interceptor
-   * @return false if an interceptor with same priority exists.
-   */
-  public boolean addInterceptor(final TraceInterceptor interceptor) {
-    return interceptors.add(interceptor);
-  }
-
   public void addScopeContext(final ScopeContext context) {
     scopeManager.addScopeContext(context);
   }
@@ -227,7 +216,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable {
     try {
       for (final TraceInterceptor interceptor :
           ServiceLoader.load(TraceInterceptor.class, classLoader)) {
-        addInterceptor(interceptor);
+        addTraceInterceptor(interceptor);
       }
     } catch (final ServiceConfigurationError e) {
       log.warn("Problem loading TraceInterceptor for classLoader: " + classLoader, e);
@@ -306,6 +295,29 @@ public class DDTracer implements io.opentracing.Tracer, Closeable {
   /** Increment the reported trace count, but do not write a trace. */
   void incrementTraceCount() {
     traceCount.incrementAndGet();
+  }
+
+  @Override
+  public String getTraceId() {
+    final Span activeSpan = this.activeSpan();
+    if (activeSpan instanceof DDSpan) {
+      return ((DDSpan) activeSpan).getTraceId();
+    }
+    return "0";
+  }
+
+  @Override
+  public String getSpanId() {
+    final Span activeSpan = this.activeSpan();
+    if (activeSpan instanceof DDSpan) {
+      return ((DDSpan) activeSpan).getSpanId();
+    }
+    return "0";
+  }
+
+  @Override
+  public boolean addTraceInterceptor(final TraceInterceptor interceptor) {
+    return interceptors.add(interceptor);
   }
 
   @Override
