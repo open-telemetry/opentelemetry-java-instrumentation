@@ -48,6 +48,7 @@ include ':dd-java-agent:instrumentation:servlet-2'
 include ':dd-java-agent:instrumentation:servlet-3'
 include ':dd-java-agent:instrumentation:sparkjava-2.4'
 include ':dd-java-agent:instrumentation:spring-web'
+include ':dd-java-agent:instrumentation:spring-webflux'
 include ':dd-java-agent:instrumentation:spymemcached-2.12'
 include ':dd-java-agent:instrumentation:trace-annotation'
 

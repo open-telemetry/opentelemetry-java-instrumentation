@@ -1,0 +1,77 @@
+muzzle {
+  pass {
+    group = "org.springframework"
+    module = "spring-webflux"
+    versions = "[5.0.0.RELEASE,)"
+    assertInverse = true
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+sourceSets {
+  main_java8 {
+    java.srcDirs "${project.projectDir}/src/main/java8"
+  }
+}
+
+compileMain_java8Java {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+
+  main_java8CompileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
+
+  main_java8Compile project(':dd-java-agent:agent-tooling')
+
+  main_java8Compile deps.bytebuddy
+  main_java8Compile deps.opentracing
+
+  compileOnly sourceSets.main_java8.compileClasspath
+
+  compile sourceSets.main_java8.output
+
+  compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:netty-4.1')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+
+  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.0.RELEASE'
+  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter', version: '2.0.0.RELEASE'
+  testCompile group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
+  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.0.RELEASE'
+  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.0.RELEASE'
+}
+
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '+'
+    force group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '+'
+    force group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '+'
+  }
+}
+
+testJava8Only += '**/*Test.class'
+testJava8Only += '**/*TestApplication.class'
+testJava8Only += '**/EchoHandler.class'
+testJava8Only += '**/EchoHandlerFunction.class'
+testJava8Only += '**/FooModel.class'
+testJava8Only += '**/TestController.class'
