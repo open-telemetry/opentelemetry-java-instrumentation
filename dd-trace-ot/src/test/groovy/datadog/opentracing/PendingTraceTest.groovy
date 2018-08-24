@@ -121,6 +121,7 @@ class PendingTraceTest extends Specification {
     trace.asList() == [rootSpan]
     writer == []
     traceCount.get() == 1
+    !PendingTrace.SPAN_CLEANER.pendingTraces.contains(trace)
   }
 
   def "add unfinished span to trace fails"() {

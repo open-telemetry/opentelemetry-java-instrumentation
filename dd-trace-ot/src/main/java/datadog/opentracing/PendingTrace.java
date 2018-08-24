@@ -205,6 +205,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     while ((ref = referenceQueue.poll()) != null) {
       weakReferences.remove(ref);
       if (isWritten.compareAndSet(false, true)) {
+        SPAN_CLEANER.pendingTraces.remove(this);
         // preserve throughput count.
         // Don't report the trace because the data comes from buggy uses of the api and is suspect.
         tracer.incrementTraceCount();
