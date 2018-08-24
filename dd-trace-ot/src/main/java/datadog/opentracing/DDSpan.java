@@ -125,6 +125,11 @@ public class DDSpan implements Span, MutableSpan {
     return this;
   }
 
+  @Override
+  public MutableSpan getRootSpan() {
+    return context().getTrace().getRootSpan();
+  }
+
   public void setErrorMeta(final Throwable error) {
     setError(true);
 
