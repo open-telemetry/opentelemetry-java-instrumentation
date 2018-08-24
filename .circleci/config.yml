@@ -4,219 +4,221 @@ defaults: &defaults
   working_directory: ~/dd-trace-java
   resource_class: xlarge
   docker:
-    - image: &default_container circleci/openjdk:8
+  - image: &default_container circleci/openjdk:8
 
 cache_keys: &cache_keys
   # Reset the cache approx every release
   keys:
-    - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
-    - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
-    - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
+  - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+  - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
+  - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
 
 
 jobs:
   build:
     <<: *defaults
     docker:
-      - image: circleci/openjdk:8-jdk
+    - image: circleci/openjdk:8-jdk
 
     steps:
-      - checkout
+    - checkout
 
-      - restore_cache:
-          <<: *cache_keys
+    - restore_cache:
+        <<: *cache_keys
 
-      - run:
-          name: Build Project
-          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1G -Xms64M" ./gradlew clean :dd-java-agent:shadowJar compileTestGroovy compileTestScala compileTestJava check -x test -x latestDepTest -x traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=4
+    - run:
+        name: Build Project
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1G -Xms64M" ./gradlew clean :dd-java-agent:shadowJar compileTestGroovy compileTestScala compileTestJava check -x test -x latestDepTest -x traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=4
 
-      - run:
-          name: Collect Libs
-          when: always
-          command: .circleci/collect_libs.sh
+    - run:
+        name: Collect Libs
+        when: always
+        command: .circleci/collect_libs.sh
 
-      - store_artifacts:
-          path: ./libs
+    - store_artifacts:
+        path: ./libs
 
-      - run:
-          name: Collect Reports
-          when: always
-          command: .circleci/collect_reports.sh
+    - run:
+        name: Collect Reports
+        when: always
+        command: .circleci/collect_reports.sh
 
-      - store_artifacts:
-          path: ./reports
+    - store_artifacts:
+        path: ./reports
 
-      - persist_to_workspace:
-          root: .
-          paths:
-            - workspace
+    - persist_to_workspace:
+        root: .
+        paths:
+        - workspace
 
-      - save_cache:
-          key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
-          paths: ~/.gradle
-          background: true
+    - save_cache:
+        key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+        paths: ~/.gradle
+        background: true
 
 
   default_test_job: &default_test_job
     <<: *defaults
 
     docker:
-      - image: *default_container
-        # This is used by spymemcached instrumentation tests
-      - image: memcached
+    - image: *default_container
+      # This is used by spymemcached instrumentation tests
+    - image: memcached
+      # This is used by couchbase instrumentation tests
+    - image: couchbase/server
 
     steps:
-      - checkout
+    - checkout
 
-      - run:
-          name: Install Additional JVM
-          command: |
-            if [ "${INSTALL_ZULU}" != "" ]; then
-              sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9
-              echo 'deb http://repos.azulsystems.com/debian stable main' | sudo tee -a /etc/apt/sources.list.d/zulu.list
-              sudo apt-get update
-              sudo apt-get install $INSTALL_ZULU
-            fi
+    - run:
+        name: Install Additional JVM
+        command: |
+          if [ "${INSTALL_ZULU}" != "" ]; then
+            sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x219BD9C9
+            echo 'deb http://repos.azulsystems.com/debian stable main' | sudo tee -a /etc/apt/sources.list.d/zulu.list
+            sudo apt-get update
+            sudo apt-get install $INSTALL_ZULU
+          fi
 
-      - attach_workspace:
-          at: .
+    - attach_workspace:
+        at: .
 
-      - restore_cache:
-          <<: *cache_keys
+    - restore_cache:
+        <<: *cache_keys
 
-      - run:
-          name: Run Tests
-          command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew $TEST_TASK --build-cache --parallel --stacktrace --no-daemon --max-workers=3
+    - run:
+        name: Run Tests
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew $TEST_TASK --build-cache --parallel --stacktrace --no-daemon --max-workers=3
 
-      - run:
-          name: Collect Reports
-          when: on_fail
-          command: .circleci/collect_reports.sh
+    - run:
+        name: Collect Reports
+        when: on_fail
+        command: .circleci/collect_reports.sh
 
-      - store_artifacts:
-          path: ./reports
+    - store_artifacts:
+        path: ./reports
 
-      - run:
-          name: Collect Test Results
-          when: always
-          command: .circleci/collect_results.sh
+    - run:
+        name: Collect Test Results
+        when: always
+        command: .circleci/collect_results.sh
 
-      - store_test_results:
-          path: ./results
+    - store_test_results:
+        path: ./results
 
   test_7:
     <<: *default_test_job
     environment:
-      - JAVA7_HOME: /usr/lib/jvm/zulu-7-amd64
-      - TEST_TASK: testJava7
-      - INSTALL_ZULU: zulu-7
+    - JAVA7_HOME: /usr/lib/jvm/zulu-7-amd64
+    - TEST_TASK: testJava7
+    - INSTALL_ZULU: zulu-7
 
   test_8:
     <<: *default_test_job
     environment:
-      # We are building on Java8, this is our default JVM so no need to set more homes
-      - TEST_TASK: test latestDepTest jacocoTestReport jacocoTestCoverageVerification
+    # We are building on Java8, this is our default JVM so no need to set more homes
+    - TEST_TASK: test latestDepTest jacocoTestReport jacocoTestCoverageVerification
 
   test_9:
     <<: *default_test_job
     environment:
-      - JAVA9_HOME: /usr/lib/jvm/zulu-9-amd64
-      - TEST_TASK: testJava9 latestDepTestJava9
-      - INSTALL_ZULU: zulu-9
+    - JAVA9_HOME: /usr/lib/jvm/zulu-9-amd64
+    - TEST_TASK: testJava9 latestDepTestJava9
+    - INSTALL_ZULU: zulu-9
 
   test_10:
     <<: *default_test_job
     environment:
-      - JAVA10_HOME: /usr/lib/jvm/zulu-10-amd64
-      - TEST_TASK: testJava10 latestDepTestJava10
-      - INSTALL_ZULU: zulu-10
+    - JAVA10_HOME: /usr/lib/jvm/zulu-10-amd64
+    - TEST_TASK: testJava10 latestDepTestJava10
+    - INSTALL_ZULU: zulu-10
 
   agent_integration_tests:
     <<: *defaults
     docker:
-      - image: circleci/openjdk:8-jdk
-      - image: datadog/docker-dd-agent
-        environment:
-          - DD_APM_ENABLED=true
-          - DD_BIND_HOST=0.0.0.0
-          - DD_API_KEY=invalid_key_but_this_is_fine
+    - image: circleci/openjdk:8-jdk
+    - image: datadog/docker-dd-agent
+      environment:
+      - DD_APM_ENABLED=true
+      - DD_BIND_HOST=0.0.0.0
+      - DD_API_KEY=invalid_key_but_this_is_fine
     steps:
-      - checkout
+    - checkout
 
-      - attach_workspace:
-          at: .
+    - attach_workspace:
+        at: .
 
-      - restore_cache:
-          # Reset the cache approx every release
-          keys:
-            - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
-            - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
-            - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
+    - restore_cache:
+        # Reset the cache approx every release
+        keys:
+        - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
+        - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
+        - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
 
-      - run:
-          name: Run Trace Agent Tests
-          command: ./gradlew traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=6
+    - run:
+        name: Run Trace Agent Tests
+        command: ./gradlew traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=6
 
-      - run:
-          name: Collect Reports
-          when: on_fail
-          command: .circleci/collect_reports.sh
+    - run:
+        name: Collect Reports
+        when: on_fail
+        command: .circleci/collect_reports.sh
 
-      - store_artifacts:
-          path: ./reports
+    - store_artifacts:
+        path: ./reports
 
-      - run:
-          name: Collect Test Results
-          when: always
-          command: .circleci/collect_results.sh
+    - run:
+        name: Collect Test Results
+        when: always
+        command: .circleci/collect_results.sh
 
-      - store_test_results:
-          path: ./results
+    - store_test_results:
+        path: ./results
 
   scan_versions:
     <<: *defaults
     steps:
-      - checkout
+    - checkout
 
-      - restore_cache:
-          # Reset the cache approx every release
-          keys:
-            - dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
-            - dd-trace-java-version-scan
+    - restore_cache:
+        # Reset the cache approx every release
+        keys:
+        - dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
+        - dd-trace-java-version-scan
 
-      - run:
-          name: Verify Version Scan and Muzzle
-          command: ./gradlew verifyVersionScan muzzle --parallel --stacktrace --no-daemon --max-workers=6
+    - run:
+        name: Verify Version Scan and Muzzle
+        command: ./gradlew verifyVersionScan muzzle --parallel --stacktrace --no-daemon --max-workers=6
 
-      - save_cache:
-          key: dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
-          paths: ~/.gradle
+    - save_cache:
+        key: dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
+        paths: ~/.gradle
 
   publish: &publish
     <<: *defaults
     steps:
-      - checkout
+    - checkout
 
-      - attach_workspace:
-          at: .
+    - attach_workspace:
+        at: .
 
-      - restore_cache:
-          <<: *cache_keys
+    - restore_cache:
+        <<: *cache_keys
 
-      - run:
-          name: Decode Signing Key
-          command: echo $PGP_KEY_FILE | base64 --decode > /home/circleci/dd-trace-java/.circleci/secring.gpg
+    - run:
+        name: Decode Signing Key
+        command: echo $PGP_KEY_FILE | base64 --decode > /home/circleci/dd-trace-java/.circleci/secring.gpg
 
-      - deploy:
-          name: Publish master to Artifactory
-          command: |
-            ./gradlew -Psigning.keyId=${PGP_KEY_ID} \
-              -Psigning.password=${PGP_KEY_PASS} \
-              -Psigning.secretKeyRingFile=/home/circleci/dd-trace-java/.circleci/secring.gpg \
-              -PbintrayUser=${BINTRAY_USER} \
-              -PbintrayApiKey=${BINTRAY_API_KEY} \
-              -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
-              artifactoryPublish --max-workers=1 --build-cache --stacktrace --no-daemon
+    - deploy:
+        name: Publish master to Artifactory
+        command: |
+          ./gradlew -Psigning.keyId=${PGP_KEY_ID} \
+            -Psigning.password=${PGP_KEY_PASS} \
+            -Psigning.secretKeyRingFile=/home/circleci/dd-trace-java/.circleci/secring.gpg \
+            -PbintrayUser=${BINTRAY_USER} \
+            -PbintrayApiKey=${BINTRAY_API_KEY} \
+            -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
+            artifactoryPublish --max-workers=1 --build-cache --stacktrace --no-daemon
 
   publish_master:
     <<: *publish
@@ -227,72 +229,72 @@ workflows:
   version: 2
   build_test_deploy:
     jobs:
-      - build:
-          filters:
-            tags:
-              only: /.*/
+    - build:
+        filters:
+          tags:
+            only: /.*/
 
-      - test_7:
-          requires:
-            - build
-          filters:
-            tags:
-              only: /.*/
-      - test_8:
-          requires:
-            - build
-          filters:
-            tags:
-              only: /.*/
-      - test_9:
-          requires:
-            - build
-          filters:
-            tags:
-              only: /.*/
-      - test_10:
-          requires:
-            - build
-          filters:
-            tags:
-              only: /.*/
+    - test_7:
+        requires:
+        - build
+        filters:
+          tags:
+            only: /.*/
+    - test_8:
+        requires:
+        - build
+        filters:
+          tags:
+            only: /.*/
+    - test_9:
+        requires:
+        - build
+        filters:
+          tags:
+            only: /.*/
+    - test_10:
+        requires:
+        - build
+        filters:
+          tags:
+            only: /.*/
 
-      - agent_integration_tests:
-          requires:
-            - build
-          filters:
-            tags:
-              only: /.*/
+    - agent_integration_tests:
+        requires:
+        - build
+        filters:
+          tags:
+            only: /.*/
 
-      - scan_versions:
-          requires:
-            - build
-          filters:
-            branches:
-              ignore: master
+    - scan_versions:
+        requires:
+        - build
+        filters:
+          branches:
+            ignore: master
 
-      - publish_master:
-          requires:
-            - test_7
-            - test_8
-            - test_9
-            - test_10
-            - agent_integration_tests
-          filters:
-            branches:
-              only: master
-            tags:
-              ignore: /.*/
+    - publish_master:
+        requires:
+        - test_7
+        - test_8
+        - test_9
+        - test_10
+        - agent_integration_tests
+        filters:
+          branches:
+            only: master
+          tags:
+            ignore: /.*/
 
-      - publish_tag:
-          requires:
-            - test_7
-            - test_8
-            - test_9
-            - test_10
-            - agent_integration_tests
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*/
+    - publish_tag:
+        requires:
+        - test_7
+        - test_8
+        - test_9
+        - test_10
+        - agent_integration_tests
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v.*/

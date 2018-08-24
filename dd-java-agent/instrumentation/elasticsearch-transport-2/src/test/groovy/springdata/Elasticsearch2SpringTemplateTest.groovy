@@ -1,3 +1,5 @@
+package springdata
+
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
@@ -17,7 +19,6 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder
 import spock.lang.Shared
-import springdata.Doc
 
 import java.util.concurrent.atomic.AtomicLong
 
