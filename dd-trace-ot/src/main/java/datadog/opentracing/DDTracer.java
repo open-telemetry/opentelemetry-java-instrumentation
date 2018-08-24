@@ -162,8 +162,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, TracerBridge.
       addDecorator(decorator);
     }
 
-    TracerBridge.registerIfAbsent(this);
-
     log.info("New instance: {}", this);
   }
 

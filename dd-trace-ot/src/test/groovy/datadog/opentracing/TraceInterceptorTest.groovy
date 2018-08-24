@@ -147,6 +147,7 @@ class TraceInterceptorTest extends Specification {
 
   def "register interceptor through bridge" () {
     setup:
+    TracerBridge.registerIfAbsent(tracer)
     def interceptor = new TraceInterceptor() {
       @Override
       Collection<? extends MutableSpan> onTraceComplete(Collection<? extends MutableSpan> trace) {
@@ -161,5 +162,6 @@ class TraceInterceptorTest extends Specification {
 
     expect:
     TracerBridge.addTraceInterceptor(interceptor)
+    tracer.interceptors.contains(interceptor)
   }
 }

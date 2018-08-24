@@ -9,6 +9,7 @@ import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.common.writer.ListWriter;
 import datadog.trace.common.writer.Writer;
+import datadog.trace.context.TracerBridge;
 import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -84,6 +85,7 @@ public abstract class AgentTestRunner extends Specification {
         };
     TEST_TRACER = new DDTracer(TEST_WRITER);
     TestUtils.registerOrReplaceGlobalTracer((Tracer) TEST_TRACER);
+    TracerBridge.registerIfAbsent((DDTracer) TEST_TRACER);
   }
 
   protected static Tracer getTestTracer() {
