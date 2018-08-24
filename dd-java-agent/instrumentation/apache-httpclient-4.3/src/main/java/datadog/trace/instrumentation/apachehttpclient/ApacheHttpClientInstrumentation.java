@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.apachehttpclient;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -34,22 +33,6 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.http.impl.client.HttpClientBuilder")
         .or(safeHasSuperType(named("org.apache.http.impl.client.CloseableHttpClient")));
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses(
-        "org.apache.http.HttpException",
-        "org.apache.http.HttpRequest",
-        "org.apache.http.client.RedirectStrategy",
-        "org.apache.http.client.methods.CloseableHttpResponse",
-        "org.apache.http.client.methods.HttpExecutionAware",
-        "org.apache.http.client.methods.HttpRequestWrapper",
-        "org.apache.http.client.protocol.HttpClientContext",
-        "org.apache.http.conn.routing.HttpRoute",
-        "org.apache.http.impl.execchain.ClientExecChain",
-        "org.apache.http.impl.client.CloseableHttpClient",
-        "org.apache.http.impl.client.InternalHttpClient");
   }
 
   @Override

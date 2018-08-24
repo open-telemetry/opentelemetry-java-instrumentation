@@ -7,6 +7,19 @@ testSets {
   latestDepTest
 }
 
+muzzle {
+  pass {
+    group = 'com.typesafe.play'
+    module = 'play_2.11'
+    versions = '[2.4.0,2.7.0-M1)'
+  }
+  pass {
+    group = 'com.typesafe.play'
+    module = 'play_2.12'
+    versions = '[2.4.0,2.7.0-M1)'
+  }
+}
+
 dependencies {
   compileOnly group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
 
