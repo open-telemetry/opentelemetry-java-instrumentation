@@ -40,6 +40,16 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       Collections.newSetFromMap(new ConcurrentHashMap<WeakReference<?>, Boolean>());
 
   private final AtomicInteger pendingReferenceCount = new AtomicInteger(0);
+  /**
+   * During a trace there are cases where the root span must be accessed (e.g. priority sampling and
+   * trace-search tags).
+   *
+   * <p>Use a weak ref because we still need to handle buggy cases where the root span is not
+   * correctly closed (see SpanCleaner).
+   *
+   * <p>The root span will be available in non-buggy cases because it has either finished and
+   * strongly ref'd in this queue or is unfinished and ref'd in a ContinuableScope.
+   */
   private final AtomicReference<WeakReference<DDSpan>> rootSpan = new AtomicReference<>();
 
   /** Ensure a trace is never written multiple times */

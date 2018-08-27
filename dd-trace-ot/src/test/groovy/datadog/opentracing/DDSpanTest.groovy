@@ -183,4 +183,18 @@ class DDSpanTest extends Specification {
     child2.getMetrics().get(DDSpanContext.PRIORITY_SAMPLING_KEY) == null
     child2.getMetrics().get(DDSpanContext.SAMPLE_RATE_KEY) == null
   }
+
+  def "getRootSpan returns the root span"() {
+    setup:
+    def root = tracer.buildSpan("root").start()
+    def child = tracer.buildSpan("child").asChildOf(root).start()
+
+    expect:
+    root.getRootSpan() == root
+    child.getRootSpan() == root
+
+    cleanup:
+    child.finish()
+    root.finish()
+  }
 }
