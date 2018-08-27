@@ -4,6 +4,7 @@ import datadog.trace.agent.test.TestUtils
 import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
 import spock.lang.Subject
+import spock.lang.Timeout
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
@@ -94,7 +95,8 @@ class PendingTraceTest extends Specification {
     traceCount.get() == 1
   }
 
-  def "trace reported when unfinished child discarded"() {
+  @Timeout(value = 60, unit = TimeUnit.SECONDS)
+  def "trace does not report when unfinished child discarded"() {
     when:
     def child = tracer.buildSpan("child").asChildOf(rootSpan).start()
     rootSpan.finish()
@@ -109,15 +111,17 @@ class PendingTraceTest extends Specification {
     def childRef = new WeakReference<>(child)
     child = null
     TestUtils.awaitGC(childRef)
-    while (trace.clean()) {
+    while (trace.pendingReferenceCount.get() > 0) {
+      trace.clean()
     }
 
     then:
     trace.pendingReferenceCount.get() == 0
     trace.weakReferences.size() == 0
     trace.asList() == [rootSpan]
-    writer == [[rootSpan]]
+    writer == []
     traceCount.get() == 1
+    !PendingTrace.SPAN_CLEANER.pendingTraces.contains(trace)
   }
 
   def "add unfinished span to trace fails"() {

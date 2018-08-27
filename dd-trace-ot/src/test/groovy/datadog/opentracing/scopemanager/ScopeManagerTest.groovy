@@ -10,8 +10,10 @@ import io.opentracing.Span
 import io.opentracing.noop.NoopSpan
 import spock.lang.Specification
 import spock.lang.Subject
+import spock.lang.Timeout
 
 import java.lang.ref.WeakReference
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
@@ -179,11 +181,13 @@ class ScopeManagerTest extends Specification {
     false     | true
   }
 
+  @Timeout(value = 60, unit = TimeUnit.SECONDS)
   def "hard reference on continuation prevents trace from reporting"() {
     setup:
     def builder = tracer.buildSpan("test")
     def scope = (ContinuableScope) builder.startActive(false)
     def span = scope.span()
+    def traceCount = ((DDSpan) span).context().tracer.traceCount
     scope.setAsyncPropagation(true)
     def continuation = scope.capture()
     scope.close()
@@ -199,7 +203,9 @@ class ScopeManagerTest extends Specification {
       def continuationRef = new WeakReference<>(continuation)
       continuation = null // Continuation references also hold up traces.
       TestUtils.awaitGC(continuationRef)
-      writer.waitForTraces(1)
+      while (traceCount.get() == 0) {
+        // wait until trace count increments or timeout expires
+      }
     }
     if (autoClose) {
       if (continuation != null) {
@@ -208,7 +214,8 @@ class ScopeManagerTest extends Specification {
     }
 
     then:
-    writer == [[span]]
+    forceGC ? true : writer == [[span]]
+    traceCount.get() == 1
 
     where:
     autoClose | forceGC

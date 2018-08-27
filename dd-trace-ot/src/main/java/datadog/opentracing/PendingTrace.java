@@ -214,11 +214,20 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     int count = 0;
     while ((ref = referenceQueue.poll()) != null) {
       weakReferences.remove(ref);
+      if (isWritten.compareAndSet(false, true)) {
+        SPAN_CLEANER.pendingTraces.remove(this);
+        // preserve throughput count.
+        // Don't report the trace because the data comes from buggy uses of the api and is suspect.
+        tracer.incrementTraceCount();
+      }
       count++;
       expireReference();
     }
     if (count > 0) {
-      log.debug("{} unfinished spans garbage collected!", count);
+      log.debug(
+          "trace {} : {} unfinished spans garbage collected. Trace will not report.",
+          traceId,
+          count);
     }
     return count > 0;
   }
