@@ -4,14 +4,12 @@ import datadog.trace.common.writer.ListWriter
 import spock.lang.Shared
 import spock.lang.Specification
 
-class OTTraceCorrelationTest extends Specification {
+class TraceCorrelationTest extends Specification {
 
   static final WRITER = new ListWriter()
 
   @Shared
   DDTracer tracer = new DDTracer(WRITER)
-  @Shared
-  OTTraceCorrelation traceCorrelation = new OTTraceCorrelation(tracer)
 
   def scope = tracer.buildSpan("test").startActive(true)
 
@@ -24,12 +22,12 @@ class OTTraceCorrelationTest extends Specification {
     scope.close()
 
     expect:
-    "0" == traceCorrelation.getTraceId()
+    "0" == tracer.getTraceId()
   }
 
   def "get trace id with trace"() {
     expect:
-    ((DDSpan) scope.span()).traceId == traceCorrelation.getTraceId()
+    ((DDSpan) scope.span()).traceId == tracer.getTraceId()
   }
 
   def "get span id without span"() {
@@ -37,11 +35,11 @@ class OTTraceCorrelationTest extends Specification {
     scope.close()
 
     expect:
-    "0" == traceCorrelation.getSpanId()
+    "0" == tracer.getSpanId()
   }
 
   def "get span id with trace"() {
     expect:
-    ((DDSpan) scope.span()).spanId == traceCorrelation.getSpanId()
+    ((DDSpan) scope.span()).spanId == tracer.getSpanId()
   }
 }
