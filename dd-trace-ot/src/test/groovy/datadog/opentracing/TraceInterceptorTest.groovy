@@ -3,7 +3,7 @@ package datadog.opentracing
 import datadog.trace.api.interceptor.MutableSpan
 import datadog.trace.api.interceptor.TraceInterceptor
 import datadog.trace.common.writer.ListWriter
-import datadog.trace.context.TracerBridge
+import datadog.trace.api.GlobalTracer
 import spock.lang.Specification
 
 import java.util.concurrent.atomic.AtomicBoolean
@@ -147,7 +147,7 @@ class TraceInterceptorTest extends Specification {
 
   def "register interceptor through bridge" () {
     setup:
-    TracerBridge.registerIfAbsent(tracer)
+    GlobalTracer.registerIfAbsent(tracer)
     def interceptor = new TraceInterceptor() {
       @Override
       Collection<? extends MutableSpan> onTraceComplete(Collection<? extends MutableSpan> trace) {
@@ -161,7 +161,7 @@ class TraceInterceptorTest extends Specification {
     }
 
     expect:
-    TracerBridge.addTraceInterceptor(interceptor)
+    GlobalTracer.get().addTraceInterceptor(interceptor)
     tracer.interceptors.contains(interceptor)
   }
 }

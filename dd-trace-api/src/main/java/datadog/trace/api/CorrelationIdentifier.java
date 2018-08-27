@@ -1,7 +1,5 @@
 package datadog.trace.api;
 
-import datadog.trace.context.TracerBridge;
-
 /**
  * Utility class to access the active trace and span ids.
  *
@@ -9,29 +7,10 @@ import datadog.trace.context.TracerBridge;
  */
 public class CorrelationIdentifier {
   public static String getTraceId() {
-    return TracerBridge.get().getTraceId();
+    return GlobalTracer.get().getTraceId();
   }
 
   public static String getSpanId() {
-    return TracerBridge.get().getSpanId();
-  }
-
-  public interface Provider {
-    String getTraceId();
-
-    String getSpanId();
-
-    Provider NO_OP =
-        new Provider() {
-          @Override
-          public String getTraceId() {
-            return "0";
-          }
-
-          @Override
-          public String getSpanId() {
-            return "0";
-          }
-        };
+    return GlobalTracer.get().getSpanId();
   }
 }

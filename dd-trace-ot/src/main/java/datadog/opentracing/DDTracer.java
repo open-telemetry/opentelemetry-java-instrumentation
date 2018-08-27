@@ -23,7 +23,6 @@ import datadog.trace.common.sampling.Sampler;
 import datadog.trace.common.writer.DDAgentWriter;
 import datadog.trace.common.writer.DDApi;
 import datadog.trace.common.writer.Writer;
-import datadog.trace.context.TracerBridge;
 import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
 import io.opentracing.Span;
@@ -49,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing API. */
 @Slf4j
-public class DDTracer implements io.opentracing.Tracer, Closeable, TracerBridge.Provider {
+public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace.api.Tracer {
 
   public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
