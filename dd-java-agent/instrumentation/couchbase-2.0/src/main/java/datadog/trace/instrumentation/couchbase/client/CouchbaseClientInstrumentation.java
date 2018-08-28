@@ -15,6 +15,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.Span;
+import io.opentracing.noop.NoopSpan;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Method;
@@ -33,11 +34,6 @@ public class CouchbaseClientInstrumentation extends Instrumenter.Default {
 
   public CouchbaseClientInstrumentation() {
     super("couchbase");
-  }
-
-  @Override
-  protected boolean defaultEnabled() {
-    return false;
   }
 
   @Override
@@ -103,11 +99,16 @@ public class CouchbaseClientInstrumentation extends Instrumenter.Default {
 
     @Override
     public void call() {
+      // This is called each time an observer has a new subscriber, but we should only time it once.
+      if (!spanRef.compareAndSet(null, NoopSpan.INSTANCE)) {
+        return;
+      }
       final Class<?> declaringClass = method.getDeclaringClass();
       final String className =
           declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
       final String resourceName = className + "." + method.getName();
 
+      // just replace the no-op span.
       spanRef.set(
           GlobalTracer.get()
               .buildSpan("couchbase.call")

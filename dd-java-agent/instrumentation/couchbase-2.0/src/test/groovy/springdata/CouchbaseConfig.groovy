@@ -1,11 +1,9 @@
 package springdata
 
-
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.couchbase.config.AbstractCouchbaseConfiguration
 import org.springframework.data.couchbase.repository.config.EnableCouchbaseRepositories
-import util.AbstractCouchbaseTest
 
 @Configuration
 @EnableCouchbaseRepositories(basePackages = "springdata")
@@ -19,11 +17,11 @@ class CouchbaseConfig extends AbstractCouchbaseConfiguration {
 
   @Override
   protected String getBucketName() {
-    return AbstractCouchbaseTest.BUCKET_COUCHBASE.name()
+    return "CouchbaseSpringRepositoryTest-cb"
   }
 
   @Override
   protected String getBucketPassword() {
-    return AbstractCouchbaseTest.BUCKET_COUCHBASE.password()
+    return "test-pass"
   }
 }

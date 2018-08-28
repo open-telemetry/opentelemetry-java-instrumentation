@@ -14,6 +14,7 @@ import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -123,7 +124,7 @@ public abstract class AgentTestRunner extends Specification {
     final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
     try {
       Thread.currentThread().setContextClassLoader(AgentTestRunner.class.getClassLoader());
-      //      assert ServiceLoader.load(Instrumenter.class).iterator().hasNext();
+      assert ServiceLoader.load(Instrumenter.class).iterator().hasNext();
       activeTransformer = AgentInstaller.installBytebuddyAgent(instrumentation, ERROR_LISTENER);
     } finally {
       Thread.currentThread().setContextClassLoader(contextLoader);

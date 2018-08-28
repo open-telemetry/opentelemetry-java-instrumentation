@@ -52,7 +52,7 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     }
 
     where:
-    bucketSettings << [BUCKET_COUCHBASE, BUCKET_MEMCACHE, BUCKET_EPHEMERAL]
+    bucketSettings << [bucketCouchbase, bucketMemcache, bucketEphemeral]
     type = bucketSettings.type().name()
   }
 }

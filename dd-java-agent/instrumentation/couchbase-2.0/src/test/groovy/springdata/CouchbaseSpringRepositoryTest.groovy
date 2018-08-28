@@ -38,7 +38,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
 
   def setup() {
     repo.deleteAll()
-//    TEST_WRITER.waitForTraces(4)
+    TEST_WRITER.waitForTraces(1) // There might be more if there were documents to delete
     TEST_WRITER.clear()
   }
 

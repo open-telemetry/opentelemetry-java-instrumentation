@@ -22,6 +22,11 @@ import com.couchbase.client.java.query.Index
 import com.couchbase.client.java.view.DefaultView
 import com.couchbase.client.java.view.DesignDocument
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.utils.OkHttpUtils
+import okhttp3.FormBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import org.testcontainers.couchbase.CouchbaseContainer
 import spock.lang.Requires
 import spock.lang.Shared
@@ -33,31 +38,35 @@ import java.util.concurrent.TimeUnit
 @Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
 class AbstractCouchbaseTest extends AgentTestRunner {
 
-  static {
-    System.setProperty("dd.integration.couchbase.enabled", "true")
-  }
   private static final USERNAME = "Administrator"
   private static final PASSWORD = "password"
+  private static final OkHttpClient HTTP_CLIENT = OkHttpUtils.client()
 
-  static final BUCKET_COUCHBASE = DefaultBucketSettings.builder()
+  @Shared
+  private String testBucketName = this.getClass().simpleName
+
+  @Shared
+  protected bucketCouchbase = DefaultBucketSettings.builder()
     .enableFlush(true)
-    .name("test-bucket-cb")
+    .name("$testBucketName-cb")
     .password("test-pass")
     .type(BucketType.COUCHBASE)
     .quota(100)
     .build()
 
-  static final BUCKET_MEMCACHE = DefaultBucketSettings.builder()
+  @Shared
+  protected bucketMemcache = DefaultBucketSettings.builder()
     .enableFlush(true)
-    .name("test-bucket-mem")
+    .name("$testBucketName-mem")
     .password("test-pass")
     .type(BucketType.MEMCACHED)
     .quota(100)
     .build()
 
-  static final BUCKET_EPHEMERAL = DefaultBucketSettings.builder()
+  @Shared
+  protected bucketEphemeral = DefaultBucketSettings.builder()
     .enableFlush(true)
-    .name("test-bucket-emp")
+    .name("$testBucketName-emp")
     .password("test-pass")
     .type(BucketType.EPHEMERAL)
     .quota(100)
@@ -91,13 +100,15 @@ class AbstractCouchbaseTest extends AgentTestRunner {
     } else {
       initCluster()
       cluster = CouchbaseCluster.create(envBuilder().build())
-      println "Using local couchbase"
+      println "Using provided couchbase"
     }
     manager = cluster.clusterManager(USERNAME, PASSWORD)
 
-    resetBucket(cluster, BUCKET_COUCHBASE)
-    resetBucket(cluster, BUCKET_MEMCACHE)
-    resetBucket(cluster, BUCKET_EPHEMERAL)
+    if (!testBucketName.contains(AbstractCouchbaseTest.simpleName)) {
+      resetBucket(cluster, bucketCouchbase)
+      resetBucket(cluster, bucketMemcache)
+      resetBucket(cluster, bucketEphemeral)
+    }
   }
 
   def cleanupSpec() {
@@ -131,41 +142,30 @@ class AbstractCouchbaseTest extends AgentTestRunner {
 
 
   protected void initCluster() {
-    assert callCouchbaseRestAPI("/pools/default", "memoryQuota=600&indexMemoryQuota=300") == 200
+    assert callCouchbaseRestAPI("/pools/default", "memoryQuota=1000&indexMemoryQuota=300") == 200
     // This one fails if already initialized, so don't assert.
-    callCouchbaseRestAPI("/node/controller/setupServices", "services=kv%2Cn1ql%2Cindex%2Cfts")
+    callCouchbaseRestAPI("/node/controller/setupServices", "services=kv%2Cindex%2Cn1ql%2Cfts")
     assert callCouchbaseRestAPI("/settings/web", "username=$USERNAME&password=$PASSWORD&port=8091") == 200
-//      callCouchbaseRestAPI(bucketURL, sampleBucketPayloadBuilder.toString())
     assert callCouchbaseRestAPI("/settings/indexes", "indexerThreads=0&logLevel=info&maxRollbackPoints=5&storageMode=memory_optimized") == 200
   }
 
+  /**
+   * Adapted from CouchbaseContainer.callCouchbaseRestAPI()
+   */
   protected int callCouchbaseRestAPI(String url, String payload) throws IOException {
-    String fullUrl = "http://localhost:8091" + url
-    HttpURLConnection httpConnection = (HttpURLConnection) ((new URL(fullUrl).openConnection()))
-    try {
-      httpConnection.setDoOutput(true)
-      httpConnection.setRequestMethod("POST")
-      httpConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-      String encoded = Base64.encode((USERNAME + ":" + PASSWORD).getBytes("UTF-8"))
-      httpConnection.setRequestProperty("Authorization", "Basic " + encoded)
-      DataOutputStream out = new DataOutputStream(httpConnection.getOutputStream())
-      try {
-        out.writeBytes(payload)
-        out.flush()
-        def code = httpConnection.getResponseCode()
-        return code
-      } finally {
-        if (Collections.singletonList(out).get(0) != null) {
-          out.close()
-        }
-      }
-    } finally {
-      if (Collections.singletonList(httpConnection).get(0) != null) {
-        httpConnection.disconnect()
-      }
-    }
+    String authToken = Base64.encode((USERNAME + ":" + PASSWORD).getBytes("UTF-8"))
+    def request = new Request.Builder()
+      .url("http://localhost:8091$url")
+      .header("Authorization", "Basic " + authToken)
+      .post(RequestBody.create(FormBody.CONTENT_TYPE, payload))
+      .build()
+    def response = HTTP_CLIENT.newCall(request).execute()
+    return response.code()
   }
 
+  /**
+   * Copied from CouchbaseContainer.callCouchbaseRestAPI()
+   */
   protected void resetBucket(CouchbaseCluster cluster, BucketSettings bucketSetting) {
     ClusterManager clusterManager = cluster.clusterManager(USERNAME, PASSWORD)
 
@@ -177,22 +177,22 @@ class AbstractCouchbaseTest extends AgentTestRunner {
 
     // Insert Bucket... This generates a LOT of traces
     BucketSettings bucketSettings = clusterManager.insertBucket(bucketSetting)
+
     // Insert Bucket admin user
     UserSettings userSettings = UserSettings.build().password(bucketSetting.password())
       .roles([new UserRole("bucket_full_access", bucketSetting.name())])
-
     clusterManager.upsertUser(AuthDomain.LOCAL, bucketSetting.name(), userSettings)
 
     Bucket bucket = cluster.openBucket(bucketSettings.name(), bucketSettings.password())
 
-//    boolean queryServiceEnabled = false
-//    while (!queryServiceEnabled) {
-//      GetClusterConfigResponse clusterConfig = bucket.core().<GetClusterConfigResponse> send(new GetClusterConfigRequest()).toBlocking().single()
-//      queryServiceEnabled = clusterConfig.config().bucketConfig(bucket.name()).serviceEnabled(ServiceType.QUERY)
-//    }
     bucket.query(Index.createPrimaryIndex().on(bucketSetting.name()))
 
+    // We don't have a good way to tell that all traces are reported
+    // since we don't know how many there will be.
+    Thread.sleep(150)
     TEST_WRITER.clear() // remove traces generated by insertBucket
+
+    // Create view for SpringRepository's findAll()
     if (BucketType.COUCHBASE.equals(bucketSettings.type())) {
       bucket.bucketManager().insertDesignDocument(
         DesignDocument.create("doc", Collections.singletonList(DefaultView.create("all",
