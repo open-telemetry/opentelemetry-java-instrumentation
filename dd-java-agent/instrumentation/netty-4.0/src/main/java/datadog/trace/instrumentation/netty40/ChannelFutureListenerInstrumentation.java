@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.netty40;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -35,11 +34,6 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
         .and(safeHasSuperType(named("io.netty.channel.ChannelFutureListener")));
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("io.netty.handler.codec.spdy.SpdyOrHttpChooser");
   }
 
   @Override
