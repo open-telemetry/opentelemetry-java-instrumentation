@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.couchbase.client;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -30,9 +29,9 @@ import rx.functions.Action0;
 import rx.functions.Action1;
 
 @AutoService(Instrumenter.class)
-public class CouchbaseClientInstrumentation extends Instrumenter.Default {
+public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
 
-  public CouchbaseClientInstrumentation() {
+  public CouchbaseClusterInstrumentation() {
     super("couchbase");
   }
 
@@ -40,11 +39,8 @@ public class CouchbaseClientInstrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface())
         .and(
-            safeHasSuperType(
-                named("com.couchbase.client.java.cluster.AsyncClusterManager")
-                    .or(named("com.couchbase.client.java.bucket.AsyncBucketManager"))
-                    .or(named("com.couchbase.client.java.AsyncCluster"))
-                    .or(named("com.couchbase.client.java.AsyncBucket"))));
+            named("com.couchbase.client.java.cluster.DefaultAsyncClusterManager")
+                .or(named("com.couchbase.client.java.CouchbaseAsyncCluster")));
   }
 
   @Override

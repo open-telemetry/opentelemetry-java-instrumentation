@@ -44,11 +44,12 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.upsert"
+          resourceName "Bucket.upsert($name)"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "bucket" name
             defaultTags()
           }
         }
@@ -56,11 +57,12 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
       trace(1, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.get"
+          resourceName "Bucket.get($name)"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "bucket" name
             defaultTags()
           }
         }
@@ -68,11 +70,12 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
       trace(2, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.remove"
+          resourceName "Bucket.remove($name)"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "bucket" name
             defaultTags()
           }
         }
@@ -80,11 +83,12 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
       trace(3, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.get"
+          resourceName "Bucket.get($name)"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "bucket" name
             defaultTags()
           }
         }

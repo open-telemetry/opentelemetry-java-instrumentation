@@ -54,11 +54,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.query"
+          resourceName "Bucket.query(${bucketCouchbase.name()})"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "bucket" bucketCouchbase.name()
             defaultTags()
           }
         }
@@ -73,7 +74,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     when:
     def doc = new Doc()
 
-    then:
+    then: // CREATE
     repo.save(doc) == doc
 
     and:
@@ -81,11 +82,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.upsert"
+          resourceName "Bucket.upsert(${bucketCouchbase.name()})"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "bucket" bucketCouchbase.name()
             defaultTags()
           }
         }
@@ -93,7 +95,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     }
     TEST_WRITER.clear()
 
-    and:
+    and: // RETRIEVE
     FIND(repo, "1") == doc
 
     and:
@@ -101,11 +103,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.get"
+          resourceName "Bucket.get(${bucketCouchbase.name()})"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "bucket" bucketCouchbase.name()
             defaultTags()
           }
         }
@@ -114,22 +117,25 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     TEST_WRITER.clear()
 
     when:
-    doc.data == "other data"
+    doc.data = "other data"
 
-    then:
+    then: // UPDATE
     repo.save(doc) == doc
     FIND(repo, "1") == doc
+    // findAll doesn't seem to be working.
+//    repo.findAll().asList() == [doc]
 
     and:
     assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.upsert"
+          resourceName "Bucket.upsert(${bucketCouchbase.name()})"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "bucket" bucketCouchbase.name()
             defaultTags()
           }
         }
@@ -137,11 +143,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(1, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.get"
+          resourceName "Bucket.get(${bucketCouchbase.name()})"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "bucket" bucketCouchbase.name()
             defaultTags()
           }
         }
@@ -149,7 +156,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     }
     TEST_WRITER.clear()
 
-    when:
+    when: // DELETE
     repo.delete("1")
 
     then:
@@ -160,11 +167,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.remove"
+          resourceName "Bucket.remove(${bucketCouchbase.name()})"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "bucket" bucketCouchbase.name()
             defaultTags()
           }
         }
@@ -172,11 +180,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(1, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.query"
+          resourceName "Bucket.query(${bucketCouchbase.name()})"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "bucket" bucketCouchbase.name()
             defaultTags()
           }
         }
