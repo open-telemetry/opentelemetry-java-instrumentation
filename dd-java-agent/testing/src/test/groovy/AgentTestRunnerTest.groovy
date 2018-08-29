@@ -10,6 +10,8 @@ class AgentTestRunnerTest extends AgentTestRunner {
   private static final boolean AGENT_INSTALLED_IN_CLINIT
   // having opentracing class in test field should not cause problems
   private static final Tracer A_TRACER = null
+  // having dd tracer api class in test field should not cause problems
+  private static final datadog.trace.api.Tracer DD_API_TRACER = null
 
   static {
     // when test class initializes, opentracing should be set up, but not the agent.
@@ -20,11 +22,13 @@ class AgentTestRunnerTest extends AgentTestRunner {
   def "classpath setup"() {
     expect:
     A_TRACER == null
+    DD_API_TRACER  == null
     OT_LOADER == BOOTSTRAP_CLASSLOADER
     !AGENT_INSTALLED_IN_CLINIT
     getTestTracer() == TestUtils.getUnderlyingGlobalTracer()
     getAgentTransformer() != null
     datadog.trace.api.Trace.getClassLoader() == BOOTSTRAP_CLASSLOADER
+    TestUtils.getUnderlyingGlobalTracer() == datadog.trace.api.GlobalTracer.get()
   }
 
   def "logging works"() {

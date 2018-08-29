@@ -85,7 +85,7 @@ public abstract class AgentTestRunner extends Specification {
         };
     TEST_TRACER = new DDTracer(TEST_WRITER);
     TestUtils.registerOrReplaceGlobalTracer((Tracer) TEST_TRACER);
-    GlobalTracer.registerIfAbsent((DDTracer) TEST_TRACER);
+    GlobalTracer.registerIfAbsent((datadog.trace.api.Tracer) TEST_TRACER);
   }
 
   protected static Tracer getTestTracer() {
