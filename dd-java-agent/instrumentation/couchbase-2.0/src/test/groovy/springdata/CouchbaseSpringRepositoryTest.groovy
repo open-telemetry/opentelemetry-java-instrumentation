@@ -1,5 +1,6 @@
 package springdata
 
+
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.data.repository.CrudRepository
@@ -29,6 +30,8 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
   DocRepository repo
 
   def setupSpec() {
+    CouchbaseConfig.setEnvironment(environment)
+
     // Close all buckets and disconnect
     cluster.disconnect()
 

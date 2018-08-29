@@ -18,6 +18,7 @@ import com.couchbase.client.java.cluster.ClusterManager
 import com.couchbase.client.java.cluster.DefaultBucketSettings
 import com.couchbase.client.java.cluster.UserRole
 import com.couchbase.client.java.cluster.UserSettings
+import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment
 import com.couchbase.client.java.query.Index
 import com.couchbase.client.java.view.DefaultView
@@ -40,7 +41,7 @@ import java.util.concurrent.TimeUnit
 // Couchbase client sometimes throws com.couchbase.client.java.error.TemporaryFailureException.
 // Lets automatically retry to avoid the test from failing completely.
 @RetryOnFailure(delaySeconds = 1)
-class AbstractCouchbaseTest extends AgentTestRunner {
+abstract class AbstractCouchbaseTest extends AgentTestRunner {
 
   private static final USERNAME = "Administrator"
   private static final PASSWORD = "password"
@@ -85,6 +86,8 @@ class AbstractCouchbaseTest extends AgentTestRunner {
   @Shared
   protected CouchbaseCluster cluster
   @Shared
+  protected CouchbaseEnvironment environment
+  @Shared
   protected ClusterManager manager
 
   def setupSpec() {
@@ -99,20 +102,20 @@ class AbstractCouchbaseTest extends AgentTestRunner {
         clusterUsername: USERNAME,
         clusterPassword: PASSWORD)
       couchbaseContainer.start()
+      environment = couchbaseContainer.getCouchbaseEnvironment()
       cluster = couchbaseContainer.getCouchbaseCluster()
       println "Couchbase container started"
     } else {
       initCluster()
-      cluster = CouchbaseCluster.create(envBuilder().build())
+      environment = envBuilder().build()
+      cluster = CouchbaseCluster.create(environment)
       println "Using provided couchbase"
     }
     manager = cluster.clusterManager(USERNAME, PASSWORD)
 
-    if (!testBucketName.contains(AbstractCouchbaseTest.simpleName)) {
-      resetBucket(cluster, bucketCouchbase)
-      resetBucket(cluster, bucketMemcache)
-      resetBucket(cluster, bucketEphemeral)
-    }
+    resetBucket(cluster, bucketCouchbase)
+    resetBucket(cluster, bucketMemcache)
+    resetBucket(cluster, bucketEphemeral)
   }
 
   def cleanupSpec() {
