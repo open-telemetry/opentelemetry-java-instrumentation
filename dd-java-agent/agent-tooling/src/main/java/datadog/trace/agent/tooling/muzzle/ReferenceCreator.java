@@ -347,5 +347,20 @@ public class ReferenceCreator extends ClassVisitor {
               .build());
       super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
     }
+
+    @Override
+    public void visitLdcInsn(final Object value) {
+      if (value instanceof Type) {
+        final Type type = underlyingType((Type) value);
+        if (type.getSort() == Type.OBJECT) {
+          addReference(
+              new Reference.Builder(type.getInternalName())
+                  .withSource(refSourceClassName, currentLineNumber)
+                  .withFlag(computeMinimumClassAccess(refSourceType, type))
+                  .build());
+        }
+      }
+      super.visitLdcInsn(value);
+    }
   }
 }
