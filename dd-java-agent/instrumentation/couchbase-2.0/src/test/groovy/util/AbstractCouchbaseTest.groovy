@@ -1,5 +1,6 @@
 package util
 
+import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import com.couchbase.client.core.env.AbstractServiceConfig
 import com.couchbase.client.core.env.KeyValueServiceConfig
 import com.couchbase.client.core.env.QueryServiceConfig
@@ -36,6 +37,9 @@ import java.util.concurrent.TimeUnit
 // Do not run tests locally on Java7 since testcontainers are not compatible with Java7
 // It is fine to run on CI because CI provides couchbase externally, not through testcontainers
 @Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
+// Couchbase client sometimes throws com.couchbase.client.java.error.TemporaryFailureException.
+// Lets automatically retry to avoid the test from failing completely.
+@RetryOnFailure(delaySeconds = 1)
 class AbstractCouchbaseTest extends AgentTestRunner {
 
   private static final USERNAME = "Administrator"

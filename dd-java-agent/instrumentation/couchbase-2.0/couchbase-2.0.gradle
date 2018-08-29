@@ -32,6 +32,8 @@ dependencies {
   annotationProcessor deps.autoservice
   implementation deps.autoservice
 
+  testCompile 'com.anotherchrisberry:spock-retry:0.6.4'
+
   testCompile project(':dd-java-agent:testing')
 
   testCompile group: 'org.testcontainers', name: 'couchbase', version: '1.8.3'
@@ -43,4 +45,4 @@ dependencies {
   latestDepTestCompile group: 'com.couchbase.client', name: 'encryption', version: '+'
 }
 
-testJava8Minimum += "**/CouchbaseSpringRepositoryTest.class"
+testJava8Minimum += "**/*.class"
