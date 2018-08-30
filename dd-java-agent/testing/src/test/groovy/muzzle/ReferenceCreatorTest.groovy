@@ -57,6 +57,14 @@ class ReferenceCreatorTest extends AgentTestRunner {
     findMethod(bMethods, "protectedMethod", "()V").getFlags().contains(Reference.Flag.PROTECTED_OR_HIGHER)
   }
 
+  def "ldc creates references" () {
+    setup:
+    Map<String, Reference> references = ReferenceCreator.createReferencesFrom(LdcAdvice.getName(), this.getClass().getClassLoader())
+
+    expect:
+    references.get('muzzle.TestClasses$MethodBodyAdvice$A') != null
+  }
+
   private static Reference.Method findMethod(Set<Reference.Method> methods, String methodName, String methodDesc) {
     for (Reference.Method method : methods) {
       if (method == new Reference.Method(methodName, methodDesc)) {

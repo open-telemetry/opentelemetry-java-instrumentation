@@ -68,4 +68,10 @@ public class TestClasses {
 
     public interface AnotherInterface extends SomeInterface {}
   }
+
+  public static class LdcAdvice {
+    public static void ldcMethod() {
+      MethodBodyAdvice.A.class.getName();
+    }
+  }
 }

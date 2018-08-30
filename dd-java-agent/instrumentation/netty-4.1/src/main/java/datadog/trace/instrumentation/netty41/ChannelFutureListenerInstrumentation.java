@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.netty41;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -38,13 +37,15 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("io.netty.handler.codec.http.HttpHeaderValues");
-  }
-
-  @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".AttributeKeys"};
+    return new String[] {
+      packageName + ".AttributeKeys",
+      // server helpers
+      packageName + ".server.NettyRequestExtractAdapter",
+      packageName + ".server.HttpServerRequestTracingHandler",
+      packageName + ".server.HttpServerResponseTracingHandler",
+      packageName + ".server.HttpServerTracingHandler"
+    };
   }
 
   @Override
