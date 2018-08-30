@@ -15,17 +15,27 @@ sourceSets {
   }
 }
 
-compileMain_java8Java {
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
-}
-
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
   latestDepTest {
     dirName = 'test'
   }
+}
+
+compileTestJava {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+
+latestDepTest {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+
+compileMain_java8Java {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
 }
 
 dependencies {
@@ -71,7 +81,3 @@ configurations.latestDepTestCompile {
 
 testJava8Only += '**/*Test.class'
 testJava8Only += '**/*TestApplication.class'
-testJava8Only += '**/EchoHandler.class'
-testJava8Only += '**/EchoHandlerFunction.class'
-testJava8Only += '**/FooModel.class'
-testJava8Only += '**/TestController.class'

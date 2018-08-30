@@ -23,15 +23,12 @@ public final class RouterFunctionInstrumentation extends Instrumenter.Default {
   public static final String PACKAGE = RouterFunctionInstrumentation.class.getPackage().getName();
 
   public RouterFunctionInstrumentation() {
-    super("spring-webflux");
+    super("spring-webflux", "spring-webflux-functional");
   }
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      RouterFunctionInstrumentation.class.getPackage().getName()
-          + ".DispatcherHandlerMonoBiConsumer"
-    };
+    return new String[] {PACKAGE + ".DispatcherHandlerMonoBiConsumer"};
   }
 
   @Override

@@ -39,12 +39,7 @@ public class RouterFunctionAdvice {
       // names that arise from webflux error handling
 
       final String resourceName =
-          predicateString
-              .replace("&&", "")
-              .replace("||", "")
-              .replace("(", "")
-              .replace(")", "")
-              .replaceAll("[ \\t]+", " ");
+          predicateString.replaceAll("[\\(\\)&|]", "").replaceAll("[ \\t]+", " ");
 
       // to be used as resource name by netty span, most likely
       DispatcherHandlerMonoBiConsumer.setTLPathUrl(resourceName);
@@ -52,7 +47,7 @@ public class RouterFunctionAdvice {
       // should be the dispatcher handler span
       final Scope activeScope = GlobalTracer.get().scopeManager().active();
       if (activeScope != null) {
-        activeScope.span().setTag("predicate_string", predicateString);
+        activeScope.span().setTag("request.predicate", predicateString);
         activeScope.span().setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
       }
     }

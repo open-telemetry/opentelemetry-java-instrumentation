@@ -17,12 +17,16 @@ import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.reactive.function.server.HandlerFunction;
 
 @AutoService(Instrumenter.class)
 public final class HandlerFunctionAdapterInstrumentation extends Instrumenter.Default {
 
+  static final String LAMBDA_CLASS_NAME = "$$Lambda$";
+
   public HandlerFunctionAdapterInstrumentation() {
-    super("spring-webflux");
+    super("spring-webflux", "spring-webflux-functional");
   }
 
   @Override
@@ -50,7 +54,30 @@ public final class HandlerFunctionAdapterInstrumentation extends Instrumenter.De
       final Span activeSpan = GlobalTracer.get().activeSpan();
 
       if (activeSpan != null && handler != null) {
-        activeSpan.setTag("handler_function.class", handler.getClass().getName());
+        final Class clazz = handler.getClass();
+
+        String className = clazz.getSimpleName();
+        if (className.isEmpty()) {
+          className = clazz.getName();
+          if (clazz.getPackage() != null) {
+            final String pkgName = clazz.getPackage().getName();
+            if (!pkgName.isEmpty()) {
+              className = clazz.getName().replace(pkgName, "").substring(1);
+            }
+          }
+        }
+        LoggerFactory.getLogger(HandlerFunction.class).warn(className);
+        final String operationName;
+        final int lambdaIdx = className.indexOf(LAMBDA_CLASS_NAME);
+
+        if (lambdaIdx > -1) {
+          operationName = className.substring(0, lambdaIdx) + ".lambda";
+        } else {
+          operationName = className + ".handle";
+        }
+        activeSpan.setOperationName(operationName);
+        activeSpan.setTag("handler.type", clazz.getName());
+
         if (throwable != null) {
           Tags.ERROR.set(activeSpan, true);
           activeSpan.log(Collections.singletonMap(ERROR_OBJECT, throwable));

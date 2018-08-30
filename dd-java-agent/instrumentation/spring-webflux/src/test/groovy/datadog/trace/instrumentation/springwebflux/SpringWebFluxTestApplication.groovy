@@ -40,12 +40,6 @@ class SpringWebFluxTestApplication {
     }
   }
 
-  @Bean
-  RouterFunction<ServerResponse> redirectRouterFunction() {
-    return route(GET("/double-greet-redirect"), {
-      req -> ServerResponse.temporaryRedirect(URI.create("/double-greet")).build()
-    })
-  }
 
   @Bean
   RouterFunction<ServerResponse> echoRouterFunction(EchoHandler echoHandler) {
