@@ -20,10 +20,6 @@ import spock.lang.Shared
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class Elasticsearch6RestClientTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.elasticsearch.enabled", "true")
-  }
-
   @Shared
   int httpPort
   @Shared

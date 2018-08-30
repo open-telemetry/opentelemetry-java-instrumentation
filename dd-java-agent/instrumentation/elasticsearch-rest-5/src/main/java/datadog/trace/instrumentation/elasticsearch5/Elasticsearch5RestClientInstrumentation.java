@@ -33,11 +33,6 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public String[] helperClassNames() {
     return new String[] {"datadog.trace.instrumentation.elasticsearch5.RestResponseListener"};
   }
