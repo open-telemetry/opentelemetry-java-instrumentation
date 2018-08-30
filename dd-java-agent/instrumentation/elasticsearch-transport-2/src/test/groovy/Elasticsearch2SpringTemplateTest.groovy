@@ -134,6 +134,13 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
     template.queryForList(query, Doc) == [new Doc()]
 
     and:
+    // IndexAction and PutMappingAction run in separate threads and order in which
+    // these spans are closed is not defined. So we force the order if it is wrong.
+    if (TEST_WRITER[3][0].resourceName == "IndexAction") {
+      def tmp = TEST_WRITER[3]
+      TEST_WRITER[3] = TEST_WRITER[4]
+      TEST_WRITER[4] = tmp
+    }
     assertTraces(TEST_WRITER, 7) {
       trace(0, 1) {
         span(0) {

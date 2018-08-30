@@ -14,6 +14,7 @@ import org.elasticsearch.node.NodeBuilder
 import org.elasticsearch.transport.RemoteTransportException
 import spock.lang.Shared
 
+import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class Elasticsearch2TransportClientTest extends AgentTestRunner {
@@ -59,8 +60,11 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
         .build()
     ).build()
     client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), tcpPort))
-    TEST_WRITER.clear()
-    client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
+    runUnderTrace("setup") {
+      // this may potentially create multiple requests and therefore multiple spans, so we wrap this call
+      // into a top level trace to get exactly one trace in the result.
+      client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
+    }
     TEST_WRITER.waitForTraces(1)
   }
 
@@ -178,6 +182,13 @@ class Elasticsearch2TransportClientTest extends AgentTestRunner {
     result.index == indexName
 
     and:
+    // IndexAction and PutMappingAction run in separate threads and order in which
+    // these spans are closed is not defined. So we force the order if it is wrong.
+    if (TEST_WRITER[3][0].resourceName == "IndexAction") {
+      def tmp = TEST_WRITER[3]
+      TEST_WRITER[3] = TEST_WRITER[4]
+      TEST_WRITER[4] = tmp
+    }
     assertTraces(TEST_WRITER, 6) {
       trace(0, 1) {
         span(0) {
