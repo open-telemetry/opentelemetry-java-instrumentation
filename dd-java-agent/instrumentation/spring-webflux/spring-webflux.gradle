@@ -15,6 +15,11 @@ sourceSets {
   }
 }
 
+compileMain_java8Java {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
@@ -22,20 +27,14 @@ testSets {
     dirName = 'test'
   }
 }
-
 compileTestJava {
   sourceCompatibility = "1.8"
   targetCompatibility = "1.8"
 }
 
-latestDepTest {
+compileLatestDepTestJava {
   sourceCompatibility = "1.8"
   targetCompatibility = "1.8"
-}
-
-compileMain_java8Java {
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
 }
 
 dependencies {
