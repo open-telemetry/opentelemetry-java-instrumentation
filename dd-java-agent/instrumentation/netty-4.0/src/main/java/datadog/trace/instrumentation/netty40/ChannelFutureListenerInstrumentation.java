@@ -38,7 +38,14 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".AttributeKeys"};
+    return new String[] {
+      packageName + ".AttributeKeys",
+      // server helpers
+      packageName + ".server.NettyRequestExtractAdapter",
+      packageName + ".server.HttpServerRequestTracingHandler",
+      packageName + ".server.HttpServerResponseTracingHandler",
+      packageName + ".server.HttpServerTracingHandler"
+    };
   }
 
   @Override
