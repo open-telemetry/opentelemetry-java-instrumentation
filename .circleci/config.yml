@@ -90,7 +90,7 @@ jobs:
 
       - run:
           name: Collect Reports
-          when: always
+          when: on_fail
           command: .circleci/collect_reports.sh
 
       - store_artifacts:
@@ -159,7 +159,7 @@ jobs:
 
       - run:
           name: Collect Reports
-          when: always
+          when: on_fail
           command: .circleci/collect_reports.sh
 
       - store_artifacts:
