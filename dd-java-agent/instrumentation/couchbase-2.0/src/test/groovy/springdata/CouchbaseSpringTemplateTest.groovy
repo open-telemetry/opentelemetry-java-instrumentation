@@ -1,5 +1,6 @@
 package springdata
 
+
 import com.couchbase.client.java.Bucket
 import org.springframework.data.couchbase.core.CouchbaseTemplate
 import spock.lang.Shared
@@ -22,6 +23,7 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
                  new CouchbaseTemplate(info, bucketMemcache),
                  new CouchbaseTemplate(info, bucketEphemeral)]
   }
+
 
   def "test write/read #name"() {
     setup:

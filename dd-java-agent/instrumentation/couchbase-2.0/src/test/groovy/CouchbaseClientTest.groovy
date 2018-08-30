@@ -1,8 +1,9 @@
 import com.couchbase.client.java.Bucket
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
+import com.couchbase.client.java.query.N1qlParams
 import com.couchbase.client.java.query.N1qlQuery
-import com.couchbase.client.java.query.N1qlQueryRow
+import com.couchbase.client.java.query.consistency.ScanConsistency
 import util.AbstractCouchbaseTest
 
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
@@ -120,15 +121,15 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
       N1qlQuery.parameterized(
         "SELECT * FROM `${bkt.name()}` WHERE hello = \$hello",
         JsonObject.create()
-          .put("hello", "world")
+          .put("hello", "world"),
+        N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)
       )
     )
 
     then:
     result.parseSuccess()
     result.finalSuccess()
-    N1qlQueryRow row = result.first()
-    row.value().get(bkt.name()).get("hello") == "world"
+    result.first().value().get(bkt.name()).get("hello") == "world"
 
     and:
     assertTraces(TEST_WRITER, 1) {

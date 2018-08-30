@@ -21,6 +21,9 @@ import com.couchbase.client.java.cluster.UserSettings
 import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment
 import com.couchbase.client.java.query.Index
+import com.couchbase.client.java.query.N1qlParams
+import com.couchbase.client.java.query.N1qlQuery
+import com.couchbase.client.java.query.consistency.ScanConsistency
 import com.couchbase.client.java.view.DefaultView
 import com.couchbase.client.java.view.DesignDocument
 import datadog.trace.agent.test.AgentTestRunner
@@ -38,9 +41,10 @@ import java.util.concurrent.TimeUnit
 // Do not run tests locally on Java7 since testcontainers are not compatible with Java7
 // It is fine to run on CI because CI provides couchbase externally, not through testcontainers
 @Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
+
 // Couchbase client sometimes throws com.couchbase.client.java.error.TemporaryFailureException.
 // Lets automatically retry to avoid the test from failing completely.
-@RetryOnFailure(delaySeconds = 1)
+@RetryOnFailure(times = 3, delaySeconds = 1)
 abstract class AbstractCouchbaseTest extends AgentTestRunner {
 
   private static final USERNAME = "Administrator"
@@ -97,7 +101,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       When building locally, however, we need to take matters into our own hands
       and we use 'testcontainers' for this.
      */
-    if ("true" != System.getenv("CI")) {
+    if (false && "true" != System.getenv("CI")) {
       couchbaseContainer = new CouchbaseContainer(
         clusterUsername: USERNAME,
         clusterPassword: PASSWORD)
@@ -113,14 +117,14 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
     }
     manager = cluster.clusterManager(USERNAME, PASSWORD)
 
-    resetBucket(cluster, bucketCouchbase)
-    resetBucket(cluster, bucketMemcache)
-    resetBucket(cluster, bucketEphemeral)
+    resetBucket(bucketCouchbase)
+    resetBucket(bucketMemcache)
+    resetBucket(bucketEphemeral)
   }
 
   def cleanupSpec() {
     // Close all buckets and disconnect
-    cluster.disconnect()
+    cluster?.disconnect()
 
     couchbaseContainer?.stop()
   }
@@ -149,75 +153,97 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
 
 
   protected void initCluster() {
-    assert callCouchbaseRestAPI("/pools/default", "memoryQuota=1000&indexMemoryQuota=300") == 200
-    // This one fails if already initialized, so don't assert.
-    callCouchbaseRestAPI("/node/controller/setupServices", "services=kv%2Cindex%2Cn1ql%2Cfts")
-    assert callCouchbaseRestAPI("/settings/web", "username=$USERNAME&password=$PASSWORD&port=8091") == 200
-    assert callCouchbaseRestAPI("/settings/indexes", "indexerThreads=0&logLevel=info&maxRollbackPoints=5&storageMode=memory_optimized") == 200
+    callCouchbaseRestAPI("/pools/default", new FormBody.Builder().add("memoryQuota", "1000").add("indexMemoryQuota", "300").build())
+    callCouchbaseRestAPI("/node/controller/setupServices", new FormBody.Builder().add("services", "kv,index,n1ql,fts").build(), ["cannot change node services after cluster is provisioned"])
+    callCouchbaseRestAPI("/settings/web", new FormBody.Builder().add("username", USERNAME).add("password", PASSWORD).add("port", "8091").build())
+    callCouchbaseRestAPI("/settings/indexes", RequestBody.create(FormBody.CONTENT_TYPE, "indexerThreads=0&logLevel=info&maxRollbackPoints=5&storageMode=memory_optimized"))
   }
 
   /**
    * Adapted from CouchbaseContainer.callCouchbaseRestAPI()
    */
-  protected int callCouchbaseRestAPI(String url, String payload) throws IOException {
+  protected void callCouchbaseRestAPI(String url, RequestBody body, expectations = null) throws IOException {
     String authToken = Base64.encode((USERNAME + ":" + PASSWORD).getBytes("UTF-8"))
     def request = new Request.Builder()
       .url("http://localhost:8091$url")
       .header("Authorization", "Basic " + authToken)
-      .post(RequestBody.create(FormBody.CONTENT_TYPE, payload))
+      .post(body)
       .build()
     def response = HTTP_CLIENT.newCall(request).execute()
-    return response.code()
+    try {
+      if (expectations != null) {
+        if (expectations instanceof Integer) {
+          assert response.code() == expectations
+        } else if (expectations instanceof String) {
+          assert response.body().string() == expectations
+        }
+      } else {
+        assert response.code() == 200
+      }
+    } finally {
+      response.close()
+    }
   }
 
   /**
    * Copied from CouchbaseContainer.callCouchbaseRestAPI()
    */
-  protected void resetBucket(CouchbaseCluster cluster, BucketSettings bucketSetting) {
-    ClusterManager clusterManager = cluster.clusterManager(USERNAME, PASSWORD)
-
-    // Remove existing Bucket
-    if (clusterManager.hasBucket(bucketSetting.name())) {
-      clusterManager.removeBucket(bucketSetting.name())
-    }
-    assert !clusterManager.hasBucket(bucketSetting.name())
-
-    // Insert Bucket... This generates a LOT of traces
-    BucketSettings bucketSettings = clusterManager.insertBucket(bucketSetting)
-
-    // Insert Bucket admin user
-    UserSettings userSettings = UserSettings.build().password(bucketSetting.password())
-      .roles([new UserRole("bucket_full_access", bucketSetting.name())])
-    clusterManager.upsertUser(AuthDomain.LOCAL, bucketSetting.name(), userSettings)
-
-    Bucket bucket = cluster.openBucket(bucketSettings.name(), bucketSettings.password())
-
-    if (BucketType.COUCHBASE.equals(bucketSettings.type())) {
-      bucket.query(Index.dropPrimaryIndex(bucketSetting.name()))
-      def result = bucket.query(Index.createPrimaryIndex().on(bucketSetting.name()))
-      if (!result.finalSuccess()) {
-        // Lets try again.
-        result = bucket.query(Index.createPrimaryIndex().on(bucketSetting.name()))
+  protected void resetBucket(BucketSettings bucketSetting) {
+    try {
+      // Remove existing Bucket
+      if (manager.hasBucket(bucketSetting.name())) {
+        manager.removeBucket(bucketSetting.name())
+        assert !manager.hasBucket(bucketSetting.name())
       }
-      assert result.finalSuccess()
 
-      // Create view for SpringRepository's findAll()
-      bucket.bucketManager().insertDesignDocument(
-        DesignDocument.create("doc", Collections.singletonList(DefaultView.create("all",
-          '''
+      // Calling the rest api because the library is slow and creates a lot of traces.
+      callCouchbaseRestAPI("/pools/default/buckets", new FormBody.Builder()
+        .add("name", bucketSetting.name())
+        .add("bucketType", bucketSetting.type().name().toLowerCase())
+        .add("ramQuotaMB", String.valueOf(bucketSetting.quota()))
+        .add("authType", "sasl")
+        .add("saslPassword", bucketSetting.password())
+        .build(), 202)
+
+      // Insert Bucket admin user
+      UserSettings userSettings = UserSettings.build().password(bucketSetting.password())
+        .roles([new UserRole("bucket_full_access", bucketSetting.name())])
+      manager.upsertUser(AuthDomain.LOCAL, bucketSetting.name(), userSettings)
+
+    } catch (Exception e) {
+      throw new RuntimeException(e)
+    }
+
+
+    Bucket bucket = cluster.openBucket(bucketSetting.name(), bucketSetting.password())
+
+    if (BucketType.COUCHBASE.equals(bucketSetting.type())) {
+      try {
+        bucket.query(N1qlQuery.simple(Index.dropPrimaryIndex(bucketSetting.name()),
+          N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)))
+
+        assert bucket.query(N1qlQuery.simple(Index.createPrimaryIndex().on(bucketSetting.name()),
+          N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS))).finalSuccess()
+
+        // Create view for SpringRepository's findAll()
+        bucket.bucketManager().insertDesignDocument(
+          DesignDocument.create("doc", Collections.singletonList(DefaultView.create("all",
+            '''
               function (doc, meta) {
                  if (doc._class == "springdata.Doc") {
                    emit(meta.id, null);
                  }
               }
               '''
-        )))
-      )
+          )))
+        )
+        TEST_WRITER.waitForTraces(13)
+      } catch (Exception e) {
+        throw new RuntimeException(e)
+      }
+    } else {
+      TEST_WRITER.waitForTraces(4)
     }
-
-    // We don't have a good way to tell that all traces are reported
-    // since we don't know how many there will be.
-    Thread.sleep(150)
     TEST_WRITER.clear() // remove traces generated by insertBucket
   }
 }
