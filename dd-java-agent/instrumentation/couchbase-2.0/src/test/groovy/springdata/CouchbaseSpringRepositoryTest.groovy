@@ -1,6 +1,7 @@
 package springdata
 
-
+import com.couchbase.client.java.view.DefaultView
+import com.couchbase.client.java.view.DesignDocument
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.data.repository.CrudRepository
@@ -30,10 +31,24 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
   DocRepository repo
 
   def setupSpec() {
-    CouchbaseConfig.setEnvironment(environment)
+
+    // Create view for SpringRepository's findAll()
+    couchbaseCluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password()).bucketManager()
+      .insertDesignDocument(
+      DesignDocument.create("doc", Collections.singletonList(DefaultView.create("all",
+        '''
+          function (doc, meta) {
+             if (doc._class == "springdata.Doc") {
+               emit(meta.id, null);
+             }
+          }
+        '''.stripIndent()
+      )))
+    )
+    CouchbaseConfig.setEnvironment(couchbaseEnvironment)
 
     // Close all buckets and disconnect
-    cluster.disconnect()
+    couchbaseCluster.disconnect()
 
     applicationContext = new AnnotationConfigApplicationContext(CouchbaseConfig)
     repo = applicationContext.getBean(DocRepository)

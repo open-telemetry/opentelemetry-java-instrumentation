@@ -64,8 +64,6 @@ jobs:
     - image: *default_container
       # This is used by spymemcached instrumentation tests
     - image: memcached
-      # This is used by couchbase instrumentation tests
-    - image: couchbase/server
 
     steps:
     - checkout

@@ -14,14 +14,11 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
   List<CouchbaseTemplate> templates
 
   def setupSpec() {
-    Bucket bucketCouchbase = cluster.openBucket(bucketCouchbase.name())
-    Bucket bucketMemcache = cluster.openBucket(bucketMemcache.name())
-    Bucket bucketEphemeral = cluster.openBucket(bucketEphemeral.name())
-    def info = manager.info()
+    Bucket bucketCouchbase = couchbaseCluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password())
+    Bucket bucketMemcache = memcacheCluster.openBucket(bucketMemcache.name(), bucketMemcache.password())
 
-    templates = [new CouchbaseTemplate(info, bucketCouchbase),
-                 new CouchbaseTemplate(info, bucketMemcache),
-                 new CouchbaseTemplate(info, bucketEphemeral)]
+    templates = [new CouchbaseTemplate(couchbaseManager.info(), bucketCouchbase),
+                 new CouchbaseTemplate(memcacheManager.info(), bucketMemcache)]
   }
 
 

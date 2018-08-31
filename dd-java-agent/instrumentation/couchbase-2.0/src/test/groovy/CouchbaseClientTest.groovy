@@ -1,9 +1,7 @@
 import com.couchbase.client.java.Bucket
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
-import com.couchbase.client.java.query.N1qlParams
 import com.couchbase.client.java.query.N1qlQuery
-import com.couchbase.client.java.query.consistency.ScanConsistency
 import util.AbstractCouchbaseTest
 
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
@@ -33,7 +31,7 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
 
     when:
     // Connect to the bucket and open it
-    Bucket bkt = cluster.openBucket(bucketSettings.name())
+    Bucket bkt = cluster.openBucket(bucketSettings.name(), bucketSettings.password())
 
     // Create a JSON document and store it with the ID "helloworld"
     JsonObject content = JsonObject.create().put("hello", "world")
@@ -84,52 +82,26 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
 
 
     where:
-    bucketSettings << [bucketCouchbase, bucketMemcache, bucketEphemeral]
+    manager          | cluster          | bucketSettings
+    couchbaseManager | couchbaseCluster | bucketCouchbase
+    memcacheManager  | memcacheCluster  | bucketMemcache
+
     type = bucketSettings.type().name()
   }
 
   def "test query"() {
-    when:
-    // Connect to the bucket and open it
-    Bucket bkt = cluster.openBucket(bucketSettings.name())
-
-    // Create a JSON document and store it with the ID "helloworld"
-    JsonObject content = JsonObject.create().put("hello", "world")
-    def inserted = bkt.upsert(JsonDocument.create("helloworld", content))
-
-    then:
-    inserted != null
-    assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.upsert(${bkt.name()})"
-          operationName "couchbase.call"
-          errored false
-          parent()
-          tags {
-            "bucket" bkt.name()
-            defaultTags()
-          }
-        }
-      }
-    }
-    TEST_WRITER.clear()
+    setup:
+    Bucket bkt = cluster.openBucket(bucketSettings.name(), bucketSettings.password())
 
     when:
-    def result = bkt.query(
-      N1qlQuery.parameterized(
-        "SELECT * FROM `${bkt.name()}` WHERE hello = \$hello",
-        JsonObject.create()
-          .put("hello", "world"),
-        N1qlParams.build().consistency(ScanConsistency.REQUEST_PLUS)
-      )
-    )
+    // Mock expects this specific query.
+    // See com.couchbase.mock.http.query.QueryServer.handleString.
+    def result = bkt.query(N1qlQuery.simple("SELECT mockrow"))
 
     then:
     result.parseSuccess()
     result.finalSuccess()
-    result.first().value().get(bkt.name()).get("hello") == "world"
+    result.first().value().get("row") == "value"
 
     and:
     assertTraces(TEST_WRITER, 1) {
@@ -149,7 +121,10 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     }
 
     where:
-    bucketSettings << [bucketCouchbase] // Only couchbase buckets support queries.
+    manager          | cluster          | bucketSettings
+    couchbaseManager | couchbaseCluster | bucketCouchbase
+    // Only couchbase buckets support queries.
+
     type = bucketSettings.type().name()
   }
 }
