@@ -1,16 +1,13 @@
-apply plugin: 'version-scan'
-
-versionScan {
-  group = "org.apache.tomcat"
-  module = "tomcat-jasper"
-  versions = "[7.0.0,)"
-  scanDependencies = true
-  verifyPresent = [
-    "org.apache.jasper.servlet.JspServletWrapper": null,
-  ]
-}
-
 apply from: "${rootDir}/gradle/java.gradle"
+
+muzzle {
+  pass {
+    group = "org.apache.tomcat"
+    module = "tomcat-jasper"
+    // range [7.0.0,7.0.19) and version 8.0.9 missing from maven
+    versions = "[7.0.19,8.0.9),(8.0.9,)"
+  }
+}
 
 apply plugin: 'org.unbroken-dome.test-sets'
 

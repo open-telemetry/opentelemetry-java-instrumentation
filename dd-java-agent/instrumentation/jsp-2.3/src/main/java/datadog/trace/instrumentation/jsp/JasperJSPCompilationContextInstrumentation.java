@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.jsp;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -30,18 +29,8 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.jasper.JspCompilationContext");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("org.apache.jasper.servlet.JspServletWrapper");
   }
 
   @Override

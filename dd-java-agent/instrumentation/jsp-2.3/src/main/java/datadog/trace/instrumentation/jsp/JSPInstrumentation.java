@@ -34,11 +34,6 @@ public final class JSPInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return not(isInterface()).and(safeHasSuperType(named("javax.servlet.jsp.HttpJspPage")));
   }

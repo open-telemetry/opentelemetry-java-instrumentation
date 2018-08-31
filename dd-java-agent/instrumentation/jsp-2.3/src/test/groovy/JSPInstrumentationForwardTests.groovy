@@ -18,7 +18,6 @@ import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 class JSPInstrumentationForwardTests extends AgentTestRunner {
 
   static {
-    System.setProperty("dd.integration.jsp.enabled", "true")
     // skip jar scanning using environment variables:
     // http://tomcat.apache.org/tomcat-7.0-doc/config/systemprops.html#JAR_Scanning
     // having this set allows us to test with old versions of the tomcat api since
