@@ -16,11 +16,16 @@ import net.bytebuddy.pool.TypePool;
 /**
  * Custom Pool strategy.
  *
- * <p>Here we are using WeakMap.Provider as the backing ClassLoader -> CacheProvider lookup. We also
- * use our bootstrap proxy when matching against the bootstrap loader.
+ * <p>Here we are using WeakMap.Provider as the backing ClassLoader -> CacheProvider lookup.
  *
- * <p>The CacheProvider is also a custom implementation that uses guava's cache to evict. See
- * eviction policy below.
+ * <p>We also use our bootstrap proxy when matching against the bootstrap loader.
+ *
+ * <p>The CacheProvider is also a custom implementation that uses guava's cache to evict.
+ *
+ * <p>By eviciting from the cache we are able to reduce the memory overhead of the agent for apps
+ * that have many classes.
+ *
+ * <p>See eviction policy below.
  */
 public class DDCachingPoolStrategy implements PoolStrategy {
   private static final WeakMap<ClassLoader, TypePool.CacheProvider> typePoolCache =

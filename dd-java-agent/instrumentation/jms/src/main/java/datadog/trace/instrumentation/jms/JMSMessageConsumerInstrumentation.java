@@ -1,8 +1,7 @@
-package datadog.trace.instrumentation.jms2;
+package datadog.trace.instrumentation.jms;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
-import static datadog.trace.instrumentation.jms.util.JmsUtil.toResourceName;
+import static datadog.trace.instrumentation.jms.JmsUtil.toResourceName;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -14,7 +13,6 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.jms.util.MessagePropertyTextMap;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -34,15 +32,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class JMS2MessageConsumerInstrumentation extends Instrumenter.Default {
-  public static final String[] JMS2_HELPER_CLASS_NAMES =
-      new String[] {
-        "datadog.trace.instrumentation.jms.util.JmsUtil",
-        "datadog.trace.instrumentation.jms.util.MessagePropertyTextMap"
-      };
+public final class JMSMessageConsumerInstrumentation extends Instrumenter.Default {
 
-  public JMS2MessageConsumerInstrumentation() {
-    super("jms", "jms-2");
+  public JMSMessageConsumerInstrumentation() {
+    super("jms", "jms-1", "jms-2");
   }
 
   @Override
@@ -51,13 +44,8 @@ public final class JMS2MessageConsumerInstrumentation extends Instrumenter.Defau
   }
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener");
-  }
-
-  @Override
   public String[] helperClassNames() {
-    return JMS2_HELPER_CLASS_NAMES;
+    return new String[] {packageName + ".JmsUtil", packageName + ".MessagePropertyTextMap"};
   }
 
   @Override
@@ -91,7 +79,7 @@ public final class JMS2MessageConsumerInstrumentation extends Instrumenter.Defau
               .buildSpan("jms.consume")
               .withTag(DDTags.SERVICE_NAME, "jms")
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_CONSUMER)
-              .withTag(Tags.COMPONENT.getKey(), "jms2")
+              .withTag(Tags.COMPONENT.getKey(), "jms")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CONSUMER)
               .withTag("span.origin.type", consumer.getClass().getName())
               .withStartTimestamp(TimeUnit.MILLISECONDS.toMicros(startTime));

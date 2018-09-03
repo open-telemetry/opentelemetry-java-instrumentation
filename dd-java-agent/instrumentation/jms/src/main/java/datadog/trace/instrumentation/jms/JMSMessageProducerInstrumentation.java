@@ -1,8 +1,7 @@
-package datadog.trace.instrumentation.jms1;
+package datadog.trace.instrumentation.jms;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
-import static datadog.trace.instrumentation.jms.util.JmsUtil.toResourceName;
+import static datadog.trace.instrumentation.jms.JmsUtil.toResourceName;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -14,7 +13,6 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.jms.util.MessagePropertyTextMap;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.propagation.Format;
@@ -32,10 +30,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class JMS1MessageProducerInstrumentation extends Instrumenter.Default {
+public final class JMSMessageProducerInstrumentation extends Instrumenter.Default {
 
-  public JMS1MessageProducerInstrumentation() {
-    super("jms", "jms-1");
+  public JMSMessageProducerInstrumentation() {
+    super("jms", "jms-1", "jms-2");
   }
 
   @Override
@@ -44,13 +42,8 @@ public final class JMS1MessageProducerInstrumentation extends Instrumenter.Defau
   }
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return not(classLoaderHasClasses("javax.jms.JMSContext", "javax.jms.CompletionListener"));
-  }
-
-  @Override
   public String[] helperClassNames() {
-    return JMS1MessageConsumerInstrumentation.JMS1_HELPER_CLASS_NAMES;
+    return new String[] {packageName + ".JmsUtil", packageName + ".MessagePropertyTextMap"};
   }
 
   @Override
@@ -86,7 +79,7 @@ public final class JMS1MessageProducerInstrumentation extends Instrumenter.Defau
               .withTag(
                   DDTags.RESOURCE_NAME,
                   "Produced for " + toResourceName(message, defaultDestination))
-              .withTag(Tags.COMPONENT.getKey(), "jms1")
+              .withTag(Tags.COMPONENT.getKey(), "jms")
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_PRODUCER)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_PRODUCER)
               .withTag("span.origin.type", producer.getClass().getName())
@@ -127,7 +120,7 @@ public final class JMS1MessageProducerInstrumentation extends Instrumenter.Defau
               .withTag(DDTags.SERVICE_NAME, "jms")
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_PRODUCER)
               .withTag(DDTags.RESOURCE_NAME, "Produced for " + toResourceName(message, destination))
-              .withTag(Tags.COMPONENT.getKey(), "jms1")
+              .withTag(Tags.COMPONENT.getKey(), "jms")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_PRODUCER)
               .withTag("span.origin.type", producer.getClass().getName())
               .startActive(true);

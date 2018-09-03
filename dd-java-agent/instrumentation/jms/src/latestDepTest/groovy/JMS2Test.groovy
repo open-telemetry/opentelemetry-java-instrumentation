@@ -1,15 +1,25 @@
+import com.google.common.io.Files
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
-import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.activemq.ActiveMQMessageConsumer
-import org.apache.activemq.ActiveMQMessageProducer
-import org.apache.activemq.junit.EmbeddedActiveMQBroker
+import org.hornetq.api.core.TransportConfiguration
+import org.hornetq.api.core.client.HornetQClient
+import org.hornetq.api.jms.HornetQJMSClient
+import org.hornetq.api.jms.JMSFactoryType
+import org.hornetq.core.config.Configuration
+import org.hornetq.core.config.CoreQueueConfiguration
+import org.hornetq.core.config.impl.ConfigurationImpl
+import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory
+import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
+import org.hornetq.core.remoting.impl.netty.NettyAcceptorFactory
+import org.hornetq.core.server.HornetQServers
+import org.hornetq.jms.client.HornetQMessageConsumer
+import org.hornetq.jms.client.HornetQMessageProducer
+import org.hornetq.jms.client.HornetQTextMessage
 import spock.lang.Shared
 
-import javax.jms.Connection
 import javax.jms.Message
 import javax.jms.MessageListener
 import javax.jms.Session
@@ -19,22 +29,47 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
-class JMS1Test extends AgentTestRunner {
+class JMS2Test extends AgentTestRunner {
   @Shared
   String messageText = "a message"
   @Shared
   Session session
 
-  def message = session.createTextMessage(messageText)
+  HornetQTextMessage message = session.createTextMessage(messageText)
 
   def setupSpec() {
-    EmbeddedActiveMQBroker broker = new EmbeddedActiveMQBroker()
-    broker.start()
-    final ActiveMQConnectionFactory connectionFactory = broker.createConnectionFactory()
+    def tempDir = Files.createTempDir()
+    tempDir.deleteOnExit()
 
-    final Connection connection = connectionFactory.createConnection()
+    Configuration config = new ConfigurationImpl()
+    config.bindingsDirectory = tempDir.path
+    config.journalDirectory = tempDir.path
+    config.createBindingsDir = false
+    config.createJournalDir = false
+    config.securityEnabled = false
+    config.persistenceEnabled = false
+    config.setQueueConfigurations([new CoreQueueConfiguration("someQueue", "someQueue", null, true)])
+    config.setAcceptorConfigurations([new TransportConfiguration(NettyAcceptorFactory.name),
+                                      new TransportConfiguration(InVMAcceptorFactory.name)].toSet())
+
+    HornetQServers.newHornetQServer(config).start()
+
+    def serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(InVMConnectorFactory.name))
+    def sf = serverLocator.createSessionFactory()
+    def clientSession = sf.createSession(false, false, false)
+    clientSession.createQueue("jms.queue.someQueue", "jms.queue.someQueue", true)
+    clientSession.createQueue("jms.topic.someTopic", "jms.topic.someTopic", true)
+    clientSession.close()
+    sf.close()
+    serverLocator.close()
+
+    def connectionFactory = HornetQJMSClient.createConnectionFactoryWithoutHA(JMSFactoryType.CF,
+      new TransportConfiguration(InVMConnectorFactory.name))
+
+    def connection = connectionFactory.createConnection()
     connection.start()
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+    session.run()
   }
 
   def "sending a message to #jmsResourceName generates spans"() {
@@ -52,7 +87,7 @@ class JMS1Test extends AgentTestRunner {
       producerTrace(it, 0, jmsResourceName)
       trace(1, 1) { // Consumer trace
         span(0) {
-          childOf TEST_WRITER.firstTrace().get(2)
+          childOf TEST_WRITER.firstTrace().get(0)
           serviceName "jms"
           operationName "jms.consume"
           resourceName "Consumed from $jmsResourceName"
@@ -62,9 +97,9 @@ class JMS1Test extends AgentTestRunner {
           tags {
             defaultTags()
             "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
-            "${Tags.COMPONENT.key}" "jms1"
+            "${Tags.COMPONENT.key}" "jms"
             "${Tags.SPAN_KIND.key}" "consumer"
-            "span.origin.type" ActiveMQMessageConsumer.name
+            "span.origin.type" HornetQMessageConsumer.name
           }
         }
       }
@@ -104,7 +139,7 @@ class JMS1Test extends AgentTestRunner {
       producerTrace(it, 0, jmsResourceName)
       trace(1, 1) { // Consumer trace
         span(0) {
-          childOf TEST_WRITER.firstTrace().get(2)
+          childOf TEST_WRITER.firstTrace().get(0)
           serviceName "jms"
           operationName "jms.onMessage"
           resourceName "Received from $jmsResourceName"
@@ -114,9 +149,9 @@ class JMS1Test extends AgentTestRunner {
           tags {
             defaultTags()
             "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
-            "${Tags.COMPONENT.key}" "jms1"
+            "${Tags.COMPONENT.key}" "jms"
             "${Tags.SPAN_KIND.key}" "consumer"
-            "span.origin.type" { t -> t.contains("JMS1Test") }
+            "span.origin.type" { t -> t.contains("JMS2Test") }
           }
         }
       }
@@ -158,9 +193,9 @@ class JMS1Test extends AgentTestRunner {
           tags {
             defaultTags()
             "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
-            "${Tags.COMPONENT.key}" "jms1"
+            "${Tags.COMPONENT.key}" "jms"
             "${Tags.SPAN_KIND.key}" "consumer"
-            "span.origin.type" ActiveMQMessageConsumer.name
+            "span.origin.type" HornetQMessageConsumer.name
           }
         }
       }
@@ -197,9 +232,9 @@ class JMS1Test extends AgentTestRunner {
           tags {
             defaultTags()
             "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
-            "${Tags.COMPONENT.key}" "jms1"
+            "${Tags.COMPONENT.key}" "jms"
             "${Tags.SPAN_KIND.key}" "consumer"
-            "span.origin.type" ActiveMQMessageConsumer.name
+            "span.origin.type" HornetQMessageConsumer.name
           }
         }
       }
@@ -215,7 +250,7 @@ class JMS1Test extends AgentTestRunner {
   }
 
   def producerTrace(ListWriterAssert writer, int index, String jmsResourceName) {
-    writer.trace(index, 3) {
+    writer.trace(index, 1) {
       span(0) {
         parent()
         serviceName "jms"
@@ -227,41 +262,9 @@ class JMS1Test extends AgentTestRunner {
         tags {
           defaultTags()
           "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_PRODUCER
-          "${Tags.COMPONENT.key}" "jms1"
+          "${Tags.COMPONENT.key}" "jms"
           "${Tags.SPAN_KIND.key}" "producer"
-          "span.origin.type" ActiveMQMessageProducer.name
-        }
-      }
-      span(1) {
-        childOf span(0)
-        serviceName "jms"
-        operationName "jms.produce"
-        resourceName "Produced for $jmsResourceName"
-        spanType DDSpanTypes.MESSAGE_PRODUCER
-        errored false
-
-        tags {
-          defaultTags()
-          "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_PRODUCER
-          "${Tags.COMPONENT.key}" "jms1"
-          "${Tags.SPAN_KIND.key}" "producer"
-          "span.origin.type" ActiveMQMessageProducer.name
-        }
-      }
-      span(2) {
-        childOf span(1)
-        serviceName "jms"
-        operationName "jms.produce"
-        resourceName "Produced for $jmsResourceName"
-        spanType DDSpanTypes.MESSAGE_PRODUCER
-        errored false
-
-        tags {
-          defaultTags()
-          "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_PRODUCER
-          "${Tags.COMPONENT.key}" "jms1"
-          "${Tags.SPAN_KIND.key}" "producer"
-          "span.origin.type" ActiveMQMessageProducer.name
+          "span.origin.type" HornetQMessageProducer.name
         }
       }
     }
@@ -280,7 +283,7 @@ class JMS1Test extends AgentTestRunner {
         tags {
           defaultTags()
           "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
-          "${Tags.COMPONENT.key}" "jms1"
+          "${Tags.COMPONENT.key}" "jms"
           "${Tags.SPAN_KIND.key}" "consumer"
           "span.origin.type" origin
         }

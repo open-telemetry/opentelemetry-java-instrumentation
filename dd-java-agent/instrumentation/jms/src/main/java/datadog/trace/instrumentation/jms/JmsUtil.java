@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.jms.util;
+package datadog.trace.instrumentation.jms;
 
 import javax.jms.Destination;
 import javax.jms.Message;
