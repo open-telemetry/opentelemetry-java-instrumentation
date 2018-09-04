@@ -20,6 +20,12 @@ class SpanAssert {
     clone(asserter)
   }
 
+  def assertSpanNameContains(String spanName, String... shouldContainArr) {
+    for (String shouldContain : shouldContainArr) {
+      assert spanName.contains(shouldContain)
+    }
+  }
+
   def serviceName(String name) {
     assert span.serviceName == name
   }
@@ -28,8 +34,16 @@ class SpanAssert {
     assert span.operationName == name
   }
 
+  def operationNameContains(String... operationNameParts) {
+    assertSpanNameContains(span.operationName, operationNameParts)
+  }
+
   def resourceName(String name) {
     assert span.resourceName == name
+  }
+
+  def resourceNameContains(String... resourceNameParts) {
+    assertSpanNameContains(span.resourceName, resourceNameParts)
   }
 
   def spanType(String type) {
