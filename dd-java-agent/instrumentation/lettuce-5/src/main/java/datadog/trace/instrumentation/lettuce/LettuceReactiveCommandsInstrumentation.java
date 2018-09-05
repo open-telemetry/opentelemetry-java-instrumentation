@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.lettuce;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -28,11 +27,6 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.lettuce.core.AbstractRedisReactiveCommands");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("io.lettuce.core.RedisClient");
   }
 
   @Override
