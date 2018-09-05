@@ -140,32 +140,31 @@ class AWSClientTest extends AgentTestRunner {
     tags["aws.endpoint"] == "http://localhost:$server.address.port"
     tags["aws.operation"] == "${operation}Request"
     tags["aws.agent"] == "java-aws-sdk"
-    tags["params"] == params
     tags["span.type"] == "web"
     tags["thread.name"] != null
     tags["thread.id"] != null
-    tags.size() == 13
+    tags.size() == 12
 
     server.lastRequest.headers.get("x-datadog-trace-id") == "$span.traceId"
     server.lastRequest.headers.get("x-datadog-parent-id") == "$span.spanId"
 
     where:
-    service | operation           | method | url                  | handlerCount | call                                                                                                                                   | body               | params                                              | client
-    "S3"    | "CreateBucket"      | "PUT"  | "testbucket/"        | 1            | { client -> client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build()); client.createBucket("testbucket") } | ""                 | "{}"                                                | new AmazonS3Client().withEndpoint("http://localhost:$server.address.port")
-    "S3"    | "GetObject"         | "GET"  | "someBucket/someKey" | 1            | { client -> client.getObject("someBucket", "someKey") }                                                                                | ""                 | "{}"                                                | new AmazonS3Client().withEndpoint("http://localhost:$server.address.port")
+    service | operation           | method | url                  | handlerCount | call                                                                                                                                   | body               | client
+    "S3"    | "CreateBucket"      | "PUT"  | "testbucket/"        | 1            | { client -> client.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build()); client.createBucket("testbucket") } | ""                 | new AmazonS3Client().withEndpoint("http://localhost:$server.address.port")
+    "S3"    | "GetObject"         | "GET"  | "someBucket/someKey" | 1            | { client -> client.getObject("someBucket", "someKey") }                                                                                | ""                 | new AmazonS3Client().withEndpoint("http://localhost:$server.address.port")
     "EC2"   | "AllocateAddress"   | "POST" | ""                   | 4            | { client -> client.allocateAddress() }                                                                                                 | """
             <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
                <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
                <publicIp>192.0.2.1</publicIp>
                <domain>standard</domain>
             </AllocateAddressResponse>
-            """ | "{Action=[AllocateAddress],Version=[2015-10-01]}"   | new AmazonEC2Client().withEndpoint("http://localhost:$server.address.port")
+            """ | new AmazonEC2Client().withEndpoint("http://localhost:$server.address.port")
     "RDS"   | "DeleteOptionGroup" | "POST" | ""                   | 1            | { client -> client.deleteOptionGroup(new DeleteOptionGroupRequest()) }                                                                 | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata>
             <RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId>
           </ResponseMetadata>
         </DeleteOptionGroupResponse>
-      """       | "{Action=[DeleteOptionGroup],Version=[2014-10-31]}" | new AmazonRDSClient().withEndpoint("http://localhost:$server.address.port")
+      """       | new AmazonRDSClient().withEndpoint("http://localhost:$server.address.port")
   }
 }
