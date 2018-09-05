@@ -35,11 +35,6 @@ public class Elasticsearch5TransportClientInstrumentation extends Instrumenter.D
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // If we want to be more generic, we could instrument the interface instead:
     // .and(safeHasSuperType(named("org.elasticsearch.client.ElasticsearchClient"))))

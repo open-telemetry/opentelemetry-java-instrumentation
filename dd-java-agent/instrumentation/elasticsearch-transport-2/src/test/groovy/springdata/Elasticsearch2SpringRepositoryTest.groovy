@@ -11,10 +11,6 @@ import spock.lang.Shared
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.elasticsearch.enabled", "true")
-  }
-
   @Shared
   ApplicationContext applicationContext = new AnnotationConfigApplicationContext(Config)
 

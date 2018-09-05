@@ -18,10 +18,6 @@ import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class Elasticsearch2TransportClientTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.elasticsearch.enabled", "true")
-  }
-
   public static final long TIMEOUT = 10000; // 10 seconds
 
   @Shared

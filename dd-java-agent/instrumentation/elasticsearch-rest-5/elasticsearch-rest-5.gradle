@@ -1,17 +1,11 @@
-//apply plugin: 'version-scan'
-//
-//versionScan {
-//  group = "org.elasticsearch.client"
-////  module = "transport"
-//  module = "rest"
-//  versions = "[5.0,)"
-//  legacyGroup = "org.elasticsearch"
-//  legacyModule = "elasticsearch"
-//  scanDependencies = true
-//  verifyPresent = [
-//    "org.elasticsearch.percolator.TransportMultiPercolateAction": null,
-//  ]
-//}
+muzzle {
+  pass {
+    group = "org.elasticsearch.client"
+    module = "rest"
+    versions = "[5.0,)"
+    assertInverse = true
+  }
+}
 
 apply from: "${rootDir}/gradle/java.gradle"
 
