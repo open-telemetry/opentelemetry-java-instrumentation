@@ -1,5 +1,6 @@
 package springdata
 
+import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
+@RetryOnFailure
 class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
