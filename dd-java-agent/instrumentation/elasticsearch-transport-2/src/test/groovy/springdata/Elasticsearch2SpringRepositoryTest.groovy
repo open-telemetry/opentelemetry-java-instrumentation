@@ -1,5 +1,6 @@
 package springdata
 
+import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
@@ -10,6 +11,7 @@ import spock.lang.Shared
 
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
+@RetryOnFailure
 class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
   @Shared
   ApplicationContext applicationContext = new AnnotationConfigApplicationContext(Config)
@@ -156,7 +158,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     TEST_WRITER.clear()
 
     when:
-    doc.data == "other data"
+    doc.data = "other data"
 
     then:
     repo.index(doc) == doc

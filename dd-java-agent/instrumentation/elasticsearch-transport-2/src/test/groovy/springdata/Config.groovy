@@ -30,7 +30,7 @@ class Config {
 
     System.addShutdownHook {
       if (tmpDir != null) {
-        FileSystemUtils.deleteSubDirectories(esWorkingDir.toPath())
+        FileSystemUtils.deleteSubDirectories(tmpDir.toPath())
         tmpDir.delete()
       }
     }

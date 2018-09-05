@@ -1,0 +1,48 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+muzzle {
+  pass {
+    group = 'com.couchbase.client'
+    module = 'java-client'
+    versions = "[2.0.0,)"
+    assertInverse = true
+  }
+  fail {
+    group = 'com.couchbase.client'
+    module = 'couchbase-client'
+    versions = "(,)"
+  }
+}
+
+dependencies {
+  compileOnly group: 'com.couchbase.client', name: 'java-client', version: '2.0.0'
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+
+  testCompile group: 'com.couchbase.mock', name: 'CouchbaseMock', version: '1.5.19'
+
+  testCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '2.0.0.RELEASE'
+  // Earliest version that seems to allow queries with CouchbaseMock:
+  testCompile group: 'com.couchbase.client', name: 'java-client', version: '2.5.0'
+
+  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.+'
+  latestDepTestCompile group: 'com.couchbase.client', name: 'java-client', version: '2.6+'
+  latestDepTestCompile group: 'com.couchbase.client', name: 'encryption', version: '+'
+}
+
+testJava8Minimum += "**/*.class"
