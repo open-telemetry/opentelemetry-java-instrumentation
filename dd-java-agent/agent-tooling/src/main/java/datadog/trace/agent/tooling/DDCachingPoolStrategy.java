@@ -90,7 +90,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
       cache.invalidateAll();
     }
 
-    private class ResolutionProvider implements Callable<TypePool.Resolution> {
+    private static class ResolutionProvider implements Callable<TypePool.Resolution> {
       private final TypePool.Resolution value;
 
       private ResolutionProvider(final TypePool.Resolution value) {

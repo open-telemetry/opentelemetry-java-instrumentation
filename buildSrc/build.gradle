@@ -13,5 +13,6 @@ dependencies {
   compile group: 'org.apache.maven', name: 'maven-aether-provider', version: '3.3.9'
 
   compile group: 'com.google.guava', name: 'guava', version: '20.0'
-  compile group: 'org.ow2.asm', name: 'asm-all', version: '5.2'
+  compile group: 'org.ow2.asm', name: 'asm', version: '7.0-beta'
+  compile group: 'org.ow2.asm', name: 'asm-tree', version: '7.0-beta'
 }

@@ -182,7 +182,6 @@ jobs:
         # Reset the cache approx every release
         keys:
         - dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
-        - dd-trace-java-version-scan
 
     - run:
         name: Verify Version Scan and Muzzle

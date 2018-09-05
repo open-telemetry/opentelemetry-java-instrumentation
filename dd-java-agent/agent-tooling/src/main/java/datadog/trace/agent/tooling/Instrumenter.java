@@ -96,7 +96,7 @@ public interface Instrumenter {
               .transform(DDTransformers.defaultTransformers());
       agentBuilder = injectHelperClasses(agentBuilder);
       agentBuilder = applyInstrumentationTransformers(agentBuilder);
-      return agentBuilder.asDecorator();
+      return agentBuilder;
     }
 
     private AgentBuilder.Identified.Extendable injectHelperClasses(

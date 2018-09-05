@@ -169,7 +169,7 @@ public class ReferenceCreator extends ClassVisitor {
   private boolean createFromMethodBodiesOnly;
 
   private ReferenceCreator(ClassVisitor classVisitor, boolean createFromMethodBodiesOnly) {
-    super(Opcodes.ASM6, classVisitor);
+    super(Opcodes.ASM7, classVisitor);
     this.createFromMethodBodiesOnly = createFromMethodBodiesOnly;
   }
 
@@ -229,7 +229,7 @@ public class ReferenceCreator extends ClassVisitor {
     private int currentLineNumber = -1;
 
     public AdviceReferenceMethodVisitor(MethodVisitor methodVisitor) {
-      super(Opcodes.ASM6, methodVisitor);
+      super(Opcodes.ASM7, methodVisitor);
     }
 
     @Override
