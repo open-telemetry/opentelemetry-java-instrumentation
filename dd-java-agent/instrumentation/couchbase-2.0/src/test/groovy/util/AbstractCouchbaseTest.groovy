@@ -18,6 +18,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import spock.lang.Shared
 
+import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 
 abstract class AbstractCouchbaseTest extends AgentTestRunner {
@@ -99,8 +100,16 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
   }
 
   def cleanupSpec() {
-    couchbaseCluster?.disconnect()
-    memcacheCluster?.disconnect()
+    try {
+      couchbaseCluster?.disconnect()
+    } catch (RejectedExecutionException e) {
+      // already closed by a test?
+    }
+    try {
+      memcacheCluster?.disconnect()
+    } catch (RejectedExecutionException e) {
+      // already closed by a test?
+    }
 
     mock?.stop()
   }

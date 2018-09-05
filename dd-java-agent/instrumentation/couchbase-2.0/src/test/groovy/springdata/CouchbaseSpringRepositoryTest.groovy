@@ -2,7 +2,7 @@ package springdata
 
 import com.couchbase.client.java.view.DefaultView
 import com.couchbase.client.java.view.DesignDocument
-import org.springframework.context.ApplicationContext
+import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.data.repository.CrudRepository
 import spock.lang.Shared
@@ -26,7 +26,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     }
   }
   @Shared
-  ApplicationContext applicationContext
+  ConfigurableApplicationContext applicationContext
   @Shared
   DocRepository repo
 
@@ -46,12 +46,17 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       )))
     )
     CouchbaseConfig.setEnvironment(couchbaseEnvironment)
+    CouchbaseConfig.setBucketSettings(bucketCouchbase)
 
     // Close all buckets and disconnect
     couchbaseCluster.disconnect()
 
     applicationContext = new AnnotationConfigApplicationContext(CouchbaseConfig)
     repo = applicationContext.getBean(DocRepository)
+  }
+
+  def cleanupSpec() {
+    applicationContext.close()
   }
 
   def setup() {
@@ -139,12 +144,9 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
 
     then: // UPDATE
     repo.save(doc) == doc
-    FIND(repo, "1") == doc
-    // findAll doesn't seem to be working.
-//    repo.findAll().asList() == [doc]
+    repo.findAll().asList() == [doc]
 
-    and:
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(TEST_WRITER, 3) {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
@@ -159,6 +161,19 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
         }
       }
       trace(1, 1) {
+        span(0) {
+          serviceName "couchbase"
+          resourceName "Bucket.query(${bucketCouchbase.name()})"
+          operationName "couchbase.call"
+          errored false
+          parent()
+          tags {
+            "bucket" bucketCouchbase.name()
+            defaultTags()
+          }
+        }
+      }
+      trace(2, 1) {
         span(0) {
           serviceName "couchbase"
           resourceName "Bucket.get(${bucketCouchbase.name()})"

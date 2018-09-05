@@ -1,5 +1,6 @@
 package springdata
 
+import com.couchbase.client.java.cluster.BucketSettings
 import com.couchbase.client.java.env.CouchbaseEnvironment
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
@@ -13,8 +14,9 @@ import static com.google.common.base.Preconditions.checkNotNull
 @ComponentScan(basePackages = "springdata")
 class CouchbaseConfig extends AbstractCouchbaseConfiguration {
 
-  // This needs to be set before this class can be used by Spring
+  // These need to be set before this class can be used by Spring
   static CouchbaseEnvironment environment
+  static BucketSettings bucketSettings
 
   @Override
   protected CouchbaseEnvironment getEnvironment() {
@@ -28,12 +30,12 @@ class CouchbaseConfig extends AbstractCouchbaseConfiguration {
 
   @Override
   protected String getBucketName() {
-    return "CouchbaseSpringRepositoryTest-cb"
+    return bucketSettings.name()
   }
 
   @Override
   protected String getBucketPassword() {
-    return "test-pass"
+    return bucketSettings.password()
   }
 
 }
