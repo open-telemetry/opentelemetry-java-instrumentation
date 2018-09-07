@@ -169,32 +169,31 @@ class AWSClientTest extends AgentTestRunner {
     tags["aws.endpoint"] == "http://localhost:$server.address.port"
     tags["aws.operation"] == "${operation}Request"
     tags["aws.agent"] == "java-aws-sdk"
-    tags["params"] == params
     tags["span.type"] == "web"
     tags["thread.name"] != null
     tags["thread.id"] != null
-    tags.size() == 13
+    tags.size() == 12
 
     server.lastRequest.headers.get("x-datadog-trace-id") == "$span.traceId"
     server.lastRequest.headers.get("x-datadog-parent-id") == "$span.spanId"
 
     where:
-    service | operation           | method | url                  | handlerCount | call                                                                   | body               | params                                              | client
-    "S3"    | "CreateBucket"      | "PUT"  | "testbucket/"        | 1            | { client -> client.createBucket("testbucket") }                        | ""                 | "{}"                                                | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()
-    "S3"    | "GetObject"         | "GET"  | "someBucket/someKey" | 1            | { client -> client.getObject("someBucket", "someKey") }                | ""                 | "{}"                                                | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()
+    service | operation           | method | url                  | handlerCount | call                                                                   | body               | client
+    "S3"    | "CreateBucket"      | "PUT"  | "testbucket/"        | 1            | { client -> client.createBucket("testbucket") }                        | ""                 | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()
+    "S3"    | "GetObject"         | "GET"  | "someBucket/someKey" | 1            | { client -> client.getObject("someBucket", "someKey") }                | ""                 | AmazonS3ClientBuilder.standard().withPathStyleAccessEnabled(true).withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()
     "EC2"   | "AllocateAddress"   | "POST" | ""                   | 4            | { client -> client.allocateAddress() }                                 | """
             <AllocateAddressResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
                <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId> 
                <publicIp>192.0.2.1</publicIp>
                <domain>standard</domain>
             </AllocateAddressResponse>
-            """ | "{Action=[AllocateAddress],Version=[2016-11-15]}"   | AmazonEC2ClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()
+            """ | AmazonEC2ClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()
     "RDS"   | "DeleteOptionGroup" | "POST" | ""                   | 5            | { client -> client.deleteOptionGroup(new DeleteOptionGroupRequest()) } | """
         <DeleteOptionGroupResponse xmlns="http://rds.amazonaws.com/doc/2014-09-01/">
           <ResponseMetadata>
             <RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId>
           </ResponseMetadata>
         </DeleteOptionGroupResponse>
-      """       | "{Action=[DeleteOptionGroup],Version=[2014-10-31]}" | AmazonRDSClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()
+      """       | AmazonRDSClientBuilder.standard().withEndpointConfiguration(endpoint).withCredentials(credentialsProvider).build()
   }
 }

@@ -28,9 +28,7 @@ import io.opentracing.tag.Tags;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 class SpanDecorator {
@@ -55,35 +53,6 @@ class SpanDecorator {
     span.setTag(
         DDTags.RESOURCE_NAME,
         remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation));
-
-    try {
-      final StringBuilder params = new StringBuilder("{");
-      final Map<String, List<String>> requestParams = request.getParameters();
-      boolean firstKey = true;
-      for (final Entry<String, List<String>> entry : requestParams.entrySet()) {
-        if (!firstKey) {
-          params.append(",");
-        }
-        params.append(entry.getKey()).append("=[");
-        for (int i = 0; i < entry.getValue().size(); ++i) {
-          if (i > 0) {
-            params.append(",");
-          }
-          params.append(entry.getValue().get(i));
-        }
-        params.append("]");
-        firstKey = false;
-      }
-      params.append("}");
-      span.setTag("params", params.toString());
-    } catch (final Exception e) {
-      try {
-        org.slf4j.LoggerFactory.getLogger(SpanDecorator.class)
-            .debug("Failed to decorate aws span", e);
-      } catch (final Exception e2) {
-        // can't reach logger. Silently eat excetpion.
-      }
-    }
   }
 
   static void onResponse(final Response response, final Span span) {

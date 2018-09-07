@@ -16,6 +16,7 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
 
+import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class JDBCInstrumentationTest extends AgentTestRunner {
@@ -142,18 +143,25 @@ class JDBCInstrumentationTest extends AgentTestRunner {
   def "basic statement with #connection.getClass().getCanonicalName() on #driver generates spans"() {
     setup:
     Statement statement = connection.createStatement()
-    ResultSet resultSet = statement.executeQuery(query)
+    ResultSet resultSet = runUnderTrace("parent") {
+      return statement.executeQuery(query)
+    }
 
     expect:
     resultSet.next()
     resultSet.getInt(1) == 3
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
+          operationName "parent"
+          parent()
+        }
+        span(1) {
           operationName "${driver}.query"
           serviceName driver
           resourceName query
           spanType DDSpanTypes.SQL
+          childOf span(0)
           errored false
           tags {
             "db.type" driver
@@ -195,19 +203,26 @@ class JDBCInstrumentationTest extends AgentTestRunner {
   def "prepared statement execute on #driver with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     PreparedStatement statement = connection.prepareStatement(query)
-    assert statement.execute()
-    ResultSet resultSet = statement.resultSet
+    ResultSet resultSet = runUnderTrace("parent") {
+      assert statement.execute()
+      return statement.resultSet
+    }
 
     expect:
     resultSet.next()
     resultSet.getInt(1) == 3
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
+          operationName "parent"
+          parent()
+        }
+        span(1) {
           operationName "${driver}.query"
           serviceName driver
           resourceName query
           spanType DDSpanTypes.SQL
+          childOf span(0)
           errored false
           tags {
             "db.type" driver
@@ -245,18 +260,25 @@ class JDBCInstrumentationTest extends AgentTestRunner {
   def "prepared statement query on #driver with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     PreparedStatement statement = connection.prepareStatement(query)
-    ResultSet resultSet = statement.executeQuery()
+    ResultSet resultSet = runUnderTrace("parent") {
+      return statement.executeQuery()
+    }
 
     expect:
     resultSet.next()
     resultSet.getInt(1) == 3
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
+          operationName "parent"
+          parent()
+        }
+        span(1) {
           operationName "${driver}.query"
           serviceName driver
           resourceName query
           spanType DDSpanTypes.SQL
+          childOf span(0)
           errored false
           tags {
             "db.type" driver
@@ -297,15 +319,22 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     def sql = connection.nativeSQL(query)
 
     expect:
-    !statement.execute(sql)
+    runUnderTrace("parent") {
+      return !statement.execute(sql)
+    }
     statement.updateCount == 0
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
+          operationName "parent"
+          parent()
+        }
+        span(1) {
           operationName "${driver}.query"
           serviceName driver
           resourceName query
           spanType DDSpanTypes.SQL
+          childOf span(0)
           errored false
           tags {
             "db.type" driver
@@ -350,14 +379,21 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     PreparedStatement statement = connection.prepareStatement(sql)
 
     expect:
-    statement.executeUpdate() == 0
+    runUnderTrace("parent") {
+      return statement.executeUpdate() == 0
+    }
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
+          operationName "parent"
+          parent()
+        }
+        span(1) {
           operationName "${driver}.query"
           serviceName driver
           resourceName query
           spanType DDSpanTypes.SQL
+          childOf span(0)
           errored false
           tags {
             "db.type" driver
@@ -405,25 +441,31 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     }
 
     Statement statement = null
-    ResultSet rs = null
-    if (prepareStatement) {
-      statement = connection.prepareStatement(query)
-      rs = statement.executeQuery()
-    } else {
+    ResultSet rs = runUnderTrace("parent") {
+      if (prepareStatement) {
+        statement = connection.prepareStatement(query)
+        return statement.executeQuery()
+      }
+      
       statement = connection.createStatement()
-      rs = statement.executeQuery(query)
+      return statement.executeQuery(query)
     }
 
     then:
     rs.next()
     rs.getInt(1) == 3
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
+          operationName "parent"
+          parent()
+        }
+        span(1) {
           operationName "${driver}.query"
           serviceName driver
           resourceName query
           spanType DDSpanTypes.SQL
+          childOf span(0)
           errored false
           tags {
             "db.type" driver
