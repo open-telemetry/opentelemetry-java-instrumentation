@@ -1,13 +1,10 @@
-apply plugin: 'version-scan'
-
-versionScan {
-  group = "javax.servlet"
-  module = "servlet-api"
-  versions = "[2.3,)"
-  verifyPresent = [
-    "javax.servlet.ServletContextEvent": null,
-  ]
-  // Code should also verify against what servlet-3 instrumentation is using.
+muzzle {
+  pass {
+    group = "javax.servlet"
+    module = "servlet-api"
+    versions = "[2.3,)"
+    assertInverse = true
+  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
