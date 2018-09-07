@@ -1,12 +1,10 @@
-apply plugin: 'version-scan'
-
-versionScan {
-  group = "org.eclipse.jetty"
-  module = 'jetty-server'
-  versions = "[8.0.0.v20110901,)"
-  verifyMissing = [
-    "org.eclipse.jetty.server.AsyncContext",
-  ]
+muzzle {
+  pass {
+    group = "org.eclipse.jetty"
+    module = 'jetty-server'
+    versions = "[8.0.0.v20110901,)"
+    assertInverse = true
+  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
