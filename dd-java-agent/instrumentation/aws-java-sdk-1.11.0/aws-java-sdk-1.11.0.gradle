@@ -1,39 +1,9 @@
-apply plugin: 'version-scan'
-
-// Commented out because version scan doesn't catch the combination of tests.
-// HttpClientFactory is only present starting in 1.11.0
-// HandlerContextAware is added in 1.11.106
-// The combination of the two allow us to filter the ranges.
-//
-
-//versionScan {
-//  group = "com.amazonaws"
-//  module = "aws-java-sdk-core"
-//  versions = "[1.11.0,1.11.106)"
-//  verifyPresent = [
-//    "com.amazonaws.http.client.HttpClientFactory": null,
-//  ]
-//  verifyMissing = [
-//    "com.amazonaws.HandlerContextAware",
-//  ]
-//}
-
-//versionScan {
-//  group = "com.amazonaws"
-//  module = "aws-java-sdk-core"
-//  versions = "[1.11.0,)"
-//  verifyPresent = [
-//    "com.amazonaws.http.client.HttpClientFactory": null,
-//  ]
-//}
-
-versionScan {
-  group = "com.amazonaws"
-  module = "aws-java-sdk-core"
-  versions = "[,1.11.106)"
-  verifyMissing = [
-    "com.amazonaws.HandlerContextAware",
-  ]
+muzzle {
+  pass {
+    group = "com.amazonaws"
+    module = "aws-java-sdk-core"
+    versions = "[1.10.33,1.11.106)"
+  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"

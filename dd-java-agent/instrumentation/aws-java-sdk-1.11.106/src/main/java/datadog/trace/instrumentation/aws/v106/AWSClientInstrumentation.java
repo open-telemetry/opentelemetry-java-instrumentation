@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.aws.v106;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -35,11 +34,6 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
         .and(
             named("com.amazonaws.AmazonWebServiceClient")
                 .and(declaresField(named("requestHandler2s"))));
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("com.amazonaws.HandlerContextAware");
   }
 
   @Override

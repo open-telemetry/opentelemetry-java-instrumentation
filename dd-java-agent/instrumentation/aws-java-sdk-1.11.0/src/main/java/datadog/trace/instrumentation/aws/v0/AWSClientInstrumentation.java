@@ -1,10 +1,8 @@
 package datadog.trace.instrumentation.aws.v0;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
@@ -32,15 +30,6 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.amazonaws.AmazonWebServiceClient")
         .and(declaresField(named("requestHandler2s")));
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("com.amazonaws.http.client.HttpClientFactory")
-        .and(
-            not(
-                classLoaderHasClasses(
-                    "com.amazonaws.client.builder.AwsClientBuilder$EndpointConfiguration")));
   }
 
   @Override
