@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.grpc.client;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -25,11 +24,6 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("io.grpc.internal.AbstractManagedChannelImplBuilder");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("io.grpc.InternalServerInterceptors");
   }
 
   @Override

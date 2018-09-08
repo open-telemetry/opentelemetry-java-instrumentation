@@ -1,12 +1,9 @@
-apply plugin: 'version-scan'
-
-versionScan {
-  group = "io.grpc"
-  module = "grpc-core"
-  versions = "[1.5.0,)"
-  verifyPresent = [
-    "io.grpc.InternalServerInterceptors": null,
-  ]
+muzzle {
+  pass {
+    group = "io.grpc"
+    module = "grpc-core"
+    versions = "[1.5.0,)"
+  }
 }
 
 buildscript {
