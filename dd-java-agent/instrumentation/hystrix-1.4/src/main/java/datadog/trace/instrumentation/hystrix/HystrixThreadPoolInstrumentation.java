@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.hystrix;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -27,11 +26,6 @@ public class HystrixThreadPoolInstrumentation extends Instrumenter.Default {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named(
         "com.netflix.hystrix.strategy.concurrency.HystrixContextScheduler$ThreadPoolWorker");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("com.netflix.hystrix.AbstractCommand");
   }
 
   @Override
