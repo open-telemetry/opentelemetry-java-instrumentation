@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.kafka_clients;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -43,12 +42,6 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.kafka.clients.consumer.ConsumerRecords");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses(
-        "org.apache.kafka.common.header.Header", "org.apache.kafka.common.header.Headers");
   }
 
   @Override

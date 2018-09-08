@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.kafka_clients;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -44,12 +43,6 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.kafka.clients.producer.KafkaProducer");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses(
-        "org.apache.kafka.common.header.Header", "org.apache.kafka.common.header.Headers");
   }
 
   @Override
