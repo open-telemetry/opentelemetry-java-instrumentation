@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.datastax.cassandra;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -28,11 +27,6 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.datastax.driver.core.Cluster$Manager");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("com.datastax.driver.core.Duration");
   }
 
   @Override
