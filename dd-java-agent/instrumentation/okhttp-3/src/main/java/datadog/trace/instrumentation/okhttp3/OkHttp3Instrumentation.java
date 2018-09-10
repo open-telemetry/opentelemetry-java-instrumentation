@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.okhttp3;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.instrumentation.okhttp3.OkHttpClientSpanDecorator.STANDARD_TAGS;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -28,17 +27,6 @@ public class OkHttp3Instrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("okhttp3.OkHttpClient");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses(
-        "okhttp3.Request",
-        "okhttp3.Response",
-        "okhttp3.Connection",
-        "okhttp3.Cookie",
-        "okhttp3.ConnectionPool",
-        "okhttp3.Headers");
   }
 
   @Override
