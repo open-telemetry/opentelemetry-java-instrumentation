@@ -47,11 +47,6 @@ public class KafkaStreamsProcessorInstrumentation {
     }
 
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
-      return classLoaderHasClasses("org.apache.kafka.streams.state.internals.OrderedBytes");
-    }
-
-    @Override
     public String[] helperClassNames() {
       return HELPER_CLASS_NAMES;
     }

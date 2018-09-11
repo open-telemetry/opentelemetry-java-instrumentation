@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.kafka_streams;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -28,11 +27,6 @@ public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation extends Ins
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.apache.kafka.streams.processor.internals.SourceNodeRecordDeserializer");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("org.apache.kafka.streams.state.internals.OrderedBytes");
   }
 
   @Override
