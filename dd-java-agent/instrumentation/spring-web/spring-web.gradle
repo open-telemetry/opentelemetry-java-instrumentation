@@ -1,15 +1,11 @@
-//apply plugin: 'version-scan'
-//
-//versionScan {
-//  group = 'org.springframework'
-//  module = 'spring-webmvc'
-//  legacyModule = "servlet-api"
-//  versions = "[3.0,)"
-//  verifyPresent = [
-//    "javax.servlet.AsyncEvent"   : null,
-//    "javax.servlet.AsyncListener": null,
-//  ]
-//}
+muzzle {
+  pass {
+    group = 'org.springframework'
+    module = 'javax.servlet.api'
+    versions = "[3.0.0.RELEASE,)"
+    extraDependency "javax.servlet:javax.servlet.api:3.0.0"
+  }
+}
 
 apply from: "${rootDir}/gradle/java.gradle"
 
