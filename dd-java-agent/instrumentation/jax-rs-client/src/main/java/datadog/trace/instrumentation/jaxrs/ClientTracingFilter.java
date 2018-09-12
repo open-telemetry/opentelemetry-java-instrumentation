@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Priority(Priorities.HEADER_DECORATOR)
 public class ClientTracingFilter implements ClientRequestFilter, ClientResponseFilter {
-  public static final String SPAN_PROPERTY_NAME = "datadog.trace.jaxrs.span"; // Copied elsewhere
+  public static final String SPAN_PROPERTY_NAME = "datadog.trace.jax-rs-client.span";
 
   @Override
   public void filter(final ClientRequestContext requestContext) {
