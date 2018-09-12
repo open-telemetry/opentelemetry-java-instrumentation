@@ -2,6 +2,8 @@ import com.couchbase.client.java.Bucket
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.query.N1qlQuery
+import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import util.AbstractCouchbaseTest
 
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
@@ -22,6 +24,7 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             defaultTags()
           }
         }
@@ -42,11 +45,12 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.upsert(${bkt.name()})"
+          resourceName "Bucket.upsert"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" bkt.name()
             defaultTags()
           }
@@ -67,11 +71,12 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.get(${bkt.name()})"
+          resourceName "Bucket.get"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" bkt.name()
             defaultTags()
           }
@@ -108,11 +113,12 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.query(${bkt.name()})"
+          resourceName "Bucket.query"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" bkt.name()
             defaultTags()
           }
