@@ -7,9 +7,11 @@ import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit
 
+import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
+
 class DDSpanTest extends Specification {
   def writer = new ListWriter()
-  def tracer = new DDTracer(DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME, writer, new RateByServiceSampler())
+  def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer, new RateByServiceSampler())
 
   def "getters and setters"() {
     setup:
@@ -77,7 +79,7 @@ class DDSpanTest extends Specification {
     span = tracer.buildSpan(opName).start()
     then:
     span.getResourceName() == opName
-    span.getServiceName() == DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME
+    span.getServiceName() == DEFAULT_SERVICE_NAME
 
     when:
     final String resourceName = "fake"

@@ -11,7 +11,7 @@ import io.opentracing.tag.StringTag
 import io.opentracing.tag.Tags
 import spock.lang.Specification
 
-import static datadog.opentracing.DDTracer.UNASSIGNED_DEFAULT_SERVICE_NAME
+import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 import static java.util.Collections.emptyMap
 
 class SpanDecoratorTest extends Specification {
@@ -75,10 +75,10 @@ class SpanDecoratorTest extends Specification {
     span.serviceName == expected
 
     where:
-    serviceName                     | expected                        | mapping
-    UNASSIGNED_DEFAULT_SERVICE_NAME | UNASSIGNED_DEFAULT_SERVICE_NAME | ["other-service-name": "other-service"]
-    UNASSIGNED_DEFAULT_SERVICE_NAME | "new-service"                   | [(UNASSIGNED_DEFAULT_SERVICE_NAME): "new-service"]
-    "other-service-name"            | "other-service"                 | ["other-service-name": "other-service"]
+    serviceName          | expected             | mapping
+    DEFAULT_SERVICE_NAME | DEFAULT_SERVICE_NAME | ["other-service-name": "other-service"]
+    DEFAULT_SERVICE_NAME | "new-service"        | [(DEFAULT_SERVICE_NAME): "new-service"]
+    "other-service-name" | "other-service"      | ["other-service-name": "other-service"]
   }
 
   def "set service name from servlet.context with context '#context'"() {
@@ -90,15 +90,15 @@ class SpanDecoratorTest extends Specification {
     span.serviceName == expected
 
     where:
-    context         | serviceName                     | expected
-    "/"             | UNASSIGNED_DEFAULT_SERVICE_NAME | UNASSIGNED_DEFAULT_SERVICE_NAME
-    ""              | UNASSIGNED_DEFAULT_SERVICE_NAME | UNASSIGNED_DEFAULT_SERVICE_NAME
-    "/some-context" | UNASSIGNED_DEFAULT_SERVICE_NAME | "some-context"
-    "other-context" | UNASSIGNED_DEFAULT_SERVICE_NAME | "other-context"
-    "/"             | "my-service"                    | "my-service"
-    ""              | "my-service"                    | "my-service"
-    "/some-context" | "my-service"                    | "my-service"
-    "other-context" | "my-service"                    | "my-service"
+    context         | serviceName          | expected
+    "/"             | DEFAULT_SERVICE_NAME | DEFAULT_SERVICE_NAME
+    ""              | DEFAULT_SERVICE_NAME | DEFAULT_SERVICE_NAME
+    "/some-context" | DEFAULT_SERVICE_NAME | "some-context"
+    "other-context" | DEFAULT_SERVICE_NAME | "other-context"
+    "/"             | "my-service"         | "my-service"
+    ""              | "my-service"         | "my-service"
+    "/some-context" | "my-service"         | "my-service"
+    "other-context" | "my-service"         | "my-service"
   }
 
   def "set service name from servlet.context with context '#context' for service #serviceName"() {
@@ -114,15 +114,15 @@ class SpanDecoratorTest extends Specification {
     span.serviceName == expected
 
     where:
-    context         | serviceName                     | expected
-    "/"             | UNASSIGNED_DEFAULT_SERVICE_NAME | "new-service"
-    ""              | UNASSIGNED_DEFAULT_SERVICE_NAME | "new-service"
-    "/some-context" | UNASSIGNED_DEFAULT_SERVICE_NAME | "some-context"
-    "other-context" | UNASSIGNED_DEFAULT_SERVICE_NAME | "other-context"
-    "/"             | "my-service"                    | "new-service"
-    ""              | "my-service"                    | "new-service"
-    "/some-context" | "my-service"                    | "new-service"
-    "other-context" | "my-service"                    | "new-service"
+    context         | serviceName          | expected
+    "/"             | DEFAULT_SERVICE_NAME | "new-service"
+    ""              | DEFAULT_SERVICE_NAME | "new-service"
+    "/some-context" | DEFAULT_SERVICE_NAME | "some-context"
+    "other-context" | DEFAULT_SERVICE_NAME | "other-context"
+    "/"             | "my-service"         | "new-service"
+    ""              | "my-service"         | "new-service"
+    "/some-context" | "my-service"         | "new-service"
+    "other-context" | "my-service"         | "new-service"
 
     mapping = [(serviceName): "new-service"]
   }

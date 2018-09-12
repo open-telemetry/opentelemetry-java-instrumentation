@@ -1,6 +1,15 @@
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/publish.gradle"
 
+// These are tested outside of this module since this module mainly just defines 'API'
+excludedClassesConverage += [
+  'datadog.trace.api.DDSpanTypes',
+  'datadog.trace.api.DDTraceApiInfo',
+  'datadog.trace.api.GlobalTracer*',
+  'datadog.trace.api.CorrelationIdentifier',
+  'datadog.trace.api.DDTags'
+]
+
 description = 'dd-trace-api'
 dependencies {
   compile deps.slf4j

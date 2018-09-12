@@ -2,12 +2,10 @@ package datadog.opentracing.decorators;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /** Create DDSpanDecorators */
 public class DDDecoratorsFactory {
-  public static List<AbstractDecorator> createBuiltinDecorators(
-      final Map<String, String> mappings) {
+  public static List<AbstractDecorator> createBuiltinDecorators() {
     final HTTPComponent httpDecorator = new HTTPComponent();
     httpDecorator.setMatchingTag("component");
     httpDecorator.setMatchingValue("java-aws-sdk");
