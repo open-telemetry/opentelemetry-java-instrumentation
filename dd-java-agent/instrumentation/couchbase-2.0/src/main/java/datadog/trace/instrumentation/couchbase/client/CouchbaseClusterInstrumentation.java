@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.Span;
@@ -110,6 +111,7 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
               .buildSpan("couchbase.call")
               .withTag(DDTags.SERVICE_NAME, "couchbase")
               .withTag(DDTags.RESOURCE_NAME, resourceName)
+              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.COUCHBASE)
               .start());
     }
   }

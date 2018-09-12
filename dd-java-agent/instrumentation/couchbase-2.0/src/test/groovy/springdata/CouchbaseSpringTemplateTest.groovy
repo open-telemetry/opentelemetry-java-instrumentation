@@ -2,6 +2,8 @@ package springdata
 
 
 import com.couchbase.client.java.Bucket
+import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import org.springframework.data.couchbase.core.CouchbaseTemplate
 import spock.lang.Shared
 import util.AbstractCouchbaseTest
@@ -43,11 +45,12 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.upsert($name)"
+          resourceName "Bucket.upsert"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" name
             defaultTags()
           }
@@ -56,11 +59,12 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
       trace(1, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.get($name)"
+          resourceName "Bucket.get"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" name
             defaultTags()
           }
@@ -69,11 +73,12 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
       trace(2, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.remove($name)"
+          resourceName "Bucket.remove"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" name
             defaultTags()
           }
@@ -82,11 +87,12 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
       trace(3, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.get($name)"
+          resourceName "Bucket.get"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" name
             defaultTags()
           }

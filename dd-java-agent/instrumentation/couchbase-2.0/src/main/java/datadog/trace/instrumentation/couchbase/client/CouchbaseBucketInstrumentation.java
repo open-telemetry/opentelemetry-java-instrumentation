@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import com.couchbase.client.java.CouchbaseCluster;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.Span;
@@ -107,7 +108,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
       final Class<?> declaringClass = method.getDeclaringClass();
       final String className =
           declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
-      final String resourceName = className + "." + method.getName() + "(" + bucket + ")";
+      final String resourceName = className + "." + method.getName();
 
       // just replace the no-op span.
       spanRef.set(
@@ -115,6 +116,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
               .buildSpan("couchbase.call")
               .withTag(DDTags.SERVICE_NAME, "couchbase")
               .withTag(DDTags.RESOURCE_NAME, resourceName)
+              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.COUCHBASE)
               .withTag("bucket", bucket)
               .start());
     }

@@ -2,6 +2,8 @@ package springdata
 
 import com.couchbase.client.java.view.DefaultView
 import com.couchbase.client.java.view.DesignDocument
+import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.data.repository.CrudRepository
@@ -77,11 +79,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.query(${bucketCouchbase.name()})"
+          resourceName "Bucket.query"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -105,11 +108,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.upsert(${bucketCouchbase.name()})"
+          resourceName "Bucket.upsert"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -126,11 +130,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.get(${bucketCouchbase.name()})"
+          resourceName "Bucket.get"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -150,11 +155,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.upsert(${bucketCouchbase.name()})"
+          resourceName "Bucket.upsert"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -163,11 +169,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(1, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.query(${bucketCouchbase.name()})"
+          resourceName "Bucket.query"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -176,11 +183,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(2, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.get(${bucketCouchbase.name()})"
+          resourceName "Bucket.get"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -200,11 +208,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.remove(${bucketCouchbase.name()})"
+          resourceName "Bucket.remove"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -213,11 +222,12 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
       trace(1, 1) {
         span(0) {
           serviceName "couchbase"
-          resourceName "Bucket.query(${bucketCouchbase.name()})"
+          resourceName "Bucket.query"
           operationName "couchbase.call"
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
