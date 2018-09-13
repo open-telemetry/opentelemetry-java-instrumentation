@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -8,16 +9,22 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
+import javax.ws.rs.ProcessingException
 import javax.ws.rs.client.AsyncInvoker
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.Invocation
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
+import java.util.concurrent.ExecutionException
 
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class JaxRsClientTest extends AgentTestRunner {
+
+  @Shared
+  def emptyPort = TestUtils.randomOpenPort()
 
   @AutoCleanup
   @Shared
@@ -32,7 +39,7 @@ class JaxRsClientTest extends AgentTestRunner {
   def "#lib request creates spans and sends headers"() {
     setup:
     Client client = builder.build()
-    WebTarget service = client.target("http://localhost:$server.address.port/ping")
+    WebTarget service = client.target("$server.address/ping")
     Response response
     if (async) {
       AsyncInvoker request = service.request(MediaType.TEXT_PLAIN).async()
@@ -45,35 +52,31 @@ class JaxRsClientTest extends AgentTestRunner {
     expect:
     response.readEntity(String) == "pong"
 
-    TEST_WRITER.size() == 1
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          resourceName "GET /ping"
+          operationName "jax-rs.client.call"
+          spanType "http"
+          parent()
+          errored false
+          tags {
 
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
+            "$Tags.COMPONENT.key" "jax-rs.client"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.HTTP_URL.key" "$server.address/ping"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            defaultTags()
+          }
+        }
+      }
+    }
 
-    and:
-    def span = trace[0]
-
-    span.context().operationName == "jax-rs.client.call"
-    span.serviceName == "unnamed-java-app"
-    span.resourceName == "GET /ping"
-    span.type == "http"
-    !span.context().getErrorFlag()
-    span.context().parentId == "0"
-
-
-    def tags = span.context().tags
-    tags[Tags.COMPONENT.key] == "jax-rs.client"
-    tags[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_CLIENT
-    tags[Tags.HTTP_METHOD.key] == "GET"
-    tags[Tags.HTTP_STATUS.key] == 200
-    tags[Tags.HTTP_URL.key] == "http://localhost:$server.address.port/ping"
-    tags[DDTags.SPAN_TYPE] == DDSpanTypes.HTTP_CLIENT
-    tags[DDTags.THREAD_NAME] != null
-    tags[DDTags.THREAD_ID] != null
-    tags.size() == 8
-
-    server.lastRequest.headers.get("x-datadog-trace-id") == "$span.traceId"
-    server.lastRequest.headers.get("x-datadog-parent-id") == "$span.spanId"
+    server.lastRequest.headers.get("x-datadog-trace-id") == TEST_WRITER[0][0].traceId
+    server.lastRequest.headers.get("x-datadog-parent-id") == TEST_WRITER[0][0].spanId
 
     where:
     builder                     | async | lib
@@ -83,5 +86,51 @@ class JaxRsClientTest extends AgentTestRunner {
     new JerseyClientBuilder()   | true  | "jersey async"
     new ClientBuilderImpl()     | true  | "cxf async"
     new ResteasyClientBuilder() | true  | "resteasy async"
+  }
+
+  def "#lib connection failure creates errored span"() {
+    when:
+    Client client = builder.build()
+    WebTarget service = client.target("http://localhost:$emptyPort/ping")
+    if (async) {
+      AsyncInvoker request = service.request(MediaType.TEXT_PLAIN).async()
+      request.get().get()
+    } else {
+      Invocation.Builder request = service.request(MediaType.TEXT_PLAIN)
+      request.get()
+    }
+
+    then:
+    thrown async ? ExecutionException : ProcessingException
+
+    assertTraces(TEST_WRITER, 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          resourceName "GET /ping"
+          operationName "jax-rs.client.call"
+          spanType "http"
+          parent()
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" "jax-rs.client"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_URL.key" "http://localhost:$emptyPort/ping"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            errorTags ProcessingException, String
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    where:
+    builder                     | async | lib
+    new JerseyClientBuilder()   | false | "jersey"
+    new ResteasyClientBuilder() | false | "resteasy"
+    new JerseyClientBuilder()   | true  | "jersey async"
+    new ResteasyClientBuilder() | true  | "resteasy async"
+    // Unfortunately there's not a good way to instrument this for CXF.
   }
 }

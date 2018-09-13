@@ -1,0 +1,22 @@
+muzzle {
+  pass {
+    group = "org.glassfish.jersey.core"
+    module = "jersey-client"
+    versions = "[2.0,)"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.0'
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compileOnly project(':dd-java-agent:instrumentation:jax-rs-client')
+}
