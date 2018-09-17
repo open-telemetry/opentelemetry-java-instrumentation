@@ -82,7 +82,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
       @DELETE
       void call() {}
     }
-    "POST /abstract/child"      | new ChildClassWithPath()
+    "POST /abstract/child/call" | new ChildClassWithPath()
 
     className = getName(obj.class)
   }
@@ -138,8 +138,9 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     abstract void call()
   }
 
-  @Path("/child")
+  @Path("child")
   class ChildClassWithPath extends AbstractClassWithPath {
+    @Path("call")
     @POST
     void call() {}
   }

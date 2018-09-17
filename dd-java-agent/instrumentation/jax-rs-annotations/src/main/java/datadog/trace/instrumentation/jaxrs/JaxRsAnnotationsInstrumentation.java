@@ -61,16 +61,19 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
     public static Scope nameSpan(@Advice.Origin final Method method) {
 
       // TODO: do we need caching for this?
-      final LinkedList<Path> classPaths = new LinkedList<>();
+      final LinkedList<Path> paths = new LinkedList<>();
       Class<?> target = method.getDeclaringClass();
       while (target != Object.class) {
         final Path annotation = target.getAnnotation(Path.class);
         if (annotation != null) {
-          classPaths.push(annotation);
+          paths.push(annotation);
         }
         target = target.getSuperclass();
       }
       final Path methodPath = method.getAnnotation(Path.class);
+      if (methodPath != null) {
+        paths.add(methodPath);
+      }
       String httpMethod = null;
       for (final Annotation ann : method.getDeclaredAnnotations()) {
         if (ann.annotationType().getAnnotation(HttpMethod.class) != null) {
@@ -83,11 +86,15 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         resourceNameBuilder.append(httpMethod);
         resourceNameBuilder.append(" ");
       }
-      for (final Path classPath : classPaths) {
-        resourceNameBuilder.append(classPath.value());
-      }
-      if (methodPath != null) {
-        resourceNameBuilder.append(methodPath.value());
+      Path last = null;
+      for (final Path path : paths) {
+        if (path.value().startsWith("/") || (last != null && last.value().endsWith("/"))) {
+          resourceNameBuilder.append(path.value());
+        } else {
+          resourceNameBuilder.append("/");
+          resourceNameBuilder.append(path.value());
+        }
+        last = path;
       }
       final String resourceName = resourceNameBuilder.toString().trim();
 
