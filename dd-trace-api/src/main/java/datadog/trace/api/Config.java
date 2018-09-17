@@ -1,7 +1,9 @@
 package datadog.trace.api;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import lombok.Getter;
@@ -26,14 +28,18 @@ public class Config {
   private static final Config INSTANCE = new Config();
 
   public static final String SERVICE_NAME = "service.name";
-  public static final String SERVICE_MAPPING = "service.mapping";
   public static final String WRITER_TYPE = "writer.type";
   public static final String AGENT_HOST = "agent.host";
   public static final String AGENT_PORT = "agent.port";
   public static final String PRIORITY_SAMPLING = "priority.sampling";
   public static final String TRACE_RESOLVER_ENABLED = "trace.resolver.enabled";
+  public static final String SERVICE_MAPPING = "service.mapping";
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String HEADER_TAGS = "trace.header.tags";
+  public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
+  public static final String JMX_FETCH_CHECK_PERIOD = "jmxfetch.check-period";
+  public static final String JMX_FETCH_REFRESH_BEANS_PERIOD = "jmxfetch.refresh-beans-period";
+  public static final String JMX_FETCH_REPORTER = "jmxfetch.reporter";
 
   public static final String DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
@@ -44,8 +50,8 @@ public class Config {
   public static final String DEFAULT_AGENT_HOST = "localhost";
   public static final int DEFAULT_AGENT_PORT = 8126;
 
-  private static final String DEFAULT_PRIORITY_SAMPLING_ENABLED = "false";
-  private static final String DEFAULT_TRACE_RESOLVER_ENABLED = "true";
+  private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = false;
+  private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
 
   @Getter private final String serviceName;
   @Getter private final String writerType;
@@ -56,6 +62,10 @@ public class Config {
   @Getter private final Map<String, String> serviceMapping;
   @Getter private final Map<String, String> spanTags;
   @Getter private final Map<String, String> headerTags;
+  @Getter private final List<String> jmxFetchMetricsConfigs;
+  @Getter private final Integer jmxFetchCheckPeriod;
+  @Getter private final Integer jmxFetchRefreshBeansPeriod;
+  @Getter private final String jmxFetchReporter;
 
   // Read order: System Properties -> Env Variables, [-> default value]
   // Visible for testing
@@ -63,18 +73,19 @@ public class Config {
     serviceName = getSettingFromEnvironment(SERVICE_NAME, DEFAULT_SERVICE_NAME);
     writerType = getSettingFromEnvironment(WRITER_TYPE, DEFAULT_AGENT_WRITER_TYPE);
     agentHost = getSettingFromEnvironment(AGENT_HOST, DEFAULT_AGENT_HOST);
-    agentPort =
-        Integer.valueOf(
-            getSettingFromEnvironment(AGENT_PORT, Integer.toString(DEFAULT_AGENT_PORT)));
+    agentPort = getIntegerSettingFromEnvironment(AGENT_PORT, DEFAULT_AGENT_PORT);
     prioritySamplingEnabled =
-        Boolean.valueOf(
-            getSettingFromEnvironment(PRIORITY_SAMPLING, DEFAULT_PRIORITY_SAMPLING_ENABLED));
+        getBooleanSettingFromEnvironment(PRIORITY_SAMPLING, DEFAULT_PRIORITY_SAMPLING_ENABLED);
     traceResolverEnabled =
-        Boolean.valueOf(
-            getSettingFromEnvironment(TRACE_RESOLVER_ENABLED, DEFAULT_TRACE_RESOLVER_ENABLED));
+        getBooleanSettingFromEnvironment(TRACE_RESOLVER_ENABLED, DEFAULT_TRACE_RESOLVER_ENABLED);
     serviceMapping = getMapSettingFromEnvironment(SERVICE_MAPPING, null);
     spanTags = getMapSettingFromEnvironment(SPAN_TAGS, null);
     headerTags = getMapSettingFromEnvironment(HEADER_TAGS, null);
+    jmxFetchMetricsConfigs = getListSettingFromEnvironment(JMX_FETCH_METRICS_CONFIGS, null);
+    jmxFetchCheckPeriod = getIntegerSettingFromEnvironment(JMX_FETCH_CHECK_PERIOD, null);
+    jmxFetchRefreshBeansPeriod =
+        getIntegerSettingFromEnvironment(JMX_FETCH_REFRESH_BEANS_PERIOD, null);
+    jmxFetchReporter = getSettingFromEnvironment(JMX_FETCH_REPORTER, null);
   }
 
   // Read order: Properties -> Parent
@@ -82,19 +93,22 @@ public class Config {
     serviceName = properties.getProperty(SERVICE_NAME, parent.serviceName);
     writerType = properties.getProperty(WRITER_TYPE, parent.writerType);
     agentHost = properties.getProperty(AGENT_HOST, parent.agentHost);
-    agentPort =
-        Integer.valueOf(properties.getProperty(AGENT_PORT, Integer.toString(parent.agentPort)));
+    agentPort = getPropertyIntegerValue(properties, AGENT_PORT, parent.agentPort);
     prioritySamplingEnabled =
-        Boolean.valueOf(
-            properties.getProperty(
-                PRIORITY_SAMPLING, Boolean.toString(parent.prioritySamplingEnabled)));
+        getPropertyBooleanValue(properties, PRIORITY_SAMPLING, parent.prioritySamplingEnabled);
     traceResolverEnabled =
-        Boolean.valueOf(
-            properties.getProperty(
-                TRACE_RESOLVER_ENABLED, Boolean.toString(parent.traceResolverEnabled)));
+        getPropertyBooleanValue(properties, TRACE_RESOLVER_ENABLED, parent.traceResolverEnabled);
     serviceMapping = getPropertyMapValue(properties, SERVICE_MAPPING, parent.serviceMapping);
     spanTags = getPropertyMapValue(properties, SPAN_TAGS, parent.spanTags);
     headerTags = getPropertyMapValue(properties, HEADER_TAGS, parent.headerTags);
+    jmxFetchMetricsConfigs =
+        getPropertyListValue(properties, JMX_FETCH_METRICS_CONFIGS, parent.jmxFetchMetricsConfigs);
+    jmxFetchCheckPeriod =
+        getPropertyIntegerValue(properties, JMX_FETCH_CHECK_PERIOD, parent.jmxFetchCheckPeriod);
+    jmxFetchRefreshBeansPeriod =
+        getPropertyIntegerValue(
+            properties, JMX_FETCH_REFRESH_BEANS_PERIOD, parent.jmxFetchRefreshBeansPeriod);
+    jmxFetchReporter = properties.getProperty(JMX_FETCH_REPORTER, parent.jmxFetchReporter);
   }
 
   private static String getSettingFromEnvironment(final String name, final String defaultValue) {
@@ -110,6 +124,23 @@ public class Config {
     return parseMap(getSettingFromEnvironment(name, defaultValue), PREFIX + name);
   }
 
+  private static List<String> getListSettingFromEnvironment(
+      final String name, final String defaultValue) {
+    return parseList(getSettingFromEnvironment(name, defaultValue));
+  }
+
+  private static Boolean getBooleanSettingFromEnvironment(
+      final String name, final Boolean defaultValue) {
+    final String value = getSettingFromEnvironment(name, null);
+    return value == null ? defaultValue : Boolean.valueOf(value);
+  }
+
+  private static Integer getIntegerSettingFromEnvironment(
+      final String name, final Integer defaultValue) {
+    final String value = getSettingFromEnvironment(name, null);
+    return value == null ? defaultValue : Integer.valueOf(value);
+  }
+
   private static String propertyToEnvironmentName(final String name) {
     return name.toUpperCase().replace(".", "_");
   }
@@ -118,6 +149,24 @@ public class Config {
       final Properties properties, final String name, final Map<String, String> defaultValue) {
     final String value = properties.getProperty(name);
     return value == null ? defaultValue : parseMap(value, name);
+  }
+
+  private static List<String> getPropertyListValue(
+      final Properties properties, final String name, final List<String> defaultValue) {
+    final String value = properties.getProperty(name);
+    return value == null ? defaultValue : parseList(value);
+  }
+
+  private static Boolean getPropertyBooleanValue(
+      final Properties properties, final String name, final Boolean defaultValue) {
+    final String value = properties.getProperty(name);
+    return value == null ? defaultValue : Boolean.valueOf(value);
+  }
+
+  private static Integer getPropertyIntegerValue(
+      final Properties properties, final String name, final Integer defaultValue) {
+    final String value = properties.getProperty(name);
+    return value == null ? defaultValue : Integer.valueOf(value);
   }
 
   private static Map<String, String> parseMap(final String str, final String settingName) {
@@ -146,6 +195,15 @@ public class Config {
       }
     }
     return Collections.unmodifiableMap(map);
+  }
+
+  private static List<String> parseList(final String str) {
+    if (str == null || str.trim().isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    final String[] tokens = str.split(",", -1);
+    return Collections.unmodifiableList(Arrays.asList(tokens));
   }
 
   public static Config get() {

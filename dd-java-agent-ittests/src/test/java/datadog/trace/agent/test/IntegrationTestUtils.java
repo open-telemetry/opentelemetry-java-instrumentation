@@ -49,6 +49,25 @@ public class IntegrationTestUtils {
     }
   }
 
+  /** Returns the classloader the jmxfetch is running on. */
+  public static ClassLoader getJmxFetchClassLoader() {
+    Field classloaderField = null;
+    try {
+      Class<?> tracingAgentClass =
+          tracingAgentClass =
+              ClassLoader.getSystemClassLoader().loadClass("datadog.trace.agent.TracingAgent");
+      classloaderField = tracingAgentClass.getDeclaredField("JMXFETCH_CLASSLOADER");
+      classloaderField.setAccessible(true);
+      return (ClassLoader) classloaderField.get(null);
+    } catch (final Exception e) {
+      throw new IllegalStateException(e);
+    } finally {
+      if (null != classloaderField) {
+        classloaderField.setAccessible(false);
+      }
+    }
+  }
+
   /** Returns the URL to the jar the agent appended to the bootstrap classpath * */
   public static ClassLoader getBootstrapProxy() throws Exception {
     final ClassLoader agentClassLoader = getAgentClassLoader();

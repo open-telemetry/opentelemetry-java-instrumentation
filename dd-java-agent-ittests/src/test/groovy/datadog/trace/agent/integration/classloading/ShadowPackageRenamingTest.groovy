@@ -56,13 +56,13 @@ class ShadowPackageRenamingTest extends Specification {
   def "agent jar contains no bootstrap classes"() {
     setup:
     final ClassPath agentClasspath = ClassPath.from(IntegrationTestUtils.getAgentClassLoader())
+    final ClassPath jmxFetchClasspath = ClassPath.from(IntegrationTestUtils.getJmxFetchClassLoader())
 
     final ClassPath bootstrapClasspath = ClassPath.from(IntegrationTestUtils.getBootstrapProxy())
     final Set<String> bootstrapClasses = new HashSet<>()
     final String[] bootstrapPrefixes = IntegrationTestUtils.getBootstrapPackagePrefixes()
     final String[] agentPrefixes = IntegrationTestUtils.getAgentPackagePrefixes()
     final List<String> badBootstrapPrefixes = []
-    final List<String> badAgentPrefixes = []
     for (ClassPath.ClassInfo info : bootstrapClasspath.getAllClasses()) {
       bootstrapClasses.add(info.getName())
       // make sure all bootstrap classes can be loaded from system
@@ -79,10 +79,11 @@ class ShadowPackageRenamingTest extends Specification {
       }
     }
 
-    final List<ClassPath.ClassInfo> duplicateClassFile = new ArrayList<>()
+    final List<ClassPath.ClassInfo> agentDuplicateClassFile = new ArrayList<>()
+    final List<String> badAgentPrefixes = []
     for (ClassPath.ClassInfo classInfo : agentClasspath.getAllClasses()) {
       if (bootstrapClasses.contains(classInfo.getName())) {
-        duplicateClassFile.add(classInfo)
+        agentDuplicateClassFile.add(classInfo)
       }
       boolean goodPrefix = false
       for (int i = 0; i < agentPrefixes.length; ++i) {
@@ -96,9 +97,28 @@ class ShadowPackageRenamingTest extends Specification {
       }
     }
 
+    final List<ClassPath.ClassInfo> jmxFetchDuplicateClassFile = new ArrayList<>()
+    final List<String> badJmxFetchPrefixes = []
+    for (ClassPath.ClassInfo classInfo : jmxFetchClasspath.getAllClasses()) {
+      if (bootstrapClasses.contains(classInfo.getName())) {
+        jmxFetchDuplicateClassFile.add(classInfo)
+      }
+      boolean goodPrefix = true
+      for (int i = 0; i < bootstrapPrefixes.length; ++i) {
+        if (classInfo.getName().startsWith(bootstrapPrefixes[i])) {
+          goodPrefix = false
+          break
+        }
+      }
+      if (!goodPrefix) {
+        badJmxFetchPrefixes.add(classInfo.getName())
+      }
+    }
+
     expect:
-    duplicateClassFile == []
+    agentDuplicateClassFile == []
     badBootstrapPrefixes == []
     badAgentPrefixes == []
+    badJmxFetchPrefixes == []
   }
 }
