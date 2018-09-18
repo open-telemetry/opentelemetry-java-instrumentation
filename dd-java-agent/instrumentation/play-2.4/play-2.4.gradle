@@ -20,6 +20,11 @@ muzzle {
   }
 }
 
+// Work around for https://github.com/gradle/gradle/issues/6735. Remove on gradle >4.10.1
+compileLatestDepTestScala {
+  analysisFiles.setFrom(files())
+}
+
 dependencies {
   compileOnly group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
 
