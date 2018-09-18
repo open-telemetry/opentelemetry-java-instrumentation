@@ -55,6 +55,7 @@ public class AgentInstaller {
             .or(nameStartsWith("datadog.trace."))
             .or(nameStartsWith("datadog.opentracing."))
             .or(nameStartsWith("datadog.slf4j."))
+            .or(nameStartsWith("net.bytebuddy."))
             .or(
                 nameStartsWith("java.")
                     .and(
