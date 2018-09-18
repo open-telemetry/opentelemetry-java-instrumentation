@@ -62,10 +62,16 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
       Connection connection;
       try {
         connection = statement.getConnection();
-        // unwrap the connection to cache the underlying actual connection and to not cache proxy
-        // objects
-        if (connection.isWrapperFor(Connection.class)) {
-          connection = connection.unwrap(Connection.class);
+        try {
+          // unwrap the connection to cache the underlying actual connection and to not cache proxy
+          // objects
+          if (connection.isWrapperFor(Connection.class)) {
+            connection = connection.unwrap(Connection.class);
+          }
+        } catch (final Exception e) {
+          // perhaps wrapping isn't supported?
+          // ex: org.h2.jdbc.JdbcConnection v1.3.175
+          // Stick with original connection.
         }
       } catch (final Throwable e) {
         // Had some problem getting the connection.

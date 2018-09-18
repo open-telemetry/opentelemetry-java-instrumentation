@@ -63,10 +63,16 @@ public final class StatementInstrumentation extends Instrumenter.Default {
       Connection connection;
       try {
         connection = statement.getConnection();
-        if (connection.isWrapperFor(Connection.class)) {
+        try {
           // unwrap the connection to cache the underlying actual connection and to not cache proxy
           // objects
-          connection = connection.unwrap(Connection.class);
+          if (connection.isWrapperFor(Connection.class)) {
+            connection = connection.unwrap(Connection.class);
+          }
+        } catch (final Exception e) {
+          // perhaps wrapping isn't supported?
+          // ex: org.h2.jdbc.JdbcConnection v1.3.175
+          // Stick with original connection.
         }
       } catch (final Throwable e) {
         // Had some problem getting the connection.
