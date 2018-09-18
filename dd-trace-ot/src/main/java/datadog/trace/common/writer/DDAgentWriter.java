@@ -1,5 +1,8 @@
 package datadog.trace.common.writer;
 
+import static datadog.trace.api.Config.DEFAULT_AGENT_HOST;
+import static datadog.trace.api.Config.DEFAULT_AGENT_PORT;
+
 import datadog.opentracing.DDSpan;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -24,11 +27,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DDAgentWriter implements Writer {
-
-  /** Default location of the DD agent */
-  public static final String DEFAULT_HOSTNAME = "localhost";
-
-  public static final int DEFAULT_PORT = 8126;
 
   /** Maximum number of traces kept in memory */
   static final int DEFAULT_MAX_TRACES = 7000;
@@ -66,7 +64,7 @@ public class DDAgentWriter implements Writer {
   private boolean queueFullReported = false;
 
   public DDAgentWriter() {
-    this(new DDApi(DEFAULT_HOSTNAME, DEFAULT_PORT));
+    this(new DDApi(DEFAULT_AGENT_HOST, DEFAULT_AGENT_PORT));
   }
 
   public DDAgentWriter(final DDApi api) {

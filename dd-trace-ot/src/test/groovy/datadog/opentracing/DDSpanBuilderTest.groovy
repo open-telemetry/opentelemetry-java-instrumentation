@@ -1,6 +1,7 @@
 package datadog.opentracing
 
 import datadog.opentracing.propagation.ExtractedContext
+import datadog.trace.api.Config
 import datadog.trace.api.DDTags
 import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
@@ -273,7 +274,7 @@ class DDSpanBuilderTest extends Specification {
   def "global span tags populated on each span"() {
     setup:
     System.setProperty("dd.trace.span.tags", tagString)
-    tracer = new DDTracer(writer)
+    tracer = new DDTracer(new Config(), writer)
     def span = tracer.buildSpan("op name").withServiceName("foo").start()
     tags.putAll([
       (DDTags.THREAD_NAME): Thread.currentThread().getName(),

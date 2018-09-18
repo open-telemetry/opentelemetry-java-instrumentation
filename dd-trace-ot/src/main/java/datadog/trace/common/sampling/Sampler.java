@@ -1,12 +1,11 @@
 package datadog.trace.common.sampling;
 
 import datadog.opentracing.DDSpan;
-import datadog.trace.common.DDTraceConfig;
+import datadog.trace.api.Config;
 import java.util.Properties;
 
 /** Main interface to sample a collection of traces. */
 public interface Sampler {
-  static final String ALL_SAMPLER_TYPE = AllSampler.class.getSimpleName();
 
   /**
    * Sample a collection of traces based on the parent span
@@ -17,12 +16,10 @@ public interface Sampler {
   boolean sample(DDSpan span);
 
   final class Builder {
-    public static Sampler forConfig(final Properties config) {
+    public static Sampler forConfig(final Config config) {
       final Sampler sampler;
       if (config != null) {
-        final boolean prioritySamplingEnabled =
-            Boolean.parseBoolean(config.getProperty(DDTraceConfig.PRIORITY_SAMPLING));
-        if (prioritySamplingEnabled) {
+        if (config.isPrioritySamplingEnabled()) {
           sampler = new RateByServiceSampler();
         } else {
           sampler = new AllSampler();
@@ -31,6 +28,10 @@ public interface Sampler {
         sampler = new AllSampler();
       }
       return sampler;
+    }
+
+    public static Sampler forConfig(final Properties config) {
+      return forConfig(Config.get(config));
     }
 
     private Builder() {}

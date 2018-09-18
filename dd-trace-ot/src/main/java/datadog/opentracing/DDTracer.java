@@ -1,11 +1,5 @@
 package datadog.opentracing;
 
-import static datadog.trace.common.DDTraceConfig.HEADER_TAGS;
-import static datadog.trace.common.DDTraceConfig.SERVICE_MAPPING;
-import static datadog.trace.common.DDTraceConfig.SERVICE_NAME;
-import static datadog.trace.common.DDTraceConfig.SPAN_TAGS;
-import static datadog.trace.common.util.Config.parseMap;
-
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
 import datadog.opentracing.propagation.Codec;
@@ -13,11 +7,10 @@ import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HTTPCodec;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
+import datadog.trace.api.Config;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.interceptor.TraceInterceptor;
 import datadog.trace.api.sampling.PrioritySampling;
-import datadog.trace.common.DDTraceConfig;
-import datadog.trace.common.sampling.AllSampler;
 import datadog.trace.common.sampling.RateByServiceSampler;
 import datadog.trace.common.sampling.Sampler;
 import datadog.trace.common.writer.DDAgentWriter;
@@ -49,8 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing API. */
 @Slf4j
 public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace.api.Tracer {
-
-  public static final String UNASSIGNED_DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
   /** Default service name if none provided on the trace or span */
   final String serviceName;
@@ -84,21 +75,29 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   /** By default, report to local agent and collect all traces. */
   public DDTracer() {
-    this(new DDTraceConfig());
+    this(Config.get());
   }
 
   public DDTracer(final String serviceName) {
-    this(new DDTraceConfig(serviceName));
+    this(serviceName, Config.get());
   }
 
   public DDTracer(final Properties config) {
+    this(Config.get(config));
+  }
+
+  public DDTracer(final Config config) {
+    this(config.getServiceName(), config);
+  }
+
+  private DDTracer(final String serviceName, final Config config) {
     this(
-        config.getProperty(SERVICE_NAME),
+        serviceName,
         Writer.Builder.forConfig(config),
         Sampler.Builder.forConfig(config),
-        parseMap(config.getProperty(SPAN_TAGS), SPAN_TAGS),
-        parseMap(config.getProperty(SERVICE_MAPPING), SERVICE_MAPPING),
-        parseMap(config.getProperty(HEADER_TAGS), HEADER_TAGS));
+        config.getSpanTags(),
+        config.getServiceMapping(),
+        config.getHeaderTags());
     log.debug("Using config: {}", config);
   }
 
@@ -110,6 +109,20 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap());
+  }
+
+  public DDTracer(final Writer writer) {
+    this(Config.get(), writer);
+  }
+
+  public DDTracer(final Config config, final Writer writer) {
+    this(
+        config.getServiceName(),
+        writer,
+        Sampler.Builder.forConfig(config),
+        config.getSpanTags(),
+        config.getServiceMapping(),
+        config.getHeaderTags());
   }
 
   public DDTracer(
@@ -154,24 +167,13 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
     registerClassLoader(ClassLoader.getSystemClassLoader());
 
-    final List<AbstractDecorator> decorators =
-        DDDecoratorsFactory.createBuiltinDecorators(serviceNameMappings);
+    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createBuiltinDecorators();
     for (final AbstractDecorator decorator : decorators) {
       log.debug("Loading decorator: {}", decorator.getClass().getSimpleName());
       addDecorator(decorator);
     }
 
     log.info("New instance: {}", this);
-  }
-
-  public DDTracer(final Writer writer) {
-    this(
-        UNASSIGNED_DEFAULT_SERVICE_NAME,
-        writer,
-        new AllSampler(),
-        parseMap(new DDTraceConfig().getProperty(SPAN_TAGS), SPAN_TAGS),
-        parseMap(new DDTraceConfig().getProperty(SERVICE_MAPPING), SPAN_TAGS),
-        parseMap(new DDTraceConfig().getProperty(HEADER_TAGS), SPAN_TAGS));
   }
 
   /**
@@ -296,7 +298,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Override
   public String getTraceId() {
-    final Span activeSpan = this.activeSpan();
+    final Span activeSpan = activeSpan();
     if (activeSpan instanceof DDSpan) {
       return ((DDSpan) activeSpan).getTraceId();
     }
@@ -305,7 +307,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Override
   public String getSpanId() {
-    final Span activeSpan = this.activeSpan();
+    final Span activeSpan = activeSpan();
     if (activeSpan instanceof DDSpan) {
       return ((DDSpan) activeSpan).getSpanId();
     }
