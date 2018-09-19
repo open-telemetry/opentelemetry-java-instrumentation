@@ -9,8 +9,8 @@ import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.env.Environment
 import org.elasticsearch.index.IndexNotFoundException
-import org.elasticsearch.node.Node
 import org.elasticsearch.node.InternalSettingsPreparer
+import org.elasticsearch.node.Node
 import org.elasticsearch.transport.Netty3Plugin
 import spock.lang.Shared
 
@@ -18,7 +18,6 @@ import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-@RetryOnFailure
 class Elasticsearch53NodeClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
@@ -69,6 +68,7 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
     }
   }
 
+  @RetryOnFailure
   def "test elasticsearch status"() {
     setup:
     def result = client.admin().cluster().health(new ClusterHealthRequest())
@@ -98,6 +98,7 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
     }
   }
 
+  @RetryOnFailure
   def "test elasticsearch error"() {
     when:
     client.prepareGet(indexName, indexType, id).get()

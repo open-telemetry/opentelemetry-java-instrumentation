@@ -22,7 +22,6 @@ import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-@RetryOnFailure
 class Elasticsearch5TransportClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
@@ -81,6 +80,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
     }
   }
 
+  @RetryOnFailure
   def "test elasticsearch status"() {
     setup:
     def result = client.admin().cluster().health(new ClusterHealthRequest())
@@ -113,6 +113,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
     }
   }
 
+  @RetryOnFailure
   def "test elasticsearch error"() {
     when:
     client.prepareGet(indexName, indexType, id).get()

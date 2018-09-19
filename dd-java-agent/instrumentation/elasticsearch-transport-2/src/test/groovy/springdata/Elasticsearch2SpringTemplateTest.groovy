@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicLong
 
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
-@RetryOnFailure
 class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
@@ -70,6 +69,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
     }
   }
 
+  @RetryOnFailure
   def "test elasticsearch error"() {
     when:
     template.refresh(indexName)

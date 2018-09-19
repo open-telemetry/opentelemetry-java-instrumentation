@@ -15,7 +15,6 @@ import spock.lang.Shared
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
-@RetryOnFailure
 class Elasticsearch2NodeClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
@@ -63,6 +62,7 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     }
   }
 
+  @RetryOnFailure
   def "test elasticsearch status"() {
     setup:
     def result = client.admin().cluster().health(new ClusterHealthRequest(new String[0]))
@@ -92,6 +92,7 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     }
   }
 
+  @RetryOnFailure
   def "test elasticsearch error"() {
     when:
     client.prepareGet(indexName, indexType, id).get()

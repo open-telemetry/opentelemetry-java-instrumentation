@@ -11,8 +11,8 @@ import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.env.Environment
 import org.elasticsearch.index.IndexNotFoundException
-import org.elasticsearch.node.Node
 import org.elasticsearch.node.InternalSettingsPreparer
+import org.elasticsearch.node.Node
 import org.elasticsearch.transport.Netty3Plugin
 import org.elasticsearch.transport.RemoteTransportException
 import org.elasticsearch.transport.client.PreBuiltTransportClient
@@ -22,7 +22,6 @@ import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-@RetryOnFailure
 class Elasticsearch53TransportClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
@@ -113,6 +112,7 @@ class Elasticsearch53TransportClientTest extends AgentTestRunner {
     }
   }
 
+  @RetryOnFailure
   def "test elasticsearch error"() {
     when:
     client.prepareGet(indexName, indexType, id).get()
