@@ -3,6 +3,7 @@ muzzle {
     group = "com.sparkjava"
     module = 'spark-core'
     versions = "[2.4,)"
+    assertInverse = true
   }
 }
 
