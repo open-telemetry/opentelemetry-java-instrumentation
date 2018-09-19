@@ -101,7 +101,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
+            "$Tags.PEER_HOSTNAME.key" String
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "ClusterHealthAction"
@@ -209,7 +209,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
-            "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
+            "$Tags.PEER_HOSTNAME.key" String
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
             defaultTags()
@@ -226,7 +226,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
+            "$Tags.PEER_HOSTNAME.key" String
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "GetAction"
@@ -265,7 +265,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
+            "$Tags.PEER_HOSTNAME.key" String
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "IndexAction"
@@ -290,7 +290,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
+            "$Tags.PEER_HOSTNAME.key" String
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "GetAction"

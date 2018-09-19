@@ -14,9 +14,7 @@ testJava8Only += '**/*Test.class'
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
+  latestDepTest
 }
 
 dependencies {
@@ -43,6 +41,6 @@ dependencies {
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
 
-  latestDepTestCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '2.+'
-  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '2.+'
+  latestDepTestCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '2.4.6'
+  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '2.1.15.RELEASE'
 }

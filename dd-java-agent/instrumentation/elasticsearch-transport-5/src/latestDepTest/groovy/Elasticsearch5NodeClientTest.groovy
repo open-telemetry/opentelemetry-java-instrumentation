@@ -9,8 +9,8 @@ import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
 import org.elasticsearch.env.Environment
 import org.elasticsearch.index.IndexNotFoundException
-import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
+import org.elasticsearch.node.internal.InternalSettingsPreparer
 import org.elasticsearch.transport.Netty3Plugin
 import spock.lang.Shared
 
@@ -18,7 +18,7 @@ import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-class Elasticsearch53NodeClientTest extends AgentTestRunner {
+class Elasticsearch5NodeClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
   @Shared
@@ -265,7 +265,6 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.write.type" indexType
-            "elasticsearch.request.write.version"(-3)
             "elasticsearch.response.status" 201
             "elasticsearch.shard.replication.total" 2
             "elasticsearch.shard.replication.successful" 1
