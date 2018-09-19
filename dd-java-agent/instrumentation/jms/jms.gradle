@@ -1,16 +1,3 @@
-apply plugin: 'version-scan'
-
-versionScan {
-  group = "javax.jms"
-  module = "jms-api"
-  versions = "(,2]"
-  legacyModule = "javax.jms-api"
-  verifyMissing = [
-    "javax.jms.JMSContext",
-    "javax.jms.CompletionListener",
-  ]
-}
-
 muzzle {
   pass {
     group = "javax.jms"
