@@ -1,13 +1,10 @@
-apply plugin: 'version-scan'
-
-versionScan {
-  group = "net.spy"
-  module = 'spymemcached'
-  versions = "[1.12.0,)"
-  scanMethods = true
-  verifyPresent = [
-    "net.spy.memcached.ConnectionFactoryBuilder": "setListenerExecutorService",
-  ]
+muzzle {
+  pass {
+    group = "net.spy"
+    module = 'spymemcached'
+    versions = "[2.10.0,)"
+    assertInverse = true
+  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
