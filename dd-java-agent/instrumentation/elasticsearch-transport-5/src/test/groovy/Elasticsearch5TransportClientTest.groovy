@@ -275,7 +275,6 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "elasticsearch.shard.replication.total" 2
             "elasticsearch.shard.replication.successful" 1
             "elasticsearch.shard.replication.failed" 0
-            "elasticsearch.request.description" "index {[test-index][test-type][1], source[{}]}"
             defaultTags()
           }
         }
