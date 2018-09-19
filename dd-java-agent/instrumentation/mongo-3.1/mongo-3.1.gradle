@@ -1,13 +1,10 @@
-apply plugin: 'version-scan'
-
-versionScan {
-  group = "org.mongodb"
-  module = "mongo-java-driver"
-  scanMethods = true
-  versions = "[3.1,)"
-  verifyPresent = [
-    'com.mongodb.MongoClientOptions$Builder': 'addCommandListener'
-  ]
+muzzle {
+  pass {
+    group = "org.mongodb"
+    module = "mongo-java-driver"
+    versions = "[3.1,)"
+    assertInverse = true
+  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
@@ -21,7 +18,7 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
+  compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.1.0'
 
   compile project(':dd-java-agent:agent-tooling')
 
@@ -31,7 +28,7 @@ dependencies {
   implementation deps.autoservice
 
   testCompile project(':dd-trace-ot')
-  testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.4.2'
+  testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.1.0'
 }
 
 configurations.latestDepTestCompile {
