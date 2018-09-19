@@ -20,6 +20,11 @@ import net.bytebuddy.utility.JavaModule;
 
 @Slf4j
 public class AgentInstaller {
+  static {
+    // WeakMap is used by other classes below, so we need to register the provider first.
+    registerWeakMapProvider();
+  }
+
   public static final DDLocationStrategy LOCATION_STRATEGY = new DDLocationStrategy();
   public static final AgentBuilder.PoolStrategy POOL_STRATEGY = new DDCachingPoolStrategy();
   private static volatile Instrumentation INSTRUMENTATION;
@@ -41,7 +46,6 @@ public class AgentInstaller {
   public static ResettableClassFileTransformer installBytebuddyAgent(
       final Instrumentation inst, final AgentBuilder.Listener... listeners) {
     INSTRUMENTATION = inst;
-    registerWeakMapProvider();
 
     AgentBuilder agentBuilder =
         new AgentBuilder.Default()
