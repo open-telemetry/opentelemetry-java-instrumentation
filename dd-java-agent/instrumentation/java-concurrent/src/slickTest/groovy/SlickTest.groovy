@@ -2,13 +2,13 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
-import spock.lang.Shared
 
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class SlickTest extends AgentTestRunner {
 
-  @Shared
+  // Can't be @Shared, otherwise the work queue is initialized before the instrumentation is applied
+  //  @Shared
   def database = new SlickUtils()
 
   def "Basic statement generates spans"() {

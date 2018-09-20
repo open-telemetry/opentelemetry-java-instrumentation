@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
+import datadog.trace.bootstrap.WeakMap;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
@@ -160,9 +161,10 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DatadogWrapper enterJobSubmit(
+        @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (DatadogWrapper.shouldWrapTask(task)) {
+      if (DatadogWrapper.shouldWrapTask(task, executor)) {
         task = new RunnableWrapper(task, (TraceScope) scope);
         return (RunnableWrapper) task;
       }
@@ -180,10 +182,11 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static DatadogWrapper enterJobSubmit(
+        @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
 
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (DatadogWrapper.shouldWrapTask(task)) {
+      if (DatadogWrapper.shouldWrapTask(task, executor)) {
         task = new CallableWrapper<>(task, (TraceScope) scope);
         return (CallableWrapper) task;
       }
@@ -274,13 +277,14 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
      * @param task task object
      * @return true iff given task object should be wrapped
      */
-    public static boolean shouldWrapTask(final Object task) {
+    public static boolean shouldWrapTask(final Object task, final Executor executor) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       return (scope instanceof TraceScope
           && ((TraceScope) scope).isAsyncPropagating()
           && task != null
           && !(task instanceof DatadogWrapper)
-          && isTopLevelCall());
+          && isTopLevelCall()
+          && !ConcurrentUtils.isDisabled(executor));
     }
 
     /**
@@ -343,9 +347,21 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
   }
 
   /** Utils for pulling DatadogWrapper out of Future instances. */
+  @Slf4j
   public static class ConcurrentUtils {
+    private static final WeakMap<Executor, Boolean> disabledExecutors =
+        WeakMap.Provider.newWeakMap();
     private static final Map<Class<?>, Field> fieldCache = new ConcurrentHashMap<>();
     private static final String[] wrapperFields = {"runnable", "callable"};
+
+    public static void disableExecutor(final Executor executor) {
+      log.debug("Disabling Executor tracing for instance {}", executor);
+      disabledExecutors.put(executor, true);
+    }
+
+    public static boolean isDisabled(final Executor executor) {
+      return disabledExecutors.containsKey(executor);
+    }
 
     public static DatadogWrapper getDatadogWrapper(final Future<?> f) {
       final Field field;

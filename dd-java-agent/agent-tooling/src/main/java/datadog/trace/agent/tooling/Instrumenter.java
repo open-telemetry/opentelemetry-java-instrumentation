@@ -43,7 +43,7 @@ public interface Instrumenter {
   /** @return Class names of helpers to inject into the user's classloader */
   String[] helperClassNames();
 
-  Map<ElementMatcher, String> transformers();
+  Map<? extends ElementMatcher, String> transformers();
 
   @Slf4j
   abstract class Default implements Instrumenter {
@@ -110,7 +110,7 @@ public interface Instrumenter {
 
     private AgentBuilder.Identified.Extendable applyInstrumentationTransformers(
         AgentBuilder.Identified.Extendable agentBuilder) {
-      for (final Map.Entry<ElementMatcher, String> entry : transformers().entrySet()) {
+      for (final Map.Entry<? extends ElementMatcher, String> entry : transformers().entrySet()) {
         agentBuilder =
             agentBuilder.transform(
                 new AgentBuilder.Transformer.ForAdvice()
@@ -185,7 +185,7 @@ public interface Instrumenter {
     public abstract ElementMatcher<? super TypeDescription> typeMatcher();
 
     @Override
-    public abstract Map<ElementMatcher, String> transformers();
+    public abstract Map<? extends ElementMatcher, String> transformers();
 
     protected boolean defaultEnabled() {
       return getConfigEnabled("dd.integrations.enabled", true);

@@ -23,10 +23,6 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
   @Shared
   Method executeMethod
 
-  static {
-    System.setProperty("dd.integration.java_concurrent.enabled", "true")
-  }
-
   def setupSpec() {
     executeMethod = Executor.getMethod("execute", Runnable)
     submitMethod = ExecutorService.getMethod("submit", Callable)
