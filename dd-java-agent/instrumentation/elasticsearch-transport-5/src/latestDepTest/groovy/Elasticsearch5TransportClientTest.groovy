@@ -5,20 +5,24 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
+import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
+import org.elasticsearch.common.transport.InetSocketTransportAddress
 import org.elasticsearch.env.Environment
 import org.elasticsearch.index.IndexNotFoundException
-import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
+import org.elasticsearch.node.internal.InternalSettingsPreparer
 import org.elasticsearch.transport.Netty3Plugin
+import org.elasticsearch.transport.RemoteTransportException
+import org.elasticsearch.transport.client.PreBuiltTransportClient
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-class Elasticsearch53NodeClientTest extends AgentTestRunner {
+class Elasticsearch5TransportClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
   @Shared
@@ -30,7 +34,8 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
   @Shared
   File esWorkingDir
 
-  def client = testNode.client()
+  @Shared
+  TransportClient client
 
   def setupSpec() {
     httpPort = TestUtils.randomOpenPort()
@@ -42,8 +47,6 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
 
     def settings = Settings.builder()
       .put("path.home", esWorkingDir.path)
-    // Since we use listeners to close spans this should make our span closing deterministic which is good for tests
-      .put("thread_pool.listener.size", 1)
       .put("http.port", httpPort)
       .put("transport.tcp.port", tcpPort)
       .put("transport.type", "netty3")
@@ -52,10 +55,19 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
       .build()
     testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
     testNode.start()
+
+    client = new PreBuiltTransportClient(
+      Settings.builder()
+      // Since we use listeners to close spans this should make our span closing deterministic which is good for tests
+        .put("thread_pool.listener.size", 1)
+        .put(CLUSTER_NAME_SETTING.getKey(), "test-cluster")
+        .build()
+    )
+    client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), tcpPort))
     runUnderTrace("setup") {
       // this may potentially create multiple requests and therefore multiple spans, so we wrap this call
       // into a top level trace to get exactly one trace in the result.
-      testNode.client().admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
+      client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     }
     TEST_WRITER.waitForTraces(1)
   }
@@ -89,6 +101,9 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
             defaultTags()
@@ -122,7 +137,7 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
-            errorTags IndexNotFoundException, "no such index"
+            errorTags RemoteTransportException, String
             defaultTags()
           }
         }
@@ -146,7 +161,6 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
     TEST_WRITER.size() == 1
 
     when:
-    client.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(TIMEOUT)
     def emptyResult = client.prepareGet(indexName, indexType, id).get()
 
     then:
@@ -176,12 +190,12 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
     and:
     // IndexAction and PutMappingAction run in separate threads and order in which
     // these spans are closed is not defined. So we force the order if it is wrong.
-    if (TEST_WRITER[3][0].resourceName == "IndexAction") {
-      def tmp = TEST_WRITER[3]
-      TEST_WRITER[3] = TEST_WRITER[4]
-      TEST_WRITER[4] = tmp
+    if (TEST_WRITER[2][0].resourceName == "IndexAction") {
+      def tmp = TEST_WRITER[2]
+      TEST_WRITER[2] = TEST_WRITER[3]
+      TEST_WRITER[3] = tmp
     }
-    assertTraces(TEST_WRITER, 6) {
+    assertTraces(TEST_WRITER, 5) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"
@@ -195,27 +209,14 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" tcpPort
             defaultTags()
           }
         }
       }
       trace(1, 1) {
-        span(0) {
-          serviceName "elasticsearch"
-          resourceName "ClusterHealthAction"
-          operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
-          tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "elasticsearch.action" "ClusterHealthAction"
-            "elasticsearch.request" "ClusterHealthRequest"
-            defaultTags()
-          }
-        }
-      }
-      trace(2, 1) {
         span(0) {
           serviceName "elasticsearch"
           resourceName "GetAction"
@@ -225,6 +226,9 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -235,7 +239,7 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
           }
         }
       }
-      trace(3, 1) {
+      trace(2, 1) {
         span(0) {
           serviceName "elasticsearch"
           resourceName "PutMappingAction"
@@ -251,7 +255,7 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
           }
         }
       }
-      trace(4, 1) {
+      trace(3, 1) {
         span(0) {
           serviceName "elasticsearch"
           resourceName "IndexAction"
@@ -261,11 +265,13 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.write.type" indexType
-            "elasticsearch.request.write.version"(-3)
             "elasticsearch.response.status" 201
             "elasticsearch.shard.replication.total" 2
             "elasticsearch.shard.replication.successful" 1
@@ -274,7 +280,7 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
           }
         }
       }
-      trace(5, 1) {
+      trace(4, 1) {
         span(0) {
           serviceName "elasticsearch"
           resourceName "GetAction"
@@ -284,6 +290,9 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName

@@ -36,9 +36,6 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   }
 
   private void onRequest(final ActionRequest request) {
-    if (request != null) {
-      span.setTag("elasticsearch.request.description", request.getDescription());
-    }
     if (request instanceof IndicesRequest) {
       final IndicesRequest req = (IndicesRequest) request;
       if (req.indices() != null) {

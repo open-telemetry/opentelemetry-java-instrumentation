@@ -13,7 +13,7 @@ import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 @RetryOnFailure
-class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
+class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
   @Shared
   ApplicationContext applicationContext = new AnnotationConfigApplicationContext(Config)
 
@@ -71,24 +71,8 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     repo.index(doc) == doc
 
     and:
-    assertTraces(TEST_WRITER, 3) {
+    assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
-        span(0) {
-          resourceName "PutMappingAction"
-          operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
-          tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "elasticsearch.action" "PutMappingAction"
-            "elasticsearch.request" "PutMappingRequest"
-            "elasticsearch.request.indices" indexName
-            defaultTags()
-          }
-        }
-      }
-      trace(1, 1) {
         span(0) {
           resourceName "IndexAction"
           operationName "elasticsearch.query"
@@ -97,18 +81,20 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "local"
-            "$Tags.PEER_HOST_IPV4.key" "0.0.0.0"
-            "$Tags.PEER_PORT.key" 0
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.write.type" "doc"
+            "elasticsearch.request.write.version"(-3)
+            "elasticsearch.response.status" 201
+            "elasticsearch.shard.replication.failed" 0
+            "elasticsearch.shard.replication.successful" 1
+            "elasticsearch.shard.replication.total" 2
             defaultTags()
           }
         }
       }
-      trace(2, 1) {
+      trace(1, 1) {
         span(0) {
           resourceName "RefreshAction"
           operationName "elasticsearch.query"
@@ -131,7 +117,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     TEST_WRITER.clear()
 
     and:
-    repo.findOne("1") == doc
+    repo.findById("1").get() == doc
 
     and:
     assertTraces(TEST_WRITER, 1) {
@@ -145,15 +131,12 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "local"
-            "$Tags.PEER_HOST_IPV4.key" "0.0.0.0"
-            "$Tags.PEER_PORT.key" 0
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.type" "doc"
             "elasticsearch.id" "1"
-            "elasticsearch.version" 1
+            "elasticsearch.version" 3
             defaultTags()
           }
         }
@@ -166,7 +149,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
 
     then:
     repo.index(doc) == doc
-    repo.findOne("1") == doc
+    repo.findById("1").get() == doc
 
     and:
     assertTraces(TEST_WRITER, 3) {
@@ -179,13 +162,15 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "local"
-            "$Tags.PEER_HOST_IPV4.key" "0.0.0.0"
-            "$Tags.PEER_PORT.key" 0
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.write.type" "doc"
+            "elasticsearch.request.write.version"(-3)
+            "elasticsearch.response.status" 200
+            "elasticsearch.shard.replication.failed" 0
+            "elasticsearch.shard.replication.successful" 1
+            "elasticsearch.shard.replication.total" 2
             defaultTags()
           }
         }
@@ -219,15 +204,12 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "local"
-            "$Tags.PEER_HOST_IPV4.key" "0.0.0.0"
-            "$Tags.PEER_PORT.key" 0
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.type" "doc"
             "elasticsearch.id" "1"
-            "elasticsearch.version" 2
+            "elasticsearch.version" 4
             defaultTags()
           }
         }
@@ -236,7 +218,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     TEST_WRITER.clear()
 
     when:
-    repo.delete("1")
+    repo.deleteById("1")
 
     then:
     !repo.findAll().iterator().hasNext()
@@ -252,13 +234,14 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "local"
-            "$Tags.PEER_HOST_IPV4.key" "0.0.0.0"
-            "$Tags.PEER_PORT.key" 0
             "elasticsearch.action" "DeleteAction"
             "elasticsearch.request" "DeleteRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.write.type" "doc"
+            "elasticsearch.request.write.version"(-3)
+            "elasticsearch.shard.replication.failed" 0
+            "elasticsearch.shard.replication.successful" 1
+            "elasticsearch.shard.replication.total" 2
             defaultTags()
           }
         }

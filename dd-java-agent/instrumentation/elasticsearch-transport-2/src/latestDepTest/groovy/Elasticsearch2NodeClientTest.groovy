@@ -7,18 +7,15 @@ import io.opentracing.tag.Tags
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
-import org.elasticsearch.env.Environment
 import org.elasticsearch.index.IndexNotFoundException
-import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
-import org.elasticsearch.transport.Netty3Plugin
+import org.elasticsearch.node.NodeBuilder
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-class Elasticsearch53NodeClientTest extends AgentTestRunner {
+class Elasticsearch2NodeClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
   @Shared
@@ -43,14 +40,11 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
     def settings = Settings.builder()
       .put("path.home", esWorkingDir.path)
     // Since we use listeners to close spans this should make our span closing deterministic which is good for tests
-      .put("thread_pool.listener.size", 1)
+      .put("threadpool.listener.size", 1)
       .put("http.port", httpPort)
       .put("transport.tcp.port", tcpPort)
-      .put("transport.type", "netty3")
-      .put("http.type", "netty3")
-      .put(CLUSTER_NAME_SETTING.getKey(), "test-cluster")
       .build()
-    testNode = new Node(new Environment(InternalSettingsPreparer.prepareSettings(settings)), [Netty3Plugin])
+    testNode = NodeBuilder.newInstance().local(true).clusterName("test-cluster").settings(settings).build()
     testNode.start()
     runUnderTrace("setup") {
       // this may potentially create multiple requests and therefore multiple spans, so we wrap this call
@@ -71,7 +65,7 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
   @RetryOnFailure
   def "test elasticsearch status"() {
     setup:
-    def result = client.admin().cluster().health(new ClusterHealthRequest())
+    def result = client.admin().cluster().health(new ClusterHealthRequest(new String[0]))
 
     def status = result.get().status
 
@@ -162,7 +156,6 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
     createResult.id == id
     createResult.type == indexType
     createResult.index == indexName
-    createResult.status().status == 201
 
     when:
     def result = client.prepareGet(indexName, indexType, id).get()
@@ -247,6 +240,7 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
+            "elasticsearch.request.indices" indexName
             defaultTags()
           }
         }
@@ -265,11 +259,6 @@ class Elasticsearch53NodeClientTest extends AgentTestRunner {
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
             "elasticsearch.request.write.type" indexType
-            "elasticsearch.request.write.version"(-3)
-            "elasticsearch.response.status" 201
-            "elasticsearch.shard.replication.total" 2
-            "elasticsearch.shard.replication.successful" 1
-            "elasticsearch.shard.replication.failed" 0
             defaultTags()
           }
         }

@@ -22,7 +22,6 @@ import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-@RetryOnFailure
 class Elasticsearch5TransportClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
@@ -81,6 +80,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
     }
   }
 
+  @RetryOnFailure
   def "test elasticsearch status"() {
     setup:
     def result = client.admin().cluster().health(new ClusterHealthRequest())
@@ -101,7 +101,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
+            "$Tags.PEER_HOSTNAME.key" String
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "ClusterHealthAction"
@@ -113,6 +113,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
     }
   }
 
+  @RetryOnFailure
   def "test elasticsearch error"() {
     when:
     client.prepareGet(indexName, indexType, id).get()
@@ -208,7 +209,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
-            "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
+            "$Tags.PEER_HOSTNAME.key" String
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
             defaultTags()
@@ -225,7 +226,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
+            "$Tags.PEER_HOSTNAME.key" String
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "GetAction"
@@ -264,7 +265,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
+            "$Tags.PEER_HOSTNAME.key" String
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "IndexAction"
@@ -275,7 +276,6 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "elasticsearch.shard.replication.total" 2
             "elasticsearch.shard.replication.successful" 1
             "elasticsearch.shard.replication.failed" 0
-            "elasticsearch.request.description" "index {[test-index][test-type][1], source[{}]}"
             defaultTags()
           }
         }
@@ -290,7 +290,7 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "$Tags.PEER_HOSTNAME.key" "127.0.0.1"
+            "$Tags.PEER_HOSTNAME.key" String
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" tcpPort
             "elasticsearch.action" "GetAction"
