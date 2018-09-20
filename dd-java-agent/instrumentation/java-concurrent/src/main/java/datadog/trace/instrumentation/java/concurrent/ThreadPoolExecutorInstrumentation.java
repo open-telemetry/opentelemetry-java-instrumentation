@@ -55,7 +55,6 @@ public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
       if (queue.size() == 0) {
         try {
           queue.add(new GenericRunnable());
-          System.err.println("ADDED to queue " + queue.getClass());
           queue.clear(); // Remove the Runnable we just added.
         } catch (final ClassCastException e) {
           ExecutorInstrumentation.ConcurrentUtils.disableExecutor(executor);
