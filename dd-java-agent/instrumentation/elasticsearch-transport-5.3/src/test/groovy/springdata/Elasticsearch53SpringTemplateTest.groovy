@@ -29,6 +29,7 @@ import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
+@RetryOnFailure
 class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
@@ -284,6 +285,9 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       }
     }
 
+    cleanup:
+    template.deleteIndex(indexName)
+
     where:
     indexName = "test-index"
     indexType = "test-type"
@@ -359,6 +363,9 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
         }
       }
     }
+
+    cleanup:
+    template.deleteIndex(indexName)
 
     where:
     indexName = "test-index-extract"

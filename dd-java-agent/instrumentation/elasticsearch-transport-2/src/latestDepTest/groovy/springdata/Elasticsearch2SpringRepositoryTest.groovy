@@ -71,24 +71,8 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     repo.index(doc) == doc
 
     and:
-    assertTraces(TEST_WRITER, 3) {
+    assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
-        span(0) {
-          resourceName "PutMappingAction"
-          operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
-          tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "elasticsearch.action" "PutMappingAction"
-            "elasticsearch.request" "PutMappingRequest"
-            "elasticsearch.request.indices" indexName
-            defaultTags()
-          }
-        }
-      }
-      trace(1, 1) {
         span(0) {
           resourceName "IndexAction"
           operationName "elasticsearch.query"
@@ -105,7 +89,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
           }
         }
       }
-      trace(2, 1) {
+      trace(1, 1) {
         span(0) {
           resourceName "RefreshAction"
           operationName "elasticsearch.query"
@@ -147,7 +131,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.request.indices" indexName
             "elasticsearch.type" "doc"
             "elasticsearch.id" "1"
-            "elasticsearch.version" 1
+            "elasticsearch.version" Number
             defaultTags()
           }
         }
@@ -215,7 +199,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.request.indices" indexName
             "elasticsearch.type" "doc"
             "elasticsearch.id" "1"
-            "elasticsearch.version" 2
+            "elasticsearch.version" Number
             defaultTags()
           }
         }
