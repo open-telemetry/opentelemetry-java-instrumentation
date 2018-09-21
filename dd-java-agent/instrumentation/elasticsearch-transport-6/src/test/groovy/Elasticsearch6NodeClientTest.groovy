@@ -275,6 +275,9 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
       }
     }
 
+    cleanup:
+    client.admin().indices().prepareDelete(indexName).get()
+
     where:
     indexName = "test-index"
     indexType = "test-type"
