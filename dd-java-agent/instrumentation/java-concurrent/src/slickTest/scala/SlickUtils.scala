@@ -18,7 +18,7 @@ class SlickUtils {
     // wrapped runnables.
     executor = AsyncExecutor("test", numThreads = 1, queueSize = 1000)
   )
-  Await.result(database.run(sqlu"""CREATE ALIAS SLEEP FOR "java.lang.Thread.sleep(long)""""), Duration.Inf)
+  Await.result(database.run(sqlu"""CREATE ALIAS IF NOT EXISTS SLEEP FOR "java.lang.Thread.sleep(long)""""), Duration.Inf)
 
   @Trace
   def startQuery(query: String): Future[Vector[Int]] = {

@@ -13,7 +13,6 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
-import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
@@ -22,10 +21,6 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
   Method submitMethod
   @Shared
   Method executeMethod
-
-  static {
-    System.setProperty("dd.integration.java_concurrent.enabled", "true")
-  }
 
   def setupSpec() {
     executeMethod = Executor.getMethod("execute", Runnable)
@@ -71,8 +66,6 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     new ForkJoinPool()                                                                            | executeMethod
     new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitMethod
     new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | executeMethod
-    new ScheduledThreadPoolExecutor(1)                                                            | submitMethod
-    new ScheduledThreadPoolExecutor(1)                                                            | executeMethod
   }
 
   // more useful name breaks java9 javac
@@ -112,6 +105,5 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     poolImpl                                                                                      | _
     new ForkJoinPool()                                                                            | _
     new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | _
-    new ScheduledThreadPoolExecutor(1)                                                            | _
   }
 }
