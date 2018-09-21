@@ -36,6 +36,7 @@ public class Config {
   public static final String SERVICE_MAPPING = "service.mapping";
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String HEADER_TAGS = "trace.header.tags";
+  public static final String JMX_FETCH_ENABLED = "jmxfetch.enabled";
   public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
   public static final String JMX_FETCH_CHECK_PERIOD = "jmxfetch.check-period";
   public static final String JMX_FETCH_REFRESH_BEANS_PERIOD = "jmxfetch.refresh-beans-period";
@@ -52,6 +53,7 @@ public class Config {
 
   private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = false;
   private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
+  private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
 
   @Getter private final String serviceName;
   @Getter private final String writerType;
@@ -62,6 +64,7 @@ public class Config {
   @Getter private final Map<String, String> serviceMapping;
   @Getter private final Map<String, String> spanTags;
   @Getter private final Map<String, String> headerTags;
+  @Getter private final boolean jmxFetchEnabled;
   @Getter private final List<String> jmxFetchMetricsConfigs;
   @Getter private final Integer jmxFetchCheckPeriod;
   @Getter private final Integer jmxFetchRefreshBeansPeriod;
@@ -81,6 +84,8 @@ public class Config {
     serviceMapping = getMapSettingFromEnvironment(SERVICE_MAPPING, null);
     spanTags = getMapSettingFromEnvironment(SPAN_TAGS, null);
     headerTags = getMapSettingFromEnvironment(HEADER_TAGS, null);
+    jmxFetchEnabled =
+        getBooleanSettingFromEnvironment(JMX_FETCH_ENABLED, DEFAULT_JMX_FETCH_ENABLED);
     jmxFetchMetricsConfigs = getListSettingFromEnvironment(JMX_FETCH_METRICS_CONFIGS, null);
     jmxFetchCheckPeriod = getIntegerSettingFromEnvironment(JMX_FETCH_CHECK_PERIOD, null);
     jmxFetchRefreshBeansPeriod =
@@ -101,6 +106,8 @@ public class Config {
     serviceMapping = getPropertyMapValue(properties, SERVICE_MAPPING, parent.serviceMapping);
     spanTags = getPropertyMapValue(properties, SPAN_TAGS, parent.spanTags);
     headerTags = getPropertyMapValue(properties, HEADER_TAGS, parent.headerTags);
+    jmxFetchEnabled =
+        getPropertyBooleanValue(properties, JMX_FETCH_ENABLED, parent.jmxFetchEnabled);
     jmxFetchMetricsConfigs =
         getPropertyListValue(properties, JMX_FETCH_METRICS_CONFIGS, parent.jmxFetchMetricsConfigs);
     jmxFetchCheckPeriod =

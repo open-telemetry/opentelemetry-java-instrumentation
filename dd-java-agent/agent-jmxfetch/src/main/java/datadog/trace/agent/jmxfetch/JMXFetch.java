@@ -18,6 +18,11 @@ public class JMXFetch {
 
   public static final void run() {
 
+    if (!Config.get().isJmxFetchEnabled()) {
+      log.info("JMXFetch is disabled");
+      return;
+    }
+
     final List<String> metricsConfigs = Config.get().getJmxFetchMetricsConfigs();
     final Integer checkPeriod = Config.get().getJmxFetchCheckPeriod();
     final Integer refreshBeansPeriod = Config.get().getJmxFetchRefreshBeansPeriod();

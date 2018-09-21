@@ -14,6 +14,7 @@ import static Config.SERVICE_NAME
 import static Config.SPAN_TAGS
 import static Config.WRITER_TYPE
 import static datadog.trace.api.Config.JMX_FETCH_CHECK_PERIOD
+import static datadog.trace.api.Config.JMX_FETCH_ENABLED
 import static datadog.trace.api.Config.JMX_FETCH_METRICS_CONFIGS
 import static datadog.trace.api.Config.JMX_FETCH_REFRESH_BEANS_PERIOD
 import static datadog.trace.api.Config.JMX_FETCH_REPORTER
@@ -46,6 +47,7 @@ class ConfigTest extends Specification {
     config.serviceMapping == [:]
     config.spanTags == [:]
     config.headerTags == [:]
+    config.jmxFetchEnabled == false
     config.jmxFetchMetricsConfigs == []
     config.jmxFetchCheckPeriod == null
     config.jmxFetchRefreshBeansPeriod == null
@@ -64,6 +66,7 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + SERVICE_MAPPING, "a:1")
     System.setProperty(PREFIX + SPAN_TAGS, "b:2")
     System.setProperty(PREFIX + HEADER_TAGS, "c:3")
+    System.setProperty(PREFIX + JMX_FETCH_ENABLED, "true")
     System.setProperty(PREFIX + JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
     System.setProperty(PREFIX + JMX_FETCH_CHECK_PERIOD, "100")
     System.setProperty(PREFIX + JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
@@ -82,6 +85,7 @@ class ConfigTest extends Specification {
     config.serviceMapping == [a: "1"]
     config.spanTags == [b: "2"]
     config.headerTags == [c: "3"]
+    config.jmxFetchEnabled == true
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100
     config.jmxFetchRefreshBeansPeriod == 200
