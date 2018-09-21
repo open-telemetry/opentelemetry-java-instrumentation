@@ -10,7 +10,6 @@ import org.datadog.jmxfetch.AppConfig;
 @Slf4j
 public class JMXFetch {
 
-  public static final int DEFAULT_STATSD_PORT = 8125;
   public static final ImmutableList<String> DEFAULT_CONFIGS =
       ImmutableList.of("jmxfetch-config.yaml");
 
@@ -76,11 +75,17 @@ public class JMXFetch {
   }
 
   private static String getReporter() {
-    String reporter = Config.get().getJmxFetchReporter();
-    if (reporter == null) {
-      reporter = "statsd:" + Config.get().getAgentHost() + ":" + DEFAULT_STATSD_PORT;
+    final Config config = Config.get();
+    if (Config.LOGGING_WRITER_TYPE.equals(config.getWriterType())) {
+      // If logging writer is enabled then also enable console reporter in JMXFetch
+      return "console";
     }
-    return reporter;
+
+    final String host =
+        config.getJmxFetchStatsdHost() == null
+            ? config.getAgentHost()
+            : config.getJmxFetchStatsdHost();
+    return "statsd:" + host + ":" + config.getJmxFetchStatsdPort();
   }
 
   private static String getLogLocation() {

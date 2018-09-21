@@ -13,11 +13,13 @@ import static Config.SERVICE_MAPPING
 import static Config.SERVICE_NAME
 import static Config.SPAN_TAGS
 import static Config.WRITER_TYPE
+import static datadog.trace.api.Config.DEFAULT_JMX_FETCH_STATSD_PORT
 import static datadog.trace.api.Config.JMX_FETCH_CHECK_PERIOD
 import static datadog.trace.api.Config.JMX_FETCH_ENABLED
 import static datadog.trace.api.Config.JMX_FETCH_METRICS_CONFIGS
 import static datadog.trace.api.Config.JMX_FETCH_REFRESH_BEANS_PERIOD
-import static datadog.trace.api.Config.JMX_FETCH_REPORTER
+import static datadog.trace.api.Config.JMX_FETCH_STATSD_HOST
+import static datadog.trace.api.Config.JMX_FETCH_STATSD_PORT
 import static datadog.trace.api.Config.PRIORITY_SAMPLING
 import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
 
@@ -51,7 +53,8 @@ class ConfigTest extends Specification {
     config.jmxFetchMetricsConfigs == []
     config.jmxFetchCheckPeriod == null
     config.jmxFetchRefreshBeansPeriod == null
-    config.jmxFetchReporter == null
+    config.jmxFetchStatsdHost == null
+    config.jmxFetchStatsdPort == DEFAULT_JMX_FETCH_STATSD_PORT
     config.toString().contains("unnamed-java-app")
   }
 
@@ -70,7 +73,8 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
     System.setProperty(PREFIX + JMX_FETCH_CHECK_PERIOD, "100")
     System.setProperty(PREFIX + JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
-    System.setProperty(PREFIX + JMX_FETCH_REPORTER, "reporter")
+    System.setProperty(PREFIX + JMX_FETCH_STATSD_HOST, "statsd host")
+    System.setProperty(PREFIX + JMX_FETCH_STATSD_PORT, "321")
 
     when:
     def config = new Config()
@@ -89,7 +93,8 @@ class ConfigTest extends Specification {
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100
     config.jmxFetchRefreshBeansPeriod == 200
-    config.jmxFetchReporter == "reporter"
+    config.jmxFetchStatsdHost == "statsd host"
+    config.jmxFetchStatsdPort == 321
   }
 
   def "specify overrides via env vars"() {
@@ -140,7 +145,8 @@ class ConfigTest extends Specification {
     properties.setProperty(JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
     properties.setProperty(JMX_FETCH_CHECK_PERIOD, "100")
     properties.setProperty(JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
-    properties.setProperty(JMX_FETCH_REPORTER, "reporter")
+    properties.setProperty(JMX_FETCH_STATSD_HOST, "statsd host")
+    properties.setProperty(JMX_FETCH_STATSD_PORT, "321")
 
     when:
     def config = Config.get(properties)
@@ -158,7 +164,8 @@ class ConfigTest extends Specification {
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100
     config.jmxFetchRefreshBeansPeriod == 200
-    config.jmxFetchReporter == "reporter"
+    config.jmxFetchStatsdHost == "statsd host"
+    config.jmxFetchStatsdPort == 321
   }
 
   def "override null properties"() {

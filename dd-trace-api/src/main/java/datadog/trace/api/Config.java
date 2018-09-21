@@ -40,7 +40,8 @@ public class Config {
   public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
   public static final String JMX_FETCH_CHECK_PERIOD = "jmxfetch.check-period";
   public static final String JMX_FETCH_REFRESH_BEANS_PERIOD = "jmxfetch.refresh-beans-period";
-  public static final String JMX_FETCH_REPORTER = "jmxfetch.reporter";
+  public static final String JMX_FETCH_STATSD_HOST = "jmxfetch.statsd.host";
+  public static final String JMX_FETCH_STATSD_PORT = "jmxfetch.statsd.port";
 
   public static final String DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
@@ -55,6 +56,8 @@ public class Config {
   private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
   private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
 
+  public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
+
   @Getter private final String serviceName;
   @Getter private final String writerType;
   @Getter private final String agentHost;
@@ -68,7 +71,8 @@ public class Config {
   @Getter private final List<String> jmxFetchMetricsConfigs;
   @Getter private final Integer jmxFetchCheckPeriod;
   @Getter private final Integer jmxFetchRefreshBeansPeriod;
-  @Getter private final String jmxFetchReporter;
+  @Getter private final String jmxFetchStatsdHost;
+  @Getter private final Integer jmxFetchStatsdPort;
 
   // Read order: System Properties -> Env Variables, [-> default value]
   // Visible for testing
@@ -90,7 +94,9 @@ public class Config {
     jmxFetchCheckPeriod = getIntegerSettingFromEnvironment(JMX_FETCH_CHECK_PERIOD, null);
     jmxFetchRefreshBeansPeriod =
         getIntegerSettingFromEnvironment(JMX_FETCH_REFRESH_BEANS_PERIOD, null);
-    jmxFetchReporter = getSettingFromEnvironment(JMX_FETCH_REPORTER, null);
+    jmxFetchStatsdHost = getSettingFromEnvironment(JMX_FETCH_STATSD_HOST, null);
+    jmxFetchStatsdPort =
+        getIntegerSettingFromEnvironment(JMX_FETCH_STATSD_PORT, DEFAULT_JMX_FETCH_STATSD_PORT);
   }
 
   // Read order: Properties -> Parent
@@ -115,7 +121,9 @@ public class Config {
     jmxFetchRefreshBeansPeriod =
         getPropertyIntegerValue(
             properties, JMX_FETCH_REFRESH_BEANS_PERIOD, parent.jmxFetchRefreshBeansPeriod);
-    jmxFetchReporter = properties.getProperty(JMX_FETCH_REPORTER, parent.jmxFetchReporter);
+    jmxFetchStatsdHost = properties.getProperty(JMX_FETCH_STATSD_HOST, parent.jmxFetchStatsdHost);
+    jmxFetchStatsdPort =
+        getPropertyIntegerValue(properties, JMX_FETCH_STATSD_PORT, parent.jmxFetchStatsdPort);
   }
 
   private static String getSettingFromEnvironment(final String name, final String defaultValue) {
