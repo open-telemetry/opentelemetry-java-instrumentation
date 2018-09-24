@@ -16,16 +16,20 @@ public class JMXFetch {
   private static final int SLEEP_AFTER_JMXFETCH_EXITS = 5000;
 
   public static final void run() {
+    run(Config.get());
+  }
 
-    if (!Config.get().isJmxFetchEnabled()) {
+  // This is used by tests
+  private static void run(final Config config) {
+    if (!config.isJmxFetchEnabled()) {
       log.info("JMXFetch is disabled");
       return;
     }
 
-    final List<String> metricsConfigs = Config.get().getJmxFetchMetricsConfigs();
-    final Integer checkPeriod = Config.get().getJmxFetchCheckPeriod();
-    final Integer refreshBeansPeriod = Config.get().getJmxFetchRefreshBeansPeriod();
-    final String reporter = getReporter();
+    final List<String> metricsConfigs = config.getJmxFetchMetricsConfigs();
+    final Integer checkPeriod = config.getJmxFetchCheckPeriod();
+    final Integer refreshBeansPeriod = config.getJmxFetchRefreshBeansPeriod();
+    final String reporter = getReporter(config);
     final String logLocation = getLogLocation();
     final String logLevel = getLogLevel();
 
@@ -37,7 +41,7 @@ public class JMXFetch {
         reporter,
         logLocation,
         logLevel);
-    final AppConfig config =
+    final AppConfig appConfig =
         AppConfig.create(
             DEFAULT_CONFIGS,
             metricsConfigs,
@@ -54,7 +58,7 @@ public class JMXFetch {
               public void run() {
                 while (true) {
                   try {
-                    final int result = App.run(config);
+                    final int result = App.run(appConfig);
                     log.error("jmx collector exited with result: " + result);
                   } catch (final Exception e) {
                     log.error("Exception in jmx collector thread", e);
@@ -74,8 +78,7 @@ public class JMXFetch {
     thread.start();
   }
 
-  private static String getReporter() {
-    final Config config = Config.get();
+  private static String getReporter(final Config config) {
     if (Config.LOGGING_WRITER_TYPE.equals(config.getWriterType())) {
       // If logging writer is enabled then also enable console reporter in JMXFetch
       return "console";

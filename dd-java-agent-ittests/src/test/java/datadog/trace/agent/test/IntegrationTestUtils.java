@@ -32,31 +32,21 @@ public class IntegrationTestUtils {
 
   /** Returns the classloader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
-    Field classloaderField = null;
-    try {
-      Class<?> tracingAgentClass =
-          tracingAgentClass =
-              ClassLoader.getSystemClassLoader().loadClass("datadog.trace.agent.TracingAgent");
-      classloaderField = tracingAgentClass.getDeclaredField("AGENT_CLASSLOADER");
-      classloaderField.setAccessible(true);
-      return (ClassLoader) classloaderField.get(null);
-    } catch (final Exception e) {
-      throw new IllegalStateException(e);
-    } finally {
-      if (null != classloaderField) {
-        classloaderField.setAccessible(false);
-      }
-    }
+    return getTracingAgentFieldClassloader("AGENT_CLASSLOADER");
   }
 
   /** Returns the classloader the jmxfetch is running on. */
   public static ClassLoader getJmxFetchClassLoader() {
+    return getTracingAgentFieldClassloader("JMXFETCH_CLASSLOADER");
+  }
+
+  private static ClassLoader getTracingAgentFieldClassloader(final String fieldName) {
     Field classloaderField = null;
     try {
       Class<?> tracingAgentClass =
           tracingAgentClass =
               ClassLoader.getSystemClassLoader().loadClass("datadog.trace.agent.TracingAgent");
-      classloaderField = tracingAgentClass.getDeclaredField("JMXFETCH_CLASSLOADER");
+      classloaderField = tracingAgentClass.getDeclaredField(fieldName);
       classloaderField.setAccessible(true);
       return (ClassLoader) classloaderField.get(null);
     } catch (final Exception e) {
