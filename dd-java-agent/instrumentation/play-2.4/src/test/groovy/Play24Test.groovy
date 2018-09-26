@@ -1,8 +1,8 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import play.api.test.TestServer
 import play.test.Helpers
@@ -13,6 +13,9 @@ class Play24Test extends AgentTestRunner {
   int port
   @Shared
   TestServer testServer
+
+  @Shared
+  def client = OkHttpUtils.client()
 
   def setupSpec() {
     port = TestUtils.randomOpenPort()
@@ -26,7 +29,6 @@ class Play24Test extends AgentTestRunner {
 
   def "request traces"() {
     setup:
-    OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
       .url("http://localhost:$port/helloplay/spock")
       .header("x-datadog-trace-id", "123")
@@ -63,7 +65,6 @@ class Play24Test extends AgentTestRunner {
 
   def "5xx errors trace"() {
     setup:
-    OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
       .url("http://localhost:$port/make-error")
       .get()
@@ -91,7 +92,6 @@ class Play24Test extends AgentTestRunner {
 
   def "error thrown in request"() {
     setup:
-    OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
       .url("http://localhost:$port/exception")
       .get()
@@ -122,7 +122,6 @@ class Play24Test extends AgentTestRunner {
 
   def "4xx errors trace"() {
     setup:
-    OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
       .url("http://localhost:$port/nowhere")
       .get()

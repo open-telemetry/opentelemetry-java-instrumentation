@@ -1,8 +1,8 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import spock.lang.Shared
 
@@ -18,6 +18,9 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
   @Shared
   int syncPort
 
+  @Shared
+  def client = OkHttpUtils.client()
+
   def setupSpec() {
     AkkaHttpTestAsyncWebServer.start()
     asyncPort = AkkaHttpTestAsyncWebServer.port()
@@ -32,7 +35,6 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
 
   def "#server 200 request trace"() {
     setup:
-    OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
       .url("http://localhost:$port/test")
       .header("x-datadog-trace-id", "123")
@@ -79,7 +81,6 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
 
   def "#server exceptions trace for #endpoint"() {
     setup:
-    OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
       .url("http://localhost:$port/$endpoint")
       .get()
@@ -120,7 +121,6 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
 
   def "#server 5xx trace"() {
     setup:
-    OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
       .url("http://localhost:$port/server-error")
       .get()
@@ -160,7 +160,6 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
 
   def "#server 4xx trace"() {
     setup:
-    OkHttpClient client = new OkHttpClient.Builder().build()
     def request = new Request.Builder()
       .url("http://localhost:$port/not-found")
       .get()

@@ -5,7 +5,6 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.common.writer.ListWriter
 import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import spock.lang.Shared
 
@@ -13,7 +12,6 @@ import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 /* Don't actually need AgentTestRunner, but it messes up the classloader for AgentTestRunnerTest if this runs first. */
-
 class ServerTest extends AgentTestRunner {
   @Shared
   def client = OkHttpUtils.client()
@@ -233,7 +231,7 @@ class ServerTest extends AgentTestRunner {
 
   def "server redirect"() {
     setup:
-    client = new OkHttpClient().newBuilder().followRedirects(followRedirects).build()
+    client = OkHttpUtils.clientBuilder().followRedirects(followRedirects).build()
     def server = httpServer {
       handlers {
         get("/redirect") {
