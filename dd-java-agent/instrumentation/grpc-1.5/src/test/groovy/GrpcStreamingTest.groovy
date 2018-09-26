@@ -24,7 +24,7 @@ class GrpcStreamingTest extends AgentTestRunner {
 
   def "test conversation #name"() {
     setup:
-    final msgCount = serverMessageCount
+    def msgCount = serverMessageCount
     def serverReceived = new CopyOnWriteArrayList<>()
     def clientReceived = new CopyOnWriteArrayList<>()
     def error = new AtomicReference()

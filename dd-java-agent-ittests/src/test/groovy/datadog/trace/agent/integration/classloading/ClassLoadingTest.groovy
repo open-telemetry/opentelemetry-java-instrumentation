@@ -17,7 +17,7 @@ class ClassLoadingTest extends Specification {
   /** Assert that we can instrument classloaders which cannot resolve agent advice classes. */
   def "instrument classloader without agent classes"() {
     setup:
-    final URLClassLoader loader = new URLClassLoader(classpath, (ClassLoader) null)
+    URLClassLoader loader = new URLClassLoader(classpath, (ClassLoader) null)
 
     when:
     loader.loadClass("datadog.agent.TracingAgent")
@@ -25,15 +25,15 @@ class ClassLoadingTest extends Specification {
     thrown ClassNotFoundException
 
     when:
-    final Class<?> instrumentedClass = loader.loadClass(ClassToInstrument.getName())
+    Class<?> instrumentedClass = loader.loadClass(ClassToInstrument.getName())
     then:
     instrumentedClass.getClassLoader() == loader
   }
 
   def "make sure ByteBuddy does not hold strong references to ClassLoader"() {
     setup:
-    final URLClassLoader loader = new URLClassLoader(classpath, (ClassLoader) null)
-    final WeakReference<URLClassLoader> ref = new WeakReference<>(loader)
+    URLClassLoader loader = new URLClassLoader(classpath, (ClassLoader) null)
+    WeakReference<URLClassLoader> ref = new WeakReference<>(loader)
 
     when:
     loader.loadClass(ClassToInstrument.getName())
@@ -45,7 +45,7 @@ class ClassLoadingTest extends Specification {
     null == ref.get()
   }
 
-  // We are doing this because Grovy cannot properly resolve constructor argument types in anonymous classes
+  // We are doing this because Groovy cannot properly resolve constructor argument types in anonymous classes
   static class CountingClassLoader extends URLClassLoader {
     public int count = 0
 
@@ -62,9 +62,10 @@ class ClassLoadingTest extends Specification {
 
   def "make sure that ByteBuddy reads classes's bytes only once"() {
     setup:
-    final CountingClassLoader loader = new CountingClassLoader(classpath)
+    CountingClassLoader loader = new CountingClassLoader(classpath)
 
     when:
+    //loader.loadClass("aaa")
     loader.loadClass(ClassToInstrument.getName())
     int countAfterFirstLoad = loader.count
     loader.loadClass(ClassToInstrumentChild.getName())
@@ -77,8 +78,8 @@ class ClassLoadingTest extends Specification {
 
   def "make sure that ByteBuddy doesn't resue cached type descriptions between different classloaders"() {
     setup:
-    final CountingClassLoader loader1 = new CountingClassLoader(classpath)
-    final CountingClassLoader loader2 = new CountingClassLoader(classpath)
+    CountingClassLoader loader1 = new CountingClassLoader(classpath)
+    CountingClassLoader loader2 = new CountingClassLoader(classpath)
 
     when:
     loader1.loadClass(ClassToInstrument.getName())

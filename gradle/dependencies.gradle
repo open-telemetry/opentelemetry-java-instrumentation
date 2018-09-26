@@ -1,5 +1,5 @@
-def groovyVer = GroovySystem.version
-def spockGroovyVer = GroovySystem.version.replaceAll(/\.\d+$/, '')
+def groovyVer = "2.5.2"
+def spockGroovyVer = groovyVer.replaceAll(/\.\d+$/, '')
 
 ext {
   versions = [
@@ -10,7 +10,7 @@ ext {
     jackson    : "2.6.3", // This is a transitive dependency for the tracer.
     // Use an old version to not force an upgrade for others using tracer as a dependency.
 
-    spock      : "1.1-groovy-$spockGroovyVer",
+    spock      : "1.2-groovy-$spockGroovyVer",
     groovy     : groovyVer,
     junit      : "4.12",
     logback    : "1.2.3",
