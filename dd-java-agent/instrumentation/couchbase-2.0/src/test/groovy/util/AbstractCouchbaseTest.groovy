@@ -115,7 +115,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
   }
 
   private DefaultCouchbaseEnvironment.Builder envBuilder(BucketSettings bucketSettings) {
-    def timeout = TimeUnit.SECONDS.toMillis(5)
+    def timeout = TimeUnit.SECONDS.toMillis(10)
     return DefaultCouchbaseEnvironment.builder()
       .bootstrapCarrierDirectPort(mock.getCarrierPort(bucketSettings.name()))
       .bootstrapHttpDirectPort(port)
@@ -124,9 +124,14 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       .networkLatencyMetricsCollectorConfig(DefaultLatencyMetricsCollectorConfig.create(0, TimeUnit.DAYS))
       .computationPoolSize(1)
       .connectTimeout(timeout)
+      .disconnectTimeout(timeout)
       .kvTimeout(timeout)
       .managementTimeout(timeout)
       .queryTimeout(timeout)
       .viewTimeout(timeout)
+      .keepAliveTimeout(timeout)
+      .searchTimeout(timeout)
+      .analyticsTimeout(timeout)
+      .socketConnectTimeout(timeout.intValue())
   }
 }
