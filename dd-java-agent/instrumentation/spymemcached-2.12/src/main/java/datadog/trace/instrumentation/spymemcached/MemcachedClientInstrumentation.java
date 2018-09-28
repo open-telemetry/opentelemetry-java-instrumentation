@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.spymemcached;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -36,15 +35,6 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named(MEMCACHED_PACKAGE + ".MemcachedClient");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    // Target 2.12 that has this method
-    return classLoaderHasClassWithMethod(
-        MEMCACHED_PACKAGE + ".ConnectionFactoryBuilder",
-        "setListenerExecutorService",
-        "java.util.concurrent.ExecutorService");
   }
 
   @Override
