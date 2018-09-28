@@ -73,11 +73,6 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
     return transformers;
   }
 
-  @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
   public static class AsyncOperationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
