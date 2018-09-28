@@ -17,7 +17,6 @@ public class OperationDecorator extends AbstractDecorator {
   static {
     final Map<String, String> mappings = new HashMap<>();
     // Component name <> Operation name
-    mappings.put("apache-httpclient", "apache.http");
     mappings.put("java-aws-sdk", "aws.http");
     // FIXME: JMS ops card is low (jms-send or jms-receive), may be this mapping is useless
     mappings.put("java-jms", "jms");
@@ -28,7 +27,7 @@ public class OperationDecorator extends AbstractDecorator {
 
   public OperationDecorator() {
     super();
-    this.setMatchingTag(Tags.COMPONENT.getKey());
+    setMatchingTag(Tags.COMPONENT.getKey());
   }
 
   @Override

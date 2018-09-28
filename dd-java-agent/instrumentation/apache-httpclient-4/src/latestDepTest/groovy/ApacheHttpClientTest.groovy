@@ -9,11 +9,13 @@ import org.apache.http.client.ClientProtocolException
 import org.apache.http.client.HttpClient
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.BasicResponseHandler
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
+import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
@@ -25,7 +27,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
     handlers {
       prefix("success") {
         handleDistributedRequest()
-        String msg = "<html><body><h1>Hello test.</h1>\n"
+        String msg = "Hello."
         response.status(200).send(msg)
       }
       prefix("redirect") {
@@ -46,24 +48,35 @@ class ApacheHttpClientTest extends AgentTestRunner {
   def redirectUrl = server.address.resolve("/redirect")
   @Shared
   def twoRedirectsUrl = server.address.resolve("/another-redirect")
+  @Shared
+  def handler = new BasicResponseHandler()
 
   final HttpClientBuilder builder = HttpClientBuilder.create()
   final HttpClient client = builder.build()
 
   def "trace request with propagation"() {
     when:
-    HttpResponse response = client.execute(new HttpGet(successUrl))
+    String response = runUnderTrace("parent") {
+      if (responseHandler) {
+        client.execute(new HttpGet(successUrl), responseHandler)
+      } else {
+        client.execute(new HttpGet(successUrl)).entity.content.text
+      }
+    }
 
     then:
-    response.getStatusLine().getStatusCode() == 200
+    response == "Hello."
     // one trace on the server, one trace on the client
     assertTraces(TEST_WRITER, 2) {
       server.distributedRequestTrace(it, 0, TEST_WRITER[1][1])
       trace(1, 2) {
-        clientParentSpan(it, 0)
+        parentSpan(it, 0)
         successClientSpan(it, 1, span(0))
       }
     }
+
+    where:
+    responseHandler << [null, handler]
   }
 
   def "trace redirected request with propagation many redirects allowed"() {
@@ -75,18 +88,19 @@ class ApacheHttpClientTest extends AgentTestRunner {
     request.setConfig(requestConfigBuilder.build())
 
     when:
-    HttpResponse response = client.execute(request)
+    HttpResponse response = runUnderTrace("parent") {
+      client.execute(request)
+    }
 
     then:
     response.getStatusLine().getStatusCode() == 200
     // two traces on the server, one trace on the client
     assertTraces(TEST_WRITER, 3) {
-      server.distributedRequestTrace(it, 0, TEST_WRITER[2][2])
+      server.distributedRequestTrace(it, 0, TEST_WRITER[2][1])
       server.distributedRequestTrace(it, 1, TEST_WRITER[2][1])
-      trace(2, 3) {
-        clientParentSpan(it, 0)
-        successClientSpan(it, 1, span(0))
-        redirectClientSpan(it, 2, span(0))
+      trace(2, 2) {
+        parentSpan(it, 0)
+        successClientSpan(it, 1, span(0), 200, "redirect")
       }
     }
   }
@@ -99,18 +113,19 @@ class ApacheHttpClientTest extends AgentTestRunner {
     request.setConfig(requestConfigBuilder.build())
 
     when:
-    HttpResponse response = client.execute(request)
+    HttpResponse response = runUnderTrace("parent") {
+      client.execute(request)
+    }
 
     then:
     response.getStatusLine().getStatusCode() == 200
     // two traces on the server, one trace on the client
     assertTraces(TEST_WRITER, 3) {
-      server.distributedRequestTrace(it, 0, TEST_WRITER[2][2])
+      server.distributedRequestTrace(it, 0, TEST_WRITER[2][1])
       server.distributedRequestTrace(it, 1, TEST_WRITER[2][1])
-      trace(2, 3) {
-        clientParentSpan(it, 0)
-        successClientSpan(it, 1, span(0))
-        redirectClientSpan(it, 2, span(0))
+      trace(2, 2) {
+        parentSpan(it, 0)
+        successClientSpan(it, 1, span(0), 200, "redirect")
       }
     }
   }
@@ -124,18 +139,19 @@ class ApacheHttpClientTest extends AgentTestRunner {
     request.setConfig(requestConfigBuilder.build())
 
     when:
-    client.execute(request)
+    runUnderTrace("parent") {
+      client.execute(request)
+    }
 
     then:
     def exception = thrown(ClientProtocolException)
     // two traces on the server, one trace on the client
     assertTraces(TEST_WRITER, 3) {
-      server.distributedRequestTrace(it, 0, TEST_WRITER[2][2])
+      server.distributedRequestTrace(it, 0, TEST_WRITER[2][1])
       server.distributedRequestTrace(it, 1, TEST_WRITER[2][1])
-      trace(2, 3) {
-        clientParentSpan(it, 0, exception)
-        redirectClientSpan(it, 1, span(0))
-        redirectClientSpan(it, 2, span(0), "another-redirect")
+      trace(2, 2) {
+        parentSpan(it, 0, exception)
+        successClientSpan(it, 1, span(0), null, "another-redirect", exception)
       }
     }
   }
@@ -146,29 +162,30 @@ class ApacheHttpClientTest extends AgentTestRunner {
     request.addHeader(new BasicHeader("is-dd-server", "false"))
 
     when:
-    HttpResponse response = client.execute(request)
+    HttpResponse response = runUnderTrace("parent") {
+      client.execute(request)
+    }
 
     then:
     response.getStatusLine().getStatusCode() == 200
     // only one trace (client).
     assertTraces(TEST_WRITER, 1) {
       trace(0, 2) {
-        clientParentSpan(it, 0)
+        parentSpan(it, 0)
         successClientSpan(it, 1, span(0))
       }
     }
   }
 
-  def clientParentSpan(TraceAssert trace, int index, Throwable exception = null) {
+  def parentSpan(TraceAssert trace, int index, Throwable exception = null) {
     trace.span(index) {
       parent()
       serviceName "unnamed-java-app"
-      operationName "apache.http"
-      resourceName "apache.http"
+      operationName "parent"
+      resourceName "parent"
       errored exception != null
       tags {
         defaultTags()
-        "$Tags.COMPONENT.key" "apache-httpclient"
         if (exception) {
           errorTags(exception.class)
         }
@@ -176,15 +193,19 @@ class ApacheHttpClientTest extends AgentTestRunner {
     }
   }
 
-  def successClientSpan(TraceAssert trace, int index, DDSpan parent, status = 200, route = "success") {
+  def successClientSpan(TraceAssert trace, int index, DDSpan parent, status = 200, route = "success", Throwable exception = null) {
     trace.span(index) {
       childOf parent
       serviceName "unnamed-java-app"
-      operationName "http.request"
+      operationName "apache.http.request"
       resourceName "GET /$route"
-      errored false
+      errored exception != null
       tags {
         defaultTags()
+        if (exception) {
+          errorTags(exception.class)
+        }
+        "$Tags.COMPONENT.key" "apache-httpclient"
         "$Tags.HTTP_STATUS.key" status
         "$Tags.HTTP_URL.key" "http://localhost:$port/$route"
         "$Tags.PEER_HOSTNAME.key" "localhost"
@@ -194,9 +215,5 @@ class ApacheHttpClientTest extends AgentTestRunner {
         "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
       }
     }
-  }
-
-  def redirectClientSpan(TraceAssert trace, int index, DDSpan parent, route = "redirect") {
-    successClientSpan(trace, index, parent, 302, route)
   }
 }
