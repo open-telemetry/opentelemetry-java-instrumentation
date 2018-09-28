@@ -1,3 +1,10 @@
+// Set properties before any plugins get loaded
+ext {
+  // Test use Cassandra 3 which requires Java 8. (Currently incompatible with Java 9.)
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
 muzzle {
   pass {
     group = "com.datastax.cassandra"
@@ -7,9 +14,6 @@ muzzle {
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
-
-// These classes use Cassandra 3 which requires Java 8. (Currently incompatible with Java 9.)
-testJava8Only += '**/CassandraClientTest.class'
 
 apply plugin: 'org.unbroken-dome.test-sets'
 

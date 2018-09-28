@@ -1,3 +1,9 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
 muzzle {
   pass {
     group = "org.springframework"
@@ -77,6 +83,3 @@ configurations.latestDepTestCompile {
     force group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '+'
   }
 }
-
-testJava8Only += '**/*Test.class'
-testJava8Only += '**/*TestApplication.class'

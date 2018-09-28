@@ -1,3 +1,8 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/test-with-scala.gradle"
 
@@ -58,4 +63,3 @@ dependencies {
 }
 
 test.dependsOn lagomTest
-testJava8Minimum += '*Test*.class'

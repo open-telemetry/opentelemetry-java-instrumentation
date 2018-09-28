@@ -1,3 +1,9 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
 apply plugin: 'version-scan'
 
 muzzle {
@@ -62,7 +68,3 @@ configurations.latestDepTestCompile {
     force group: 'io.lettuce', name: 'lettuce-core', version: '+'
   }
 }
-
-testJava8Only += '**/LettuceAsyncClientTest.class'
-testJava8Only += '**/LettuceSyncClientTest.class'
-testJava8Only += '**/LettuceReactiveClientTest.class'

@@ -1,3 +1,8 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
 
 apply plugin: 'org.unbroken-dome.test-sets'
@@ -44,5 +49,3 @@ dependencies {
   latestDepTestCompile group: 'com.couchbase.client', name: 'java-client', version: '2.6+'
   latestDepTestCompile group: 'com.couchbase.client', name: 'encryption', version: '+'
 }
-
-testJava8Minimum += "**/*.class"
