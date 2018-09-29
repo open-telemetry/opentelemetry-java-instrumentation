@@ -13,21 +13,16 @@
  */
 package datadog.trace.instrumentation.aws.v106;
 
-import static io.opentracing.log.Fields.ERROR_KIND;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static io.opentracing.log.Fields.EVENT;
-import static io.opentracing.log.Fields.MESSAGE;
-import static io.opentracing.log.Fields.STACK;
 
 import com.amazonaws.AmazonWebServiceResponse;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -50,9 +45,11 @@ class SpanDecorator {
     span.setTag("aws.operation", awsOperation.getSimpleName());
     span.setTag("aws.endpoint", request.getEndpoint().toString());
 
+    span.setTag(DDTags.SERVICE_NAME, COMPONENT_NAME);
     span.setTag(
         DDTags.RESOURCE_NAME,
         remapServiceName(awsServiceName) + "." + remapOperationName(awsOperation));
+    span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT);
   }
 
   static void onResponse(final Response response, final Span span) {
@@ -65,22 +62,7 @@ class SpanDecorator {
 
   static void onError(final Throwable throwable, final Span span) {
     Tags.ERROR.set(span, Boolean.TRUE);
-    span.log(errorLogs(throwable));
-  }
-
-  private static Map<String, Object> errorLogs(final Throwable throwable) {
-    final Map<String, Object> errorLogs = new HashMap<>(4);
-    errorLogs.put(EVENT, Tags.ERROR.getKey());
-    errorLogs.put(ERROR_KIND, throwable.getClass().getName());
-    errorLogs.put(ERROR_OBJECT, throwable);
-
-    errorLogs.put(MESSAGE, throwable.getMessage());
-
-    final StringWriter sw = new StringWriter();
-    throwable.printStackTrace(new PrintWriter(sw));
-    errorLogs.put(STACK, sw.toString());
-
-    return errorLogs;
+    span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
   }
 
   private static String remapServiceName(final String serviceName) {

@@ -129,7 +129,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
         "$Tags.HTTP_STATUS.key" status
         "$Tags.HTTP_URL.key" "http://localhost:$port/$route"
         "$Tags.PEER_HOSTNAME.key" "localhost"
-        "$Tags.PEER_PORT.key" server.getAddress().port
+        "$Tags.PEER_PORT.key" server.address.port
         "$Tags.HTTP_METHOD.key" "GET"
         "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
         "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT

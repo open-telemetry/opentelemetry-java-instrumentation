@@ -6,15 +6,11 @@ import java.util.List;
 /** Create DDSpanDecorators */
 public class DDDecoratorsFactory {
   public static List<AbstractDecorator> createBuiltinDecorators() {
-    final HTTPComponent httpDecorator = new HTTPComponent();
-    httpDecorator.setMatchingTag("component");
-    httpDecorator.setMatchingValue("java-aws-sdk");
 
     return Arrays.asList(
         new DBStatementAsResourceName(),
         new DBTypeDecorator(),
         new ErrorFlag(),
-        httpDecorator,
         new OperationDecorator(),
         new PeerServiceDecorator(),
         new ResourceNameDecorator(),
