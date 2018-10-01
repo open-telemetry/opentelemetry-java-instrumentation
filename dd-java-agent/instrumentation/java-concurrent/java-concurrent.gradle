@@ -12,11 +12,6 @@ compileSlickTestGroovy {
   dependsOn compileSlickTestScala
 }
 
-// Work around for https://github.com/gradle/gradle/issues/6735. Remove on gradle >4.10.1
-compileSlickTestScala {
-  analysisFiles.setFrom(files())
-}
-
 dependencies {
   compile project(':dd-trace-api')
   compile project(':dd-java-agent:agent-tooling')
