@@ -91,7 +91,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       final Tracer tracer = GlobalTracer.get();
       final Scope scope =
           tracer
-              .buildSpan("apache.http.request")
+              .buildSpan("http.request")
               .withTag(Tags.COMPONENT.getKey(), "apache-httpclient")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)

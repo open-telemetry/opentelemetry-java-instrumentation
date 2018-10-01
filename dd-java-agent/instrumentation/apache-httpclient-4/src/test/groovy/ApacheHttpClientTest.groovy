@@ -117,7 +117,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
     trace.span(index) {
       childOf parent
       serviceName "unnamed-java-app"
-      operationName "apache.http.request"
+      operationName "http.request"
       resourceName "GET /$route"
       errored exception != null
       tags {

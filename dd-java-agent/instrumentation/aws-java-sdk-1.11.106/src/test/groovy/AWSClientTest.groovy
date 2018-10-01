@@ -106,7 +106,7 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(TEST_WRITER, 2) {
       trace(0, 1) {
         span(0) {
-          operationName "apache.http.request"
+          operationName "http.request"
           resourceName "$method /$url"
           errored false
           parent() // FIXME: This should be a child of the aws.http call.
