@@ -31,7 +31,7 @@ dependencies {
 
   testCompile project(':dd-java-agent:testing')
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
-  testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4.3')
+  testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
   testCompile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.106'
 }
 

@@ -41,7 +41,7 @@ dependencies {
   // Include httpclient instrumentation for testing because it is a dependency for elasticsearch-rest-client.
   // It doesn't actually work though.  They use HttpAsyncClient, which isn't currently instrumented.
   // TODO: add HttpAsyncClient instrumentation when that is complete.
-  testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4.3')
+  testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
   // TODO: add netty instrumentation when that is complete.
 
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'

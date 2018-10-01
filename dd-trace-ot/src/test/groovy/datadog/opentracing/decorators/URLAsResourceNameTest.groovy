@@ -25,6 +25,9 @@ class URLAsResourceNameTest extends Specification {
 
     where:
     input                          | output
+    ""                             | "/"
+    " "                            | "/"
+    "\t"                           | "/"
     "/"                            | "/"
     "/?asdf"                       | "/"
     "/search"                      | "/search"

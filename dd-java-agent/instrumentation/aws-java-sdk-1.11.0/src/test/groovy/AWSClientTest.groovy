@@ -7,6 +7,7 @@ import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import spock.lang.AutoCleanup
@@ -14,6 +15,7 @@ import spock.lang.Shared
 
 import java.util.concurrent.atomic.AtomicReference
 
+import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class AWSClientTest extends AgentTestRunner {
@@ -72,81 +74,52 @@ class AWSClientTest extends AgentTestRunner {
     client.requestHandler2s.size() == handlerCount
     client.requestHandler2s.get(0).getClass().getSimpleName() == "TracingRequestHandler"
 
-    TEST_WRITER.size() == 2
-
-    def trace = TEST_WRITER.get(0)
-    trace.size() == 2
-
-    and: // span 0 - from apache-httpclient instrumentation
-    def span1 = trace[0]
-
-    span1.context().operationName == "apache.http"
-    span1.serviceName == "unnamed-java-app"
-    span1.resourceName == "apache.http"
-    span1.type == null
-    !span1.context().getErrorFlag()
-    span1.context().parentId == "0"
-
-
-    def tags1 = span1.context().tags
-    tags1["component"] == "apache-httpclient"
-    tags1["thread.name"] != null
-    tags1["thread.id"] != null
-    tags1.size() == 3
-
-    and: // span 1 - from apache-httpclient instrumentation
-    def span2 = trace[1]
-
-    span2.context().operationName == "http.request"
-    span2.serviceName == "unnamed-java-app"
-    span2.resourceName == "$method /$url"
-    span2.type == "http"
-    !span2.context().getErrorFlag()
-    span2.context().parentId == span1.spanId
-
-
-    def tags2 = span2.context().tags
-    tags2[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_CLIENT
-    tags2[Tags.HTTP_METHOD.key] == "$method"
-    tags2[Tags.HTTP_URL.key] == "http://localhost:$server.address.port/$url"
-    tags2[Tags.PEER_HOSTNAME.key] == "localhost"
-    tags2[Tags.PEER_PORT.key] == server.address.port
-    tags2[DDTags.THREAD_NAME] != null
-    tags2[DDTags.THREAD_ID] != null
-    tags2.size() == 9
-
-    and:
-
-    def trace2 = TEST_WRITER.get(1)
-    trace2.size() == 1
-
-    and: // span 0 - from aws instrumentation
-    def span = trace2[0]
-
-    span.context().operationName == "aws.http"
-    span.serviceName == "java-aws-sdk"
-    span.resourceName == "$service.$operation"
-    span.type == "web"
-    !span.context().getErrorFlag()
-    span.context().parentId == "0"
-
-    def tags = span.context().tags
-    tags[Tags.COMPONENT.key] == "java-aws-sdk"
-    tags[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_CLIENT
-    tags[Tags.HTTP_METHOD.key] == "$method"
-    tags[Tags.HTTP_URL.key] == "http://localhost:$server.address.port"
-    tags[Tags.HTTP_STATUS.key] == 200
-    tags["aws.service"] == "Amazon $service" || tags["aws.service"] == "Amazon$service"
-    tags["aws.endpoint"] == "http://localhost:$server.address.port"
-    tags["aws.operation"] == "${operation}Request"
-    tags["aws.agent"] == "java-aws-sdk"
-    tags["span.type"] == "web"
-    tags["thread.name"] != null
-    tags["thread.id"] != null
-    tags.size() == 12
-
-    server.lastRequest.headers.get("x-datadog-trace-id") == "$span.traceId"
-    server.lastRequest.headers.get("x-datadog-parent-id") == "$span.spanId"
+    assertTraces(TEST_WRITER, 2) {
+      trace(0, 1) {
+        span(0) {
+          operationName "http.request"
+          resourceName "$method /$url"
+          errored false
+          parent() // FIXME: This should be a child of the aws.http call.
+          tags {
+            "$Tags.COMPONENT.key" "apache-httpclient"
+            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.HTTP_URL.key" "$server.address/$url"
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.HTTP_METHOD.key" "$method"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            defaultTags()
+          }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          serviceName "java-aws-sdk"
+          operationName "aws.http"
+          resourceName "$service.$operation"
+          errored false
+          parent()
+          tags {
+            "$Tags.COMPONENT.key" "java-aws-sdk"
+            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_METHOD.key" "$method"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "aws.service" String
+            "aws.endpoint" "$server.address"
+            "aws.operation" "${operation}Request"
+            "aws.agent" "java-aws-sdk"
+            defaultTags()
+          }
+        }
+      }
+    }
+    // Not sure why these are children of the aws.http span:
+    server.lastRequest.headers.get("x-datadog-trace-id") == TEST_WRITER[1][0].traceId
+    server.lastRequest.headers.get("x-datadog-parent-id") == TEST_WRITER[1][0].spanId
 
     where:
     service | operation           | method | url                  | handlerCount | call                                                                                                                                   | body               | client

@@ -4,12 +4,12 @@ muzzle {
   fail {
     group = "commons-httpclient"
     module = "commons-httpclient"
-    versions = "[,4.3)"
+    versions = "[,4.0)"
   }
   pass {
     group = "org.apache.httpcomponents"
     module = "httpclient"
-    versions = "[4.3,)"
+    versions = "[4.0,)"
     assertInverse = true
   }
 }
@@ -17,13 +17,11 @@ muzzle {
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
+  latestDepTest
 }
 
 dependencies {
-  compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3'
+  compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
 
   compile project(':dd-java-agent:agent-tooling')
 
@@ -33,8 +31,7 @@ dependencies {
   implementation deps.autoservice
 
   testCompile project(':dd-java-agent:testing')
-  testCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3'
-
+  testCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
 
   latestDepTestCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '+'
 }

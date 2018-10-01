@@ -17,8 +17,8 @@ public class URLAsResourceName extends AbstractDecorator {
 
   public URLAsResourceName() {
     super();
-    this.setMatchingTag(Tags.HTTP_URL.getKey());
-    this.setReplacementTag(DDTags.RESOURCE_NAME);
+    setMatchingTag(Tags.HTTP_URL.getKey());
+    setReplacementTag(DDTags.RESOURCE_NAME);
   }
 
   @Override
@@ -58,6 +58,10 @@ public class URLAsResourceName extends AbstractDecorator {
     String norm = origin;
     norm = QUERYSTRING.matcher(norm).replaceAll("");
     norm = PATH_MIXED_ALPHANUMERICS.matcher(norm).replaceAll("?");
+
+    if (norm.trim().isEmpty()) {
+      norm = "/";
+    }
 
     return norm;
   }
