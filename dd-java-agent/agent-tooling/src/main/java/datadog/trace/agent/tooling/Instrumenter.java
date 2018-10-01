@@ -8,6 +8,7 @@ import datadog.trace.agent.tooling.muzzle.Reference;
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -186,6 +187,13 @@ public interface Instrumenter {
 
     @Override
     public abstract Map<? extends ElementMatcher, String> transformers();
+
+    /**
+     * A map of {class-name -> context-class-name}. Keys (and their subclasses) will be associated with a context of the value.
+     */
+    public Map<String, String> contextStore() {
+      return Collections.EMPTY_MAP;
+    }
 
     protected boolean defaultEnabled() {
       return getConfigEnabled("dd.integrations.enabled", true);
