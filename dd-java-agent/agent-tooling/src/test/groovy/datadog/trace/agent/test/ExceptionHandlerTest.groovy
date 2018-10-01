@@ -7,6 +7,7 @@ import datadog.trace.agent.tooling.ExceptionHandlers
 import datadog.trace.bootstrap.ExceptionLogger
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.agent.builder.AgentBuilder
+import net.bytebuddy.agent.builder.ResettableClassFileTransformer
 import net.bytebuddy.dynamic.ClassFileLocator
 import org.slf4j.LoggerFactory
 import spock.lang.Shared
@@ -18,6 +19,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named
 class ExceptionHandlerTest extends Specification {
   @Shared
   ListAppender testAppender = new ListAppender()
+  @Shared
+  ResettableClassFileTransformer transformer
 
   def setupSpec() {
     AgentBuilder builder = new AgentBuilder.Default()
@@ -40,7 +43,7 @@ class ExceptionHandlerTest extends Specification {
         BadAdvice.NoOpAdvice.getName()))
 
     ByteBuddyAgent.install()
-    builder.installOn(ByteBuddyAgent.getInstrumentation())
+    transformer = builder.installOn(ByteBuddyAgent.getInstrumentation())
 
     final Logger logger = (Logger) LoggerFactory.getLogger(ExceptionLogger)
     testAppender.setContext(logger.getLoggerContext())
@@ -50,6 +53,7 @@ class ExceptionHandlerTest extends Specification {
 
   def cleanupSpec() {
     testAppender.stop()
+    transformer.reset(ByteBuddyAgent.getInstrumentation(), AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
   }
 
   def "exception handler invoked"() {
