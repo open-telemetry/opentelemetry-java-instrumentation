@@ -147,16 +147,22 @@ tasks.withType(Test) {
 
   def cloned = it
 
-  [7,9,10,11]. each { i ->
+  [7, 9, 10, 11].each { i ->
     def javaHome = System.getenv("JAVA${i}_HOME")
     if (javaHome != null) {
       def test = task "${cloned.name}Java${i}"(type: cloned.class) {
         group = "Verification"
         description "Runs $cloned.name under Java ${i}"
         executable = "$javaHome/bin/java"
-        afterEvaluate {
-          exclude project.testJava8Only
-          exclude project.testJava8Minimum
+        if (i == 7) {
+          afterEvaluate {
+            exclude project.testJava8Only
+            exclude project.testJava8Minimum
+          }
+        } else if (i > 8) {
+          afterEvaluate {
+            exclude project.testJava8Only
+          }
         }
       }
       tasks.check.dependsOn test

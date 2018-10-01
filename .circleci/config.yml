@@ -140,7 +140,7 @@ jobs:
     environment:
     - JAVA11_HOME: /usr/lib/jvm/jdk-11
     - TEST_TASK: testJava11 latestDepTestJava11
-    - INSTALL_OPENJDK: https://download.java.net/java/early_access/jdk11/28/GPL/openjdk-11+28_linux-x64_bin.tar.gz
+    - INSTALL_OPENJDK: https://download.java.net/java/ga/jdk11/openjdk-11_linux-x64_bin.tar.gz
 
   agent_integration_tests:
     <<: *defaults
