@@ -1,3 +1,8 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/test-with-scala.gradle"
 
@@ -48,5 +53,3 @@ compileLatestDepTestGroovy {
   classpath = classpath.plus(files(compileLatestDepTestScala.destinationDir))
   dependsOn compileLatestDepTestScala
 }
-
-testJava8Minimum += '*Play*Test*'

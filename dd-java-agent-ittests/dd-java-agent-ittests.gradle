@@ -1,3 +1,9 @@
+// Set properties before any plugins get loaded
+project.ext {
+  // Execute tests on all JVMs, even rare and outdated ones
+  integrationTests = true
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
 
 description = 'dd-java-agent-ittests'

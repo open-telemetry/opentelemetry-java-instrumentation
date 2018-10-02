@@ -1,3 +1,9 @@
+// Set properties before any plugins get loaded
+project.ext {
+  // Execute tests on all JVMs, even rare and outdated ones
+  coreJavaInstrumentation = true
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
@@ -10,5 +16,4 @@ dependencies {
 
   testCompile project(':dd-java-agent:testing')
   testCompile group: 'org.springframework', name: 'spring-web', version: '4.3.7.RELEASE'
-
 }

@@ -170,7 +170,6 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
   }
 
-
   def "#route pool request trace"() {
     setup:
     def url = server.address.resolve("/" + route).toURL()

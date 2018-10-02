@@ -13,12 +13,9 @@ cache_keys: &cache_keys
   - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
   - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
 
-
 jobs:
   build:
     <<: *defaults
-    docker:
-    - image: circleci/openjdk:8-jdk
 
     steps:
     - checkout
@@ -28,7 +25,7 @@ jobs:
 
     - run:
         name: Build Project
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1G -Xms64M" ./gradlew clean :dd-java-agent:shadowJar compileTestGroovy compileTestScala compileTestJava check -x test -x latestDepTest -x traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=4
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1G -Xms64M" ./gradlew clean :dd-java-agent:shadowJar compileTestGroovy compileTestScala compileTestJava --build-cache --parallel --stacktrace --no-daemon --max-workers=4
 
     - run:
         name: Collect Libs
@@ -38,14 +35,6 @@ jobs:
     - store_artifacts:
         path: ./libs
 
-    - run:
-        name: Collect Reports
-        when: always
-        command: .circleci/collect_reports.sh
-
-    - store_artifacts:
-        path: ./reports
-
     - persist_to_workspace:
         root: .
         paths:
@@ -54,7 +43,6 @@ jobs:
     - save_cache:
         key: dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
         paths: ~/.gradle
-        background: true
 
 
   default_test_job: &default_test_job
@@ -111,7 +99,7 @@ jobs:
   test_7:
     <<: *default_test_job
     environment:
-    - JAVA7_HOME: /usr/lib/jvm/zulu-7-amd64
+    - JAVA_7_HOME: /usr/lib/jvm/zulu-7-amd64
     - TEST_TASK: testJava7
     - INSTALL_ZULU: zulu-7
 
@@ -124,28 +112,28 @@ jobs:
   test_9:
     <<: *default_test_job
     environment:
-    - JAVA9_HOME: /usr/lib/jvm/zulu-9-amd64
-    - TEST_TASK: testJava9 latestDepTestJava9
+    - JAVA_9_HOME: /usr/lib/jvm/zulu-9-amd64
+    - TEST_TASK: testJava9
     - INSTALL_ZULU: zulu-9
 
   test_10:
     <<: *default_test_job
     environment:
-    - JAVA10_HOME: /usr/lib/jvm/zulu-10-amd64
-    - TEST_TASK: testJava10 latestDepTestJava10
+    - JAVA_10_HOME: /usr/lib/jvm/zulu-10-amd64
+    - TEST_TASK: testJava10
     - INSTALL_ZULU: zulu-10
 
   test_11:
     <<: *default_test_job
     environment:
-    - JAVA11_HOME: /usr/lib/jvm/jdk-11
-    - TEST_TASK: testJava11 latestDepTestJava11
+    - JAVA_11_HOME: /usr/lib/jvm/jdk-11
+    - TEST_TASK: testJava11
     - INSTALL_OPENJDK: https://download.java.net/java/ga/jdk11/openjdk-11_linux-x64_bin.tar.gz
 
   agent_integration_tests:
     <<: *defaults
     docker:
-    - image: circleci/openjdk:8-jdk
+    - image: *default_container
     - image: datadog/docker-dd-agent
       environment:
       - DD_APM_ENABLED=true
@@ -158,11 +146,7 @@ jobs:
         at: .
 
     - restore_cache:
-        # Reset the cache approx every release
-        keys:
-        - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}-{{ .Revision }}
-        - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}-{{ .Branch }}
-        - dd-trace-java-{{ checksum "dd-trace-java.gradle" }}
+        <<: *cache_keys
 
     - run:
         name: Run Trace Agent Tests
@@ -183,6 +167,30 @@ jobs:
 
     - store_test_results:
         path: ./results
+
+  check:
+    <<: *defaults
+
+    steps:
+    - checkout
+
+    - attach_workspace:
+        at: .
+
+    - restore_cache:
+        <<: *cache_keys
+
+    - run:
+        name: Build Project
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1G -Xms64M" ./gradlew check -PskipTests --build-cache --parallel --stacktrace --no-daemon --max-workers=4
+
+    - run:
+        name: Collect Reports
+        when: always
+        command: .circleci/collect_reports.sh
+
+    - store_artifacts:
+        path: ./reports
 
   scan_versions:
     <<: *defaults
@@ -280,6 +288,13 @@ workflows:
           tags:
             only: /.*/
 
+    - check:
+        requires:
+        - build
+        filters:
+          tags:
+            only: /.*/
+
     - scan_versions:
         requires:
         - build
@@ -295,6 +310,7 @@ workflows:
         - test_10
         - test_11
         - agent_integration_tests
+        - check
         filters:
           branches:
             only: master
@@ -309,6 +325,7 @@ workflows:
         - test_10
         - test_11
         - agent_integration_tests
+        - check
         filters:
           branches:
             ignore: /.*/

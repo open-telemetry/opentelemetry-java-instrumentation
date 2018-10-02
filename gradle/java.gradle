@@ -1,6 +1,10 @@
 apply plugin: 'java'
 apply plugin: 'groovy'
 
+apply from: "$rootDir/gradle/checkstyle.gradle"
+apply from: "$rootDir/gradle/codenarc.gradle"
+apply from: "$rootDir/gradle/jacoco.gradle"
+
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
@@ -136,43 +140,113 @@ if (project.hasProperty("removeJarVersionNumbers") && removeJarVersionNumbers) {
   }
 }
 
+if (project.parent && project.parent.hasProperty("javaExecutableVersionCache")) {
+  project.ext.javaExecutableVersionCache = project.parent.ext.javaExecutableVersionCache
+} else {
+  project.ext.javaExecutableVersionCache = [:]
+}
+def getJavaExecutableVersion(String path) {
+  def cache = project.ext.javaExecutableVersionCache
 
-project.ext.testJava8Only = []
-project.ext.testJava8Minimum = []
-
-tasks.withType(Test) {
-  if (name.endsWith("Java7") || name.endsWith("Java9") || name.endsWith("Java10") || name.endsWith("Java11")) {
-    return
+  if (cache.containsKey(path)) {
+    return cache.get(path)
   }
-
-  def cloned = it
-
-  [7, 9, 10, 11].each { i ->
-    def javaHome = System.getenv("JAVA${i}_HOME")
-    if (javaHome != null) {
-      def test = task "${cloned.name}Java${i}"(type: cloned.class) {
-        group = "Verification"
-        description "Runs $cloned.name under Java ${i}"
-        executable = "$javaHome/bin/java"
-        if (i == 7) {
-          afterEvaluate {
-            exclude project.testJava8Only
-            exclude project.testJava8Minimum
-          }
-        } else if (i > 8) {
-          afterEvaluate {
-            exclude project.testJava8Only
-          }
-        }
-      }
-      tasks.check.dependsOn test
+  new ByteArrayOutputStream().withStream { stream ->
+    exec {
+      commandLine = [path, "-version"]
+      errorOutput = stream
+    }
+    def matcher = stream.toString() =~ /^(?:java|openjdk) version "([^"]+)"/
+    if (matcher) {
+      def version = JavaVersion.toVersion(matcher.group(1))
+      cache.put(path, version)
+      return version
+    } else {
+      throw new GradleScriptException("Cannot determine java version: ${stream.toString}")
     }
   }
 }
 
-apply from: "$rootDir/gradle/checkstyle.gradle"
-apply from: "$rootDir/gradle/codenarc.gradle"
-apply from: "$rootDir/gradle/jacoco.gradle"
+def isJavaVersionAllowed(JavaVersion version) {
+  if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests').compareTo(version) > 0) {
+    return false
+  }
+  if (project.hasProperty('maxJavaVersionForTests') && project.getProperty('maxJavaVersionForTests').compareTo(version) < 0) {
+    return false
+  }
+  return true
+}
+
+
+// JVM names we would like to run complete test suite on
+// Note: complete test suite is always run on JVM used for compilation
+// Note2: apparently there is no way to have a 'global' variable, so instead we have per project
+// attribute that has same value in all projects
+project.ext.majorSupportedJVMs = ["7", "11"]
+
+def isTestingEnabled(String javaName) {
+  if (javaName in project.majorSupportedJVMs) {
+    return true
+  }
+  if (project.findProperty("coreJavaInstrumentation") || project.findProperty("integrationTests")) {
+    return true
+  }
+  return false
+}
+
+// Disable default test tasks if current JVM doesn't match version requirements
+tasks.withType(Test) {
+  if (name.endsWith("Generated")) {
+    return
+  }
+
+  // Always run all tests that are runnable on JVM used for compilation
+  onlyIf { isJavaVersionAllowed(JavaVersion.current()) }
+}
+
+// Generate tests tasks for all provided JVMs
+for (def env : System.getenv().entrySet()) {
+  def matcher = env.key =~ /JAVA_([^_]+)_HOME/
+  if (!matcher) {
+    continue
+  }
+  def javaName = matcher.group(1)
+  def javaHome = env.value
+  def javaPath = "$javaHome/bin/java"
+  def javaVersion = getJavaExecutableVersion(javaPath)
+
+  def parentTask = task "testJava${javaName}"() {
+    group = 'Verification'
+    description = "Run tests for Java ${javaName}"
+  }
+  tasks.check.dependsOn parentTask
+
+  tasks.withType(Test) {
+    if (name.endsWith("Generated")) {
+      return
+    }
+
+    def clonedTask = it
+    def newTask = task "${clonedTask.name}Java${javaName}Generated"(type: clonedTask.class) {
+      description "Runs $clonedTask.name under java ${javaName}"
+      executable = javaPath
+      onlyIf { isJavaVersionAllowed(javaVersion) && isTestingEnabled(javaName) }
+      jacoco {
+        // Disable jacoco for additional JVM tests to speed things up a bit
+        enabled = false
+      }
+    }
+
+    parentTask.dependsOn newTask
+  }
+}
+
+// Disable all tests if skipTests property was specified
+if (project.hasProperty("skipTests")) {
+  tasks.withType(Test) {
+    onlyIf { false }
+  }
+}
 
 plugins.withType(BasePlugin) {
   project.afterEvaluate {
