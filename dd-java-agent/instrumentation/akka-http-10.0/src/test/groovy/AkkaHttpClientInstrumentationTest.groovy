@@ -22,9 +22,6 @@ import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.akka-http-client.enabled", "true")
-  }
 
   private static final String MESSAGE = "an\nmultiline\nhttp\nresponse"
   private static final long TIMEOUT = 10000L
