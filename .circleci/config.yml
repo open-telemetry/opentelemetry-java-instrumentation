@@ -77,6 +77,10 @@ jobs:
             sudo apt-get update
             sudo apt-get install $INSTALL_ZULU
           fi
+          if [ "${INSTALL_OPENJDK}" != "" ]; then
+            wget -O ~/openjdk.tar.gz $INSTALL_OPENJDK
+            sudo tar xvf ~/openjdk.tar.gz -C /usr/lib/jvm/
+          fi
 
     - attach_workspace:
         at: .
@@ -130,6 +134,13 @@ jobs:
     - JAVA10_HOME: /usr/lib/jvm/zulu-10-amd64
     - TEST_TASK: testJava10 latestDepTestJava10
     - INSTALL_ZULU: zulu-10
+
+  test_11:
+    <<: *default_test_job
+    environment:
+    - JAVA11_HOME: /usr/lib/jvm/jdk-11
+    - TEST_TASK: testJava11 latestDepTestJava11
+    - INSTALL_OPENJDK: https://download.java.net/java/ga/jdk11/openjdk-11_linux-x64_bin.tar.gz
 
   agent_integration_tests:
     <<: *defaults
@@ -255,6 +266,12 @@ workflows:
         filters:
           tags:
             only: /.*/
+    - test_11:
+        requires:
+        - build
+        filters:
+          tags:
+            only: /.*/
 
     - agent_integration_tests:
         requires:
@@ -276,6 +293,7 @@ workflows:
         - test_8
         - test_9
         - test_10
+        - test_11
         - agent_integration_tests
         filters:
           branches:
@@ -289,6 +307,7 @@ workflows:
         - test_8
         - test_9
         - test_10
+        - test_11
         - agent_integration_tests
         filters:
           branches:
