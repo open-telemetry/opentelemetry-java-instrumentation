@@ -54,7 +54,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
     private Instrumenter.Default instrumenter;
 
     public InsertSafetyMatcher(ClassVisitor classVisitor) {
-      super(Opcodes.ASM6, classVisitor);
+      super(Opcodes.ASM7, classVisitor);
     }
 
     @Override
@@ -461,7 +461,7 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
     /** Append a field initializer to the end of a method. */
     public class InitializeFieldVisitor extends MethodVisitor {
       public InitializeFieldVisitor(MethodVisitor methodVisitor) {
-        super(Opcodes.ASM6, methodVisitor);
+        super(Opcodes.ASM7, methodVisitor);
       }
 
       @Override

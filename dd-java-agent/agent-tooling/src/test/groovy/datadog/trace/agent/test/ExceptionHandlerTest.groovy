@@ -38,7 +38,6 @@ class ExceptionHandlerTest extends Specification {
         .advice(
         isMethod().and(named("smallStack").or(named("largeStack"))),
         BadAdvice.NoOpAdvice.getName()))
-      .asDecorator()
 
     ByteBuddyAgent.install()
     builder.installOn(ByteBuddyAgent.getInstrumentation())
