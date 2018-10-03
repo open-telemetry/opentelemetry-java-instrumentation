@@ -1,0 +1,25 @@
+muzzle {
+  pass {
+    group = 'io.dropwizard'
+    module = 'dropwizard-views'
+    versions = "(,)"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'io.dropwizard', name: 'dropwizard-views', version: '0.7.0'
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+  
+  testCompile project(':dd-java-agent:testing')
+
+  testCompile group: 'io.dropwizard', name: 'dropwizard-views-freemarker', version: '0.7.0'
+  testCompile group: 'io.dropwizard', name: 'dropwizard-views-mustache', version: '0.7.0'
+}
