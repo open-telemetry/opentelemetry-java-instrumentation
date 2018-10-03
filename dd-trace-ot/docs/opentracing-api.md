@@ -1,7 +1,7 @@
 # OpenTracing API
 
 
-The Opentraction group offers an API to instrument your code. 
+The OpenTracing group offers an API to instrument your code. 
 This document is a kind of a "quick start" for the official specification: https://github.com/opentracing/specification
 
 There are several concepts exposed by the OpenTracing API:
@@ -67,7 +67,7 @@ Sometimes you need to create a span without promoting it as the active. If you w
 
 Typically, span creations are made in the beginning of the methods you want to trace. 
 And of course, you need to finish/close the span in order to get the operation duration.
-This is achieving using the `finish` method.
+This is achieved using the `finish` method.
 
 ```java
   // Finishing the tracing operation
