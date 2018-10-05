@@ -1,5 +1,8 @@
+import com.google.common.reflect.ClassPath
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.SpockRunner
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.tooling.Utils
 import io.opentracing.Tracer
 
 import java.lang.reflect.Field
@@ -19,16 +22,34 @@ class AgentTestRunnerTest extends AgentTestRunner {
     AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null
   }
 
+  def "spock runner bootstrap prefixes correct for test setup"() {
+    expect:
+    SpockRunner.BOOTSTRAP_PACKAGE_PREFIXES_COPY == Utils.BOOTSTRAP_PACKAGE_PREFIXES
+  }
+
   def "classpath setup"() {
+    setup:
+    final List<String> bootstrapClassesIncorrectlyLoaded = []
+    for (ClassPath.ClassInfo info : TestUtils.getTestClasspath().getAllClasses()) {
+      for (int i = 0; i < Utils.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
+        if (info.getName().startsWith(Utils.BOOTSTRAP_PACKAGE_PREFIXES[i])) {
+          Class<?> bootstrapClass = Class.forName(info.getName())
+          if (bootstrapClass.getClassLoader() != BOOTSTRAP_CLASSLOADER) {
+            bootstrapClassesIncorrectlyLoaded.add(bootstrapClass)
+          }
+          break
+        }
+      }
+    }
+
     expect:
     A_TRACER == null
     DD_API_TRACER  == null
-    OT_LOADER == BOOTSTRAP_CLASSLOADER
     !AGENT_INSTALLED_IN_CLINIT
     getTestTracer() == TestUtils.getUnderlyingGlobalTracer()
     getAgentTransformer() != null
-    datadog.trace.api.Trace.getClassLoader() == BOOTSTRAP_CLASSLOADER
     TestUtils.getUnderlyingGlobalTracer() == datadog.trace.api.GlobalTracer.get()
+    bootstrapClassesIncorrectlyLoaded == []
   }
 
   def "logging works"() {

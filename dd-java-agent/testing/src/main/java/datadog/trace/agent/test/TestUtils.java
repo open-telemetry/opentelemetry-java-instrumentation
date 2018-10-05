@@ -1,7 +1,12 @@
 package datadog.trace.agent.test;
 
+import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
+import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.ClassPath;
 import datadog.trace.agent.tooling.Utils;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
@@ -16,8 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
+import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -26,6 +33,7 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 public class TestUtils {
+  private static final ClassPath testClasspath = computeTestClasspath();
 
   public static void registerOrReplaceGlobalTracer(final Tracer tracer) {
     try {
@@ -222,5 +230,47 @@ public class TestUtils {
       System.gc();
       System.runFinalization();
     }
+  }
+
+  public static ClassPath getTestClasspath() {
+    return testClasspath;
+  }
+
+  private static ClassPath computeTestClasspath() {
+    ClassLoader testClassLoader = AgentTestRunner.class.getClassLoader();
+    if (!(testClassLoader instanceof URLClassLoader)) {
+      // java9's system loader does not extend URLClassLoader
+      // which breaks Guava ClassPath lookup
+      testClassLoader = buildJavaClassPathClassLoader();
+    }
+    try {
+      return ClassPath.from(testClassLoader);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Parse JVM classpath and return ClassLoader containing all classpath entries. Inspired by Guava.
+   *
+   * <p>TODO: use we cannot use Guava version when we can update Guava to version that has this
+   * logic, i.e. when we drop Java7 support.
+   */
+  private static ClassLoader buildJavaClassPathClassLoader() {
+    ImmutableList.Builder<URL> urls = ImmutableList.builder();
+    for (String entry : Splitter.on(PATH_SEPARATOR.value()).split(JAVA_CLASS_PATH.value())) {
+      try {
+        try {
+          urls.add(new File(entry).toURI().toURL());
+        } catch (SecurityException e) { // File.toURI checks to see if the file is a directory
+          urls.add(new URL("file", null, new File(entry).getAbsolutePath()));
+        }
+      } catch (MalformedURLException e) {
+        System.err.println(
+            String.format(
+                "Error injecting bootstrap jar: Malformed classpath entry: %s. %s", entry, e));
+      }
+    }
+    return new URLClassLoader(urls.build().toArray(new URL[0]), null);
   }
 }
