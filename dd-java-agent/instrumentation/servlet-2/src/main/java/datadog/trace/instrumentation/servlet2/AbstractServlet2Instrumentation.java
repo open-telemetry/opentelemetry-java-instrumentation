@@ -12,10 +12,10 @@ public abstract class AbstractServlet2Instrumentation extends Instrumenter.Defau
     super("servlet", "servlet-2");
   }
 
+  // this is required to make sure servlet 2 instrumentation won't apply to servlet 3
   @Override
   public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return not(classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"))
-        .and(classLoaderHasClasses("javax.servlet.ServletContextEvent"));
+    return not(classLoaderHasClasses("javax.servlet.AsyncEvent", "javax.servlet.AsyncListener"));
   }
 
   @Override
