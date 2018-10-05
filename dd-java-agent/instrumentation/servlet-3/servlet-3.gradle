@@ -1,14 +1,15 @@
-apply plugin: 'version-scan'
-
-versionScan {
-  group = "javax.servlet"
-  module = 'javax.servlet-api'
-  legacyModule = "servlet-api"
-  versions = "[3.0,)"
-  verifyPresent = [
-    "javax.servlet.AsyncEvent"   : null,
-    "javax.servlet.AsyncListener": null,
-  ]
+muzzle {
+  pass {
+    group = "javax.servlet"
+    module = 'javax.servlet-api'
+    versions = "[3.0,)"
+    assertInverse = true
+  }
+  fail {
+    group = "javax.servlet"
+    module = 'servlet-api'
+    versions = "(,)"
+  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
