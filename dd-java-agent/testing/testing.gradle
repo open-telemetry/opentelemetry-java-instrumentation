@@ -5,7 +5,8 @@ minimumInstructionCoverage = 0.6
 excludedClassesConverage += [
   'datadog.trace.agent.test.asserts.*Assert',
   'datadog.trace.agent.test.AgentTestRunner.ErrorCountingListener',
-  'datadog.trace.agent.test.OkHttpUtils'
+  'datadog.trace.agent.test.OkHttpUtils',
+  'datadog.trace.agent.test.TestUtils'
 ]
 
 dependencies {
