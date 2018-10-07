@@ -1,8 +1,22 @@
+// compiling against 1.11.0, but instrumentation should work against 1.10.33 with varying effects,
+// depending on the version's implementation. (i.e. DeleteOptionGroup may have less handlerCounts than
+// expected in 1.11.84. Testing against 1.11.0 instead of 1.10.33 because the RequestHandler class
+// used in testing is abstract in 1.10.33
 muzzle {
   pass {
     group = "com.amazonaws"
     module = "aws-java-sdk-core"
-    versions = "[1.10.33,1.11.106)"
+    versions = "[1.10.33,1.11.0)"
+  }
+  pass {
+    group = "com.amazonaws"
+    module = "aws-java-sdk-core"
+    versions = "[1.11.0,)"
+  }
+  fail {
+    group = "com.amazonaws"
+    module = "aws-java-sdk-core"
+    versions = "(,1.10.33)"
   }
 }
 
@@ -11,10 +25,29 @@ apply from: "${rootDir}/gradle/java.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
+  // features used in test_1_11_106 (builder) is available since 1.11.84, but
+  // using 1.11.106 because of previous concerns with byte code differences
+  // in 1.11.106, also, the DeleteOptionGroup request generates more spans
+  // in 1.11.106 than 1.11.84
+  test_1_11_106
+
   latestDepTest {
-    dirName = 'test'
+    dirName = 'test_1_11_106'
   }
 }
+
+configurations.test_1_11_106Compile {
+  resolutionStrategy {
+    force group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.106'
+  }
+}
+
+configurations.latestDepTestCompile {
+  resolutionStrategy {
+    force group: 'com.amazonaws', name: 'aws-java-sdk', version: '+'
+  }
+}
+
 
 dependencies {
   compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
@@ -30,10 +63,12 @@ dependencies {
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
   testCompile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.0'
-}
 
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.105'
-  }
+  test_1_11_106Compile project(':dd-java-agent:testing')
+  test_1_11_106Compile project(':dd-java-agent:instrumentation:apache-httpclient-4')
+  test_1_11_106Compile group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.106'
+
+  latestDepTestCompile project(':dd-java-agent:testing')
+  latestDepTestCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
+  latestDepTestCompile group: 'com.amazonaws', name: 'aws-java-sdk', version: '+'
 }
