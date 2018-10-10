@@ -252,9 +252,6 @@ public class TestUtils {
 
   /**
    * Parse JVM classpath and return ClassLoader containing all classpath entries. Inspired by Guava.
-   *
-   * <p>TODO: use we cannot use Guava version when we can update Guava to version that has this
-   * logic, i.e. when we drop Java7 support.
    */
   private static ClassLoader buildJavaClassPathClassLoader() {
     ImmutableList.Builder<URL> urls = ImmutableList.builder();

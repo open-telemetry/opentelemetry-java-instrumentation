@@ -3,7 +3,9 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.SpockRunner
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.tooling.Utils
+import io.opentracing.Span
 import io.opentracing.Tracer
+import spock.lang.Shared
 
 import java.lang.reflect.Field
 
@@ -16,10 +18,17 @@ class AgentTestRunnerTest extends AgentTestRunner {
   // having dd tracer api class in test field should not cause problems
   private static final datadog.trace.api.Tracer DD_API_TRACER = null
 
+  @Shared
+  private Class sharedSpanClass
+
   static {
     // when test class initializes, opentracing should be set up, but not the agent.
     OT_LOADER = io.opentracing.Tracer.getClassLoader()
     AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null
+  }
+
+  def setupSpec() {
+    sharedSpanClass = Span
   }
 
   def "spock runner bootstrap prefixes correct for test setup"() {
@@ -43,6 +52,8 @@ class AgentTestRunnerTest extends AgentTestRunner {
     }
 
     expect:
+    // a shared OT class should cause no trouble
+    sharedSpanClass.getClassLoader() == BOOTSTRAP_CLASSLOADER
     A_TRACER == null
     DD_API_TRACER  == null
     !AGENT_INSTALLED_IN_CLINIT
