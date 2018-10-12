@@ -6,8 +6,6 @@ import io.opentracing.tag.Tags
 import okhttp3.Request
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
 
   @Shared
@@ -43,7 +41,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
     expect:
     response.code() == 200
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           traceId "123"
@@ -87,7 +85,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
     expect:
     response.code() == 500
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"
@@ -127,7 +125,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
     expect:
     response.code() == 500
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"
@@ -166,7 +164,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
     expect:
     response.code() == 404
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"

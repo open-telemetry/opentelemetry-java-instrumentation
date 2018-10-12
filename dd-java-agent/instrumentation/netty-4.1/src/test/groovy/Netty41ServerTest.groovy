@@ -28,8 +28,6 @@ import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class Netty41ServerTest extends AgentTestRunner {
 
   OkHttpClient client = OkHttpUtils.client()
@@ -48,7 +46,7 @@ class Netty41ServerTest extends AgentTestRunner {
     response.body().string() == "Hello World"
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"
@@ -94,7 +92,7 @@ class Netty41ServerTest extends AgentTestRunner {
     response.body().string() == "Hello World"
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"

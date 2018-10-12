@@ -25,7 +25,6 @@ import java.util.function.BiFunction
 import java.util.function.Consumer
 import java.util.function.Function
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.AGENT_CRASHING_COMMAND_PREFIX
 
 class LettuceAsyncClientTest extends AgentTestRunner {
@@ -113,7 +112,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     connection != null
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -154,7 +153,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     then:
     connection == null
     thrown ExecutionException
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -187,7 +186,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     expect:
     res == "OK"
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -226,7 +225,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -279,7 +278,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -318,7 +317,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -376,7 +375,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -440,7 +439,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     conds.await()
     completedExceptionally == true
     thrown Exception
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -482,7 +481,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     then:
     conds.await()
     cancelSuccess == true
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -509,7 +508,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     asyncCommands.debugSegfault()
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -536,7 +535,7 @@ class LettuceAsyncClientTest extends AgentTestRunner {
     asyncCommands.shutdown(false)
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"

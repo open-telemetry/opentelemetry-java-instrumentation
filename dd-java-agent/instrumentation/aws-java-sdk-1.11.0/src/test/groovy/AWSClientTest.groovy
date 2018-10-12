@@ -15,7 +15,6 @@ import spock.lang.Shared
 
 import java.util.concurrent.atomic.AtomicReference
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class AWSClientTest extends AgentTestRunner {
@@ -74,7 +73,7 @@ class AWSClientTest extends AgentTestRunner {
     client.requestHandler2s.size() == handlerCount
     client.requestHandler2s.get(0).getClass().getSimpleName() == "TracingRequestHandler"
 
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 1) {
         span(0) {
           operationName "http.request"

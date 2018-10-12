@@ -15,8 +15,6 @@ import io.opentracing.tag.Tags
 
 import java.util.concurrent.TimeUnit
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class GrpcTest extends AgentTestRunner {
   static {
     System.setProperty("dd.integration.grpc.enabled", "true")
@@ -43,7 +41,7 @@ class GrpcTest extends AgentTestRunner {
 
     then:
     response.message == "Hello $name"
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"
@@ -134,7 +132,7 @@ class GrpcTest extends AgentTestRunner {
     then:
     thrown StatusRuntimeException
 
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"
@@ -219,7 +217,7 @@ class GrpcTest extends AgentTestRunner {
     then:
     thrown StatusRuntimeException
 
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"

@@ -1,9 +1,9 @@
 package datadog.opentracing
 
+import datadog.trace.api.GlobalTracer
 import datadog.trace.api.interceptor.MutableSpan
 import datadog.trace.api.interceptor.TraceInterceptor
 import datadog.trace.common.writer.ListWriter
-import datadog.trace.api.GlobalTracer
 import spock.lang.Specification
 
 import java.util.concurrent.atomic.AtomicBoolean
@@ -145,7 +145,7 @@ class TraceInterceptorTest extends Specification {
     tags.size() == 6
   }
 
-  def "register interceptor through bridge" () {
+  def "register interceptor through bridge"() {
     setup:
     GlobalTracer.registerIfAbsent(tracer)
     def interceptor = new TraceInterceptor() {

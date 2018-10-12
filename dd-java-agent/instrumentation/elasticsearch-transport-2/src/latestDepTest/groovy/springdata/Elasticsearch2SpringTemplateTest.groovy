@@ -23,8 +23,6 @@ import spock.lang.Shared
 
 import java.util.concurrent.atomic.AtomicLong
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 @RetryOnFailure
 class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
@@ -79,7 +77,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
     thrown IndexNotFoundException
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"
@@ -141,7 +139,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
       TEST_WRITER[3] = TEST_WRITER[4]
       TEST_WRITER[4] = tmp
     }
-    assertTraces(TEST_WRITER, 7) {
+    assertTraces(7) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"
@@ -328,7 +326,7 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
     results[1] == [id: "1", data: "doc a"]
     bucketTags == [:]
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"

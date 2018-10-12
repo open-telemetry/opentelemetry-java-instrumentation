@@ -2,16 +2,17 @@ package server
 
 import datadog.opentracing.DDTracer
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.common.writer.ListWriter
 import okhttp3.MultipartBody
 import okhttp3.Request
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 /* Don't actually need AgentTestRunner, but it messes up the classloader for AgentTestRunnerTest if this runs first. */
+
 class ServerTest extends AgentTestRunner {
   @Shared
   def client = OkHttpUtils.client()
@@ -314,7 +315,7 @@ class ServerTest extends AgentTestRunner {
     response.code() == 200
     response.body().string().trim() == "done"
 
-    assertTraces(writer, 1) {
+    ListWriterAssert.assertTraces(writer, 1) {
       server.distributedRequestTrace(it, 0)
     }
 

@@ -13,8 +13,6 @@ import org.eclipse.jetty.http.HttpStatus
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class JSPInstrumentationForwardTests extends AgentTestRunner {
 
   static {
@@ -80,7 +78,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     Response res = client.newCall(req).execute()
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 5) {
         span(0) {
           parent()
@@ -192,7 +190,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     Response res = client.newCall(req).execute()
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         span(0) {
           parent()
@@ -264,7 +262,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     Response res = client.newCall(req).execute()
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 9) {
         span(0) {
           parent()
@@ -441,7 +439,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     Response res = client.newCall(req).execute()
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 7) {
         span(0) {
           parent()
@@ -583,7 +581,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     Response res = client.newCall(req).execute()
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 4) {
         span(0) {
           parent()
@@ -677,7 +675,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
     Response res = client.newCall(req).execute()
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         span(0) {
           parent()

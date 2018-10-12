@@ -10,7 +10,6 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 
@@ -21,7 +20,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     }
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "test"
@@ -94,7 +93,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     }
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           operationName "test"

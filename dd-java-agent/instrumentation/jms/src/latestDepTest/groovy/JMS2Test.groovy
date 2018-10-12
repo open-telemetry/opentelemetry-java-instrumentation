@@ -27,8 +27,6 @@ import javax.jms.TextMessage
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class JMS2Test extends AgentTestRunner {
   @Shared
   String messageText = "a message"
@@ -83,7 +81,7 @@ class JMS2Test extends AgentTestRunner {
 
     expect:
     receivedMessage.text == messageText
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       producerTrace(it, 0, jmsResourceName)
       trace(1, 1) { // Consumer trace
         span(0) {
@@ -135,7 +133,7 @@ class JMS2Test extends AgentTestRunner {
     lock.countDown()
 
     expect:
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       producerTrace(it, 0, jmsResourceName)
       trace(1, 1) { // Consumer trace
         span(0) {
@@ -180,7 +178,7 @@ class JMS2Test extends AgentTestRunner {
 
     expect:
     receivedMessage == null
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
@@ -219,7 +217,7 @@ class JMS2Test extends AgentTestRunner {
 
     expect:
     receivedMessage == null
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()

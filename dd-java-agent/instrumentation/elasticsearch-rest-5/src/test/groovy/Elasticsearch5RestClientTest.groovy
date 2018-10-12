@@ -19,7 +19,6 @@ import org.elasticsearch.node.internal.InternalSettingsPreparer
 import org.elasticsearch.transport.Netty3Plugin
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 @RetryOnFailure
@@ -84,7 +83,7 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
     expect:
     result.status == "green"
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"

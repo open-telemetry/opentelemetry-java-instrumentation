@@ -17,8 +17,6 @@ import org.eclipse.jetty.security.authentication.BasicAuthenticator
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class JettyServlet2Test extends AgentTestRunner {
 
   OkHttpClient client = OkHttpUtils.clientBuilder().addNetworkInterceptor(new Interceptor() {
@@ -72,7 +70,7 @@ class JettyServlet2Test extends AgentTestRunner {
     expect:
     response.body().string().trim() == expectedResponse
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "ctx"
@@ -115,7 +113,7 @@ class JettyServlet2Test extends AgentTestRunner {
     expect:
     response.body().string().trim() != expectedResponse
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "ctx"
@@ -156,7 +154,7 @@ class JettyServlet2Test extends AgentTestRunner {
     expect:
     response.body().string().trim() != expectedResponse
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "ctx"

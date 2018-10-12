@@ -11,8 +11,6 @@ import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class TomcatServlet3Test extends AgentTestRunner {
 
   OkHttpClient client = OkHttpUtils.client()
@@ -73,7 +71,7 @@ class TomcatServlet3Test extends AgentTestRunner {
     expect:
     response.body().string().trim() == expectedResponse
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           if (distributedTracing) {
@@ -121,7 +119,7 @@ class TomcatServlet3Test extends AgentTestRunner {
     expect:
     response.body().string().trim() != expectedResponse
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "my-context"
@@ -163,7 +161,7 @@ class TomcatServlet3Test extends AgentTestRunner {
     expect:
     response.body().string().trim() != expectedResponse
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "my-context"

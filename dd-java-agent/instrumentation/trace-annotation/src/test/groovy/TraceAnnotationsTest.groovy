@@ -5,8 +5,6 @@ import dd.test.trace.annotation.SayTracedHello
 
 import java.util.concurrent.Callable
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class TraceAnnotationsTest extends AgentTestRunner {
 
   static {
@@ -19,7 +17,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
     SayTracedHello.sayHello()
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "test"
@@ -41,7 +39,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
     SayTracedHello.sayHELLOsayHA()
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         span(0) {
           resourceName "NEW_TRACE"
@@ -90,7 +88,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
     }
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           resourceName "ERROR"
@@ -111,7 +109,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
     SayTracedHello.fromCallable()
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           resourceName "SayTracedHello\$1.call"
@@ -132,7 +130,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
     TEST_WRITER.waitForTraces(2)
 
     then:
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 1) {
         span(0) {
           resourceName "SayTracedHello\$1.call"

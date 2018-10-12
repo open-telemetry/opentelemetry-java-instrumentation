@@ -27,7 +27,6 @@ import static CompletionListener.COMPONENT_NAME
 import static CompletionListener.OPERATION_NAME
 import static CompletionListener.SERVICE_NAME
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY
 
 // Do not run tests locally on Java7 since testcontainers are not compatible with Java7
@@ -145,7 +144,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "get", null, "hit")
@@ -160,7 +159,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "get", null, "miss")
@@ -177,7 +176,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "get", "canceled")
@@ -201,7 +200,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         getSpan(it, 0, "get", "timeout")
       }
@@ -216,7 +215,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "getBulk", null, null)
@@ -231,7 +230,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "set")
@@ -248,7 +247,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "set", "canceled")
@@ -264,7 +263,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
         getSpan(it, 1, "get", null, "hit")
@@ -281,7 +280,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
         getSpan(it, 1, "add")
@@ -298,7 +297,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
         getSpan(it, 1, "get", null, "miss")
@@ -314,7 +313,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "delete")
@@ -330,7 +329,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
         getSpan(it, 1, "get", null, "hit")
@@ -346,7 +345,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "replace")
@@ -363,7 +362,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 4) {
         getParentSpan(it, 0)
         getSpan(it, 1, "get", null, "hit")
@@ -382,7 +381,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 4) {
         getParentSpan(it, 0)
         getSpan(it, 1, "get", null, "hit")
@@ -400,7 +399,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
         getSpan(it, 1, "cas")
@@ -416,7 +415,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "cas")
@@ -431,7 +430,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "touch")
@@ -446,7 +445,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "touch")
@@ -461,7 +460,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "getAndTouch")
@@ -476,7 +475,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "getAndTouch")
@@ -496,7 +495,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
         getSpan(it, 1, "get", null, "hit")
@@ -512,7 +511,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "decr")
@@ -526,7 +525,7 @@ class SpymemcachedTest extends AgentTestRunner {
 
     then:
     thrown IllegalArgumentException
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         getSpan(it, 0, "decr", "long key")
       }
@@ -545,7 +544,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         getParentSpan(it, 0)
         getSpan(it, 1, "get", null, "hit")
@@ -561,7 +560,7 @@ class SpymemcachedTest extends AgentTestRunner {
     }
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         getParentSpan(it, 0)
         getSpan(it, 1, "incr")
@@ -575,7 +574,7 @@ class SpymemcachedTest extends AgentTestRunner {
 
     then:
     thrown IllegalArgumentException
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         getSpan(it, 0, "incr", "long key")
       }

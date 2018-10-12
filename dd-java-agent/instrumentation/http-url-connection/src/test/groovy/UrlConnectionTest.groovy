@@ -6,7 +6,6 @@ import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class UrlConnectionTest extends AgentTestRunner {
   static {
@@ -29,7 +28,7 @@ class UrlConnectionTest extends AgentTestRunner {
     thrown ConnectException
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "someTrace"

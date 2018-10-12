@@ -14,7 +14,6 @@ import java.util.function.Function
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.TestServer
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.startServer
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class LagomTest extends AgentTestRunner {
   static {
@@ -61,7 +60,7 @@ class LagomTest extends AgentTestRunner {
     probe.cancel()
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"
@@ -99,7 +98,7 @@ class LagomTest extends AgentTestRunner {
     }
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"

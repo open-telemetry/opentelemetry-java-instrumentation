@@ -14,7 +14,6 @@ import spock.lang.AutoCleanup
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class ApacheHttpClientTest extends AgentTestRunner {
@@ -64,7 +63,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
     then:
     response == "Hello."
     // one trace on the server, one trace on the client
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       server.distributedRequestTrace(it, 0, TEST_WRITER[1][1])
       trace(1, 2) {
         parentSpan(it, 0)
@@ -89,7 +88,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
     then:
     response.getStatusLine().getStatusCode() == 200
     // only one trace (client).
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         parentSpan(it, 0)
         successClientSpan(it, 1, span(0))

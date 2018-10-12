@@ -14,8 +14,6 @@ import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class JettyHandlerTest extends AgentTestRunner {
 
   static {
@@ -113,7 +111,7 @@ class JettyHandlerTest extends AgentTestRunner {
     }
 
     expect:
-    assertTraces(TEST_WRITER, numTraces) {
+    assertTraces(numTraces) {
       for (int i = 0; i < numTraces; ++i) {
         trace(i, 1) {
           span(0) {

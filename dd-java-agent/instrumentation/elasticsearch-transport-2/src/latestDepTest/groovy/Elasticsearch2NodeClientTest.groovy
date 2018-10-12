@@ -13,7 +13,6 @@ import org.elasticsearch.node.NodeBuilder
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 @RetryOnFailure
 class Elasticsearch2NodeClientTest extends AgentTestRunner {
@@ -72,7 +71,7 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     expect:
     status.name() == "GREEN"
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"
@@ -100,7 +99,7 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
     thrown IndexNotFoundException
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"
@@ -173,7 +172,7 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
       TEST_WRITER[3] = TEST_WRITER[4]
       TEST_WRITER[4] = tmp
     }
-    assertTraces(TEST_WRITER, 6) {
+    assertTraces(6) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"
