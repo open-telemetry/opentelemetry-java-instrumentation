@@ -50,6 +50,7 @@ ext {
     bytebuddyagent : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: "${versions.bytebuddy}"),
     groovy         : "org.codehaus.groovy:groovy-all:${versions.groovy}",
     junit          : "junit:junit:${versions.junit}",
+    testcontainers : "org.testcontainers:testcontainers:1.7.3",
     testLogging    : [
       dependencies.create(group: 'ch.qos.logback', name: 'logback-classic', version: versions.logback),
       dependencies.create(group: 'org.slf4j', name: 'log4j-over-slf4j', version: versions.slf4j),

@@ -52,6 +52,8 @@ jobs:
     - image: *default_container
       # This is used by spymemcached instrumentation tests
     - image: memcached
+      # This is used by rabbitmq instrumentation tests
+    - image: rabbitmq
 
     steps:
     - checkout

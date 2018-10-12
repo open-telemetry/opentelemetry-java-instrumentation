@@ -18,7 +18,7 @@ public class HTTPCodec implements Codec<TextMap> {
 
   // uint 64 bits max value, 2^64 - 1
   static final BigInteger BIG_INTEGER_UINT64_MAX =
-      (new BigInteger("2")).pow(64).subtract(BigInteger.ONE);
+      new BigInteger("2").pow(64).subtract(BigInteger.ONE);
 
   private static final String OT_BAGGAGE_PREFIX = "ot-baggage-";
   private static final String TRACE_ID_KEY = "x-datadog-trace-id";
@@ -120,16 +120,16 @@ public class HTTPCodec implements Codec<TextMap> {
    * @return the ID in String format if it passes validations
    * @throws IllegalArgumentException if val is not a number or if the number is out of range
    */
-  private String validateUInt64BitsID(String val) throws IllegalArgumentException {
+  private String validateUInt64BitsID(final String val) throws IllegalArgumentException {
     try {
-      BigInteger validate = new BigInteger(val);
+      final BigInteger validate = new BigInteger(val);
       if (validate.compareTo(BigInteger.ZERO) == -1
           || validate.compareTo(BIG_INTEGER_UINT64_MAX) == 1) {
         throw new IllegalArgumentException(
             "ID out of range, must be between 0 and 2^64-1, got: " + val);
       }
       return val;
-    } catch (NumberFormatException nfe) {
+    } catch (final NumberFormatException nfe) {
       throw new IllegalArgumentException(
           "Expecting a number for trace ID or span ID, but got: " + val, nfe);
     }

@@ -7,7 +7,7 @@ class TagsAssert {
   private final Set<String> assertedTags = new TreeSet<>()
 
   private TagsAssert(DDSpan span) {
-    this.tags = new TreeMap(span.tags)
+    this.tags = span.tags
   }
 
   static void assertTags(DDSpan span,
@@ -56,14 +56,20 @@ class TagsAssert {
     }
   }
 
+  def tag(String name) {
+    return tags[name]
+  }
+
   def methodMissing(String name, args) {
-    if (args.length != 1) {
+    if (args.length == 0) {
       throw new IllegalArgumentException(args.toString())
     }
     tag(name, args[0])
   }
 
   void assertTagsAllVerified() {
-    assert tags.keySet() == assertedTags
+    def set = new TreeMap<>(tags).keySet()
+    set.removeAll(assertedTags)
+    assert tags.entrySet() != assertedTags && set.isEmpty()
   }
 }
