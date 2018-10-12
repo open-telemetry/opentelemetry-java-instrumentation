@@ -13,10 +13,6 @@ class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
   private static final ClassLoader OT_LOADER
   private static final boolean AGENT_INSTALLED_IN_CLINIT
-  // having opentracing class in test field should not cause problems
-  private static final Tracer A_TRACER = null
-  // having dd tracer api class in test field should not cause problems
-  private static final datadog.trace.api.Tracer DD_API_TRACER = null
 
   @Shared
   private Class sharedSpanClass
@@ -52,10 +48,9 @@ class AgentTestRunnerTest extends AgentTestRunner {
     }
 
     expect:
-    // a shared OT class should cause no trouble
+    // shared OT classes should cause no trouble
     sharedSpanClass.getClassLoader() == BOOTSTRAP_CLASSLOADER
-    A_TRACER == null
-    DD_API_TRACER  == null
+    Tracer.getClassLoader() == BOOTSTRAP_CLASSLOADER
     !AGENT_INSTALLED_IN_CLINIT
     getTestTracer() == TestUtils.getUnderlyingGlobalTracer()
     getAgentTransformer() != null

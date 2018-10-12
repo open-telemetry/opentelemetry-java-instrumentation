@@ -4,6 +4,7 @@ import com.google.common.reflect.ClassPath;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -66,6 +67,7 @@ public class SpockRunner extends Sputnik {
       throws InitializationError, NoSuchFieldException, SecurityException, IllegalArgumentException,
           IllegalAccessException {
     super(shadowTestClass(clazz));
+    assertNoBootstrapClassesInTestClass(clazz);
     // access the classloader created in shadowTestClass above
     Field clazzField = Sputnik.class.getDeclaredField("clazz");
     try {
@@ -75,6 +77,37 @@ public class SpockRunner extends Sputnik {
     } finally {
       clazzField.setAccessible(false);
     }
+  }
+
+  private static void assertNoBootstrapClassesInTestClass(Class<?> testClass) {
+    for (final Field field : testClass.getDeclaredFields()) {
+      assertNotBootstrapClass(testClass, field.getType());
+    }
+
+    for (final Method method : testClass.getDeclaredMethods()) {
+      assertNotBootstrapClass(testClass, method.getReturnType());
+      for (final Class paramType : method.getParameterTypes()) {
+        assertNotBootstrapClass(testClass, paramType);
+      }
+    }
+  }
+
+  private static void assertNotBootstrapClass(Class<?> testClass, Class<?> clazz) {
+    if ((!clazz.isPrimitive()) && isBootstrapClass(clazz.getName())) {
+      throw new IllegalStateException(
+          testClass.getName()
+              + ": Bootstrap classes are not allowed in test class field or method signatures. Offending class: "
+              + clazz.getName());
+    }
+  }
+
+  private static boolean isBootstrapClass(String className) {
+    for (int i = 0; i < TEST_BOOTSTRAP_PREFIXES.length; ++i) {
+      if (className.startsWith(TEST_BOOTSTRAP_PREFIXES[i])) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // Shadow the test class with bytes loaded by InstrumentationClassLoader
@@ -117,11 +150,8 @@ public class SpockRunner extends Sputnik {
     Set<String> bootstrapClasses = new HashSet<String>();
     for (ClassPath.ClassInfo info : TestUtils.getTestClasspath().getAllClasses()) {
       // if info starts with bootstrap prefix: add to bootstrap jar
-      for (int i = 0; i < TEST_BOOTSTRAP_PREFIXES.length; ++i) {
-        if (info.getName().startsWith(TEST_BOOTSTRAP_PREFIXES[i])) {
-          bootstrapClasses.add(info.getResourceName());
-          break;
-        }
+      if (isBootstrapClass(info.getName())) {
+        bootstrapClasses.add(info.getResourceName());
       }
     }
     return new File(
