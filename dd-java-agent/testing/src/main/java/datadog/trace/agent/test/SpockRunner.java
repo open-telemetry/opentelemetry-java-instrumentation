@@ -1,19 +1,10 @@
 package datadog.trace.agent.test;
 
-import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
-import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
-import static datadog.trace.agent.tooling.Utils.BOOTSTRAP_PACKAGE_PREFIXES;
-
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.ClassPath;
-import datadog.trace.agent.tooling.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -32,6 +23,20 @@ import org.spockframework.runtime.Sputnik;
  * </ul>
  */
 public class SpockRunner extends Sputnik {
+  /**
+   * An exact copy of Utils#BOOSTRAP_PACKAGE_PREFIXES.
+   *
+   * <p>This list is needed to initialize the bootstrap classpath because Utils' static initializer
+   * references bootstrap classes (e.g. DatadogClassLoader).
+   */
+  public static final String[] BOOTSTRAP_PACKAGE_PREFIXES_COPY = {
+    "io.opentracing",
+    "datadog.slf4j",
+    "datadog.trace.bootstrap",
+    "datadog.trace.api",
+    "datadog.trace.context"
+  };
+
   private static final String[] TEST_BOOTSTRAP_PREFIXES;
 
   static {
@@ -47,9 +52,10 @@ public class SpockRunner extends Sputnik {
     };
     TEST_BOOTSTRAP_PREFIXES =
         Arrays.copyOf(
-            BOOTSTRAP_PACKAGE_PREFIXES, BOOTSTRAP_PACKAGE_PREFIXES.length + testBS.length);
+            BOOTSTRAP_PACKAGE_PREFIXES_COPY,
+            BOOTSTRAP_PACKAGE_PREFIXES_COPY.length + testBS.length);
     for (int i = 0; i < testBS.length; ++i) {
-      TEST_BOOTSTRAP_PREFIXES[i + BOOTSTRAP_PACKAGE_PREFIXES.length] = testBS[i];
+      TEST_BOOTSTRAP_PREFIXES[i + BOOTSTRAP_PACKAGE_PREFIXES_COPY.length] = testBS[i];
     }
 
     setupBootstrapClasspath();
@@ -61,6 +67,7 @@ public class SpockRunner extends Sputnik {
       throws InitializationError, NoSuchFieldException, SecurityException, IllegalArgumentException,
           IllegalAccessException {
     super(shadowTestClass(clazz));
+    assertNoBootstrapClassesInTestClass(clazz);
     // access the classloader created in shadowTestClass above
     Field clazzField = Sputnik.class.getDeclaredField("clazz");
     try {
@@ -70,6 +77,37 @@ public class SpockRunner extends Sputnik {
     } finally {
       clazzField.setAccessible(false);
     }
+  }
+
+  private static void assertNoBootstrapClassesInTestClass(Class<?> testClass) {
+    for (final Field field : testClass.getDeclaredFields()) {
+      assertNotBootstrapClass(testClass, field.getType());
+    }
+
+    for (final Method method : testClass.getDeclaredMethods()) {
+      assertNotBootstrapClass(testClass, method.getReturnType());
+      for (final Class paramType : method.getParameterTypes()) {
+        assertNotBootstrapClass(testClass, paramType);
+      }
+    }
+  }
+
+  private static void assertNotBootstrapClass(Class<?> testClass, Class<?> clazz) {
+    if ((!clazz.isPrimitive()) && isBootstrapClass(clazz.getName())) {
+      throw new IllegalStateException(
+          testClass.getName()
+              + ": Bootstrap classes are not allowed in test class field or method signatures. Offending class: "
+              + clazz.getName());
+    }
+  }
+
+  private static boolean isBootstrapClass(String className) {
+    for (int i = 0; i < TEST_BOOTSTRAP_PREFIXES.length; ++i) {
+      if (className.startsWith(TEST_BOOTSTRAP_PREFIXES[i])) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // Shadow the test class with bytes loaded by InstrumentationClassLoader
@@ -100,56 +138,26 @@ public class SpockRunner extends Sputnik {
       final File bootstrapJar = createBootstrapJar();
       ByteBuddyAgent.getInstrumentation()
           .appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
-      Utils.getBootstrapProxy().addURL(bootstrapJar.toURI().toURL());
+      // Utils cannot be referenced before this line, as its static initializers load bootstrap
+      // classes (for example, the bootstrap proxy).
+      datadog.trace.agent.tooling.Utils.getBootstrapProxy().addURL(bootstrapJar.toURI().toURL());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   private static File createBootstrapJar() throws IOException {
-    ClassLoader loader = AgentTestRunner.class.getClassLoader();
-    if (!(loader instanceof URLClassLoader)) {
-      // java9's system loader does not extend URLClassLoader
-      // which breaks Guava ClassPath lookup
-      loader = buildJavaClassPathClassLoader();
-    }
-    final ClassPath testCP = ClassPath.from(loader);
     Set<String> bootstrapClasses = new HashSet<String>();
-    for (ClassPath.ClassInfo info : testCP.getAllClasses()) {
+    for (ClassPath.ClassInfo info : TestUtils.getTestClasspath().getAllClasses()) {
       // if info starts with bootstrap prefix: add to bootstrap jar
-      for (int i = 0; i < TEST_BOOTSTRAP_PREFIXES.length; ++i) {
-        if (info.getName().startsWith(TEST_BOOTSTRAP_PREFIXES[i])) {
-          bootstrapClasses.add(info.getResourceName());
-          break;
-        }
+      if (isBootstrapClass(info.getName())) {
+        bootstrapClasses.add(info.getResourceName());
       }
     }
     return new File(
-        TestUtils.createJarWithClasses(loader, bootstrapClasses.toArray(new String[0])).getFile());
-  }
-
-  /**
-   * Parse JVM classpath and return ClassLoader containing all classpath entries. Inspired by Guava.
-   *
-   * <p>TODO: use we cannot use Guava version when we can update Guava to version that has this
-   * logic, i.e. when we drop Java7 support.
-   */
-  private static ClassLoader buildJavaClassPathClassLoader() {
-    ImmutableList.Builder<URL> urls = ImmutableList.builder();
-    for (String entry : Splitter.on(PATH_SEPARATOR.value()).split(JAVA_CLASS_PATH.value())) {
-      try {
-        try {
-          urls.add(new File(entry).toURI().toURL());
-        } catch (SecurityException e) { // File.toURI checks to see if the file is a directory
-          urls.add(new URL("file", null, new File(entry).getAbsolutePath()));
-        }
-      } catch (MalformedURLException e) {
-        System.err.println(
-            String.format(
-                "Error injecting bootstrap jar: Malformed classpath entry: %s. %s", entry, e));
-      }
-    }
-    return new URLClassLoader(urls.build().toArray(new URL[0]), null);
+        TestUtils.createJarWithClasses(
+                AgentTestRunner.class.getClassLoader(), bootstrapClasses.toArray(new String[0]))
+            .getFile());
   }
 
   /** Run test classes in a classloader which loads test classes before delegating. */

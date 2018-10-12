@@ -6,7 +6,11 @@ import java.lang.reflect.Method;
 import java.net.URL;
 
 public class Utils {
-  /* packages which will be loaded on the bootstrap classloader*/
+  /**
+   * packages which will be loaded on the bootstrap classloader
+   *
+   * <p>Updates should be mirrored in TestUtils#BOOTSTRAP_PACKAGE_PREFIXES_COPY
+   */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
     "io.opentracing",
     "datadog.slf4j",
@@ -14,6 +18,7 @@ public class Utils {
     "datadog.trace.api",
     "datadog.trace.context"
   };
+
   public static final String[] AGENT_PACKAGE_PREFIXES = {
     "datadog.trace.common",
     "datadog.trace.agent",

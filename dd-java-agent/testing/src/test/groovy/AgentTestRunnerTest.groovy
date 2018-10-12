@@ -1,6 +1,11 @@
+import com.google.common.reflect.ClassPath
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.SpockRunner
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.tooling.Utils
+import io.opentracing.Span
 import io.opentracing.Tracer
+import spock.lang.Shared
 
 import java.lang.reflect.Field
 
@@ -8,10 +13,9 @@ class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
   private static final ClassLoader OT_LOADER
   private static final boolean AGENT_INSTALLED_IN_CLINIT
-  // having opentracing class in test field should not cause problems
-  private static final Tracer A_TRACER = null
-  // having dd tracer api class in test field should not cause problems
-  private static final datadog.trace.api.Tracer DD_API_TRACER = null
+
+  @Shared
+  private Class sharedSpanClass
 
   static {
     // when test class initializes, opentracing should be set up, but not the agent.
@@ -19,16 +23,39 @@ class AgentTestRunnerTest extends AgentTestRunner {
     AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null
   }
 
-  def "classpath setup"() {
+  def setupSpec() {
+    sharedSpanClass = Span
+  }
+
+  def "spock runner bootstrap prefixes correct for test setup"() {
     expect:
-    A_TRACER == null
-    DD_API_TRACER  == null
-    OT_LOADER == BOOTSTRAP_CLASSLOADER
+    SpockRunner.BOOTSTRAP_PACKAGE_PREFIXES_COPY == Utils.BOOTSTRAP_PACKAGE_PREFIXES
+  }
+
+  def "classpath setup"() {
+    setup:
+    final List<String> bootstrapClassesIncorrectlyLoaded = []
+    for (ClassPath.ClassInfo info : TestUtils.getTestClasspath().getAllClasses()) {
+      for (int i = 0; i < Utils.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
+        if (info.getName().startsWith(Utils.BOOTSTRAP_PACKAGE_PREFIXES[i])) {
+          Class<?> bootstrapClass = Class.forName(info.getName())
+          if (bootstrapClass.getClassLoader() != BOOTSTRAP_CLASSLOADER) {
+            bootstrapClassesIncorrectlyLoaded.add(bootstrapClass)
+          }
+          break
+        }
+      }
+    }
+
+    expect:
+    // shared OT classes should cause no trouble
+    sharedSpanClass.getClassLoader() == BOOTSTRAP_CLASSLOADER
+    Tracer.getClassLoader() == BOOTSTRAP_CLASSLOADER
     !AGENT_INSTALLED_IN_CLINIT
     getTestTracer() == TestUtils.getUnderlyingGlobalTracer()
     getAgentTransformer() != null
-    datadog.trace.api.Trace.getClassLoader() == BOOTSTRAP_CLASSLOADER
     TestUtils.getUnderlyingGlobalTracer() == datadog.trace.api.GlobalTracer.get()
+    bootstrapClassesIncorrectlyLoaded == []
   }
 
   def "logging works"() {
