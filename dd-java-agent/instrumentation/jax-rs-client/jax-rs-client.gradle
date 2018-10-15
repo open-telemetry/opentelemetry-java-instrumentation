@@ -4,6 +4,13 @@ muzzle {
     module = "javax.ws.rs-api"
     versions = "[2.0,)"
   }
+  pass {
+    // We want to support the dropwizard clients too.
+    group = 'io.dropwizard'
+    module = 'dropwizard-client'
+    versions = "[0.8.0,)"
+    assertInverse = true
+  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"

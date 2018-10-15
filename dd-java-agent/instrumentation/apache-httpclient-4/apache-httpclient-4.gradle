@@ -12,6 +12,13 @@ muzzle {
     versions = "[4.0,)"
     assertInverse = true
   }
+  pass {
+    // We want to support the dropwizard clients too.
+    group = 'io.dropwizard'
+    module = 'dropwizard-client'
+    versions = "(,)"
+    assertInverse = true
+  }
 }
 
 apply plugin: 'org.unbroken-dome.test-sets'
