@@ -3,8 +3,6 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class SlickTest extends AgentTestRunner {
 
   // Can't be @Shared, otherwise the work queue is initialized before the instrumentation is applied
@@ -19,7 +17,7 @@ class SlickTest extends AgentTestRunner {
     expect:
     result == SlickUtils.TestValue()
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "SlickUtils.startQuery"
@@ -68,7 +66,7 @@ class SlickTest extends AgentTestRunner {
     result == SlickUtils.TestValue()
 
     // Expect two traces because two queries have been run
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 2, {
         span(0) {}
         span(1) {}

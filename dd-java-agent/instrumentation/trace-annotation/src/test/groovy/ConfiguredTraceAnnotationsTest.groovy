@@ -6,7 +6,6 @@ import java.util.concurrent.Callable
 
 import static TraceAnnotationsInstrumentation.DEFAULT_ANNOTATIONS
 import static datadog.trace.agent.test.TestUtils.withSystemProperty
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
 
@@ -35,7 +34,7 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     TEST_WRITER.waitForTraces(1)
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           resourceName "AnnotationTracedCallable.call"

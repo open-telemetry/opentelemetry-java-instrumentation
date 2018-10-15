@@ -15,8 +15,6 @@ import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.web.server.ResponseStatusException
 import spock.lang.Unroll
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = SpringWebFluxTestApplication)
 class SpringWebfluxTest extends AgentTestRunner {
 
@@ -40,7 +38,7 @@ class SpringWebfluxTest extends AgentTestRunner {
     then:
     response.code == 200
     response.body().string() == expectedResponseBody
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           resourceNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
@@ -95,7 +93,7 @@ class SpringWebfluxTest extends AgentTestRunner {
     then:
     response.code == 200
     response.body().string() == expectedResponseBody
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           resourceName TestController.getSimpleName() + ".getFooModel"
@@ -146,7 +144,7 @@ class SpringWebfluxTest extends AgentTestRunner {
 
     then:
     response.code == 404
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           resourceName "404"
@@ -195,7 +193,7 @@ class SpringWebfluxTest extends AgentTestRunner {
     then:
     response.code() == 202
     response.body().string() == echoString
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           resourceName EchoHandlerFunction.getSimpleName() + ".handle"
@@ -243,7 +241,7 @@ class SpringWebfluxTest extends AgentTestRunner {
 
     then:
     response.code() == 500
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           resourceName "GET /failfoo/{id}"
@@ -294,7 +292,7 @@ class SpringWebfluxTest extends AgentTestRunner {
 
     then:
     response.code() == 500
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           resourceName "POST /fail-echo"
@@ -346,7 +344,7 @@ class SpringWebfluxTest extends AgentTestRunner {
 
     then:
     response.code == 200
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 2) {
         span(0) {
           resourceName "GET /double-greet-redirect"
@@ -432,7 +430,7 @@ class SpringWebfluxTest extends AgentTestRunner {
     then:
     response.code() == 200
     expectedResponseBodyStr == response.body().string()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           resourceNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
@@ -486,7 +484,7 @@ class SpringWebfluxTest extends AgentTestRunner {
     then:
     response.code() == 200
     expectedResponseBodyStr == response.body().string()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           resourceName TestController.getSimpleName() + ".getXFooModels"

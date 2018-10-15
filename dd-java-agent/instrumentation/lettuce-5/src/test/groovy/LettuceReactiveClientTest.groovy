@@ -13,7 +13,6 @@ import spock.util.concurrent.AsyncConditions
 
 import java.util.function.Consumer
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.AGENT_CRASHING_COMMAND_PREFIX
 
 class LettuceReactiveClientTest extends AgentTestRunner {
@@ -86,7 +85,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -116,7 +115,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -154,7 +153,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -190,7 +189,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
 
     then:
     conds.await()
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -216,7 +215,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     reactiveCommands.command().subscribe()
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -243,7 +242,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     reactiveCommands.command().take(2).subscribe()
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -283,7 +282,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     reactiveCommands.debugSegfault().subscribe()
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -309,7 +308,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
     reactiveCommands.shutdown(false).subscribe()
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"

@@ -8,8 +8,6 @@ import org.springframework.data.couchbase.core.CouchbaseTemplate
 import spock.lang.Shared
 import util.AbstractCouchbaseTest
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
   @Shared
@@ -41,7 +39,7 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     template.findById("1", Doc) == null
 
     and:
-    assertTraces(TEST_WRITER, 4) {
+    assertTraces(4) {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"

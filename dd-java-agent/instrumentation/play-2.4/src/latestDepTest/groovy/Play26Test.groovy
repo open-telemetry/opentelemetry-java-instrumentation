@@ -7,8 +7,6 @@ import play.api.test.TestServer
 import play.test.Helpers
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class Play26Test extends AgentTestRunner {
   static {
     System.setProperty("dd.integration.akka-http-server.enabled", "true")
@@ -45,7 +43,7 @@ class Play26Test extends AgentTestRunner {
     expect:
     response.code() == 200
     response.body().string() == "hello spock"
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         span(0) {
           traceId "123"
@@ -98,7 +96,7 @@ class Play26Test extends AgentTestRunner {
 
     expect:
     response.code() == 500
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"
@@ -149,7 +147,7 @@ class Play26Test extends AgentTestRunner {
     expect:
     testServer != null
     response.code() == 500
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"
@@ -203,7 +201,7 @@ class Play26Test extends AgentTestRunner {
     expect:
     response.code() == 404
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"

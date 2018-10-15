@@ -17,7 +17,6 @@ import java.sql.ResultSet
 import java.sql.Statement
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class JDBCInstrumentationTest extends AgentTestRunner {
 
@@ -150,7 +149,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     expect:
     resultSet.next()
     resultSet.getInt(1) == 3
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "parent"
@@ -211,7 +210,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     expect:
     resultSet.next()
     resultSet.getInt(1) == 3
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "parent"
@@ -267,7 +266,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     expect:
     resultSet.next()
     resultSet.getInt(1) == 3
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "parent"
@@ -323,7 +322,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       return !statement.execute(sql)
     }
     statement.updateCount == 0
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "parent"
@@ -382,7 +381,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     runUnderTrace("parent") {
       return statement.executeUpdate() == 0
     }
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "parent"
@@ -446,7 +445,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
         statement = connection.prepareStatement(query)
         return statement.executeQuery()
       }
-      
+
       statement = connection.createStatement()
       return statement.executeQuery(query)
     }
@@ -454,7 +453,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     then:
     rs.next()
     rs.getInt(1) == 3
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "parent"
@@ -535,7 +534,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     for (int i = 0; i < numQueries; ++i) {
       res[i] == 3
     }
-    assertTraces(TEST_WRITER, 6) {
+    assertTraces(6) {
       trace(0, 1) {
         span(0) {
           operationName "${dbType}.query"

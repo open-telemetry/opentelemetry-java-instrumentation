@@ -1,19 +1,25 @@
 package muzzle
 
-import static datadog.trace.agent.tooling.muzzle.Reference.Flag.*
-import static datadog.trace.agent.tooling.muzzle.Reference.Mismatch.*
-
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.tooling.muzzle.Reference
 import datadog.trace.agent.tooling.muzzle.Reference.Source
 import datadog.trace.agent.tooling.muzzle.ReferenceCreator
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher
-
 import net.bytebuddy.jar.asm.Type
 import spock.lang.Shared
 
-import static muzzle.TestClasses.*
+import static datadog.trace.agent.tooling.muzzle.Reference.Flag.INTERFACE
+import static datadog.trace.agent.tooling.muzzle.Reference.Flag.NON_INTERFACE
+import static datadog.trace.agent.tooling.muzzle.Reference.Flag.NON_STATIC
+import static datadog.trace.agent.tooling.muzzle.Reference.Flag.PRIVATE_OR_HIGHER
+import static datadog.trace.agent.tooling.muzzle.Reference.Flag.PROTECTED_OR_HIGHER
+import static datadog.trace.agent.tooling.muzzle.Reference.Flag.STATIC
+import static datadog.trace.agent.tooling.muzzle.Reference.Mismatch.MissingClass
+import static datadog.trace.agent.tooling.muzzle.Reference.Mismatch.MissingField
+import static datadog.trace.agent.tooling.muzzle.Reference.Mismatch.MissingFlag
+import static datadog.trace.agent.tooling.muzzle.Reference.Mismatch.MissingMethod
+import static muzzle.TestClasses.MethodBodyAdvice
 
 class ReferenceMatcherTest extends AgentTestRunner {
 
@@ -45,7 +51,7 @@ class ReferenceMatcherTest extends AgentTestRunner {
     MuzzleWeakReferenceTest.classLoaderRefIsGarbageCollected()
   }
 
-  private static class CountingClassLoader extends URLClassLoader{
+  private static class CountingClassLoader extends URLClassLoader {
     int count = 0
 
     CountingClassLoader(URL[] urls, ClassLoader parent) {

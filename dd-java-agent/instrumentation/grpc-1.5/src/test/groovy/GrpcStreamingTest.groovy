@@ -15,8 +15,6 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class GrpcStreamingTest extends AgentTestRunner {
   static {
     System.setProperty("dd.integration.grpc.enabled", "true")
@@ -87,7 +85,7 @@ class GrpcStreamingTest extends AgentTestRunner {
     then:
     error.get() == null
 
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, clientMessageCount + 1) {
         span(0) {
           serviceName "unnamed-java-app"

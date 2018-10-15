@@ -13,8 +13,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.util.NestedServletException
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class SpringBootBasedTest extends AgentTestRunner {
 
@@ -30,7 +28,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     restTemplate.getForObject("http://localhost:$port/", String) == "Hello World"
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "servlet.request"
@@ -58,7 +56,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     expect:
     restTemplate.getForObject("http://localhost:$port/param/asdf1234/", String) == "Hello asdf1234"
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "servlet.request"
@@ -90,7 +88,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     response.get("status") == 404
     response.get("error") == "Not Found"
 
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 2) {
         span(0) {
           operationName "servlet.request"
@@ -144,7 +142,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     response.get("exception") == "java.lang.RuntimeException"
     response.get("message") == "qwerty"
 
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 2) {
         span(0) {
           operationName "servlet.request"
@@ -194,7 +192,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     expect:
     restTemplate.postForObject("http://localhost:$port/validated", new TestForm("bob", 20), String) == "Hello bob Person(Name: bob, Age: 20)"
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "servlet.request"
@@ -228,7 +226,7 @@ class SpringBootBasedTest extends AgentTestRunner {
     response.get("exception") == "org.springframework.web.bind.MethodArgumentNotValidException"
     response.get("message") == "Validation failed for object='testForm'. Error count: 1"
 
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 2) {
         span(0) {
           operationName "servlet.request"

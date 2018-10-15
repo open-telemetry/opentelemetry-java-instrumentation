@@ -4,7 +4,6 @@ import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class OkHttp3Test extends AgentTestRunner {
@@ -27,7 +26,7 @@ class OkHttp3Test extends AgentTestRunner {
 
     expect:
     response.body.string() == "pong"
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "okhttp.http"

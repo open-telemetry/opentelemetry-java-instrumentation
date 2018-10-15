@@ -7,7 +7,6 @@ import java.util.concurrent.LinkedBlockingQueue
 
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 class HystrixTest extends AgentTestRunner {
   // Uncomment for debugging:
@@ -36,7 +35,7 @@ class HystrixTest extends AgentTestRunner {
     TRANSFORMED_CLASSES.contains("HystrixTest\$1")
     result == "Hello!"
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         span(0) {
           serviceName "unnamed-java-app"
@@ -108,7 +107,7 @@ class HystrixTest extends AgentTestRunner {
     TRANSFORMED_CLASSES.contains("HystrixTest\$2")
     result == "Fallback!"
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         span(0) {
           serviceName "unnamed-java-app"

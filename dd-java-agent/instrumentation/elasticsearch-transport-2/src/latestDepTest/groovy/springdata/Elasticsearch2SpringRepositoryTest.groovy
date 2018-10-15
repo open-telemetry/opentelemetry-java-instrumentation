@@ -10,7 +10,6 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 
 @RetryOnFailure
 class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
@@ -37,7 +36,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     !result.iterator().hasNext()
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"
@@ -71,7 +70,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     repo.index(doc) == doc
 
     and:
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 1) {
         span(0) {
           resourceName "IndexAction"
@@ -115,7 +114,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     repo.findOne("1") == doc
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"
@@ -147,7 +146,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     repo.findOne("1") == doc
 
     and:
-    assertTraces(TEST_WRITER, 3) {
+    assertTraces(3) {
       trace(0, 1) {
         span(0) {
           resourceName "IndexAction"
@@ -214,7 +213,7 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     !repo.findAll().iterator().hasNext()
 
     and:
-    assertTraces(TEST_WRITER, 3) {
+    assertTraces(3) {
       trace(0, 1) {
         span(0) {
           resourceName "DeleteAction"

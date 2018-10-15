@@ -18,7 +18,6 @@ import spock.lang.Shared
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.ExecutionException
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
@@ -70,7 +69,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
       message == expectedMessage
     }
 
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       server.distributedRequestTrace(it, 0, TEST_WRITER[1][0])
       trace(1, 1) {
         span(0) {
@@ -116,7 +115,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
     then:
     thrown ExecutionException
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           parent()
@@ -147,7 +146,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
     then:
     thrown NullPointerException
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           parent()
@@ -189,7 +188,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
       message == expectedMessage
     }
 
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       server.distributedRequestTrace(it, 0, TEST_WRITER[1][0])
       trace(1, 1) {
         span(0) {
@@ -236,7 +235,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
     then:
     thrown StreamTcpException
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           parent()

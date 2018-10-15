@@ -13,7 +13,6 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
@@ -45,7 +44,7 @@ class Netty41ClientTest extends AgentTestRunner {
     response.responseBody == "Hello World"
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           serviceName "unnamed-java-app"
@@ -94,7 +93,7 @@ class Netty41ClientTest extends AgentTestRunner {
     throwable.cause instanceof ConnectException
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "parent"

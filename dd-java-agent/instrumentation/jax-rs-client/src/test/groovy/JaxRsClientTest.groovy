@@ -18,7 +18,6 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import java.util.concurrent.ExecutionException
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class JaxRsClientTest extends AgentTestRunner {
@@ -52,7 +51,7 @@ class JaxRsClientTest extends AgentTestRunner {
     expect:
     response.readEntity(String) == "pong"
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"
@@ -103,7 +102,7 @@ class JaxRsClientTest extends AgentTestRunner {
     then:
     thrown async ? ExecutionException : ProcessingException
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "unnamed-java-app"

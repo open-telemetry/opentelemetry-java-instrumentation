@@ -8,7 +8,6 @@ import spock.lang.AutoCleanup
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class HttpUrlConnectionTest extends AgentTestRunner {
@@ -56,7 +55,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     }
 
     expect:
-    assertTraces(TEST_WRITER, 3) {
+    assertTraces(3) {
       server.distributedRequestTrace(it, 0, TEST_WRITER[2][2])
       server.distributedRequestTrace(it, 1, TEST_WRITER[2][1])
       trace(2, 3) {
@@ -134,7 +133,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     }
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 3) {
         span(0) {
           operationName "someTrace"
@@ -194,7 +193,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     }
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "someTrace"
@@ -236,7 +235,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     }
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "someTrace"
@@ -296,7 +295,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     }
 
     expect:
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       server.distributedRequestTrace(it, 0, TEST_WRITER[1][1])
       trace(1, 3) {
         span(0) {
@@ -356,7 +355,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     }
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           operationName "someTrace"
@@ -381,7 +380,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     assert lines == [RESPONSE]
 
     expect:
-    assertTraces(TEST_WRITER, 0) {}
+    assertTraces(0) {}
   }
 
   def "rest template"() {
@@ -393,7 +392,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
     }
 
     expect:
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       server.distributedRequestTrace(it, 0, TEST_WRITER[1][2])
       trace(1, 4) {
         span(0) {

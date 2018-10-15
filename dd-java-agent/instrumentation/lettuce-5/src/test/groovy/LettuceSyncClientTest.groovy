@@ -12,7 +12,6 @@ import spock.lang.Shared
 
 import java.util.concurrent.CompletionException
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.AGENT_CRASHING_COMMAND_PREFIX
 
 class LettuceSyncClientTest extends AgentTestRunner {
@@ -93,7 +92,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     StatefulConnection connection = testConnectionClient.connect()
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -131,7 +130,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
     then:
     thrown RedisConnectionException
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -163,7 +162,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
     expect:
     res == "OK"
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -190,7 +189,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
     expect:
     res == "TESTVAL"
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -217,7 +216,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
     expect:
     res == null
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -244,7 +243,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
     expect:
     keyRetrieved != null
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -271,7 +270,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
     expect:
     res == 1
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -298,7 +297,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
     expect:
     res == "OK"
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -325,7 +324,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
 
     expect:
     res == testHashMap
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -351,7 +350,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     syncCommands.debugSegfault()
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"
@@ -377,7 +376,7 @@ class LettuceSyncClientTest extends AgentTestRunner {
     syncCommands.shutdown(false)
 
     expect:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "redis"

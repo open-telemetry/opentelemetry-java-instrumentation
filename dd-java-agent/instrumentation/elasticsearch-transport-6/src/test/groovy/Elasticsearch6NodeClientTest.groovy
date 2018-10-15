@@ -14,7 +14,6 @@ import org.elasticsearch.transport.Netty4Plugin
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 @RetryOnFailure
@@ -75,7 +74,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
     expect:
     status.name() == "GREEN"
 
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"
@@ -103,7 +102,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
     thrown IndexNotFoundException
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"
@@ -176,7 +175,7 @@ class Elasticsearch6NodeClientTest extends AgentTestRunner {
       TEST_WRITER[2] = TEST_WRITER[3]
       TEST_WRITER[3] = tmp
     }
-    assertTraces(TEST_WRITER, 5) {
+    assertTraces(5) {
       trace(0, 1) {
         span(0) {
           serviceName "elasticsearch"

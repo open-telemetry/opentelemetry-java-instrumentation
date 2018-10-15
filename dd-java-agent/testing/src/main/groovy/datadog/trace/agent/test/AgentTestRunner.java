@@ -5,11 +5,14 @@ import ch.qos.logback.classic.Logger;
 import com.google.common.collect.Sets;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
+import datadog.trace.agent.test.asserts.ListWriterAssert;
 import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.GlobalTracer;
 import datadog.trace.common.writer.ListWriter;
 import datadog.trace.common.writer.Writer;
+import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -124,7 +127,8 @@ public abstract class AgentTestRunner extends Specification {
     final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
     try {
       Thread.currentThread().setContextClassLoader(AgentTestRunner.class.getClassLoader());
-      assert ServiceLoader.load(Instrumenter.class).iterator().hasNext();
+      assert ServiceLoader.load(Instrumenter.class).iterator().hasNext()
+          : "No instrumentation found";
       activeTransformer = AgentInstaller.installBytebuddyAgent(instrumentation, ERROR_LISTENER);
     } finally {
       Thread.currentThread().setContextClassLoader(contextLoader);
@@ -152,6 +156,13 @@ public abstract class AgentTestRunner extends Specification {
       instrumentation.removeTransformer(activeTransformer);
       activeTransformer = null;
     }
+  }
+
+  public static void assertTraces(
+      final int size,
+      @DelegatesTo(value = ListWriterAssert.class, strategy = Closure.DELEGATE_FIRST)
+          final Closure spec) {
+    ListWriterAssert.assertTraces(TEST_WRITER, size, spec);
   }
 
   public static class ErrorCountingListener implements AgentBuilder.Listener {

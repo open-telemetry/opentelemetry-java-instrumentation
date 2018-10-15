@@ -6,8 +6,6 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import util.AbstractCouchbaseTest
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class CouchbaseClientTest extends AbstractCouchbaseTest {
 
   def "test client #type"() {
@@ -15,7 +13,7 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     manager.hasBucket(bucketSettings.name())
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
@@ -41,7 +39,7 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     def inserted = bkt.upsert(JsonDocument.create("helloworld", content))
 
     then:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
@@ -67,7 +65,7 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     found.content().getString("hello") == "world"
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
@@ -109,7 +107,7 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     result.first().value().get("row") == "value"
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"

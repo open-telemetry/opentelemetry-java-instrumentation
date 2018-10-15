@@ -10,8 +10,6 @@ import org.springframework.data.repository.CrudRepository
 import spock.lang.Shared
 import util.AbstractCouchbaseTest
 
-import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
-
 class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
   private static final Closure<Doc> FIND
   static {
@@ -75,7 +73,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     !result.iterator().hasNext()
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
@@ -104,7 +102,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     repo.save(doc) == doc
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
@@ -126,7 +124,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     FIND(repo, "1") == doc
 
     and:
-    assertTraces(TEST_WRITER, 1) {
+    assertTraces(1) {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
@@ -151,7 +149,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     repo.save(doc) == doc
     repo.findAll().asList() == [doc]
 
-    assertTraces(TEST_WRITER, 3) {
+    assertTraces(3) {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
@@ -204,7 +202,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     !repo.findAll().iterator().hasNext()
 
     and:
-    assertTraces(TEST_WRITER, 2) {
+    assertTraces(2) {
       trace(0, 1) {
         span(0) {
           serviceName "couchbase"
