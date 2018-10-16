@@ -27,9 +27,11 @@ import io.netty.util.CharsetUtil
 import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import spock.lang.Shared
 
 class Netty41ServerTest extends AgentTestRunner {
 
+  @Shared
   OkHttpClient client = OkHttpUtils.client()
 
   def "test server request/response"() {
@@ -38,7 +40,12 @@ class Netty41ServerTest extends AgentTestRunner {
     int port = TestUtils.randomOpenPort()
     initializeServer(eventLoopGroup, port, handlers, HttpResponseStatus.OK)
 
-    def request = new Request.Builder().url("http://localhost:$port/").get().build()
+    def request = new Request.Builder()
+      .url("http://localhost:$port/")
+      .header("x-datadog-trace-id", "123")
+      .header("x-datadog-parent-id", "456")
+      .get()
+      .build()
     def response = client.newCall(request).execute()
 
     expect:
@@ -49,6 +56,8 @@ class Netty41ServerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
+          traceId "123"
+          parentId "456"
           serviceName "unnamed-java-app"
           operationName "netty.request"
           resourceName "GET /"
