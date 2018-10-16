@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -419,7 +420,7 @@ public class DDSpan implements Span, MutableSpan {
     public void serialize(
         final String value, final JsonGenerator gen, final SerializerProvider provider)
         throws IOException {
-      gen.writeNumber(value);
+      gen.writeNumber(new BigInteger(value));
     }
   }
 }
