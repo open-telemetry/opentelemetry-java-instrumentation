@@ -182,7 +182,7 @@ jobs:
 
     - run:
         name: Verify Version Scan and Muzzle
-        command: ./gradlew verifyVersionScan muzzle --parallel --stacktrace --no-daemon --max-workers=6
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4G -Xms64M" ./gradlew verifyVersionScan muzzle --parallel --stacktrace --no-daemon --max-workers=2
 
     - save_cache:
         key: dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
