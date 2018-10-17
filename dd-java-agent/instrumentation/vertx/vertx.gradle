@@ -1,0 +1,49 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+muzzle {
+  pass {
+    group = "io.vertx"
+    module = "vertx-web"
+    versions = "[4.1.0.Final,)"
+    assertInverse = true
+  }
+  pass {
+    group = "io.netty"
+    module = "netty"
+    versions = "[4.1.0.Final,)"
+    assertInverse = true
+  }
+}
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+  compileOnly group: 'io.vertx', name: 'vertx-web', version: '3.5.0'
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  testCompile project(':dd-java-agent:instrumentation:trace-annotation')
+  testCompile project(':dd-java-agent:instrumentation:netty-4.1')
+  testCompile group: 'io.vertx', name: 'vertx-web', version: '3.5.0'
+}

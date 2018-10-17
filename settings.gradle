@@ -56,6 +56,7 @@ include ':dd-java-agent:instrumentation:spring-web'
 include ':dd-java-agent:instrumentation:spring-webflux'
 include ':dd-java-agent:instrumentation:spymemcached-2.12'
 include ':dd-java-agent:instrumentation:trace-annotation'
+include ':dd-java-agent:instrumentation:vertx'
 
 // benchmark
 include ':dd-java-agent:benchmark'
