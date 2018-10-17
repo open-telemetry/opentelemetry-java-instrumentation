@@ -18,9 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.implementation.auxiliary.MethodCallProxy;
-import net.bytebuddy.implementation.bytecode.StackManipulation;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
 
@@ -54,8 +51,7 @@ public interface Instrumenter {
   @Slf4j
   abstract class Default implements Instrumenter {
     private final Set<String> instrumentationNames;
-    // FIXME: make field private again
-    public final String instrumentationPrimaryName;
+    private final String instrumentationPrimaryName;
     // TODO: create a generic instrumentaton pipeline attacher?
     private final InstrumentationContextProvider contextProvider;
     protected final boolean enabled;
@@ -105,6 +101,21 @@ public interface Instrumenter {
               .and(new MuzzleMatcher())
               .transform(DDTransformers.defaultTransformers());
       agentBuilder = injectHelperClasses(agentBuilder);
+      if (contextStore().size() > 0) {
+        agentBuilder =
+            agentBuilder.transform(
+                new AgentBuilder.Transformer() {
+                  @Override
+                  public DynamicType.Builder<?> transform(
+                      DynamicType.Builder<?> builder,
+                      TypeDescription typeDescription,
+                      ClassLoader classLoader,
+                      JavaModule module) {
+                    return builder.visit(contextProvider.getInstrumentationVisitor());
+                  }
+                });
+        agentBuilder = agentBuilder.transform(new HelperInjector(contextProvider.dynamicClasses()));
+      }
       agentBuilder = applyInstrumentationTransformers(agentBuilder);
       return agentBuilder;
     }
@@ -126,14 +137,7 @@ public interface Instrumenter {
                 new AgentBuilder.Transformer.ForAdvice()
                     .include(Utils.getAgentClassLoader())
                     .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
-                    .advice(entry.getKey(), entry.getValue()))
-        .transform(new AgentBuilder.Transformer() {
-          @Override
-          public DynamicType.Builder<?> transform(DynamicType.Builder<?> builder, TypeDescription typeDescription, ClassLoader classLoader, JavaModule module) {
-            return builder.visit(contextProvider.getInstrumentationVisitor());
-          }
-        })
-        ;
+                    .advice(entry.getKey(), entry.getValue()));
       }
       return agentBuilder;
     }
@@ -205,7 +209,8 @@ public interface Instrumenter {
     public abstract Map<? extends ElementMatcher, String> transformers();
 
     /**
-     * A map of {class-name -> context-class-name}. Keys (and their subclasses) will be associated with a context of the value.
+     * A map of {class-name -> context-class-name}. Keys (and their subclasses) will be associated
+     * with a context of the value.
      */
     public Map<String, String> contextStore() {
       return Collections.EMPTY_MAP;

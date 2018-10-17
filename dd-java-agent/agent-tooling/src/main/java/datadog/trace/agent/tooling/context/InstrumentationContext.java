@@ -1,12 +1,10 @@
 package datadog.trace.agent.tooling.context;
 
-/**
- * Instrumentation Context API
- */
+/** Instrumentation Context API */
 public class InstrumentationContext {
   private InstrumentationContext() {}
 
-  public static <T> T get(Object contextInstance, Class<T> contextClass) {
+  public static <K, V> V get(Object userInstance, Class<K> userClass, Class<V> contextClass) {
     throw new RuntimeException("calls to this method should be rewritten");
   }
 }

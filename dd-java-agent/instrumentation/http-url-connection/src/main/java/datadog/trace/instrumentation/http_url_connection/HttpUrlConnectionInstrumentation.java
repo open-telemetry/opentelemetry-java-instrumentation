@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.http_url_connection;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -14,7 +13,6 @@ import datadog.trace.agent.tooling.context.InstrumentationContext;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import datadog.trace.bootstrap.WeakMap;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -54,7 +52,8 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   }
 
   public Map<String, String> contextStore() {
-    return Collections.singletonMap("java.net.HttpURLConnection", getClass().getName() + "$HttpURLState");
+    return Collections.singletonMap(
+        "java.net.HttpURLConnection", getClass().getName() + "$HttpURLState");
   }
 
   @Override
@@ -74,7 +73,8 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("connected") final boolean connected,
         @Advice.Origin("#m") final String methodName) {
 
-      final HttpURLState state = InstrumentationContext.get(thiz, HttpURLState.class);
+      final HttpURLState state =
+          InstrumentationContext.get(thiz, HttpURLConnection.class, HttpURLState.class);
 
       String operationName = "http.request";
 
