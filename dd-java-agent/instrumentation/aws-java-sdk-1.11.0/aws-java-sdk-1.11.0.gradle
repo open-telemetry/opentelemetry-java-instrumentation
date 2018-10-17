@@ -2,6 +2,9 @@
 // depending on the version's implementation. (i.e. DeleteOptionGroup may have less handlerCounts than
 // expected in 1.11.84. Testing against 1.11.0 instead of 1.10.33 because the RequestHandler class
 // used in testing is abstract in 1.10.33
+// keeping base test version on 1.11.0 because RequestHandler2 is abstract in 1.10.33,
+// therefore keeping base version as 1.11.0 even though the instrumentation probably
+// is able to support up to 1.10.33
 muzzle {
   pass {
     group = "com.amazonaws"
