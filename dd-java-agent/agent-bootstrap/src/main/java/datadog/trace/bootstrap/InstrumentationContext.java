@@ -1,4 +1,4 @@
-package datadog.trace.agent.tooling.context;
+package datadog.trace.bootstrap;
 
 /** Instrumentation Context API */
 public class InstrumentationContext {

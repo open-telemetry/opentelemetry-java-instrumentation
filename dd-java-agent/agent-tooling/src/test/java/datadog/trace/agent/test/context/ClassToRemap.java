@@ -1,6 +1,6 @@
 package datadog.trace.agent.test.context;
 
-import datadog.trace.agent.tooling.context.InstrumentationContext;
+import datadog.trace.bootstrap.InstrumentationContext;
 
 /** A class which correctly uses the context api. */
 public class ClassToRemap {

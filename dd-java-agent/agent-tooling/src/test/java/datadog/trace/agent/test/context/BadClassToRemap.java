@@ -1,6 +1,6 @@
 package datadog.trace.agent.test.context;
 
-import datadog.trace.agent.tooling.context.InstrumentationContext;
+import datadog.trace.bootstrap.InstrumentationContext;
 import java.util.concurrent.Callable;
 
 /** A class which incorrectly uses the context api. */

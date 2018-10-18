@@ -2,6 +2,7 @@ package datadog.trace.agent.tooling.context;
 
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.agent.tooling.Utils;
+import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.bootstrap.WeakMap;
 import java.lang.reflect.Method;
 import java.util.HashMap;
