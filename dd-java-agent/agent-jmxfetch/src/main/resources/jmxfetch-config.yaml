@@ -1,0 +1,7 @@
+init_config:
+  is_jmx: true
+
+instances:
+- jmx_url: service:jmx:local:///
+  conf:
+    # Intentionally left empty for now

@@ -31,7 +31,9 @@ import java.util.jar.JarFile;
 
 /** Entry point for initializing the agent. */
 public class TracingAgent {
+  private static boolean inited = false;
   private static ClassLoader AGENT_CLASSLOADER = null;
+  private static ClassLoader JMXFETCH_CLASSLOADER = null;
 
   public static void premain(final String agentArgs, final Instrumentation inst) throws Exception {
     startAgent(agentArgs, inst);
@@ -44,12 +46,15 @@ public class TracingAgent {
 
   private static synchronized void startAgent(final String agentArgs, final Instrumentation inst)
       throws Exception {
-    if (null == AGENT_CLASSLOADER) {
+    if (!inited) {
       final File toolingJar =
           extractToTmpFile(
               TracingAgent.class.getClassLoader(),
               "agent-tooling-and-instrumentation.jar.zip",
               "agent-tooling-and-instrumentation.jar");
+      final File jmxFetchJar =
+          extractToTmpFile(
+              TracingAgent.class.getClassLoader(), "agent-jmxfetch.jar.zip", "agent-jmxfetch.jar");
       final File bootstrapJar =
           extractToTmpFile(
               TracingAgent.class.getClassLoader(),
@@ -59,6 +64,7 @@ public class TracingAgent {
       // bootstrap jar must be appended before agent classloader is created.
       inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
       final ClassLoader agentClassLoader = createDatadogClassLoader(bootstrapJar, toolingJar);
+      final ClassLoader jmxFetchClassLoader = createDatadogClassLoader(bootstrapJar, jmxFetchJar);
 
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
@@ -81,10 +87,22 @@ public class TracingAgent {
           logVersionInfoMethod.invoke(null);
         }
 
+        Thread.currentThread().setContextClassLoader(jmxFetchClassLoader);
+        { // install jmxfetch tracer
+          // We would like jmxfetch to be loaded after APM agent to avoid needing to retransform
+          // classes
+          final Class<?> jmxFetchAgentClass =
+              jmxFetchClassLoader.loadClass("datadog.trace.agent.jmxfetch.JMXFetch");
+          final Method jmxFetchInstallerMethod = jmxFetchAgentClass.getMethod("run");
+          jmxFetchInstallerMethod.invoke(null);
+        }
+
         AGENT_CLASSLOADER = agentClassLoader;
+        JMXFETCH_CLASSLOADER = jmxFetchClassLoader;
       } finally {
         Thread.currentThread().setContextClassLoader(contextLoader);
       }
+      inited = true;
     }
   }
 
