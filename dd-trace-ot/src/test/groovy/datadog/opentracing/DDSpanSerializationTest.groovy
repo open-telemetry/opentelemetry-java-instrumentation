@@ -5,6 +5,10 @@ import com.google.common.collect.Maps
 import datadog.trace.api.DDTags
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
+import org.msgpack.core.MessagePack
+import org.msgpack.core.buffer.ArrayBufferInput
+import org.msgpack.jackson.dataformat.MessagePackFactory
+import org.msgpack.value.ValueType
 import spock.lang.Specification
 
 class DDSpanSerializationTest extends Specification {
@@ -71,5 +75,52 @@ class DDSpanSerializationTest extends Specification {
     samplingPriority              | _
     PrioritySampling.SAMPLER_KEEP | _
     PrioritySampling.UNSET        | _
+  }
+
+  def "serialize trace/span with id #value as int"() {
+    setup:
+    def objectMapper = new ObjectMapper(new MessagePackFactory())
+    def writer = new ListWriter()
+    def tracer = new DDTracer(writer)
+    def context = new DDSpanContext(
+      value.toString(),
+      value.toString(),
+      "0",
+      "fakeService",
+      "fakeOperation",
+      "fakeResource",
+      PrioritySampling.UNSET,
+      Collections.emptyMap(),
+      false,
+      "fakeType",
+      Collections.emptyMap(),
+      new PendingTrace(tracer, "1", [:]),
+      tracer)
+    def span = new DDSpan(0, context)
+    byte[] bytes = objectMapper.writeValueAsBytes(span)
+    def unpacker = MessagePack.newDefaultUnpacker(new ArrayBufferInput(bytes))
+    int size = unpacker.unpackMapHeader()
+
+    expect:
+    for (int i = 0; i < size; i++) {
+      String key = unpacker.unpackString()
+
+      switch (key) {
+        case "trace_id":
+        case "span_id":
+          assert unpacker.nextFormat.valueType == ValueType.INTEGER
+          assert unpacker.unpackBigInteger() == value
+          break
+        default:
+          unpacker.unpackValue()
+      }
+    }
+
+    where:
+    value | _
+    BigInteger.ZERO | _
+    BigInteger.ONE | _
+    BigInteger.valueOf(Long.MAX_VALUE).subtract(BigInteger.ONE) | _
+    BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE) | _
   }
 }
