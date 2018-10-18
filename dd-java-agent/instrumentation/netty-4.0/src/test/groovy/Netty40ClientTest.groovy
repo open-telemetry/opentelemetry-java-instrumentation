@@ -27,7 +27,7 @@ class Netty40ClientTest extends AgentTestRunner {
     }
   }
   @Shared
-  def clientConfig = DefaultAsyncHttpClientConfig.Builder.newInstance().setRequestTimeout(TimeUnit.SECONDS.toMillis(5).toInteger())
+  def clientConfig = DefaultAsyncHttpClientConfig.Builder.newInstance().setRequestTimeout(TimeUnit.SECONDS.toMillis(10).toInteger())
   @Shared
   AsyncHttpClient asyncHttpClient = asyncHttpClient(clientConfig)
 
