@@ -11,7 +11,7 @@ import spock.lang.Shared
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
 
-@RetryOnFailure
+@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
   @Shared
   ApplicationContext applicationContext = new AnnotationConfigApplicationContext(Config)

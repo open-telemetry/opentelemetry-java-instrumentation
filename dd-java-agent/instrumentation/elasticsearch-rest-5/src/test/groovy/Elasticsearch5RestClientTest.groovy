@@ -21,7 +21,7 @@ import spock.lang.Shared
 
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-@RetryOnFailure
+@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch5RestClientTest extends AgentTestRunner {
   @Shared
   int httpPort

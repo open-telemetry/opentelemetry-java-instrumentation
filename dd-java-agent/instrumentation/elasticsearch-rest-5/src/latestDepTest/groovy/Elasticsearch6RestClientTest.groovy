@@ -18,7 +18,7 @@ import org.elasticsearch.node.Node
 import org.elasticsearch.transport.Netty4Plugin
 import spock.lang.Shared
 
-@RetryOnFailure
+@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch6RestClientTest extends AgentTestRunner {
   @Shared
   int httpPort
