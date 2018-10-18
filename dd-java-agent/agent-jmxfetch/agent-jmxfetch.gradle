@@ -3,12 +3,6 @@ plugins {
 }
 apply from: "${rootDir}/gradle/java.gradle"
 
-repositories {
-  maven {
-    url "https://dl.bintray.com/datadog/datadog-maven"
-  }
-}
-
 dependencies {
   compile 'com.heliosapm.jmxlocal:jmxlocal:1.0'
   compile 'com.datadoghq:jmxfetch:0.21.0'
