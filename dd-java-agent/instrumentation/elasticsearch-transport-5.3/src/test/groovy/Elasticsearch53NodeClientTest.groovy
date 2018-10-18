@@ -17,7 +17,7 @@ import spock.lang.Shared
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-@RetryOnFailure
+@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch53NodeClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 

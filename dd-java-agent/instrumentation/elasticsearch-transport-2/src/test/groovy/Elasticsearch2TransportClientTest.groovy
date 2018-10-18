@@ -17,7 +17,7 @@ import spock.lang.Shared
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
 
-@RetryOnFailure
+@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch2TransportClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 

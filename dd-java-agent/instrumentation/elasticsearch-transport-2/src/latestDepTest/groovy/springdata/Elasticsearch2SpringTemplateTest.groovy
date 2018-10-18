@@ -23,7 +23,7 @@ import spock.lang.Shared
 
 import java.util.concurrent.atomic.AtomicLong
 
-@RetryOnFailure
+@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
@@ -68,7 +68,6 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
     }
   }
 
-  @RetryOnFailure
   def "test elasticsearch error"() {
     when:
     template.refresh(indexName)

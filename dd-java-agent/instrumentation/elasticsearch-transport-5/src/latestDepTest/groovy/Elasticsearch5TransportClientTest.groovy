@@ -21,7 +21,7 @@ import spock.lang.Shared
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-@RetryOnFailure
+@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch5TransportClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
@@ -80,7 +80,6 @@ class Elasticsearch5TransportClientTest extends AgentTestRunner {
     }
   }
 
-  @RetryOnFailure
   def "test elasticsearch status"() {
     setup:
     def result = client.admin().cluster().health(new ClusterHealthRequest())

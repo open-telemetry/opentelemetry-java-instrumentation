@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicLong
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
-@RetryOnFailure
+@RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
 
@@ -82,7 +82,6 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     }
   }
 
-  @RetryOnFailure
   def "test elasticsearch error"() {
     when:
     template.refresh(indexName)
