@@ -70,6 +70,9 @@ class TagsAssert {
   void assertTagsAllVerified() {
     def set = new TreeMap<>(tags).keySet()
     set.removeAll(assertedTags)
+    // The primary goal is to ensure the set is empty.
+    // tags and assertedTags are included via an "always true" comparison
+    // so they provide better context in the error message.
     assert tags.entrySet() != assertedTags && set.isEmpty()
   }
 }

@@ -17,7 +17,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Command;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
@@ -135,12 +134,6 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         CallDepthThreadLocalMap.reset(Channel.class);
       }
     }
-
-    // Added to ensure consistent muzzle validation for all instrumentation.
-    public static void muzzleCheck(final Command cmd) {
-      com.rabbitmq.client.Method.class.getName();
-      cmd.getMethod();
-    }
   }
 
   public static class ChannelPublishAdvice {
@@ -153,7 +146,8 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       final Span span = GlobalTracer.get().activeSpan();
 
       if (span != null) {
-        span.setTag(DDTags.RESOURCE_NAME, "basic.publish " + exchange);
+        final String exchangeName = exchange == null || exchange.isEmpty() ? "<default>" : exchange;
+        span.setTag(DDTags.RESOURCE_NAME, "basic.publish " + exchangeName);
         span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_PRODUCER);
         span.setTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_PRODUCER);
         span.setTag("amqp.exchange", exchange);
@@ -278,7 +272,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final String queue,
         @Advice.Argument(value = 6, readOnly = false) Consumer consumer) {
       // We have to save off the queue name here because it isn't available to the consumer later.
-      if (consumer != null) {
+      if (consumer != null && !(consumer instanceof TracedDelegatingConsumer)) {
         consumer = new TracedDelegatingConsumer(queue, consumer);
       }
     }

@@ -26,7 +26,7 @@ import spock.lang.Shared
 import java.util.concurrent.Phaser
 
 // Do not run tests locally on Java7 since testcontainers are not compatible with Java7
-// It is fine to run on CI because CI provides memcached externally, not through testcontainers
+// It is fine to run on CI because CI provides rabbitmq externally, not through testcontainers
 @Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
 class RabbitMQTest extends AgentTestRunner {
 
@@ -48,7 +48,7 @@ class RabbitMQTest extends AgentTestRunner {
   def setupSpec() {
 
     /*
-      CI will provide us with memcached container running along side our build.
+      CI will provide us with rabbitmq container running along side our build.
       When building locally, however, we need to take matters into our own hands
       and we use 'testcontainers' for this.
      */
@@ -121,7 +121,9 @@ class RabbitMQTest extends AgentTestRunner {
   def "test rabbit consume #messageCount messages"() {
     setup:
     channel.exchangeDeclare(exchangeName, "direct", false)
-    String queueName = channel.queueDeclare("some-queue", false, true, true, null).getQueue()
+    String queueName = (messageCount % 2 == 0) ?
+      channel.queueDeclare().getQueue() :
+      channel.queueDeclare("some-queue", false, true, true, null).getQueue()
     channel.queueBind(queueName, exchangeName, "")
 
     def phaser = new Phaser()
@@ -145,6 +147,7 @@ class RabbitMQTest extends AgentTestRunner {
       TEST_WRITER.waitForTraces(3 + (it * 2))
       phaser.arriveAndAwaitAdvance()
     }
+    def resource = messageCount % 2 == 0 ? "basic.deliver <generated>" : "basic.deliver $queueName"
 
     expect:
     assertTraces(4 + (messageCount * 2)) {
@@ -167,7 +170,7 @@ class RabbitMQTest extends AgentTestRunner {
           rabbitSpan(it, "basic.publish")
         }
         trace(3 + (it * 2), 1) {
-          rabbitSpan(it, "basic.deliver some-queue", publishSpan)
+          rabbitSpan(it, resource, publishSpan)
         }
       }
     }
@@ -176,7 +179,7 @@ class RabbitMQTest extends AgentTestRunner {
 
     where:
     exchangeName = "some-exchange"
-    messageCount << (1..3)
+    messageCount << (1..4)
   }
 
   def "test rabbit error (#command)"() {

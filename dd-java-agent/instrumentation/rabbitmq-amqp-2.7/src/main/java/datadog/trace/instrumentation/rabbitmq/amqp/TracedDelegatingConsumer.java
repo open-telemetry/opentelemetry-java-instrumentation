@@ -24,11 +24,11 @@ import java.util.Map;
  * queue name when the message is consumed.
  */
 public class TracedDelegatingConsumer implements Consumer {
-  private final String queueName;
+  private final String queue;
   private final Consumer delegate;
 
-  public TracedDelegatingConsumer(final String queueName, final Consumer delegate) {
-    this.queueName = queueName;
+  public TracedDelegatingConsumer(final String queue, final Consumer delegate) {
+    this.queue = queue;
     this.delegate = delegate;
   }
 
@@ -53,8 +53,8 @@ public class TracedDelegatingConsumer implements Consumer {
   }
 
   @Override
-  public void handleRecoverOk() {
-    delegate.handleRecoverOk();
+  public void handleRecoverOk(String consumerTag) {
+    delegate.handleRecoverOk(consumerTag);
   }
 
   @Override
@@ -73,15 +73,19 @@ public class TracedDelegatingConsumer implements Consumer {
               : GlobalTracer.get()
                   .extract(Format.Builtin.TEXT_MAP, new TextMapExtractAdapter(headers));
 
-      final String resourceName =
-          queueName == null ? "basic.deliver null" : "basic.deliver " + queueName;
+      String queueName = queue;
+      if (queue == null || queue.isEmpty()) {
+        queueName = "<default>";
+      } else if (queue.startsWith("amq.gen-")) {
+        queueName = "<generated>";
+      }
 
       scope =
           GlobalTracer.get()
               .buildSpan("amqp.command")
               .asChildOf(parentContext)
               .withTag(DDTags.SERVICE_NAME, "rabbitmq")
-              .withTag(DDTags.RESOURCE_NAME, resourceName)
+              .withTag(DDTags.RESOURCE_NAME, "basic.deliver " + queueName)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_CONSUMER)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CONSUMER)
               .withTag(Tags.COMPONENT.getKey(), "rabbitmq-amqp")

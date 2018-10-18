@@ -32,6 +32,14 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
   }
 
   @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      // These are only used by muzzleCheck.
+      packageName + ".TextMapExtractAdapter", packageName + ".TracedDelegatingConsumer",
+    };
+  }
+
+  @Override
   public Map<? extends ElementMatcher, String> transformers() {
     return Collections.singletonMap(isConstructor(), CommandConstructorAdvice.class.getName());
   }
@@ -47,6 +55,15 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
         span.setTag(DDTags.RESOURCE_NAME, name);
         span.setTag("amqp.command", name);
       }
+    }
+
+    /**
+     * This instrumentation will match with 2.6, but the channel instrumentation only matches with
+     * 2.7 because of TracedDelegatingConsumer. This unused method is added to ensure consistent
+     * muzzle validation by preventing match with 2.6.
+     */
+    public static void muzzleCheck(final TracedDelegatingConsumer consumer) {
+      consumer.handleRecoverOk(null);
     }
   }
 }
