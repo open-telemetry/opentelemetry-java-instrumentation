@@ -13,6 +13,8 @@ import datadog.trace.common.writer.ListWriter;
 import datadog.trace.common.writer.Writer;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
+import groovy.transform.stc.ClosureParams;
+import groovy.transform.stc.SimpleType;
 import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -160,7 +162,10 @@ public abstract class AgentTestRunner extends Specification {
 
   public static void assertTraces(
       final int size,
-      @DelegatesTo(value = ListWriterAssert.class, strategy = Closure.DELEGATE_FIRST)
+      @ClosureParams(
+              value = SimpleType.class,
+              options = "datadog.trace.agent.test.asserts.ListWriterAssert")
+          @DelegatesTo(value = ListWriterAssert.class, strategy = Closure.DELEGATE_FIRST)
           final Closure spec) {
     ListWriterAssert.assertTraces(TEST_WRITER, size, spec);
   }

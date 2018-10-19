@@ -1,0 +1,47 @@
+muzzle {
+  pass {
+    group = "com.rabbitmq"
+    module = 'amqp-client'
+    versions = "[2.7.0,)"
+    assertInverse = true
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
+
+  compile project(':dd-trace-ot')
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  compile deps.autoservice
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+
+  testCompile group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
+  testCompile group: 'org.springframework.amqp', name: 'spring-rabbit', version: '1.1.0.RELEASE'
+
+  testCompile deps.testcontainers
+
+  latestDepTestCompile group: 'com.rabbitmq', name: 'amqp-client', version: '+'
+  latestDepTestCompile group: 'org.springframework.amqp', name: 'spring-rabbit', version: '+'
+}
+
+configurations.testRuntime {
+  resolutionStrategy {
+    force group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
+  }
+}

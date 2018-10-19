@@ -1,16 +1,19 @@
 package datadog.trace.agent.test.asserts
 
 import datadog.opentracing.DDSpan
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
 
 class TagsAssert {
   private final Map<String, Object> tags
   private final Set<String> assertedTags = new TreeSet<>()
 
   private TagsAssert(DDSpan span) {
-    this.tags = new TreeMap(span.tags)
+    this.tags = span.tags
   }
 
   static void assertTags(DDSpan span,
+                         @ClosureParams(value = SimpleType, options = ['datadog.trace.agent.test.asserts.TagsAssert'])
                          @DelegatesTo(value = TagsAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new TagsAssert(span)
     def clone = (Closure) spec.clone()
@@ -56,14 +59,23 @@ class TagsAssert {
     }
   }
 
+  def tag(String name) {
+    return tags[name]
+  }
+
   def methodMissing(String name, args) {
-    if (args.length != 1) {
+    if (args.length == 0) {
       throw new IllegalArgumentException(args.toString())
     }
     tag(name, args[0])
   }
 
   void assertTagsAllVerified() {
-    assert tags.keySet() == assertedTags
+    def set = new TreeMap<>(tags).keySet()
+    set.removeAll(assertedTags)
+    // The primary goal is to ensure the set is empty.
+    // tags and assertedTags are included via an "always true" comparison
+    // so they provide better context in the error message.
+    assert tags.entrySet() != assertedTags && set.isEmpty()
   }
 }
