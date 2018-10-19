@@ -29,7 +29,7 @@ public class MuzzleVersionScanPlugin {
         });
   }
 
-  public static void assertInstrumentationMuzzled(ClassLoader cl, boolean assertPass)
+  public static void assertInstrumentationMuzzled(final ClassLoader cl, final boolean assertPass)
       throws Exception {
     // muzzle validate all instrumenters
     for (Instrumenter instrumenter :
@@ -49,17 +49,20 @@ public class MuzzleVersionScanPlugin {
       try {
         m = instrumenter.getClass().getDeclaredMethod("getInstrumentationMuzzle");
         m.setAccessible(true);
-        ReferenceMatcher muzzle = (ReferenceMatcher) m.invoke(instrumenter);
-        List<Reference.Mismatch> mismatches = muzzle.getMismatchedReferenceSources(cl);
-        boolean passed = mismatches.size() == 0;
+        final ReferenceMatcher muzzle = (ReferenceMatcher) m.invoke(instrumenter);
+        final List<Reference.Mismatch> mismatches = muzzle.getMismatchedReferenceSources(cl);
+        final boolean passed = mismatches.size() == 0;
         if (mismatches.size() > 0) {}
         if (passed && !assertPass) {
-          System.err.println("MUZZLE PASSED BUT FAILURE WAS EXPECTED");
+          System.err.println(
+              "MUZZLE PASSED "
+                  + instrumenter.getClass().getSimpleName()
+                  + " BUT FAILURE WAS EXPECTED");
           throw new RuntimeException("Instrumentation unexpectedly passed Muzzle validation");
         } else if (!passed && assertPass) {
           System.err.println(
               "FAILED MUZZLE VALIDATION: " + instrumenter.getClass().getName() + " mismatches:");
-          for (Reference.Mismatch mismatch : mismatches) {
+          for (final Reference.Mismatch mismatch : mismatches) {
             System.err.println("-- " + mismatch);
           }
           throw new RuntimeException("Instrumentation failed Muzzle validation");
@@ -95,7 +98,7 @@ public class MuzzleVersionScanPlugin {
               new HelperInjector(helperClassNames).transform(null, null, cl, null);
             }
           }
-        } catch (Exception e) {
+        } catch (final Exception e) {
           System.err.println(
               "FAILED HELPER INJECTION. Are Helpers being injected in the correct order?");
           throw e;
@@ -105,7 +108,7 @@ public class MuzzleVersionScanPlugin {
   }
 
   public static void printMuzzleReferences() {
-    for (Instrumenter instrumenter :
+    for (final Instrumenter instrumenter :
         ServiceLoader.load(Instrumenter.class, MuzzleGradlePlugin.class.getClassLoader())) {
       if (instrumenter instanceof Instrumenter.Default) {
         try {
@@ -119,10 +122,10 @@ public class MuzzleVersionScanPlugin {
             getMuzzleMethod.setAccessible(false);
           }
           System.out.println(instrumenter.getClass().getName());
-          for (Reference ref : muzzle.getReferences()) {
+          for (final Reference ref : muzzle.getReferences()) {
             System.out.println(prettyPrint("  ", ref));
           }
-        } catch (Exception e) {
+        } catch (final Exception e) {
           System.out.println(
               "Unexpected exception printing references for " + instrumenter.getClass().getName());
           throw new RuntimeException(e);
@@ -136,14 +139,14 @@ public class MuzzleVersionScanPlugin {
     }
   }
 
-  private static String prettyPrint(String prefix, Reference ref) {
+  private static String prettyPrint(final String prefix, final Reference ref) {
     final StringBuilder builder = new StringBuilder(prefix).append(ref.getClassName());
     if (ref.getSuperName() != null) {
       builder.append(" extends<").append(ref.getSuperName()).append(">");
     }
     if (ref.getInterfaces().size() > 0) {
       builder.append(" implements ");
-      for (String iface : ref.getInterfaces()) {
+      for (final String iface : ref.getInterfaces()) {
         builder.append(" <").append(iface).append(">");
       }
     }
@@ -154,7 +157,7 @@ public class MuzzleVersionScanPlugin {
     for (final Reference.Field field : ref.getFields()) {
       builder.append("\n").append(prefix).append(prefix);
       builder.append("Field: ");
-      for (Reference.Flag flag : field.getFlags()) {
+      for (final Reference.Flag flag : field.getFlags()) {
         builder.append(flag).append(" ");
       }
       builder.append(field.toString());
@@ -162,7 +165,7 @@ public class MuzzleVersionScanPlugin {
     for (final Reference.Method method : ref.getMethods()) {
       builder.append("\n").append(prefix).append(prefix);
       builder.append("Method: ");
-      for (Reference.Flag flag : method.getFlags()) {
+      for (final Reference.Flag flag : method.getFlags()) {
         builder.append(flag).append(" ");
       }
       builder.append(method.toString());

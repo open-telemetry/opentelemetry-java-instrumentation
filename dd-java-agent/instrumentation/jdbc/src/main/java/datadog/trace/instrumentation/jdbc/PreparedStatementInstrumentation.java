@@ -21,6 +21,7 @@ import io.opentracing.noop.NoopScopeManager.NoopScope;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -92,12 +93,13 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
       {
         if (dbInfo == null) {
           try {
-            final String url = connection.getMetaData().getURL();
+            final DatabaseMetaData metaData = connection.getMetaData();
+            final String url = metaData.getURL();
             if (url != null) {
               // Remove end of url to prevent passwords from leaking:
               final String sanitizedURL = url.replaceAll("[?;].*", "");
               final String type = url.split(":", -1)[1];
-              String user = connection.getMetaData().getUserName();
+              String user = metaData.getUserName();
               if (user != null && user.trim().equals("")) {
                 user = null;
               }
