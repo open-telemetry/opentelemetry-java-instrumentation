@@ -147,7 +147,11 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       if (span != null) {
         final String exchangeName = exchange == null || exchange.isEmpty() ? "<default>" : exchange;
-        span.setTag(DDTags.RESOURCE_NAME, "basic.publish " + exchangeName);
+        final String routing =
+            routingKey == null || routingKey.isEmpty()
+                ? "<all>"
+                : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
+        span.setTag(DDTags.RESOURCE_NAME, "basic.publish " + exchangeName + " -> " + routing);
         span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_PRODUCER);
         span.setTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_PRODUCER);
         span.setTag("amqp.exchange", exchange);

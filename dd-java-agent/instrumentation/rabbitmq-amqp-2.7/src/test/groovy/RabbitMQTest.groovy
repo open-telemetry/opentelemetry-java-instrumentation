@@ -108,7 +108,7 @@ class RabbitMQTest extends AgentTestRunner {
           operationName "parent"
         }
         // reverse order
-        rabbitSpan(it, 1, "basic.publish $exchangeName", span(0))
+        rabbitSpan(it, 1, "basic.publish $exchangeName -> $routingKey", span(0))
         rabbitSpan(it, 2, "queue.bind", span(0))
         rabbitSpan(it, 3, "queue.declare", span(0))
         rabbitSpan(it, 4, "exchange.declare", span(0))
@@ -122,10 +122,9 @@ class RabbitMQTest extends AgentTestRunner {
 
   def "test rabbit publish/get default exchange"() {
     setup:
-    String queueName = channel.queueDeclare("some-routing-queue", false, true, true, null).getQueue()
-    String routingKey = queueName
+    String queueName = channel.queueDeclare().getQueue()
 
-    channel.basicPublish("", routingKey, null, "Hello, world!".getBytes())
+    channel.basicPublish("", queueName, null, "Hello, world!".getBytes())
 
     GetResponse response = channel.basicGet(queueName, true)
 
@@ -138,10 +137,10 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, "queue.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, "basic.publish <default>")
+        rabbitSpan(it, "basic.publish <default> -> <generated>")
       }
       trace(2, 1) {
-        rabbitSpan(it, "basic.get some-routing-queue", TEST_WRITER[1][0])
+        rabbitSpan(it, "basic.get <generated>", TEST_WRITER[1][0])
       }
     }
   }
@@ -195,7 +194,7 @@ class RabbitMQTest extends AgentTestRunner {
         def publishSpan = null
         trace(2 + (it * 2), 1) {
           publishSpan = span(0)
-          rabbitSpan(it, "basic.publish $exchangeName")
+          rabbitSpan(it, "basic.publish $exchangeName -> <all>")
         }
         trace(3 + (it * 2), 1) {
           rabbitSpan(it, resource, publishSpan)
@@ -257,7 +256,7 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, "queue.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, "basic.publish <default>")
+        rabbitSpan(it, "basic.publish <default> -> some-routing-queue")
       }
       trace(2, 1) {
         rabbitSpan(it, "basic.get $queue.name", TEST_WRITER[1][0])
@@ -297,7 +296,9 @@ class RabbitMQTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_PRODUCER
             "amqp.command" "basic.publish"
             "amqp.exchange" { it == null || it == "some-exchange" }
-            "amqp.routing_key" { it == null || it == "some-routing-key" || it == "some-routing-queue" }
+            "amqp.routing_key" {
+              it == null || it == "some-routing-key" || it == "some-routing-queue" || it.startsWith("amq.gen-")
+            }
             "amqp.delivery_mode" { it == null || it == 2 }
             "message.size" Integer
             break
