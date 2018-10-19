@@ -1,6 +1,8 @@
 package datadog.trace.agent.test.asserts
 
 import datadog.opentracing.DDSpan
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
 
 import static SpanAssert.assertSpan
 
@@ -15,6 +17,7 @@ class TraceAssert {
   }
 
   static void assertTrace(List<DDSpan> trace, int expectedSize,
+                          @ClosureParams(value = SimpleType, options = ['datadog.trace.agent.test.asserts.TraceAssert'])
                           @DelegatesTo(value = File, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     assert trace.size() == expectedSize
     def asserter = new TraceAssert(trace)
@@ -29,7 +32,7 @@ class TraceAssert {
     trace.get(index)
   }
 
-  void span(int index, @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+  void span(int index, @ClosureParams(value = SimpleType, options = ['datadog.trace.agent.test.asserts.SpanAssert']) @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     if (index >= size) {
       throw new ArrayIndexOutOfBoundsException(index)
     }

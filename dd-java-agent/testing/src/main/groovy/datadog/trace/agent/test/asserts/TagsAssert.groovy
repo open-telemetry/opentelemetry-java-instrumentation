@@ -1,6 +1,8 @@
 package datadog.trace.agent.test.asserts
 
 import datadog.opentracing.DDSpan
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
 
 class TagsAssert {
   private final Map<String, Object> tags
@@ -11,6 +13,7 @@ class TagsAssert {
   }
 
   static void assertTags(DDSpan span,
+                         @ClosureParams(value = SimpleType, options = ['datadog.trace.agent.test.asserts.TagsAssert'])
                          @DelegatesTo(value = TagsAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new TagsAssert(span)
     def clone = (Closure) spec.clone()

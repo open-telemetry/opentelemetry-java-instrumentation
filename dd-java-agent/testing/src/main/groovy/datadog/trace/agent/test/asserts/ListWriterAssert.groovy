@@ -2,6 +2,8 @@ package datadog.trace.agent.test.asserts
 
 import datadog.opentracing.DDSpan
 import datadog.trace.common.writer.ListWriter
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
 import org.codehaus.groovy.runtime.powerassert.PowerAssertionError
 import org.spockframework.runtime.Condition
 import org.spockframework.runtime.ConditionNotSatisfiedError
@@ -20,6 +22,7 @@ class ListWriterAssert {
   }
 
   static void assertTraces(ListWriter writer, int expectedSize,
+                           @ClosureParams(value = SimpleType, options = ['datadog.trace.agent.test.asserts.ListWriterAssert'])
                            @DelegatesTo(value = ListWriterAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     try {
       writer.waitForTraces(expectedSize)
@@ -55,6 +58,7 @@ class ListWriterAssert {
   }
 
   void trace(int index, int expectedSize,
+             @ClosureParams(value = SimpleType, options = ['datadog.trace.agent.test.asserts.TraceAssert'])
              @DelegatesTo(value = TraceAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     if (index >= size) {
       throw new ArrayIndexOutOfBoundsException(index)

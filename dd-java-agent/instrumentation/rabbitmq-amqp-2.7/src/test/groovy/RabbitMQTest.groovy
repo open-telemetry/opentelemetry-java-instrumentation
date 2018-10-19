@@ -25,6 +25,8 @@ import spock.lang.Shared
 
 import java.util.concurrent.Phaser
 
+import static datadog.trace.agent.test.TestUtils.runUnderTrace
+
 // Do not run tests locally on Java7 since testcontainers are not compatible with Java7
 // It is fine to run on CI because CI provides rabbitmq externally, not through testcontainers
 @Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
@@ -83,33 +85,33 @@ class RabbitMQTest extends AgentTestRunner {
 
   def "test rabbit publish/get"() {
     setup:
-    channel.exchangeDeclare(exchangeName, "direct", false)
-    String queueName = channel.queueDeclare().getQueue()
-    channel.queueBind(queueName, exchangeName, routingKey)
+    GetResponse response = runUnderTrace("parent") {
+      channel.exchangeDeclare(exchangeName, "direct", false)
+      String queueName = channel.queueDeclare().getQueue()
+      channel.queueBind(queueName, exchangeName, routingKey)
 
-    channel.basicPublish(exchangeName, routingKey, null, "Hello, world!".getBytes())
+      channel.basicPublish(exchangeName, routingKey, null, "Hello, world!".getBytes())
 
-    GetResponse response = channel.basicGet(queueName, true)
+      return channel.basicGet(queueName, true)
+    }
 
     expect:
     new String(response.getBody()) == "Hello, world!"
 
     and:
-    assertTraces(5) {
+    assertTraces(2) {
       trace(0, 1) {
-        rabbitSpan(it, "exchange.declare")
+        rabbitSpan(it, "basic.get <generated>", TEST_WRITER[1][1])
       }
-      trace(1, 1) {
-        rabbitSpan(it, "queue.declare")
-      }
-      trace(2, 1) {
-        rabbitSpan(it, "queue.bind")
-      }
-      trace(3, 1) {
-        rabbitSpan(it, "basic.publish $exchangeName")
-      }
-      trace(4, 1) {
-        rabbitSpan(it, "basic.get <generated>", TEST_WRITER[3][0])
+      trace(1, 5) {
+        span(0) {
+          operationName "parent"
+        }
+        // reverse order
+        rabbitSpan(it, 1, "basic.publish $exchangeName", span(0))
+        rabbitSpan(it, 2, "queue.bind", span(0))
+        rabbitSpan(it, 3, "queue.declare", span(0))
+        rabbitSpan(it, 4, "exchange.declare", span(0))
       }
     }
 
@@ -264,7 +266,11 @@ class RabbitMQTest extends AgentTestRunner {
   }
 
   def rabbitSpan(TraceAssert trace, String resource, DDSpan parentSpan = null, Throwable exception = null, String errorMsg = null) {
-    trace.span(0) {
+    rabbitSpan(trace, 0, resource, parentSpan, exception, errorMsg)
+  }
+
+  def rabbitSpan(TraceAssert trace, int index, String resource, DDSpan parentSpan = null, Throwable exception = null, String errorMsg = null) {
+    trace.span(index) {
       serviceName "rabbitmq"
       operationName "amqp.command"
       resourceName resource
