@@ -31,12 +31,6 @@ import net.bytebuddy.pool.TypePool;
 public class MapBackedProvider implements InstrumentationContextProvider {
   private static final Method contextGetMethod;
   private static final Method mapGetMethod;
-  /** dynamic-class-name -> dynamic-class-bytes */
-  private final AtomicReference<Map<String, byte[]>> dynamicClasses = new AtomicReference<>(null);
-
-  /** user-class-name -> dynamic-class-name */
-  private final AtomicReference<Map<String, String>> dynamicClassNames =
-      new AtomicReference<>(null);
 
   static {
     try {
@@ -48,6 +42,13 @@ public class MapBackedProvider implements InstrumentationContextProvider {
       throw new IllegalStateException(e);
     }
   }
+
+  /** dynamic-class-name -> dynamic-class-bytes */
+  private final AtomicReference<Map<String, byte[]>> dynamicClasses = new AtomicReference<>(null);
+
+  /** user-class-name -> dynamic-class-name */
+  private final AtomicReference<Map<String, String>> dynamicClassNames =
+      new AtomicReference<>(null);
 
   private final Instrumenter.Default instrumenter;
 
@@ -258,7 +259,8 @@ public class MapBackedProvider implements InstrumentationContextProvider {
               contextInstance = contextClass.newInstance();
               MAP.put(instance, contextInstance);
             } catch (Exception e) {
-              throw new RuntimeException(e);
+              throw new RuntimeException(
+                  contextClass.getName() + " must define a public, no-arg constructor.", e);
             }
           }
         }

@@ -5,6 +5,7 @@ import static datadog.trace.agent.tooling.Utils.getConfigEnabled;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import datadog.trace.agent.tooling.context.InstrumentationContextProvider;
+import datadog.trace.agent.tooling.context.MapBackedProvider;
 import datadog.trace.agent.tooling.muzzle.Reference;
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
 import java.security.ProtectionDomain;
@@ -52,7 +53,6 @@ public interface Instrumenter {
   abstract class Default implements Instrumenter {
     private final Set<String> instrumentationNames;
     private final String instrumentationPrimaryName;
-    // TODO: create a generic instrumentaton pipeline attacher?
     private final InstrumentationContextProvider contextProvider;
     protected final boolean enabled;
 
@@ -78,7 +78,7 @@ public interface Instrumenter {
         }
       }
       enabled = anyEnabled;
-      contextProvider = InstrumentationContextProvider.Creator.contextProviderFor(this);
+      contextProvider = new MapBackedProvider(this);
     }
 
     @Override
@@ -101,21 +101,7 @@ public interface Instrumenter {
               .and(new MuzzleMatcher())
               .transform(DDTransformers.defaultTransformers());
       agentBuilder = injectHelperClasses(agentBuilder);
-      if (contextStore().size() > 0) {
-        agentBuilder =
-            agentBuilder.transform(
-                new AgentBuilder.Transformer() {
-                  @Override
-                  public DynamicType.Builder<?> transform(
-                      DynamicType.Builder<?> builder,
-                      TypeDescription typeDescription,
-                      ClassLoader classLoader,
-                      JavaModule module) {
-                    return builder.visit(contextProvider.getInstrumentationVisitor());
-                  }
-                });
-        agentBuilder = agentBuilder.transform(new HelperInjector(contextProvider.dynamicClasses()));
-      }
+      agentBuilder = applyContextStoreTransform(agentBuilder);
       agentBuilder = applyInstrumentationTransformers(agentBuilder);
       return agentBuilder;
     }
@@ -138,6 +124,26 @@ public interface Instrumenter {
                     .include(Utils.getAgentClassLoader())
                     .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
                     .advice(entry.getKey(), entry.getValue()));
+      }
+      return agentBuilder;
+    }
+
+    private AgentBuilder.Identified.Extendable applyContextStoreTransform(
+        AgentBuilder.Identified.Extendable agentBuilder) {
+      if (contextStore().size() > 0) {
+        agentBuilder =
+            agentBuilder.transform(
+                new AgentBuilder.Transformer() {
+                  @Override
+                  public DynamicType.Builder<?> transform(
+                      DynamicType.Builder<?> builder,
+                      TypeDescription typeDescription,
+                      ClassLoader classLoader,
+                      JavaModule module) {
+                    return builder.visit(contextProvider.getInstrumentationVisitor());
+                  }
+                });
+        agentBuilder = agentBuilder.transform(new HelperInjector(contextProvider.dynamicClasses()));
       }
       return agentBuilder;
     }

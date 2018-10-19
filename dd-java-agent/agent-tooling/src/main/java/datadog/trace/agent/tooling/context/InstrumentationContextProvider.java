@@ -1,6 +1,5 @@
 package datadog.trace.agent.tooling.context;
 
-import datadog.trace.agent.tooling.Instrumenter;
 import java.util.Map;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -17,14 +16,4 @@ public interface InstrumentationContextProvider {
   Map<String, byte[]> dynamicClasses();
 
   AgentBuilder additionalInstrumentation(AgentBuilder builder);
-
-  // TODO: better place to put factory/creator
-  class Creator {
-    private Creator() {}
-
-    public static InstrumentationContextProvider contextProviderFor(
-        Instrumenter.Default instrumenter) {
-      return new MapBackedProvider(instrumenter);
-    }
-  }
 }
