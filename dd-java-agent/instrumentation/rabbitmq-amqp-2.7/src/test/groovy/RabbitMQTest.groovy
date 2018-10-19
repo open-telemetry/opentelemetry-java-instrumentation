@@ -106,7 +106,7 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, "queue.bind")
       }
       trace(3, 1) {
-        rabbitSpan(it, "basic.publish")
+        rabbitSpan(it, "basic.publish $exchangeName")
       }
       trace(4, 1) {
         rabbitSpan(it, "basic.get <generated>", TEST_WRITER[3][0])
@@ -114,8 +114,34 @@ class RabbitMQTest extends AgentTestRunner {
     }
 
     where:
-    exchangeName = "some-exchange"
-    routingKey = "some-routing-key"
+    exchangeName    | routingKey
+    "some-exchange" | "some-routing-key"
+  }
+
+  def "test rabbit publish/get default exchange"() {
+    setup:
+    String queueName = channel.queueDeclare("some-routing-queue", false, true, true, null).getQueue()
+    String routingKey = queueName
+
+    channel.basicPublish("", routingKey, null, "Hello, world!".getBytes())
+
+    GetResponse response = channel.basicGet(queueName, true)
+
+    expect:
+    new String(response.getBody()) == "Hello, world!"
+
+    and:
+    assertTraces(3) {
+      trace(0, 1) {
+        rabbitSpan(it, "queue.declare")
+      }
+      trace(1, 1) {
+        rabbitSpan(it, "basic.publish <default>")
+      }
+      trace(2, 1) {
+        rabbitSpan(it, "basic.get some-routing-queue", TEST_WRITER[1][0])
+      }
+    }
   }
 
   def "test rabbit consume #messageCount messages"() {
@@ -167,7 +193,7 @@ class RabbitMQTest extends AgentTestRunner {
         def publishSpan = null
         trace(2 + (it * 2), 1) {
           publishSpan = span(0)
-          rabbitSpan(it, "basic.publish")
+          rabbitSpan(it, "basic.publish $exchangeName")
         }
         trace(3 + (it * 2), 1) {
           rabbitSpan(it, resource, publishSpan)
@@ -229,7 +255,7 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, "queue.declare")
       }
       trace(1, 1) {
-        rabbitSpan(it, "basic.publish")
+        rabbitSpan(it, "basic.publish <default>")
       }
       trace(2, 1) {
         rabbitSpan(it, "basic.get $queue.name", TEST_WRITER[1][0])

@@ -52,7 +52,10 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
       final Method method = command.getMethod();
       if (span != null && method != null) {
         final String name = method.protocolMethodName();
-        span.setTag(DDTags.RESOURCE_NAME, name);
+        if (!name.equals("basic.publish")) {
+          // Don't overwrite the name already set.
+          span.setTag(DDTags.RESOURCE_NAME, name);
+        }
         span.setTag("amqp.command", name);
       }
     }
