@@ -1,5 +1,5 @@
 plugins {
-  id "com.github.johnrengelman.shadow" version "2.0.4"
+  id "com.github.johnrengelman.shadow" version "4.0.1"
 }
 
 description = 'dd-java-agent'
@@ -31,6 +31,8 @@ def includeShadowJar(subproject, jarname) {
       classifier null
 
       mergeServiceFiles()
+
+      exclude '**/module-info.class'
 
       dependencies {
         exclude(dependency("org.projectlombok:lombok:$versions.lombok"))

@@ -56,7 +56,7 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
             .and(nameStartsWith("create"))
             .and(nameEndsWith("Flux"))
             .and(takesArgument(0, named("java.util.function.Supplier")))
-            .and(returns(named(("reactor.core.publisher.Flux")))),
+            .and(returns(named("reactor.core.publisher.Flux"))),
         // Cannot reference class directly here because it would lead to class load failure on Java7
         PACKAGE + ".rx.LettuceFluxCreationAdvice");
 

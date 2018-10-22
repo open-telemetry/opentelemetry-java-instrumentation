@@ -6,7 +6,7 @@ import net.bytebuddy.build.Plugin;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
-import net.bytebuddy.dynamic.DynamicType.Builder;
+import net.bytebuddy.dynamic.DynamicType;
 
 /** Bytebuddy gradle plugin which creates muzzle-references at compile time. */
 public class MuzzleGradlePlugin implements Plugin {
@@ -32,8 +32,8 @@ public class MuzzleGradlePlugin implements Plugin {
   }
 
   @Override
-  public Builder<?> apply(
-      final Builder<?> builder,
+  public DynamicType.Builder<?> apply(
+      final DynamicType.Builder<?> builder,
       final TypeDescription typeDescription,
       final ClassFileLocator classFileLocator) {
     return builder.visit(new MuzzleVisitor());
@@ -50,8 +50,8 @@ public class MuzzleGradlePlugin implements Plugin {
     }
 
     @Override
-    public Builder<?> apply(
-        final Builder<?> builder,
+    public DynamicType.Builder<?> apply(
+        final DynamicType.Builder<?> builder,
         final TypeDescription typeDescription,
         final ClassFileLocator classFileLocator) {
       return builder;

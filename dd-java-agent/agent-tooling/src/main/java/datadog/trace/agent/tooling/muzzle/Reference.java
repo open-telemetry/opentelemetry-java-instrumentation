@@ -22,13 +22,13 @@ public class Reference {
   private final Set<Method> methods;
 
   private Reference(
-      Set<Source> sources,
-      Set<Flag> flags,
-      String className,
-      String superName,
-      Set<String> interfaces,
-      Set<Field> fields,
-      Set<Method> methods) {
+      final Set<Source> sources,
+      final Set<Flag> flags,
+      final String className,
+      final String superName,
+      final Set<String> interfaces,
+      final Set<Field> fields,
+      final Set<Method> methods) {
     this.sources = sources;
     this.flags = flags;
     this.className = Utils.getClassName(className);
@@ -59,11 +59,11 @@ public class Reference {
   }
 
   public Set<Method> getMethods() {
-    return this.methods;
+    return methods;
   }
 
   public Set<Field> getFields() {
-    return this.fields;
+    return fields;
   }
 
   /**
@@ -72,11 +72,11 @@ public class Reference {
    * @param anotherReference A reference to the same class
    * @return a new Reference which merges the two references
    */
-  public Reference merge(Reference anotherReference) {
+  public Reference merge(final Reference anotherReference) {
     if (!anotherReference.getClassName().equals(className)) {
       throw new IllegalStateException("illegal merge " + this + " != " + anotherReference);
     }
-    String superName = null == this.superName ? anotherReference.superName : this.superName;
+    final String superName = null == this.superName ? anotherReference.superName : this.superName;
 
     return new Reference(
         merge(sources, anotherReference.sources),
@@ -88,17 +88,17 @@ public class Reference {
         mergeMethods(methods, anotherReference.methods));
   }
 
-  private static <T> Set<T> merge(Set<T> set1, Set<T> set2) {
+  private static <T> Set<T> merge(final Set<T> set1, final Set<T> set2) {
     final Set<T> set = new HashSet<>();
     set.addAll(set1);
     set.addAll(set2);
     return set;
   }
 
-  private static Set<Method> mergeMethods(Set<Method> methods1, Set<Method> methods2) {
-    List<Method> merged = new ArrayList<>(methods1);
-    for (Method method : methods2) {
-      int i = merged.indexOf(method);
+  private static Set<Method> mergeMethods(final Set<Method> methods1, final Set<Method> methods2) {
+    final List<Method> merged = new ArrayList<>(methods1);
+    for (final Method method : methods2) {
+      final int i = merged.indexOf(method);
       if (i == -1) {
         merged.add(method);
       } else {
@@ -108,10 +108,10 @@ public class Reference {
     return new HashSet<>(merged);
   }
 
-  private static Set<Field> mergeFields(Set<Field> fields1, Set<Field> fields2) {
-    List<Field> merged = new ArrayList<>(fields1);
-    for (Field field : fields2) {
-      int i = merged.indexOf(field);
+  private static Set<Field> mergeFields(final Set<Field> fields1, final Set<Field> fields2) {
+    final List<Field> merged = new ArrayList<>(fields1);
+    for (final Field field : fields2) {
+      final int i = merged.indexOf(field);
       if (i == -1) {
         merged.add(field);
       } else {
@@ -121,8 +121,8 @@ public class Reference {
     return new HashSet<>(merged);
   }
 
-  private static Set<Flag> mergeFlags(Set<Flag> flags1, Set<Flag> flags2) {
-    Set<Flag> merged = merge(flags1, flags2);
+  private static Set<Flag> mergeFlags(final Set<Flag> flags1, final Set<Flag> flags2) {
+    final Set<Flag> merged = merge(flags1, flags2);
     // TODO: Assert flags are non-contradictory and resolve
     // public > protected > package-private > private
     return merged;
@@ -137,7 +137,7 @@ public class Reference {
     private final String name;
     private final int line;
 
-    public Source(String name, int line) {
+    public Source(final String name, final int line) {
       this.name = name;
       this.line = line;
     }
@@ -156,9 +156,9 @@ public class Reference {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
       if (o instanceof Source) {
-        Source other = (Source) o;
+        final Source other = (Source) o;
         return name.equals(other.name) && line == other.line;
       }
       return false;
@@ -180,7 +180,7 @@ public class Reference {
     /** Instrumentation sources which caused the mismatch. */
     private final Source[] mismatchSources;
 
-    Mismatch(Source[] mismatchSources) {
+    Mismatch(final Source[] mismatchSources) {
       this.mismatchSources = mismatchSources;
     }
 
@@ -199,7 +199,7 @@ public class Reference {
     public static class MissingClass extends Mismatch {
       private final String className;
 
-      public MissingClass(Source[] sources, String className) {
+      public MissingClass(final Source[] sources, final String className) {
         super(sources);
         this.className = className;
       }
@@ -216,7 +216,10 @@ public class Reference {
       private final int foundAccess;
 
       public MissingFlag(
-          Source[] sources, String classMethodOrFieldDesc, Flag expectedFlag, int foundAccess) {
+          final Source[] sources,
+          final String classMethodOrFieldDesc,
+          final Flag expectedFlag,
+          final int foundAccess) {
         super(sources);
         this.classMethodOrFieldDesc = classMethodOrFieldDesc;
         this.expectedFlag = expectedFlag;
@@ -236,9 +239,11 @@ public class Reference {
       private final ClassLoader classLoaderBeingChecked;
 
       public ReferenceCheckError(
-          Exception e, Reference referenceBeingChecked, ClassLoader classLoaderBeingChecked) {
+          final Exception e,
+          final Reference referenceBeingChecked,
+          final ClassLoader classLoaderBeingChecked) {
         super(new Source[0]);
-        this.referenceCheckException = e;
+        referenceCheckException = e;
         this.referenceBeingChecked = referenceBeingChecked;
         this.classLoaderBeingChecked = classLoaderBeingChecked;
       }
@@ -263,7 +268,11 @@ public class Reference {
       private final String fieldName;
       private final String fieldDesc;
 
-      public MissingField(Source[] sources, String className, String fieldName, String fieldDesc) {
+      public MissingField(
+          final Source[] sources,
+          final String className,
+          final String fieldName,
+          final String fieldDesc) {
         super(sources);
         this.className = className;
         this.fieldName = fieldName;
@@ -280,7 +289,7 @@ public class Reference {
       private final String className;
       private final String method;
 
-      public MissingMethod(Source[] sources, String className, String method) {
+      public MissingMethod(final Source[] sources, final String className, final String method) {
         super(sources);
         this.className = className;
         this.method = method;
@@ -297,7 +306,7 @@ public class Reference {
   public enum Flag {
     PUBLIC {
       @Override
-      public boolean supersedes(Flag anotherFlag) {
+      public boolean supersedes(final Flag anotherFlag) {
         switch (anotherFlag) {
           case PRIVATE_OR_HIGHER:
           case PROTECTED_OR_HIGHER:
@@ -309,112 +318,112 @@ public class Reference {
       }
 
       @Override
-      public boolean matches(int asmFlags) {
+      public boolean matches(final int asmFlags) {
         return (Opcodes.ACC_PUBLIC & asmFlags) != 0;
       }
     },
     PACKAGE_OR_HIGHER {
       @Override
-      public boolean supersedes(Flag anotherFlag) {
+      public boolean supersedes(final Flag anotherFlag) {
         return anotherFlag == PRIVATE_OR_HIGHER;
       }
 
       @Override
-      public boolean matches(int asmFlags) {
+      public boolean matches(final int asmFlags) {
         return (Opcodes.ACC_PUBLIC & asmFlags) != 0
             || ((Opcodes.ACC_PRIVATE & asmFlags) == 0 && (Opcodes.ACC_PROTECTED & asmFlags) == 0);
       }
     },
     PROTECTED_OR_HIGHER {
       @Override
-      public boolean supersedes(Flag anotherFlag) {
+      public boolean supersedes(final Flag anotherFlag) {
         return anotherFlag == PRIVATE_OR_HIGHER;
       }
 
       @Override
-      public boolean matches(int asmFlags) {
+      public boolean matches(final int asmFlags) {
         return PUBLIC.matches(asmFlags) || (Opcodes.ACC_PROTECTED & asmFlags) != 0;
       }
     },
     PRIVATE_OR_HIGHER {
       @Override
-      public boolean matches(int asmFlags) {
+      public boolean matches(final int asmFlags) {
         // you can't out-private a private
         return true;
       }
     },
     NON_FINAL {
       @Override
-      public boolean contradicts(Flag anotherFlag) {
+      public boolean contradicts(final Flag anotherFlag) {
         return anotherFlag == FINAL;
       }
 
       @Override
-      public boolean matches(int asmFlags) {
+      public boolean matches(final int asmFlags) {
         return (Opcodes.ACC_FINAL & asmFlags) == 0;
       }
     },
     FINAL {
       @Override
-      public boolean contradicts(Flag anotherFlag) {
+      public boolean contradicts(final Flag anotherFlag) {
         return anotherFlag == NON_FINAL;
       }
 
       @Override
-      public boolean matches(int asmFlags) {
+      public boolean matches(final int asmFlags) {
         return (Opcodes.ACC_FINAL & asmFlags) != 0;
       }
     },
     STATIC {
       @Override
-      public boolean contradicts(Flag anotherFlag) {
+      public boolean contradicts(final Flag anotherFlag) {
         return anotherFlag == NON_STATIC;
       }
 
       @Override
-      public boolean matches(int asmFlags) {
+      public boolean matches(final int asmFlags) {
         return (Opcodes.ACC_STATIC & asmFlags) != 0;
       }
     },
     NON_STATIC {
       @Override
-      public boolean contradicts(Flag anotherFlag) {
+      public boolean contradicts(final Flag anotherFlag) {
         return anotherFlag == STATIC;
       }
 
       @Override
-      public boolean matches(int asmFlags) {
+      public boolean matches(final int asmFlags) {
         return (Opcodes.ACC_STATIC & asmFlags) == 0;
       }
     },
     INTERFACE {
       @Override
-      public boolean contradicts(Flag anotherFlag) {
+      public boolean contradicts(final Flag anotherFlag) {
         return anotherFlag == NON_INTERFACE;
       }
 
       @Override
-      public boolean matches(int asmFlags) {
+      public boolean matches(final int asmFlags) {
         return (Opcodes.ACC_INTERFACE & asmFlags) != 0;
       }
     },
     NON_INTERFACE {
       @Override
-      public boolean contradicts(Flag anotherFlag) {
+      public boolean contradicts(final Flag anotherFlag) {
         return anotherFlag == INTERFACE;
       }
 
       @Override
-      public boolean matches(int asmFlags) {
+      public boolean matches(final int asmFlags) {
         return (Opcodes.ACC_INTERFACE & asmFlags) == 0;
       }
     };
 
-    public boolean contradicts(Flag anotherFlag) {
+    public boolean contradicts(final Flag anotherFlag) {
       return false;
     }
 
-    public boolean supersedes(Flag anotherFlag) {
+    public boolean supersedes(final Flag anotherFlag) {
       return false;
     }
 
@@ -428,7 +437,7 @@ public class Reference {
     private final Type returnType;
     private final List<Type> parameterTypes;
 
-    public Method(String name, String descriptor) {
+    public Method(final String name, final String descriptor) {
       this(
           new Source[0],
           new Flag[0],
@@ -438,7 +447,11 @@ public class Reference {
     }
 
     public Method(
-        Source[] sources, Flag[] flags, String name, Type returnType, Type[] parameterTypes) {
+        final Source[] sources,
+        final Flag[] flags,
+        final String name,
+        final Type returnType,
+        final Type[] parameterTypes) {
       this(
           new HashSet<>(Arrays.asList(sources)),
           new HashSet<>(Arrays.asList(flags)),
@@ -448,11 +461,11 @@ public class Reference {
     }
 
     public Method(
-        Set<Source> sources,
-        Set<Flag> flags,
-        String name,
-        Type returnType,
-        List<Type> parameterTypes) {
+        final Set<Source> sources,
+        final Set<Flag> flags,
+        final String name,
+        final Type returnType,
+        final List<Type> parameterTypes) {
       this.sources = sources;
       this.flags = flags;
       this.name = name;
@@ -480,8 +493,8 @@ public class Reference {
       return parameterTypes;
     }
 
-    public Method merge(Method anotherMethod) {
-      if (!this.equals(anotherMethod)) {
+    public Method merge(final Method anotherMethod) {
+      if (!equals(anotherMethod)) {
         throw new IllegalStateException("illegal merge " + this + " != " + anotherMethod);
       }
 
@@ -506,7 +519,7 @@ public class Reference {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
       if (o instanceof Method) {
         final Method m = (Method) o;
         return name.equals(m.name) && getDescriptor().equals(m.getDescriptor());
@@ -526,11 +539,12 @@ public class Reference {
     private final String name;
     private final Type type;
 
-    public Field(Source[] sources, Flag[] flags, String name, Type fieldType) {
+    public Field(
+        final Source[] sources, final Flag[] flags, final String name, final Type fieldType) {
       this.sources = new HashSet<>(Arrays.asList(sources));
       this.flags = new HashSet<>(Arrays.asList(flags));
       this.name = name;
-      this.type = fieldType;
+      type = fieldType;
     }
 
     public String getName() {
@@ -549,8 +563,8 @@ public class Reference {
       return type;
     }
 
-    public Field merge(Field anotherField) {
-      if (!this.equals(anotherField) || (!type.equals(anotherField.type))) {
+    public Field merge(final Field anotherField) {
+      if (!equals(anotherField) || !type.equals(anotherField.type)) {
         throw new IllegalStateException("illegal merge " + this + " != " + anotherField);
       }
       return new Field(
@@ -566,9 +580,9 @@ public class Reference {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
       if (o instanceof Field) {
-        Field other = (Field) o;
+        final Field other = (Field) o;
         return name.equals(other.name);
       }
       return false;
@@ -593,30 +607,33 @@ public class Reference {
       this.className = className;
     }
 
-    public Builder withSuperName(String superName) {
+    public Builder withSuperName(final String superName) {
       this.superName = superName;
       return this;
     }
 
-    public Builder withInterface(String interfaceName) {
+    public Builder withInterface(final String interfaceName) {
       interfaces.add(interfaceName);
       return this;
     }
 
-    public Builder withSource(String sourceName, int line) {
+    public Builder withSource(final String sourceName, final int line) {
       sources.add(new Source(sourceName, line));
       return this;
     }
 
-    public Builder withFlag(Flag flag) {
+    public Builder withFlag(final Flag flag) {
       flags.add(flag);
       return this;
     }
 
     public Builder withField(
-        Source[] sources, Flag[] fieldFlags, String fieldName, Type fieldType) {
+        final Source[] sources,
+        final Flag[] fieldFlags,
+        final String fieldName,
+        final Type fieldType) {
       final Field field = new Field(sources, fieldFlags, fieldName, fieldType);
-      int existingIndex = fields.indexOf(field);
+      final int existingIndex = fields.indexOf(field);
       if (existingIndex == -1) {
         fields.add(field);
       } else {
@@ -626,13 +643,13 @@ public class Reference {
     }
 
     public Builder withMethod(
-        Source[] sources,
-        Flag[] methodFlags,
-        String methodName,
-        Type returnType,
-        Type... methodArgs) {
+        final Source[] sources,
+        final Flag[] methodFlags,
+        final String methodName,
+        final Type returnType,
+        final Type... methodArgs) {
       final Method method = new Method(sources, methodFlags, methodName, returnType, methodArgs);
-      int existingIndex = methods.indexOf(method);
+      final int existingIndex = methods.indexOf(method);
       if (existingIndex == -1) {
         methods.add(method);
       } else {
