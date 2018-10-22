@@ -1,15 +1,13 @@
 package datadog.opentracing.propagation;
 
-import io.opentracing.SpanContext;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ExtractedContext implements SpanContext {
+public class ExtractedContext extends TagContext {
   private final String traceId;
   private final String spanId;
   private final int samplingPriority;
   private final Map<String, String> baggage;
-  private final Map<String, String> tags;
   private final AtomicBoolean samplingPriorityLocked = new AtomicBoolean(false);
 
   public ExtractedContext(
@@ -18,11 +16,11 @@ public class ExtractedContext implements SpanContext {
       final int samplingPriority,
       final Map<String, String> baggage,
       final Map<String, String> tags) {
+    super(tags);
     this.traceId = traceId;
     this.spanId = spanId;
     this.samplingPriority = samplingPriority;
     this.baggage = baggage;
-    this.tags = tags;
   }
 
   @Override
@@ -48,10 +46,6 @@ public class ExtractedContext implements SpanContext {
 
   public Map<String, String> getBaggage() {
     return baggage;
-  }
-
-  public Map<String, String> getTags() {
-    return tags;
   }
 
   public boolean getSamplingPriorityLocked() {

@@ -186,6 +186,24 @@ class HTTPCodecTest extends Specification {
     PrioritySampling.SAMPLER_KEEP | _
   }
 
+  def "extract header tags with no propagation"() {
+    setup:
+    final Map<String, String> actual = [
+      SOME_HEADER: "my-interesting-info",
+    ]
+
+    TagContext context = codec.extract(new TextMapExtractAdapter(actual))
+
+    expect:
+    !(context instanceof ExtractedContext)
+    context.getTags() == ["some-tag": "my-interesting-info"]
+  }
+
+  def "extract empty headers returns null"() {
+    expect:
+    codec.extract(new TextMapExtractAdapter(["ignored-header": "ignored-value"])) == null
+  }
+
   def "extract http headers with larger than Java long IDs"() {
     setup:
     String largeTraceId = "9523372036854775807"
