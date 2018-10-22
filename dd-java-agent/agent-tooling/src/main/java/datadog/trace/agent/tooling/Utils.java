@@ -37,8 +37,6 @@ public class Utils {
     "org.msgpack",
     "com.fasterxml.jackson",
     "org.yaml.snakeyaml",
-    // modules
-    "module-info",
   };
 
   private static Method findLoadedClassMethod = null;
