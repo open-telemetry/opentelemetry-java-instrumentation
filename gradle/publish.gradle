@@ -19,7 +19,6 @@
 apply plugin: "maven"
 apply plugin: "com.jfrog.artifactory"
 apply plugin: 'com.jfrog.bintray'
-apply plugin: "signing"
 
 afterEvaluate {
   assert description: "Project $project.path is published, must have a description"
@@ -35,13 +34,6 @@ def isRoot = project.rootProject == project
 if (!isRoot) {
   apply from: "$rootDir/gradle/version.gradle"
   apply from: "${rootDir}/gradle/pom.gradle"
-
-  def isCI = Boolean.parseBoolean("$System.env.CI")
-
-  signing {
-    required = isCI
-    sign configurations.archives
-  }
 
   configurations {
     configurations {
