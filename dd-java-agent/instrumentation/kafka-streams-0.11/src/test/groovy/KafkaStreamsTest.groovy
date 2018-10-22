@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.Config
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
@@ -119,7 +120,8 @@ class KafkaStreamsTest extends AgentTestRunner {
     t1tags1["span.type"] == "queue"
     t1tags1["thread.name"] != null
     t1tags1["thread.id"] != null
-    t1tags1.size() == 5
+    t1tags1[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
+    t1tags1.size() == 6
 
     and: // STREAMING span 0
     def t2span1 = t2[0]
@@ -157,8 +159,9 @@ class KafkaStreamsTest extends AgentTestRunner {
     t2tags2["offset"] == 0
     t2tags2["thread.name"] != null
     t2tags2["thread.id"] != null
+    t2tags2[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
     t2tags2["asdf"] == "testing"
-    t2tags2.size() == 8
+    t2tags2.size() == 9
 
     and: // CONSUMER span 0
     def t3span1 = t3[0]
@@ -178,8 +181,9 @@ class KafkaStreamsTest extends AgentTestRunner {
     t3tags1["offset"] == 0
     t3tags1["thread.name"] != null
     t3tags1["thread.id"] != null
+    t3tags1[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
     t3tags1["testing"] == 123
-    t3tags1.size() == 8
+    t3tags1.size() == 9
 
     def headers = received.headers()
     headers.iterator().hasNext()

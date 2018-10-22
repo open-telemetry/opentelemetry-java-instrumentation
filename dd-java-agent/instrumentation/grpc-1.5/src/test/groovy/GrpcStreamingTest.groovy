@@ -97,7 +97,7 @@ class GrpcStreamingTest extends AgentTestRunner {
           tags {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
-            defaultTags()
+            defaultTags(true)
           }
         }
         clientRange.each {

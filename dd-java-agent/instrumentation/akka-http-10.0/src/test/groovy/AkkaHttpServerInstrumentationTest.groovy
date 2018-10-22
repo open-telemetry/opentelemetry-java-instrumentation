@@ -52,7 +52,7 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            defaultTags()
+            defaultTags(true)
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "http://localhost:$port/test"
             "$Tags.HTTP_METHOD.key" "GET"

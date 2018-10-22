@@ -3,6 +3,7 @@ package datadog.trace.agent.jmxfetch;
 import com.google.common.collect.ImmutableList;
 import datadog.trace.api.Config;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.datadog.jmxfetch.App;
 import org.datadog.jmxfetch.AppConfig;
@@ -29,15 +30,17 @@ public class JMXFetch {
     final List<String> metricsConfigs = config.getJmxFetchMetricsConfigs();
     final Integer checkPeriod = config.getJmxFetchCheckPeriod();
     final Integer refreshBeansPeriod = config.getJmxFetchRefreshBeansPeriod();
+    final Map<String, String> globalTags = config.getMergedJmxTags();
     final String reporter = getReporter(config);
     final String logLocation = getLogLocation();
     final String logLevel = getLogLevel();
 
     log.error(
-        "JMXFetch config: {} {} {} {} {} {}",
+        "JMXFetch config: {} {} {} {} {} {} {}",
         metricsConfigs,
         checkPeriod,
         refreshBeansPeriod,
+        globalTags,
         reporter,
         logLocation,
         logLevel);
@@ -47,6 +50,7 @@ public class JMXFetch {
             metricsConfigs,
             checkPeriod,
             refreshBeansPeriod,
+            globalTags,
             reporter,
             logLocation,
             logLevel);

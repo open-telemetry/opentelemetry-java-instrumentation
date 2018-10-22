@@ -94,7 +94,7 @@ class TomcatServlet3Test extends AgentTestRunner {
             "span.origin.type" ApplicationFilterChain.name
             "servlet.context" "/my-context"
             "http.status_code" 200
-            defaultTags()
+            defaultTags(distributedTracing)
           }
         }
       }

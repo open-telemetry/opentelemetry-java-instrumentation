@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.Config
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.junit.ClassRule
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
@@ -93,7 +94,8 @@ class KafkaClientTest extends AgentTestRunner {
     t1tags1["span.type"] == "queue"
     t1tags1["thread.name"] != null
     t1tags1["thread.id"] != null
-    t1tags1.size() == 5
+    t1tags1[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
+    t1tags1.size() == 6
 
     and: // CONSUMER span 0
     def t2span1 = t2[0]
@@ -113,7 +115,8 @@ class KafkaClientTest extends AgentTestRunner {
     t2tags1["offset"] == 0
     t2tags1["thread.name"] != null
     t2tags1["thread.id"] != null
-    t2tags1.size() == 7
+    t2tags1[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
+    t2tags1.size() == 8
 
     def headers = received.headers()
     headers.iterator().hasNext()

@@ -42,7 +42,15 @@ class SpanDecoratorTest extends Specification {
 
   def "set service name"() {
     setup:
-    tracer = new DDTracer("wrong-service", new LoggingWriter(), new AllSampler(), emptyMap(), mapping, emptyMap())
+    tracer = new DDTracer(
+      "wrong-service",
+      new LoggingWriter(),
+      new AllSampler(),
+      "some-runtime-id",
+      emptyMap(),
+      mapping,
+      emptyMap()
+    )
 
     when:
     def span = tracer.buildSpan("some span").withTag(tag, name).start()
@@ -65,7 +73,15 @@ class SpanDecoratorTest extends Specification {
 
   def "default or configured service name can be remapped without setting tag"() {
     setup:
-    tracer = new DDTracer(serviceName, new LoggingWriter(), new AllSampler(), emptyMap(), mapping, emptyMap())
+    tracer = new DDTracer(
+      serviceName,
+      new LoggingWriter(),
+      new AllSampler(),
+      "some-runtime-id",
+      emptyMap(),
+      mapping,
+      emptyMap()
+    )
 
     when:
     def span = tracer.buildSpan("some span").start()
@@ -103,7 +119,15 @@ class SpanDecoratorTest extends Specification {
 
   def "set service name from servlet.context with context '#context' for service #serviceName"() {
     setup:
-    tracer = new DDTracer(serviceName, new LoggingWriter(), new AllSampler(), emptyMap(), mapping, emptyMap())
+    tracer = new DDTracer(
+      serviceName,
+      new LoggingWriter(),
+      new AllSampler(),
+      "some-runtime-id",
+      emptyMap(),
+      mapping,
+      emptyMap()
+    )
 
     when:
     def span = tracer.buildSpan("some span").start()

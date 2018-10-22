@@ -47,9 +47,6 @@ class JettyServlet2Test extends AgentTestRunner {
 
     jettyServer.setHandler(servletContext)
     jettyServer.start()
-
-    System.out.println(
-      "Jetty server: http://localhost:" + port + "/")
   }
 
   def cleanup() {
@@ -57,11 +54,15 @@ class JettyServlet2Test extends AgentTestRunner {
     jettyServer.destroy()
   }
 
-  def "test #path servlet call"() {
+  def "test #path servlet call (auth: #auth, distributed tracing: #distributedTracing)"() {
     setup:
     def requestBuilder = new Request.Builder()
       .url("http://localhost:$port/ctx/$path")
       .get()
+    if (distributedTracing) {
+      requestBuilder.header("x-datadog-trace-id", "123")
+      requestBuilder.header("x-datadog-parent-id", "456")
+    }
     if (auth) {
       requestBuilder.header(HttpHeaders.AUTHORIZATION, Credentials.basic("user", "password"))
     }
@@ -73,12 +74,17 @@ class JettyServlet2Test extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
+          if (distributedTracing) {
+            traceId "123"
+            parentId "456"
+          } else {
+            parent()
+          }
           serviceName "ctx"
           operationName "servlet.request"
           resourceName "GET /ctx/$path"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
-          parent()
           tags {
             "http.url" "http://localhost:$port/ctx/$path"
             "http.method" "GET"
@@ -90,16 +96,18 @@ class JettyServlet2Test extends AgentTestRunner {
             if (auth) {
               "user.principal" "user"
             }
-            defaultTags()
+            defaultTags(distributedTracing)
           }
         }
       }
     }
 
     where:
-    path        | expectedResponse | auth
-    "sync"      | "Hello Sync"     | false
-    "auth/sync" | "Hello Sync"     | true
+    path        | expectedResponse | auth  | distributedTracing
+    "sync"      | "Hello Sync"     | false | false
+    "auth/sync" | "Hello Sync"     | true  | false
+    "sync"      | "Hello Sync"     | false | true
+    "auth/sync" | "Hello Sync"     | true  | true
   }
 
   def "test #path error servlet call"() {

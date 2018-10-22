@@ -100,7 +100,7 @@ class JettyServlet3Test extends AgentTestRunner {
             if (auth) {
               "user.principal" "user"
             }
-            defaultTags()
+            defaultTags(distributedTracing)
           }
         }
       }

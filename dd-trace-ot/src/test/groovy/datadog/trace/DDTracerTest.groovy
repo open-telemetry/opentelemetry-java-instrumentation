@@ -64,7 +64,8 @@ class DDTracerTest extends Specification {
     System.setProperty(PREFIX + HEADER_TAGS, mapString)
 
     when:
-    def tracer = new DDTracer(new Config())
+    def config = new Config()
+    def tracer = new DDTracer(config)
     def taggedHeaders = tracer.registry.codecs.values().first().taggedHeaders
 
     then:

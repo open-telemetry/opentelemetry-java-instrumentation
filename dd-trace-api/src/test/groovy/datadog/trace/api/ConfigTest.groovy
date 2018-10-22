@@ -5,23 +5,7 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
 
-import static Config.AGENT_HOST
-import static Config.AGENT_PORT
-import static Config.HEADER_TAGS
-import static Config.PREFIX
-import static Config.SERVICE_MAPPING
-import static Config.SERVICE_NAME
-import static Config.SPAN_TAGS
-import static Config.WRITER_TYPE
-import static datadog.trace.api.Config.DEFAULT_JMX_FETCH_STATSD_PORT
-import static datadog.trace.api.Config.JMX_FETCH_CHECK_PERIOD
-import static datadog.trace.api.Config.JMX_FETCH_ENABLED
-import static datadog.trace.api.Config.JMX_FETCH_METRICS_CONFIGS
-import static datadog.trace.api.Config.JMX_FETCH_REFRESH_BEANS_PERIOD
-import static datadog.trace.api.Config.JMX_FETCH_STATSD_HOST
-import static datadog.trace.api.Config.JMX_FETCH_STATSD_PORT
-import static datadog.trace.api.Config.PRIORITY_SAMPLING
-import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
+import static datadog.trace.api.Config.*
 
 class ConfigTest extends Specification {
   @Rule
@@ -47,7 +31,8 @@ class ConfigTest extends Specification {
     config.prioritySamplingEnabled == false
     config.traceResolverEnabled == true
     config.serviceMapping == [:]
-    config.spanTags == [:]
+    config.mergedSpanTags == [:]
+    config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId()]
     config.headerTags == [:]
     config.jmxFetchEnabled == false
     config.jmxFetchMetricsConfigs == []
@@ -67,8 +52,10 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + PRIORITY_SAMPLING, "true")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, "false")
     System.setProperty(PREFIX + SERVICE_MAPPING, "a:1")
-    System.setProperty(PREFIX + SPAN_TAGS, "b:2")
-    System.setProperty(PREFIX + HEADER_TAGS, "c:3")
+    System.setProperty(PREFIX + GLOBAL_TAGS, "b:2")
+    System.setProperty(PREFIX + SPAN_TAGS, "c:3")
+    System.setProperty(PREFIX + JMX_TAGS, "d:4")
+    System.setProperty(PREFIX + HEADER_TAGS, "e:5")
     System.setProperty(PREFIX + JMX_FETCH_ENABLED, "true")
     System.setProperty(PREFIX + JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
     System.setProperty(PREFIX + JMX_FETCH_CHECK_PERIOD, "100")
@@ -87,8 +74,9 @@ class ConfigTest extends Specification {
     config.prioritySamplingEnabled == true
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
-    config.spanTags == [b: "2"]
-    config.headerTags == [c: "3"]
+    config.mergedSpanTags == [b: "2", c: "3"]
+    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId()]
+    config.headerTags == [e: "5"]
     config.jmxFetchEnabled == true
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100
@@ -140,8 +128,10 @@ class ConfigTest extends Specification {
     properties.setProperty(PRIORITY_SAMPLING, "true")
     properties.setProperty(TRACE_RESOLVER_ENABLED, "false")
     properties.setProperty(SERVICE_MAPPING, "a:1")
-    properties.setProperty(SPAN_TAGS, "b:2")
-    properties.setProperty(HEADER_TAGS, "c:3")
+    properties.setProperty(GLOBAL_TAGS, "b:2")
+    properties.setProperty(SPAN_TAGS, "c:3")
+    properties.setProperty(JMX_TAGS, "d:4")
+    properties.setProperty(HEADER_TAGS, "e:5")
     properties.setProperty(JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
     properties.setProperty(JMX_FETCH_CHECK_PERIOD, "100")
     properties.setProperty(JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
@@ -159,8 +149,9 @@ class ConfigTest extends Specification {
     config.prioritySamplingEnabled == true
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
-    config.spanTags == [b: "2"]
-    config.headerTags == [c: "3"]
+    config.mergedSpanTags == [b: "2", c: "3"]
+    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId()]
+    config.headerTags == [e: "5"]
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100
     config.jmxFetchRefreshBeansPeriod == 200
