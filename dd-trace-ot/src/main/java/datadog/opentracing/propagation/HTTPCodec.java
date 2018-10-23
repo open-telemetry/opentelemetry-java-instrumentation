@@ -2,6 +2,7 @@ package datadog.opentracing.propagation;
 
 import datadog.opentracing.DDSpanContext;
 import datadog.trace.api.sampling.PrioritySampling;
+import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMap;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -49,7 +50,7 @@ public class HTTPCodec implements Codec<TextMap> {
   }
 
   @Override
-  public ExtractedContext extract(final TextMap carrier) {
+  public SpanContext extract(final TextMap carrier) {
 
     Map<String, String> baggage = Collections.emptyMap();
     Map<String, String> tags = Collections.emptyMap();
@@ -81,12 +82,17 @@ public class HTTPCodec implements Codec<TextMap> {
         tags.put(taggedHeaders.get(key), decode(val));
       }
     }
-    ExtractedContext context = null;
-    if (!"0".equals(traceId)) {
-      context = new ExtractedContext(traceId, spanId, samplingPriority, baggage, tags);
-      context.lockSamplingPriority();
 
-      log.debug("{} - Parent context extracted", context.getTraceId());
+    SpanContext context = null;
+    if (!"0".equals(traceId)) {
+      final ExtractedContext ctx =
+          new ExtractedContext(traceId, spanId, samplingPriority, baggage, tags);
+      ctx.lockSamplingPriority();
+
+      log.debug("{} - Parent context extracted", ctx.getTraceId());
+      context = ctx;
+    } else if (!tags.isEmpty()) {
+      context = new TagContext(tags);
     }
 
     return context;

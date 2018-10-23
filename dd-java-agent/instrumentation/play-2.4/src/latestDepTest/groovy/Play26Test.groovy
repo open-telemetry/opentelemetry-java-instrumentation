@@ -54,7 +54,7 @@ class Play26Test extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            defaultTags()
+            defaultTags(true)
             "http.status_code" 200
             "http.url" "http://localhost:$port/helloplay/spock"
             "http.method" "GET"

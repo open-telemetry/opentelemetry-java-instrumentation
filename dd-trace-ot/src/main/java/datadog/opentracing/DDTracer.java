@@ -5,6 +5,7 @@ import datadog.opentracing.decorators.DDDecoratorsFactory;
 import datadog.opentracing.propagation.Codec;
 import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HTTPCodec;
+import datadog.opentracing.propagation.TagContext;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
 import datadog.trace.api.Config;
@@ -545,25 +546,29 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           spanType = ddsc.getSpanType();
         }
 
-        // Propagate external trace
-      } else if (parentContext instanceof ExtractedContext) {
-        final ExtractedContext ddsc = (ExtractedContext) parentContext;
-        traceId = ddsc.getTraceId();
-        parentSpanId = ddsc.getSpanId();
-        baggage = ddsc.getBaggage();
-        tags.putAll(ddsc.getTags());
-        tags.put(Config.RUNTIME_ID_TAG, runtimeId);
-        parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
-        samplingPriority = ddsc.getSamplingPriority();
-
-        // Start a new trace
       } else {
-        traceId = generateNewId();
-        parentSpanId = "0";
-        baggage = null;
+        if (parentContext instanceof ExtractedContext) {
+          // Propagate external trace
+          final ExtractedContext extractedContext = (ExtractedContext) parentContext;
+          traceId = extractedContext.getTraceId();
+          parentSpanId = extractedContext.getSpanId();
+          samplingPriority = extractedContext.getSamplingPriority();
+          baggage = extractedContext.getBaggage();
+        } else {
+          // Start a new trace
+          traceId = generateNewId();
+          parentSpanId = "0";
+          samplingPriority = PrioritySampling.UNSET;
+          baggage = null;
+        }
+
+        // Get header tags whether propagating or not.
+        if (parentContext instanceof TagContext) {
+          tags.putAll(((TagContext) parentContext).getTags());
+        }
         tags.put(Config.RUNTIME_ID_TAG, runtimeId);
+
         parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
-        samplingPriority = PrioritySampling.UNSET;
       }
 
       if (serviceName == null) {

@@ -22,6 +22,7 @@
 package datadog.opentracing.propagation;
 
 import datadog.opentracing.DDSpanContext;
+import io.opentracing.SpanContext;
 
 /** A codec is a simple object that can encode and decode a span context through a carrier */
 public interface Codec<T> {
@@ -41,5 +42,5 @@ public interface Codec<T> {
    * @param carrier
    * @return the span context
    */
-  ExtractedContext extract(T carrier);
+  SpanContext extract(T carrier);
 }
