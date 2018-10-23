@@ -202,7 +202,9 @@ jobs:
 
     - run:
         name: Verify Muzzle
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4G -Xms64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=2
+        # Note: Current muzzle implementation doesn't use parallel workers running everything in one large process.
+        # Therefore we do not have `--max-workers` here and also set heap to be quite large.
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx12G -Xms64M" ./gradlew muzzle --parallel --stacktrace --no-daemon
 
     - save_cache:
         key: dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
