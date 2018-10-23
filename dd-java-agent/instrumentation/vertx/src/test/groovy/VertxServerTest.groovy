@@ -63,7 +63,7 @@ class VertxServerTest extends AgentTestRunner {
             "$Tags.PEER_PORT.key" Integer
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
-            defaultTags()
+            defaultTags(true)
           }
         }
         span(1) {

@@ -93,7 +93,7 @@ class JMS2Test extends AgentTestRunner {
           errored false
 
           tags {
-            defaultTags()
+            defaultTags(true)
             "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
             "${Tags.COMPONENT.key}" "jms"
             "${Tags.SPAN_KIND.key}" "consumer"
@@ -145,7 +145,7 @@ class JMS2Test extends AgentTestRunner {
           errored false
 
           tags {
-            defaultTags()
+            defaultTags(true)
             "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
             "${Tags.COMPONENT.key}" "jms"
             "${Tags.SPAN_KIND.key}" "consumer"

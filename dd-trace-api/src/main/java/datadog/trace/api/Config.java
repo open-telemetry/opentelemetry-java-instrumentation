@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,9 @@ public class Config {
   public static final String PRIORITY_SAMPLING = "priority.sampling";
   public static final String TRACE_RESOLVER_ENABLED = "trace.resolver.enabled";
   public static final String SERVICE_MAPPING = "service.mapping";
+  public static final String GLOBAL_TAGS = "trace.global.tags";
   public static final String SPAN_TAGS = "trace.span.tags";
+  public static final String JMX_TAGS = "trace.jmx.tags";
   public static final String HEADER_TAGS = "trace.header.tags";
   public static final String JMX_FETCH_ENABLED = "jmxfetch.enabled";
   public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
@@ -43,6 +46,7 @@ public class Config {
   public static final String JMX_FETCH_STATSD_HOST = "jmxfetch.statsd.host";
   public static final String JMX_FETCH_STATSD_PORT = "jmxfetch.statsd.port";
 
+  public static final String RUNTIME_ID_TAG = "runtime-id";
   public static final String DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
   public static final String DD_AGENT_WRITER_TYPE = "DDAgentWriter";
@@ -58,6 +62,12 @@ public class Config {
 
   public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
 
+  /**
+   * this is a random UUID that gets generated on JVM start up and is attached to every root span
+   * and every JMX metric that is sent out.
+   */
+  @Getter private final String runtimeId;
+
   @Getter private final String serviceName;
   @Getter private final String writerType;
   @Getter private final String agentHost;
@@ -65,7 +75,9 @@ public class Config {
   @Getter private final boolean prioritySamplingEnabled;
   @Getter private final boolean traceResolverEnabled;
   @Getter private final Map<String, String> serviceMapping;
-  @Getter private final Map<String, String> spanTags;
+  private final Map<String, String> globalTags;
+  private final Map<String, String> spanTags;
+  private final Map<String, String> jmxTags;
   @Getter private final Map<String, String> headerTags;
   @Getter private final boolean jmxFetchEnabled;
   @Getter private final List<String> jmxFetchMetricsConfigs;
@@ -77,6 +89,8 @@ public class Config {
   // Read order: System Properties -> Env Variables, [-> default value]
   // Visible for testing
   Config() {
+    runtimeId = UUID.randomUUID().toString();
+
     serviceName = getSettingFromEnvironment(SERVICE_NAME, DEFAULT_SERVICE_NAME);
     writerType = getSettingFromEnvironment(WRITER_TYPE, DEFAULT_AGENT_WRITER_TYPE);
     agentHost = getSettingFromEnvironment(AGENT_HOST, DEFAULT_AGENT_HOST);
@@ -86,7 +100,11 @@ public class Config {
     traceResolverEnabled =
         getBooleanSettingFromEnvironment(TRACE_RESOLVER_ENABLED, DEFAULT_TRACE_RESOLVER_ENABLED);
     serviceMapping = getMapSettingFromEnvironment(SERVICE_MAPPING, null);
+
+    globalTags = getMapSettingFromEnvironment(GLOBAL_TAGS, null);
     spanTags = getMapSettingFromEnvironment(SPAN_TAGS, null);
+    jmxTags = getMapSettingFromEnvironment(JMX_TAGS, null);
+
     headerTags = getMapSettingFromEnvironment(HEADER_TAGS, null);
     jmxFetchEnabled =
         getBooleanSettingFromEnvironment(JMX_FETCH_ENABLED, DEFAULT_JMX_FETCH_ENABLED);
@@ -101,6 +119,8 @@ public class Config {
 
   // Read order: Properties -> Parent
   private Config(final Properties properties, final Config parent) {
+    runtimeId = parent.runtimeId;
+
     serviceName = properties.getProperty(SERVICE_NAME, parent.serviceName);
     writerType = properties.getProperty(WRITER_TYPE, parent.writerType);
     agentHost = properties.getProperty(AGENT_HOST, parent.agentHost);
@@ -110,7 +130,11 @@ public class Config {
     traceResolverEnabled =
         getPropertyBooleanValue(properties, TRACE_RESOLVER_ENABLED, parent.traceResolverEnabled);
     serviceMapping = getPropertyMapValue(properties, SERVICE_MAPPING, parent.serviceMapping);
+
+    globalTags = getPropertyMapValue(properties, GLOBAL_TAGS, parent.globalTags);
     spanTags = getPropertyMapValue(properties, SPAN_TAGS, parent.spanTags);
+    jmxTags = getPropertyMapValue(properties, JMX_TAGS, parent.jmxTags);
+
     headerTags = getPropertyMapValue(properties, HEADER_TAGS, parent.headerTags);
     jmxFetchEnabled =
         getPropertyBooleanValue(properties, JMX_FETCH_ENABLED, parent.jmxFetchEnabled);
@@ -124,6 +148,22 @@ public class Config {
     jmxFetchStatsdHost = properties.getProperty(JMX_FETCH_STATSD_HOST, parent.jmxFetchStatsdHost);
     jmxFetchStatsdPort =
         getPropertyIntegerValue(properties, JMX_FETCH_STATSD_PORT, parent.jmxFetchStatsdPort);
+  }
+
+  public Map<String, String> getMergedSpanTags() {
+    // DO not include runtimeId into span tags: we only want that added to the root span
+    final Map<String, String> result = newHashMap(globalTags.size() + spanTags.size());
+    result.putAll(globalTags);
+    result.putAll(spanTags);
+    return Collections.unmodifiableMap(result);
+  }
+
+  public Map<String, String> getMergedJmxTags() {
+    final Map<String, String> result = newHashMap(globalTags.size() + jmxTags.size() + 1);
+    result.putAll(globalTags);
+    result.putAll(jmxTags);
+    result.put(RUNTIME_ID_TAG, runtimeId);
+    return Collections.unmodifiableMap(result);
   }
 
   private static String getSettingFromEnvironment(final String name, final String defaultValue) {
@@ -195,7 +235,7 @@ public class Config {
     }
 
     final String[] tokens = str.split(",", -1);
-    final Map<String, String> map = new HashMap<>(tokens.length + 1, 1f);
+    final Map<String, String> map = newHashMap(tokens.length);
 
     for (final String token : tokens) {
       final String[] keyValue = token.split(":", -1);
@@ -210,6 +250,10 @@ public class Config {
       }
     }
     return Collections.unmodifiableMap(map);
+  }
+
+  private static Map<String, String> newHashMap(final int size) {
+    return new HashMap<>(size + 1, 1f);
   }
 
   private static List<String> parseList(final String str) {

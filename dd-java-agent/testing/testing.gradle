@@ -1,7 +1,7 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
 minimumBranchCoverage = 0.5
-minimumInstructionCoverage = 0.6
+minimumInstructionCoverage = 0.5
 excludedClassesConverage += [
   'datadog.trace.agent.test.asserts.*Assert',
   'datadog.trace.agent.test.AgentTestRunner.ErrorCountingListener',

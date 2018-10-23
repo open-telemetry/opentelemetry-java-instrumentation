@@ -1,6 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import okhttp3.OkHttpClient
 import org.eclipse.jetty.continuation.Continuation
@@ -74,8 +75,9 @@ class JettyHandlerTest extends AgentTestRunner {
     tags["http.status_code"] == 200
     tags["thread.name"] != null
     tags["thread.id"] != null
+    tags[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
     tags["span.origin.type"] == handler.class.name
-    tags.size() == 9
+    tags.size() == 10
   }
 
 
@@ -162,10 +164,11 @@ class JettyHandlerTest extends AgentTestRunner {
     tags["http.status_code"] == 500
     tags["thread.name"] != null
     tags["thread.id"] != null
+    tags[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
     tags["span.origin.type"] == handler.class.name
     tags["error"] == true
     tags["error.type"] == RuntimeException.name
     tags["error.stack"] != null
-    tags.size() == 12
+    tags.size() == 13
   }
 }

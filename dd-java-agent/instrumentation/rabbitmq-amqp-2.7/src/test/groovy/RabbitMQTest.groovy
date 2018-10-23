@@ -101,17 +101,17 @@ class RabbitMQTest extends AgentTestRunner {
     and:
     assertTraces(2) {
       trace(0, 1) {
-        rabbitSpan(it, "basic.get <generated>", TEST_WRITER[1][1])
+        rabbitSpan(it, "basic.get <generated>", true, TEST_WRITER[1][1])
       }
       trace(1, 5) {
         span(0) {
           operationName "parent"
         }
         // reverse order
-        rabbitSpan(it, 1, "basic.publish $exchangeName -> $routingKey", span(0))
-        rabbitSpan(it, 2, "queue.bind", span(0))
-        rabbitSpan(it, 3, "queue.declare", span(0))
-        rabbitSpan(it, 4, "exchange.declare", span(0))
+        rabbitSpan(it, 1, "basic.publish $exchangeName -> $routingKey", false, span(0))
+        rabbitSpan(it, 2, "queue.bind", false, span(0))
+        rabbitSpan(it, 3, "queue.declare", false, span(0))
+        rabbitSpan(it, 4, "exchange.declare", false, span(0))
       }
     }
 
@@ -140,7 +140,7 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, "basic.publish <default> -> <generated>")
       }
       trace(2, 1) {
-        rabbitSpan(it, "basic.get <generated>", TEST_WRITER[1][0])
+        rabbitSpan(it, "basic.get <generated>", true, TEST_WRITER[1][0])
       }
     }
   }
@@ -197,7 +197,7 @@ class RabbitMQTest extends AgentTestRunner {
           rabbitSpan(it, "basic.publish $exchangeName -> <all>")
         }
         trace(3 + (it * 2), 1) {
-          rabbitSpan(it, resource, publishSpan)
+          rabbitSpan(it, resource, true, publishSpan)
         }
       }
     }
@@ -220,7 +220,7 @@ class RabbitMQTest extends AgentTestRunner {
 
     assertTraces(1) {
       trace(0, 1) {
-        rabbitSpan(it, command, null, throwable, errorMsg)
+        rabbitSpan(it, command, false, null, throwable, errorMsg)
       }
     }
 
@@ -259,16 +259,31 @@ class RabbitMQTest extends AgentTestRunner {
         rabbitSpan(it, "basic.publish <default> -> some-routing-queue")
       }
       trace(2, 1) {
-        rabbitSpan(it, "basic.get $queue.name", TEST_WRITER[1][0])
+        rabbitSpan(it, "basic.get $queue.name", true, TEST_WRITER[1][0])
       }
     }
   }
 
-  def rabbitSpan(TraceAssert trace, String resource, DDSpan parentSpan = null, Throwable exception = null, String errorMsg = null) {
-    rabbitSpan(trace, 0, resource, parentSpan, exception, errorMsg)
+  def rabbitSpan(
+    TraceAssert trace,
+    String resource,
+    Boolean distributedRootSpan = false,
+    DDSpan parentSpan = null,
+    Throwable exception = null,
+    String errorMsg = null
+  ) {
+    rabbitSpan(trace, 0, resource, distributedRootSpan, parentSpan, exception, errorMsg)
   }
 
-  def rabbitSpan(TraceAssert trace, int index, String resource, DDSpan parentSpan = null, Throwable exception = null, String errorMsg = null) {
+  def rabbitSpan(
+    TraceAssert trace,
+    int index,
+    String resource,
+    Boolean distributedRootSpan = false,
+    DDSpan parentSpan = null,
+    Throwable exception = null,
+    String errorMsg = null
+  ) {
     trace.span(index) {
       serviceName "rabbitmq"
       operationName "amqp.command"
@@ -322,7 +337,7 @@ class RabbitMQTest extends AgentTestRunner {
             "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CLIENT
             "amqp.command" { it == null || it == resource }
         }
-        defaultTags()
+        defaultTags(distributedRootSpan)
       }
     }
   }

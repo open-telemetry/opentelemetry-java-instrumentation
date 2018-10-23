@@ -52,6 +52,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   /** Scope manager is in charge of managing the scopes from which spans are created */
   final ContextualScopeManager scopeManager = new ContextualScopeManager();
 
+  /** Value for runtime-id tag */
+  private final String runtimeId;
   /** A set of tags that are added to every span */
   private final Map<String, String> defaultSpanTags;
   /** A configured mapping of service names to update with new values */
@@ -95,17 +97,24 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         serviceName,
         Writer.Builder.forConfig(config),
         Sampler.Builder.forConfig(config),
-        config.getSpanTags(),
+        config.getRuntimeId(),
+        config.getMergedSpanTags(),
         config.getServiceMapping(),
         config.getHeaderTags());
     log.debug("Using config: {}", config);
   }
 
-  public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
+  /** Visible for testing */
+  DDTracer(
+      final String serviceName,
+      final Writer writer,
+      final Sampler sampler,
+      final String runtimeId) {
     this(
         serviceName,
         writer,
         sampler,
+        runtimeId,
         Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap());
@@ -120,7 +129,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         config.getServiceName(),
         writer,
         Sampler.Builder.forConfig(config),
-        config.getSpanTags(),
+        config.getRuntimeId(),
+        config.getMergedSpanTags(),
         config.getServiceMapping(),
         config.getHeaderTags());
   }
@@ -129,9 +139,11 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final String serviceName,
       final Writer writer,
       final Sampler sampler,
+      final String runtimeId,
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders) {
+    assert runtimeId != null;
     assert defaultSpanTags != null;
     assert serviceNameMappings != null;
     assert taggedHeaders != null;
@@ -141,6 +153,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this.writer.start();
     this.sampler = sampler;
     this.defaultSpanTags = defaultSpanTags;
+    this.runtimeId = runtimeId;
     this.serviceNameMappings = serviceNameMappings;
 
     try {
@@ -335,6 +348,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         + writer
         + ", sampler="
         + sampler
+        + ", runtimeId="
+        + runtimeId
         + ", defaultSpanTags="
         + defaultSpanTags
         + '}';
@@ -361,7 +376,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     private final String operationName;
 
     // Builder attributes
-    private Map<String, Object> tags = new HashMap<String, Object>(defaultSpanTags);
+    private final Map<String, Object> tags = new HashMap<String, Object>(defaultSpanTags);
     private long timestampMicro;
     private SpanContext parent;
     private String serviceName;
@@ -536,12 +551,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         traceId = ddsc.getTraceId();
         parentSpanId = ddsc.getSpanId();
         baggage = ddsc.getBaggage();
-        if (tags.isEmpty() && !ddsc.getTags().isEmpty()) {
-          tags = new HashMap<>();
-        }
-        if (!ddsc.getTags().isEmpty()) {
-          tags.putAll(ddsc.getTags());
-        }
+        tags.putAll(ddsc.getTags());
+        tags.put(Config.RUNTIME_ID_TAG, runtimeId);
         parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
         samplingPriority = ddsc.getSamplingPriority();
 
@@ -550,6 +561,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         traceId = generateNewId();
         parentSpanId = "0";
         baggage = null;
+        tags.put(Config.RUNTIME_ID_TAG, runtimeId);
         parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
         samplingPriority = PrioritySampling.UNSET;
       }

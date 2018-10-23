@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when
 
 class DDSpanBuilderTest extends Specification {
   def writer = new ListWriter()
+  def config = Config.get()
   def tracer = new DDTracer(writer)
 
   def "build simple span"() {
@@ -51,8 +52,9 @@ class DDSpanBuilderTest extends Specification {
 
     then:
     span.getTags() == [
-      (DDTags.THREAD_NAME): Thread.currentThread().getName(),
-      (DDTags.THREAD_ID)  : Thread.currentThread().getId(),
+      (DDTags.THREAD_NAME)   : Thread.currentThread().getName(),
+      (DDTags.THREAD_ID)     : Thread.currentThread().getId(),
+      (Config.RUNTIME_ID_TAG): config.getRuntimeId()
     ]
 
     when:
@@ -263,7 +265,7 @@ class DDSpanBuilderTest extends Specification {
     span.parentId == extractedContext.spanId
     span.samplingPriority == extractedContext.samplingPriority
     span.context().baggageItems == extractedContext.baggage
-    span.context().@tags == extractedContext.tags
+    span.context().@tags == extractedContext.tags + [(Config.RUNTIME_ID_TAG): config.getRuntimeId()]
 
     where:
     extractedContext                                                      | _
@@ -274,15 +276,16 @@ class DDSpanBuilderTest extends Specification {
   def "global span tags populated on each span"() {
     setup:
     System.setProperty("dd.trace.span.tags", tagString)
-    tracer = new DDTracer(new Config(), writer)
+    def config = new Config()
+    tracer = new DDTracer(config, writer)
     def span = tracer.buildSpan("op name").withServiceName("foo").start()
-    tags.putAll([
-      (DDTags.THREAD_NAME): Thread.currentThread().getName(),
-      (DDTags.THREAD_ID)  : Thread.currentThread().getId(),
-    ])
 
     expect:
-    span.tags == tags
+    span.tags == tags + [
+      (DDTags.THREAD_NAME)   : Thread.currentThread().getName(),
+      (DDTags.THREAD_ID)     : Thread.currentThread().getId(),
+      (Config.RUNTIME_ID_TAG): config.getRuntimeId()
+    ]
 
     cleanup:
     System.clearProperty("dd.trace.span.tags")

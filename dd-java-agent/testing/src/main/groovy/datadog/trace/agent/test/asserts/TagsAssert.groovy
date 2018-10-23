@@ -1,14 +1,17 @@
 package datadog.trace.agent.test.asserts
 
 import datadog.opentracing.DDSpan
+import datadog.trace.api.Config
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 
 class TagsAssert {
+  private final String spanParentId
   private final Map<String, Object> tags
   private final Set<String> assertedTags = new TreeSet<>()
 
   private TagsAssert(DDSpan span) {
+    this.spanParentId = span.parentId
     this.tags = span.tags
   }
 
@@ -23,12 +26,21 @@ class TagsAssert {
     asserter.assertTagsAllVerified()
   }
 
-  def defaultTags() {
+  /**
+   * @param distributedRootSpan set to true if current span has a parent span but still considered 'root' for current service
+   */
+  def defaultTags(boolean distributedRootSpan = false) {
     assertedTags.add("thread.name")
     assertedTags.add("thread.id")
+    assertedTags.add(Config.RUNTIME_ID_TAG)
 
     assert tags["thread.name"] != null
     assert tags["thread.id"] != null
+    if ("0" == spanParentId || distributedRootSpan) {
+      assert tags[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
+    } else {
+      assert tags[Config.RUNTIME_ID_TAG] == null
+    }
   }
 
   def errorTags(Class<Throwable> errorType) {

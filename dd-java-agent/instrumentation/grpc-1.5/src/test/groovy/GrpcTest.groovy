@@ -53,7 +53,7 @@ class GrpcTest extends AgentTestRunner {
           tags {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
-            defaultTags()
+            defaultTags(true)
           }
         }
         span(1) {
@@ -144,7 +144,7 @@ class GrpcTest extends AgentTestRunner {
           tags {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
-            defaultTags()
+            defaultTags(true)
           }
         }
         span(1) {
@@ -230,7 +230,7 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             errorTags error.class, error.message
-            defaultTags()
+            defaultTags(true)
           }
         }
         span(1) {

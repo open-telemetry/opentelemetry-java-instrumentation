@@ -38,7 +38,12 @@ class Netty40ServerTest extends AgentTestRunner {
     int port = TestUtils.randomOpenPort()
     initializeServer(eventLoopGroup, port, handlers, HttpResponseStatus.OK)
 
-    def request = new Request.Builder().url("http://localhost:$port/").get().build()
+    def request = new Request.Builder()
+      .url("http://localhost:$port/")
+      .header("x-datadog-trace-id", "123")
+      .header("x-datadog-parent-id", "456")
+      .get()
+      .build()
     def response = client.newCall(request).execute()
 
     expect:
@@ -49,6 +54,8 @@ class Netty40ServerTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
+          traceId "123"
+          parentId "456"
           serviceName "unnamed-java-app"
           operationName "netty.request"
           resourceName "GET /"
@@ -63,7 +70,7 @@ class Netty40ServerTest extends AgentTestRunner {
             "$Tags.PEER_PORT.key" Integer
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
-            defaultTags()
+            defaultTags(true)
           }
         }
       }
