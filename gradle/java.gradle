@@ -145,6 +145,7 @@ if (project.parent && project.parent.hasProperty("javaExecutableVersionCache")) 
 } else {
   project.ext.javaExecutableVersionCache = [:]
 }
+
 def getJavaExecutableVersion(String path) {
   def cache = project.ext.javaExecutableVersionCache
 
@@ -176,7 +177,6 @@ def isJavaVersionAllowed(JavaVersion version) {
   }
   return true
 }
-
 
 // JVM names we would like to run complete test suite on
 // Note: complete test suite is always run on JVM used for compilation

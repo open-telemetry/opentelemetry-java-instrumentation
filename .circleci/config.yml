@@ -25,7 +25,7 @@ jobs:
 
     - run:
         name: Build Project
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1G -Xms64M" ./gradlew clean :dd-java-agent:shadowJar compileTestGroovy compileTestScala compileTestJava --build-cache --parallel --stacktrace --no-daemon --max-workers=4
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1G -Xms64M" ./gradlew clean :dd-java-agent:shadowJar compileTestGroovy compileTestScala compileTestJava --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
     - run:
         name: Collect Libs
@@ -66,7 +66,7 @@ jobs:
 
     - run:
         name: Run Tests
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew $TEST_TASK --build-cache --parallel --stacktrace --no-daemon --max-workers=3
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2G -Xms512M" ./gradlew $TEST_TASK --build-cache --parallel --stacktrace --no-daemon --max-workers=6
 
     - run:
         name: Collect Reports
@@ -130,7 +130,7 @@ jobs:
 
     - run:
         name: Run Trace Agent Tests
-        command: ./gradlew traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=6
+        command: ./gradlew traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
     - run:
         name: Collect Reports
@@ -162,7 +162,7 @@ jobs:
 
     - run:
         name: Build Project
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1G -Xms64M" ./gradlew check -PskipTests --build-cache --parallel --stacktrace --no-daemon --max-workers=4
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx1G -Xms64M" ./gradlew check -PskipTests --build-cache --parallel --stacktrace --no-daemon --max-workers=8
 
     - run:
         name: Collect Reports
@@ -184,7 +184,7 @@ jobs:
 
     - run:
         name: Verify Version Scan
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4G -Xms64M" ./gradlew verifyVersionScan --parallel --stacktrace --no-daemon --max-workers=2
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4G -Xms64M" ./gradlew verifyVersionScan --parallel --stacktrace --no-daemon --max-workers=8
 
     - save_cache:
         key: dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
