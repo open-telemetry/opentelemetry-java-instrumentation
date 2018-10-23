@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class WeakMapSuppliers {
   // Comparison with using WeakConcurrentMap vs Guava's implementation:
@@ -57,46 +58,26 @@ class WeakMapSuppliers {
     private final Queue<WeakReference<WeakConcurrentMap>> suppliedMaps =
         new ConcurrentLinkedQueue<>();
 
-    private final Runnable runnable =
-        new Runnable() {
-          @Override
-          public void run() {
-            for (final Iterator<WeakReference<WeakConcurrentMap>> iterator =
-                    suppliedMaps.iterator();
-                iterator.hasNext(); ) {
-              final WeakConcurrentMap map = iterator.next().get();
-              if (map == null) {
-                iterator.remove();
-              } else {
-                map.expungeStaleEntries();
-              }
-            }
-          }
-        };
+    private final AtomicBoolean finalized = new AtomicBoolean(false);
 
     WeakConcurrent() {
       cleanerExecutorService = Executors.newScheduledThreadPool(1, THREAD_FACTORY);
       cleanerExecutorService.scheduleAtFixedRate(
-          runnable, CLEAN_FREQUENCY_SECONDS, CLEAN_FREQUENCY_SECONDS, TimeUnit.SECONDS);
+          new CleanupRunnable(cleanerExecutorService, suppliedMaps, finalized),
+          CLEAN_FREQUENCY_SECONDS,
+          CLEAN_FREQUENCY_SECONDS,
+          TimeUnit.SECONDS);
 
       try {
-        Runtime.getRuntime()
-            .addShutdownHook(
-                new Thread() {
-                  @Override
-                  public void run() {
-                    try {
-                      cleanerExecutorService.shutdownNow();
-                      cleanerExecutorService.awaitTermination(
-                          SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS);
-                    } catch (final InterruptedException e) {
-                      // Don't bother waiting then...
-                    }
-                  }
-                });
+        Runtime.getRuntime().addShutdownHook(new ShutdownCallback(cleanerExecutorService));
       } catch (final IllegalStateException ex) {
         // The JVM is already shutting down.
       }
+    }
+
+    @Override
+    public void finalize() {
+      finalized.set(true);
     }
 
     @Override
@@ -104,6 +85,57 @@ class WeakMapSuppliers {
       final WeakConcurrentMap<K, V> map = new WeakConcurrentMap<>(false);
       suppliedMaps.add(new WeakReference<WeakConcurrentMap>(map));
       return new Adapter<>(map);
+    }
+
+    private static class CleanupRunnable implements Runnable {
+
+      private final ScheduledExecutorService executorService;
+      private final Queue<WeakReference<WeakConcurrentMap>> suppliedMaps;
+      private final AtomicBoolean finalized;
+
+      public CleanupRunnable(
+          final ScheduledExecutorService executorService,
+          final Queue<WeakReference<WeakConcurrentMap>> suppliedMaps,
+          final AtomicBoolean finalized) {
+        this.executorService = executorService;
+        this.suppliedMaps = suppliedMaps;
+        this.finalized = finalized;
+      }
+
+      @Override
+      public void run() {
+        for (final Iterator<WeakReference<WeakConcurrentMap>> iterator = suppliedMaps.iterator();
+            iterator.hasNext(); ) {
+          final WeakConcurrentMap map = iterator.next().get();
+          if (map == null) {
+            iterator.remove();
+          } else {
+            map.expungeStaleEntries();
+          }
+        }
+        if (finalized.get() && suppliedMaps.isEmpty()) {
+          executorService.shutdown();
+        }
+      }
+    }
+
+    private static final class ShutdownCallback extends Thread {
+
+      private final ScheduledExecutorService executorService;
+
+      public ShutdownCallback(final ScheduledExecutorService executorService) {
+        this.executorService = executorService;
+      }
+
+      @Override
+      public void run() {
+        try {
+          executorService.shutdownNow();
+          executorService.awaitTermination(SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS);
+        } catch (final InterruptedException e) {
+          // Don't bother waiting then...
+        }
+      }
     }
 
     private static class Adapter<K, V> implements WeakMap<K, V> {
@@ -150,7 +182,7 @@ class WeakMapSuppliers {
       return new WeakMap.MapAdapter<>(new MapMaker().weakKeys().<K, V>makeMap());
     }
 
-    public <K, V> WeakMap<K, V> get(int concurrencyLevel) {
+    public <K, V> WeakMap<K, V> get(final int concurrencyLevel) {
       return new WeakMap.MapAdapter<>(
           new MapMaker().concurrencyLevel(concurrencyLevel).weakKeys().<K, V>makeMap());
     }

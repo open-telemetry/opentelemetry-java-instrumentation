@@ -38,14 +38,35 @@ class WeakConcurrentSupplierTest extends Specification {
     "Guava"          | guavaSupplier
   }
 
-  def "Unreferenced map get cleaned up on #name"() {
+  def "Unreferenced supplier gets cleaned up on #name"() {
+    setup:
+    // Note: we use 'double supplier' here because Groovy keeps reference to test data preventing it from being GCed
+    def supplier = supplierSupplier()
+    def ref = new WeakReference(supplier)
+
+    when:
+    def supplierRef = new WeakReference(supplier)
+    supplier = null
+    TestUtils.awaitGC(supplierRef)
+
+    then:
+    ref.get() == null
+
+    where:
+    name             | supplierSupplier
+    "WeakConcurrent" | { -> new WeakMapSuppliers.WeakConcurrent() }
+    "WeakInline"     | { -> new WeakMapSuppliers.WeakConcurrent.Inline() }
+    "Guava"          | { -> new WeakMapSuppliers.Guava() }
+  }
+
+  def "Unreferenced map gets cleaned up on #name"() {
     setup:
     WeakMap.Provider.provider.set(supplier)
     def map = WeakMap.Provider.newWeakMap()
     def ref = new WeakReference(map)
 
     when:
-    def mapRef = new WeakReference<>(map)
+    def mapRef = new WeakReference(map)
     map = null
     TestUtils.awaitGC(mapRef)
 
@@ -69,7 +90,7 @@ class WeakConcurrentSupplierTest extends Specification {
     map.size() == 1
 
     when:
-    def keyRef = new WeakReference<>(key)
+    def keyRef = new WeakReference(key)
     key = null
     TestUtils.awaitGC(keyRef)
 
