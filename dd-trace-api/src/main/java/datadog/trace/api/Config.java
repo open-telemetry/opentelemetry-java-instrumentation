@@ -62,6 +62,10 @@ public class Config {
 
   public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
 
+  /**
+   * this is a random UUID that gets generated on JVM start up and is attached to every root span
+   * and every JMX metric that is sent out.
+   */
   @Getter private final String runtimeId;
 
   @Getter private final String serviceName;
