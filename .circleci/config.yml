@@ -201,16 +201,10 @@ jobs:
     - restore_cache:
         <<: *cache_keys
 
-    - run:
-        name: Decode Signing Key
-        command: echo $PGP_KEY_FILE | base64 --decode > /home/circleci/dd-trace-java/.circleci/secring.gpg
-
     - deploy:
         name: Publish master to Artifactory
         command: |
-          ./gradlew -Psigning.keyId=${PGP_KEY_ID} \
-            -Psigning.password=${PGP_KEY_PASS} \
-            -Psigning.secretKeyRingFile=/home/circleci/dd-trace-java/.circleci/secring.gpg \
+          ./gradlew \
             -PbintrayUser=${BINTRAY_USER} \
             -PbintrayApiKey=${BINTRAY_API_KEY} \
             -PbuildInfo.build.number=${CIRCLE_BUILD_NUM} \
