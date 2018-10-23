@@ -1,4 +1,3 @@
-
 plugins {
   id 'io.franzbecker.gradle-lombok' version '1.13'
   id 'com.jfrog.artifactory' version '4.7.5'
