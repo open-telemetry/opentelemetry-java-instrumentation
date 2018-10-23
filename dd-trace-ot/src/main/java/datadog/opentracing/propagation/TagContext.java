@@ -4,6 +4,10 @@ import io.opentracing.SpanContext;
 import java.util.Collections;
 import java.util.Map;
 
+/**
+ * When calling extract, we allow for grabbing other configured headers as tags. Those tags are
+ * returned here even if the rest of the request would have returned null.
+ */
 public class TagContext implements SpanContext {
   private final Map<String, String> tags;
 

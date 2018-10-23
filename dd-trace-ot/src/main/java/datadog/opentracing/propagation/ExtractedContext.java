@@ -3,6 +3,9 @@ package datadog.opentracing.propagation;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Propagated data resulting from calling tracer.extract with header data from an incoming request.
+ */
 public class ExtractedContext extends TagContext {
   private final String traceId;
   private final String spanId;

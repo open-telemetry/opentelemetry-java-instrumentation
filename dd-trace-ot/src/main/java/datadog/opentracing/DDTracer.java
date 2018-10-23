@@ -564,14 +564,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
         // Get header tags whether propagating or not.
         if (parentContext instanceof TagContext) {
-          final TagContext tagContext = (TagContext) parentContext;
-
-          if (tags.isEmpty() && !tagContext.getTags().isEmpty()) {
-            tags = new HashMap<>();
-          }
-          if (!tagContext.getTags().isEmpty()) {
-            tags.putAll(tagContext.getTags());
-          }
+          tags.putAll(((TagContext) parentContext).getTags());
         }
         tags.put(Config.RUNTIME_ID_TAG, runtimeId);
 
