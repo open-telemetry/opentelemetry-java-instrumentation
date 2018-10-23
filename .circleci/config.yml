@@ -183,11 +183,29 @@ jobs:
         - dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
 
     - run:
-        name: Verify Version Scan and Muzzle
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4G -Xms64M" ./gradlew verifyVersionScan muzzle --parallel --stacktrace --no-daemon --max-workers=2
+        name: Verify Version Scan
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4G -Xms64M" ./gradlew verifyVersionScan --parallel --stacktrace --no-daemon --max-workers=2
 
     - save_cache:
         key: dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
+        paths: ~/.gradle
+
+  muzzle:
+    <<: *defaults
+    steps:
+    - checkout
+
+    - restore_cache:
+        # Reset the cache approx every release
+        keys:
+        - dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
+
+    - run:
+        name: Verify Muzzle
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx4G -Xms64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=2
+
+    - save_cache:
+        key: dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
         paths: ~/.gradle
 
   publish: &publish
@@ -276,6 +294,13 @@ workflows:
             only: /.*/
 
     - scan_versions:
+        requires:
+        - build
+        filters:
+          branches:
+            ignore: master
+
+    - muzzle:
         requires:
         - build
         filters:
