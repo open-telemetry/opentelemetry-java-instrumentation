@@ -74,11 +74,11 @@ class HystrixTest extends AgentTestRunner {
     }
 
     where:
-    action    | operation
-    "execute" | { HystrixCommand cmd -> cmd.execute() }
-    "queue"   | { HystrixCommand cmd -> cmd.queue().get() }
-    "observe" | { HystrixCommand cmd -> cmd.observe().toBlocking().first() }
-    "observe" | { HystrixCommand cmd ->
+    action          | operation
+    "execute"       | { HystrixCommand cmd -> cmd.execute() }
+    "queue"         | { HystrixCommand cmd -> cmd.queue().get() }
+    "observe"       | { HystrixCommand cmd -> cmd.observe().toBlocking().first() }
+    "observe block" | { HystrixCommand cmd ->
       BlockingQueue queue = new LinkedBlockingQueue()
       cmd.observe().subscribe { next ->
         queue.put(next)
@@ -147,11 +147,11 @@ class HystrixTest extends AgentTestRunner {
     }
 
     where:
-    action    | operation
-    "execute" | { HystrixCommand cmd -> cmd.execute() }
-    "queue"   | { HystrixCommand cmd -> cmd.queue().get() }
-    "observe" | { HystrixCommand cmd -> cmd.observe().toBlocking().first() }
-    "observe" | { HystrixCommand cmd ->
+    action          | operation
+    "execute"       | { HystrixCommand cmd -> cmd.execute() }
+    "queue"         | { HystrixCommand cmd -> cmd.queue().get() }
+    "observe"       | { HystrixCommand cmd -> cmd.observe().toBlocking().first() }
+    "observe block" | { HystrixCommand cmd ->
       BlockingQueue queue = new LinkedBlockingQueue()
       cmd.observe().subscribe { next ->
         queue.put(next)
