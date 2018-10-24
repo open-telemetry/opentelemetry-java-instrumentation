@@ -205,7 +205,7 @@ jobs:
         # Note: we do not have `--max-workers` here to have number of workers (threads) equal to number of CPUs (32 currently).
         # This should speed things up slightly because muzzle may do a lot of IO bound work: reading off disk and downloading
         # dependencies.
-        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx12G -Xms64M" ./gradlew muzzle --parallel --stacktrace --no-daemon
+        command: GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx8G -Xms64M" ./gradlew muzzle --parallel --stacktrace --no-daemon
 
     - save_cache:
         key: dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
