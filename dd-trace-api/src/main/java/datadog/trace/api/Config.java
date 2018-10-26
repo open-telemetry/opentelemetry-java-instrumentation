@@ -197,7 +197,7 @@ public class Config {
   }
 
   private static String propertyToEnvironmentName(final String name) {
-    return name.toUpperCase().replace(".", "_");
+    return name.toUpperCase().replace(".", "_").replace("-", "_");
   }
 
   private static Map<String, String> getPropertyMapValue(
