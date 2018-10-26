@@ -115,7 +115,8 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
   }
 
   private DefaultCouchbaseEnvironment.Builder envBuilder(BucketSettings bucketSettings) {
-    def timeout = TimeUnit.SECONDS.toMillis(10)
+    // Couchbase seems to be really slow to start sometimes
+    def timeout = TimeUnit.SECONDS.toMillis(20)
     return DefaultCouchbaseEnvironment.builder()
       .bootstrapCarrierDirectPort(mock.getCarrierPort(bucketSettings.name()))
       .bootstrapHttpDirectPort(port)
