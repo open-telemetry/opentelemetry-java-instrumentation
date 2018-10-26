@@ -18,6 +18,7 @@ class ConfigTest extends Specification {
   private static final DD_SERVICE_MAPPING_ENV = "DD_SERVICE_MAPPING"
   private static final DD_SPAN_TAGS_ENV = "DD_SPAN_TAGS"
   private static final DD_HEADER_TAGS_ENV = "DD_HEADER_TAGS"
+  private static final DD_JMXFETCH_METRICS_CONFIGS_ENV = "DD_JMXFETCH_METRICS_CONFIGS"
 
   def "verify defaults"() {
     when:
@@ -89,6 +90,7 @@ class ConfigTest extends Specification {
     setup:
     environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
+    environmentVariables.set(DD_JMXFETCH_METRICS_CONFIGS_ENV, "some/file")
 
     when:
     def config = new Config()
@@ -96,6 +98,7 @@ class ConfigTest extends Specification {
     then:
     config.serviceName == "still something else"
     config.writerType == "LoggingWriter"
+    config.jmxFetchMetricsConfigs == ["some/file"]
   }
 
   def "sys props override env vars"() {
