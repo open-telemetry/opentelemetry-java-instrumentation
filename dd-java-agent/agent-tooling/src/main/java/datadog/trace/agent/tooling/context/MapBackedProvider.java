@@ -1,5 +1,6 @@
 package datadog.trace.agent.tooling.context;
 
+import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.agent.tooling.Utils;
 import datadog.trace.bootstrap.InstrumentationContext;
@@ -18,6 +19,7 @@ import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
 import net.bytebuddy.description.method.MethodList;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.jar.asm.ClassVisitor;
 import net.bytebuddy.jar.asm.Label;
@@ -25,6 +27,7 @@ import net.bytebuddy.jar.asm.MethodVisitor;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.pool.TypePool;
+import net.bytebuddy.utility.JavaModule;
 
 /**
  * InstrumentationContextProvider which stores context in a global map.
@@ -77,8 +80,27 @@ public class MapBackedProvider implements InstrumentationContextProvider {
     this.instrumenter = instrumenter;
   }
 
-  @Override
-  public AsmVisitorWrapper getInstrumentationVisitor() {
+  public AgentBuilder.Identified.Extendable instrumentationTransformer(
+      AgentBuilder.Identified.Extendable builder) {
+    if (instrumenter.contextStore().size() > 0) {
+      builder =
+          builder.transform(
+              new AgentBuilder.Transformer() {
+                @Override
+                public DynamicType.Builder<?> transform(
+                    DynamicType.Builder<?> builder,
+                    TypeDescription typeDescription,
+                    ClassLoader classLoader,
+                    JavaModule module) {
+                  return builder.visit(getInstrumentationVisitor());
+                }
+              });
+      builder = builder.transform(new HelperInjector(dynamicClasses()));
+    }
+    return builder;
+  }
+
+  private AsmVisitorWrapper getInstrumentationVisitor() {
     return new AsmVisitorWrapper() {
       @Override
       public int mergeWriter(int flags) {
@@ -217,13 +239,13 @@ public class MapBackedProvider implements InstrumentationContextProvider {
     };
   }
 
-  @Override
-  public Map<String, byte[]> dynamicClasses() {
+  private Map<String, byte[]> dynamicClasses() {
     return createOrGetDynamicClasses();
   }
 
   @Override
-  public AgentBuilder additionalInstrumentation(AgentBuilder builder) {
+  public AgentBuilder.Identified.Extendable additionalInstrumentation(
+      AgentBuilder.Identified.Extendable builder) {
     return builder;
   }
 

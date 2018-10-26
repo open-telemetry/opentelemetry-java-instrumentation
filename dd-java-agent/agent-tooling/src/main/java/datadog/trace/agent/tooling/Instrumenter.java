@@ -18,7 +18,6 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
 
@@ -101,8 +100,9 @@ public interface Instrumenter {
               .and(new MuzzleMatcher())
               .transform(DDTransformers.defaultTransformers());
       agentBuilder = injectHelperClasses(agentBuilder);
-      agentBuilder = applyContextStoreTransform(agentBuilder);
+      agentBuilder = contextProvider.instrumentationTransformer(agentBuilder);
       agentBuilder = applyInstrumentationTransformers(agentBuilder);
+      agentBuilder = contextProvider.additionalInstrumentation(agentBuilder);
       return agentBuilder;
     }
 
@@ -124,26 +124,6 @@ public interface Instrumenter {
                     .include(Utils.getAgentClassLoader())
                     .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
                     .advice(entry.getKey(), entry.getValue()));
-      }
-      return agentBuilder;
-    }
-
-    private AgentBuilder.Identified.Extendable applyContextStoreTransform(
-        AgentBuilder.Identified.Extendable agentBuilder) {
-      if (contextStore().size() > 0) {
-        agentBuilder =
-            agentBuilder.transform(
-                new AgentBuilder.Transformer() {
-                  @Override
-                  public DynamicType.Builder<?> transform(
-                      DynamicType.Builder<?> builder,
-                      TypeDescription typeDescription,
-                      ClassLoader classLoader,
-                      JavaModule module) {
-                    return builder.visit(contextProvider.getInstrumentationVisitor());
-                  }
-                });
-        agentBuilder = agentBuilder.transform(new HelperInjector(contextProvider.dynamicClasses()));
       }
       return agentBuilder;
     }

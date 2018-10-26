@@ -1,20 +1,17 @@
 package datadog.trace.agent.tooling.context;
 
-import java.util.Map;
 import net.bytebuddy.agent.builder.AgentBuilder;
-import net.bytebuddy.asm.AsmVisitorWrapper;
 
 public interface InstrumentationContextProvider {
 
-  /** @return An AsmVisitorWrapper to run on the instrumentation's bytecode. */
-  AsmVisitorWrapper getInstrumentationVisitor();
-
   /**
-   * @return A map of dynamic-class-name -> dynamic-class-bytes. These classes will be injected into
-   *     the runtime classloader.
+   * Hook to provide an agent builder after advice is applied to target class. Used to implement
+   * context-store lookup.
    */
-  Map<String, byte[]> dynamicClasses();
+  AgentBuilder.Identified.Extendable instrumentationTransformer(
+      AgentBuilder.Identified.Extendable builder);
 
-  /** Hook for the context impl to define additional instrumentation if needed. */
-  AgentBuilder additionalInstrumentation(AgentBuilder builder);
+  /** Hook to define additional instrumentation. Run at instrumentation advice is hooked up. */
+  AgentBuilder.Identified.Extendable additionalInstrumentation(
+      AgentBuilder.Identified.Extendable builder);
 }
