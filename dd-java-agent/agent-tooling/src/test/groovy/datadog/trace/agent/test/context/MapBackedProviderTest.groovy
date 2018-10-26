@@ -120,13 +120,6 @@ class MapBackedProviderTest extends Specification {
     thrown RuntimeException
   }
 
-  def "context store fails if runtime types are incorrect" () {
-    when:
-    ClassToRemap.mapIncorrectObject()
-    then:
-    thrown RuntimeException
-  }
-
   static class TestInstrumenter extends Instrumenter.Default {
     TestInstrumenter() {
       super("test")

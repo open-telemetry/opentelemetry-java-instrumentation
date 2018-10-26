@@ -25,15 +25,6 @@ public class ClassToRemap {
     return ++state.anInt;
   }
 
-  /**
-   * Instance passed to the context api does not extend the user class. This will throw an
-   * exception.
-   */
-  public static int mapIncorrectObject() {
-    State state = InstrumentationContext.get(new Object(), Runnable.class, State.class);
-    return state.anInt;
-  }
-
   public static class State {
     public int anInt = 0;
     public Object anObject = new Object();

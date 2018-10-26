@@ -10,10 +10,11 @@ public interface InstrumentationContextProvider {
   AsmVisitorWrapper getInstrumentationVisitor();
 
   /**
-   * @return A list of classes in byte-array format. These classes will be injected into the runtime
-   *     classloader.
+   * @return A map of dynamic-class-name -> dynamic-class-bytes. These classes will be injected into
+   *     the runtime classloader.
    */
   Map<String, byte[]> dynamicClasses();
 
+  /** Hook for the context impl to define additional instrumentation if needed. */
   AgentBuilder additionalInstrumentation(AgentBuilder builder);
 }

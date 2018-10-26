@@ -26,7 +26,28 @@ import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.pool.TypePool;
 
-/** InstrumentationContextProvider which stores context in a global map. */
+/**
+ * InstrumentationContextProvider which stores context in a global map.
+ *
+ * <p>This is accomplished by
+ *
+ * <ol>
+ *   <li>Injecting a Dynamic Class to store a static map
+ *   <li>Rewritting calls to the context-store to access the map on the dynamic class
+ * </ol>
+ *
+ * Storing the map on a dynamic class and doing bytecode rewrites allows for a 1-pass lookup.
+ * Without bytecode transformations a 2-pass lookup would be required.
+ *
+ * <p>Example:<br>
+ * <em>InstrumentationContext.get(runnableInstance, Runnable.class, RunnableState.class)")</em><br>
+ * is rewritten to:<br>
+ * <em>RunnableInstrumentation$ContextStore$RunnableState12345.getOrCreate(runnableInstance,
+ * Runnable.class, RunnableState.class)</em>
+ *
+ * <p>Map lookup implementation defined in template class: {@link MapHolder#getOrCreate(Object,
+ * Class, Class)}
+ */
 @Slf4j
 public class MapBackedProvider implements InstrumentationContextProvider {
   private static final Method contextGetMethod;
@@ -144,11 +165,15 @@ public class MapBackedProvider implements InstrumentationContextProvider {
                 }
               }
 
+              /** Tracking the most recently used opcodes to assert proper api usage. */
               private void pushOpcode(final int opcode) {
                 System.arraycopy(insnStack, 0, insnStack, 1, insnStack.length - 1);
                 insnStack[0] = opcode;
               }
 
+              /**
+               * Tracking the most recently pushed objects on the stack to assert proper api usage.
+               */
               private void pushStack(Object o) {
                 System.arraycopy(stack, 0, stack, 1, stack.length - 1);
                 stack[0] = o;
@@ -242,6 +267,12 @@ public class MapBackedProvider implements InstrumentationContextProvider {
   private static final class MapHolder {
     public static final WeakMap MAP = WeakMap.Provider.newWeakMap();
 
+    /**
+     * Fetch a context class out of the backing map. Create and return a new context class if none
+     * currently exists.
+     *
+     * <p>This method is thread safe.
+     */
     public static Object getOrCreate(Object instance, Class userClass, Class contextClass) {
       if (!userClass.isAssignableFrom(instance.getClass())) {
         throw new RuntimeException(

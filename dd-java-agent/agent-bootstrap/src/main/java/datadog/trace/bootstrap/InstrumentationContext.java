@@ -37,7 +37,7 @@ public class InstrumentationContext {
    * @param <V> context class
    * @return The context instance attached to userInstance.
    */
-  public static <K, V> V get(Object userInstance, Class<K> userClass, Class<V> contextClass) {
+  public static <K, V> V get(K userInstance, Class<K> userClass, Class<V> contextClass) {
     throw new RuntimeException("calls to this method will be rewritten");
   }
 }
