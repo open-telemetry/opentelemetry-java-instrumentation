@@ -39,6 +39,17 @@ public class HelperInjector implements Transformer {
     this.helperClassNames = new LinkedHashSet<>(Arrays.asList(helperClassNames));
   }
 
+  public HelperInjector(final Map<String, byte[]> helperMap) {
+    this.helperClassNames = helperMap.keySet();
+    this.helperMap = new LinkedHashMap<>(helperClassNames.size());
+    for (final String helperName : helperClassNames) {
+      final TypeDescription typeDesc =
+          new TypeDescription.Latent(
+              helperName, 0, null, Collections.<TypeDescription.Generic>emptyList());
+      this.helperMap.put(typeDesc, helperMap.get(helperName));
+    }
+  }
+
   private synchronized Map<TypeDescription, byte[]> getHelperMap() throws IOException {
     if (helperMap == null) {
       helperMap = new LinkedHashMap<>(helperClassNames.size());

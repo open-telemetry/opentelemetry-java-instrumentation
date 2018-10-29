@@ -4,10 +4,13 @@ import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.failSafe;
 import static datadog.trace.agent.tooling.Utils.getConfigEnabled;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
+import datadog.trace.agent.tooling.context.InstrumentationContextProvider;
+import datadog.trace.agent.tooling.context.MapBackedProvider;
 import datadog.trace.agent.tooling.muzzle.Reference;
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +52,7 @@ public interface Instrumenter {
   abstract class Default implements Instrumenter {
     private final Set<String> instrumentationNames;
     private final String instrumentationPrimaryName;
+    private final InstrumentationContextProvider contextProvider;
     protected final boolean enabled;
 
     protected final String packageName =
@@ -73,10 +77,11 @@ public interface Instrumenter {
         }
       }
       enabled = anyEnabled;
+      contextProvider = new MapBackedProvider(this);
     }
 
     @Override
-    public AgentBuilder instrument(final AgentBuilder parentAgentBuilder) {
+    public final AgentBuilder instrument(final AgentBuilder parentAgentBuilder) {
       if (!enabled) {
         log.debug("Instrumentation {} is disabled", this);
         return parentAgentBuilder;
@@ -95,7 +100,9 @@ public interface Instrumenter {
               .and(new MuzzleMatcher())
               .transform(DDTransformers.defaultTransformers());
       agentBuilder = injectHelperClasses(agentBuilder);
+      agentBuilder = contextProvider.instrumentationTransformer(agentBuilder);
       agentBuilder = applyInstrumentationTransformers(agentBuilder);
+      agentBuilder = contextProvider.additionalInstrumentation(agentBuilder);
       return agentBuilder;
     }
 
@@ -186,6 +193,14 @@ public interface Instrumenter {
 
     @Override
     public abstract Map<? extends ElementMatcher, String> transformers();
+
+    /**
+     * A map of {class-name -> context-class-name}. Keys (and their subclasses) will be associated
+     * with a context of the value.
+     */
+    public Map<String, String> contextStore() {
+      return Collections.EMPTY_MAP;
+    }
 
     protected boolean defaultEnabled() {
       return getConfigEnabled("dd.integrations.enabled", true);

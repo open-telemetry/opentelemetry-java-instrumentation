@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.http_url_connection;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -13,7 +12,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import datadog.trace.bootstrap.WeakMap;
+import datadog.trace.bootstrap.InstrumentationContext;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -52,6 +51,11 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     return new String[] {HttpUrlConnectionInstrumentation.class.getName() + "$HttpURLState"};
   }
 
+  public Map<String, String> contextStore() {
+    return Collections.singletonMap(
+        "java.net.HttpURLConnection", getClass().getName() + "$HttpURLState");
+  }
+
   @Override
   public Map<ElementMatcher, String> transformers() {
     return Collections.<ElementMatcher, String>singletonMap(
@@ -69,7 +73,9 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("connected") final boolean connected,
         @Advice.Origin("#m") final String methodName) {
 
-      final HttpURLState state = HttpURLState.get(thiz);
+      final HttpURLState state =
+          InstrumentationContext.get(thiz, HttpURLConnection.class, HttpURLState.class);
+
       String operationName = "http.request";
 
       switch (methodName) {
@@ -177,26 +183,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   }
 
   public static class HttpURLState {
-    private static final WeakMap<HttpURLConnection, HttpURLState> STATE_MAP = newWeakMap();
-
-    public static HttpURLState get(final HttpURLConnection connection) {
-      HttpURLState state = STATE_MAP.get(connection);
-      if (state == null) {
-        synchronized (connection) {
-          // might not be a good idea to synchronize on a method parameter...
-          state = STATE_MAP.get(connection);
-          if (state == null) {
-            state = new HttpURLState();
-            STATE_MAP.put(connection, state);
-          }
-        }
-      }
-      return state;
-    }
-
     public boolean calledOutputStream = false;
     public boolean calledInputStream = false;
-
-    private HttpURLState() {}
   }
 }
