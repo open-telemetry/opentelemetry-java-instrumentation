@@ -73,8 +73,8 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
   def "#poolImpl reports after canceled jobs"() {
     setup:
     def pool = poolImpl
-    final AsyncChild child = new AsyncChild(true, true)
-    List<Future> jobFutures = new ArrayList<Future>()
+    List<AsyncChild> children = new ArrayList<>()
+    List<Future> jobFutures = new ArrayList<>()
 
     new Runnable() {
       @Override
@@ -83,6 +83,14 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
         ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
         try {
           for (int i = 0; i < 20; ++i) {
+            // Our current instrumentation instrumentation does not behave very well
+            // if we try to reuse Callable/Runnable. Namely we would be getting 'orphaned'
+            // child traces sometimes since state can contain only one continuation - and
+            // we do not really have a good way for attributing work to correct parent span
+            // if we reuse Callable/Runnable.
+            // Solution for now is to never reuse a Callable/Runnable.
+            final AsyncChild child = new AsyncChild(true, true)
+            children.add(child)
             Future f = pool.submit((Callable) child)
             jobFutures.add(f)
           }
@@ -92,7 +100,9 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
         for (Future f : jobFutures) {
           f.cancel(false)
         }
-        child.unblock()
+        for (AsyncChild child : children) {
+          child.unblock()
+        }
       }
     }.run()
 

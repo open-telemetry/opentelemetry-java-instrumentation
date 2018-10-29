@@ -9,13 +9,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import datadog.trace.bootstrap.WeakMap;
+import datadog.trace.bootstrap.ContextStore;
+import datadog.trace.bootstrap.InstrumentationContext;
+import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,7 +22,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +62,6 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
       "scala.concurrent.impl.ExecutionContextImpl$$anon$3",
       "akka.dispatch.MessageDispatcher",
       "akka.dispatch.Dispatcher",
-      "akka.dispatch.Dispatcher$LazyExecutorServiceDelegate",
       "akka.actor.ActorSystemImpl$$anon$1",
       "akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinPool",
       "akka.dispatch.forkjoin.ForkJoinPool",
@@ -128,37 +125,46 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       ExecutorInstrumentation.class.getName() + "$ConcurrentUtils",
-      ExecutorInstrumentation.class.getName() + "$DatadogWrapper",
-      ExecutorInstrumentation.class.getName() + "$CallableWrapper",
-      ExecutorInstrumentation.class.getName() + "$RunnableWrapper"
     };
+  }
+
+  @Override
+  public Map<String, String> contextStore() {
+    final Map<String, String> map = new HashMap<>();
+    map.put("java.lang.Runnable", State.class.getName());
+    map.put("java.util.concurrent.Callable", State.class.getName());
+    map.put("java.util.concurrent.Future", State.class.getName());
+    return Collections.unmodifiableMap(map);
   }
 
   @Override
   public Map<ElementMatcher, String> transformers() {
     final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
-        named("execute").and(takesArgument(0, Runnable.class)), WrapRunnableAdvice.class.getName());
+        named("execute").and(takesArgument(0, Runnable.class)),
+        SetRunnableStateAdvice.class.getName());
     transformers.put(
-        named("submit").and(takesArgument(0, Runnable.class)), WrapRunnableAdvice.class.getName());
+        named("submit").and(takesArgument(0, Runnable.class)),
+        SetRunnableStateAdvice.class.getName());
     transformers.put(
-        named("submit").and(takesArgument(0, Callable.class)), WrapCallableAdvice.class.getName());
+        named("submit").and(takesArgument(0, Callable.class)),
+        SetCallableStateAdvice.class.getName());
     transformers.put(
         nameMatches("invoke(Any|All)$").and(takesArgument(0, Callable.class)),
-        WrapCallableCollectionAdvice.class.getName());
+        SetCallableStateForCallableCollectionAdvice.class.getName());
     return transformers;
   }
 
-  public static class WrapRunnableAdvice {
+  public static class SetRunnableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static DatadogWrapper enterJobSubmit(
-        @Advice.This final Executor executor,
-        @Advice.Argument(value = 0, readOnly = false) Runnable task) {
+    public static State enterJobSubmit(
+        @Advice.This final Executor executor, @Advice.Argument(value = 0) final Runnable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (DatadogWrapper.shouldWrapTask(task, executor)) {
-        task = new RunnableWrapper(task, (TraceScope) scope);
-        return (RunnableWrapper) task;
+      if (ConcurrentUtils.shouldAttachStateToTask(task, executor)) {
+        final ContextStore<Runnable, State> contextStore =
+            InstrumentationContext.get(Runnable.class, State.class);
+        return ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
       }
       return null;
     }
@@ -166,23 +172,22 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
         @Advice.This final Executor executor,
-        @Advice.Enter final DatadogWrapper wrapper,
+        @Advice.Enter final State state,
         @Advice.Thrown final Throwable throwable) {
-      DatadogWrapper.cleanUpOnMethodExit(executor, wrapper, throwable);
+      ConcurrentUtils.cleanUpOnMethodExit(executor, state, throwable);
     }
   }
 
-  public static class WrapCallableAdvice {
+  public static class SetCallableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static DatadogWrapper enterJobSubmit(
-        @Advice.This final Executor executor,
-        @Advice.Argument(value = 0, readOnly = false) Callable<?> task) {
-
+    public static State enterJobSubmit(
+        @Advice.This final Executor executor, @Advice.Argument(value = 0) final Callable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (DatadogWrapper.shouldWrapTask(task, executor)) {
-        task = new CallableWrapper<>(task, (TraceScope) scope);
-        return (CallableWrapper) task;
+      if (ConcurrentUtils.shouldAttachStateToTask(task, executor)) {
+        final ContextStore<Callable, State> contextStore =
+            InstrumentationContext.get(Callable.class, State.class);
+        return ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
       }
       return null;
     }
@@ -190,47 +195,65 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
         @Advice.This final Executor executor,
-        @Advice.Enter final DatadogWrapper wrapper,
-        @Advice.Thrown final Throwable throwable) {
-      DatadogWrapper.cleanUpOnMethodExit(executor, wrapper, throwable);
+        @Advice.Enter final State state,
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Return final Future future) {
+      if (state != null && future != null) {
+        final ContextStore<Future, State> contextStore =
+            InstrumentationContext.get(Future.class, State.class);
+        contextStore.put(future, state);
+      }
+      ConcurrentUtils.cleanUpOnMethodExit(executor, state, throwable);
     }
   }
 
-  public static class WrapCallableCollectionAdvice {
+  public static class SetCallableStateForCallableCollectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Collection<?> wrapJob(
+    public static void wrapJob(
         @Advice.This final Executor executor,
-        @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
+        @Advice.Argument(value = 0) final Collection<? extends Callable<?>> tasks) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       if (scope instanceof TraceScope
           && ((TraceScope) scope).isAsyncPropagating()
-          && tasks != null
-          && DatadogWrapper.isTopLevelCall(executor)) {
-        final Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
+        && tasks != null) {
         for (final Callable<?> task : tasks) {
-          if (task != null && !(task instanceof CallableWrapper)) {
-            wrappedTasks.add(new CallableWrapper<>(task, (TraceScope) scope));
+          if (task != null) {
+            final ContextStore<Callable, State> contextStore =
+                InstrumentationContext.get(Callable.class, State.class);
+            ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
           }
         }
-        tasks = wrappedTasks;
-        return tasks;
       }
-      return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void checkCancel(
         @Advice.This final Executor executor,
-        @Advice.Enter final Collection<?> wrappedJobs,
+        @Advice.Argument(value = 0) final Collection<? extends Callable<?>> tasks,
         @Advice.Thrown final Throwable throwable) {
-      if (null != wrappedJobs) {
-        DatadogWrapper.resetNestedCalls(executor);
-
-        if (null != throwable) {
-          for (final Object wrapper : wrappedJobs) {
-            if (wrapper instanceof DatadogWrapper) {
-              ((DatadogWrapper) wrapper).cancel();
+      /*
+       Note1: invokeAny doesn't return any futures so all we need to do for it
+       is to make sure we close all scopes in case of an exception.
+       Note2: invokeAll does return futures - but according to its documentation
+       it actually only returns after all futures have been completed - i.e. it blocks.
+       This means we do not need to setup any hooks on these futures, we just need to clean
+       up any continuations in case of an error.
+       (according to ExecutorService docs and AbstractExecutorService code)
+      */
+      if (null != throwable) {
+        for (final Callable<?> task : tasks) {
+          if (task != null) {
+            final ContextStore<Callable, State> contextStore =
+                InstrumentationContext.get(Callable.class, State.class);
+            final State state = contextStore.get(task);
+            if (state != null) {
+              // Note: this may potentially close somebody else's continuation if we didn't set it up
+              // in setupState because it was already present before us. This should be safe but may lead
+              // to non-attributed async work in some very rare cases.
+              // Alternative is to not close continuation here if we did not set it up in setupState but
+              // this may potentially lead to memory leaks if callers do not properly handle exceptions.
+              state.closeContinuation();
             }
           }
         }
@@ -238,169 +261,64 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
     }
   }
 
-  /** Marker interface for tasks which are wrapped to propagate the trace context. */
+  /** Utils for concurrent instrumentations. */
   @Slf4j
-  public abstract static class DatadogWrapper {
-    protected final TraceScope.Continuation continuation;
-
-    public DatadogWrapper(final TraceScope scope) {
-      continuation = scope.capture();
-      log.debug("created continuation {} from scope {}", continuation, scope);
-    }
-
-    public void cancel() {
-      if (null != continuation) {
-        continuation.close();
-        log.debug("canceled continuation {}", continuation);
-      }
-    }
+  public static class ConcurrentUtils {
 
     /**
-     * Check if given call to executor is nested. We would like to ignore nested calls to execute to
-     * avoid wrapping tasks twice. Note: this condition may lead to problems with executors that
-     * 'fork' several tasks, but we do not have such executors at the moment. Note: this condition
-     * is mutating and needs to be checked right before task is actually wrapped.
+     * Checks if given task should get state attached.
      *
-     * @return true iff call is not nested
-     */
-    public static boolean isTopLevelCall(final Executor executor) {
-      final int i = CallDepthThreadLocalMap.incrementCallDepth(executor.getClass());
-      return i <= 0;
-    }
-
-    /** Reset nested calls to executor. */
-    public static void resetNestedCalls(final Executor executor) {
-      CallDepthThreadLocalMap.reset(executor.getClass());
-    }
-
-    /**
+     * <p>Warning: this also increments nested call counter!
+     *
      * @param task task object
+     * @param executor executor this task was scheduled on
      * @return true iff given task object should be wrapped
      */
-    public static boolean shouldWrapTask(final Object task, final Executor executor) {
+    public static boolean shouldAttachStateToTask(final Object task, final Executor executor) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       return (scope instanceof TraceScope
           && ((TraceScope) scope).isAsyncPropagating()
-          && task != null
-          && !(task instanceof DatadogWrapper)
-          && isTopLevelCall(executor)
-          && !ConcurrentUtils.isDisabled(executor));
+        && task != null);
+    }
+
+    /**
+     * Create task state given current scope
+     *
+     * @param contextStore context storage
+     * @param task task instance
+     * @param scope current scope
+     * @param <T> task class type
+     * @return new state
+     */
+    public static <T> State setupState(
+        final ContextStore<T, State> contextStore, final T task, final TraceScope scope) {
+      final State state = contextStore.putIfAbsent(task, State.FACTORY);
+      final TraceScope.Continuation continuation = scope.capture();
+      if (state.setContinuation(continuation)) {
+        log.debug("created continuation {} from scope {}, state: {}", continuation, scope, state);
+      } else {
+        continuation.close();
+      }
+      return state;
     }
 
     /**
      * Clean up after job submission method has exited
      *
      * @param executor the current executor
-     * @param wrapper task wrapper
+     * @param state task instrumentation state
      * @param throwable throwable that may have been thrown
      */
     public static void cleanUpOnMethodExit(
-        final Executor executor, final DatadogWrapper wrapper, final Throwable throwable) {
-      if (null != wrapper) {
-        resetNestedCalls(executor);
-        if (null != throwable) {
-          wrapper.cancel();
-        }
+        final Executor executor, final State state, final Throwable throwable) {
+      if (null != state && null != throwable) {
+        // Note: this may potentially close somebody else's continuation if we didn't set it up
+        // in setupState because it was already present before us. This should be safe but may lead
+        // to non-attributed async work in some very rare cases.
+        // Alternative is to not close continuation here if we did not set it up in setupState but
+        // this may potentially lead to memory leaks if callers do not properly handle exceptions.
+        state.closeContinuation();
       }
-    }
-  }
-
-  @Slf4j
-  public static class RunnableWrapper extends DatadogWrapper implements Runnable {
-    private final Runnable delegatee;
-
-    public RunnableWrapper(final Runnable toWrap, final TraceScope scope) {
-      super(scope);
-      delegatee = toWrap;
-    }
-
-    @Override
-    public void run() {
-      final TraceScope context = continuation.activate();
-      context.setAsyncPropagation(true);
-      try {
-        delegatee.run();
-      } finally {
-        context.close();
-      }
-    }
-  }
-
-  @Slf4j
-  public static class CallableWrapper<T> extends DatadogWrapper implements Callable<T> {
-    private final Callable<T> delegatee;
-
-    public CallableWrapper(final Callable<T> toWrap, final TraceScope scope) {
-      super(scope);
-      delegatee = toWrap;
-    }
-
-    @Override
-    public T call() throws Exception {
-      final TraceScope context = continuation.activate();
-      context.setAsyncPropagation(true);
-      try {
-        return delegatee.call();
-      } finally {
-        context.close();
-      }
-    }
-  }
-
-  /** Utils for pulling DatadogWrapper out of Future instances. */
-  @Slf4j
-  public static class ConcurrentUtils {
-    private static final WeakMap<Executor, Boolean> disabledExecutors =
-        WeakMap.Provider.newWeakMap();
-    private static final Map<Class<?>, Field> fieldCache = new ConcurrentHashMap<>();
-    private static final String[] wrapperFields = {"runnable", "callable"};
-
-    public static void disableExecutor(final Executor executor) {
-      log.debug("Disabling Executor tracing for instance {}", executor);
-      disabledExecutors.put(executor, true);
-    }
-
-    public static boolean isDisabled(final Executor executor) {
-      return disabledExecutors.containsKey(executor);
-    }
-
-    public static DatadogWrapper getDatadogWrapper(final Future<?> f) {
-      final Field field;
-      if (fieldCache.containsKey(f.getClass())) {
-        field = fieldCache.get(f.getClass());
-      } else {
-        field = getWrapperField(f.getClass());
-        fieldCache.put(f.getClass(), field);
-      }
-
-      if (field != null) {
-        try {
-          field.setAccessible(true);
-          final Object o = field.get(f);
-          if (o instanceof DatadogWrapper) {
-            return (DatadogWrapper) o;
-          }
-        } catch (final IllegalArgumentException | IllegalAccessException e) {
-        } finally {
-          field.setAccessible(false);
-        }
-      }
-      return null;
-    }
-
-    private static Field getWrapperField(Class<?> clazz) {
-      Field field = null;
-      while (field == null && clazz != null) {
-        for (int i = 0; i < wrapperFields.length; ++i) {
-          try {
-            field = clazz.getDeclaredField(wrapperFields[i]);
-            break;
-          } catch (final Exception e) {
-          }
-        }
-        clazz = clazz.getSuperclass();
-      }
-      return field;
     }
   }
 }

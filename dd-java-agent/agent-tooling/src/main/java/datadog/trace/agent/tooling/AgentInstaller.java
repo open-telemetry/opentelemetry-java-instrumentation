@@ -55,6 +55,9 @@ public class AgentInstaller {
             .with(POOL_STRATEGY)
             .with(new LoggingListener())
             .with(LOCATION_STRATEGY)
+            // FIXME: we cannot enable it yet dur to BB/JVM bug, see
+            // https://github.com/raphw/byte-buddy/issues/558
+            // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), skipClassLoader())
             .or(nameStartsWith("datadog.trace."))
             .or(nameStartsWith("datadog.opentracing."))

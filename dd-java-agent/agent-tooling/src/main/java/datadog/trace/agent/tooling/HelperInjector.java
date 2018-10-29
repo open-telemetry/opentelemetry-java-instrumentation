@@ -40,7 +40,7 @@ public class HelperInjector implements Transformer {
   }
 
   public HelperInjector(final Map<String, byte[]> helperMap) {
-    this.helperClassNames = helperMap.keySet();
+    helperClassNames = helperMap.keySet();
     this.helperMap = new LinkedHashMap<>(helperClassNames.size());
     for (final String helperName : helperClassNames) {
       final TypeDescription typeDesc =

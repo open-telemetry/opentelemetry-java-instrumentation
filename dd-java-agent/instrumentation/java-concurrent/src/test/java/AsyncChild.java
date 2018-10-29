@@ -12,7 +12,7 @@ public class AsyncChild implements Runnable, Callable {
     this(true, false);
   }
 
-  public AsyncChild(boolean doTraceableWork, boolean blockThread) {
+  public AsyncChild(final boolean doTraceableWork, final boolean blockThread) {
     this.doTraceableWork = doTraceableWork;
     this.blockThread = new AtomicBoolean(blockThread);
   }

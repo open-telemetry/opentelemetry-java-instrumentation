@@ -8,8 +8,9 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.instrumentation.java.concurrent.ExecutorInstrumentation.ConcurrentUtils;
-import datadog.trace.instrumentation.java.concurrent.ExecutorInstrumentation.DatadogWrapper;
+import datadog.trace.bootstrap.ContextStore;
+import datadog.trace.bootstrap.InstrumentationContext;
+import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -86,12 +87,14 @@ public final class FutureInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      ExecutorInstrumentation.class.getName() + "$ConcurrentUtils",
-      ExecutorInstrumentation.class.getName() + "$DatadogWrapper",
-      ExecutorInstrumentation.class.getName() + "$CallableWrapper",
-      ExecutorInstrumentation.class.getName() + "$RunnableWrapper"
-    };
+    return new String[] {ExecutorInstrumentation.class.getName() + "$ConcurrentUtils"};
+  }
+
+  @Override
+  public Map<String, String> contextStore() {
+    final Map<String, String> map = new HashMap<>();
+    map.put("java.util.concurrent.Future", State.class.getName());
+    return Collections.unmodifiableMap(map);
   }
 
   @Override
@@ -103,16 +106,16 @@ public final class FutureInstrumentation extends Instrumenter.Default {
   }
 
   public static class CanceledFutureAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static DatadogWrapper findWrapper(@Advice.This final Future<?> future) {
-      return ConcurrentUtils.getDatadogWrapper(future);
-    }
-
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void abortTracing(
-        @Advice.Enter final DatadogWrapper wrapper, @Advice.Return final boolean canceled) {
-      if (canceled && null != wrapper) {
-        wrapper.cancel();
+    public static void exit(
+        @Advice.This final Future<?> future, @Advice.Return final boolean canceled) {
+      if (canceled) {
+        final ContextStore<Future, State> contextStore =
+            InstrumentationContext.get(Future.class, State.class);
+        final State state = contextStore.get(future);
+        if (state != null) {
+          state.closeContinuation();
+        }
       }
     }
   }

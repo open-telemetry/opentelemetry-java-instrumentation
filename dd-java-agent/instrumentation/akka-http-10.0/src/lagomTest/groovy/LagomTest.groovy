@@ -16,9 +16,6 @@ import static com.lightbend.lagom.javadsl.testkit.ServiceTest.defaultSetup
 import static com.lightbend.lagom.javadsl.testkit.ServiceTest.startServer
 
 class LagomTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.akka-http-server.enabled", "true")
-  }
 
   @Shared
   private TestServer server
