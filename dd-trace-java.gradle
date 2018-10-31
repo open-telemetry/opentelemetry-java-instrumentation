@@ -39,11 +39,13 @@ task latestDepTest {}
 // Applied here to allow publishing of artifactory build info
 apply from: "${rootDir}/gradle/publish.gradle"
 
+def skipBuildscan = Boolean.valueOf(System.getenv("SKIP_BUILDSCAN"))
+
 buildScan {
   termsOfServiceUrl = 'https://gradle.com/terms-of-service'
   termsOfServiceAgree = 'yes'
 
-  if (isCI) {
+  if (isCI && !skipBuildscan) {
     publishAlways()
     tag 'CI'
   }
