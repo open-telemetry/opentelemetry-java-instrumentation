@@ -14,6 +14,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
+import datadog.trace.bootstrap.ExceptionLogger;
 import datadog.trace.bootstrap.JDBCMaps;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -76,6 +77,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
         }
       } catch (final Throwable e) {
         // Had some problem getting the connection.
+        ExceptionLogger.LOGGER.debug("Could not get connection for PreparedStatementAdvice", e);
         return NoopScope.INSTANCE;
       }
 
