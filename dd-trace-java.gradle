@@ -1,15 +1,16 @@
 plugins {
   id 'io.franzbecker.gradle-lombok' version '1.13'
-  id 'com.jfrog.artifactory' version '4.7.5'
+  id 'com.jfrog.artifactory' version '4.8.1'
   id 'com.jfrog.bintray' version '1.8.4'
+  // FIXME: this is really old!
   id 'net.ltgt.errorprone' version '0.0.14'
   id 'org.unbroken-dome.test-sets' version '1.5.1'
 
-  id 'com.gradle.build-scan' version '1.15.1'
+  id 'com.gradle.build-scan' version '1.16'
   // Not applying google java format by default because it gets confused by stray java build
   // files in 'workspace' build directory in CI
   id 'com.github.sherter.google-java-format' version '0.7.1' apply false
-  id 'com.dorongold.task-tree' version '1.3'
+  id 'com.dorongold.task-tree' version '1.3.1'
 }
 
 def isCI = System.getenv("CI") != null
