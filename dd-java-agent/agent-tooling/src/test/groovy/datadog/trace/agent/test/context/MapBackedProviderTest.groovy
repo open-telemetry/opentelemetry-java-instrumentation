@@ -1,7 +1,6 @@
 package datadog.trace.agent.test.context
 
 import datadog.trace.agent.test.TestUtils
-import datadog.trace.agent.tooling.HelperInjector
 import datadog.trace.agent.tooling.Instrumenter
 import datadog.trace.agent.tooling.context.MapBackedProvider
 import net.bytebuddy.agent.ByteBuddyAgent
@@ -22,38 +21,40 @@ import static net.bytebuddy.matcher.ElementMatchers.named
 class MapBackedProviderTest extends Specification {
   @Shared
   ResettableClassFileTransformer transformer
+  @Shared
+  MapBackedProvider contextProvider
 
   def setupSpec() {
-    final MapBackedProvider contextProvider = new MapBackedProvider(new TestInstrumenter())
+    contextProvider = new MapBackedProvider(new TestInstrumenter())
 
     AgentBuilder builder = new AgentBuilder.Default()
       .disableClassFormatChanges()
       .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-      .type(named("datadog.trace.agent.test.context.ClassToRemap"))
-      .or(named("datadog.trace.agent.test.context.BadClassToRemap"))
-      .transform(new AgentBuilder.Transformer() {
+      .type(named("datadog.trace.agent.test.context.ClassToRemap")
+      .or(named("datadog.trace.agent.test.context.BadClassToRemap")))
+    builder = contextProvider.instrumentationTransformer(builder)
+    builder = builder
+      .with(new AgentBuilder.Listener() {
       @Override
-      DynamicType.Builder<?> transform(DynamicType.Builder<?> builder, TypeDescription typeDescription, ClassLoader classLoader, JavaModule module) {
-        return builder.visit(contextProvider.getInstrumentationVisitor())
-      }})
-    .transform(new HelperInjector(contextProvider.dynamicClasses()))
-    .with(new AgentBuilder.Listener() {
-      @Override
-      void onDiscovery(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) { }
+      void onDiscovery(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
+
       @Override
       void onTransformation(TypeDescription typeDescription, ClassLoader classLoader, JavaModule module, boolean loaded, DynamicType dynamicType) {
         assert !"datadog.trace.agent.test.context.BadClassToRemap".equals(typeDescription.getName())
       }
+
       @Override
-      void onIgnored(TypeDescription typeDescription, ClassLoader classLoader, JavaModule module, boolean loaded) { }
+      void onIgnored(TypeDescription typeDescription, ClassLoader classLoader, JavaModule module, boolean loaded) {}
+
       @Override
       void onError(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded, Throwable throwable) {
         assert "datadog.trace.agent.test.context.BadClassToRemap".equals(typeName)
         System.err.println("Exception during test")
         throwable.printStackTrace()
       }
+
       @Override
-      void onComplete(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) { }
+      void onComplete(String typeName, ClassLoader classLoader, JavaModule module, boolean loaded) {}
     })
 
     ByteBuddyAgent.install()
@@ -118,6 +119,16 @@ class MapBackedProviderTest extends Specification {
 
     then:
     thrown RuntimeException
+  }
+
+  def "inject dynamic classes into correct classloader"() {
+    when:
+    for (final String dynamicClassName : contextProvider.dynamicClasses().keySet()) {
+      assert getClass().getClassLoader().loadClass(dynamicClassName).getClassLoader() == getClass().getClassLoader()
+    }
+
+    then:
+    noExceptionThrown()
   }
 
   static class TestInstrumenter extends Instrumenter.Default {

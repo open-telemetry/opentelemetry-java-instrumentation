@@ -1,5 +1,7 @@
 package datadog.trace.agent.tooling.context;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
+
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.agent.tooling.Utils;
@@ -8,6 +10,7 @@ import datadog.trace.bootstrap.WeakMap;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import jdk.internal.org.objectweb.asm.ClassWriter;
@@ -95,7 +98,24 @@ public class MapBackedProvider implements InstrumentationContextProvider {
                   return builder.visit(getInstrumentationVisitor());
                 }
               });
-      builder = builder.transform(new HelperInjector(dynamicClasses()));
+      builder =
+          builder.transform(
+              new AgentBuilder.Transformer() {
+                final HelperInjector injector = new HelperInjector(dynamicClasses());
+
+                @Override
+                public DynamicType.Builder<?> transform(
+                    DynamicType.Builder<?> builder,
+                    TypeDescription typeDescription,
+                    ClassLoader classLoader,
+                    JavaModule module) {
+                  return injector.transform(
+                      builder,
+                      typeDescription,
+                      findClassLoaderForMapHolderInjection(classLoader),
+                      module);
+                }
+              });
     }
     return builder;
   }
@@ -237,6 +257,49 @@ public class MapBackedProvider implements InstrumentationContextProvider {
         };
       }
     };
+  }
+
+  /**
+   * Find the topmost classloader in the classloader hierarchy (beginning from startingLoader) which
+   * can load all user classes defined in the instrumentation context store.
+   */
+  private ClassLoader findClassLoaderForMapHolderInjection(final ClassLoader startingLoader) {
+    final Set<String> userClassNames = instrumenter.contextStore().keySet();
+    ClassLoader lastGoodLoader = startingLoader;
+    ClassLoader searchLoader = startingLoader;
+    // search up the classloader hierarchy for a classloader which can see all user classes
+    while (true) {
+      log.debug(
+          "{}: Searching for classloader to inject dynamic context map: {}",
+          instrumenter,
+          searchLoader);
+      if (searchLoader == BOOTSTRAP_CLASSLOADER) {
+        searchLoader = Utils.getBootstrapProxy();
+      }
+      boolean allClassesFound = true;
+      for (final String userClassName : userClassNames) {
+        if (searchLoader.getResource(Utils.getResourceName(userClassName)) == null) {
+          allClassesFound = false;
+          break;
+        }
+      }
+      if (!allClassesFound) {
+        // current searchLoader can't see resources. Use last good classloader.
+        break;
+      }
+      lastGoodLoader = searchLoader;
+      if (searchLoader == Utils.getBootstrapProxy()) {
+        // all classloaders can see resources. Use bootstrap
+        searchLoader = BOOTSTRAP_CLASSLOADER;
+        lastGoodLoader = BOOTSTRAP_CLASSLOADER;
+        break;
+      }
+      searchLoader = searchLoader.getParent();
+    }
+
+    log.debug(
+        "{}: Found classloader to inject dynamic context map: {}", instrumenter, lastGoodLoader);
+    return lastGoodLoader;
   }
 
   private Map<String, byte[]> dynamicClasses() {
