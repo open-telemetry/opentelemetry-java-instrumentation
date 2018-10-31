@@ -66,7 +66,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     try {
       // call other interceptors
       result = next.startCall(call, headers);
-    } catch (final RuntimeException | Error e) {
+    } catch (final Throwable e) {
       Tags.ERROR.set(span, true);
       span.log(Collections.singletonMap(ERROR_OBJECT, e));
       span.finish();
@@ -109,7 +109,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
       }
       try {
         delegate().onMessage(message);
-      } catch (final RuntimeException | Error e) {
+      } catch (final Throwable e) {
         final Span span = scope.span();
         Tags.ERROR.set(span, true);
         this.span.log(Collections.singletonMap(ERROR_OBJECT, e));
@@ -133,7 +133,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
         if (scope instanceof TraceScope) {
           ((TraceScope) scope).setAsyncPropagation(false);
         }
-      } catch (final RuntimeException | Error e) {
+      } catch (final Throwable e) {
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, e));
         span.finish();
@@ -153,7 +153,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
         if (scope instanceof TraceScope) {
           ((TraceScope) scope).setAsyncPropagation(false);
         }
-      } catch (final RuntimeException | Error e) {
+      } catch (final Throwable e) {
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, e));
         span.finish();
@@ -172,7 +172,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
         if (scope instanceof TraceScope) {
           ((TraceScope) scope).setAsyncPropagation(false);
         }
-      } catch (final RuntimeException | Error e) {
+      } catch (final Throwable e) {
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, e));
         span.finish();
@@ -190,7 +190,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
         if (scope instanceof TraceScope) {
           ((TraceScope) scope).setAsyncPropagation(false);
         }
-      } catch (final RuntimeException | Error e) {
+      } catch (final Throwable e) {
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, e));
         span.finish();
