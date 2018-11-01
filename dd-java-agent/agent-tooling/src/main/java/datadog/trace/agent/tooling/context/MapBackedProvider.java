@@ -1,5 +1,7 @@
 package datadog.trace.agent.tooling.context;
 
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
+
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.agent.tooling.Utils;
@@ -95,7 +97,25 @@ public class MapBackedProvider implements InstrumentationContextProvider {
                   return builder.visit(getInstrumentationVisitor());
                 }
               });
-      builder = builder.transform(new HelperInjector(dynamicClasses()));
+      builder =
+          builder.transform(
+              new AgentBuilder.Transformer() {
+                final HelperInjector injector = new HelperInjector(dynamicClasses());
+
+                @Override
+                public DynamicType.Builder<?> transform(
+                    DynamicType.Builder<?> builder,
+                    TypeDescription typeDescription,
+                    ClassLoader classLoader,
+                    JavaModule module) {
+                  return injector.transform(
+                      builder,
+                      typeDescription,
+                      // dynamic map classes will always go to the bootstrap
+                      BOOTSTRAP_CLASSLOADER,
+                      module);
+                }
+              });
     }
     return builder;
   }
