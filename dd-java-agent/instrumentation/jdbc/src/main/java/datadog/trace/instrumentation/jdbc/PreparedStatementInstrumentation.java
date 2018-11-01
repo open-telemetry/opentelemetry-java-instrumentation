@@ -70,9 +70,10 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
           if (connection.isWrapperFor(Connection.class)) {
             connection = connection.unwrap(Connection.class);
           }
-        } catch (final Exception e) {
+        } catch (final Exception | AbstractMethodError e) {
           // perhaps wrapping isn't supported?
           // ex: org.h2.jdbc.JdbcConnection v1.3.175
+          // or: jdts.jdbc which always throws `AbstractMethodError` (at least up to version 1.3)
           // Stick with original connection.
         }
       } catch (final Throwable e) {
