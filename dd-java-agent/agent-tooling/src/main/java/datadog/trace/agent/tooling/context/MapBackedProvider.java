@@ -5,6 +5,7 @@ import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOAD
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.agent.tooling.Utils;
+import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.bootstrap.WeakMap;
 import java.lang.reflect.Method;
@@ -37,8 +38,8 @@ import net.bytebuddy.utility.JavaModule;
  * <p>This is accomplished by
  *
  * <ol>
- *   <li>Injecting a Dynamic Class to store a static map
- *   <li>Rewritting calls to the context-store to access the map on the dynamic class
+ *   <li>Injecting a Dynamic Class created from {@link MapHolder} to store a static map
+ *   <li>Rewritting calls to the context-store to access the specific dynamic {@link MapHolder}
  * </ol>
  *
  * Storing the map on a dynamic class and doing bytecode rewrites allows for a 1-pass lookup.
@@ -47,11 +48,8 @@ import net.bytebuddy.utility.JavaModule;
  * <p>Example:<br>
  * <em>InstrumentationContext.get(runnableInstance, Runnable.class, RunnableState.class)")</em><br>
  * is rewritten to:<br>
- * <em>RunnableInstrumentation$ContextStore$RunnableState12345.getOrCreate(runnableInstance,
- * Runnable.class, RunnableState.class)</em>
- *
- * <p>Map lookup implementation defined in template class: {@link MapHolder#getOrCreate(Object,
- * Class, Class)}
+ * <em>RunnableInstrumentation$ContextStore$RunnableState12345.getMapHolder(runnableRunnable.class,
+ * RunnableState.class)</em>
  */
 @Slf4j
 public class MapBackedProvider implements InstrumentationContextProvider {
@@ -60,11 +58,9 @@ public class MapBackedProvider implements InstrumentationContextProvider {
 
   static {
     try {
-      contextGetMethod =
-          InstrumentationContext.class.getMethod("get", Object.class, Class.class, Class.class);
-      mapGetMethod =
-          MapHolder.class.getMethod("getOrCreate", Object.class, Class.class, Class.class);
-    } catch (Exception e) {
+      contextGetMethod = InstrumentationContext.class.getMethod("get", Class.class, Class.class);
+      mapGetMethod = MapHolder.class.getMethod("getMapHolder", Class.class, Class.class);
+    } catch (final Exception e) {
       throw new IllegalStateException(e);
     }
   }
@@ -72,16 +68,17 @@ public class MapBackedProvider implements InstrumentationContextProvider {
   /** dynamic-class-name -> dynamic-class-bytes */
   private final AtomicReference<Map<String, byte[]>> dynamicClasses = new AtomicReference<>(null);
 
-  /** user-class-name -> dynamic-class-name */
+  /** key-class-name -> dynamic-class-name */
   private final AtomicReference<Map<String, String>> dynamicClassNames =
       new AtomicReference<>(null);
 
   private final Instrumenter.Default instrumenter;
 
-  public MapBackedProvider(Instrumenter.Default instrumenter) {
+  public MapBackedProvider(final Instrumenter.Default instrumenter) {
     this.instrumenter = instrumenter;
   }
 
+  @Override
   public AgentBuilder.Identified.Extendable instrumentationTransformer(
       AgentBuilder.Identified.Extendable builder) {
     if (instrumenter.contextStore().size() > 0) {
@@ -90,10 +87,10 @@ public class MapBackedProvider implements InstrumentationContextProvider {
               new AgentBuilder.Transformer() {
                 @Override
                 public DynamicType.Builder<?> transform(
-                    DynamicType.Builder<?> builder,
-                    TypeDescription typeDescription,
-                    ClassLoader classLoader,
-                    JavaModule module) {
+                    final DynamicType.Builder<?> builder,
+                    final TypeDescription typeDescription,
+                    final ClassLoader classLoader,
+                    final JavaModule module) {
                   return builder.visit(getInstrumentationVisitor());
                 }
               });
@@ -104,10 +101,10 @@ public class MapBackedProvider implements InstrumentationContextProvider {
 
                 @Override
                 public DynamicType.Builder<?> transform(
-                    DynamicType.Builder<?> builder,
-                    TypeDescription typeDescription,
-                    ClassLoader classLoader,
-                    JavaModule module) {
+                    final DynamicType.Builder<?> builder,
+                    final TypeDescription typeDescription,
+                    final ClassLoader classLoader,
+                    final JavaModule module) {
                   return injector.transform(
                       builder,
                       typeDescription,
@@ -123,41 +120,45 @@ public class MapBackedProvider implements InstrumentationContextProvider {
   private AsmVisitorWrapper getInstrumentationVisitor() {
     return new AsmVisitorWrapper() {
       @Override
-      public int mergeWriter(int flags) {
+      public int mergeWriter(final int flags) {
         return flags | ClassWriter.COMPUTE_MAXS;
       }
 
       @Override
-      public int mergeReader(int flags) {
+      public int mergeReader(final int flags) {
         return flags;
       }
 
       @Override
       public ClassVisitor wrap(
           final TypeDescription instrumentedType,
-          ClassVisitor classVisitor,
-          Implementation.Context implementationContext,
-          TypePool typePool,
-          FieldList<FieldDescription.InDefinedShape> fields,
-          MethodList<?> methods,
-          int writerFlags,
-          int readerFlags) {
+          final ClassVisitor classVisitor,
+          final Implementation.Context implementationContext,
+          final TypePool typePool,
+          final FieldList<FieldDescription.InDefinedShape> fields,
+          final MethodList<?> methods,
+          final int writerFlags,
+          final int readerFlags) {
         generateMapHolderClasses();
         return new ClassVisitor(Opcodes.ASM7, classVisitor) {
           @Override
           public void visit(
-              int version,
-              int access,
-              String name,
-              String signature,
-              String superName,
-              String[] interfaces) {
+              final int version,
+              final int access,
+              final String name,
+              final String signature,
+              final String superName,
+              final String[] interfaces) {
             super.visit(version, access, name, signature, superName, interfaces);
           }
 
           @Override
           public MethodVisitor visitMethod(
-              int access, String name, String descriptor, String signature, String[] exceptions) {
+              final int access,
+              final String name,
+              final String descriptor,
+              final String signature,
+              final String[] exceptions) {
             final MethodVisitor mv =
                 super.visitMethod(access, name, descriptor, signature, exceptions);
             return new MethodVisitor(Opcodes.ASM7, mv) {
@@ -168,7 +169,11 @@ public class MapBackedProvider implements InstrumentationContextProvider {
 
               @Override
               public void visitMethodInsn(
-                  int opcode, String owner, String name, String descriptor, boolean isInterface) {
+                  final int opcode,
+                  final String owner,
+                  final String name,
+                  final String descriptor,
+                  final boolean isInterface) {
                 pushOpcode(opcode);
                 if (Utils.getInternalName(contextGetMethod.getDeclaringClass().getName())
                         .equals(owner)
@@ -180,28 +185,38 @@ public class MapBackedProvider implements InstrumentationContextProvider {
                           && insnStack[2] == Opcodes.LDC)
                       && (stack[0] instanceof Type && stack[1] instanceof Type)) {
                     final String contextClassName = ((Type) stack[0]).getClassName();
-                    final String userClassName = ((Type) stack[1]).getClassName();
-                    final String mapHolderClass = dynamicClassNames.get().get(userClassName);
+                    final String keyClassName = ((Type) stack[1]).getClassName();
+                    final String mapHolderClass = dynamicClassNames.get().get(keyClassName);
                     log.debug(
                         "Rewriting context-store map fetch for instrumenter {}: {} -> {}",
                         instrumenter.getClass().getName(),
-                        userClassName,
+                        keyClassName,
                         contextClassName);
-                    if (mapHolderClass != null
-                        && contextClassName.equals(
-                            instrumenter.contextStore().get(userClassName))) {
-                      // stack: contextClass | userClass | instance
-                      mv.visitMethodInsn(
-                          Opcodes.INVOKESTATIC,
-                          Utils.getInternalName(mapHolderClass),
-                          mapGetMethod.getName(),
-                          Type.getMethodDescriptor(mapGetMethod),
-                          false);
-                      return;
+                    if (mapHolderClass == null) {
+                      throw new IllegalStateException(
+                          String.format(
+                              "Incorrect Context Api Usage detected. Cannot find map holder class for %s. Was that class defined in contextStore for instrumentation %s?",
+                              keyClassName, instrumenter.getClass().getName()));
                     }
+                    if (!contextClassName.equals(instrumenter.contextStore().get(keyClassName))) {
+                      throw new IllegalStateException(
+                          String.format(
+                              "Incorrect Context Api Usage detected. Incorrect context class %s, expected %s for instrumentation %s",
+                              contextClassName,
+                              instrumenter.contextStore().get(keyClassName),
+                              instrumenter.getClass().getName()));
+                    }
+                    // stack: contextClass | keyClass
+                    mv.visitMethodInsn(
+                        Opcodes.INVOKESTATIC,
+                        Utils.getInternalName(mapHolderClass),
+                        mapGetMethod.getName(),
+                        Type.getMethodDescriptor(mapGetMethod),
+                        false);
+                    return;
                   }
                   throw new IllegalStateException(
-                      "Incorrect Context Api Usage detected. User and context class must be class-literals. Example of correct usage: InstrumentationContext.get(runnableInstance, Runnable.class, RunnableState.class)");
+                      "Incorrect Context Api Usage detected. Key and context class must be class-literals. Example of correct usage: InstrumentationContext.get(Runnable.class, RunnableContext.class)");
                 } else {
                   super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
                 }
@@ -216,38 +231,38 @@ public class MapBackedProvider implements InstrumentationContextProvider {
               /**
                * Tracking the most recently pushed objects on the stack to assert proper api usage.
                */
-              private void pushStack(Object o) {
+              private void pushStack(final Object o) {
                 System.arraycopy(stack, 0, stack, 1, stack.length - 1);
                 stack[0] = o;
               }
 
               @Override
-              public void visitInsn(int opcode) {
+              public void visitInsn(final int opcode) {
                 pushOpcode(opcode);
                 super.visitInsn(opcode);
               }
 
               @Override
-              public void visitJumpInsn(int opcode, Label label) {
+              public void visitJumpInsn(final int opcode, final Label label) {
                 pushOpcode(opcode);
                 super.visitJumpInsn(opcode, label);
               }
 
               @Override
-              public void visitIntInsn(int opcode, int operand) {
+              public void visitIntInsn(final int opcode, final int operand) {
                 pushOpcode(opcode);
                 super.visitIntInsn(opcode, operand);
               }
 
               @Override
-              public void visitVarInsn(int opcode, int var) {
+              public void visitVarInsn(final int opcode, final int var) {
                 pushOpcode(opcode);
                 pushStack(var);
                 super.visitVarInsn(opcode, var);
               }
 
               @Override
-              public void visitLdcInsn(Object value) {
+              public void visitLdcInsn(final Object value) {
                 pushOpcode(Opcodes.LDC);
                 pushStack(value);
                 super.visitLdcInsn(value);
@@ -265,7 +280,7 @@ public class MapBackedProvider implements InstrumentationContextProvider {
 
   @Override
   public AgentBuilder.Identified.Extendable additionalInstrumentation(
-      AgentBuilder.Identified.Extendable builder) {
+      final AgentBuilder.Identified.Extendable builder) {
     return builder;
   }
 
@@ -281,14 +296,14 @@ public class MapBackedProvider implements InstrumentationContextProvider {
       final Map<String, byte[]> dynamicClasses = new HashMap<>(instrumenter.contextStore().size());
       final Map<String, String> dynamicClassNames =
           new HashMap<>(instrumenter.contextStore().size());
-      for (final String userClassName : instrumenter.contextStore().keySet()) {
+      for (final String keyClassName : instrumenter.contextStore().keySet()) {
         final String dynamicClassName =
             instrumenter.getClass().getName()
                 + "$ContextStore"
-                + userClassName.replaceAll(".*([^\\.]+)$", "\\1")
+                + keyClassName.replaceAll(".*([^\\.]+)$", "\\1")
                 + UUID.randomUUID().toString().replace('-', '_');
 
-        dynamicClassNames.put(userClassName, dynamicClassName);
+        dynamicClassNames.put(keyClassName, dynamicClassName);
         dynamicClasses.put(dynamicClassName, makeMapHolderClass(dynamicClassName));
       }
       this.dynamicClassNames.compareAndSet(null, dynamicClassNames);
@@ -296,7 +311,7 @@ public class MapBackedProvider implements InstrumentationContextProvider {
     }
   }
 
-  private byte[] makeMapHolderClass(String className) {
+  private byte[] makeMapHolderClass(final String className) {
     return new ByteBuddy()
         .rebase(MapHolder.class)
         .modifiers(Opcodes.ACC_PUBLIC | Opcodes.ACC_FINAL)
@@ -306,41 +321,62 @@ public class MapBackedProvider implements InstrumentationContextProvider {
   }
 
   /** Template class used to generate the class holding the global map. */
-  private static final class MapHolder {
-    public static final WeakMap MAP = WeakMap.Provider.newWeakMap();
+  private static final class MapHolder implements ContextStore<Object, Object> {
+    private static final MapHolder INSTANCE = new MapHolder(WeakMap.Provider.newWeakMap());
 
-    /**
-     * Fetch a context class out of the backing map. Create and return a new context class if none
-     * currently exists.
-     *
-     * <p>This method is thread safe.
-     */
-    public static Object getOrCreate(Object instance, Class userClass, Class contextClass) {
-      if (!userClass.isAssignableFrom(instance.getClass())) {
-        throw new RuntimeException(
-            "Illegal context lookup. "
-                + instance.getClass().getName()
-                + " cannot be cast to  "
-                + userClass.getName());
-      }
-      Object contextInstance = MAP.get(instance);
-      if (null == contextInstance) {
-        synchronized (instance) {
-          contextInstance = MAP.get(instance);
-          if (null == contextInstance) {
-            try {
-              contextInstance = contextClass.newInstance();
-              MAP.put(instance, contextInstance);
-            } catch (Exception e) {
-              throw new RuntimeException(
-                  contextClass.getName() + " must define a public, no-arg constructor.", e);
-            }
-          }
-        }
-      }
-      return contextInstance;
+    private final WeakMap map;
+
+    private MapHolder(final WeakMap map) {
+      this.map = map;
     }
 
-    private MapHolder() {}
+    @Override
+    public Object get(final Object key) {
+      return map.get(key);
+    }
+
+    @Override
+    public Object putIfAbsent(final Object key, final Object context) {
+      Object existingContext = map.get(key);
+      if (null != existingContext) {
+        return existingContext;
+      }
+      synchronized (map) {
+        existingContext = map.get(key);
+        if (null != existingContext) {
+          return existingContext;
+        }
+        map.put(key, context);
+        return context;
+      }
+    }
+
+    @Override
+    public Object putIfAbsent(final Object key, final ContextStore.Factory<Object> contextFactory) {
+      Object existingContext = map.get(key);
+      if (null != existingContext) {
+        return existingContext;
+      }
+      synchronized (map) {
+        existingContext = map.get(key);
+        if (null != existingContext) {
+          return existingContext;
+        }
+        final Object context = contextFactory.create();
+        map.put(key, context);
+        return context;
+      }
+    }
+
+    @Override
+    public void put(final Object key, final Object context) {
+      map.put(key, context);
+    }
+
+    public static ContextStore getMapHolder(final Class keyClass, final Class contextClass) {
+      // We do not actually check the keyClass here - but that should be fine since compiler would
+      // check things for us.
+      return INSTANCE;
+    }
   }
 }

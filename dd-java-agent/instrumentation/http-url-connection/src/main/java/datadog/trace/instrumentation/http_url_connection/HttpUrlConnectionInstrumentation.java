@@ -12,6 +12,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
+import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -48,9 +49,13 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {HttpUrlConnectionInstrumentation.class.getName() + "$HttpURLState"};
+    return new String[] {
+      HttpUrlConnectionInstrumentation.class.getName() + "$HttpURLState",
+      HttpUrlConnectionInstrumentation.class.getName() + "$HttpURLState$1"
+    };
   }
 
+  @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(
         "java.net.HttpURLConnection", getClass().getName() + "$HttpURLState");
@@ -72,9 +77,9 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         @Advice.This final HttpURLConnection thiz,
         @Advice.FieldValue("connected") final boolean connected,
         @Advice.Origin("#m") final String methodName) {
-
-      final HttpURLState state =
-          InstrumentationContext.get(thiz, HttpURLConnection.class, HttpURLState.class);
+      final ContextStore<HttpURLConnection, HttpURLState> contextStore =
+          InstrumentationContext.get(HttpURLConnection.class, HttpURLState.class);
+      final HttpURLState state = contextStore.putIfAbsent(thiz, HttpURLState.FACTORY);
 
       String operationName = "http.request";
 
@@ -183,6 +188,15 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   }
 
   public static class HttpURLState {
+
+    public static final ContextStore.Factory<HttpURLState> FACTORY =
+        new ContextStore.Factory<HttpURLState>() {
+          @Override
+          public HttpURLState create() {
+            return new HttpURLState();
+          }
+        };
+
     public boolean calledOutputStream = false;
     public boolean calledInputStream = false;
   }
