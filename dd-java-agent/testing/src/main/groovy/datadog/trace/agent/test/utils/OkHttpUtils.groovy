@@ -7,10 +7,11 @@ import java.util.concurrent.TimeUnit
 class OkHttpUtils {
 
   static clientBuilder() {
+    def unit = TimeUnit.MINUTES
     new OkHttpClient.Builder()
-      .connectTimeout(1, TimeUnit.MINUTES)
-      .writeTimeout(1, TimeUnit.MINUTES)
-      .readTimeout(1, TimeUnit.MINUTES)
+      .connectTimeout(1, unit)
+      .writeTimeout(1, unit)
+      .readTimeout(1, unit)
   }
 
   static client() {

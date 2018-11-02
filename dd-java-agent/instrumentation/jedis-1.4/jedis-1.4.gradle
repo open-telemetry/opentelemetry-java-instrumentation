@@ -33,9 +33,3 @@ dependencies {
 
   latestDepTestCompile group: 'redis.clients', name: 'jedis', version: '+'
 }
-
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'redis.clients', name: 'jedis', version: '+'
-  }
-}

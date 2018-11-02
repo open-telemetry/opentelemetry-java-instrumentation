@@ -80,14 +80,13 @@ class JettyHandlerTest extends AgentTestRunner {
     tags.size() == 10
   }
 
-
   def "handler instrumentation clears state after async request"() {
     setup:
     Handler handler = new AbstractHandler() {
       @Override
       void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         final Continuation continuation = ContinuationSupport.getContinuation(request)
-        continuation.suspend()
+        continuation.suspend(response)
         // By the way, this is a terrible async server
         new Thread() {
           @Override

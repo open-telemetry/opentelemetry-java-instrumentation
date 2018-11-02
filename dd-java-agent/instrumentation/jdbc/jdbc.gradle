@@ -33,17 +33,13 @@ dependencies {
   testCompile group: 'org.apache.tomcat', name: 'tomcat-juli', version: '7.0.19'
   testCompile group: 'com.zaxxer', name: 'HikariCP', version: '2.4.0'
   testCompile group: 'com.mchange', name: 'c3p0', version: '0.9.5'
-}
+  
+  latestDepTestCompile group: 'com.h2database', name: 'h2', version: '+'
+  latestDepTestCompile group: 'org.apache.derby', name: 'derby', version: '+'
+  latestDepTestCompile group: 'org.hsqldb', name: 'hsqldb', version: '+'
 
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'com.h2database', name: 'h2', version: '+'
-    force group: 'org.apache.derby', name: 'derby', version: '+'
-    force group: 'org.hsqldb', name: 'hsqldb', version: '+'
-
-    force group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '+'
-    force group: 'org.apache.tomcat', name: 'tomcat-juli', version: '+'
-    force group: 'com.zaxxer', name: 'HikariCP', version: '+'
-    force group: 'com.mchange', name: 'c3p0', version: '+'
-  }
+  latestDepTestCompile group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '+'
+  latestDepTestCompile group: 'org.apache.tomcat', name: 'tomcat-juli', version: '+'
+  latestDepTestCompile group: 'com.zaxxer', name: 'HikariCP', version: '+'
+  latestDepTestCompile group: 'com.mchange', name: 'c3p0', version: '+'
 }

@@ -61,10 +61,6 @@ dependencies {
 
   testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   testCompile group: 'io.lettuce', name: 'lettuce-core', version: '5.0.0.RELEASE'
-}
 
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'io.lettuce', name: 'lettuce-core', version: '+'
-  }
+  latestDepTestCompile group: 'io.lettuce', name: 'lettuce-core', version: '+'
 }

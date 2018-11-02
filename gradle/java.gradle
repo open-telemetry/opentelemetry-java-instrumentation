@@ -118,6 +118,18 @@ artifacts {
   archives javaDocJar
 }
 
+project.afterEvaluate {
+  if (project.plugins.hasPlugin('org.unbroken-dome.test-sets')) {
+    tasks.withType(Test) {
+      doFirst{
+        def testArtifacts = configurations.testRuntime.resolvedConfiguration.resolvedArtifacts
+        def latestTestArtifacts = configurations.latestDepTestRuntime.resolvedConfiguration.resolvedArtifacts
+        assert testArtifacts != latestTestArtifacts : "latestDepTest dependencies are identical to test"
+      }
+    }
+  }
+}
+
 if (project.plugins.hasPlugin('com.github.johnrengelman.shadow')) {
   // Remove the no-deps jar from the archives to prevent publication
   configurations.archives.with {

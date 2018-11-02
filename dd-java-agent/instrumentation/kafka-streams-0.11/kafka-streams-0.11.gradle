@@ -35,13 +35,9 @@ dependencies {
   testCompile group: 'org.springframework.kafka', name: 'spring-kafka', version: '1.3.3.RELEASE'
   testCompile group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '1.3.3.RELEASE'
   testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
-}
 
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'org.apache.kafka', name: 'kafka-clients', version: '+'
-    force group: 'org.apache.kafka', name: 'kafka-streams', version: '+'
-    force group: 'org.springframework.kafka', name: 'spring-kafka', version: '+'
-    force group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '+'
-  }
+  latestDepTestCompile group: 'org.apache.kafka', name: 'kafka-clients', version: '+'
+  latestDepTestCompile group: 'org.apache.kafka', name: 'kafka-streams', version: '+'
+  latestDepTestCompile group: 'org.springframework.kafka', name: 'spring-kafka', version: '+'
+  latestDepTestCompile group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '+'
 }

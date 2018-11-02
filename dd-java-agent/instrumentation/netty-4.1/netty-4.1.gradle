@@ -42,6 +42,9 @@ dependencies {
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
   testCompile group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
   testCompile group: 'org.asynchttpclient', name: 'async-http-client', version: '2.1.0'
+
+  latestDepTestCompile group: 'io.netty', name: 'netty-codec-http', version: '+'
+  latestDepTestCompile group: 'org.asynchttpclient', name: 'async-http-client', version: '+'
 }
 
 // We need to force the dependency to the earliest supported version because other libraries declare newer versions.
@@ -55,11 +58,3 @@ configurations.testCompile {
     }
   }
 }
-
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'io.netty', name: 'netty-codec-http', version: '+'
-    force group: 'org.asynchttpclient', name: 'async-http-client', version: '+'
-  }
-}
-

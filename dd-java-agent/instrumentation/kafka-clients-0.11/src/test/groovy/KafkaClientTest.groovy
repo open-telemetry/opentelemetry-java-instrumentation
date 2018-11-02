@@ -7,7 +7,6 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.listener.KafkaMessageListenerContainer
 import org.springframework.kafka.listener.MessageListener
-import org.springframework.kafka.listener.config.ContainerProperties
 import org.springframework.kafka.test.rule.KafkaEmbedded
 import org.springframework.kafka.test.utils.ContainerTestUtils
 import org.springframework.kafka.test.utils.KafkaTestUtils
@@ -36,7 +35,12 @@ class KafkaClientTest extends AgentTestRunner {
     def consumerFactory = new DefaultKafkaConsumerFactory<String, String>(consumerProperties)
 
     // set the topic that needs to be consumed
-    ContainerProperties containerProperties = new ContainerProperties(SHARED_TOPIC)
+    def containerProperties = null
+    try {
+      containerProperties = Class.forName("org.springframework.kafka.listener.config.ContainerProperties").newInstance(SHARED_TOPIC)
+    } catch (ClassNotFoundException | NoClassDefFoundError e) {
+      containerProperties = Class.forName("org.springframework.kafka.listener.ContainerProperties").newInstance(SHARED_TOPIC)
+    }
 
     // create a Kafka MessageListenerContainer
     def container = new KafkaMessageListenerContainer<>(consumerFactory, containerProperties)
@@ -126,7 +130,7 @@ class KafkaClientTest extends AgentTestRunner {
 
     cleanup:
     producerFactory.stop()
-    container.stop()
+    container?.stop()
   }
 
 }

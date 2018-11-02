@@ -16,7 +16,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public final class HandlerInstrumentation extends Instrumenter.Default {
-  public static final String SERVLET_OPERATION_NAME = "jetty.request";
 
   public HandlerInstrumentation() {
     super("jetty", "jetty-8");
