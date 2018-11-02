@@ -11,7 +11,6 @@ import datadog.trace.bootstrap.WeakMap;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import jdk.internal.org.objectweb.asm.ClassWriter;
 import lombok.extern.slf4j.Slf4j;
@@ -298,11 +297,7 @@ public class MapBackedProvider implements InstrumentationContextProvider {
           new HashMap<>(instrumenter.contextStore().size());
       for (final String keyClassName : instrumenter.contextStore().keySet()) {
         final String dynamicClassName =
-            instrumenter.getClass().getName()
-                + "$ContextStore"
-                + keyClassName.replaceAll(".*([^\\.]+)$", "\\1")
-                + UUID.randomUUID().toString().replace('-', '_');
-
+            getClass().getName() + "$ContextStore" + keyClassName.replaceAll("\\.", "\\$");
         dynamicClassNames.put(keyClassName, dynamicClassName);
         dynamicClasses.put(dynamicClassName, makeMapHolderClass(dynamicClassName));
       }
