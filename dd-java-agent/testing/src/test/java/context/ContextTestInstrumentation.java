@@ -1,9 +1,11 @@
 package context;
 
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,59 +22,181 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named(getClass().getPackage().getName() + ".UserClass1")
-        .or(named(getClass().getPackage().getName() + ".UserClass2"));
+    return nameStartsWith(getClass().getName() + "$");
   }
 
   @Override
   public Map<? extends ElementMatcher, String> transformers() {
     final Map<ElementMatcher, String> transformers = new HashMap<>(2);
     transformers.put(named("isInstrumented"), MarkInstrumentedAdvice.class.getName());
-    transformers.put(named("incrementContextCount"), CorrectContextApiUsageAdvice.class.getName());
     transformers.put(
-        named("incrementContextCountCountBroken"), IncorrectContextApiUsageAdvice.class.getName());
+        named("incrementContextCount"), StoreAndIncrementApiUsageAdvice.class.getName());
+    transformers.put(named("getContextCount"), GetApiUsageAdvice.class.getName());
+    transformers.put(named("putContextCount"), PutApiUsageAdvice.class.getName());
+    transformers.put(
+        named("incorrectKeyClassUsage"), IncorrectKeyClassContextApiUsageAdvice.class.getName());
+    transformers.put(
+        named("incorrectContextClassUsage"),
+        IncorrectContextClassContextApiUsageAdvice.class.getName());
+    transformers.put(
+        named("incorrectCallUsage"), IncorrectCallContextApiUsageAdvice.class.getName());
     return transformers;
   }
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {getClass().getName() + "$UserClass1State"};
+    return new String[] {getClass().getName() + "$Context", getClass().getName() + "$Context$1"};
   }
 
   @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(
-        getClass().getPackage().getName() + ".UserClass1",
-        getClass().getName() + "$UserClass1State");
+        getClass().getName() + "$KeyClass", getClass().getName() + "$Context");
   }
 
   public static class MarkInstrumentedAdvice {
     @Advice.OnMethodExit
-    public static void markInstrumented(@Advice.Return(readOnly = false) boolean isInstrumented) {
+    public static void methodExit(@Advice.Return(readOnly = false) boolean isInstrumented) {
       isInstrumented = true;
     }
   }
 
-  public static class CorrectContextApiUsageAdvice {
+  public static class StoreAndIncrementApiUsageAdvice {
     @Advice.OnMethodExit
-    public static void storeAndIncrement(
-        @Advice.This Object thiz, @Advice.Return(readOnly = false) int contextCount) {
-      UserClass1State state =
-          InstrumentationContext.get((UserClass1) thiz, UserClass1.class, UserClass1State.class);
-      contextCount = ++state.count;
+    public static void methodExit(
+        @Advice.This final KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
+      final ContextStore<KeyClass, Context> contextStore =
+          InstrumentationContext.get(KeyClass.class, Context.class);
+      final Context context = contextStore.putIfAbsent(thiz, new Context());
+      contextCount = ++context.count;
     }
   }
 
-  public static class IncorrectContextApiUsageAdvice {
+  public static class StoreAndIncrementWithFactoryApiUsageAdvice {
     @Advice.OnMethodExit
-    public static void storeAndIncrement(
-        @Advice.This Object thiz, @Advice.Return(readOnly = false) int contextCount) {
-      UserClass1State state = InstrumentationContext.get(thiz, Object.class, UserClass1State.class);
-      contextCount = ++state.count;
+    public static void methodExit(
+        @Advice.This final KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
+      final ContextStore<KeyClass, Context> contextStore =
+          InstrumentationContext.get(KeyClass.class, Context.class);
+      final Context context = contextStore.putIfAbsent(thiz, Context.FACTORY);
+      contextCount = ++context.count;
     }
   }
 
-  public static class UserClass1State {
+  public static class GetApiUsageAdvice {
+    @Advice.OnMethodExit
+    public static void methodExit(
+        @Advice.This final KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
+      final ContextStore<KeyClass, Context> contextStore =
+          InstrumentationContext.get(KeyClass.class, Context.class);
+      contextCount = contextStore.get(thiz).count;
+    }
+  }
+
+  public static class PutApiUsageAdvice {
+    @Advice.OnMethodExit
+    public static void methodExit(
+        @Advice.This final KeyClass thiz, @Advice.Argument(0) final int value) {
+      final ContextStore<KeyClass, Context> contextStore =
+          InstrumentationContext.get(KeyClass.class, Context.class);
+      final Context context = new Context();
+      context.count = value;
+      contextStore.put(thiz, context);
+    }
+  }
+
+  public static class IncorrectKeyClassContextApiUsageAdvice {
+    @Advice.OnMethodExit
+    public static void methodExit() {
+      InstrumentationContext.get(Object.class, Context.class);
+    }
+  }
+
+  public static class IncorrectContextClassContextApiUsageAdvice {
+    @Advice.OnMethodExit
+    public static void methodExit() {
+      InstrumentationContext.get(KeyClass.class, Object.class);
+    }
+  }
+
+  public static class IncorrectCallContextApiUsageAdvice {
+    @Advice.OnMethodExit
+    public static void methodExit() {
+      // Our instrumentation doesn't handle variables being passed to InstrumentationContext.get,
+      // so we make sure that this actually fails instrumentation.
+      final Class clazz = null;
+      InstrumentationContext.get(clazz, Object.class);
+    }
+  }
+
+  public static class Context {
+    public static final ContextStore.Factory<Context> FACTORY =
+        new ContextStore.Factory<Context>() {
+          @Override
+          public Context create() {
+            return new Context();
+          }
+        };
+
     int count = 0;
+  }
+
+  public static class KeyClass {
+    public boolean isInstrumented() {
+      // implementation replaced with test instrumentation
+      return false;
+    }
+
+    public int incrementContextCount() {
+      // implementation replaced with test instrumentation
+      return -1;
+    }
+
+    public int incrementContextCountWithFactory() {
+      // implementation replaced with test instrumentation
+      return -1;
+    }
+
+    public int getContextCount() {
+      // implementation replaced with test instrumentation
+      return -1;
+    }
+
+    public void putContextCount(final int value) {
+      // implementation replaced with test instrumentation
+    }
+  }
+
+  public static class IncorrectKeyClassUsageKeyClass {
+    public boolean isInstrumented() {
+      return false;
+    }
+
+    public int incorrectKeyClassUsage() {
+      // instrumentation will not apply to this class because advice incorrectly uses context api
+      return -1;
+    }
+  }
+
+  public static class IncorrectContextClassUsageKeyClass {
+    public boolean isInstrumented() {
+      return false;
+    }
+
+    public int incorrectContextClassUsage() {
+      // instrumentation will not apply to this class because advice incorrectly uses context api
+      return -1;
+    }
+  }
+
+  public static class IncorrectCallUsageKeyClass {
+    public boolean isInstrumented() {
+      return false;
+    }
+
+    public int incorrectCallUsage() {
+      // instrumentation will not apply to this class because advice incorrectly uses context api
+      return -1;
+    }
   }
 }

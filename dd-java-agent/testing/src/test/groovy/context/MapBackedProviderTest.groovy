@@ -6,10 +6,15 @@ import net.bytebuddy.utility.JavaModule
 
 import java.lang.ref.WeakReference
 
+import static context.ContextTestInstrumentation.IncorrectCallUsageKeyClass
+import static context.ContextTestInstrumentation.IncorrectContextClassUsageKeyClass
+import static context.ContextTestInstrumentation.IncorrectKeyClassUsageKeyClass
+import static context.ContextTestInstrumentation.KeyClass
+
 class MapBackedProviderTest extends AgentTestRunner {
 
   def setupSpec() {
-    assert new UserClass1().isInstrumented()
+    assert new KeyClass().isInstrumented()
   }
 
   @Override
@@ -19,14 +24,16 @@ class MapBackedProviderTest extends AgentTestRunner {
     final JavaModule module,
     final boolean loaded,
     final Throwable throwable) {
-    // UserClass2 asserts on incorrect api usage. Error expected.
-    return !(typeName.equals(UserClass2.getName()) && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."))
+    // Incorrect* classes assert on incorrect api usage. Error expected.
+    return !(typeName.startsWith(ContextTestInstrumentation.getName() + "$Incorrect") && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."))
   }
 
   def "correct api usage stores state in map"() {
+    setup:
+    KeyClass instance1 = new KeyClass()
+    KeyClass instance2 = new KeyClass()
+
     when:
-    UserClass1 instance1 = new UserClass1()
-    UserClass1 instance2 = new UserClass1()
     instance1.incrementContextCount()
 
     then:
@@ -34,11 +41,22 @@ class MapBackedProviderTest extends AgentTestRunner {
     instance2.incrementContextCount() == 1
   }
 
-  def "backing map should not create strong refs to user instances"() {
+  def "get/put test"() {
+    setup:
+    KeyClass instance1 = new KeyClass()
+
     when:
-    UserClass1 instance = new UserClass1()
+    instance1.putContextCount(10)
+
+    then:
+    instance1.getContextCount() == 10
+  }
+
+  def "backing map should not create strong refs to key class instances"() {
+    when:
+    KeyClass instance = new KeyClass()
     final int count = instance.incrementContextCount()
-    WeakReference<UserClass1> instanceRef = new WeakReference(instance)
+    WeakReference<KeyClass> instanceRef = new WeakReference(instance)
     instance = null
     TestUtils.awaitGC(instanceRef)
 
@@ -47,8 +65,18 @@ class MapBackedProviderTest extends AgentTestRunner {
     count == 1
   }
 
-  def "incorrect api usage fails at class load time"() {
+  def "incorrect key class usage fails at class load time"() {
     expect:
-    !new UserClass2().isInstrumented()
+    !new IncorrectKeyClassUsageKeyClass().isInstrumented()
+  }
+
+  def "incorrect context class usage fails at class load time"() {
+    expect:
+    !new IncorrectContextClassUsageKeyClass().isInstrumented()
+  }
+
+  def "incorrect call usage fails at class load time"() {
+    expect:
+    !new IncorrectCallUsageKeyClass().isInstrumented()
   }
 }
