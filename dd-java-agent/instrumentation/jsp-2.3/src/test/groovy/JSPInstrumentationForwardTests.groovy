@@ -43,17 +43,23 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
   OkHttpClient client = OkHttpUtils.client()
 
   def setupSpec() {
-    port = TestUtils.randomOpenPort()
-    tomcatServer = new Tomcat()
-    tomcatServer.setPort(port)
-    // comment to debug
-    tomcatServer.setSilent(true)
-
     baseDir = Files.createTempDir()
     baseDir.deleteOnExit()
     expectedJspClassFilesDir = baseDir.getCanonicalFile().getAbsolutePath() + expectedJspClassFilesDir
-    baseUrl = "http://localhost:$port/$jspWebappContext"
+
+    port = TestUtils.randomOpenPort()
+
+    tomcatServer = new Tomcat()
     tomcatServer.setBaseDir(baseDir.getAbsolutePath())
+    tomcatServer.setPort(port)
+    // comment to debug
+    tomcatServer.setSilent(true)
+    // this is needed in tomcat 9, this triggers the creation of a connector, will not
+    // affect tomcat 7 and 8
+    // https://stackoverflow.com/questions/48998387/code-works-with-embedded-apache-tomcat-8-but-not-with-9-whats-changed
+    tomcatServer.getConnector()
+
+    baseUrl = "http://localhost:$port/$jspWebappContext"
 
     appContext = tomcatServer.addWebapp("/$jspWebappContext",
       JSPInstrumentationForwardTests.getResource("/webapps/jsptest").getPath())

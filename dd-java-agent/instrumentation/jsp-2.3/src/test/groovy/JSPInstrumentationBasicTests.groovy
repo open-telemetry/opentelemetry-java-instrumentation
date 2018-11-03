@@ -45,17 +45,22 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
   OkHttpClient client = OkHttpUtils.client()
 
   def setupSpec() {
-    port = TestUtils.randomOpenPort()
-    tomcatServer = new Tomcat()
-    tomcatServer.setPort(port)
-    // comment to debug
-    tomcatServer.setSilent(true)
-
     baseDir = Files.createTempDir()
     baseDir.deleteOnExit()
     expectedJspClassFilesDir = baseDir.getCanonicalFile().getAbsolutePath() + expectedJspClassFilesDir
-    baseUrl = "http://localhost:$port/$jspWebappContext"
+
+    port = TestUtils.randomOpenPort()
+
+    tomcatServer = new Tomcat()
     tomcatServer.setBaseDir(baseDir.getAbsolutePath())
+    tomcatServer.setPort(port)
+    // comment to debug
+    tomcatServer.setSilent(true)
+    // this is needed in tomcat 9, this triggers the creation of a connector, will not
+    // affect tomcat 7 and 8
+    // https://stackoverflow.com/questions/48998387/code-works-with-embedded-apache-tomcat-8-but-not-with-9-whats-changed
+    tomcatServer.getConnector()
+    baseUrl = "http://localhost:$port/$jspWebappContext"
 
     appContext = tomcatServer.addWebapp("/$jspWebappContext",
       JSPInstrumentationBasicTests.getResource("/webapps/jsptest").getPath())
@@ -344,7 +349,14 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
-            errorTags(exceptionClass, errorMessage)
+            "error" true
+            "error.type" { String tagExceptionType ->
+              return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
+            }
+            "error.msg" { String tagErrorMsg ->
+              return errorMessageOptional || tagErrorMsg instanceof String
+            }
+            "error.stack" String
             defaultTags()
           }
         }
@@ -373,10 +385,10 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     res.close()
 
     where:
-    test                       | jspFileName        | jspClassName       | exceptionClass                  | errorMessage
-    "java runtime error"       | "runtimeError.jsp" | "runtimeError_jsp" | ArithmeticException             | String
-    "invalid write"            | "invalidWrite.jsp" | "invalidWrite_jsp" | StringIndexOutOfBoundsException | String
-    "missing query gives null" | "getQuery.jsp"     | "getQuery_jsp"     | NullPointerException            | null
+    test                       | jspFileName        | jspClassName       | exceptionClass            | errorMessageOptional
+    "java runtime error"       | "runtimeError.jsp" | "runtimeError_jsp" | ArithmeticException       | false
+    "invalid write"            | "invalidWrite.jsp" | "invalidWrite_jsp" | IndexOutOfBoundsException | true
+    "missing query gives null" | "getQuery.jsp"     | "getQuery_jsp"     | NullPointerException      | true
   }
 
   def "non-erroneous include plain HTML GET"() {
