@@ -34,7 +34,7 @@ dependencies {
   slickTestCompile project(':dd-java-agent:instrumentation:java-concurrent')
   slickTestCompile project(':dd-java-agent:instrumentation:trace-annotation')
   slickTestCompile project(':dd-java-agent:instrumentation:jdbc')
-  slickTestCompile group: 'org.scala-lang', name: 'scala-library', version: '2.11.12'
+  slickTestCompile deps.scala
   slickTestCompile group: 'com.typesafe.slick', name: 'slick_2.11', version: '3.2.0'
   slickTestCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
 }

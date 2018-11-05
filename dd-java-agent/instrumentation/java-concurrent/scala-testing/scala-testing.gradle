@@ -4,7 +4,7 @@ apply from: "${rootDir}/gradle/test-with-scala.gradle"
 dependencies {
   testCompile project(':dd-trace-api')
   testCompile project(':dd-trace-ot')
-  testCompile group: 'org.scala-lang', name: 'scala-library', version: '2.11.12'
+  testCompile deps.scala
 
   testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')

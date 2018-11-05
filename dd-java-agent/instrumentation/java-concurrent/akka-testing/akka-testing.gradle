@@ -6,7 +6,7 @@ excludedClassesConverage += ['*']
 dependencies {
   testCompile project(':dd-trace-api')
   testCompile project(':dd-trace-ot')
-  testCompile group: 'org.scala-lang', name: 'scala-library', version: '2.11.12'
+  testCompile deps.scala
   testCompile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.3.16'
   testCompile group: 'com.typesafe.akka', name: 'akka-testkit_2.11', version: '2.3.16'
 
