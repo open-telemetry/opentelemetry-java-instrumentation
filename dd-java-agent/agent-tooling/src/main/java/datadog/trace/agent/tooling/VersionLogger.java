@@ -21,6 +21,12 @@ public class VersionLogger {
         "dd-java-agent - version: {}",
         getVersionString(
             ClassLoader.getSystemClassLoader().getResourceAsStream("dd-java-agent.version")));
+    log.debug(
+        "Running on Java {}. JVM {} - {} - {}",
+        System.getProperty("java.version"),
+        System.getProperty("java.vm.name"),
+        System.getProperty("java.vm.vendor"),
+        System.getProperty("java.vm.version"));
   }
 
   private static String getVersionString(InputStream stream) {
