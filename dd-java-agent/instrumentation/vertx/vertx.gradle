@@ -20,13 +20,13 @@ muzzle {
   }
 }
 
-apply plugin: 'org.unbroken-dome.test-sets'
-
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
+//apply plugin: 'org.unbroken-dome.test-sets'
+//
+//testSets {
+//  latestDepTest {
+//    dirName = 'test'
+//  }
+//}
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8

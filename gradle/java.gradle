@@ -119,7 +119,7 @@ artifacts {
 }
 
 project.afterEvaluate {
-  if (project.plugins.hasPlugin('org.unbroken-dome.test-sets')) {
+  if (project.plugins.hasPlugin('org.unbroken-dome.test-sets') && configurations.hasProperty("latestDepTestRuntime")) {
     tasks.withType(Test) {
       doFirst{
         def testArtifacts = configurations.testRuntime.resolvedConfiguration.resolvedArtifacts

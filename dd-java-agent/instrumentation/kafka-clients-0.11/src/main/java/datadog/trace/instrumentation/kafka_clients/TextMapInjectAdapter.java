@@ -21,6 +21,6 @@ public class TextMapInjectAdapter implements TextMap {
 
   @Override
   public void put(final String key, final String value) {
-    headers.add(key, value.getBytes(StandardCharsets.UTF_8));
+    headers.remove(key).add(key, value.getBytes(StandardCharsets.UTF_8));
   }
 }

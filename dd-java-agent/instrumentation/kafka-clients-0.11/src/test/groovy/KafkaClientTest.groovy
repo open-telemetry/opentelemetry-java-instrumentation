@@ -35,8 +35,9 @@ class KafkaClientTest extends AgentTestRunner {
     def consumerFactory = new DefaultKafkaConsumerFactory<String, String>(consumerProperties)
 
     // set the topic that needs to be consumed
-    def containerProperties = null
+    def containerProperties
     try {
+      // Different class names for test and latestDepTest.
       containerProperties = Class.forName("org.springframework.kafka.listener.config.ContainerProperties").newInstance(SHARED_TOPIC)
     } catch (ClassNotFoundException | NoClassDefFoundError e) {
       containerProperties = Class.forName("org.springframework.kafka.listener.ContainerProperties").newInstance(SHARED_TOPIC)

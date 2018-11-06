@@ -43,7 +43,8 @@ dependencies {
   testCompile group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
   testCompile group: 'org.asynchttpclient', name: 'async-http-client', version: '2.1.0'
 
-  latestDepTestCompile group: 'io.netty', name: 'netty-codec-http', version: '+'
+  latestDepTestCompile group: 'io.netty', name: 'netty-codec-http', version: '(,5.0)'
+  // latest async-http-client incompatable with 5.0+ netty
   latestDepTestCompile group: 'org.asynchttpclient', name: 'async-http-client', version: '+'
 }
 

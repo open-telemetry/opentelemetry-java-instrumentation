@@ -40,4 +40,5 @@ dependencies {
   latestDepTestCompile group: 'org.apache.kafka', name: 'kafka-streams', version: '+'
   latestDepTestCompile group: 'org.springframework.kafka', name: 'spring-kafka', version: '+'
   latestDepTestCompile group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '+'
+  latestDepTestCompile group: 'org.assertj', name: 'assertj-core', version: '3.+'
 }
