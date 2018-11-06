@@ -35,7 +35,7 @@ dependencies {
   annotationProcessor deps.autoservice
   implementation deps.autoservice
 
-  testCompile group: 'org.scala-lang', name: 'scala-library', version: '2.11.12'
+  testCompile deps.scala
   testCompile group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
   testCompile group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.4.0'
   testCompile project(':dd-java-agent:testing')
@@ -44,7 +44,7 @@ dependencies {
   testCompile project(':dd-java-agent:instrumentation:akka-http-10.0')
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
 
-  latestDepTestCompile group: 'org.scala-lang', name: 'scala-library', version: '2.11.12'
+  latestDepTestCompile deps.scala
   latestDepTestCompile group: 'com.typesafe.play', name: 'play_2.11', version: '2.6.0'
   latestDepTestCompile group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.6.0'
 }
