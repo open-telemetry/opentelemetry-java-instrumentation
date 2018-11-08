@@ -74,7 +74,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           });
   private final CodecRegistry registry;
 
-  private final AtomicInteger traceCount = new AtomicInteger(0);
+  private final AtomicInteger traceCount;
 
   /** By default, report to local agent and collect all traces. */
   public DDTracer() {
@@ -178,10 +178,14 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     registry = new CodecRegistry();
     registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec(taggedHeaders));
     registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec(taggedHeaders));
-    if (this.writer instanceof DDAgentWriter && sampler instanceof DDApi.ResponseListener) {
+    if (this.writer instanceof DDAgentWriter) {
       final DDApi api = ((DDAgentWriter) this.writer).getApi();
-      api.addResponseListener((DDApi.ResponseListener) this.sampler);
-      api.addTraceCounter(traceCount);
+      traceCount = api.getTraceCounter();
+      if (sampler instanceof DDApi.ResponseListener) {
+        api.addResponseListener((DDApi.ResponseListener) this.sampler);
+      }
+    } else {
+      traceCount = new AtomicInteger(0);
     }
 
     registerClassLoader(ClassLoader.getSystemClassLoader());

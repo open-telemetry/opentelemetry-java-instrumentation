@@ -4,6 +4,8 @@ import datadog.opentracing.DDTracer
 import datadog.trace.api.Config
 import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.sampling.RateByServiceSampler
+import datadog.trace.common.writer.DDAgentWriter
+import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.common.writer.LoggingWriter
 import org.junit.Rule
@@ -111,5 +113,20 @@ class DDTracerTest extends Specification {
     tracer.sampler == sampler
     tracer.writer == writer
     tracer.runtimeId.length() > 0
+  }
+
+  def "Shares TraceCount with DDApi with #key = #value"() {
+    setup:
+    System.setProperty(PREFIX + key, value)
+    final DDTracer tracer = new DDTracer(new Config())
+
+    expect:
+    tracer.writer instanceof DDAgentWriter
+    tracer.traceCount.is(((DDAgentWriter) tracer.writer).getApi().traceCount)
+
+    where:
+    key                      | value
+    Config.PRIORITY_SAMPLING | "true"
+    Config.PRIORITY_SAMPLING | "false"
   }
 }

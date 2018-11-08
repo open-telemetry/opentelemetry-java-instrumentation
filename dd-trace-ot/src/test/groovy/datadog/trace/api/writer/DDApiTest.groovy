@@ -9,7 +9,6 @@ import datadog.trace.common.writer.DDApi.ResponseListener
 import org.msgpack.jackson.dataformat.MessagePackFactory
 import spock.lang.Specification
 
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
@@ -69,6 +68,7 @@ class DDApiTest extends Specification {
 
     expect:
     client.tracesEndpoint == "http://localhost:${agent.address.port}/v0.4/traces"
+    client.getTraceCounter().addAndGet(traces.size()) >= 0
     client.sendTraces(traces)
     agent.lastRequest.contentType == "application/msgpack"
     agent.lastRequest.headers.get("Datadog-Meta-Lang") == "java"
@@ -130,8 +130,8 @@ class DDApiTest extends Specification {
     }
     def client = new DDApi("localhost", agent.address.port)
     client.addResponseListener(responseListener)
-    def traceCounter = new AtomicInteger(3)
-    client.addTraceCounter(traceCounter)
+    def traceCounter = client.getTraceCounter()
+    traceCounter.set(3)
 
     when:
     client.sendTraces([])

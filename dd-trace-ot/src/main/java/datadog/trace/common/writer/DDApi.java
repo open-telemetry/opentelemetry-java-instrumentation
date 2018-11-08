@@ -35,7 +35,7 @@ public class DDApi {
   private final String tracesEndpoint;
   private final List<ResponseListener> responseListeners = new ArrayList<>();
 
-  private AtomicInteger traceCount;
+  private final AtomicInteger traceCount = new AtomicInteger(0);
   private volatile long nextAllowedLogTime = 0;
 
   private static final ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory());
@@ -59,8 +59,8 @@ public class DDApi {
     }
   }
 
-  public void addTraceCounter(final AtomicInteger traceCount) {
-    this.traceCount = traceCount;
+  public AtomicInteger getTraceCounter() {
+    return traceCount;
   }
 
   /**
