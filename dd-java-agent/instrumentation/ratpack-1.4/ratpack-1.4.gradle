@@ -4,16 +4,12 @@ ext {
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
-apply plugin: 'version-scan'
-
-versionScan {
-  group = "io.ratpack"
-  module = 'ratpack-core'
-  versions = "[1.4.0,)"
-  scanMethods = true
-  verifyPresent = [
-    "ratpack.path.PathBinding": "getDescription",
-  ]
+muzzle {
+  pass {
+    group = "io.ratpack"
+    module = 'ratpack-core'
+    versions = "[1.4.0,)"
+  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
