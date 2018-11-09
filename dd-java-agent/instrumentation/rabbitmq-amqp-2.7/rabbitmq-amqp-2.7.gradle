@@ -37,7 +37,9 @@ dependencies {
   testCompile deps.testcontainers
 
   latestDepTestCompile group: 'com.rabbitmq', name: 'amqp-client', version: '+'
-  latestDepTestCompile group: 'org.springframework.amqp', name: 'spring-rabbit', version: '+'
+  // TODO: check next version of amqp to make sure the dependencies can be downloaded from maven and 
+  // revert back to using latest
+  latestDepTestCompile group: 'org.springframework.amqp', name: 'spring-rabbit', version: '2.1.0.RELEASE'
 }
 
 configurations.testRuntime {
