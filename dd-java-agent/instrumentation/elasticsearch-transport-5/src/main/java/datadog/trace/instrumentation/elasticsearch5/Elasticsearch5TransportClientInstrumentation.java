@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.elasticsearch5;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -39,11 +38,6 @@ public class Elasticsearch5TransportClientInstrumentation extends Instrumenter.D
     // If we want to be more generic, we could instrument the interface instead:
     // .and(safeHasSuperType(named("org.elasticsearch.client.ElasticsearchClient"))))
     return not(isInterface()).and(named("org.elasticsearch.client.support.AbstractClient"));
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return classLoaderHasClasses("org.elasticsearch.percolator.TransportMultiPercolateAction");
   }
 
   @Override

@@ -4,8 +4,6 @@ ext {
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
-apply plugin: 'version-scan'
-
 muzzle {
   pass {
     group = "io.lettuce"

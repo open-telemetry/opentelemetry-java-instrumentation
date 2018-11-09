@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.kafka_streams;
 
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
@@ -101,12 +100,6 @@ public class KafkaStreamsProcessorInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("org.apache.kafka.streams.processor.internals.StreamTask");
-    }
-
-    @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
-      return classLoaderHasClasses(
-          "org.apache.kafka.common.header.Header", "org.apache.kafka.common.header.Headers");
     }
 
     @Override
