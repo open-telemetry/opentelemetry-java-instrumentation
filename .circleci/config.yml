@@ -172,24 +172,6 @@ jobs:
     - store_artifacts:
         path: ./reports
 
-  scan_versions:
-    <<: *defaults
-    steps:
-    - checkout
-
-    - restore_cache:
-        # Reset the cache approx every release
-        keys:
-        - dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
-
-    - run:
-        name: Verify Version Scan
-        command: GRADLE_OPTS="-Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew verifyVersionScan --parallel --stacktrace --no-daemon --max-workers=8
-
-    - save_cache:
-        key: dd-trace-java-version-scan-{{ checksum "dd-trace-java.gradle" }}
-        paths: ~/.gradle
-
   muzzle:
     <<: *defaults
     steps:
@@ -289,13 +271,6 @@ workflows:
         filters:
           tags:
             only: /.*/
-
-    - scan_versions:
-        requires:
-        - build
-        filters:
-          branches:
-            ignore: master
 
     - muzzle:
         requires:
