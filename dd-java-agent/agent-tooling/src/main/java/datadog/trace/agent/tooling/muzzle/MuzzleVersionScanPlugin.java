@@ -3,7 +3,6 @@ package datadog.trace.agent.tooling.muzzle;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.WeakMap;
-
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;

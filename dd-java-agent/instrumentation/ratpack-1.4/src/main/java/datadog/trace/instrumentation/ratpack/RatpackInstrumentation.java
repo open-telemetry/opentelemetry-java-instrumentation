@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.ratpack;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClassWithMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -29,10 +28,6 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
   static final TypeDescription.Latent ACTION_TYPE_DESCRIPTION =
       new TypeDescription.Latent("ratpack.func.Action", Modifier.PUBLIC, null);
 
-  static final ElementMatcher.Junction.AbstractBase<ClassLoader>
-      CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE =
-          classLoaderHasClassWithMethod("ratpack.path.PathBinding", "getDescription");
-
   public RatpackInstrumentation() {
     super(EXEC_NAME);
   }
@@ -45,11 +40,6 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("ratpack.server.internal.ServerRegistry");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE;
   }
 
   @Override
@@ -90,11 +80,6 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
     }
 
     @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
-      return CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE;
-    }
-
-    @Override
     public String[] helperClassNames() {
       return new String[] {
         // exec helpers
@@ -129,11 +114,6 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
     public ElementMatcher<TypeDescription> typeMatcher() {
       return named("ratpack.exec.Execution")
           .or(not(isInterface()).and(safeHasSuperType(named("ratpack.exec.Execution"))));
-    }
-
-    @Override
-    public ElementMatcher<ClassLoader> classLoaderMatcher() {
-      return CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE;
     }
 
     @Override
