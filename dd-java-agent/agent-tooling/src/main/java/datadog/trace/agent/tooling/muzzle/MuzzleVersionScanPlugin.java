@@ -3,6 +3,7 @@ package datadog.trace.agent.tooling.muzzle;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.WeakMap;
+
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
@@ -89,14 +90,10 @@ public class MuzzleVersionScanPlugin {
                       .newInstance();
         }
         try {
-          // Ratpack injects the scope manager as a helper.
-          // This is likely a bug, but we'll grandfather it out of the helper checks for now.
-          if (!instrumenter.getClass().getName().contains("Ratpack")) {
-            // verify helper injector works
-            final String[] helperClassNames = instrumenter.helperClassNames();
-            if (helperClassNames.length > 0) {
-              new HelperInjector(helperClassNames).transform(null, null, cl, null);
-            }
+          // verify helper injector works
+          final String[] helperClassNames = instrumenter.helperClassNames();
+          if (helperClassNames.length > 0) {
+            new HelperInjector(helperClassNames).transform(null, null, cl, null);
           }
         } catch (final Exception e) {
           System.err.println(
