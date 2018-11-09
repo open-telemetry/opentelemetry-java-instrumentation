@@ -51,7 +51,6 @@ testSets {
 dependencies {
   main_java8CompileOnly group: 'io.ratpack', name: 'ratpack-core', version: '1.4.0'
 
-  main_java8Compile project(':dd-trace-ot')
   main_java8Compile project(':dd-java-agent:agent-tooling')
 
   main_java8Compile deps.bytebuddy
@@ -65,6 +64,7 @@ dependencies {
   compile sourceSets.main_java8.output
 
   testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
   testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.0'
   latestDepTestCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '+'
 }

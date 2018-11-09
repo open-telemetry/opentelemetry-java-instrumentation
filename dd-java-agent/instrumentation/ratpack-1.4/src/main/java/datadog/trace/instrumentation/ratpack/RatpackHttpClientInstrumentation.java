@@ -55,9 +55,6 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Default
       "datadog.trace.instrumentation.ratpack.impl.RatpackHttpClientAdvice$StreamedResponseAction",
       "datadog.trace.instrumentation.ratpack.impl.RequestSpecInjectAdapter",
       "datadog.trace.instrumentation.ratpack.impl.WrappedRequestSpec",
-      // core helpers
-      "datadog.opentracing.scopemanager.ContextualScopeManager",
-      "datadog.opentracing.scopemanager.ScopeContext"
     };
   }
 

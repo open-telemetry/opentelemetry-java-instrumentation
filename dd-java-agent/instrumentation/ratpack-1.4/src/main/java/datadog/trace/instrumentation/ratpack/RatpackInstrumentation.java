@@ -55,13 +55,8 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      // core helpers
-      "datadog.opentracing.scopemanager.ContextualScopeManager",
-      "datadog.opentracing.scopemanager.ScopeContext",
       // service registry helpers
       "datadog.trace.instrumentation.ratpack.impl.RatpackRequestExtractAdapter",
-      "datadog.trace.instrumentation.ratpack.impl.RatpackScopeManager",
-      "datadog.trace.instrumentation.ratpack.impl.RatpackScopeManager$RatpackScope",
       "datadog.trace.instrumentation.ratpack.impl.RatpackServerAdvice",
       "datadog.trace.instrumentation.ratpack.impl.RatpackServerAdvice$RatpackServerRegistryAdvice",
       "datadog.trace.instrumentation.ratpack.impl.TracingHandler"
@@ -102,9 +97,6 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
     @Override
     public String[] helperClassNames() {
       return new String[] {
-        // core helpers
-        "datadog.opentracing.scopemanager.ContextualScopeManager",
-        "datadog.opentracing.scopemanager.ScopeContext",
         // exec helpers
         "datadog.trace.instrumentation.ratpack.impl.RatpackServerAdvice$ExecStarterAdvice",
         "datadog.trace.instrumentation.ratpack.impl.RatpackServerAdvice$ExecStarterAction"

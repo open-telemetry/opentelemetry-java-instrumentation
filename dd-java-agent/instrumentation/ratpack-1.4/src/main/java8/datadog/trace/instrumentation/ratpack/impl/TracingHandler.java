@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.ratpack.impl;
 
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
+import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -37,9 +38,16 @@ public final class TracingHandler implements Handler {
             .withTag(Tags.HTTP_URL.getKey(), request.getUri())
             .startActive(true);
 
+    if (scope instanceof TraceScope) {
+      ((TraceScope) scope).setAsyncPropagation(true);
+    }
+
     ctx.getResponse()
         .beforeSend(
             response -> {
+              if (scope instanceof TraceScope) {
+                ((TraceScope) scope).setAsyncPropagation(false);
+              }
               final Span span = scope.span();
               span.setTag(DDTags.RESOURCE_NAME, getResourceName(ctx));
               final Status status = response.getStatus();
@@ -49,6 +57,7 @@ public final class TracingHandler implements Handler {
                 }
                 Tags.HTTP_STATUS.set(span, status.getCode());
               }
+
               scope.close();
             });
 
