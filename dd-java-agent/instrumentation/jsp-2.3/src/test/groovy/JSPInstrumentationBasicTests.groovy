@@ -54,6 +54,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     tomcatServer = new Tomcat()
     tomcatServer.setBaseDir(baseDir.getAbsolutePath())
     tomcatServer.setPort(port)
+    tomcatServer.getConnector()
     // comment to debug
     tomcatServer.setSilent(true)
     // this is needed in tomcat 9, this triggers the creation of a connector, will not

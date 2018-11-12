@@ -27,6 +27,7 @@ class TomcatServlet3Test extends AgentTestRunner {
     port = TestUtils.randomOpenPort()
     tomcatServer = new Tomcat()
     tomcatServer.setPort(port)
+    tomcatServer.getConnector()
 
     def baseDir = Files.createTempDir()
     baseDir.deleteOnExit()
