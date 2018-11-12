@@ -7,7 +7,6 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import org.eclipse.jetty.http.HttpHeaders
 import org.eclipse.jetty.security.ConstraintMapping
 import org.eclipse.jetty.security.ConstraintSecurityHandler
 import org.eclipse.jetty.security.HashLoginService
@@ -16,6 +15,7 @@ import org.eclipse.jetty.security.authentication.BasicAuthenticator
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.ServletContextHandler
 import org.eclipse.jetty.util.security.Constraint
+import spock.lang.Shared
 
 class JettyServlet3Test extends AgentTestRunner {
 
@@ -29,11 +29,14 @@ class JettyServlet3Test extends AgentTestRunner {
   })
     .build()
 
+  @Shared
   int port
+  @Shared
   private Server jettyServer
+  @Shared
   private ServletContextHandler servletContext
 
-  def setup() {
+  def setupSpec() {
     port = TestUtils.randomOpenPort()
     jettyServer = new Server(port)
     servletContext = new ServletContextHandler()
@@ -53,7 +56,7 @@ class JettyServlet3Test extends AgentTestRunner {
       "Jetty server: http://localhost:" + port + "/")
   }
 
-  def cleanup() {
+  def cleanupSpec() {
     jettyServer.stop()
     jettyServer.destroy()
   }
@@ -68,7 +71,7 @@ class JettyServlet3Test extends AgentTestRunner {
       requestBuilder.header("x-datadog-parent-id", "456")
     }
     if (auth) {
-      requestBuilder.header(HttpHeaders.AUTHORIZATION, Credentials.basic("user", "password"))
+      requestBuilder.header("Authorization", Credentials.basic("user", "password"))
     }
     def response = client.newCall(requestBuilder.build()).execute()
 
