@@ -13,6 +13,9 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.util.NestedServletException
 
+import static test.Application.PASS
+import static test.Application.USER
+
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class SpringBootBasedTest extends AgentTestRunner {
 
@@ -25,7 +28,8 @@ class SpringBootBasedTest extends AgentTestRunner {
   def "valid response"() {
     expect:
     port != 0
-    restTemplate.getForObject("http://localhost:$port/", String) == "Hello World"
+    restTemplate.withBasicAuth(USER, PASS)
+      .getForObject("http://localhost:$port/", String) == "Hello World"
 
     and:
     assertTraces(1) {
@@ -44,6 +48,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 200
+            "user.principal" USER
             defaultTags()
           }
         }
@@ -54,7 +59,8 @@ class SpringBootBasedTest extends AgentTestRunner {
 
   def "generates spans"() {
     expect:
-    restTemplate.getForObject("http://localhost:$port/param/asdf1234/", String) == "Hello asdf1234"
+    restTemplate.withBasicAuth(USER, PASS)
+      .getForObject("http://localhost:$port/param/asdf1234/", String) == "Hello asdf1234"
 
     assertTraces(1) {
       trace(0, 2) {
@@ -72,6 +78,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 200
+            "user.principal" USER
             defaultTags()
           }
         }
@@ -80,9 +87,61 @@ class SpringBootBasedTest extends AgentTestRunner {
     }
   }
 
+  def "missing auth"() {
+    setup:
+    def resp = restTemplate.getForObject("http://localhost:$port/param/asdf1234/", Map)
+
+    expect:
+    resp["status"] == 401
+    resp["error"] == "Unauthorized"
+
+    assertTraces(2) {
+      trace(0, 1) {
+        span(0) {
+          operationName "servlet.request"
+          resourceName "GET /param/?/"
+          spanType DDSpanTypes.WEB_SERVLET
+          parent()
+          errored false
+          tags {
+            "http.url" "http://localhost:$port/param/asdf1234/"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
+            "component" "java-web-servlet"
+            "http.status_code" 401
+            defaultTags()
+          }
+        }
+      }
+      trace(1, 2) {
+        span(0) {
+          operationName "servlet.request"
+          resourceName "GET /error"
+          spanType DDSpanTypes.WEB_SERVLET
+          parent()
+          errored false
+          tags {
+            "http.url" "http://localhost:$port/error"
+            "http.method" "GET"
+            "span.kind" "server"
+            "span.type" "web"
+            "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
+            "component" "java-web-servlet"
+            "http.status_code" 401
+            defaultTags()
+          }
+        }
+        controllerSpan(it, 1, "BasicErrorController.error")
+      }
+    }
+  }
+
   def "generates 404 spans"() {
     setup:
-    def response = restTemplate.getForObject("http://localhost:$port/invalid", Map)
+    def response = restTemplate.withBasicAuth(USER, PASS)
+      .getForObject("http://localhost:$port/invalid", Map)
 
     expect:
     response.get("status") == 404
@@ -104,6 +163,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 404
+            "user.principal" USER
             defaultTags()
           }
         }
@@ -134,7 +194,8 @@ class SpringBootBasedTest extends AgentTestRunner {
 
   def "generates error spans"() {
     setup:
-    def response = restTemplate.getForObject("http://localhost:$port/error/qwerty/", Map)
+    def response = restTemplate.withBasicAuth(USER, PASS)
+      .getForObject("http://localhost:$port/error/qwerty/", Map)
 
     expect:
     response.get("status") == 500
@@ -158,6 +219,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 500
+            "user.principal" USER
             errorTags NestedServletException, "Request processing failed; nested exception is java.lang.RuntimeException: qwerty"
             defaultTags()
           }
@@ -190,7 +252,8 @@ class SpringBootBasedTest extends AgentTestRunner {
 
   def "validated form"() {
     expect:
-    restTemplate.postForObject("http://localhost:$port/validated", new TestForm("bob", 20), String) == "Hello bob Person(Name: bob, Age: 20)"
+    restTemplate.withBasicAuth(USER, PASS)
+      .postForObject("http://localhost:$port/validated", new TestForm("bob", 20), String) == "Hello bob Person(Name: bob, Age: 20)"
 
     assertTraces(1) {
       trace(0, 2) {
@@ -208,6 +271,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 200
+            "user.principal" USER
             defaultTags()
           }
         }
@@ -218,7 +282,8 @@ class SpringBootBasedTest extends AgentTestRunner {
 
   def "invalid form"() {
     setup:
-    def response = restTemplate.postForObject("http://localhost:$port/validated", new TestForm("bill", 5), Map, Map)
+    def response = restTemplate.withBasicAuth(USER, PASS)
+      .postForObject("http://localhost:$port/validated", new TestForm("bill", 5), Map, Map)
 
     expect:
     response.get("status") == 400
@@ -242,6 +307,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 400
+            "user.principal" USER
             "error" false
             "error.msg" String
             "error.type" MethodArgumentNotValidException.name
