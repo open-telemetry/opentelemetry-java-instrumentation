@@ -55,11 +55,21 @@ public class AgentInstaller {
             .with(POOL_STRATEGY)
             .with(new LoggingListener())
             .with(LOCATION_STRATEGY)
-            // FIXME: we cannot enable it yet dur to BB/JVM bug, see
+            // FIXME: we cannot enable it yet due to BB/JVM bug, see
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), skipClassLoader())
-            .or(nameStartsWith("datadog.trace."))
+            .or(
+                nameStartsWith("datadog.trace.")
+                    // FIXME: We should remove this once
+                    // https://github.com/raphw/byte-buddy/issues/558 is fixed
+                    .and(
+                        not(
+                            named(
+                                    "datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper")
+                                .or(
+                                    named(
+                                        "datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper")))))
             .or(nameStartsWith("datadog.opentracing."))
             .or(nameStartsWith("datadog.slf4j."))
             .or(nameStartsWith("net.bytebuddy."))

@@ -4,8 +4,8 @@ import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.failSafe;
 import static datadog.trace.agent.tooling.Utils.getConfigEnabled;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
+import datadog.trace.agent.tooling.context.FieldBackedProvider;
 import datadog.trace.agent.tooling.context.InstrumentationContextProvider;
-import datadog.trace.agent.tooling.context.MapBackedProvider;
 import datadog.trace.agent.tooling.muzzle.Reference;
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
 import java.security.ProtectionDomain;
@@ -77,7 +77,7 @@ public interface Instrumenter {
         }
       }
       enabled = anyEnabled;
-      contextProvider = new MapBackedProvider(this);
+      contextProvider = new FieldBackedProvider(this);
     }
 
     @Override

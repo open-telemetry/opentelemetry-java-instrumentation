@@ -7,7 +7,6 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -50,8 +49,10 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    return Collections.singletonMap(
-        getClass().getName() + "$KeyClass", getClass().getName() + "$Context");
+    final Map<String, String> store = new HashMap<>(2);
+    store.put(getClass().getName() + "$KeyClass", getClass().getName() + "$Context");
+    store.put(getClass().getName() + "$UntransformableKeyClass", getClass().getName() + "$Context");
+    return store;
   }
 
   public static class MarkInstrumentedAdvice {
@@ -164,6 +165,14 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
 
     public void putContextCount(final int value) {
       // implementation replaced with test instrumentation
+    }
+  }
+
+  /** A class which cannot be transformed by our instrumentation. */
+  public static class UntransformableKeyClass extends KeyClass {
+    @Override
+    public boolean isInstrumented() {
+      return false;
     }
   }
 

@@ -21,6 +21,7 @@ public class InstrumentationContext {
    */
   public static <K, C> ContextStore<K, C> get(
       final Class<K> keyClass, final Class<C> contextClass) {
-    throw new RuntimeException("Calls to this method will be rewritten by MapBackedProvider");
+    throw new RuntimeException(
+        "Calls to this method will be rewritten by Instrumentation Context Provider (e.g. FieldBackedProvider)");
   }
 }

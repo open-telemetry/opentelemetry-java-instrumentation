@@ -11,10 +11,14 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
+import datadog.trace.bootstrap.WeakMap;
+import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper;
+import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -159,9 +163,11 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This final Executor executor, @Advice.Argument(value = 0) final Runnable task) {
+        @Advice.This final Executor executor,
+        @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       if (ConcurrentUtils.shouldAttachStateToTask(task, executor)) {
+        task = RunnableWrapper.wrapIfNeeded(task);
         final ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
         return ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
@@ -182,9 +188,11 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
-        @Advice.This final Executor executor, @Advice.Argument(value = 0) final Callable task) {
+        @Advice.This final Executor executor,
+        @Advice.Argument(value = 0, readOnly = false) Callable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       if (ConcurrentUtils.shouldAttachStateToTask(task, executor)) {
+        task = CallableWrapper.wrapIfNeeded(task);
         final ContextStore<Callable, State> contextStore =
             InstrumentationContext.get(Callable.class, State.class);
         return ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
@@ -210,27 +218,33 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
   public static class SetCallableStateForCallableCollectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapJob(
+    public static Collection<?> submitEnter(
         @Advice.This final Executor executor,
-        @Advice.Argument(value = 0) final Collection<? extends Callable<?>> tasks) {
+        @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       if (scope instanceof TraceScope
           && ((TraceScope) scope).isAsyncPropagating()
-        && tasks != null) {
-        for (final Callable<?> task : tasks) {
+          && tasks != null) {
+        final Collection<Callable<?>> wrappedTasks = new ArrayList<>(tasks.size());
+        for (Callable<?> task : tasks) {
           if (task != null) {
+            task = CallableWrapper.wrapIfNeeded(task);
+            wrappedTasks.add(task);
             final ContextStore<Callable, State> contextStore =
                 InstrumentationContext.get(Callable.class, State.class);
             ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
           }
         }
+        tasks = wrappedTasks;
+        return tasks;
       }
+      return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void checkCancel(
+    public static void submitExit(
         @Advice.This final Executor executor,
-        @Advice.Argument(value = 0) final Collection<? extends Callable<?>> tasks,
+        @Advice.Enter final Collection<? extends Callable<?>> wrappedTasks,
         @Advice.Thrown final Throwable throwable) {
       /*
        Note1: invokeAny doesn't return any futures so all we need to do for it
@@ -241,18 +255,21 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
        up any continuations in case of an error.
        (according to ExecutorService docs and AbstractExecutorService code)
       */
-      if (null != throwable) {
-        for (final Callable<?> task : tasks) {
+      if (null != throwable && wrappedTasks != null) {
+        for (final Callable<?> task : wrappedTasks) {
           if (task != null) {
             final ContextStore<Callable, State> contextStore =
                 InstrumentationContext.get(Callable.class, State.class);
             final State state = contextStore.get(task);
             if (state != null) {
-              // Note: this may potentially close somebody else's continuation if we didn't set it up
-              // in setupState because it was already present before us. This should be safe but may lead
-              // to non-attributed async work in some very rare cases.
-              // Alternative is to not close continuation here if we did not set it up in setupState but
-              // this may potentially lead to memory leaks if callers do not properly handle exceptions.
+              /*
+              Note: this may potentially close somebody else's continuation if we didn't set it
+              up in setupState because it was already present before us. This should be safe but
+              may lead to non-attributed async work in some very rare cases.
+              Alternative is to not close continuation here if we did not set it up in setupState
+              but this may potentially lead to memory leaks if callers do not properly handle
+              exceptions.
+               */
               state.closeContinuation();
             }
           }
@@ -265,10 +282,11 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
   @Slf4j
   public static class ConcurrentUtils {
 
+    private static final WeakMap<Executor, Boolean> DISABLED_EXECUTORS =
+        WeakMap.Provider.newWeakMap();
+
     /**
      * Checks if given task should get state attached.
-     *
-     * <p>Warning: this also increments nested call counter!
      *
      * @param task task object
      * @param executor executor this task was scheduled on
@@ -278,11 +296,12 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
       final Scope scope = GlobalTracer.get().scopeManager().active();
       return (scope instanceof TraceScope
           && ((TraceScope) scope).isAsyncPropagating()
-        && task != null);
+          && task != null
+          && !ConcurrentUtils.isDisabled(executor));
     }
 
     /**
-     * Create task state given current scope
+     * Create task state given current scope.
      *
      * @param contextStore context storage
      * @param task task instance
@@ -303,7 +322,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
     }
 
     /**
-     * Clean up after job submission method has exited
+     * Clean up after job submission method has exited.
      *
      * @param executor the current executor
      * @param state task instrumentation state
@@ -312,13 +331,25 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
     public static void cleanUpOnMethodExit(
         final Executor executor, final State state, final Throwable throwable) {
       if (null != state && null != throwable) {
-        // Note: this may potentially close somebody else's continuation if we didn't set it up
-        // in setupState because it was already present before us. This should be safe but may lead
-        // to non-attributed async work in some very rare cases.
-        // Alternative is to not close continuation here if we did not set it up in setupState but
-        // this may potentially lead to memory leaks if callers do not properly handle exceptions.
+        /*
+        Note: this may potentially close somebody else's continuation if we didn't set it
+        up in setupState because it was already present before us. This should be safe but
+        may lead to non-attributed async work in some very rare cases.
+        Alternative is to not close continuation here if we did not set it up in setupState
+        but this may potentially lead to memory leaks if callers do not properly handle
+        exceptions.
+         */
         state.closeContinuation();
       }
+    }
+
+    public static void disableExecutor(final Executor executor) {
+      log.debug("Disabling Executor tracing for instance {}", executor);
+      DISABLED_EXECUTORS.put(executor, true);
+    }
+
+    public static boolean isDisabled(final Executor executor) {
+      return DISABLED_EXECUTORS.containsKey(executor);
     }
   }
 }

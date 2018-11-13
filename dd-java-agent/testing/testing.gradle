@@ -6,7 +6,9 @@ excludedClassesConverage += [
   'datadog.trace.agent.test.asserts.*Assert',
   'datadog.trace.agent.test.AgentTestRunner.ErrorCountingListener',
   'datadog.trace.agent.test.OkHttpUtils',
-  'datadog.trace.agent.test.TestUtils'
+  'datadog.trace.agent.test.TestUtils',
+  // Avoid applying jacoco instrumentation to classes instrumented by tested agent
+  'context.ContextTestInstrumentation**',
 ]
 
 dependencies {

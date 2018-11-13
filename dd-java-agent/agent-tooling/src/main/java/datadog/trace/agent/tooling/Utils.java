@@ -1,9 +1,13 @@
 package datadog.trace.agent.tooling;
 
+import static net.bytebuddy.matcher.ElementMatchers.named;
+
 import datadog.trace.bootstrap.DatadogClassLoader;
 import datadog.trace.bootstrap.DatadogClassLoader.BootstrapClassLoaderProxy;
 import java.lang.reflect.Method;
 import java.net.URL;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDefinition;
 
 public class Utils {
   /**
@@ -84,6 +88,31 @@ public class Utils {
   /** com.foo.Bar -> com/foo/Bar */
   public static String getInternalName(final String resourceName) {
     return resourceName.replaceAll("\\.class\\$", "").replace('.', '/');
+  }
+
+  /**
+   * Convert class name to a format that can be used as part of inner class name by replacing all
+   * ','s with '$'s.
+   *
+   * @param className class named to be converted
+   * @return convertd name
+   */
+  public static String converToInnerClassName(final String className) {
+    return className.replaceAll("\\.", "\\$");
+  }
+
+  /**
+   * Get method definition for given {@link TypeDefinition} and method name.
+   *
+   * @param type type
+   * @param methodName method name
+   * @return {@link MethodDescription} for given method
+   * @throws IllegalStateException if more then one method matches (i.e. in case of overloaded
+   *     methods) or if no method found
+   */
+  public static MethodDescription getMethodDefinition(
+      final TypeDefinition type, final String methodName) {
+    return type.getDeclaredMethods().filter(named(methodName)).getOnly();
   }
 
   static boolean getConfigEnabled(final String name, final boolean fallback) {
