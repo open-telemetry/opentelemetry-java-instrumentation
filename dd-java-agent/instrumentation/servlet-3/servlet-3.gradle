@@ -41,13 +41,9 @@ dependencies {
   testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.2.0.v20160908'
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.0.41'
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '8.0.41'
-}
 
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'org.eclipse.jetty', name: 'jetty-server', version: '+'
-    force group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '+'
-    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '+'
-    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '+'
-  }
+  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '+'
+  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '+'
+  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '+'
+  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '+'
 }

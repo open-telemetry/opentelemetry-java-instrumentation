@@ -32,10 +32,6 @@ dependencies {
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
   testCompile project(':dd-java-agent:instrumentation:trace-annotation')
   testCompile group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
-}
 
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'com.netflix.hystrix', name: 'hystrix-core', version: '+'
-  }
+  latestDepTestCompile group: 'com.netflix.hystrix', name: 'hystrix-core', version: '+'
 }

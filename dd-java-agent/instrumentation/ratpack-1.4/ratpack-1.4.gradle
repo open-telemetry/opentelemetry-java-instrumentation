@@ -66,10 +66,5 @@ dependencies {
 
   testCompile project(':dd-java-agent:testing')
   testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.0'
-}
-
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'io.ratpack', name: 'ratpack-groovy-test', version: '+'
-  }
+  latestDepTestCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '+'
 }

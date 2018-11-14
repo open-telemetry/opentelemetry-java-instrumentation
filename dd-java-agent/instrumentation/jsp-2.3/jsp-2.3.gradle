@@ -38,14 +38,10 @@ dependencies {
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '7.0.37'
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-logging-juli', version: '7.0.37'
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '7.0.37'
-}
 
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'javax.servlet.jsp', name: 'javax.servlet.jsp-api', version: '+'
-    force group: 'javax.servlet', name: 'javax.servlet-api', version: '+'
-    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '+'
-    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '+'
-    force group: 'org.apache.tomcat.embed', name: 'tomcat-embed-logging-juli', version: '+'
-  }
+  latestDepTestCompile group: 'javax.servlet.jsp', name: 'javax.servlet.jsp-api', version: '+'
+  latestDepTestCompile group: 'javax.servlet', name: 'javax.servlet-api', version: '+'
+  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '+'
+  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '+'
+  latestDepTestCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-logging-juli', version: '+'
 }

@@ -1,7 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
-import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import okhttp3.OkHttpClient
 import org.eclipse.jetty.continuation.Continuation
@@ -11,9 +10,11 @@ import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
 
+import javax.servlet.DispatcherType
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import java.util.concurrent.atomic.AtomicBoolean
 
 class JettyHandlerTest extends AgentTestRunner {
 
@@ -55,31 +56,30 @@ class JettyHandlerTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() == "Hello World"
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.size() == 1
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-    def context = trace[0].context()
-    context.serviceName == "unnamed-java-app"
-    context.operationName == "jetty.request"
-    context.resourceName == "GET ${handler.class.name}"
-    context.spanType == DDSpanTypes.HTTP_SERVER
-    !context.getErrorFlag()
-    context.parentId == "0"
-    def tags = context.tags
-    tags["http.url"] == "http://localhost:$port/"
-    tags["http.method"] == "GET"
-    tags["span.kind"] == "server"
-    tags["span.type"] == DDSpanTypes.HTTP_SERVER
-    tags["component"] == "jetty-handler"
-    tags["http.status_code"] == 200
-    tags["thread.name"] != null
-    tags["thread.id"] != null
-    tags[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
-    tags["span.origin.type"] == handler.class.name
-    tags.size() == 10
-  }
 
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "jetty.request"
+          resourceName "GET ${handler.class.name}"
+          spanType DDSpanTypes.HTTP_SERVER
+          errored false
+          parent()
+          tags {
+            "http.url" "http://localhost:$port/"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "jetty-handler"
+            "span.origin.type" handler.class.name
+            "span.type" DDSpanTypes.HTTP_SERVER
+            "http.status_code" 200
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
 
   def "handler instrumentation clears state after async request"() {
     setup:
@@ -87,7 +87,7 @@ class JettyHandlerTest extends AgentTestRunner {
       @Override
       void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         final Continuation continuation = ContinuationSupport.getContinuation(request)
-        continuation.suspend()
+        continuation.suspend(response)
         // By the way, this is a terrible async server
         new Thread() {
           @Override
@@ -128,10 +128,16 @@ class JettyHandlerTest extends AgentTestRunner {
 
   def "call to jetty with error creates a trace"() {
     setup:
+    def errorHandlerCalled = new AtomicBoolean(false)
     Handler handler = new AbstractHandler() {
       @Override
       void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        throw new RuntimeException()
+        if (baseRequest.dispatcherType == DispatcherType.ERROR) {
+          errorHandlerCalled.set(true)
+          baseRequest.setHandled(true)
+        } else {
+          throw new RuntimeException()
+        }
       }
     }
     server.setHandler(handler)
@@ -144,31 +150,52 @@ class JettyHandlerTest extends AgentTestRunner {
 
     expect:
     response.body().string().trim() == ""
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.size() == 1
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-    def context = trace[0].context()
-    context.serviceName == "unnamed-java-app"
-    context.operationName == "jetty.request"
-    context.resourceName == "GET ${handler.class.name}"
-    context.spanType == DDSpanTypes.HTTP_SERVER
-    context.getErrorFlag()
-    context.parentId == "0"
-    def tags = context.tags
-    tags["http.url"] == "http://localhost:$port/"
-    tags["http.method"] == "GET"
-    tags["span.kind"] == "server"
-    tags["span.type"] == DDSpanTypes.HTTP_SERVER
-    tags["component"] == "jetty-handler"
-    tags["http.status_code"] == 500
-    tags["thread.name"] != null
-    tags["thread.id"] != null
-    tags[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
-    tags["span.origin.type"] == handler.class.name
-    tags["error"] == true
-    tags["error.type"] == RuntimeException.name
-    tags["error.stack"] != null
-    tags.size() == 13
+
+    assertTraces(errorHandlerCalled.get() ? 2 : 1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "jetty.request"
+          resourceName "GET ${handler.class.name}"
+          spanType DDSpanTypes.HTTP_SERVER
+          errored true
+          parent()
+          tags {
+            "http.url" "http://localhost:$port/"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "jetty-handler"
+            "span.origin.type" handler.class.name
+            "span.type" DDSpanTypes.HTTP_SERVER
+            "http.status_code" 500
+            errorTags RuntimeException
+            defaultTags()
+          }
+        }
+      }
+      if (errorHandlerCalled.get()) {
+        trace(1, 1) {
+          span(0) {
+            serviceName "unnamed-java-app"
+            operationName "jetty.request"
+            resourceName "GET ${handler.class.name}"
+            spanType DDSpanTypes.HTTP_SERVER
+            errored true
+            parent()
+            tags {
+              "http.url" "http://localhost:$port/"
+              "http.method" "GET"
+              "span.kind" "server"
+              "component" "jetty-handler"
+              "span.origin.type" handler.class.name
+              "span.type" DDSpanTypes.HTTP_SERVER
+              "http.status_code" 500
+              "error" true
+              defaultTags()
+            }
+          }
+        }
+      }
+    }
   }
 }

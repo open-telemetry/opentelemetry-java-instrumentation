@@ -1,11 +1,9 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.Config
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.kstream.KStream
-import org.apache.kafka.streams.kstream.KStreamBuilder
 import org.apache.kafka.streams.kstream.ValueMapper
 import org.junit.ClassRule
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
@@ -13,7 +11,6 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.listener.KafkaMessageListenerContainer
 import org.springframework.kafka.listener.MessageListener
-import org.springframework.kafka.listener.config.ContainerProperties
 import org.springframework.kafka.test.rule.KafkaEmbedded
 import org.springframework.kafka.test.utils.ContainerTestUtils
 import org.springframework.kafka.test.utils.KafkaTestUtils
@@ -41,7 +38,15 @@ class KafkaStreamsTest extends AgentTestRunner {
 
     // CONFIGURE CONSUMER
     def consumerFactory = new DefaultKafkaConsumerFactory<String, String>(KafkaTestUtils.consumerProps("sender", "false", embeddedKafka))
-    def consumerContainer = new KafkaMessageListenerContainer<>(consumerFactory, new ContainerProperties(STREAM_PROCESSED))
+
+    def containerProperties
+    try {
+      // Different class names for test and latestDepTest.
+      containerProperties = Class.forName("org.springframework.kafka.listener.config.ContainerProperties").newInstance(STREAM_PROCESSED)
+    } catch (ClassNotFoundException | NoClassDefFoundError e) {
+      containerProperties = Class.forName("org.springframework.kafka.listener.ContainerProperties").newInstance(STREAM_PROCESSED)
+    }
+    def consumerContainer = new KafkaMessageListenerContainer<>(consumerFactory, containerProperties)
 
     // create a thread safe queue to store the processed message
     def records = new LinkedBlockingQueue<ConsumerRecord<String, String>>()
@@ -65,9 +70,15 @@ class KafkaStreamsTest extends AgentTestRunner {
     ContainerTestUtils.waitForAssignment(consumerContainer, embeddedKafka.getPartitionsPerTopic())
 
     // CONFIGURE PROCESSOR
-    final KStreamBuilder builder = new KStreamBuilder()
+    def builder
+    try {
+      // Different class names for test and latestDepTest.
+      builder = Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder").newInstance()
+    } catch (ClassNotFoundException | NoClassDefFoundError e) {
+      builder = Class.forName("org.apache.kafka.streams.StreamsBuilder").newInstance()
+    }
     KStream<String, String> textLines = builder.stream(STREAM_PENDING)
-    textLines
+    def values = textLines
       .mapValues(new ValueMapper<String, String>() {
       @Override
       String apply(String textLine) {
@@ -76,8 +87,18 @@ class KafkaStreamsTest extends AgentTestRunner {
         return textLine.toLowerCase()
       }
     })
-      .to(Serdes.String(), Serdes.String(), STREAM_PROCESSED)
-    KafkaStreams streams = new KafkaStreams(builder, config)
+
+    KafkaStreams streams
+    try {
+      // Different api for test and latestDepTest.
+      values.to(Serdes.String(), Serdes.String(), STREAM_PROCESSED)
+      streams = new KafkaStreams(builder, config)
+    } catch (MissingMethodException e) {
+      def producer = Class.forName("org.apache.kafka.streams.kstream.Produced")
+        .with(Serdes.String(), Serdes.String())
+      values.to(STREAM_PROCESSED, producer)
+      streams = new KafkaStreams(builder.build(), config)
+    }
     streams.start()
 
     // CONFIGURE PRODUCER
@@ -94,101 +115,89 @@ class KafkaStreamsTest extends AgentTestRunner {
     received.value() == greeting.toLowerCase()
     received.key() == null
 
-    TEST_WRITER.waitForTraces(3)
-    TEST_WRITER.size() == 3
+    assertTraces(3) {
+      trace(0, 1) {
+        // PRODUCER span 0
+        span(0) {
+          serviceName "kafka"
+          operationName "kafka.produce"
+          resourceName "Produce Topic $STREAM_PENDING"
+          spanType "queue"
+          errored false
+          parent()
+          tags {
+            "component" "java-kafka"
+            "span.kind" "producer"
+            "span.type" "queue"
+            defaultTags()
+          }
+        }
+      }
+      trace(1, 2) {
 
-    def t1 = TEST_WRITER.get(0)
-    t1.size() == 1
-    def t2 = TEST_WRITER.get(1)
-    t2.size() == 2
-    def t3 = TEST_WRITER.get(2)
-    t3.size() == 1
+        // STREAMING span 0
+        span(0) {
+          serviceName "kafka"
+          operationName "kafka.produce"
+          resourceName "Produce Topic $STREAM_PROCESSED"
+          spanType "queue"
+          errored false
+          childOf span(1)
 
-    and: // PRODUCER span 0
-    def t1span1 = t1[0]
+          tags {
+            "component" "java-kafka"
+            "span.kind" "producer"
+            "span.type" "queue"
+            defaultTags()
+          }
+        }
 
-    t1span1.context().operationName == "kafka.produce"
-    t1span1.serviceName == "kafka"
-    t1span1.resourceName == "Produce Topic $STREAM_PENDING"
-    t1span1.type == "queue"
-    !t1span1.context().getErrorFlag()
-    t1span1.context().parentId == "0"
+        // STREAMING span 1
+        span(1) {
+          serviceName "kafka"
+          operationName "kafka.consume"
+          resourceName "Consume Topic $STREAM_PENDING"
+          spanType "queue"
+          errored false
+          childOf TEST_WRITER[0][0]
 
-    def t1tags1 = t1span1.context().tags
-    t1tags1["component"] == "java-kafka"
-    t1tags1["span.kind"] == "producer"
-    t1tags1["span.type"] == "queue"
-    t1tags1["thread.name"] != null
-    t1tags1["thread.id"] != null
-    t1tags1[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
-    t1tags1.size() == 6
-
-    and: // STREAMING span 0
-    def t2span1 = t2[0]
-
-    t2span1.context().operationName == "kafka.produce"
-    t2span1.serviceName == "kafka"
-    t2span1.resourceName == "Produce Topic $STREAM_PROCESSED"
-    t2span1.type == "queue"
-    !t2span1.context().getErrorFlag()
-
-    def t2tags1 = t2span1.context().tags
-    t2tags1["component"] == "java-kafka"
-    t2tags1["span.kind"] == "producer"
-    t2tags1["span.type"] == "queue"
-    t2tags1["thread.name"] != null
-    t2tags1["thread.id"] != null
-    t2tags1.size() == 5
-
-    and: // STREAMING span 1
-    def t2span2 = t2[1]
-    t2span1.context().parentId == t2span2.context().spanId
-
-    t2span2.context().operationName == "kafka.consume"
-    t2span2.serviceName == "kafka"
-    t2span2.resourceName == "Consume Topic $STREAM_PENDING"
-    t2span2.type == "queue"
-    !t2span2.context().getErrorFlag()
-    t2span2.context().parentId == t1span1.context().spanId
-
-    def t2tags2 = t2span2.context().tags
-    t2tags2["component"] == "java-kafka"
-    t2tags2["span.kind"] == "consumer"
-    t2tags2["span.type"] == "queue"
-    t2tags2["partition"] >= 0
-    t2tags2["offset"] == 0
-    t2tags2["thread.name"] != null
-    t2tags2["thread.id"] != null
-    t2tags2[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
-    t2tags2["asdf"] == "testing"
-    t2tags2.size() == 9
-
-    and: // CONSUMER span 0
-    def t3span1 = t3[0]
-
-    t3span1.context().operationName == "kafka.consume"
-    t3span1.serviceName == "kafka"
-    t3span1.resourceName == "Consume Topic $STREAM_PROCESSED"
-    t3span1.type == "queue"
-    !t3span1.context().getErrorFlag()
-    t3span1.context().parentId == t2span1.context().spanId
-
-    def t3tags1 = t3span1.context().tags
-    t3tags1["component"] == "java-kafka"
-    t3tags1["span.kind"] == "consumer"
-    t3tags1["span.type"] == "queue"
-    t3tags1["partition"] >= 0
-    t3tags1["offset"] == 0
-    t3tags1["thread.name"] != null
-    t3tags1["thread.id"] != null
-    t3tags1[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
-    t3tags1["testing"] == 123
-    t3tags1.size() == 9
+          tags {
+            "component" "java-kafka"
+            "span.kind" "consumer"
+            "span.type" "queue"
+            "partition" { it >= 0 }
+            "offset" 0
+            defaultTags(true)
+            "asdf" "testing"
+          }
+        }
+      }
+      trace(2, 1) {
+        // CONSUMER span 0
+        span(0) {
+          serviceName "kafka"
+          operationName "kafka.consume"
+          resourceName "Consume Topic $STREAM_PROCESSED"
+          spanType "queue"
+          errored false
+          childOf TEST_WRITER[1][0]
+          tags {
+            "component" "java-kafka"
+            "span.kind" "consumer"
+            "span.type" "queue"
+            "partition" { it >= 0 }
+            "offset" 0
+            defaultTags(true)
+            "testing" 123
+          }
+        }
+      }
+    }
 
     def headers = received.headers()
     headers.iterator().hasNext()
-    new String(headers.headers("x-datadog-trace-id").iterator().next().value()) == "$t2span1.traceId"
-    new String(headers.headers("x-datadog-parent-id").iterator().next().value()) == "$t2span1.spanId"
+    new String(headers.headers("x-datadog-trace-id").iterator().next().value()) == "${TEST_WRITER[1][0].traceId}"
+    new String(headers.headers("x-datadog-parent-id").iterator().next().value()) == "${TEST_WRITER[1][0].spanId}"
 
 
     cleanup:

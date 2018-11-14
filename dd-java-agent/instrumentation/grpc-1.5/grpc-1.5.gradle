@@ -60,12 +60,7 @@ dependencies {
   testCompile group: 'io.grpc', name: 'grpc-stub', version: grpcVersion
 
   latestDepTestCompile sourceSets.test.output // include the protobuf generated classes
-}
-
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'io.grpc', name: 'grpc-netty', version: '+'
-    force group: 'io.grpc', name: 'grpc-protobuf', version: '+'
-    force group: 'io.grpc', name: 'grpc-stub', version: '+'
-  }
+  latestDepTestCompile group: 'io.grpc', name: 'grpc-netty', version: '+'
+  latestDepTestCompile group: 'io.grpc', name: 'grpc-protobuf', version: '+'
+  latestDepTestCompile group: 'io.grpc', name: 'grpc-stub', version: '+'
 }

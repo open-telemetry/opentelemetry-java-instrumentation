@@ -13,7 +13,6 @@ import okhttp3.RequestBody
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.web.server.ResponseStatusException
-import spock.lang.Unroll
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = SpringWebFluxTestApplication)
 class SpringWebfluxTest extends AgentTestRunner {
@@ -27,7 +26,6 @@ class SpringWebfluxTest extends AgentTestRunner {
 
   OkHttpClient client = OkHttpUtils.client()
 
-  @Unroll
   def "Basic GET test #testName to functional API"() {
     setup:
     String url = "http://localhost:$port/greet$urlSuffix"
@@ -82,7 +80,6 @@ class SpringWebfluxTest extends AgentTestRunner {
     "with two parameters" | "/World/Test1" | "/{name}/{word}"      | SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " World Test1"
   }
 
-  @Unroll
   def "Basic GET test #testName to annotations API"() {
     setup:
     String url = "http://localhost:$port/foo$urlSuffix"
@@ -417,7 +414,6 @@ class SpringWebfluxTest extends AgentTestRunner {
     }
   }
 
-  @Unroll
   def "Flux x#count GET test with functional API endpoint"() {
     setup:
     String expectedResponseBodyStr = FooModel.createXFooModelsStringFromArray(FooModel.createXFooModels(count))
@@ -471,7 +467,6 @@ class SpringWebfluxTest extends AgentTestRunner {
     count << [0, 1, 10]
   }
 
-  @Unroll
   def "Flux x#count GET test with spring annotations endpoint"() {
     setup:
     String expectedResponseBodyStr = FooModel.createXFooModelsStringFromArray(FooModel.createXFooModels(count))

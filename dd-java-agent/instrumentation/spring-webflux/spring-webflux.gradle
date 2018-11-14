@@ -74,12 +74,9 @@ dependencies {
   testCompile group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
   testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.0.RELEASE'
   testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.0.RELEASE'
-}
 
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '+'
-    force group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '+'
-    force group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '+'
-  }
+  // FIXME: Tests need to be updated to support 2.1+
+  latestDepTestCompile group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.+'
+  latestDepTestCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.+'
+  latestDepTestCompile group: 'org.springframework.boot', name: 'spring-boot-starter-reactor-netty', version: '2.0.+'
 }

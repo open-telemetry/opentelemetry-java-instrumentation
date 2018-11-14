@@ -95,13 +95,6 @@ configurations.test_1_11_106Compile {
   }
 }
 
-configurations.latestDepTestCompile {
-  resolutionStrategy {
-    force group: 'com.amazonaws', name: 'aws-java-sdk', version: '+'
-  }
-}
-
-
 dependencies {
   compileOnly group: 'com.amazonaws', name: 'aws-java-sdk-core', version: '1.11.0'
 

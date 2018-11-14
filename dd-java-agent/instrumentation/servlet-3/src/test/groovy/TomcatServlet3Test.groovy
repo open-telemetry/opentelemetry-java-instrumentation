@@ -10,19 +10,24 @@ import org.apache.catalina.core.ApplicationFilterChain
 import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
+import spock.lang.Shared
 
 class TomcatServlet3Test extends AgentTestRunner {
 
   OkHttpClient client = OkHttpUtils.client()
 
+  @Shared
   int port
+  @Shared
   Tomcat tomcatServer
+  @Shared
   Context appContext
 
-  def setup() {
+  def setupSpec() {
     port = TestUtils.randomOpenPort()
     tomcatServer = new Tomcat()
     tomcatServer.setPort(port)
+    tomcatServer.getConnector()
 
     def baseDir = Files.createTempDir()
     baseDir.deleteOnExit()
@@ -52,7 +57,7 @@ class TomcatServlet3Test extends AgentTestRunner {
       "Tomcat server: http://" + tomcatServer.getHost().getName() + ":" + port + "/")
   }
 
-  def cleanup() {
+  def cleanupSpec() {
     tomcatServer.stop()
     tomcatServer.destroy()
   }
