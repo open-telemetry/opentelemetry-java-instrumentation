@@ -109,6 +109,7 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
       spanRef.set(
           GlobalTracer.get()
               .buildSpan("couchbase.call")
+              .withTag(Tags.COMPONENT.getKey(), "couchbase-client")
               .withTag(DDTags.SERVICE_NAME, "couchbase")
               .withTag(DDTags.RESOURCE_NAME, resourceName)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.COUCHBASE)

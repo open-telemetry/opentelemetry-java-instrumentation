@@ -4,6 +4,7 @@ package springdata
 import com.couchbase.client.java.Bucket
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
+import io.opentracing.tag.Tags
 import org.springframework.data.couchbase.core.CouchbaseTemplate
 import spock.lang.Shared
 import util.AbstractCouchbaseTest
@@ -49,6 +50,7 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
           parent()
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+            "$Tags.COMPONENT.key" "couchbase-client"
             "bucket" name
             defaultTags()
           }
@@ -63,6 +65,7 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
           parent()
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+            "$Tags.COMPONENT.key" "couchbase-client"
             "bucket" name
             defaultTags()
           }
@@ -77,6 +80,7 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
           parent()
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+            "$Tags.COMPONENT.key" "couchbase-client"
             "bucket" name
             defaultTags()
           }
@@ -91,6 +95,7 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
           parent()
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+            "$Tags.COMPONENT.key" "couchbase-client"
             "bucket" name
             defaultTags()
           }

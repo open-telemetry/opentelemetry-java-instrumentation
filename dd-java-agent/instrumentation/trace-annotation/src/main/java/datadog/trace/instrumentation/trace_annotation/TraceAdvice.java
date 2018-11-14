@@ -32,7 +32,10 @@ public class TraceAdvice {
       operationName = className + "." + method.getName();
     }
 
-    return GlobalTracer.get().buildSpan(operationName).startActive(true);
+    return GlobalTracer.get()
+        .buildSpan(operationName)
+        .withTag(Tags.COMPONENT.getKey(), "trace")
+        .startActive(true);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

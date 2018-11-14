@@ -97,6 +97,7 @@ class GrpcStreamingTest extends AgentTestRunner {
           tags {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT.key" "grpc-server"
             defaultTags(true)
           }
         }
@@ -111,6 +112,7 @@ class GrpcStreamingTest extends AgentTestRunner {
             tags {
               "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
               "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+              "$Tags.COMPONENT.key" "grpc-server"
               "message.type" "example.Helloworld\$Response"
               defaultTags()
             }
@@ -129,6 +131,7 @@ class GrpcStreamingTest extends AgentTestRunner {
             "status.code" "OK"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT.key" "grpc-client"
             defaultTags()
           }
         }
@@ -143,6 +146,7 @@ class GrpcStreamingTest extends AgentTestRunner {
             tags {
               "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
               "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+              "$Tags.COMPONENT.key" "grpc-client"
               "message.type" "example.Helloworld\$Response"
               defaultTags()
             }

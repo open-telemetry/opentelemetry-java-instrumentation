@@ -34,11 +34,11 @@ public final class WrappedRequestSpec implements RequestSpec {
       final Tracer tracer,
       final Scope scope,
       final AtomicReference<Span> spanRef) {
-    this.delegate = spec;
+    delegate = spec;
     this.tracer = tracer;
     this.scope = scope;
     this.spanRef = spanRef;
-    this.delegate.onRedirect(this::redirectHandler);
+    delegate.onRedirect(this::redirectHandler);
   }
 
   /*
@@ -53,7 +53,7 @@ public final class WrappedRequestSpec implements RequestSpec {
 
   @Override
   public RequestSpec redirects(final int maxRedirects) {
-    this.delegate.redirects(maxRedirects);
+    delegate.redirects(maxRedirects);
     return this;
   }
 
@@ -64,30 +64,30 @@ public final class WrappedRequestSpec implements RequestSpec {
     final Function<? super ReceivedResponse, Action<? super RequestSpec>> wrapped =
         (ReceivedResponse response) -> redirectHandler(response).append(function.apply(response));
 
-    this.delegate.onRedirect(wrapped);
+    delegate.onRedirect(wrapped);
     return this;
   }
 
   @Override
   public RequestSpec sslContext(final SSLContext sslContext) {
-    this.delegate.sslContext(sslContext);
+    delegate.sslContext(sslContext);
     return this;
   }
 
   @Override
   public MutableHeaders getHeaders() {
-    return this.delegate.getHeaders();
+    return delegate.getHeaders();
   }
 
   @Override
   public RequestSpec maxContentLength(final int numBytes) {
-    this.delegate.maxContentLength(numBytes);
+    delegate.maxContentLength(numBytes);
     return this;
   }
 
   @Override
   public RequestSpec headers(final Action<? super MutableHeaders> action) throws Exception {
-    this.delegate.headers(action);
+    delegate.headers(action);
     return this;
   }
 
@@ -97,49 +97,49 @@ public final class WrappedRequestSpec implements RequestSpec {
         tracer
             .buildSpan("ratpack.client-request")
             .asChildOf(scope != null ? scope.span() : null)
-            .withTag(Tags.COMPONENT.getKey(), "httpclient")
+            .withTag(Tags.COMPONENT.getKey(), "ratpack-httpclient")
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
             .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
             .withTag(Tags.HTTP_URL.getKey(), getUri().toString())
             .withTag(Tags.HTTP_METHOD.getKey(), method.getName())
             .start();
-    this.spanRef.set(span);
-    this.delegate.method(method);
+    spanRef.set(span);
+    delegate.method(method);
     tracer.inject(span.context(), Format.Builtin.HTTP_HEADERS, new RequestSpecInjectAdapter(this));
     return this;
   }
 
   @Override
   public RequestSpec decompressResponse(final boolean shouldDecompress) {
-    this.delegate.decompressResponse(shouldDecompress);
+    delegate.decompressResponse(shouldDecompress);
     return this;
   }
 
   @Override
   public URI getUri() {
-    return this.delegate.getUri();
+    return delegate.getUri();
   }
 
   @Override
   public RequestSpec connectTimeout(final Duration duration) {
-    this.delegate.connectTimeout(duration);
+    delegate.connectTimeout(duration);
     return this;
   }
 
   @Override
   public RequestSpec readTimeout(final Duration duration) {
-    this.delegate.readTimeout(duration);
+    delegate.readTimeout(duration);
     return this;
   }
 
   @Override
   public Body getBody() {
-    return this.delegate.getBody();
+    return delegate.getBody();
   }
 
   @Override
   public RequestSpec body(final Action<? super Body> action) throws Exception {
-    this.delegate.body(action);
+    delegate.body(action);
     return this;
   }
 }

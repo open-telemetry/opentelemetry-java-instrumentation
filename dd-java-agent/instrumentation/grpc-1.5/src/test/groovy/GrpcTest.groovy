@@ -53,6 +53,7 @@ class GrpcTest extends AgentTestRunner {
           tags {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT.key" "grpc-server"
             defaultTags(true)
           }
         }
@@ -66,6 +67,7 @@ class GrpcTest extends AgentTestRunner {
           tags {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT.key" "grpc-server"
             "message.type" "example.Helloworld\$Request"
             defaultTags()
           }
@@ -83,6 +85,7 @@ class GrpcTest extends AgentTestRunner {
             "status.code" "OK"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT.key" "grpc-client"
             defaultTags()
           }
         }
@@ -96,6 +99,7 @@ class GrpcTest extends AgentTestRunner {
           tags {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT.key" "grpc-client"
             "message.type" "example.Helloworld\$Response"
             defaultTags()
           }
@@ -144,6 +148,7 @@ class GrpcTest extends AgentTestRunner {
           tags {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT.key" "grpc-server"
             defaultTags(true)
           }
         }
@@ -157,6 +162,7 @@ class GrpcTest extends AgentTestRunner {
           tags {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT.key" "grpc-server"
             "message.type" "example.Helloworld\$Request"
             defaultTags()
           }
@@ -175,6 +181,7 @@ class GrpcTest extends AgentTestRunner {
             "status.description" description
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT.key" "grpc-client"
             tag "error", true
             defaultTags()
           }
@@ -229,6 +236,7 @@ class GrpcTest extends AgentTestRunner {
           tags {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT.key" "grpc-server"
             errorTags error.class, error.message
             defaultTags(true)
           }
@@ -243,6 +251,7 @@ class GrpcTest extends AgentTestRunner {
           tags {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT.key" "grpc-server"
             "message.type" "example.Helloworld\$Request"
             defaultTags()
           }
@@ -260,6 +269,7 @@ class GrpcTest extends AgentTestRunner {
             "status.code" "UNKNOWN"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
+            "$Tags.COMPONENT.key" "grpc-client"
             tag "error", true
             defaultTags()
           }

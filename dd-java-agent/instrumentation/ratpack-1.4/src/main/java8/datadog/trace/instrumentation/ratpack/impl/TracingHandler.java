@@ -30,7 +30,7 @@ public final class TracingHandler implements Handler {
         GlobalTracer.get()
             .buildSpan("ratpack.handler")
             .asChildOf(extractedContext)
-            .withTag(Tags.COMPONENT.getKey(), "handler")
+            .withTag(Tags.COMPONENT.getKey(), "ratpack")
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
             .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER)
             .withTag(Tags.HTTP_METHOD.getKey(), request.getMethod().getName())

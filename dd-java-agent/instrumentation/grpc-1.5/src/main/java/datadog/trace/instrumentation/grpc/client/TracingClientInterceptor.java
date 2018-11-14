@@ -40,6 +40,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
             .withTag(DDTags.RESOURCE_NAME, method.getFullMethodName())
             .withTag(DDTags.SPAN_TYPE, DDSpanTypes.RPC)
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
+            .withTag(Tags.COMPONENT.getKey(), "grpc-client")
             .startActive(false);
     final Span span = scope.span();
 
@@ -119,6 +120,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
               .withTag("message.type", message.getClass().getName())
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.RPC)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
+              .withTag(Tags.COMPONENT.getKey(), "grpc-client")
               .startActive(true);
       try {
         delegate().onMessage(message);
