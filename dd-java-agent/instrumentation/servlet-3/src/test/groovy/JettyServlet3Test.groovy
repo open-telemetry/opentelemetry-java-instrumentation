@@ -49,6 +49,10 @@ class JettyServlet3Test extends AgentTestRunner {
     servletContext.addServlet(TestServlet3.Sync, "/auth/sync")
     servletContext.addServlet(TestServlet3.Async, "/async")
     servletContext.addServlet(TestServlet3.Async, "/auth/async")
+    servletContext.addServlet(TestServlet3.BlockingAsync, "/blocking")
+    servletContext.addServlet(TestServlet3.DispatchSync, "/dispatch/sync")
+    servletContext.addServlet(TestServlet3.DispatchAsync, "/dispatch/async")
+    servletContext.addServlet(TestServlet3.FakeAsync, "/fake")
 
     jettyServer.setHandler(servletContext)
     jettyServer.start()
@@ -111,40 +115,134 @@ class JettyServlet3Test extends AgentTestRunner {
     }
 
     where:
-    path         | expectedResponse | auth  | origin  | distributedTracing
-    "async"      | "Hello Async"    | false | "Async" | false
-    "sync"       | "Hello Sync"     | false | "Sync"  | false
-    "auth/async" | "Hello Async"    | true  | "Async" | false
-    "auth/sync"  | "Hello Sync"     | true  | "Sync"  | false
-    "async"      | "Hello Async"    | false | "Async" | true
-    "sync"       | "Hello Sync"     | false | "Sync"  | true
-    "auth/async" | "Hello Async"    | true  | "Async" | true
-    "auth/sync"  | "Hello Sync"     | true  | "Sync"  | true
+    path         | expectedResponse      | auth  | origin          | distributedTracing
+    "async"      | "Hello Async"         | false | "Async"         | false
+    "sync"       | "Hello Sync"          | false | "Sync"          | false
+    "auth/async" | "Hello Async"         | true  | "Async"         | false
+    "auth/sync"  | "Hello Sync"          | true  | "Sync"          | false
+    "blocking"   | "Hello BlockingAsync" | false | "BlockingAsync" | false
+    "fake"       | "Hello FakeAsync"     | false | "FakeAsync"     | false
+    "async"      | "Hello Async"         | false | "Async"         | true
+    "sync"       | "Hello Sync"          | false | "Sync"          | true
+    "auth/async" | "Hello Async"         | true  | "Async"         | true
+    "auth/sync"  | "Hello Sync"          | true  | "Sync"          | true
+    "blocking"   | "Hello BlockingAsync" | false | "BlockingAsync" | true
+    "fake"       | "Hello FakeAsync"     | false | "FakeAsync"     | true
+  }
+
+  def "test dispatch #path"() {
+    setup:
+    def requestBuilder = new Request.Builder()
+      .url("http://localhost:$port/dispatch/$path")
+      .get()
+    if (distributedTracing) {
+      requestBuilder.header("x-datadog-trace-id", "123")
+      requestBuilder.header("x-datadog-parent-id", "456")
+    }
+    def response = client.newCall(requestBuilder.build()).execute()
+
+    expect:
+    response.body().string().trim() == "Hello $type"
+
+    assertTraces(2) {
+      trace(0, 1) {
+        span(0) {
+          if (distributedTracing) {
+            traceId "123"
+            parentId "456"
+          } else {
+            parent()
+          }
+          serviceName "unnamed-java-app"
+          operationName "servlet.request"
+          resourceName "GET /dispatch/$path"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "http.url" "http://localhost:$port/dispatch/$path"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.origin.type" "TestServlet3\$Dispatch$type"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "http.status_code" 200
+            "servlet.dispatch" "/$path"
+            defaultTags(distributedTracing)
+          }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "servlet.request"
+          resourceName "GET /$path"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "http.url" "http://localhost:$port/$path"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.origin.type" "TestServlet3\$$type"
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "http.status_code" 200
+            defaultTags(true)
+          }
+        }
+      }
+    }
+
+    where:
+    path    | distributedTracing
+    "sync"  | true
+    "sync"  | false
+    "async" | true
+    "async" | false
+
+    type = path.capitalize()
   }
 
   def "servlet instrumentation clears state after async request"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$port/async")
+      .url("http://localhost:$port/$path")
       .get()
       .build()
-    def numTraces = 5
+    def numTraces = 10
     for (int i = 0; i < numTraces; ++i) {
       client.newCall(request).execute()
     }
 
     expect:
-    assertTraces(numTraces) {
-      for (int i = 0; i < numTraces; ++i) {
-        trace(i, 1) {
+    assertTraces(dispatched ? numTraces * 2 : numTraces) {
+      for (int i = 0; (dispatched ? i + 1 : i) < TEST_WRITER.size(); i += (dispatched ? 2 : 1)) {
+        if (dispatched) {
+          trace(i, 1) {
+            span(0) {
+              operationName "servlet.request"
+              resourceName "GET /dispatch/async"
+              parent()
+            }
+          }
+        }
+        trace(dispatched ? i + 1 : i, 1) {
           span(0) {
-            serviceName "unnamed-java-app"
             operationName "servlet.request"
             resourceName "GET /async"
+            if (dispatched) {
+              childOf TEST_WRITER[i][0]
+            } else {
+              parent()
+            }
           }
         }
       }
     }
+
+    where:
+    path             | dispatched
+    "async"          | false
+    "dispatch/async" | true
   }
 
   def "test #path error servlet call"() {

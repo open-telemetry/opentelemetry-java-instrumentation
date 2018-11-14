@@ -3,6 +3,7 @@ import groovy.servlet.AbstractHttpServlet
 import javax.servlet.annotation.WebServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+import java.util.concurrent.CountDownLatch
 
 class TestServlet3 {
 
@@ -25,11 +26,58 @@ class TestServlet3 {
   static class Async extends AbstractHttpServlet {
     @Override
     void doGet(HttpServletRequest req, HttpServletResponse resp) {
+      def latch = new CountDownLatch(1)
       def context = req.startAsync()
       context.start {
+        latch.await()
         resp.writer.print("Hello Async")
         context.complete()
       }
+      latch.countDown()
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  static class BlockingAsync extends AbstractHttpServlet {
+    @Override
+    void doGet(HttpServletRequest req, HttpServletResponse resp) {
+      def latch = new CountDownLatch(1)
+      def context = req.startAsync()
+      context.start {
+        resp.writer.print("Hello BlockingAsync")
+        context.complete()
+        latch.countDown()
+      }
+      latch.await()
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  static class DispatchSync extends AbstractHttpServlet {
+    @Override
+    void doGet(HttpServletRequest req, HttpServletResponse resp) {
+      req.startAsync().dispatch("/sync")
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  static class DispatchAsync extends AbstractHttpServlet {
+    @Override
+    void doGet(HttpServletRequest req, HttpServletResponse resp) {
+      def context = req.startAsync()
+      context.start {
+        context.dispatch("/async")
+      }
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  static class FakeAsync extends AbstractHttpServlet {
+    @Override
+    void doGet(HttpServletRequest req, HttpServletResponse resp) {
+      def context = req.startAsync()
+      resp.writer.print("Hello FakeAsync")
+      context.complete()
     }
   }
 }
