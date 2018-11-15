@@ -4,12 +4,14 @@ import datadog.opentracing.DDTracer
 import datadog.trace.api.Config
 import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.sampling.RateByServiceSampler
+import datadog.trace.common.writer.ListWriter
 import datadog.trace.common.writer.LoggingWriter
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
 
+import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 import static datadog.trace.api.Config.HEADER_TAGS
 import static datadog.trace.api.Config.PREFIX
 import static datadog.trace.api.Config.PRIORITY_SAMPLING
@@ -94,5 +96,20 @@ class DDTracerTest extends Specification {
     "writer" | "writer.type" | "LoggingWriter" | "LoggingWriter { }"
     "writer" | "agent.host"  | "somethingelse" | "DDAgentWriter { api=DDApi { tracesEndpoint=http://somethingelse:8126/v0.3/traces } }"
     "writer" | "agent.port"  | "9999"          | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:9999/v0.3/traces } }"
+  }
+
+  def "verify sampler/writer constructor"() {
+    setup:
+    def writer = new ListWriter()
+    def sampler = new RateByServiceSampler()
+
+    when:
+    def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer, sampler)
+
+    then:
+    tracer.serviceName == DEFAULT_SERVICE_NAME
+    tracer.sampler == sampler
+    tracer.writer == writer
+    tracer.runtimeId.length() > 0
   }
 }

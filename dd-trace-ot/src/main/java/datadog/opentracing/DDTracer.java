@@ -93,6 +93,11 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this(config.getServiceName(), config);
   }
 
+  // This constructor is already used in the wild, so we have to keep it inside this API for now.
+  public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
+    this(serviceName, writer, sampler, Config.get().getRuntimeId());
+  }
+
   private DDTracer(final String serviceName, final Config config) {
     this(
         serviceName,
