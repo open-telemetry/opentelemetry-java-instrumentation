@@ -2,6 +2,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
+import datadog.trace.instrumentation.http_url_connection.UrlInstrumentation
 import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
 
@@ -64,5 +65,48 @@ class UrlConnectionTest extends AgentTestRunner {
     "https" | "DelegateHttpsURLConnection"
 
     url = new URI("$scheme://localhost:$INVALID_PORT").toURL()
+  }
+
+  def "trace request with connection failure to a local file with broken url path"() {
+    setup:
+    def url = new URI("file:/some-random-file%abc").toURL()
+
+    when:
+    runUnderTrace("someTrace") {
+      url.openConnection()
+    }
+
+    then:
+    thrown IllegalArgumentException
+
+    expect:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          operationName "someTrace"
+          parent()
+          errored true
+          tags {
+            errorTags IllegalArgumentException, String
+            defaultTags()
+          }
+        }
+        span(1) {
+          operationName "file.request"
+          childOf span(0)
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" UrlInstrumentation.COMPONENT
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            // FIXME: These tags really make no sense for non-http connections, why do we set them?
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$Tags.HTTP_URL.key" "$url"
+            "$Tags.PEER_PORT.key" 80
+            errorTags IllegalArgumentException, String
+            defaultTags()
+          }
+        }
+      }
+    }
   }
 }
