@@ -20,13 +20,13 @@ muzzle {
   }
 }
 
-//apply plugin: 'org.unbroken-dome.test-sets'
-//
-//testSets {
-//  latestDepTest {
-//    dirName = 'test'
-//  }
-//}
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -46,4 +46,6 @@ dependencies {
   testCompile project(':dd-java-agent:instrumentation:trace-annotation')
   testCompile project(':dd-java-agent:instrumentation:netty-4.1')
   testCompile group: 'io.vertx', name: 'vertx-web', version: '3.5.0'
+
+  latestDepTestCompile group: 'io.vertx', name: 'vertx-web', version: '+'
 }
