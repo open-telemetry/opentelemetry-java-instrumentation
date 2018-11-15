@@ -25,6 +25,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public class UrlInstrumentation extends Instrumenter.Default {
 
+  public static final String COMPONENT = "UrlConnection";
+
   public UrlInstrumentation() {
     super("urlconnection", "httpurlconnection");
   }
@@ -67,7 +69,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
                 .buildSpan(protocol + ".request")
                 .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
                 .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
-                .withTag(Tags.COMPONENT.getKey(), "UrlConnection")
+                .withTag(Tags.COMPONENT.getKey(), COMPONENT)
                 .startActive(true);
 
         final Span span = scope.span();
