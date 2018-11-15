@@ -4,6 +4,7 @@ import com.couchbase.client.java.view.DefaultView
 import com.couchbase.client.java.view.DesignDocument
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
+import io.opentracing.tag.Tags
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.data.repository.CrudRepository
@@ -83,6 +84,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
           parent()
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+            "$Tags.COMPONENT.key" "couchbase-client"
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -112,6 +114,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
           parent()
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+            "$Tags.COMPONENT.key" "couchbase-client"
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -134,6 +137,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
           parent()
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+            "$Tags.COMPONENT.key" "couchbase-client"
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -159,6 +163,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
           parent()
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+            "$Tags.COMPONENT.key" "couchbase-client"
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -173,6 +178,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
           parent()
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+            "$Tags.COMPONENT.key" "couchbase-client"
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -187,6 +193,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
           parent()
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+            "$Tags.COMPONENT.key" "couchbase-client"
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -212,6 +219,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
           parent()
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+            "$Tags.COMPONENT.key" "couchbase-client"
             "bucket" bucketCouchbase.name()
             defaultTags()
           }
@@ -226,6 +234,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
           parent()
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
+            "$Tags.COMPONENT.key" "couchbase-client"
             "bucket" bucketCouchbase.name()
             defaultTags()
           }

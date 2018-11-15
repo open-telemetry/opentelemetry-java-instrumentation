@@ -26,6 +26,7 @@ class SlickTest extends AgentTestRunner {
           parent()
           errored false
           tags {
+            "$Tags.COMPONENT.key" "trace"
             defaultTags()
           }
         }

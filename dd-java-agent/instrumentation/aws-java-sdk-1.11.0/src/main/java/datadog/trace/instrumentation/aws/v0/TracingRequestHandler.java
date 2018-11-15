@@ -33,7 +33,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   private final Tracer tracer;
 
   public TracingRequestHandler(final Tracer tracer) {
-    this.parentContext = null;
+    parentContext = null;
     this.tracer = tracer;
   }
 
@@ -56,6 +56,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   /** {@inheritDoc} */
   @Override
   public void beforeRequest(final Request<?> request) {
+    // Note: not setting Component tag here because it is always set by SpanDecorator
     final Tracer.SpanBuilder spanBuilder =
         tracer.buildSpan("aws.command").withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
 

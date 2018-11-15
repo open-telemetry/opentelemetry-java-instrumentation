@@ -1,6 +1,7 @@
 import com.netflix.hystrix.HystrixCommand
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
+import io.opentracing.tag.Tags
 
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -56,6 +57,7 @@ class HystrixTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
+            "$Tags.COMPONENT.key" "hystrix"
             defaultTags()
           }
         }
@@ -67,6 +69,7 @@ class HystrixTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
+            "$Tags.COMPONENT.key" "trace"
             defaultTags()
           }
         }
@@ -128,6 +131,7 @@ class HystrixTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
+            "$Tags.COMPONENT.key" "hystrix"
             defaultTags()
           }
         }
@@ -139,6 +143,7 @@ class HystrixTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
+            "$Tags.COMPONENT.key" "hystrix"
             errorTags(IllegalArgumentException)
             defaultTags()
           }

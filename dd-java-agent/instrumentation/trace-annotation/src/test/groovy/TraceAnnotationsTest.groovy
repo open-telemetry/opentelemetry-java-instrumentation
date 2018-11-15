@@ -2,6 +2,7 @@ import datadog.opentracing.decorators.ErrorFlag
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
 import dd.test.trace.annotation.SayTracedHello
+import io.opentracing.tag.Tags
 
 import java.util.concurrent.Callable
 
@@ -26,6 +27,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
+            "$Tags.COMPONENT.key" "trace"
             defaultTags()
           }
         }
@@ -47,6 +49,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
+            "$Tags.COMPONENT.key" "trace"
             defaultTags()
           }
         }
@@ -57,6 +60,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
+            "$Tags.COMPONENT.key" "trace"
             "span.type" "DB"
             defaultTags()
           }
@@ -68,6 +72,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
+            "$Tags.COMPONENT.key" "trace"
             defaultTags()
           }
         }
@@ -95,6 +100,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           operationName "ERROR"
           errored true
           tags {
+            "$Tags.COMPONENT.key" "trace"
             errorTags(error.class)
             defaultTags()
           }

@@ -261,6 +261,7 @@ class TracingSession implements Session {
     final Tracer.SpanBuilder spanBuilder =
         tracer
             .buildSpan("cassandra.execute")
+            .withTag(Tags.COMPONENT.getKey(), "datastax-cassandra")
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
             .withTag(DDTags.SPAN_TYPE, DDSpanTypes.CASSANDRA);
 

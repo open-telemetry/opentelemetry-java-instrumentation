@@ -60,7 +60,10 @@ public class HystrixCommandInstrumentation extends Instrumenter.Default {
       }
       final String operationName = className + "." + method.getName();
 
-      return GlobalTracer.get().buildSpan(operationName).startActive(true);
+      return GlobalTracer.get()
+          .buildSpan(operationName)
+          .withTag(Tags.COMPONENT.getKey(), "hystrix")
+          .startActive(true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

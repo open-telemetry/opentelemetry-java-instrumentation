@@ -50,7 +50,8 @@ public class TracingServerInterceptor implements ServerInterceptor {
             .buildSpan("grpc.server")
             .withTag(DDTags.RESOURCE_NAME, call.getMethodDescriptor().getFullMethodName())
             .withTag(DDTags.SPAN_TYPE, DDSpanTypes.RPC)
-            .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER);
+            .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
+            .withTag(Tags.COMPONENT.getKey(), "grpc-server");
     if (spanContext != null) {
       spanBuilder.asChildOf(spanContext);
     }
@@ -103,6 +104,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
               .withTag("message.type", message.getClass().getName())
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.RPC)
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
+              .withTag(Tags.COMPONENT.getKey(), "grpc-server")
               .startActive(true);
       if (scope instanceof TraceScope) {
         ((TraceScope) scope).setAsyncPropagation(true);
