@@ -95,13 +95,6 @@ class ConfigTest extends Specification {
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
     environmentVariables.set(DD_JMXFETCH_METRICS_CONFIGS_ENV, "some/file")
 
-    if (overridePort) {
-      environmentVariables.set(DD_TRACE_AGENT_PORT_ENV, "123")
-    }
-    if (overrideLegacyPort) {
-      environmentVariables.set(DD_AGENT_PORT_LEGACY_ENV, "456")
-    }
-
     when:
     def config = new Config()
 
@@ -109,15 +102,6 @@ class ConfigTest extends Specification {
     config.serviceName == "still something else"
     config.writerType == "LoggingWriter"
     config.jmxFetchMetricsConfigs == ["some/file"]
-    config.agentPort == expectedPort
-
-    where:
-    overridePort | overrideLegacyPort | expectedPort
-    true         | true               | 123
-    true         | false              | 123
-    false        | true               | 456
-    false        | false              | 8126
-
   }
 
   def "sys props override env vars"() {
@@ -129,6 +113,26 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + SERVICE_NAME, "what we actually want")
     System.setProperty(PREFIX + WRITER_TYPE, "DDAgentWriter")
     System.setProperty(PREFIX + AGENT_HOST, "somewhere")
+    System.setProperty(PREFIX + TRACE_AGENT_PORT, "123")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.serviceName == "what we actually want"
+    config.writerType == "DDAgentWriter"
+    config.agentHost == "somewhere"
+    config.agentPort == 123
+  }
+
+  def "sys props and env vars overrides for trace_agent_port and agent_port_legacy as expected"() {
+    setup:
+    if (overridePortEnvVar) {
+      environmentVariables.set(DD_TRACE_AGENT_PORT_ENV, "777")
+    }
+    if (overrideLegacyPortEnvVar) {
+      environmentVariables.set(DD_AGENT_PORT_LEGACY_ENV, "888")
+    }
 
     if (overridePort) {
       System.setProperty(PREFIX + TRACE_AGENT_PORT, "123")
@@ -141,17 +145,26 @@ class ConfigTest extends Specification {
     def config = new Config()
 
     then:
-    config.serviceName == "what we actually want"
-    config.writerType == "DDAgentWriter"
-    config.agentHost == "somewhere"
     config.agentPort == expectedPort
 
     where:
-    overridePort | overrideLegacyPort | expectedPort
-    true         | true               | 123
-    true         | false              | 123
-    false        | true               | 777 // env var gets picked up instead.
-    false        | false              | 777 // env var gets picked up instead.
+    overridePort | overrideLegacyPort | overridePortEnvVar | overrideLegacyPortEnvVar | expectedPort
+    true         | true               | false              | false                    | 123
+    true         | false              | false              | false                    | 123
+    false        | true               | false              | false                    | 456
+    false        | false              | false              | false                    | 8126
+    true         | true               | true               | false                    | 123
+    true         | false              | true               | false                    | 123
+    false        | true               | true               | false                    | 777 // env var gets picked up instead.
+    false        | false              | true               | false                    | 777 // env var gets picked up instead.
+    true         | true               | false              | true                     | 123
+    true         | false              | false              | true                     | 123
+    false        | true               | false              | true                     | 456
+    false        | false              | false              | true                     | 888 // legacy env var gets picked up instead.
+    true         | true               | true               | true                     | 123
+    true         | false              | true               | true                     | 123
+    false        | true               | true               | true                     | 777 // env var gets picked up instead.
+    false        | false              | true               | true                     | 777 // env var gets picked up instead.
   }
 
   def "sys props override properties"() {
