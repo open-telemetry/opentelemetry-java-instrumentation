@@ -32,9 +32,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
   @Shared
   int port = TestUtils.randomOpenPort()
   @Shared
-  String user = "user"
+  protected String user = "user"
   @Shared
-  String pass = "password"
+  protected String pass = "password"
 
   abstract String getContext()
 

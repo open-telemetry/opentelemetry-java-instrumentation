@@ -1,6 +1,8 @@
 import com.google.common.io.Files
 import org.apache.catalina.Context
+import org.apache.catalina.LifecycleState
 import org.apache.catalina.realm.MemoryRealm
+import org.apache.catalina.realm.MessageDigestCredentialHandler
 import org.apache.catalina.startup.Tomcat
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
@@ -65,31 +67,34 @@ class TomcatServlet3Test extends AbstractServlet3Test<Context> {
     servletContext.addServletMappingDecoded(url, name)
   }
 
-  static setupAuthentication(Tomcat server, Context servletContext) {
+  private setupAuthentication(Tomcat server, Context servletContext) {
     // Login Config
-    LoginConfig authConfig = new LoginConfig();
-    authConfig.setAuthMethod("BASIC");
+    LoginConfig authConfig = new LoginConfig()
+    authConfig.setAuthMethod("BASIC")
 
     // adding constraint with role "test"
-    SecurityConstraint constraint = new SecurityConstraint();
-    constraint.addAuthRole("role");
+    SecurityConstraint constraint = new SecurityConstraint()
+    constraint.addAuthRole("role")
 
     // add constraint to a collection with pattern /second
-    SecurityCollection collection = new SecurityCollection();
-    collection.addPattern("/auth/*");
-    constraint.addCollection(collection);
+    SecurityCollection collection = new SecurityCollection()
+    collection.addPattern("/auth/*")
+    constraint.addCollection(collection)
 
-    servletContext.setLoginConfig(authConfig);
+    servletContext.setLoginConfig(authConfig)
     // does the context need a auth role too?
-    servletContext.addSecurityRole("role");
-    servletContext.addConstraint(constraint);
+    servletContext.addSecurityRole("role")
+    servletContext.addConstraint(constraint)
 
     // add tomcat users to realm
-    URL uri = getClass().getResource("/tomcat-users.xml");
-    assert uri
-    MemoryRealm realm = new MemoryRealm();
-    realm.setPathname(uri.toString());
-    server.getEngine().setRealm(realm);
+    MemoryRealm realm = new MemoryRealm() {
+      protected void startInternal() {
+        credentialHandler = new MessageDigestCredentialHandler()
+        setState(LifecycleState.STARTING)
+      }
+    }
+    realm.addUser(user, pass, "role")
+    server.getEngine().setRealm(realm)
 
     servletContext.setLoginConfig(authConfig)
   }
