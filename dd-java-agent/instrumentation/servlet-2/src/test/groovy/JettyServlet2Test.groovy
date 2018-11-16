@@ -2,6 +2,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import okhttp3.Credentials
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -94,7 +95,7 @@ class JettyServlet2Test extends AgentTestRunner {
             "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" "/ctx"
             if (auth) {
-              "user.principal" "user"
+              "$DDTags.USER_NAME" "user"
             }
             defaultTags(distributedTracing)
           }

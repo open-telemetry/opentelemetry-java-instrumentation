@@ -11,6 +11,7 @@ import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
+import java.security.Principal;
 import java.util.Collections;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
@@ -49,16 +50,24 @@ public class Servlet2Advice {
     if (scope instanceof TraceScope) {
       ((TraceScope) scope).setAsyncPropagation(true);
     }
-
-    if (httpServletRequest.getUserPrincipal() != null) {
-      scope.span().setTag("user.principal", httpServletRequest.getUserPrincipal().getName());
-    }
     return scope;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
+      @Advice.Enter final Scope scope,
+      @Advice.Argument(0) final ServletRequest req,
+      @Advice.Thrown final Throwable throwable) {
+    // Set user.principal regardless of who created this span.
+    final Span currentSpan = GlobalTracer.get().activeSpan();
+    if (currentSpan != null) {
+      if (req instanceof HttpServletRequest) {
+        final Principal principal = ((HttpServletRequest) req).getUserPrincipal();
+        if (principal != null) {
+          currentSpan.setTag(DDTags.USER_NAME, principal.getName());
+        }
+      }
+    }
 
     if (scope != null) {
       final Span span = scope.span();
