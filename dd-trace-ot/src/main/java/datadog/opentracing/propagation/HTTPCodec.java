@@ -62,6 +62,10 @@ public class HTTPCodec implements Codec<TextMap> {
       final String key = entry.getKey().toLowerCase();
       final String val = entry.getValue();
 
+      if (val == null) {
+        continue;
+      }
+
       if (TRACE_ID_KEY.equalsIgnoreCase(key)) {
         traceId = validateUInt64BitsID(val);
       } else if (SPAN_ID_KEY.equalsIgnoreCase(key)) {

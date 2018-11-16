@@ -21,11 +21,13 @@ import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 
 public class Servlet3Advice {
+  public static final String SERVLET_SPAN = "datadog.servlet.span";
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope startSpan(
       @Advice.This final Object servlet, @Advice.Argument(0) final ServletRequest req) {
-    if (GlobalTracer.get().activeSpan() != null || !(req instanceof HttpServletRequest)) {
+    final Object spanAttr = req.getAttribute(SERVLET_SPAN);
+    if (!(req instanceof HttpServletRequest) || spanAttr != null) {
       // Tracing might already be applied by the FilterChain.  If so ignore this.
       return null;
     }
@@ -53,6 +55,8 @@ public class Servlet3Advice {
     if (scope instanceof TraceScope) {
       ((TraceScope) scope).setAsyncPropagation(true);
     }
+
+    req.setAttribute(SERVLET_SPAN, scope.span());
     return scope;
   }
 
@@ -63,13 +67,11 @@ public class Servlet3Advice {
       @Advice.Enter final Scope scope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
-    final Span currentSpan = GlobalTracer.get().activeSpan();
-    if (currentSpan != null) {
-      if (request instanceof HttpServletRequest) {
-        final Principal principal = ((HttpServletRequest) request).getUserPrincipal();
-        if (principal != null) {
-          currentSpan.setTag(DDTags.USER_NAME, principal.getName());
-        }
+    final Object spanAttr = request.getAttribute(SERVLET_SPAN);
+    if (spanAttr instanceof Span && request instanceof HttpServletRequest) {
+      final Principal principal = ((HttpServletRequest) request).getUserPrincipal();
+      if (principal != null) {
+        ((Span) spanAttr).setTag(DDTags.USER_NAME, principal.getName());
       }
     }
 
@@ -90,19 +92,23 @@ public class Servlet3Advice {
             ((TraceScope) scope).setAsyncPropagation(false);
           }
           scope.close();
+          req.removeAttribute(SERVLET_SPAN);
           span.finish(); // Finish the span manually since finishSpanOnClose was false
-        } else if (req.isAsyncStarted()) {
-          final AtomicBoolean activated = new AtomicBoolean(false);
-          // what if async is already finished? This would not be called
-          req.getAsyncContext().addListener(new TagSettingAsyncListener(activated, span));
-          scope.close();
         } else {
-          Tags.HTTP_STATUS.set(span, resp.getStatus());
-          if (scope instanceof TraceScope) {
-            ((TraceScope) scope).setAsyncPropagation(false);
+          final AtomicBoolean activated = new AtomicBoolean(false);
+          if (req.isAsyncStarted()) {
+            req.getAsyncContext().addListener(new TagSettingAsyncListener(activated, span));
+          }
+          // Check again in case the request finished before adding the listener.
+          if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
+            Tags.HTTP_STATUS.set(span, resp.getStatus());
+            if (scope instanceof TraceScope) {
+              ((TraceScope) scope).setAsyncPropagation(false);
+            }
+            req.removeAttribute(SERVLET_SPAN);
+            span.finish(); // Finish the span manually since finishSpanOnClose was false
           }
           scope.close();
-          span.finish(); // Finish the span manually since finishSpanOnClose was false
         }
       }
     }

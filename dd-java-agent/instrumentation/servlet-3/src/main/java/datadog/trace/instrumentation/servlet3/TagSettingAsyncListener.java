@@ -10,6 +10,7 @@ import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.servlet.AsyncContext;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
 import javax.servlet.http.HttpServletResponse;
@@ -72,6 +73,12 @@ public class TagSettingAsyncListener implements AsyncListener {
     }
   }
 
+  /** Re-attach listener for dispatch. */
   @Override
-  public void onStartAsync(final AsyncEvent event) throws IOException {}
+  public void onStartAsync(final AsyncEvent event) {
+    final AsyncContext eventAsyncContext = event.getAsyncContext();
+    if (eventAsyncContext != null) {
+      eventAsyncContext.addListener(this, event.getSuppliedRequest(), event.getSuppliedResponse());
+    }
+  }
 }

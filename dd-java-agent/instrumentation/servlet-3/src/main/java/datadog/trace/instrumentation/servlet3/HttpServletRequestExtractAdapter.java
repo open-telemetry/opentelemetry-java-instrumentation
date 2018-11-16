@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.servlet3;
 import io.opentracing.propagation.TextMap;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -50,6 +51,20 @@ public class HttpServletRequestExtractAdapter implements TextMap {
       }
 
       headersResult.put(headerName, valuesList);
+    }
+
+    /*
+     * Read from the attributes and override the headers.
+     * This is used by HttpServletRequestInjectAdapter when a request is async-dispatched.
+     */
+    final Enumeration<String> attributeNamesIt = httpServletRequest.getAttributeNames();
+    while (attributeNamesIt.hasMoreElements()) {
+      final String attributeName = attributeNamesIt.nextElement();
+
+      final Object valuesIt = httpServletRequest.getAttribute(attributeName);
+      if (valuesIt instanceof String) {
+        headersResult.put(attributeName, Collections.singletonList((String) valuesIt));
+      }
     }
 
     return headersResult;

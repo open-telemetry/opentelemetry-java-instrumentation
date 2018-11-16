@@ -15,7 +15,19 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class HttpServlet3Instrumentation extends AbstractServlet3Instrumentation {
+public final class HttpServlet3Instrumentation extends Instrumenter.Default {
+  public HttpServlet3Instrumentation() {
+    super("servlet", "servlet-3");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "datadog.trace.instrumentation.servlet3.HttpServletRequestExtractAdapter",
+      "datadog.trace.instrumentation.servlet3.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
+      "datadog.trace.instrumentation.servlet3.TagSettingAsyncListener"
+    };
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
