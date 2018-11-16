@@ -48,6 +48,8 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
     addServlet(context, "/blocking", TestServlet3.BlockingAsync)
     addServlet(context, "/dispatch/sync", TestServlet3.DispatchSync)
     addServlet(context, "/dispatch/async", TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
+    addServlet(context, "/recursive", TestServlet3.DispatchRecursive)
     addServlet(context, "/fake", TestServlet3.FakeAsync)
   }
 
@@ -116,10 +118,10 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
     "fake"       | "Hello FakeAsync"     | false | "FakeAsync"     | true
   }
 
-  def "test dispatch #path"() {
+  def "test dispatch #path with depth #depth"() {
     setup:
     def requestBuilder = new Request.Builder()
-      .url("http://localhost:$port/$context/dispatch/$path")
+      .url("http://localhost:$port/$context/dispatch/$path?depth=$depth")
       .get()
     if (distributedTracing) {
       requestBuilder.header("x-datadog-trace-id", "123")
@@ -130,14 +132,51 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
     expect:
     response.body().string().trim() == "Hello $origin"
 
-    assertTraces(2) {
-      trace(0, 1) {
+    assertTraces(2 + depth) {
+      for (int i = 0; i < depth; i++) {
+        trace(i, 1) {
+          span(0) {
+            if (i == 0) {
+              if (distributedTracing) {
+                traceId "123"
+                parentId "456"
+              } else {
+                parent()
+              }
+            } else {
+              childOf TEST_WRITER[i - 1][0]
+            }
+            serviceName context
+            operationName "servlet.request"
+            resourceName "GET /$context/dispatch/$path"
+            spanType DDSpanTypes.WEB_SERVLET
+            errored false
+            tags {
+              "http.url" "http://localhost:$port/$context/dispatch/$path"
+              "http.method" "GET"
+              "span.kind" "server"
+              "component" "java-web-servlet"
+              "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
+              "span.type" DDSpanTypes.WEB_SERVLET
+              "http.status_code" 200
+              "servlet.context" "/$context"
+              "servlet.dispatch" "/dispatch/recursive?depth=${depth - i - 1}"
+              defaultTags(i > 0 ? true : distributedTracing)
+            }
+          }
+        }
+      }
+      trace(depth, 1) {
         span(0) {
-          if (distributedTracing) {
-            traceId "123"
-            parentId "456"
+          if (depth > 0) {
+            childOf TEST_WRITER[depth - 1][0]
           } else {
-            parent()
+            if (distributedTracing) {
+              traceId "123"
+              parentId "456"
+            } else {
+              parent()
+            }
           }
           serviceName context
           operationName "servlet.request"
@@ -154,24 +193,26 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.status_code" 200
             "servlet.context" "/$context"
             "servlet.dispatch" "/$path"
-            defaultTags(distributedTracing)
+            defaultTags(depth > 0 ? true : distributedTracing)
           }
         }
       }
-      trace(1, 1) {
+      trace(depth + 1, 1) {
         span(0) {
           serviceName context
           operationName "servlet.request"
           resourceName "GET /$context/$path"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
-          childOf TEST_WRITER[0][0]
+          childOf TEST_WRITER[depth][0]
           tags {
             "http.url" "http://localhost:$port/$context/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
-            "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
+            "span.origin.type" {
+              it == "TestServlet3\$$origin" || it == "TestServlet3\$DispatchRecursive" || it == ApplicationFilterChain.name
+            }
             "span.type" DDSpanTypes.WEB_SERVLET
             "http.status_code" 200
             "servlet.context" "/$context"
@@ -182,11 +223,17 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
     }
 
     where:
-    path    | distributedTracing
-    "sync"  | true
-    "sync"  | false
-    "async" | true
-    "async" | false
+    path        | distributedTracing | depth
+    "sync"      | true               | 0
+    "sync"      | false              | 0
+    "async"     | true               | 0
+    "async"     | false              | 0
+    "recursive" | true               | 0
+    "recursive" | false              | 0
+    "recursive" | true               | 1
+    "recursive" | false              | 1
+    "recursive" | true               | 20
+    "recursive" | false              | 20
 
     origin = path.capitalize()
   }

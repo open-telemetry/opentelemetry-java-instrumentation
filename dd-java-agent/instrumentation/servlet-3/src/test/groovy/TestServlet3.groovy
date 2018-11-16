@@ -72,6 +72,23 @@ class TestServlet3 {
   }
 
   @WebServlet(asyncSupported = true)
+  static class DispatchRecursive extends AbstractHttpServlet {
+    @Override
+    void doGet(HttpServletRequest req, HttpServletResponse resp) {
+      if (req.servletPath.equals("/recursive")) {
+        resp.writer.print("Hello Recursive")
+        return
+      }
+      def depth = Integer.parseInt(req.getParameter("depth"))
+      if (depth > 0) {
+        req.startAsync().dispatch("/dispatch/recursive?depth=" + (depth - 1))
+      } else {
+        req.startAsync().dispatch("/recursive")
+      }
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
   static class FakeAsync extends AbstractHttpServlet {
     @Override
     void doGet(HttpServletRequest req, HttpServletResponse resp) {
@@ -80,4 +97,5 @@ class TestServlet3 {
       context.complete()
     }
   }
+
 }
