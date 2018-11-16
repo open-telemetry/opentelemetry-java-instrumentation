@@ -8,6 +8,8 @@ public class DDTags {
   public static final String THREAD_ID = "thread.id";
   public static final String DB_STATEMENT = "sql.query";
 
+  public static final String USER_NAME = "user.principal";
+
   public static final String ERROR_MSG = "error.msg"; // string representing the error message
   public static final String ERROR_TYPE = "error.type"; // string representing the type of the error
   public static final String ERROR_STACK = "error.stack"; // human readable version of the stack

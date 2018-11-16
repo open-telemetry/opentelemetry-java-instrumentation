@@ -34,7 +34,7 @@ dependencies {
 
   testCompile group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
 
-  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '1.5.+'
-  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.+'
-  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '1.5.+'
+  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '1.5.17.RELEASE'
+  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.17.RELEASE'
+  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: '1.5.17.RELEASE'
 }

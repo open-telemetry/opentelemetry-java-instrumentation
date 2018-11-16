@@ -48,7 +48,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 200
-            "user.principal" USER
+            "$DDTags.USER_NAME" USER
             defaultTags()
           }
         }
@@ -78,7 +78,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 200
-            "user.principal" USER
+            "$DDTags.USER_NAME" USER
             defaultTags()
           }
         }
@@ -163,7 +163,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 404
-            "user.principal" USER
+            "$DDTags.USER_NAME" USER
             defaultTags()
           }
         }
@@ -219,7 +219,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 500
-            "user.principal" USER
+            "$DDTags.USER_NAME" USER
             errorTags NestedServletException, "Request processing failed; nested exception is java.lang.RuntimeException: qwerty"
             defaultTags()
           }
@@ -271,7 +271,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 200
-            "user.principal" USER
+            "$DDTags.USER_NAME" USER
             defaultTags()
           }
         }
@@ -307,7 +307,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
             "http.status_code" 400
-            "user.principal" USER
+            "$DDTags.USER_NAME" USER
             "error" false
             "error.msg" String
             "error.type" MethodArgumentNotValidException.name

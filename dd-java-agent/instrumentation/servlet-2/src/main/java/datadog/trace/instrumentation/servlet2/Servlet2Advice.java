@@ -64,7 +64,7 @@ public class Servlet2Advice {
       if (req instanceof HttpServletRequest) {
         final Principal principal = ((HttpServletRequest) req).getUserPrincipal();
         if (principal != null) {
-          currentSpan.setTag("user.principal", principal.getName());
+          currentSpan.setTag(DDTags.USER_NAME, principal.getName());
         }
       }
     }

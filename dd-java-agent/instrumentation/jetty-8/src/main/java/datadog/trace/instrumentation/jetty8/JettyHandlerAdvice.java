@@ -52,7 +52,7 @@ public class JettyHandlerAdvice {
     Tags.HTTP_URL.set(span, req.getRequestURL().toString());
     span.setTag(DDTags.RESOURCE_NAME, resourceName);
     if (req.getUserPrincipal() != null) {
-      span.setTag("user.principal", req.getUserPrincipal().getName());
+      span.setTag(DDTags.USER_NAME, req.getUserPrincipal().getName());
     }
     return scope;
   }
