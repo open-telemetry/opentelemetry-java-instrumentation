@@ -5,7 +5,6 @@ import datadog.trace.api.Config
 import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.DDAgentWriter
-import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.common.writer.LoggingWriter
 import org.junit.Rule
@@ -26,6 +25,16 @@ class DDTracerTest extends Specification {
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
+
+  def setupSpec() {
+    // assert that a trace agent isn't running locally as that messes up the test.
+    try {
+      (new Socket("localhost", 8126)).close()
+      throw new IllegalStateException("Trace Agent unexpectedly running locally.")
+    } catch (final ConnectException ioe) {
+      // trace agent is not running locally.
+    }
+  }
 
   def "verify defaults on tracer"() {
     when:
@@ -93,11 +102,12 @@ class DDTracerTest extends Specification {
 
     where:
 
-    source   | key           | value           | expected
-    "writer" | "default"     | "default"       | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:8126/v0.3/traces } }"
-    "writer" | "writer.type" | "LoggingWriter" | "LoggingWriter { }"
-    "writer" | "agent.host"  | "somethingelse" | "DDAgentWriter { api=DDApi { tracesEndpoint=http://somethingelse:8126/v0.3/traces } }"
-    "writer" | "agent.port"  | "9999"          | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:9999/v0.3/traces } }"
+    source   | key                | value           | expected
+    "writer" | "default"          | "default"       | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:8126/v0.3/traces } }"
+    "writer" | "writer.type"      | "LoggingWriter" | "LoggingWriter { }"
+    "writer" | "agent.host"       | "somethingelse" | "DDAgentWriter { api=DDApi { tracesEndpoint=http://somethingelse:8126/v0.3/traces } }"
+    "writer" | "agent.port"       | "777"           | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:777/v0.3/traces } }"
+    "writer" | "trace.agent.port" | "9999"          | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:9999/v0.3/traces } }"
   }
 
   def "verify sampler/writer constructor"() {

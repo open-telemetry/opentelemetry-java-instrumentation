@@ -19,6 +19,8 @@ class ConfigTest extends Specification {
   private static final DD_SPAN_TAGS_ENV = "DD_SPAN_TAGS"
   private static final DD_HEADER_TAGS_ENV = "DD_HEADER_TAGS"
   private static final DD_JMXFETCH_METRICS_CONFIGS_ENV = "DD_JMXFETCH_METRICS_CONFIGS"
+  private static final DD_TRACE_AGENT_PORT_ENV = "DD_TRACE_AGENT_PORT"
+  private static final DD_AGENT_PORT_LEGACY_ENV = "DD_AGENT_PORT"
 
   def "verify defaults"() {
     when:
@@ -49,7 +51,8 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + SERVICE_NAME, "something else")
     System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
     System.setProperty(PREFIX + AGENT_HOST, "somehost")
-    System.setProperty(PREFIX + AGENT_PORT, "123")
+    System.setProperty(PREFIX + TRACE_AGENT_PORT, "123")
+    System.setProperty(PREFIX + AGENT_PORT_LEGACY, "456")
     System.setProperty(PREFIX + PRIORITY_SAMPLING, "true")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, "false")
     System.setProperty(PREFIX + SERVICE_MAPPING, "a:1")
@@ -92,6 +95,13 @@ class ConfigTest extends Specification {
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
     environmentVariables.set(DD_JMXFETCH_METRICS_CONFIGS_ENV, "some/file")
 
+    if (overridePort) {
+      environmentVariables.set(DD_TRACE_AGENT_PORT_ENV, "123")
+    }
+    if (overrideLegacyPort) {
+      environmentVariables.set(DD_AGENT_PORT_LEGACY_ENV, "456")
+    }
+
     when:
     def config = new Config()
 
@@ -99,17 +109,33 @@ class ConfigTest extends Specification {
     config.serviceName == "still something else"
     config.writerType == "LoggingWriter"
     config.jmxFetchMetricsConfigs == ["some/file"]
+    config.agentPort == expectedPort
+
+    where:
+    overridePort | overrideLegacyPort | expectedPort
+    true         | true               | 123
+    true         | false              | 123
+    false        | true               | 456
+    false        | false              | 8126
+
   }
 
   def "sys props override env vars"() {
     setup:
     environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
+    environmentVariables.set(DD_TRACE_AGENT_PORT_ENV, "777")
 
     System.setProperty(PREFIX + SERVICE_NAME, "what we actually want")
     System.setProperty(PREFIX + WRITER_TYPE, "DDAgentWriter")
     System.setProperty(PREFIX + AGENT_HOST, "somewhere")
-    System.setProperty(PREFIX + AGENT_PORT, "9999")
+
+    if (overridePort) {
+      System.setProperty(PREFIX + TRACE_AGENT_PORT, "123")
+    }
+    if (overrideLegacyPort) {
+      System.setProperty(PREFIX + AGENT_PORT_LEGACY, "456")
+    }
 
     when:
     def config = new Config()
@@ -118,7 +144,14 @@ class ConfigTest extends Specification {
     config.serviceName == "what we actually want"
     config.writerType == "DDAgentWriter"
     config.agentHost == "somewhere"
-    config.agentPort == 9999
+    config.agentPort == expectedPort
+
+    where:
+    overridePort | overrideLegacyPort | expectedPort
+    true         | true               | 123
+    true         | false              | 123
+    false        | true               | 777 // env var gets picked up instead.
+    false        | false              | 777 // env var gets picked up instead.
   }
 
   def "sys props override properties"() {
@@ -127,7 +160,7 @@ class ConfigTest extends Specification {
     properties.setProperty(SERVICE_NAME, "something else")
     properties.setProperty(WRITER_TYPE, "LoggingWriter")
     properties.setProperty(AGENT_HOST, "somehost")
-    properties.setProperty(AGENT_PORT, "123")
+    properties.setProperty(TRACE_AGENT_PORT, "123")
     properties.setProperty(PRIORITY_SAMPLING, "true")
     properties.setProperty(TRACE_RESOLVER_ENABLED, "false")
     properties.setProperty(SERVICE_MAPPING, "a:1")

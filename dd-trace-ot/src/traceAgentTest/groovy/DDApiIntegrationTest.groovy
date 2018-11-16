@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 import static datadog.trace.api.Config.DEFAULT_AGENT_HOST
-import static datadog.trace.api.Config.DEFAULT_AGENT_PORT
+import static datadog.trace.api.Config.DEFAULT_TRACE_AGENT_PORT
 
 class DDApiIntegrationTest {
   static class DDApiIntegrationV4Test extends Specification {
@@ -33,7 +33,7 @@ class DDApiIntegrationTest {
       new PendingTrace(TRACER, "1", [:]),
       TRACER)
 
-    def api = new DDApi(DEFAULT_AGENT_HOST, DEFAULT_AGENT_PORT, v4())
+    def api = new DDApi(DEFAULT_AGENT_HOST, DEFAULT_TRACE_AGENT_PORT, v4())
 
     def endpoint = new AtomicReference<String>(null)
     def agentResponse = new AtomicReference<String>(null)
