@@ -31,7 +31,8 @@ public class Config {
   public static final String SERVICE_NAME = "service.name";
   public static final String WRITER_TYPE = "writer.type";
   public static final String AGENT_HOST = "agent.host";
-  public static final String AGENT_PORT = "agent.port";
+  public static final String TRACE_AGENT_PORT = "trace.agent.port";
+  public static final String AGENT_PORT_LEGACY = "agent.port";
   public static final String PRIORITY_SAMPLING = "priority.sampling";
   public static final String TRACE_RESOLVER_ENABLED = "trace.resolver.enabled";
   public static final String SERVICE_MAPPING = "service.mapping";
@@ -54,7 +55,7 @@ public class Config {
   public static final String DEFAULT_AGENT_WRITER_TYPE = DD_AGENT_WRITER_TYPE;
 
   public static final String DEFAULT_AGENT_HOST = "localhost";
-  public static final int DEFAULT_AGENT_PORT = 8126;
+  public static final int DEFAULT_TRACE_AGENT_PORT = 8126;
 
   private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = false;
   private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
@@ -94,7 +95,10 @@ public class Config {
     serviceName = getSettingFromEnvironment(SERVICE_NAME, DEFAULT_SERVICE_NAME);
     writerType = getSettingFromEnvironment(WRITER_TYPE, DEFAULT_AGENT_WRITER_TYPE);
     agentHost = getSettingFromEnvironment(AGENT_HOST, DEFAULT_AGENT_HOST);
-    agentPort = getIntegerSettingFromEnvironment(AGENT_PORT, DEFAULT_AGENT_PORT);
+    agentPort =
+        getIntegerSettingFromEnvironment(
+            TRACE_AGENT_PORT,
+            getIntegerSettingFromEnvironment(AGENT_PORT_LEGACY, DEFAULT_TRACE_AGENT_PORT));
     prioritySamplingEnabled =
         getBooleanSettingFromEnvironment(PRIORITY_SAMPLING, DEFAULT_PRIORITY_SAMPLING_ENABLED);
     traceResolverEnabled =
@@ -124,7 +128,11 @@ public class Config {
     serviceName = properties.getProperty(SERVICE_NAME, parent.serviceName);
     writerType = properties.getProperty(WRITER_TYPE, parent.writerType);
     agentHost = properties.getProperty(AGENT_HOST, parent.agentHost);
-    agentPort = getPropertyIntegerValue(properties, AGENT_PORT, parent.agentPort);
+    agentPort =
+        getPropertyIntegerValue(
+            properties,
+            TRACE_AGENT_PORT,
+            getPropertyIntegerValue(properties, AGENT_PORT_LEGACY, parent.agentPort));
     prioritySamplingEnabled =
         getPropertyBooleanValue(properties, PRIORITY_SAMPLING, parent.prioritySamplingEnabled);
     traceResolverEnabled =

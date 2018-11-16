@@ -1,7 +1,7 @@
 package datadog.trace.common.writer;
 
 import static datadog.trace.api.Config.DEFAULT_AGENT_HOST;
-import static datadog.trace.api.Config.DEFAULT_AGENT_PORT;
+import static datadog.trace.api.Config.DEFAULT_TRACE_AGENT_PORT;
 
 import datadog.opentracing.DDSpan;
 import java.util.List;
@@ -64,7 +64,7 @@ public class DDAgentWriter implements Writer {
   private boolean queueFullReported = false;
 
   public DDAgentWriter() {
-    this(new DDApi(DEFAULT_AGENT_HOST, DEFAULT_AGENT_PORT));
+    this(new DDApi(DEFAULT_AGENT_HOST, DEFAULT_TRACE_AGENT_PORT));
   }
 
   public DDAgentWriter(final DDApi api) {
