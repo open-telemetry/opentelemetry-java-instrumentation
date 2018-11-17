@@ -17,7 +17,7 @@ def isCI = System.getenv("CI") != null
 
 allprojects {
   group = 'com.datadoghq'
-  version = '0.18.0'
+  version = '0.19.0-SNAPSHOT'
 
   if (isCI) {
     buildDir = "${rootDir}/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"
