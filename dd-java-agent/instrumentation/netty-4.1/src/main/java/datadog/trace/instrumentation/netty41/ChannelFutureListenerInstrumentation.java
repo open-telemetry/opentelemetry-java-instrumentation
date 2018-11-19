@@ -62,32 +62,39 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   public static class OperationCompleteAdvice {
     @Advice.OnMethodEnter
     public static TraceScope activateScope(@Advice.Argument(0) final ChannelFuture future) {
+      /*
+      Idea here is:
+       - To return scope only if we have captured it.
+       - To capture scope only in case of error.
+       */
+      final Throwable cause = future.cause();
+      if (cause == null) {
+        return null;
+      }
       final TraceScope.Continuation continuation =
-          future.channel().attr(AttributeKeys.PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY).get();
-
+          future
+              .channel()
+              .attr(AttributeKeys.PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY)
+              .getAndRemove();
       if (continuation == null) {
         return null;
       }
       final TraceScope scope = continuation.activate();
 
-      final Throwable cause = future.cause();
-      if (cause != null) {
-        final Span errorSpan =
-            GlobalTracer.get()
-                .buildSpan("netty.connect")
-                .withTag(Tags.COMPONENT.getKey(), "netty")
-                .start();
-        Tags.ERROR.set(errorSpan, true);
-        errorSpan.log(Collections.singletonMap(ERROR_OBJECT, cause));
-        errorSpan.finish();
-      }
+      final Span errorSpan =
+          GlobalTracer.get()
+              .buildSpan("netty.connect")
+              .withTag(Tags.COMPONENT.getKey(), "netty")
+              .start();
+      Tags.ERROR.set(errorSpan, true);
+      errorSpan.log(Collections.singletonMap(ERROR_OBJECT, cause));
+      errorSpan.finish();
 
       return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void deactivateScope(
-        @Advice.Enter final TraceScope scope, @Advice.Thrown final Throwable throwable) {
+    public static void deactivateScope(@Advice.Enter final TraceScope scope) {
       if (scope != null) {
         ((Scope) scope).close();
       }

@@ -41,10 +41,6 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
         }
       }
 
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(false);
-      }
-
       if (finishSpan) {
         Tags.HTTP_STATUS.set(span, ((HttpResponse) msg).getStatus().code());
         span.finish(); // Finish the span manually since finishSpanOnClose was false
