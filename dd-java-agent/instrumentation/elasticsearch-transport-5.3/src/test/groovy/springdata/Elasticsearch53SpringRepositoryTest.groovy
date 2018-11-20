@@ -135,7 +135,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.request.indices" indexName
             "elasticsearch.type" "doc"
             "elasticsearch.id" "1"
-            "elasticsearch.version" 3
+            "elasticsearch.version" Number
             defaultTags()
           }
         }
@@ -208,7 +208,7 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
             "elasticsearch.request.indices" indexName
             "elasticsearch.type" "doc"
             "elasticsearch.id" "1"
-            "elasticsearch.version" 4
+            "elasticsearch.version" Number
             defaultTags()
           }
         }
