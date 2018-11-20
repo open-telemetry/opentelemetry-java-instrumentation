@@ -17,6 +17,7 @@ import datadog.trace.common.sampling.Sampler;
 import datadog.trace.common.writer.DDAgentWriter;
 import datadog.trace.common.writer.DDApi;
 import datadog.trace.common.writer.Writer;
+import io.opentracing.References;
 import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
 import io.opentracing.Span;
@@ -496,7 +497,21 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
     @Override
     public DDSpanBuilder addReference(final String referenceType, final SpanContext spanContext) {
-      log.debug("`addReference` method is not implemented. Doing nothing");
+      if (spanContext == null) {
+        return this;
+      }
+      if (!(spanContext instanceof ExtractedContext) && !(spanContext instanceof DDSpanContext)) {
+        log.debug(
+            "Expected to have a DDSpanContext or ExtractedContext but got "
+                + spanContext.getClass().getName());
+        return this;
+      }
+      if (References.CHILD_OF.equals(referenceType)
+          || References.FOLLOWS_FROM.equals(referenceType)) {
+        return asChildOf(spanContext);
+      } else {
+        log.debug("Only support reference type of CHILD_OF and FOLLOWS_FROM");
+      }
       return this;
     }
 
