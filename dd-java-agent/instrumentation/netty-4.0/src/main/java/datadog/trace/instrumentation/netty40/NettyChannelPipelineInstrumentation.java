@@ -27,6 +27,7 @@ import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
+import io.netty.util.Attribute;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
 import java.util.HashMap;
@@ -137,12 +138,15 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter
     public static void addParentSpan(@Advice.This final ChannelPipeline pipeline) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-
       if (scope instanceof TraceScope) {
-        pipeline
-            .channel()
-            .attr(AttributeKeys.PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY)
-            .set(((TraceScope) scope).capture());
+        final TraceScope.Continuation continuation = ((TraceScope) scope).capture();
+        if (null != continuation) {
+          final Attribute<TraceScope.Continuation> attribute =
+              pipeline.channel().attr(AttributeKeys.PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY);
+          if (!attribute.compareAndSet(null, continuation)) {
+            continuation.close();
+          }
+        }
       }
     }
   }
