@@ -31,5 +31,6 @@ dependencies {
   testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   testCompile group: 'redis.clients', name: 'jedis', version: '1.4.0'
 
-  latestDepTestCompile group: 'redis.clients', name: 'jedis', version: '+'
+  // Jedis 3.0 has API changes that prevent instrumentation from applying
+  latestDepTestCompile group: 'redis.clients', name: 'jedis', version: '2.+'
 }
