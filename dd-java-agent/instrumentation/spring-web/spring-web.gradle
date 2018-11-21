@@ -32,7 +32,7 @@ dependencies {
   testCompile group: 'javax.validation', name: 'validation-api', version: '1.1.0.Final'
   testCompile group: 'org.hibernate', name: 'hibernate-validator', version: '5.4.2.Final'
 
-  testCompile group: 'org.spockframework', name: 'spock-spring', version: '1.1-groovy-2.4'
+  testCompile group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
 
   testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '1.5.17.RELEASE'
   testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.17.RELEASE'
