@@ -8,6 +8,7 @@ import net.bytebuddy.utility.JavaModule
 import java.lang.instrument.ClassDefinition
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
+import java.util.concurrent.atomic.AtomicReference
 
 import static context.ContextTestInstrumentation.IncorrectCallUsageKeyClass
 import static context.ContextTestInstrumentation.IncorrectContextClassUsageKeyClass
@@ -93,31 +94,21 @@ class FieldBackedProviderTest extends AgentTestRunner {
     new UntransformableKeyClass() | _
   }
 
-  def "backing map should not create strong refs to key class instances"() {
+  def "backing map should not create strong refs to key class instances #keyValue.get().getClass().getName()"() {
     when:
-    KeyClass instance = new KeyClass()
-    final int count = instance.incrementContextCount()
-    WeakReference<KeyClass> instanceRef = new WeakReference(instance)
-    instance = null
+    final int count = keyValue.get().incrementContextCount()
+    WeakReference<KeyClass> instanceRef = new WeakReference(keyValue.get())
+    keyValue.set(null)
     TestUtils.awaitGC(instanceRef)
 
     then:
     instanceRef.get() == null
     count == 1
-  }
 
-  // can't use spock 'where' in this test because that creates strong references
-  def "backing map should not create strong refs to untransformable key class instances"() {
-    when:
-    UntransformableKeyClass instance = new UntransformableKeyClass()
-    final int count = instance.incrementContextCount()
-    WeakReference<KeyClass> instanceRef = new WeakReference(instance)
-    instance = null
-    TestUtils.awaitGC(instanceRef)
-
-    then:
-    instanceRef.get() == null
-    count == 1
+    where:
+    keyValue                                           | _
+    new AtomicReference(new KeyClass())                | _
+    new AtomicReference(new UntransformableKeyClass()) | _
   }
 
   def "context classes are retransform safe"() {

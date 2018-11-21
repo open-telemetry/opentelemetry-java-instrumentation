@@ -64,7 +64,7 @@ import net.bytebuddy.utility.JavaModule;
  * <p>Example:<br>
  * <em>InstrumentationContext.get(Runnable.class, RunnableState.class)")</em><br>
  * is rewritten to:<br>
- * <em>RunnableInstrumentation$ContextStore$Runnable$RunnableState12345.getContextStore(runnableRunnable.class,
+ * <em>FieldBackedProvider$ContextStore$Runnable$RunnableState12345.getContextStore(runnableRunnable.class,
  * RunnableState.class)</em>
  */
 @Slf4j
@@ -88,6 +88,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   }
 
   private final Instrumenter.Default instrumenter;
+  private final ByteBuddy byteBuddy;
 
   /** fields-accessor-interface-name -> fields-accessor-interface-dynamic-type */
   private final Map<String, DynamicType.Unloaded<?>> fieldAccessorInterfaces;
@@ -99,6 +100,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   public FieldBackedProvider(final Instrumenter.Default instrumenter) {
     this.instrumenter = instrumenter;
+    byteBuddy = new ByteBuddy();
     fieldAccessorInterfaces = generateFieldAccessorInterfaces();
     contextStoreImplementations = generateContextStoreImplementationClasses();
     fieldInjectionEnabled = Config.get().isRuntimeContextFieldInjection();
@@ -108,7 +110,12 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   public AgentBuilder.Identified.Extendable instrumentationTransformer(
       AgentBuilder.Identified.Extendable builder) {
     if (instrumenter.contextStore().size() > 0) {
-      builder = builder.transform(getTransformerForASMVisitor(getInstrumentationVisitor()));
+      /*
+      Install transformer that rewrites accesses to context store with specialized bytecode that invokes appropriate
+      storage implementation.
+       */
+      builder =
+          builder.transform(getTransformerForASMVisitor(getContextStoreReadsRewritingVisitor()));
 
       /*
       We inject into bootstrap classloader because field accessor interfaces are needed by
@@ -149,7 +156,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     };
   }
 
-  private AsmVisitorWrapper getInstrumentationVisitor() {
+  private AsmVisitorWrapper getContextStoreReadsRewritingVisitor() {
     return new AsmVisitorWrapper() {
       @Override
       public int mergeWriter(final int flags) {
@@ -211,6 +218,12 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     && CONTEXT_GET_METHOD.getName().equals(name)
                     && Type.getMethodDescriptor(CONTEXT_GET_METHOD).equals(descriptor)) {
                   log.debug("Found context-store access in {}", instrumenter.getClass().getName());
+                  /*
+                  The idea here is that the rest if this method visitor collects last three instructions in `insnStack`
+                  variable. Once we get here we check if those last three instructions constitute call that looks like
+                  `InstrumentationContext.get(K.class, V.class)`. If it does the inside of this if rewrites it to call
+                  dynamically injected context store implementation instead.
+                   */
                   if ((insnStack[0] == Opcodes.INVOKESTATIC
                           && insnStack[1] == Opcodes.LDC
                           && insnStack[2] == Opcodes.LDC)
@@ -312,6 +325,10 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
     if (fieldInjectionEnabled) {
       for (final Map.Entry<String, String> entry : instrumenter.contextStore().entrySet()) {
+        /*
+        For each context store defined in a current instrumentation we create an agent builder
+        that injects necessary fields.
+         */
         builder =
             builder
                 .type(
@@ -375,8 +392,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           final int readerFlags) {
         return new ClassVisitor(Opcodes.ASM7, classVisitor) {
           // We are using Object class name instead of contextClassName here because this gets
-          // injected onto Bootstrap
-          // classloader where context class may be unavailable
+          // injected onto Bootstrap classloader where context class may be unavailable
           private final TypeDescription contextType =
               new TypeDescription.ForLoadedType(Object.class);
           private final String fieldName = getContextFieldName(keyClassName);
@@ -502,7 +518,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
    */
   private DynamicType.Unloaded<?> makeContextStoreImplementationClass(
       final String keyClassName, final String contextClassName) {
-    return new ByteBuddy()
+    return byteBuddy
         .rebase(ContextStoreImplementationTemplate.class)
         .modifiers(Visibility.PUBLIC, TypeManifestation.FINAL)
         .name(getContextStoreImplementationClassName(keyClassName, contextClassName))
@@ -859,10 +875,9 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   private DynamicType.Unloaded<?> makeFieldAccessorInterface(
       final String keyClassName, final String contextClassName) {
     // We are using Object class name instead of contextClassName here because this gets injected
-    // onto Bootstrap
-    // classloader where context class may be unavailable
+    // onto Bootstrap classloader where context class may be unavailable
     final TypeDescription contextType = new TypeDescription.ForLoadedType(Object.class);
-    return new ByteBuddy()
+    return byteBuddy
         .makeInterface()
         .name(getContextAccessorInterfaceName(keyClassName, contextClassName))
         .defineMethod(getContextGetterName(keyClassName), contextType, Visibility.PUBLIC)

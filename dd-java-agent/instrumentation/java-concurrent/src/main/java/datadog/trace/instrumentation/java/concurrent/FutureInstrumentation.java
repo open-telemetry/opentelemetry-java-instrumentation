@@ -93,7 +93,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> map = new HashMap<>();
-    map.put("java.util.concurrent.Future", State.class.getName());
+    map.put(Future.class.getName(), State.class.getName());
     return Collections.unmodifiableMap(map);
   }
 

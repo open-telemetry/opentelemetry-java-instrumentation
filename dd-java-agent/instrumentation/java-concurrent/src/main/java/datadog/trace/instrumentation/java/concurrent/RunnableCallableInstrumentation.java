@@ -23,9 +23,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
 @AutoService(Instrumenter.class)
-public final class RunnableInstrumentation extends Instrumenter.Default {
+public final class RunnableCallableInstrumentation extends Instrumenter.Default {
 
-  public RunnableInstrumentation() {
+  public RunnableCallableInstrumentation() {
     super(ExecutorInstrumentation.EXEC_NAME);
   }
 
@@ -38,15 +38,15 @@ public final class RunnableInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      RunnableInstrumentation.class.getName() + "$RunnableUtils",
+      RunnableCallableInstrumentation.class.getName() + "$RunnableUtils",
     };
   }
 
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> map = new HashMap<>();
-    map.put("java.lang.Runnable", State.class.getName());
-    map.put("java.util.concurrent.Callable", State.class.getName());
+    map.put(Runnable.class.getName(), State.class.getName());
+    map.put(Callable.class.getName(), State.class.getName());
     return Collections.unmodifiableMap(map);
   }
 

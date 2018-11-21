@@ -92,7 +92,7 @@ public class Utils {
 
   /**
    * Convert class name to a format that can be used as part of inner class name by replacing all
-   * ','s with '$'s.
+   * '.'s with '$'s.
    *
    * @param className class named to be converted
    * @return convertd name

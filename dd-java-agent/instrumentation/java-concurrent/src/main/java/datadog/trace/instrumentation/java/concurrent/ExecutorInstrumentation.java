@@ -135,9 +135,9 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> map = new HashMap<>();
-    map.put("java.lang.Runnable", State.class.getName());
-    map.put("java.util.concurrent.Callable", State.class.getName());
-    map.put("java.util.concurrent.Future", State.class.getName());
+    map.put(Runnable.class.getName(), State.class.getName());
+    map.put(Callable.class.getName(), State.class.getName());
+    map.put(Future.class.getName(), State.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
