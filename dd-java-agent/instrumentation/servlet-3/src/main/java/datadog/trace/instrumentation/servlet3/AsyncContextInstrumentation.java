@@ -47,8 +47,9 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
   }
 
   /**
-   * When a request is dispatched, we want to close out the existing request and replace the
-   * propagation info in the headers with the closed span.
+   * When a request is dispatched, we want new request to have propagation headers from its parent
+   * request. The parent request's span is later closed by {@code
+   * TagSettingAsyncListener#onStartAsync}
    */
   public static class DispatchAdvice {
 
@@ -65,7 +66,8 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
       if (spanAttr instanceof Span) {
         request.removeAttribute(SERVLET_SPAN);
         final Span span = (Span) spanAttr;
-        // Override propagation headers by injecting attributes with new values.
+        // Override propagation headers by injecting attributes from the current span
+        // into the new request
         if (request instanceof HttpServletRequest) {
           GlobalTracer.get()
               .inject(
@@ -82,7 +84,6 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
           path = "true";
         }
         span.setTag("servlet.dispatch", path);
-        span.finish();
       }
       return true;
     }

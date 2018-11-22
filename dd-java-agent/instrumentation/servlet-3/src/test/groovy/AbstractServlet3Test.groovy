@@ -118,7 +118,7 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
     "fake"       | "Hello FakeAsync"     | false | "FakeAsync"     | true
   }
 
-  def "test dispatch #path with depth #depth"() {
+  def "test dispatch #path with depth #depth, distributed tracing: #distributedTracing"() {
     setup:
     def requestBuilder = new Request.Builder()
       .url("http://localhost:$port/$context/dispatch/$path?depth=$depth")
@@ -131,7 +131,6 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
 
     expect:
     response.body().string().trim() == "Hello $origin"
-
     assertTraces(2 + depth) {
       for (int i = 0; i < depth; i++) {
         trace(i, 1) {
@@ -166,7 +165,31 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
           }
         }
       }
+      // In case of recursive requests or sync request the most 'bottom' span is closed before its parent
       trace(depth, 1) {
+        span(0) {
+          serviceName context
+          operationName "servlet.request"
+          resourceName "GET /$context/$path"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          childOf TEST_WRITER[depth + 1][0]
+          tags {
+            "http.url" "http://localhost:$port/$context/$path"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.origin.type" {
+              it == "TestServlet3\$$origin" || it == "TestServlet3\$DispatchRecursive" || it == ApplicationFilterChain.name
+            }
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "http.status_code" 200
+            "servlet.context" "/$context"
+            defaultTags(true)
+          }
+        }
+      }
+      trace(depth + 1, 1) {
         span(0) {
           if (depth > 0) {
             childOf TEST_WRITER[depth - 1][0]
@@ -197,14 +220,72 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
           }
         }
       }
-      trace(depth + 1, 1) {
+    }
+
+    where:
+    path        | distributedTracing | depth
+    "sync"      | true               | 0
+    "sync"      | false              | 0
+    "recursive" | true               | 0
+    "recursive" | false              | 0
+    "recursive" | true               | 1
+    "recursive" | false              | 1
+    "recursive" | true               | 20
+    "recursive" | false              | 20
+
+    origin = path.capitalize()
+  }
+
+  def "test dispatch async #path with depth #depth, distributed tracing: #distributedTracing"() {
+    setup:
+    def requestBuilder = new Request.Builder()
+      .url("http://localhost:$port/$context/dispatch/$path")
+      .get()
+    if (distributedTracing) {
+      requestBuilder.header("x-datadog-trace-id", "123")
+      requestBuilder.header("x-datadog-parent-id", "456")
+    }
+    def response = client.newCall(requestBuilder.build()).execute()
+
+    expect:
+    response.body().string().trim() == "Hello $origin"
+    assertTraces(2) {
+      // Async requests have their parent span closed before child span
+      trace(0, 1) {
+        span(0) {
+          if (distributedTracing) {
+            traceId "123"
+            parentId "456"
+          } else {
+            parent()
+          }
+          serviceName context
+          operationName "servlet.request"
+          resourceName "GET /$context/dispatch/$path"
+          spanType DDSpanTypes.WEB_SERVLET
+          errored false
+          tags {
+            "http.url" "http://localhost:$port/$context/dispatch/$path"
+            "http.method" "GET"
+            "span.kind" "server"
+            "component" "java-web-servlet"
+            "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
+            "span.type" DDSpanTypes.WEB_SERVLET
+            "http.status_code" 200
+            "servlet.context" "/$context"
+            "servlet.dispatch" "/$path"
+            defaultTags(distributedTracing)
+          }
+        }
+      }
+      trace(1, 1) {
         span(0) {
           serviceName context
           operationName "servlet.request"
           resourceName "GET /$context/$path"
           spanType DDSpanTypes.WEB_SERVLET
           errored false
-          childOf TEST_WRITER[depth][0]
+          childOf TEST_WRITER[0][0]
           tags {
             "http.url" "http://localhost:$port/$context/$path"
             "http.method" "GET"
@@ -223,17 +304,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
     }
 
     where:
-    path        | distributedTracing | depth
-    "sync"      | true               | 0
-    "sync"      | false              | 0
-    "async"     | true               | 0
-    "async"     | false              | 0
-    "recursive" | true               | 0
-    "recursive" | false              | 0
-    "recursive" | true               | 1
-    "recursive" | false              | 1
-    "recursive" | true               | 20
-    "recursive" | false              | 20
+    path    | distributedTracing
+    "async" | true
+    "async" | false
 
     origin = path.capitalize()
   }

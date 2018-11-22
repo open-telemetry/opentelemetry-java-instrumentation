@@ -88,10 +88,6 @@ public class Servlet3Advice {
           }
           Tags.ERROR.set(span, Boolean.TRUE);
           span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-          if (scope instanceof TraceScope) {
-            ((TraceScope) scope).setAsyncPropagation(false);
-          }
-          scope.close();
           req.removeAttribute(SERVLET_SPAN);
           span.finish(); // Finish the span manually since finishSpanOnClose was false
         } else {
@@ -102,14 +98,11 @@ public class Servlet3Advice {
           // Check again in case the request finished before adding the listener.
           if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
             Tags.HTTP_STATUS.set(span, resp.getStatus());
-            if (scope instanceof TraceScope) {
-              ((TraceScope) scope).setAsyncPropagation(false);
-            }
             req.removeAttribute(SERVLET_SPAN);
             span.finish(); // Finish the span manually since finishSpanOnClose was false
           }
-          scope.close();
         }
+        scope.close();
       }
     }
   }
