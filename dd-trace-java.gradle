@@ -1,5 +1,5 @@
 plugins {
-  id 'io.franzbecker.gradle-lombok' version '1.13'
+  id 'io.franzbecker.gradle-lombok' version '1.14'
   id 'com.jfrog.artifactory' version '4.8.1'
   id 'com.jfrog.bintray' version '1.8.4'
   // FIXME: this is really old!
