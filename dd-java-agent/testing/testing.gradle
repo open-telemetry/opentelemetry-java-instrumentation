@@ -32,4 +32,8 @@ dependencies {
 
   // test instrumenting java 1.1 bytecode
   testCompile group: 'net.sf.jt400', name: 'jt400', version: '6.1'
+
+  // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
+  testAnnotationProcessor deps.autoservice
+  testImplementation deps.autoservice
 }
