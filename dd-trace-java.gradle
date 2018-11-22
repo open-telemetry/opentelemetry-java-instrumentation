@@ -55,3 +55,10 @@ ext.gradleWrapperVersion = '4.10.2'
 task wrapper(type: Wrapper) {
   gradleVersion = gradleWrapperVersion
 }
+
+allprojects {
+  tasks.withType(JavaForkOptions) {
+    maxHeapSize = System.properties["datadog.forkedMaxHeapSize"]
+    minHeapSize = System.properties["datadog.forkedMinHeapSize"]
+  }
+}
