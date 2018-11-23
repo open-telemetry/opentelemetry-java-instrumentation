@@ -2,8 +2,10 @@ package context
 
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.api.Config
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.utility.JavaModule
+import spock.lang.Requires
 
 import java.lang.instrument.ClassDefinition
 import java.lang.ref.WeakReference
@@ -149,4 +151,44 @@ class FieldBackedProviderTest extends AgentTestRunner {
     expect:
     !new IncorrectCallUsageKeyClass().isInstrumented()
   }
+}
+
+/**
+ * Make sure that fields not get injected into the class if it is disabled via system properties.
+ *
+ * Unfortunately we cannot set system properties here early enough for AgentTestRunner to see.
+ * Instead we have to configure this via Gradle. Ideally we should not have to do this.
+ */
+@Requires({ "true" == System.getProperty(Config.PREFIX + Config.RUNTIME_CONTEXT_FIELD_INJECTION) })
+class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
+  def "Check that structure is not modified when structure modification is disabled"() {
+    setup:
+    def keyClass = ContextTestInstrumentation.DisabledKeyClass
+    boolean hasField = false
+    for (Field field : keyClass.getDeclaredFields()) {
+      if (field.getName().startsWith("__datadog")) {
+        hasField = true
+        break
+      }
+    }
+
+    boolean hasMarkerInterface = false
+    boolean hasAccessorInterface = false
+    for (Class inter : keyClass.getInterfaces()) {
+      if (inter.getName() == 'datadog.trace.bootstrap.FieldBackedContextStoreAppliedMarker') {
+        hasMarkerInterface = true
+      }
+      if (inter.getName().startsWith('datadog.trace.agent.tooling.context.FieldBackedProvider$ContextAccessor')) {
+        hasAccessorInterface = true
+      }
+    }
+
+    expect:
+    Config.get().isPrioritySamplingEnabled() == false
+    hasField == false
+    hasMarkerInterface == false
+    hasAccessorInterface == false
+    keyClass.newInstance().isInstrumented() == true
+  }
+
 }

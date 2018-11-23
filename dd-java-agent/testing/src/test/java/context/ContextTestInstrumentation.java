@@ -52,6 +52,7 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
     final Map<String, String> store = new HashMap<>(2);
     store.put(getClass().getName() + "$KeyClass", getClass().getName() + "$Context");
     store.put(getClass().getName() + "$UntransformableKeyClass", getClass().getName() + "$Context");
+    store.put(getClass().getName() + "$DisabledKeyClass", getClass().getName() + "$Context");
     return store;
   }
 
@@ -170,6 +171,14 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
 
   /** A class which cannot be transformed by our instrumentation. */
   public static class UntransformableKeyClass extends KeyClass {
+    @Override
+    public boolean isInstrumented() {
+      return false;
+    }
+  }
+
+  /** A class that is used that field injection can be disabled. */
+  public static class DisabledKeyClass extends KeyClass {
     @Override
     public boolean isInstrumented() {
       return false;
