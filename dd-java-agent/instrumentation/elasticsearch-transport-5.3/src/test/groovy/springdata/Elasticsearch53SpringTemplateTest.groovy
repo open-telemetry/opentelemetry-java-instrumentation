@@ -1,6 +1,7 @@
 package springdata
 
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
+import com.google.common.collect.ImmutableSet
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.DDSpanTypes
@@ -31,6 +32,11 @@ import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 @RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
+
+  // Some ES actions are not caused by clients and seem to just happen from time to time.
+  // We will just ignore these actions in traces.
+  // TODO: check if other ES tests need this protection and potentially pull this into global class
+  public static final Set<String> IGNORED_ACTIONS = ImmutableSet.of("NodesStatsAction", "IndicesStatsAction")
 
   @Shared
   int httpPort
@@ -145,6 +151,9 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     template.queryForList(query, Doc) == [new Doc()]
 
     and:
+    // FIXME: it looks like proper approach is to provide TEST_WRITER with an API to filter traces as they are written
+    TEST_WRITER.waitForTraces(7)
+    filterIgnoredActions() == null
     // IndexAction and PutMappingAction run in separate threads and order in which
     // these spans are closed is not defined. So we force the order if it is wrong.
     if (TEST_WRITER[3][0].resourceName == "IndexAction") {
@@ -152,6 +161,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       TEST_WRITER[3] = TEST_WRITER[4]
       TEST_WRITER[4] = tmp
     }
+
     assertTraces(7) {
       trace(0, 1) {
         span(0) {
@@ -367,5 +377,13 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
 
     where:
     indexName = "test-index-extract"
+  }
+
+  def filterIgnoredActions() {
+    for (int i = 0; i < TEST_WRITER.size(); i++) {
+      if (IGNORED_ACTIONS.contains(TEST_WRITER[i][0].getResourceName())) {
+        TEST_WRITER.remove(i)
+      }
+    }
   }
 }
