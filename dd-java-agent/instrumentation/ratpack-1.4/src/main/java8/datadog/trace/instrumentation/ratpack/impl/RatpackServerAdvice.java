@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.ratpack.impl;
 
 import io.opentracing.Scope;
-import io.opentracing.ScopeManager;
 import io.opentracing.util.GlobalTracer;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
@@ -18,10 +17,7 @@ public class RatpackServerAdvice {
     public static void injectTracing(@Advice.Return(readOnly = false) Registry registry) {
       registry =
           registry.join(
-              Registry.builder()
-                  .add(ScopeManager.class, GlobalTracer.get().scopeManager())
-                  .add(HandlerDecorator.prepend(new TracingHandler()))
-                  .build());
+              Registry.builder().add(HandlerDecorator.prepend(new TracingHandler())).build());
     }
   }
 
