@@ -1,5 +1,5 @@
 plugins {
-  id 'io.franzbecker.gradle-lombok' version '1.13'
+  id 'io.franzbecker.gradle-lombok' version '1.14'
   id 'com.jfrog.artifactory' version '4.8.1'
   id 'com.jfrog.bintray' version '1.8.4'
   // FIXME: this is really old!
@@ -54,4 +54,11 @@ buildScan {
 ext.gradleWrapperVersion = '4.10.2'
 task wrapper(type: Wrapper) {
   gradleVersion = gradleWrapperVersion
+}
+
+allprojects {
+  tasks.withType(JavaForkOptions) {
+    maxHeapSize = System.properties["datadog.forkedMaxHeapSize"]
+    minHeapSize = System.properties["datadog.forkedMinHeapSize"]
+  }
 }

@@ -121,10 +121,10 @@ artifacts {
 project.afterEvaluate {
   if (project.plugins.hasPlugin('org.unbroken-dome.test-sets') && configurations.hasProperty("latestDepTestRuntime")) {
     tasks.withType(Test) {
-      doFirst{
+      doFirst {
         def testArtifacts = configurations.testRuntime.resolvedConfiguration.resolvedArtifacts
         def latestTestArtifacts = configurations.latestDepTestRuntime.resolvedConfiguration.resolvedArtifacts
-        assert testArtifacts != latestTestArtifacts : "latestDepTest dependencies are identical to test"
+        assert testArtifacts != latestTestArtifacts: "latestDepTest dependencies are identical to test"
       }
     }
   }
@@ -267,3 +267,4 @@ plugins.withType(BasePlugin) {
     otherTasks*.mustRunAfter deleteTasks
   }
 }
+
