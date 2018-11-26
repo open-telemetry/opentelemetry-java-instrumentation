@@ -224,6 +224,130 @@ class DDSpanBuilderTest extends Specification {
     span.context().getResourceName() == expectedChildResourceName
     span.context().getSpanType() == expectedChildType
   }
+  
+  
+    def "should inherit the DD parent attributes addReference CHILD_OF"() {
+    setup:
+    def expectedName = "fakeName"
+    def expectedParentServiceName = "fakeServiceName"
+    def expectedParentResourceName = "fakeResourceName"
+    def expectedParentType = "fakeType"
+    def expectedChildServiceName = "fakeServiceName-child"
+    def expectedChildResourceName = "fakeResourceName-child"
+    def expectedChildType = "fakeType-child"
+    def expectedBaggageItemKey = "fakeKey"
+    def expectedBaggageItemValue = "fakeValue"
+
+    final DDSpan parent =
+      tracer
+        .buildSpan(expectedName)
+        .withServiceName("foo")
+        .withResourceName(expectedParentResourceName)
+        .withSpanType(expectedParentType)
+        .start()
+
+    parent.setBaggageItem(expectedBaggageItemKey, expectedBaggageItemValue)
+
+    // ServiceName and SpanType are always set by the parent  if they are not present in the child
+    DDSpan span =
+      tracer
+        .buildSpan(expectedName)
+        .withServiceName(expectedParentServiceName)
+        .addReference("child_of", parent.context())
+        .start()
+
+    println span.getBaggageItem(expectedBaggageItemKey)
+    println expectedBaggageItemValue
+    println span.context().getSpanType()
+    println expectedParentType
+
+    expect:
+    span.getOperationName() == expectedName
+    span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
+    span.context().getServiceName() == expectedParentServiceName
+    span.context().getResourceName() == expectedName
+    span.context().getSpanType() == expectedParentType
+
+    when:
+    // ServiceName and SpanType are always overwritten by the child  if they are present
+    span =
+      tracer
+        .buildSpan(expectedName)
+        .withServiceName(expectedChildServiceName)
+        .withResourceName(expectedChildResourceName)
+        .withSpanType(expectedChildType)
+        .addReference("child_of", parent.context())
+        .start()
+
+    then:
+    span.getOperationName() == expectedName
+    span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
+    span.context().getServiceName() == expectedChildServiceName
+    span.context().getResourceName() == expectedChildResourceName
+    span.context().getSpanType() == expectedChildType
+  }
+  
+  
+    def "should inherit the DD parent attributes add reference FOLLOWS_FROM"() {
+    setup:
+    def expectedName = "fakeName"
+    def expectedParentServiceName = "fakeServiceName"
+    def expectedParentResourceName = "fakeResourceName"
+    def expectedParentType = "fakeType"
+    def expectedChildServiceName = "fakeServiceName-child"
+    def expectedChildResourceName = "fakeResourceName-child"
+    def expectedChildType = "fakeType-child"
+    def expectedBaggageItemKey = "fakeKey"
+    def expectedBaggageItemValue = "fakeValue"
+
+    final DDSpan parent =
+      tracer
+        .buildSpan(expectedName)
+        .withServiceName("foo")
+        .withResourceName(expectedParentResourceName)
+        .withSpanType(expectedParentType)
+        .start()
+
+    parent.setBaggageItem(expectedBaggageItemKey, expectedBaggageItemValue)
+
+    // ServiceName and SpanType are always set by the parent  if they are not present in the child
+    DDSpan span =
+      tracer
+        .buildSpan(expectedName)
+        .withServiceName(expectedParentServiceName)
+        .addReference("follows_from", parent.context())
+        .start()
+
+    println span.getBaggageItem(expectedBaggageItemKey)
+    println expectedBaggageItemValue
+    println span.context().getSpanType()
+    println expectedParentType
+
+    expect:
+    span.getOperationName() == expectedName
+    span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
+    span.context().getServiceName() == expectedParentServiceName
+    span.context().getResourceName() == expectedName
+    span.context().getSpanType() == expectedParentType
+
+    when:
+    // ServiceName and SpanType are always overwritten by the child  if they are present
+    span =
+      tracer
+        .buildSpan(expectedName)
+        .withServiceName(expectedChildServiceName)
+        .withResourceName(expectedChildResourceName)
+        .withSpanType(expectedChildType)
+        .addReference("follows_from", parent.context())
+        .start()
+
+    then:
+    span.getOperationName() == expectedName
+    span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
+    span.context().getServiceName() == expectedChildServiceName
+    span.context().getResourceName() == expectedChildResourceName
+    span.context().getSpanType() == expectedChildType
+  }
 
   def "should track all spans in trace"() {
     setup:
