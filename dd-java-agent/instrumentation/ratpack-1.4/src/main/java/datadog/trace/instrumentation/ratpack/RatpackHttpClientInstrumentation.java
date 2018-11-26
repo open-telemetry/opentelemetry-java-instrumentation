@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.ratpack;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.instrumentation.ratpack.RatpackInstrumentation.CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -39,11 +38,6 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Default
   }
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    return CLASSLOADER_CONTAINS_RATPACK_1_4_OR_ABOVE;
-  }
-
-  @Override
   public String[] helperClassNames() {
     return new String[] {
       // http helpers
@@ -55,9 +49,6 @@ public final class RatpackHttpClientInstrumentation extends Instrumenter.Default
       "datadog.trace.instrumentation.ratpack.impl.RatpackHttpClientAdvice$StreamedResponseAction",
       "datadog.trace.instrumentation.ratpack.impl.RequestSpecInjectAdapter",
       "datadog.trace.instrumentation.ratpack.impl.WrappedRequestSpec",
-      // core helpers
-      "datadog.opentracing.scopemanager.ContextualScopeManager",
-      "datadog.opentracing.scopemanager.ScopeContext"
     };
   }
 

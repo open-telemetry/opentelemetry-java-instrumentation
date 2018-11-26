@@ -4,16 +4,12 @@ ext {
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
-apply plugin: 'version-scan'
-
-versionScan {
-  group = "io.ratpack"
-  module = 'ratpack-core'
-  versions = "[1.4.0,)"
-  scanMethods = true
-  verifyPresent = [
-    "ratpack.path.PathBinding": "getDescription",
-  ]
+muzzle {
+  pass {
+    group = "io.ratpack"
+    module = 'ratpack-core'
+    versions = "[1.4.0,)"
+  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
@@ -51,7 +47,6 @@ testSets {
 dependencies {
   main_java8CompileOnly group: 'io.ratpack', name: 'ratpack-core', version: '1.4.0'
 
-  main_java8Compile project(':dd-trace-ot')
   main_java8Compile project(':dd-java-agent:agent-tooling')
 
   main_java8Compile deps.bytebuddy
@@ -65,6 +60,7 @@ dependencies {
   compile sourceSets.main_java8.output
 
   testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
   testCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '1.4.0'
   latestDepTestCompile group: 'io.ratpack', name: 'ratpack-groovy-test', version: '+'
 }
