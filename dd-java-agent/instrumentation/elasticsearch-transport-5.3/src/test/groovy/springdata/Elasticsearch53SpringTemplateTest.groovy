@@ -153,7 +153,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     and:
     // FIXME: it looks like proper approach is to provide TEST_WRITER with an API to filter traces as they are written
     TEST_WRITER.waitForTraces(7)
-    filterIgnoredActions() == null
+    filterIgnoredActions()
     // IndexAction and PutMappingAction run in separate threads and order in which
     // these spans are closed is not defined. So we force the order if it is wrong.
     if (TEST_WRITER[3][0].resourceName == "IndexAction") {
@@ -379,7 +379,7 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
     indexName = "test-index-extract"
   }
 
-  def filterIgnoredActions() {
+  void filterIgnoredActions() {
     for (int i = 0; i < TEST_WRITER.size(); i++) {
       if (IGNORED_ACTIONS.contains(TEST_WRITER[i][0].getResourceName())) {
         TEST_WRITER.remove(i)
