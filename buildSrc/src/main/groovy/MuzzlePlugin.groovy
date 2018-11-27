@@ -220,7 +220,6 @@ class MuzzlePlugin implements Plugin<Project> {
     return inverseDirectives
   }
 
-
   /**
    * Configure a muzzle task to pass or fail a given version.
    *
@@ -315,6 +314,7 @@ class MuzzleDirective {
   List<String> additionalDependencies = new ArrayList<>()
   boolean assertPass
   boolean assertInverse = false
+
   void extraDependency(String compileString) {
     additionalDependencies.add(compileString)
   }
