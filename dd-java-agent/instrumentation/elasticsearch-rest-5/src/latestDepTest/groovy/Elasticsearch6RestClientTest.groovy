@@ -78,25 +78,8 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
     expect:
     result.status == "green"
 
-    assertTraces(2) {
+    assertTraces(1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "elasticsearch"
-          resourceName "ClusterHealthAction"
-          operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
-            "elasticsearch.action" "ClusterHealthAction"
-            "elasticsearch.request" "ClusterHealthRequest"
-            defaultTags()
-          }
-        }
-      }
-      trace(1, 1) {
         span(0) {
           serviceName "elasticsearch"
           resourceName "GET _cluster/health"
