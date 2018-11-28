@@ -53,7 +53,7 @@ public class TracedDelegatingConsumer implements Consumer {
   }
 
   @Override
-  public void handleRecoverOk(String consumerTag) {
+  public void handleRecoverOk(final String consumerTag) {
     delegate.handleRecoverOk(consumerTag);
   }
 
@@ -105,6 +105,7 @@ public class TracedDelegatingConsumer implements Consumer {
         final Span span = scope.span();
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+        throw throwable;
       } finally {
         scope.close();
       }
