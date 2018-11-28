@@ -15,6 +15,7 @@ import org.eclipse.aether.spi.connector.transport.TransporterFactory
 import org.eclipse.aether.transport.http.HttpTransporterFactory
 import org.eclipse.aether.version.Version
 import org.gradle.api.Action
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -252,6 +253,12 @@ class MuzzlePlugin implements Plugin<Project> {
         Method assertionMethod = agentCL.loadClass('datadog.trace.agent.tooling.muzzle.MuzzleVersionScanPlugin')
           .getMethod('assertInstrumentationMuzzled', ClassLoader.class, boolean.class)
         assertionMethod.invoke(null, userCL, muzzleDirective.assertPass)
+
+        for (Thread thread : Thread.getThreads()) {
+          if (thread.getName().startsWith("dd-")) {
+            throw new GradleException("Task $taskName has spawned a thread: $thread. This will prevent GC of dynamic muzzle classes. Aborting muzzle run.")
+          }
+        }
       }
     }
     runAfter.finalizedBy(muzzleTask)
