@@ -146,10 +146,10 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
     final Map<ElementMatcher, String> transformers = new HashMap<>();
     transformers.put(
         named("execute").and(takesArgument(0, Runnable.class)),
-        SetRunnableStateAdvice.class.getName());
+        SetExecuteRunnableStateAdvice.class.getName());
     transformers.put(
         named("submit").and(takesArgument(0, Runnable.class)),
-        SetRunnableStateAdvice.class.getName());
+        SetSubmitRunnableStateAdvice.class.getName());
     transformers.put(
         named("submit").and(takesArgument(0, Callable.class)),
         SetCallableStateAdvice.class.getName());
@@ -159,7 +159,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
     return transformers;
   }
 
-  public static class SetRunnableStateAdvice {
+  public static class SetExecuteRunnableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
@@ -180,6 +180,37 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
         @Advice.This final Executor executor,
         @Advice.Enter final State state,
         @Advice.Thrown final Throwable throwable) {
+      ConcurrentUtils.cleanUpOnMethodExit(executor, state, throwable);
+    }
+  }
+
+  public static class SetSubmitRunnableStateAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static State enterJobSubmit(
+        @Advice.This final Executor executor,
+        @Advice.Argument(value = 0, readOnly = false) Runnable task) {
+      final Scope scope = GlobalTracer.get().scopeManager().active();
+      if (ConcurrentUtils.shouldAttachStateToTask(task, executor)) {
+        task = RunnableWrapper.wrapIfNeeded(task);
+        final ContextStore<Runnable, State> contextStore =
+            InstrumentationContext.get(Runnable.class, State.class);
+        return ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
+      }
+      return null;
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void exitJobSubmit(
+        @Advice.This final Executor executor,
+        @Advice.Enter final State state,
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Return final Future future) {
+      if (state != null && future != null) {
+        final ContextStore<Future, State> contextStore =
+            InstrumentationContext.get(Future.class, State.class);
+        contextStore.put(future, state);
+      }
       ConcurrentUtils.cleanUpOnMethodExit(executor, state, throwable);
     }
   }
