@@ -10,6 +10,7 @@ import org.springframework.boot.context.embedded.LocalServerPort
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.util.NestedServletException
 
@@ -58,26 +59,32 @@ class SpringBootBasedTest extends AgentTestRunner {
   }
 
   def "generates spans"() {
+    setup:
+    def entity = restTemplate.withBasicAuth(USER, PASS)
+      .getForEntity("http://localhost:$port/param/$param/", String)
+
     expect:
-    restTemplate.withBasicAuth(USER, PASS)
-      .getForObject("http://localhost:$port/param/asdf1234/", String) == "Hello asdf1234"
+    entity.statusCode == status
+    if (entity.hasBody()) {
+      entity.body == "Hello asdf1234"
+    }
 
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
           operationName "servlet.request"
-          resourceName "GET /param/{parameter}/"
+          resourceName(status.value == 404 ? "404" : "GET /param/{parameter}/")
           spanType DDSpanTypes.WEB_SERVLET
           parent()
           errored false
           tags {
-            "http.url" "http://localhost:$port/param/asdf1234/"
+            "http.url" "http://localhost:$port/param/$param/"
             "http.method" "GET"
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
-            "http.status_code" 200
+            "http.status_code" status.value
             "$DDTags.USER_NAME" USER
             defaultTags()
           }
@@ -85,6 +92,11 @@ class SpringBootBasedTest extends AgentTestRunner {
         controllerSpan(it, 1, "TestController.withParam")
       }
     }
+
+    where:
+    param      | status
+    "asdf1234" | HttpStatus.OK
+    "missing"  | HttpStatus.NOT_FOUND
   }
 
   def "missing auth"() {
