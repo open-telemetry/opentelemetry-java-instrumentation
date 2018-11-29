@@ -16,14 +16,21 @@ public interface WeakMap<K, V> {
 
   void put(K key, V value);
 
+  @Slf4j
   class Provider {
     private static final AtomicReference<Supplier> provider =
         new AtomicReference<>(Supplier.DEFAULT);
 
     public static void registerIfAbsent(final Supplier provider) {
       if (provider != null && provider != Supplier.DEFAULT) {
-        Provider.provider.compareAndSet(Supplier.DEFAULT, provider);
+        if (Provider.provider.compareAndSet(Supplier.DEFAULT, provider)) {
+          log.debug("Weak map provider set to {}", provider);
+        }
       }
+    }
+
+    public static boolean isProviderRegistered() {
+      return provider.get() != Supplier.DEFAULT;
     }
 
     public static <K, V> WeakMap<K, V> newWeakMap() {
