@@ -128,9 +128,18 @@ public class ContinuableScope implements Scope, TraceScope {
 
     @Override
     public void close() {
+      close(true);
+    }
+
+    @Override
+    public void close(final boolean closeContinuationScope) {
       if (used.compareAndSet(false, true)) {
         trace.cancelContinuation(this);
-        ContinuableScope.this.close();
+        if (closeContinuationScope) {
+          ContinuableScope.this.close();
+        } else {
+          openCount.decrementAndGet();
+        }
       } else {
         log.debug("Failed to close continuation {}. Already used.", this);
       }

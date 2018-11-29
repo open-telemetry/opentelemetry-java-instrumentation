@@ -66,6 +66,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
       "scala.concurrent.impl.ExecutionContextImpl$$anon$3",
       "akka.dispatch.MessageDispatcher",
       "akka.dispatch.Dispatcher",
+      "akka.dispatch.Dispatcher$LazyExecutorServiceDelegate",
       "akka.actor.ActorSystemImpl$$anon$1",
       "akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinPool",
       "akka.dispatch.forkjoin.ForkJoinPool",
@@ -347,7 +348,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
       if (state.setContinuation(continuation)) {
         log.debug("created continuation {} from scope {}, state: {}", continuation, scope, state);
       } else {
-        continuation.close();
+        continuation.close(false);
       }
       return state;
     }
