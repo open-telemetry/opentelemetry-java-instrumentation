@@ -11,6 +11,7 @@ import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
+import io.opentracing.Tracer;
 import io.opentracing.noop.NoopScopeManager;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
@@ -18,11 +19,13 @@ import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Wrapping the consumer instead of instrumenting it directly because it doesn't get access to the
  * queue name when the message is consumed.
  */
+@Slf4j
 public class TracedDelegatingConsumer implements Consumer {
   private final String queue;
   private final Consumer delegate;
@@ -80,7 +83,7 @@ public class TracedDelegatingConsumer implements Consumer {
         queueName = "<generated>";
       }
 
-      scope =
+      final Tracer.SpanBuilder spanBuilder =
           GlobalTracer.get()
               .buildSpan("amqp.command")
               .asChildOf(parentContext)
@@ -90,11 +93,19 @@ public class TracedDelegatingConsumer implements Consumer {
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CONSUMER)
               .withTag(Tags.COMPONENT.getKey(), "rabbitmq-amqp")
               .withTag("amqp.command", "basic.deliver")
-              .withTag("amqp.exchange", envelope.getExchange())
-              .withTag("amqp.routing_key", envelope.getRoutingKey())
               .withTag("message.size", body == null ? 0 : body.length)
-              .withTag("span.origin.type", delegate.getClass().getName())
-              .startActive(true);
+              .withTag("span.origin.type", delegate.getClass().getName());
+
+      if (envelope != null) {
+        spanBuilder
+            .withTag("amqp.exchange", envelope.getExchange())
+            .withTag("amqp.routing_key", envelope.getRoutingKey());
+      }
+
+      scope = spanBuilder.startActive(true);
+
+    } catch (final Exception e) {
+      log.debug("Instrumentation error in tracing consumer", e);
     } finally {
       try {
 

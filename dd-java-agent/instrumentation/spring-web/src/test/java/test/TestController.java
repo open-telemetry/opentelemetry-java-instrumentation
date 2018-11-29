@@ -1,6 +1,7 @@
 package test;
 
 import javax.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,8 +18,11 @@ public class TestController {
   }
 
   @GetMapping("/param/{parameter}/")
-  public @ResponseBody String withParam(@PathVariable("parameter") final String param) {
-    return "Hello " + param;
+  public ResponseEntity<String> withParam(@PathVariable("parameter") final String param) {
+    if (param.equals("missing")) {
+      return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok("Hello " + param);
   }
 
   @PostMapping("/validated")
