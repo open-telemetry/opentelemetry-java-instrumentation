@@ -19,11 +19,13 @@ import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Wrapping the consumer instead of instrumenting it directly because it doesn't get access to the
  * queue name when the message is consumed.
  */
+@Slf4j
 public class TracedDelegatingConsumer implements Consumer {
   private final String queue;
   private final Consumer delegate;
@@ -101,7 +103,9 @@ public class TracedDelegatingConsumer implements Consumer {
       }
 
       scope = spanBuilder.startActive(true);
-      
+
+    } catch (final Exception e) {
+      log.debug("Instrumentation error in tracing consumer", e);
     } finally {
       try {
 
