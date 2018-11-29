@@ -12,7 +12,9 @@ public class TextMapExtractAdapter implements TextMap {
 
   public TextMapExtractAdapter(final Map<String, Object> headers) {
     for (final Map.Entry<String, Object> entry : headers.entrySet()) {
-      map.put(entry.getKey(), entry.getValue().toString());
+      if (entry != null && entry.getValue() != null) {
+        map.put(entry.getKey(), entry.getValue().toString());
+      }
     }
   }
 
