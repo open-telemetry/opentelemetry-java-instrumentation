@@ -40,6 +40,8 @@ public class Config {
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String JMX_TAGS = "trace.jmx.tags";
   public static final String HEADER_TAGS = "trace.header.tags";
+  public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
+      "trace.runtime.context.field.injection";
   public static final String JMX_FETCH_ENABLED = "jmxfetch.enabled";
   public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
   public static final String JMX_FETCH_CHECK_PERIOD = "jmxfetch.check-period";
@@ -56,6 +58,8 @@ public class Config {
 
   public static final String DEFAULT_AGENT_HOST = "localhost";
   public static final int DEFAULT_TRACE_AGENT_PORT = 8126;
+
+  private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
 
   private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = false;
   private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
@@ -80,6 +84,7 @@ public class Config {
   private final Map<String, String> spanTags;
   private final Map<String, String> jmxTags;
   @Getter private final Map<String, String> headerTags;
+  @Getter private final boolean runtimeContextFieldInjection;
   @Getter private final boolean jmxFetchEnabled;
   @Getter private final List<String> jmxFetchMetricsConfigs;
   @Getter private final Integer jmxFetchCheckPeriod;
@@ -108,8 +113,12 @@ public class Config {
     globalTags = getMapSettingFromEnvironment(GLOBAL_TAGS, null);
     spanTags = getMapSettingFromEnvironment(SPAN_TAGS, null);
     jmxTags = getMapSettingFromEnvironment(JMX_TAGS, null);
-
     headerTags = getMapSettingFromEnvironment(HEADER_TAGS, null);
+
+    runtimeContextFieldInjection =
+        getBooleanSettingFromEnvironment(
+            RUNTIME_CONTEXT_FIELD_INJECTION, DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION);
+
     jmxFetchEnabled =
         getBooleanSettingFromEnvironment(JMX_FETCH_ENABLED, DEFAULT_JMX_FETCH_ENABLED);
     jmxFetchMetricsConfigs = getListSettingFromEnvironment(JMX_FETCH_METRICS_CONFIGS, null);
@@ -142,8 +151,12 @@ public class Config {
     globalTags = getPropertyMapValue(properties, GLOBAL_TAGS, parent.globalTags);
     spanTags = getPropertyMapValue(properties, SPAN_TAGS, parent.spanTags);
     jmxTags = getPropertyMapValue(properties, JMX_TAGS, parent.jmxTags);
-
     headerTags = getPropertyMapValue(properties, HEADER_TAGS, parent.headerTags);
+
+    runtimeContextFieldInjection =
+        getPropertyBooleanValue(
+            properties, RUNTIME_CONTEXT_FIELD_INJECTION, parent.runtimeContextFieldInjection);
+
     jmxFetchEnabled =
         getPropertyBooleanValue(properties, JMX_FETCH_ENABLED, parent.jmxFetchEnabled);
     jmxFetchMetricsConfigs =

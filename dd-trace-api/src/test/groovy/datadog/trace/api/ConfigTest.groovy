@@ -37,6 +37,7 @@ class ConfigTest extends Specification {
     config.mergedSpanTags == [:]
     config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId()]
     config.headerTags == [:]
+    config.runtimeContextFieldInjection == true
     config.jmxFetchEnabled == false
     config.jmxFetchMetricsConfigs == []
     config.jmxFetchCheckPeriod == null
@@ -60,6 +61,7 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + SPAN_TAGS, "c:3")
     System.setProperty(PREFIX + JMX_TAGS, "d:4")
     System.setProperty(PREFIX + HEADER_TAGS, "e:5")
+    System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
     System.setProperty(PREFIX + JMX_FETCH_ENABLED, "true")
     System.setProperty(PREFIX + JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
     System.setProperty(PREFIX + JMX_FETCH_CHECK_PERIOD, "100")
@@ -81,6 +83,7 @@ class ConfigTest extends Specification {
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId()]
     config.headerTags == [e: "5"]
+    config.runtimeContextFieldInjection == false
     config.jmxFetchEnabled == true
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100

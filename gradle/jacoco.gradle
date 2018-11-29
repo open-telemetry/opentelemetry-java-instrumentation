@@ -36,6 +36,13 @@ project.ext.minimumBranchCoverage = 0.9
 project.ext.minimumInstructionCoverage = 0.9
 
 afterEvaluate {
+  test {
+    jacoco {
+      // Make sure that excluded classes do not get jacoc instrumentation applied since it may confuse apm agent in some cases
+      excludes = project.excludedClassesConverage
+    }
+  }
+
   jacocoTestCoverageVerification {
     violationRules {
       rule {

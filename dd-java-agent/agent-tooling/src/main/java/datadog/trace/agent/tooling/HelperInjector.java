@@ -5,7 +5,9 @@ import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOAD
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -40,7 +42,7 @@ public class HelperInjector implements Transformer {
   }
 
   public HelperInjector(final Map<String, byte[]> helperMap) {
-    this.helperClassNames = helperMap.keySet();
+    helperClassNames = helperMap.keySet();
     this.helperMap = new LinkedHashMap<>(helperClassNames.size());
     for (final String helperName : helperClassNames) {
       final TypeDescription typeDesc =
@@ -48,6 +50,14 @@ public class HelperInjector implements Transformer {
               helperName, 0, null, Collections.<TypeDescription.Generic>emptyList());
       this.helperMap.put(typeDesc, helperMap.get(helperName));
     }
+  }
+
+  public static HelperInjector forDynamicTypes(final Collection<DynamicType.Unloaded<?>> helpers) {
+    final Map<String, byte[]> bytes = new HashMap<>(helpers.size());
+    for (final DynamicType.Unloaded<?> helper : helpers) {
+      bytes.put(helper.getTypeDescription().getName(), helper.getBytes());
+    }
+    return new HelperInjector(bytes);
   }
 
   private synchronized Map<TypeDescription, byte[]> getHelperMap() throws IOException {

@@ -5,6 +5,7 @@ import datadog.trace.api.Trace
 import io.opentracing.util.GlobalTracer
 import spock.lang.Shared
 
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
@@ -18,13 +19,16 @@ import java.util.concurrent.TimeUnit
 
 class ExecutorInstrumentationTest extends AgentTestRunner {
   @Shared
-  Method submitMethod
-  @Shared
   Method executeMethod
+  @Shared
+  Method submitRunnableMethod
+  @Shared
+  Method submitCallableMethod
 
   def setupSpec() {
     executeMethod = Executor.getMethod("execute", Runnable)
-    submitMethod = ExecutorService.getMethod("submit", Callable)
+    submitRunnableMethod = ExecutorService.getMethod("submit", Runnable)
+    submitCallableMethod = ExecutorService.getMethod("submit", Callable)
   }
 
   // more useful name breaks java9 javac
@@ -62,9 +66,11 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     // Unfortunately, there's no simple way to test the cross product of methods/pools.
     where:
     poolImpl                                                                                      | method
-    new ForkJoinPool()                                                                            | submitMethod
+    new ForkJoinPool()                                                                            | submitRunnableMethod
+    new ForkJoinPool()                                                                            | submitCallableMethod
     new ForkJoinPool()                                                                            | executeMethod
-    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitMethod
+    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitRunnableMethod
+    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitCallableMethod
     new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | executeMethod
   }
 
@@ -73,8 +79,9 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
   def "#poolImpl reports after canceled jobs"() {
     setup:
     def pool = poolImpl
-    final AsyncChild child = new AsyncChild(true, true)
-    List<Future> jobFutures = new ArrayList<Future>()
+    def m = method
+    List<AsyncChild> children = new ArrayList<>()
+    List<Future> jobFutures = new ArrayList<>()
 
     new Runnable() {
       @Override
@@ -83,8 +90,20 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
         ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
         try {
           for (int i = 0; i < 20; ++i) {
-            Future f = pool.submit((Callable) child)
-            jobFutures.add(f)
+            // Our current instrumentation instrumentation does not behave very well
+            // if we try to reuse Callable/Runnable. Namely we would be getting 'orphaned'
+            // child traces sometimes since state can contain only one continuation - and
+            // we do not really have a good way for attributing work to correct parent span
+            // if we reuse Callable/Runnable.
+            // Solution for now is to never reuse a Callable/Runnable.
+            final AsyncChild child = new AsyncChild(true, true)
+            children.add(child)
+            try {
+              Future f = m.invoke(pool, new AsyncChild())
+              jobFutures.add(f)
+            } catch (InvocationTargetException e) {
+              throw e.getCause()
+            }
           }
         } catch (RejectedExecutionException e) {
         }
@@ -92,18 +111,23 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
         for (Future f : jobFutures) {
           f.cancel(false)
         }
-        child.unblock()
+        for (AsyncChild child : children) {
+          child.unblock()
+        }
       }
     }.run()
 
     TEST_WRITER.waitForTraces(1)
 
     expect:
+    // FIXME: we should improve this test to make sure continuations are actually closed
     TEST_WRITER.size() == 1
 
     where:
-    poolImpl                                                                                      | _
-    new ForkJoinPool()                                                                            | _
-    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | _
+    poolImpl                                                                                      | method
+    new ForkJoinPool()                                                                            | submitRunnableMethod
+    new ForkJoinPool()                                                                            | submitCallableMethod
+    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitRunnableMethod
+    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitCallableMethod
   }
 }

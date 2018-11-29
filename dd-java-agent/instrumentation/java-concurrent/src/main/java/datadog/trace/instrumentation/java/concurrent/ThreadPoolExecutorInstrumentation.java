@@ -18,6 +18,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
 @AutoService(Instrumenter.class)
+/**
+ * Disable instrumentation for executors that cannot take our runnable wrappers.
+ *
+ * <p>FIXME: We should remove this once https://github.com/raphw/byte-buddy/issues/558 is fixed
+ */
 public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
 
   public ThreadPoolExecutorInstrumentation() {

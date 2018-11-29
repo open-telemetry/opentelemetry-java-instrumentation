@@ -32,7 +32,19 @@ public interface TraceScope {
      */
     TraceScope activate();
 
-    /** Cancel the continuation. */
+    /**
+     * Cancel the continuation. This also closes parent scope.
+     *
+     * <p>FIXME: the fact that this is closing parent scope is confusing, we should review this in
+     * new API.
+     */
     void close();
+
+    /**
+     * Close the continuation.
+     *
+     * @param closeContinuationScope true iff parent scope should also be closed
+     */
+    void close(boolean closeContinuationScope);
   }
 }
