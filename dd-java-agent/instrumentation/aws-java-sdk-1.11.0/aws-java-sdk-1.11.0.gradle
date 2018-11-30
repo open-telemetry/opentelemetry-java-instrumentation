@@ -9,68 +9,9 @@ muzzle {
   pass {
     group = "com.amazonaws"
     module = "aws-java-sdk-core"
-    versions = "[1.10.33, 1.11.0)"
+    versions = "[1.10.33,)"
+    assertInverse = true
   }
-
-  pass {
-    group = "com.amazonaws"
-    module = "aws-java-sdk-core"
-    versions = "[1.11.0, 1.11.50)"
-  }
-
-  pass {
-    group = "com.amazonaws"
-    module = "aws-java-sdk-core"
-    versions = "[1.11.50, 1.11.100)"
-  }
-
-  pass {
-    group = "com.amazonaws"
-    module = "aws-java-sdk-core"
-    versions = "[1.11.100, 1.11.150)"
-  }
-
-  pass {
-    group = "com.amazonaws"
-    module = "aws-java-sdk-core"
-    versions = "[1.11.150, 1.11.200)"
-  }
-
-  pass {
-    group = "com.amazonaws"
-    module = "aws-java-sdk-core"
-    versions = "[1.11.200, 1.11.250)"
-  }
-
-  pass {
-    group = "com.amazonaws"
-    module = "aws-java-sdk-core"
-    versions = "[1.11.250, 1.11.300)"
-  }
-
-  pass {
-    group = "com.amazonaws"
-    module = "aws-java-sdk-core"
-    versions = "[1.11.300, 1.11.350)"
-  }
-
-  pass {
-    group = "com.amazonaws"
-    module = "aws-java-sdk-core"
-    versions = "[1.11.350, 1.11.400)"
-  }
-
-  pass {
-    group = "com.amazonaws"
-    module = "aws-java-sdk-core"
-    versions = "[1.11.400,)"
-  }
-
-//  fail {
-//    group = "com.amazonaws"
-//    module = "aws-java-sdk-core"
-//    versions = "[,1.10.33)"
-//  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
