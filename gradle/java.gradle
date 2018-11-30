@@ -67,10 +67,9 @@ dependencies {
   testCompile deps.spock
   testCompile deps.groovy
   testCompile deps.testLogging
-  testCompile 'info.solidsoft.spock:spock-global-unroll:0.5.1'
-  testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.17.1'
-
+  testCompile group: 'info.solidsoft.spock', name: 'spock-global-unroll', version: '0.5.1'
   testCompile group: 'com.anotherchrisberry', name: 'spock-retry', version: '0.6.4'
+  testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
 }
 
 tasks.withType(Javadoc) {
