@@ -64,10 +64,6 @@ repositories {
 }
 
 dependencies {
-  testCompile deps.junit
-  testCompile group: 'org.assertj', name: 'assertj-core', version: '2.9.+'
-  testCompile group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
-
   testCompile deps.spock
   testCompile deps.groovy
   testCompile deps.testLogging

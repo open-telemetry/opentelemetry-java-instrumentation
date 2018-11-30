@@ -40,6 +40,8 @@ dependencies {
   testImplementation deps.autoservice
 
   testCompile project(":dd-java-agent:testing")
+  testCompile group: 'org.assertj', name: 'assertj-core', version: '2.9.+'
+  testCompile group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6'
   testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
   testCompile 'com.github.stefanbirkner:system-rules:1.17.1'
