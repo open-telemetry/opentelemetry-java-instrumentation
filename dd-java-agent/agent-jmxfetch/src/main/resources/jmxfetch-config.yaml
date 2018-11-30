@@ -1,5 +1,6 @@
 init_config:
   is_jmx: true
+  new_gc_metrics: true
 
 instances:
 - jmx_url: service:jmx:local:///
