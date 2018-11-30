@@ -14,7 +14,7 @@ ext {
     groovy     : groovyVer,
     junit      : "4.12",
     logback    : "1.2.3",
-    lombok     : "1.18.2",
+    lombok     : "1.18.4",
     bytebuddy  : "1.9.5",
     scala      : "2.11.12",
   ]
