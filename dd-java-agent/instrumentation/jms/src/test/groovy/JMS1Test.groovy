@@ -51,7 +51,7 @@ class JMS1Test extends AgentTestRunner {
       producerTrace(it, 0, jmsResourceName)
       trace(1, 1) { // Consumer trace
         span(0) {
-          childOf TEST_WRITER.firstTrace().get(2)
+          childOf TEST_WRITER[0][0]
           serviceName "jms"
           operationName "jms.consume"
           resourceName "Consumed from $jmsResourceName"
@@ -103,7 +103,7 @@ class JMS1Test extends AgentTestRunner {
       producerTrace(it, 0, jmsResourceName)
       trace(1, 1) { // Consumer trace
         span(0) {
-          childOf TEST_WRITER.firstTrace().get(2)
+          childOf TEST_WRITER[0][0]
           serviceName "jms"
           operationName "jms.onMessage"
           resourceName "Received from $jmsResourceName"
@@ -269,41 +269,9 @@ class JMS1Test extends AgentTestRunner {
   }
 
   def producerTrace(ListWriterAssert writer, int index, String jmsResourceName) {
-    writer.trace(index, 3) {
+    writer.trace(index, 1) {
       span(0) {
         parent()
-        serviceName "jms"
-        operationName "jms.produce"
-        resourceName "Produced for $jmsResourceName"
-        spanType DDSpanTypes.MESSAGE_PRODUCER
-        errored false
-
-        tags {
-          defaultTags()
-          "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_PRODUCER
-          "${Tags.COMPONENT.key}" "jms"
-          "${Tags.SPAN_KIND.key}" "producer"
-          "span.origin.type" ActiveMQMessageProducer.name
-        }
-      }
-      span(1) {
-        childOf span(0)
-        serviceName "jms"
-        operationName "jms.produce"
-        resourceName "Produced for $jmsResourceName"
-        spanType DDSpanTypes.MESSAGE_PRODUCER
-        errored false
-
-        tags {
-          defaultTags()
-          "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_PRODUCER
-          "${Tags.COMPONENT.key}" "jms"
-          "${Tags.SPAN_KIND.key}" "producer"
-          "span.origin.type" ActiveMQMessageProducer.name
-        }
-      }
-      span(2) {
-        childOf span(1)
         serviceName "jms"
         operationName "jms.produce"
         resourceName "Produced for $jmsResourceName"
@@ -324,7 +292,7 @@ class JMS1Test extends AgentTestRunner {
   def consumerTrace(ListWriterAssert writer, int index, String jmsResourceName, origin) {
     writer.trace(index, 1) {
       span(0) {
-        childOf TEST_WRITER.firstTrace().get(2)
+        childOf TEST_WRITER[0][0]
         serviceName "jms"
         operationName "jms.onMessage"
         resourceName "Received from $jmsResourceName"
