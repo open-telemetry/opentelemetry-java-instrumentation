@@ -1,0 +1,6 @@
+description = 'dd-trace-ext'
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compile project(':dd-trace')
+}

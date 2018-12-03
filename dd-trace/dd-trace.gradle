@@ -1,0 +1,17 @@
+description = 'dd-trace'
+apply from: "${rootDir}/gradle/java.gradle"
+
+// TODO: Move over any special setups from dd-trace-ot (e.g. trace-agent integration tests).
+
+dependencies {
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  compile project(':dd-trace-api')
+
+  compile deps.jackson
+  compile deps.slf4j
+  // any higher versions seems to break ES tests with this exception:
+  // java.lang.NoSuchMethodError: com.fasterxml.jackson.dataformat.smile.SmileGenerator.getOutputContext()
+  compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.14'
+}
