@@ -7,15 +7,14 @@ import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
+import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.COMPONENT_NAME
+import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
 class UrlConnectionTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.httpurlconnection.enabled", "true")
-  }
 
   private static final int INVALID_PORT = TestUtils.randomOpenPort()
 
-  def "trace request with connection failure"() {
+  def "trace request with connection failure #scheme"() {
     when:
     runUnderTrace("someTrace") {
       URLConnection connection = url.openConnection()
@@ -41,11 +40,11 @@ class UrlConnectionTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "http.request.input-stream"
+          operationName OPERATION_NAME
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT.key" component
+            "$Tags.COMPONENT.key" COMPONENT_NAME
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$url"
@@ -60,9 +59,9 @@ class UrlConnectionTest extends AgentTestRunner {
     }
 
     where:
-    scheme  | component
-    "http"  | "HttpURLConnection"
-    "https" | "DelegateHttpsURLConnection"
+    scheme  | _
+    "http"  | _
+    "https" | _
 
     url = new URI("$scheme://localhost:$INVALID_PORT").toURL()
   }
