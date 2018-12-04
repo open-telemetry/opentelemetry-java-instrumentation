@@ -1,4 +1,5 @@
 import com.google.common.io.Files
+import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.api.DDSpanTypes
@@ -14,6 +15,7 @@ import org.hornetq.core.config.impl.ConfigurationImpl
 import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory
 import org.hornetq.core.remoting.impl.netty.NettyAcceptorFactory
+import org.hornetq.core.server.HornetQServer
 import org.hornetq.core.server.HornetQServers
 import org.hornetq.jms.client.HornetQMessageConsumer
 import org.hornetq.jms.client.HornetQMessageProducer
@@ -28,6 +30,8 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicReference
 
 class JMS2Test extends AgentTestRunner {
+  @Shared
+  HornetQServer server
   @Shared
   String messageText = "a message"
   @Shared
@@ -50,7 +54,8 @@ class JMS2Test extends AgentTestRunner {
     config.setAcceptorConfigurations([new TransportConfiguration(NettyAcceptorFactory.name),
                                       new TransportConfiguration(InVMAcceptorFactory.name)].toSet())
 
-    HornetQServers.newHornetQServer(config).start()
+    server = HornetQServers.newHornetQServer(config)
+    server.start()
 
     def serverLocator = HornetQClient.createServerLocatorWithoutHA(new TransportConfiguration(InVMConnectorFactory.name))
     def sf = serverLocator.createSessionFactory()
@@ -70,6 +75,10 @@ class JMS2Test extends AgentTestRunner {
     session.run()
   }
 
+  def cleanupSpec() {
+    server.stop()
+  }
+
   def "sending a message to #jmsResourceName generates spans"() {
     setup:
     def producer = session.createProducer(destination)
@@ -83,24 +92,7 @@ class JMS2Test extends AgentTestRunner {
     receivedMessage.text == messageText
     assertTraces(2) {
       producerTrace(it, 0, jmsResourceName)
-      trace(1, 1) { // Consumer trace
-        span(0) {
-          childOf TEST_WRITER.firstTrace().get(0)
-          serviceName "jms"
-          operationName "jms.consume"
-          resourceName "Consumed from $jmsResourceName"
-          spanType DDSpanTypes.MESSAGE_PRODUCER
-          errored false
-
-          tags {
-            defaultTags(true)
-            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
-            "${Tags.COMPONENT.key}" "jms"
-            "${Tags.SPAN_KIND.key}" "consumer"
-            "span.origin.type" HornetQMessageConsumer.name
-          }
-        }
-      }
+      consumerTrace(it, 1, jmsResourceName, false, HornetQMessageConsumer)
     }
 
     cleanup:
@@ -135,24 +127,7 @@ class JMS2Test extends AgentTestRunner {
     expect:
     assertTraces(2) {
       producerTrace(it, 0, jmsResourceName)
-      trace(1, 1) { // Consumer trace
-        span(0) {
-          childOf TEST_WRITER.firstTrace().get(0)
-          serviceName "jms"
-          operationName "jms.onMessage"
-          resourceName "Received from $jmsResourceName"
-          spanType DDSpanTypes.MESSAGE_PRODUCER
-          errored false
-
-          tags {
-            defaultTags(true)
-            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
-            "${Tags.COMPONENT.key}" "jms"
-            "${Tags.SPAN_KIND.key}" "consumer"
-            "span.origin.type" { t -> t.contains("JMS2Test") }
-          }
-        }
-      }
+      consumerTrace(it, 1, jmsResourceName, true, consumer.messageListener.class)
     }
     // This check needs to go after all traces have been accounted for
     messageRef.get().text == messageText
@@ -247,7 +222,7 @@ class JMS2Test extends AgentTestRunner {
     session.createTopic("someTopic") | "Topic someTopic"
   }
 
-  def producerTrace(ListWriterAssert writer, int index, String jmsResourceName) {
+  static producerTrace(ListWriterAssert writer, int index, String jmsResourceName) {
     writer.trace(index, 1) {
       span(0) {
         parent()
@@ -268,22 +243,27 @@ class JMS2Test extends AgentTestRunner {
     }
   }
 
-  def consumerTrace(ListWriterAssert writer, int index, String jmsResourceName, origin) {
+  static consumerTrace(ListWriterAssert writer, int index, String jmsResourceName, boolean messageListener, Class origin, DDSpan parentSpan = TEST_WRITER[0][0]) {
     writer.trace(index, 1) {
       span(0) {
-        childOf TEST_WRITER.firstTrace().get(2)
+        childOf parentSpan
         serviceName "jms"
-        operationName "jms.onMessage"
-        resourceName "Received from $jmsResourceName"
+        if (messageListener) {
+          operationName "jms.onMessage"
+          resourceName "Received from $jmsResourceName"
+        } else {
+          operationName "jms.consume"
+          resourceName "Consumed from $jmsResourceName"
+        }
         spanType DDSpanTypes.MESSAGE_PRODUCER
         errored false
 
         tags {
-          defaultTags()
+          defaultTags(true)
           "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
           "${Tags.COMPONENT.key}" "jms"
           "${Tags.SPAN_KIND.key}" "consumer"
-          "span.origin.type" origin
+          "span.origin.type" origin.name
         }
       }
     }

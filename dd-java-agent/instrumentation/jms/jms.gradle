@@ -35,6 +35,8 @@ dependencies {
   testCompile group: 'org.apache.activemq', name: 'activemq-pool', version: '5.14.5'
   testCompile group: 'org.apache.activemq', name: 'activemq-broker', version: '5.14.5'
 
+  testCompile group: 'org.springframework', name: 'spring-jms', version: '4.3.21.RELEASE' // 4.x required for Java 7
+
   latestDepTestCompile group: 'org.hornetq', name: 'hornetq-jms-client', version: '2.4.7.Final'
   latestDepTestCompile group: 'org.hornetq', name: 'hornetq-jms-server', version: '2.4.7.Final'
 }
