@@ -16,7 +16,7 @@ import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.opentracing.tag.Tags;
-import java.net.UnknownHostException;
+import java.util.concurrent.TimeoutException;
 import org.bson.Document;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -36,7 +36,6 @@ public class MongoClientInstrumentationTest {
 
   public static void startLocalMongo() throws Exception {
     final MongodStarter starter = MongodStarter.getDefaultInstance();
-
     final IMongodConfig mongodConfig =
         new MongodConfigBuilder()
             .version(Version.Main.PRODUCTION)
@@ -62,6 +61,9 @@ public class MongoClientInstrumentationTest {
   public static void setup() throws Exception {
     IntegrationTestUtils.registerOrReplaceGlobalTracer(tracer);
     startLocalMongo();
+    // Embeded Mongo uses HttpUrlConnection to download things so we have to clear traces before
+    // going to tests
+    writer.clear();
 
     client = new MongoClient(MONGO_HOST, MONGO_PORT);
   }
@@ -84,7 +86,7 @@ public class MongoClientInstrumentationTest {
   }
 
   @Test
-  public void insertOperation() throws UnknownHostException {
+  public void insertOperation() throws TimeoutException, InterruptedException {
     final MongoDatabase db = client.getDatabase(MONGO_DB_NAME);
     final String collectionName = "testCollection";
     db.createCollection(collectionName);

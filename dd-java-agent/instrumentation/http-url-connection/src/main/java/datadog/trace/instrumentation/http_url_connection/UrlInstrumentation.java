@@ -32,11 +32,6 @@ public class UrlInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return is(URL.class);
   }

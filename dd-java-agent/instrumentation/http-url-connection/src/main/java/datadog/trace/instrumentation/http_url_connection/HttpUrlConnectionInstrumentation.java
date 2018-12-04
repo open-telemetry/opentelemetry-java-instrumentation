@@ -17,11 +17,14 @@ import datadog.trace.bootstrap.InstrumentationContext;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
+import io.opentracing.propagation.Format;
+import io.opentracing.propagation.TextMap;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
 import net.bytebuddy.asm.Advice;
@@ -36,11 +39,6 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return safeHasSuperType(named("java.net.HttpURLConnection"))
         // This class is a simple delegator. Skip because it does not update its `connected` field.
@@ -50,15 +48,16 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      HttpUrlConnectionInstrumentation.class.getName() + "$HttpURLState",
-      HttpUrlConnectionInstrumentation.class.getName() + "$HttpURLState$1"
+      HttpUrlConnectionInstrumentation.class.getName() + "$HeadersInjectAdapter",
+      HttpUrlConnectionInstrumentation.class.getName() + "$HttpUrlState",
+      HttpUrlConnectionInstrumentation.class.getName() + "$HttpUrlState$1"
     };
   }
 
   @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(
-        "java.net.HttpURLConnection", getClass().getName() + "$HttpURLState");
+        "java.net.HttpURLConnection", getClass().getName() + "$HttpUrlState");
   }
 
   @Override
@@ -73,131 +72,170 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
   public static class HttpUrlConnectionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(
+    public static HttpUrlState methodEnter(
         @Advice.This final HttpURLConnection thiz,
-        @Advice.FieldValue("connected") final boolean connected,
-        @Advice.Origin("#m") final String methodName) {
-      final ContextStore<HttpURLConnection, HttpURLState> contextStore =
-          InstrumentationContext.get(HttpURLConnection.class, HttpURLState.class);
-      final HttpURLState state = contextStore.putIfAbsent(thiz, HttpURLState.FACTORY);
+        @Advice.FieldValue("connected") final boolean connected) {
 
-      String operationName = "http.request";
+      final ContextStore<HttpURLConnection, HttpUrlState> contextStore =
+          InstrumentationContext.get(HttpURLConnection.class, HttpUrlState.class);
+      final HttpUrlState state = contextStore.putIfAbsent(thiz, HttpUrlState.FACTORY);
 
-      switch (methodName) {
-        case "connect":
-          if (connected) {
-            return null;
+      synchronized (state) {
+        /*
+         * AgentWriter uses HttpURLConnection to report to the trace-agent. We don't want to trace
+         * those requests. Check after the connected test above because getRequestProperty will
+         * throw an exception if already connected.
+         */
+        final boolean isTraceRequest =
+            Thread.currentThread().getName().equals("dd-agent-writer")
+                || (!connected && thiz.getRequestProperty("Datadog-Meta-Lang") != null);
+        if (isTraceRequest) {
+          state.finish();
+          return null;
+        }
+
+        final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
+        if (callDepth > 0) {
+          return null;
+        }
+
+        if (!state.hasSpan() && !state.isFinished()) {
+          final Span span = state.startSpan(thiz);
+          if (!connected) {
+            GlobalTracer.get()
+                .inject(
+                    span.context(), Format.Builtin.HTTP_HEADERS, new HeadersInjectAdapter(thiz));
           }
-          /*
-           * Ideally, we would like to only have a single span for each of the output and input streams,
-           * but since headers are also sent on connect(), there wouldn't be a span to mark as parent if
-           * we don't create a span here.
-           */
-          operationName += ".connect";
-          break;
-
-        case "getOutputStream":
-          if (state.calledOutputStream) {
-            return null;
-          }
-          state.calledOutputStream = true;
-          operationName += ".output-stream";
-          break;
-
-        case "getInputStream":
-          if (state.calledInputStream) {
-            return null;
-          }
-          state.calledInputStream = true;
-          operationName += ".input-stream";
-          break;
+        }
+        return state;
       }
-
-      /*
-       * AgentWriter uses HttpURLConnection to report to the trace-agent. We don't want to trace
-       * those requests. Check after the connected test above because getRequestProperty will
-       * throw an exception if already connected.
-       */
-      final boolean isTraceRequest =
-          Thread.currentThread().getName().equals("dd-agent-writer")
-              || (!connected && thiz.getRequestProperty("Datadog-Meta-Lang") != null);
-      if (isTraceRequest) {
-        return null;
-      }
-
-      final Tracer tracer = GlobalTracer.get();
-      if (tracer.activeSpan() == null) {
-        // We don't want this as a top level span.
-        return null;
-      }
-
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
-      if (callDepth > 0) {
-        return null;
-      }
-
-      final Scope scope =
-          tracer
-              .buildSpan(operationName)
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
-              .startActive(true);
-
-      final URL url = thiz.getURL();
-      final Span span = scope.span();
-      Tags.COMPONENT.set(scope.span(), thiz.getClass().getSimpleName());
-      Tags.HTTP_URL.set(span, url.toString());
-      Tags.PEER_HOSTNAME.set(span, url.getHost());
-      if (url.getPort() > 0) {
-        Tags.PEER_PORT.set(span, url.getPort());
-      } else if (thiz instanceof HttpsURLConnection) {
-        Tags.PEER_PORT.set(span, 443);
-      } else {
-        Tags.PEER_PORT.set(span, 80);
-      }
-      Tags.HTTP_METHOD.set(span, thiz.getRequestMethod());
-
-      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
+    public static void methodExit(
+        @Advice.Enter final HttpUrlState state,
         @Advice.FieldValue("responseCode") final int responseCode,
-        @Advice.Enter final Scope scope,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Origin("#m") final String methodName) {
 
-      if (scope == null) {
+      if (state == null) {
         return;
       }
 
-      final Span span = scope.span();
-      if (throwable != null) {
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-      } else if (responseCode > 0) {
-        /*
-         * responseCode field cache is sometimes not populated.
-         * We can't call getResponseCode() due to some unwanted side-effects
-         * (e.g. breaks getOutputStream).
-         */
-        Tags.HTTP_STATUS.set(span, responseCode);
+      synchronized (state) {
+        if (state.hasSpan() && !state.isFinished()) {
+          if (throwable != null) {
+            state.finishSpan(throwable);
+          } else if ("getInputStream".equals(methodName)) {
+            state.finishSpan(responseCode);
+          }
+        }
       }
-      scope.close();
+
       CallDepthThreadLocalMap.reset(HttpURLConnection.class);
     }
   }
 
-  public static class HttpURLState {
+  public static class HeadersInjectAdapter implements TextMap {
 
-    public static final ContextStore.Factory<HttpURLState> FACTORY =
-        new ContextStore.Factory<HttpURLState>() {
+    private final HttpURLConnection connection;
+
+    public HeadersInjectAdapter(final HttpURLConnection connection) {
+      this.connection = connection;
+    }
+
+    @Override
+    public void put(final String key, final String value) {
+      try {
+        connection.setRequestProperty(key, value);
+      } catch (final IllegalStateException e) {
+        // There are cases when this can through an exception. E.g. some implementations have
+        // 'connecting' state. Just guard against that here, there is not much we can do at this
+        // point.
+      }
+    }
+
+    @Override
+    public Iterator<Map.Entry<String, String>> iterator() {
+      throw new UnsupportedOperationException(
+          "This class should be used only with tracer#inject()");
+    }
+  }
+
+  public static class HttpUrlState {
+
+    public static final String OPERATION_NAME = "http.request";
+    public static final String COMPONENT_NAME = "http-url-connection";
+
+    public static final ContextStore.Factory<HttpUrlState> FACTORY =
+        new ContextStore.Factory<HttpUrlState>() {
           @Override
-          public HttpURLState create() {
-            return new HttpURLState();
+          public HttpUrlState create() {
+            return new HttpUrlState();
           }
         };
 
-    public boolean calledOutputStream = false;
-    public boolean calledInputStream = false;
+    private volatile Span span = null;
+    private volatile boolean finished = false;
+
+    public Span startSpan(final HttpURLConnection connection) {
+      final Tracer.SpanBuilder builder =
+          GlobalTracer.get()
+              .buildSpan(OPERATION_NAME)
+              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
+              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT);
+      try (final Scope scope = builder.startActive(false)) {
+        span = scope.span();
+        final URL url = connection.getURL();
+        Tags.COMPONENT.set(span, COMPONENT_NAME);
+        Tags.HTTP_URL.set(span, url.toString());
+        Tags.PEER_HOSTNAME.set(span, url.getHost());
+        if (url.getPort() > 0) {
+          Tags.PEER_PORT.set(span, url.getPort());
+        } else if (connection instanceof HttpsURLConnection) {
+          Tags.PEER_PORT.set(span, 443);
+        } else {
+          Tags.PEER_PORT.set(span, 80);
+        }
+        Tags.HTTP_METHOD.set(span, connection.getRequestMethod());
+        return span;
+      }
+    }
+
+    public boolean hasSpan() {
+      return span != null;
+    }
+
+    public boolean isFinished() {
+      return finished;
+    }
+
+    public void finish() {
+      finished = true;
+    }
+
+    public void finishSpan(final Throwable throwable) {
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+        Tags.ERROR.set(span, true);
+        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+      }
+      span = null;
+      finished = true;
+    }
+
+    public void finishSpan(final int responseCode) {
+      /*
+       * responseCode field is sometimes not populated.
+       * We can't call getResponseCode() due to some unwanted side-effects
+       * (e.g. breaks getOutputStream).
+       */
+      if (responseCode > 0) {
+        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+          Tags.HTTP_STATUS.set(span, responseCode);
+          span = null;
+          finished = true;
+        }
+      }
+    }
   }
 }

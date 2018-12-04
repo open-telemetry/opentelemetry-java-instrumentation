@@ -29,6 +29,10 @@ public class MongoAsyncClientInstrumentationTest {
   public static void setup() throws Exception {
     IntegrationTestUtils.registerOrReplaceGlobalTracer(tracer);
     MongoClientInstrumentationTest.startLocalMongo();
+    // Embeded Mongo uses HttpUrlConnection to download things so we have to clear traces before
+    // going to tests
+    writer.clear();
+
     client = MongoClients.create("mongodb://" + MONGO_HOST + ":" + MONGO_PORT);
   }
 
@@ -50,7 +54,7 @@ public class MongoAsyncClientInstrumentationTest {
   }
 
   @Test
-  public void insertOperation() throws InterruptedException, Exception {
+  public void insertOperation() throws Exception {
     final MongoDatabase db = client.getDatabase(MONGO_DB_NAME);
     final String collectionName = "asyncCollection";
     final AtomicBoolean done = new AtomicBoolean(false);
