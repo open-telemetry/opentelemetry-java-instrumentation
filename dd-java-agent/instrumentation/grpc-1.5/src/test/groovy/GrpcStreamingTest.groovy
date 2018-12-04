@@ -16,9 +16,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 class GrpcStreamingTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.grpc.enabled", "true")
-  }
 
   def "test conversation #name"() {
     setup:

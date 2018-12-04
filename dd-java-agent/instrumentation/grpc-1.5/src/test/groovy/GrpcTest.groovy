@@ -16,9 +16,6 @@ import io.opentracing.tag.Tags
 import java.util.concurrent.TimeUnit
 
 class GrpcTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.grpc.enabled", "true")
-  }
 
   def "test request-response"() {
     setup:

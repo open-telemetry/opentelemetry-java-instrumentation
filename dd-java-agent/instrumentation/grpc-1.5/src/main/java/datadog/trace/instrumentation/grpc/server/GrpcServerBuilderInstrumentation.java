@@ -40,11 +40,6 @@ public class GrpcServerBuilderInstrumentation extends Instrumenter.Default {
         isMethod().and(named("build")), AddInterceptorAdvice.class.getName());
   }
 
-  @Override
-  protected boolean defaultEnabled() {
-    return false;
-  }
-
   public static class AddInterceptorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
