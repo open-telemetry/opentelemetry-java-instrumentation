@@ -29,6 +29,10 @@ public interface WeakMap<K, V> {
       }
     }
 
+    public static boolean isProviderRegistered() {
+      return provider.get() != Supplier.DEFAULT;
+    }
+
     public static <K, V> WeakMap<K, V> newWeakMap() {
       return provider.get().get();
     }

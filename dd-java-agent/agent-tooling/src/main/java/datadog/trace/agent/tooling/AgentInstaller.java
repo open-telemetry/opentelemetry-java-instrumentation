@@ -111,9 +111,11 @@ public class AgentInstaller {
   }
 
   private static void registerWeakMapProvider() {
-    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent());
-    // WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent.Inline());
-    // WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.Guava());
+    if (!WeakMap.Provider.isProviderRegistered()) {
+      WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent());
+    }
+    //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent.Inline());
+    //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.Guava());
   }
 
   @Slf4j
