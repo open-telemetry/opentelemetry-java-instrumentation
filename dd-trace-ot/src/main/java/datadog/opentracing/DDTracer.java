@@ -60,6 +60,11 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   private final Map<String, String> defaultSpanTags;
   /** A configured mapping of service names to update with new values */
   private final Map<String, String> serviceNameMappings;
+  /**
+   * JVM shutdown callback, keeping a reference to it to remove this if DDTracer gets destroyed
+   * earlier
+   */
+  private final Thread shutdownCallback;
 
   /** Span context decorators */
   private final Map<String, List<AbstractDecorator>> spanContextDecorators =
@@ -163,15 +168,15 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this.runtimeId = runtimeId;
     this.serviceNameMappings = serviceNameMappings;
 
+    shutdownCallback =
+        new Thread() {
+          @Override
+          public void run() {
+            close();
+          }
+        };
     try {
-      Runtime.getRuntime()
-          .addShutdownHook(
-              new Thread() {
-                @Override
-                public void run() {
-                  close();
-                }
-              });
+      Runtime.getRuntime().addShutdownHook(shutdownCallback);
     } catch (final IllegalStateException ex) {
       // The JVM is already shutting down.
     }
@@ -198,6 +203,12 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     }
 
     log.info("New instance: {}", this);
+  }
+
+  @Override
+  public void finalize() {
+    Runtime.getRuntime().removeShutdownHook(shutdownCallback);
+    shutdownCallback.run();
   }
 
   /**
