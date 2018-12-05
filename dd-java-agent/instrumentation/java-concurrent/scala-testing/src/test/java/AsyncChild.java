@@ -1,18 +1,16 @@
 import datadog.trace.api.Trace;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class AsyncChild implements Runnable, Callable {
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;
-  private final AtomicInteger numberOfWorkers = new AtomicInteger(0);
 
   public AsyncChild() {
     this(true, false);
   }
 
-  public AsyncChild(boolean doTraceableWork, boolean blockThread) {
+  public AsyncChild(final boolean doTraceableWork, final boolean blockThread) {
     this.doTraceableWork = doTraceableWork;
     this.blockThread = new AtomicBoolean(blockThread);
   }
@@ -36,13 +34,8 @@ public class AsyncChild implements Runnable, Callable {
     if (doTraceableWork) {
       asyncChild();
     }
-    numberOfWorkers.getAndIncrement();
-    try {
-      while (blockThread.get()) {
-        // busy-wait to block thread
-      }
-    } finally {
-      numberOfWorkers.getAndDecrement();
+    while (blockThread.get()) {
+      // busy-wait to block thread
     }
   }
 
