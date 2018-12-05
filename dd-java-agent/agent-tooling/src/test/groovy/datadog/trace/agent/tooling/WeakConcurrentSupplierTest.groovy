@@ -107,7 +107,7 @@ class WeakConcurrentSupplierTest extends Specification {
 
     // Hit map a few times to trigger unreferenced entries cleanup.
     // Exact number of times that we need to hit map is implementation dependent.
-    // For Guava it i specified in
+    // For Guava it is specified in
     // com.google.common.collect.MapMakerInternalMap.DRAIN_THRESHOLD = 0x3F
     if (name == "Guava" || name == "WeakInline") {
       for (int i = 0; i <= 0x3F; i++) {

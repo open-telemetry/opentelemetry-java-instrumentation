@@ -54,7 +54,7 @@ class WeakMapSuppliers {
         };
 
     private final ScheduledExecutorService cleanerExecutorService;
-
+    private final Thread shutdownCallback;
     private final Queue<WeakReference<WeakConcurrentMap>> suppliedMaps =
         new ConcurrentLinkedQueue<>();
 
@@ -62,14 +62,16 @@ class WeakMapSuppliers {
 
     WeakConcurrent() {
       cleanerExecutorService = Executors.newScheduledThreadPool(1, THREAD_FACTORY);
+      shutdownCallback = new ShutdownCallback(cleanerExecutorService);
+
       cleanerExecutorService.scheduleAtFixedRate(
-          new CleanupRunnable(cleanerExecutorService, suppliedMaps, finalized),
+          new CleanupRunnable(cleanerExecutorService, shutdownCallback, suppliedMaps, finalized),
           CLEAN_FREQUENCY_SECONDS,
           CLEAN_FREQUENCY_SECONDS,
           TimeUnit.SECONDS);
 
       try {
-        Runtime.getRuntime().addShutdownHook(new ShutdownCallback(cleanerExecutorService));
+        Runtime.getRuntime().addShutdownHook(shutdownCallback);
       } catch (final IllegalStateException ex) {
         // The JVM is already shutting down.
       }
@@ -90,14 +92,17 @@ class WeakMapSuppliers {
     private static class CleanupRunnable implements Runnable {
 
       private final ScheduledExecutorService executorService;
+      private final Thread shutdownCallback;
       private final Queue<WeakReference<WeakConcurrentMap>> suppliedMaps;
       private final AtomicBoolean finalized;
 
       public CleanupRunnable(
           final ScheduledExecutorService executorService,
+          final Thread shutdownCallback,
           final Queue<WeakReference<WeakConcurrentMap>> suppliedMaps,
           final AtomicBoolean finalized) {
         this.executorService = executorService;
+        this.shutdownCallback = shutdownCallback;
         this.suppliedMaps = suppliedMaps;
         this.finalized = finalized;
       }
@@ -115,6 +120,7 @@ class WeakMapSuppliers {
         }
         if (finalized.get() && suppliedMaps.isEmpty()) {
           executorService.shutdown();
+          Runtime.getRuntime().removeShutdownHook(shutdownCallback);
         }
       }
     }
