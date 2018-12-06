@@ -52,7 +52,7 @@ class FieldBackedProviderTest extends AgentTestRunner {
       if (inter.getName() == 'datadog.trace.bootstrap.FieldBackedContextStoreAppliedMarker') {
         hasMarkerInterface = true
       }
-      if (inter.getName().startsWith('datadog.trace.agent.tooling.context.FieldBackedProvider$ContextAccessor')) {
+      if (inter.getName().startsWith('datadog.trace.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
         hasAccessorInterface = true
       }
     }
@@ -178,7 +178,7 @@ class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
       if (inter.getName() == 'datadog.trace.bootstrap.FieldBackedContextStoreAppliedMarker') {
         hasMarkerInterface = true
       }
-      if (inter.getName().startsWith('datadog.trace.agent.tooling.context.FieldBackedProvider$ContextAccessor')) {
+      if (inter.getName().startsWith('datadog.trace.bootstrap.instrumentation.context.FieldBackedProvider$ContextAccessor')) {
         hasAccessorInterface = true
       }
     }

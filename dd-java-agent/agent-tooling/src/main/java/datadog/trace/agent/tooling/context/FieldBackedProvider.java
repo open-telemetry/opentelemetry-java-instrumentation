@@ -70,6 +70,14 @@ import net.bytebuddy.utility.JavaModule;
 @Slf4j
 public class FieldBackedProvider implements InstrumentationContextProvider {
 
+  /*
+  Note: the value here has to be inside on of the prefixes in
+  datadog.trace.agent.tooling.Utils#BOOTSTRAP_PACKAGE_PREFIXES. This ensures that 'isolating' (or 'module')
+  classloaders like jboss and osgi see injected classes. This works because we instrument those classloaders
+  to load everything inside bootstrap packages.
+   */
+  private static final String DYNAMIC_CLASSES_PACKAGE =
+      "datadog.trace.bootstrap.instrumentation.context.";
   private static final String INJECTED_FIELDS_MARKER_CLASS_NAME =
       Utils.getInternalName(FieldBackedContextStoreAppliedMarker.class.getName());
 
@@ -903,7 +911,8 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private String getContextStoreImplementationClassName(
       final String keyClassName, final String contextClassName) {
-    return getClass().getName()
+    return DYNAMIC_CLASSES_PACKAGE
+        + getClass().getSimpleName()
         + "$ContextStore$"
         + Utils.converToInnerClassName(keyClassName)
         + "$"
@@ -912,7 +921,8 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   private String getContextAccessorInterfaceName(
       final String keyClassName, final String contextClassName) {
-    return getClass().getName()
+    return DYNAMIC_CLASSES_PACKAGE
+        + getClass().getSimpleName()
         + "$ContextAccessor$"
         + Utils.converToInnerClassName(keyClassName)
         + "$"
