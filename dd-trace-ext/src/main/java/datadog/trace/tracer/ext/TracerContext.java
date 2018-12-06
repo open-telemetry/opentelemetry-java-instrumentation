@@ -81,8 +81,8 @@ public final class TracerContext {
    */
   public void popScope(Scope scope) {}
 
-  /** @return The scope on the top of this scope stack or null if there is no active scope. */
-  public Scope topOfScopeStack() {
+  /** @return The scope on the top of this scope-stack or null if there is no active scope. */
+  public Scope peekScope() {
     return null;
   }
 }

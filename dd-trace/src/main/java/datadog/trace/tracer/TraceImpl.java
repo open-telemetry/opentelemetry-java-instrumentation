@@ -1,6 +1,5 @@
-package datadog.trace.tracer.impl;
+package datadog.trace.tracer;
 
-import datadog.trace.tracer.Span;
 import datadog.trace.tracer.writer.Writer;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -27,4 +26,11 @@ public class TraceImpl {
    * relying on getRootSpan() will break.
    */
   private final List<Span> spans = null;
+
+  /**
+   * Create a new Trace.
+   *
+   * @param tracer the Tracer to apply settings from.
+   */
+  TraceImpl(Tracer tracer) {}
 }

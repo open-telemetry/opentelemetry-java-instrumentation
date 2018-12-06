@@ -7,13 +7,34 @@ import datadog.trace.tracer.writer.Writer;
 /** A Tracer creates {@link Trace}s and holds common settings across traces. */
 public class Tracer {
   /** Default service name if none provided on the trace or span */
-  final String serviceName = null;
+  private final String serviceName = null;
   /** Writer is an charge of reporting traces and spans to the desired endpoint */
-  final Writer writer = null;
+  private final Writer writer = null;
   /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
-  final Sampler sampler = null;
+  private final Sampler sampler = null;
   /** Settings for this tracer. */
-  final Config config = null;
+  private final Config config = null;
+  /** The clock to use for tracing. */
+  private final Clock clock = null;
+
+  /**
+   * Construct a new trace using this tracer's settings and return the root span.
+   *
+   * @return The root span of the new trace.
+   */
+  public Span buildTrace() {
+    return null;
+  }
+
+  /**
+   * Construct a new trace using this tracer's settings and return the root span.
+   *
+   * @param rootSpanStartTimestampNanoseconds Epoch time in nanoseconds when the root span started.
+   * @return The root span of the new trace.
+   */
+  public Span buildTrace(final long rootSpanStartTimestampNanoseconds) {
+    return null;
+  }
 
   // TODO: doc inject and extract
 

@@ -6,6 +6,8 @@ package datadog.trace.tracer;
  *
  * <p>A trace will be written when all of its spans are finished and all trace continuations are
  * closed.
+ *
+ * <p>To create a Trace, see {@link Tracer#buildTrace()}
  */
 public interface Trace {
   /** Get the tracer which created this trace. */

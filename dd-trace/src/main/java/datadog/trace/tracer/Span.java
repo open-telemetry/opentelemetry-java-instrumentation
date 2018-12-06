@@ -5,7 +5,7 @@ package datadog.trace.tracer;
  *
  * <p>All spans are thread safe.
  *
- * <p>Spans may not be constructed individually, but created through a {@link Trace}
+ * <p>To create a Span, see {@link Tracer#buildTrace()}
  */
 public interface Span {
 

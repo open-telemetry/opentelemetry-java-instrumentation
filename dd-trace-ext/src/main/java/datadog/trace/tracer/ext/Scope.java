@@ -4,13 +4,13 @@ import datadog.trace.tracer.Span;
 import datadog.trace.tracer.Trace;
 
 /**
- * A scope holds a single span or trace continuation and may optionally close out its span or
+ * A scope holds a single span or trace continuation and may optionally finish its span or
  * continuation.
  *
  * <p>To create a scope, see {@link TracerContext#pushScope(Span, boolean)} and {@link
  * TracerContext#pushScope(Trace.Continuation, boolean)}.
  *
- * <p>All created scopes must be closed with {@link }
+ * <p>All created scopes must be closed with {@link Scope#close()}
  */
 public interface Scope {
   /** Get the span held by this scope. */

@@ -1,9 +1,5 @@
-package datadog.trace.tracer.impl;
+package datadog.trace.tracer;
 
-import datadog.trace.tracer.Clock;
-import datadog.trace.tracer.Span;
-import datadog.trace.tracer.SpanContext;
-import datadog.trace.tracer.Trace;
 import java.util.Map;
 
 public class SpanImpl implements Span {
@@ -33,17 +29,19 @@ public class SpanImpl implements Span {
   /**
    * Create a span with a start time of the current timestamp.
    *
+   * @param parentContext identifies the parent of this span. May be null.
    * @param clock The clock to use to measure the span's duration.
    */
-  SpanImpl(final Clock clock) {}
+  SpanImpl(final SpanContext parentContext, final Clock clock) {}
 
   /**
    * Create a span with the a specific start timestamp.
    *
+   * @param parentContext identifies the parent of this span. May be null.
    * @param clock The clock to use to measure the span's duration.
-   * @param startTimeNanoseconds Epoch time in nanoseconds when this span started.
+   * @param startTimestampNanoseconds Epoch time in nanoseconds when this span started.
    */
-  SpanImpl(final Clock clock, final long startTimeNanoseconds) {}
+  SpanImpl(final SpanContext parentContext, final Clock clock, final long startTimestampNanoseconds) {}
 
   @Override
   public Trace getTrace() {
