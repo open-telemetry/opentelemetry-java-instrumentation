@@ -4,6 +4,7 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.context.TraceScope
 import io.opentracing.Scope
+import io.opentracing.Span
 import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
 import okhttp3.HttpUrl
@@ -314,18 +315,18 @@ class RatpackTest extends AgentTestRunner {
             GlobalTracer.get()
               .buildSpan("ratpack.exec-test")
               .withTag(DDTags.RESOURCE_NAME, "INSIDE-TEST")
-              .startActive(true)
+              .startActive(false)
 
           if (startSpanInHandler) {
             ((TraceScope) scope).setAsyncPropagation(true)
           }
           scope.span().setBaggageItem("test-baggage", "foo")
 
-          context.onClose {
-            if (startSpanInHandler) {
-              final Scope activeScope = GlobalTracer.get().scopeManager().active()
-              ((TraceScope) activeScope).setAsyncPropagation(false)
-              activeScope.close()
+          final Span startedSpan = startSpanInHandler ? scope.span() : null
+          if (startSpanInHandler) {
+            scope.close()
+            context.onClose {
+                startedSpan.finish()
             }
           }
 
