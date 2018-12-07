@@ -26,7 +26,6 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
   def setupSpec() {
     broker.start()
     final ActiveMQConnectionFactory connectionFactory = broker.createConnectionFactory()
-
     final Connection connection = connectionFactory.createConnection()
     connection.start()
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
@@ -59,11 +58,12 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
   def "send and receive message generates spans"() {
     setup:
     Thread.start {
-      TEST_WRITER.waitForTraces(1)
       TextMessage msg = template.receive(destination)
       assert msg.text == messageText
 
-      // There's a chance this might be reported last, messing up the assertion.
+      // Make sure that first pair of send/receive traces has landed to simplify assertions
+      TEST_WRITER.waitForTraces(2)
+
       template.send(msg.getJMSReplyTo()) {
         session -> template.getMessageConverter().toMessage("responded!", session)
       }
@@ -74,6 +74,11 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
 
     TEST_WRITER.waitForTraces(4)
     // Manually reorder if reported in the wrong order.
+    if (TEST_WRITER[1][0].operationName == "jms.produce") {
+      def producerTrace = TEST_WRITER[1]
+      TEST_WRITER[1] = TEST_WRITER[0]
+      TEST_WRITER[0] = producerTrace
+    }
     if (TEST_WRITER[3][0].operationName == "jms.produce") {
       def producerTrace = TEST_WRITER[3]
       TEST_WRITER[3] = TEST_WRITER[2]
