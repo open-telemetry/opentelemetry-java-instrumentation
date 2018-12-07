@@ -11,55 +11,9 @@ model {
     play {
       platform play: playVersion, scala: scalaVersion, java: '1.8'
       injectedRoutesGenerator = true
-//
-//      sources {
-//        scala {
-//          source.srcDir "play-perftest-server/app"
-//        }
-//        routes {
-//          source.srcDir "play-perftest-server/conf"
-//        }
-//      }
-
-
     }
   }
 }
-//dist {
-//  into(project.name) {
-//    from 'play-perftest-server'
-//    include 'conf/*'
-//  }
-//}
-// EXAMPLE: How to add parameter to Scala compiler
-// Another option is documented here:
-// https://docs.gradle.org/current/userguide/play_plugin.html#sec:configuring_compiler_options
-//
-// See other configurations for ScalaCompile task here:
-// https://docs.gradle.org/current/dsl/org.gradle.api.tasks.scala.ScalaCompile.html
-//
-// tasks.withType(ScalaCompile) {
-//     scalaCompileOptions.additionalParameters = [
-//         "-deprecation",
-//         "-verbose"
-//     ]
-// }
-
-// EXAMPLE: How to add JVM parameters when running `runPlayBinary`.
-// See other configurations for PlayRun here:
-// https://docs.gradle.org/current/dsl/org.gradle.play.tasks.PlayRun.html
-//
-// tasks.withType(PlayRun) {
-//     forkOptions.jvmArgs = ['-Dplay.http.secret.key=yadayada']
-// }
-
-// EXAMPLE: How to add JVM parameters to the script created by `stage`.
-// See more details here:
-// https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/application/CreateStartScripts.html
-//
-//tasks.withType(CreateStartScripts) {
-//  defaultJvmOpts = ['-Dplay.http.secret.key=yadayada', '-Dhttp.port=8080']
-//}
 
 dependencies {
   play "com.typesafe.play:play-guice_$scalaVersion:$playVersion"
