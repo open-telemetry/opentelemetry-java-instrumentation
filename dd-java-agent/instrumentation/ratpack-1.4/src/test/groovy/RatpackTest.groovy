@@ -320,12 +320,16 @@ class RatpackTest extends AgentTestRunner {
             ((TraceScope) scope).setAsyncPropagation(true)
           }
           scope.span().setBaggageItem("test-baggage", "foo")
-          context.render(testPromise().fork())
 
-          if (startSpanInHandler) {
-            ((TraceScope) scope).setAsyncPropagation(false)
+          context.onClose {
+            if (startSpanInHandler) {
+              final Scope activeScope = GlobalTracer.get().scopeManager().active()
+              ((TraceScope) activeScope).setAsyncPropagation(false)
+              activeScope.close()
+            }
           }
-          scope.close()
+
+          context.render(testPromise().fork())
         }
       }
     }
