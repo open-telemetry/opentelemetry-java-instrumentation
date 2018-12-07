@@ -1,36 +1,54 @@
 package datadog.trace.tracer;
 
 import datadog.trace.tracer.writer.Writer;
+import java.lang.ref.WeakReference;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Set;
 
-public class TraceImpl {
+public class TraceImpl implements Trace {
   private final Writer writer = null;
-  /**
-   * Count of all unfinished spans and continuations.
-   *
-   * <p>When the count reaches 0 this trace will be reported.
-   */
-  private final AtomicInteger referenceCount = new AtomicInteger(0);
 
-  /**
-   * Thread safe list of spans. List is ordered by span-creation time. The root span will always be
-   * the first element. Note that span creation time may differ from span start timestamp (in cases
-   * where span creators specify a custom start timestamp).
-   *
-   * <p>References to these spans are weakly held. If api users create spans but do not finish them
-   * we will clean up this trace and increment the trace count with the writer. However, the trace
-   * itself will not be reported because incorrect api usage produces suspect data.
-   *
-   * <p>TODO: There is a potential edge-case with the root span. If the root span is GC'd everything
-   * relying on getRootSpan() will break.
-   */
-  private final List<Span> spans = null;
+  // TODO: Document approach to weak-referencdes and cleanup. If a span has to be closed by our GC
+  // logic the trace should increment the writer's count but not report (invalid api usage produces
+  // suspect data).
+  private final Set<WeakReference<Span>> inFlightSpans = null;
+  private final Set<WeakReference<Trace.Continuation>> inFlightContinuations = null;
+
+  /** Strong refs to spans which are closed */
+  private final List<Span> finishedSpans = null;
+
+  private final Span rootSpan = null;
 
   /**
    * Create a new Trace.
    *
    * @param tracer the Tracer to apply settings from.
    */
-  TraceImpl(Tracer tracer) {}
+  TraceImpl(
+      Tracer tracer,
+      SpanContext rootSpanParentContext,
+      final long rootSpanStartTimestampNanoseconds) {}
+
+  @Override
+  public Tracer getTracer() {
+    return null;
+  }
+
+  @Override
+  public Span getRootSpan() {
+    return null;
+  }
+
+  @Override
+  public Span createSpan(Span parentSpan) {
+    return null;
+  }
+
+  @Override
+  public Continuation createContinuation(Span parentSpan) {
+    return null;
+  }
+
+  // TODO methods to inform the trace that continuations and spans finished/closed. Also be able to
+  // inform trace when a span finishes due to GC.
 }

@@ -29,13 +29,6 @@ public interface Span {
   boolean isFinished();
 
   /**
-   * Attach a {@link LifecycleInterceptor} to this span.
-   *
-   * @param interceptor the interceptor to attach.
-   */
-  void addInterceptor(LifecycleInterceptor interceptor);
-
-  /**
    * Get the span context for this span.
    *
    * @return the span context.
@@ -88,7 +81,7 @@ public interface Span {
   boolean isErrored();
 
   /** Attach a throwable to this span. */
-  void attachThrowable();
+  void attachThrowable(Throwable t);
 
   /**
    * Mark the span as having an error.
@@ -101,10 +94,9 @@ public interface Span {
   // does not implement.
 
   /**
-   * A LifecycleInterceptor allows adding hooks to particular events between a span starting and
-   * finishing.
+   * A Interceptor allows adding hooks to particular events between a span starting and finishing.
    */
-  interface LifecycleInterceptor {
+  interface Interceptor {
     /**
      * Called after a span is started.
      *

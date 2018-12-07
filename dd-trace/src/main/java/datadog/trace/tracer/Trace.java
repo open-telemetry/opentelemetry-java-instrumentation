@@ -34,7 +34,7 @@ public interface Trace {
    */
   Continuation createContinuation(Span parentSpan);
 
-  interface LifecycleInterceptor {
+  interface Interceptor {
     /**
      * Invoked when a trace is eligible for writing but hasn't been handed off to its writer yet.
      *
@@ -52,5 +52,8 @@ public interface Trace {
      * <p>Has no effect after the first invocation.
      */
     void close();
+
+    // TODO: doc
+    Span span();
   }
 }

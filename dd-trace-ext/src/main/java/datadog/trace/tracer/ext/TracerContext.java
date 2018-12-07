@@ -53,10 +53,9 @@ public final class TracerContext {
    * Push a new scope to the top of this scope-stack. The scope's span will be the given span.
    *
    * @param span
-   * @param finishSpanOnScopeClose
    * @return
    */
-  public Scope pushScope(Span span, boolean finishSpanOnScopeClose) {
+  public Scope pushScope(Span span) {
     return null;
   }
 
@@ -65,10 +64,9 @@ public final class TracerContext {
    * span.
    *
    * @param continuation
-   * @param closeContinuationOnScopeClose
    * @return
    */
-  public Scope pushScope(Trace.Continuation continuation, boolean closeContinuationOnScopeClose) {
+  public Scope pushScope(Trace.Continuation continuation) {
     return null;
   }
 

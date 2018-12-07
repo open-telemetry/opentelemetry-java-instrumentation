@@ -1,8 +1,6 @@
 description = 'dd-trace'
 apply from: "${rootDir}/gradle/java.gradle"
 
-// TODO: Move over any special setups from dd-trace-ot (e.g. trace-agent integration tests).
-
 dependencies {
   annotationProcessor deps.autoservice
   implementation deps.autoservice

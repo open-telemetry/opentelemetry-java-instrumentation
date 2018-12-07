@@ -7,12 +7,12 @@ import datadog.trace.tracer.Trace;
  * A scope holds a single span or trace continuation and may optionally finish its span or
  * continuation.
  *
- * <p>To create a scope, see {@link TracerContext#pushScope(Span, boolean)} and {@link
- * TracerContext#pushScope(Trace.Continuation, boolean)}.
+ * <p>To create a scope, see {@link TracerContext#pushScope(Span)} and {@link
+ * TracerContext#pushScope(Trace.Continuation)}.
  *
  * <p>All created scopes must be closed with {@link Scope#close()}
  */
-public interface Scope {
+public interface Scope extends AutoCloseable {
   /** Get the span held by this scope. */
   Span span();
 
@@ -20,7 +20,7 @@ public interface Scope {
    * Close this scope. This method must be invoked on all created scopes.
    *
    * <p>Attempting to close a scope which is not on the top of its TracerContext's scope-stack is an
-   * error. See {@link TracerContext#topOfScopeStack()}.
+   * error. See {@link TracerContext#peekScope()}.
    */
   void close();
 }

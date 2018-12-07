@@ -1,6 +1,8 @@
 package datadog.trace.tracer;
 
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class SpanImpl implements Span {
   private final Clock clock = null;
@@ -17,7 +19,7 @@ public class SpanImpl implements Span {
   /* The start time of the request in nanoseconds from the unix epoch. */
   private final long startEpochNano = -1;
   /* Duration of the span in nanoseconds */
-  private final long durationNano = -1;
+  private final AtomicLong durationNano = new AtomicLong(-1);
   // optional attributes to report to datadog
   /* The type of the span (web, db, etc). See DDSpanTypes. */
   private final String type = null;
@@ -29,19 +31,32 @@ public class SpanImpl implements Span {
   /**
    * Create a span with a start time of the current timestamp.
    *
+   * @param trace The trace to associate this span with
    * @param parentContext identifies the parent of this span. May be null.
    * @param clock The clock to use to measure the span's duration.
+   * @param interceptors interceptors to run on the span
    */
-  SpanImpl(final SpanContext parentContext, final Clock clock) {}
+  SpanImpl(
+      final TraceImpl trace,
+      final SpanContext parentContext,
+      final Clock clock,
+      List<Interceptor> interceptors) {}
 
   /**
    * Create a span with the a specific start timestamp.
    *
+   * @param trace The trace to associate this span with
    * @param parentContext identifies the parent of this span. May be null.
    * @param clock The clock to use to measure the span's duration.
+   * @param interceptors interceptors to run on the span
    * @param startTimestampNanoseconds Epoch time in nanoseconds when this span started.
    */
-  SpanImpl(final SpanContext parentContext, final Clock clock, final long startTimestampNanoseconds) {}
+  SpanImpl(
+      final TraceImpl trace,
+      final SpanContext parentContext,
+      final Clock clock,
+      List<Interceptor> interceptors,
+      final long startTimestampNanoseconds) {}
 
   @Override
   public Trace getTrace() {
@@ -60,13 +75,10 @@ public class SpanImpl implements Span {
   }
 
   @Override
-  public void attachThrowable() {}
+  public void attachThrowable(Throwable t) {}
 
   @Override
   public void setError(boolean isErrored) {}
-
-  @Override
-  public void addInterceptor(LifecycleInterceptor interceptor) {}
 
   @Override
   public SpanContext getContext() {
