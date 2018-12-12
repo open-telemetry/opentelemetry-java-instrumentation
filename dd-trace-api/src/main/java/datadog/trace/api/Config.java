@@ -184,6 +184,7 @@ public class Config {
     result.putAll(globalTags);
     result.putAll(jmxTags);
     result.put(RUNTIME_ID_TAG, runtimeId);
+    result.put(SERVICE_NAME, serviceName);
     return Collections.unmodifiableMap(result);
   }
 
