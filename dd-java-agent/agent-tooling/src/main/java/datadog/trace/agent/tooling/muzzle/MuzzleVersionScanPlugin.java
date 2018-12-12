@@ -51,6 +51,9 @@ public class MuzzleVersionScanPlugin {
                     .getDeclaredConstructor()
                     .newInstance();
       }
+      if (!(instrumenter instanceof Instrumenter.Default)) {
+        continue;
+      }
       Method m = null;
       try {
         m = instrumenter.getClass().getDeclaredMethod("getInstrumentationMuzzle");
@@ -93,6 +96,9 @@ public class MuzzleVersionScanPlugin {
                       .loadClass(instrumenter.getClass().getName() + "$TracerClassInstrumentation")
                       .getDeclaredConstructor()
                       .newInstance();
+        }
+        if (!(instrumenter instanceof Instrumenter.Default)) {
+          continue;
         }
         try {
           // verify helper injector works
