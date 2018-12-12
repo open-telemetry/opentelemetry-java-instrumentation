@@ -4,8 +4,13 @@ import datadog.trace.tracer.Trace;
 
 /** A writer sends traces to some place. */
 public interface Writer {
+
   /**
-   * Write a trace represented by the entire list of all the finished spans
+   * Write a trace represented by the entire list of all the finished spans.
+   *
+   * <p>It is up to the tracer to decide if the trace should be written (e.g. for invalid traces).
+   *
+   * <p>This call doesn't increment trace counter, see {@code incrementTraceCount} for that
    *
    * @param trace the trace to write
    */

@@ -1,7 +1,7 @@
 package datadog.trace.tracer.ext;
 
+import datadog.trace.tracer.Continuation;
 import datadog.trace.tracer.Span;
-import datadog.trace.tracer.Trace;
 import datadog.trace.tracer.Tracer;
 
 /**
@@ -27,7 +27,7 @@ public final class TracerContext {
    * @return The old global TracerContext, or null if no previous context ws registered
    */
   public static TracerContext registerGlobalContext(
-      TracerContext context, boolean replaceExisting) {
+      final TracerContext context, final boolean replaceExisting) {
     return null;
   }
 
@@ -38,7 +38,7 @@ public final class TracerContext {
 
   private final Tracer tracer;
 
-  public TracerContext(Tracer tracer) {
+  public TracerContext(final Tracer tracer) {
     this.tracer = tracer;
   }
 
@@ -55,7 +55,7 @@ public final class TracerContext {
    * @param span
    * @return
    */
-  public Scope pushScope(Span span) {
+  public Scope pushScope(final Span span) {
     return null;
   }
 
@@ -66,7 +66,7 @@ public final class TracerContext {
    * @param continuation
    * @return
    */
-  public Scope pushScope(Trace.Continuation continuation) {
+  public Scope pushScope(final Continuation continuation) {
     return null;
   }
 
@@ -77,7 +77,7 @@ public final class TracerContext {
    *
    * @param scope the topmost scope in the scope stack.
    */
-  public void popScope(Scope scope) {}
+  public void popScope(final Scope scope) {}
 
   /** @return The scope on the top of this scope-stack or null if there is no active scope. */
   public Scope peekScope() {

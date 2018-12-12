@@ -1,7 +1,7 @@
 package datadog.trace.tracer.ext;
 
+import datadog.trace.tracer.Continuation;
 import datadog.trace.tracer.Span;
-import datadog.trace.tracer.Trace;
 import datadog.trace.tracer.Tracer;
 
 // Keeping in PR for potential discussions. Will eventually remove.
@@ -18,9 +18,8 @@ class Examples {
     final TracerContext ctx = TracerContext.getGlobalContext();
     // without try-with-resources
     {
-      Span rootSpan = ctx.getTracer().buildTrace(null);
+      final Span rootSpan = ctx.getTracer().buildTrace(null);
       final Scope scope = ctx.pushScope(rootSpan);
-      rootSpan.setError(true);
       rootSpan.attachThrowable(someThrowable);
       scope.close();
       rootSpan.finish();
@@ -44,11 +43,10 @@ class Examples {
 
     // with try-with-resources finishOnClose=false
     {
-      Span rootSpan = ctx.getTracer().buildTrace(null);
-      try (Scope scope = ctx.pushScope(rootSpan)) {
+      final Span rootSpan = ctx.getTracer().buildTrace(null);
+      try (final Scope scope = ctx.pushScope(rootSpan)) {
         // the body
-      } catch (Throwable t) {
-        rootSpan.setError(true);
+      } catch (final Throwable t) {
         rootSpan.attachThrowable(t);
         throw t;
       } finally {
@@ -58,10 +56,10 @@ class Examples {
 
     // continuations
     {
-      Span rootSpan = ctx.getTracer().buildTrace(null);
-      final Trace.Continuation cont = rootSpan.getTrace().createContinuation(rootSpan);
+      final Span rootSpan = ctx.getTracer().buildTrace(null);
+      final Continuation cont = rootSpan.getTrace().createContinuation(rootSpan);
       { // on another thread
-        final Span parent = cont.span();
+        final Span parent = cont.getSpan();
         try {
           // body
         } finally {
@@ -71,6 +69,7 @@ class Examples {
     }
 
     // create a span as a child of the currently active span
-    Span childSpan = ctx.peekScope().span().getTrace().createSpan(ctx.peekScope().span());
+    final Span childSpan =
+        ctx.peekScope().span().getTrace().createSpan(ctx.peekScope().span().getContext());
   }
 }

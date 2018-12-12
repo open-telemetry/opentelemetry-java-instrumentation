@@ -1,5 +1,7 @@
 package datadog.trace.tracer;
 
+import java.util.List;
+
 /**
  * A tree of {@link Span}s with a single root node plus logic to determine when to report said tree
  * to the backend.
@@ -7,23 +9,44 @@ package datadog.trace.tracer;
  * <p>A trace will be written when all of its spans are finished and all trace continuations are
  * closed.
  *
- * <p>To create a Trace, see {@link Tracer#buildTrace()}
+ * <p>To create a Trace, see {@link Tracer#buildTrace(SpanContext parentContext)}
  */
 public interface Trace {
-  /** Get the tracer which created this trace. */
+  /** @return the tracer which created this trace. */
   Tracer getTracer();
 
-  /** Get the root span for this trace. This will never be null. */
+  /** @return the root span for this trace. This will never be null. */
   Span getRootSpan();
 
   /**
-   * Create a new span in this trace as a child of the given parentSpan.
+   * @return list of spans for this trace. Note: if trace is not finished this will report error.
+   */
+  List<Span> getSpans();
+
+  /** @return true iff trace is valid (invalid traces should not be reported). */
+  boolean isValid();
+
+  /** @return current timestamp using this trace's clock */
+  Timestamp createCurrentTimestamp();
+
+  /**
+   * Create a new span in this trace as a child of the given parent context.
    *
-   * @param parentSpan the parent to use. Must be a span in this trace.
+   * @param parentContext the parent to use. Must be a span in this trace.
    * @return the new span. It is the caller's responsibility to ensure {@link Span#finish()} is
    *     eventually invoked on this span.
    */
-  Span createSpan(Span parentSpan);
+  Span createSpan(final SpanContext parentContext);
+
+  /**
+   * Create a new span in this trace as a child of the given parent context.
+   *
+   * @param parentContext the parent to use. Must be a span in this trace.
+   * @param startTimestamp timestamp to use as start timestamp for a new span.
+   * @return the new span. It is the caller's responsibility to ensure {@link Span#finish()} is
+   *     eventually invoked on this span.
+   */
+  Span createSpan(final SpanContext parentContext, final Timestamp startTimestamp);
 
   /**
    * Create a new continuation for this trace
@@ -33,27 +56,4 @@ public interface Trace {
    *     Continuation#close()} is eventually invoked on this continuation.
    */
   Continuation createContinuation(Span parentSpan);
-
-  interface Interceptor {
-    /**
-     * Invoked when a trace is eligible for writing but hasn't been handed off to its writer yet.
-     *
-     * @param trace The intercepted trace.
-     */
-    void beforeTraceWritten(Trace trace);
-  }
-
-  /** A way to prevent a trace from reporting without creating a span. */
-  interface Continuation {
-    /**
-     * Close the continuation. Continuation's trace will not block reporting on account of this
-     * continuation.
-     *
-     * <p>Has no effect after the first invocation.
-     */
-    void close();
-
-    // TODO: doc
-    Span span();
-  }
 }

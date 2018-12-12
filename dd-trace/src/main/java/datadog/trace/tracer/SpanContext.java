@@ -8,12 +8,13 @@ package datadog.trace.tracer;
  * <p>All SpanContexts are thread safe.
  */
 public interface SpanContext {
+
   /**
-   * Get this context's span id.
+   * Get this context's trace id.
    *
    * @return 64 bit unsigned integer in String format.
    */
-  String getSpanId();
+  String getTraceId();
 
   /**
    * Get this context's parent span id.
@@ -23,11 +24,11 @@ public interface SpanContext {
   String getParentId();
 
   /**
-   * Get this context's trace id.
+   * Get this context's span id.
    *
    * @return 64 bit unsigned integer in String format.
    */
-  String getTraceId();
+  String getSpanId();
 
   /**
    * Get the sampling flag for this context.
