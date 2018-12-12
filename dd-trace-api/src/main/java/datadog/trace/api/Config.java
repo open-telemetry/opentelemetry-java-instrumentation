@@ -61,7 +61,7 @@ public class Config {
 
   private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
 
-  private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = false;
+  private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = true;
   private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
   private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
 
