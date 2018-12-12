@@ -7,6 +7,9 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.ClassLoaderMatcher;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.agent.tooling.Utils;
+import datadog.trace.agent.tooling.muzzle.Reference;
+import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
+import java.security.ProtectionDomain;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -41,6 +44,7 @@ public class LoggerInstrumentation implements Instrumenter {
   // loggerClassName = java.util.logging.Logger
   private static final String loggerClassName =
       "java.util.logging.TMP".replaceFirst("TMP", "Logger");
+  private ReferenceMatcher referenceMatcher = null;
 
   public LoggerInstrumentation() {}
 
@@ -60,6 +64,19 @@ public class LoggerInstrumentation implements Instrumenter {
                 },
                 "Instrumentation class loader matcher unexpected exception: "
                     + getClass().getName()))
+        .and(
+            new AgentBuilder.RawMatcher() {
+              @Override
+              public boolean matches(
+                  TypeDescription typeDescription,
+                  ClassLoader classLoader,
+                  JavaModule module,
+                  Class<?> classBeingRedefined,
+                  ProtectionDomain protectionDomain) {
+                // make sure the private constructor is present before applying instrumentation.
+                return getReferenceMatcher().matches(classLoader);
+              }
+            })
         .transform(
             new AgentBuilder.Transformer() {
               @Override
@@ -71,6 +88,28 @@ public class LoggerInstrumentation implements Instrumenter {
                 return builder.visit(new ReturnPatchLoggerForDDThreadsVisitor());
               }
             });
+  }
+
+  /**
+   * Create or build a muzzle reference matcher to assert private logging constructor is present.
+   *
+   * <p>Logging instrumentation uses this private constructor because it's the only path to create a
+   * logger which does not touch the global log manager.
+   */
+  private synchronized ReferenceMatcher getReferenceMatcher() {
+    if (null == referenceMatcher) {
+      referenceMatcher =
+          new ReferenceMatcher(
+              new Reference.Builder(loggerClassName)
+                  .withMethod(
+                      new Reference.Source[0],
+                      new Reference.Flag[] {Reference.Flag.PRIVATE_OR_HIGHER},
+                      "<init>",
+                      Type.VOID_TYPE,
+                      Type.getType(String.class))
+                  .build());
+    }
+    return referenceMatcher;
   }
 
   /**

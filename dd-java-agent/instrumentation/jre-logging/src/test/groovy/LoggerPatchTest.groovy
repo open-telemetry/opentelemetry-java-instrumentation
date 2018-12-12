@@ -3,7 +3,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import java.util.logging.Logger
 
 class LoggerPatchTest extends AgentTestRunner {
-  def "datadog threads do not initialize the log manager"() {
+  def "datadog threads receive custom logger"() {
     setup:
     String threadName = Thread.currentThread().getName()
     Thread.currentThread().setName("dd-test")
