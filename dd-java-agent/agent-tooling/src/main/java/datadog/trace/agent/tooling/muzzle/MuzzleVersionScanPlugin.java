@@ -100,11 +100,12 @@ public class MuzzleVersionScanPlugin {
         if (!(instrumenter instanceof Instrumenter.Default)) {
           continue;
         }
+        Instrumenter.Default defaultInstrumenter = (Instrumenter.Default) instrumenter;
         try {
           // verify helper injector works
-          final String[] helperClassNames = instrumenter.helperClassNames();
+          final String[] helperClassNames = defaultInstrumenter.helperClassNames();
           if (helperClassNames.length > 0) {
-            new HelperInjector(createHelperMap(instrumenter))
+            new HelperInjector(createHelperMap(defaultInstrumenter))
                 .transform(null, null, userClassLoader, null);
           }
         } catch (final Exception e) {
@@ -116,7 +117,8 @@ public class MuzzleVersionScanPlugin {
     }
   }
 
-  private static Map<String, byte[]> createHelperMap(Instrumenter instrumenter) throws IOException {
+  private static Map<String, byte[]> createHelperMap(Instrumenter.Default instrumenter)
+      throws IOException {
     final Map<String, byte[]> helperMap =
         new LinkedHashMap<>(instrumenter.helperClassNames().length);
     for (final String helperName : instrumenter.helperClassNames()) {

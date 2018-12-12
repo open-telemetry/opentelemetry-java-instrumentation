@@ -1,14 +1,12 @@
 package datadog.trace.instrumentation.jre.logging;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.failSafe;
-import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.ClassLoaderMatcher;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.agent.tooling.Utils;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -29,9 +27,12 @@ import net.bytebuddy.pool.TypePool;
 import net.bytebuddy.utility.JavaModule;
 
 /**
- * This instrumentation patches java.util.logging.Logger to return a "safe" logger which doesn't touch the global log manager when static log creators (e.g. getLogger) are invoked under datadog threads.
+ * This instrumentation patches java.util.logging.Logger to return a "safe" logger which doesn't
+ * touch the global log manager when static log creators (e.g. getLogger) are invoked under datadog
+ * threads.
  *
- * Our PatchLogger solution is not enough here because it's possible for dd-threads to use bootstrap utils which in turn use call Logger.getLogger(...)
+ * <p>Our PatchLogger solution is not enough here because it's possible for dd-threads to use
+ * bootstrap utils which in turn use call Logger.getLogger(...)
  */
 @Slf4j
 @AutoService(Instrumenter.class)
@@ -47,13 +48,18 @@ public class LoggerInstrumentation implements Instrumenter {
   public AgentBuilder instrument(AgentBuilder agentBuilder) {
     return agentBuilder
         .type(
-            failSafe(named(loggerClassName), "Instrumentation type matcher unexpected exception: " + getClass().getName()),
-            failSafe(new ElementMatcher<ClassLoader>() {
-                      @Override
-                      public boolean matches(ClassLoader target) {
-                        return target == ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
-                      }
-                    }, "Instrumentation class loader matcher unexpected exception: " + getClass().getName()))
+            failSafe(
+                named(loggerClassName),
+                "Instrumentation type matcher unexpected exception: " + getClass().getName()),
+            failSafe(
+                new ElementMatcher<ClassLoader>() {
+                  @Override
+                  public boolean matches(ClassLoader target) {
+                    return target == ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
+                  }
+                },
+                "Instrumentation class loader matcher unexpected exception: "
+                    + getClass().getName()))
         .transform(
             new AgentBuilder.Transformer() {
               @Override
@@ -172,26 +178,5 @@ public class LoggerInstrumentation implements Instrumenter {
         }
       };
     }
-  }
-
-  // TODO: move these matcher methods to the Instrumenter.Default class to avoid awkward stubs
-  @Override
-  public ElementMatcher<? super TypeDescription> typeMatcher() {
-    throw new RuntimeException("Should not be invoked");
-  }
-
-  @Override
-  public ElementMatcher<? super ClassLoader> classLoaderMatcher() {
-    throw new RuntimeException("Should not be invoked");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    throw new RuntimeException("Should not be invoked");
-  }
-
-  @Override
-  public Map<? extends ElementMatcher, String> transformers() {
-    throw new RuntimeException("Should not be invoked");
   }
 }

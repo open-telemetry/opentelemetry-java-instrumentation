@@ -136,24 +136,4 @@ public class TraceConfigInstrumentation implements Instrumenter {
       return transformers;
     }
   }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    throw new RuntimeException("TracerConfigInstrumentation must not use TypeMatcher");
-  }
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderMatcher() {
-    throw new RuntimeException("TracerConfigInstrumentation must not use classLoaderMatcher");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    throw new RuntimeException("TracerConfigInstrumentation must not use helperClassNames");
-  }
-
-  @Override
-  public Map<ElementMatcher, String> transformers() {
-    throw new RuntimeException("TracerConfigInstrumentation must not use transformers.");
-  }
 }

@@ -3,7 +3,6 @@ package datadog.trace.agent.integration.muzzle
 import datadog.trace.agent.test.IntegrationTestUtils
 import spock.lang.Specification
 
-import java.lang.instrument.Instrumentation
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
