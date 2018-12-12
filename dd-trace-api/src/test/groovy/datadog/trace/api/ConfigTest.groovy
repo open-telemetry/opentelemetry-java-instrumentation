@@ -35,7 +35,7 @@ class ConfigTest extends Specification {
     config.traceResolverEnabled == true
     config.serviceMapping == [:]
     config.mergedSpanTags == [:]
-    config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId()]
+    config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_NAME): config.serviceName]
     config.headerTags == [:]
     config.runtimeContextFieldInjection == true
     config.jmxFetchEnabled == false
@@ -81,7 +81,7 @@ class ConfigTest extends Specification {
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]
-    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId()]
+    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_NAME): config.serviceName]
     config.headerTags == [e: "5"]
     config.runtimeContextFieldInjection == false
     config.jmxFetchEnabled == true
@@ -202,7 +202,7 @@ class ConfigTest extends Specification {
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]
-    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId()]
+    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_NAME): config.serviceName]
     config.headerTags == [e: "5"]
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100
