@@ -2,7 +2,6 @@ package datadog.trace.common.sampling;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import datadog.opentracing.DDSpan;
-import datadog.opentracing.DDSpanContext;
 import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.writer.DDApi.ResponseListener;
 import java.util.HashMap;
@@ -58,7 +57,6 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
     } else {
       span.setSamplingPriority(PrioritySampling.SAMPLER_DROP);
     }
-    span.context().setMetric(DDSpanContext.SAMPLE_RATE_KEY, sampler.getSampleRate());
   }
 
   private static String getSpanEnv(DDSpan span) {

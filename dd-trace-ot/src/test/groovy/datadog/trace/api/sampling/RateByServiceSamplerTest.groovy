@@ -65,6 +65,7 @@ class RateByServiceSamplerTest extends Specification {
     expect:
     // sets correctly on root span
     span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
-    span.getMetrics().get("_sample_rate") == 1.0
+    // RateByServiceSamler must not set the sample rate
+    span.getMetrics().get("_sample_rate") == null
   }
 }
