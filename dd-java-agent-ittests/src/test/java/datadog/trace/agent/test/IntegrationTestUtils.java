@@ -1,17 +1,25 @@
 package datadog.trace.agent.test;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
@@ -70,20 +78,32 @@ public class IntegrationTestUtils {
     }
   }
 
+  /** See {@link IntegrationTestUtils#createJarWithClasses(String, Class[])} */
+  public static URL createJarWithClasses(final Class<?>... classes) throws IOException {
+    return createJarWithClasses(null, classes);
+  }
   /**
    * Create a temporary jar on the filesystem with the bytes of the given classes.
    *
    * <p>The jar file will be removed when the jvm exits.
    *
+   * @param mainClassname The name of the class to use for Main-Class and Premain-Class. May be null
    * @param classes classes to package into the jar.
    * @return the location of the newly created jar.
    * @throws IOException
    */
-  public static URL createJarWithClasses(final Class<?>... classes) throws IOException {
+  public static URL createJarWithClasses(final String mainClassname, final Class<?>... classes)
+      throws IOException {
     final File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "-", ".jar");
     tmpJar.deleteOnExit();
 
     final Manifest manifest = new Manifest();
+    if (mainClassname != null) {
+      Attributes mainAttributes = manifest.getMainAttributes();
+      mainAttributes.put(Attributes.Name.MANIFEST_VERSION, "1.0");
+      mainAttributes.put(Attributes.Name.MAIN_CLASS, mainClassname);
+      mainAttributes.put(new Attributes.Name("Premain-Class"), mainClassname);
+    }
     final JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest);
     for (final Class<?> clazz : classes) {
       addToJar(clazz, target);
@@ -179,5 +199,54 @@ public class IntegrationTestUtils {
       System.gc();
       System.runFinalization();
     }
+  }
+
+  /**
+   * On a separate JVM, run the main method for a given class.
+   *
+   * @param mainClassName The name of the entry point class. Must declare a main method.
+   * @param printOutputStreams if true, print stdout and stderr of the child jvm
+   * @return the return code of the child jvm
+   * @throws Exception
+   */
+  public static int runOnSeparateJvm(
+      final String mainClassName,
+      final String[] jvmArgs,
+      final String[] mainMethodArgs,
+      final boolean printOutputStreams)
+      throws Exception {
+    final String separator = System.getProperty("file.separator");
+    final String classpath = System.getProperty("java.class.path");
+    final String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
+    final List<String> commands = new ArrayList();
+    commands.add(path);
+    commands.addAll(Arrays.asList(jvmArgs));
+    commands.add("-cp");
+    commands.add(classpath);
+    commands.add(mainClassName);
+    commands.addAll(Arrays.asList(mainMethodArgs));
+    final ProcessBuilder processBuilder = new ProcessBuilder(commands.toArray(new String[0]));
+    final Process process = processBuilder.start();
+    final int result = process.waitFor();
+
+    if (printOutputStreams) {
+      final BufferedReader stdInput =
+          new BufferedReader(new InputStreamReader(process.getInputStream(), UTF_8));
+
+      final BufferedReader stdError =
+          new BufferedReader(new InputStreamReader(process.getErrorStream(), UTF_8));
+      System.out.println("--- " + mainClassName + " stdout ---");
+      String s = null;
+      while ((s = stdInput.readLine()) != null) {
+        System.out.println(s);
+      }
+      System.out.println("--- stdout end ---");
+      System.out.println("--- " + mainClassName + " stderr ---");
+      while ((s = stdError.readLine()) != null) {
+        System.out.println(s);
+      }
+      System.out.println("--- stderr end ---");
+    }
+    return result;
   }
 }

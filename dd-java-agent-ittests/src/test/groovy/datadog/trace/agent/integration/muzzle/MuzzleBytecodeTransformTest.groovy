@@ -19,6 +19,10 @@ class MuzzleBytecodeTransformTest extends Specification {
         // check on TracerClassInstrumentation instead
         instrumenter = IntegrationTestUtils.getAgentClassLoader().loadClass(instrumenter.getClass().getName() + '$TracerClassInstrumentation').newInstance()
       }
+      if (!IntegrationTestUtils.getAgentClassLoader().loadClass('datadog.trace.agent.tooling.Instrumenter$Default').isAssignableFrom(instrumenter.getClass())) {
+        // muzzle only applies to default instrumenters
+        continue
+      }
       Field f
       Method m
       try {
