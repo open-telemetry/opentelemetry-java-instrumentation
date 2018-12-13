@@ -1,6 +1,10 @@
 package jvmbootstraptest;
 
-import java.lang.reflect.Method;
+import java.lang.instrument.ClassFileTransformer;
+import java.lang.instrument.IllegalClassFormatException;
+import java.lang.instrument.Instrumentation;
+import java.security.ProtectionDomain;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.LogManager;
 
 public class LogManagerSetter {
@@ -8,22 +12,38 @@ public class LogManagerSetter {
   // loggerClassName = java.util.logging.Logger
   private static final String loggerClassName =
       "java.util.logging.TMP".replaceFirst("TMP", "Logger");
+  private static final String loggerInternalName = loggerClassName.replace('.', '/');
+  private static final AtomicBoolean loggerInitialized = new AtomicBoolean(false);
+
+  public static void premain(final String agentArgs, final Instrumentation inst) throws Exception {
+    inst.addTransformer(
+        new ClassFileTransformer() {
+          @Override
+          public byte[] transform(
+              ClassLoader loader,
+              String className,
+              Class<?> classBeingRedefined,
+              ProtectionDomain protectionDomain,
+              byte[] classfileBuffer)
+              throws IllegalClassFormatException {
+            if (loggerInternalName.equals(className)) {
+              loggerInitialized.compareAndSet(false, true);
+            }
+            return null;
+          }
+        });
+  }
 
   public static void main(String... args) throws Exception {
     final ClassLoader systemLoader = ClassLoader.getSystemClassLoader();
 
     // once the logger class has been initialized, we know jmxfetch is running and can proceed with
     // the test
-    final Method method =
-        ClassLoader.class.getDeclaredMethod("findBootstrapClassOrNull", String.class);
-    try {
-      method.setAccessible(true);
-      while (method.invoke(systemLoader, loggerClassName) == null) {
-        Thread.sleep(1);
-      }
-    } finally {
-      method.setAccessible(false);
+    while (!loggerInitialized.get()) {
+      Thread.sleep(1);
     }
+    systemLoader.loadClass(loggerClassName);
+    // at this point the logger is loaded and fully initialized
 
     System.setProperty("java.util.logging.manager", CustomLogManager.class.getName());
     customAssert(

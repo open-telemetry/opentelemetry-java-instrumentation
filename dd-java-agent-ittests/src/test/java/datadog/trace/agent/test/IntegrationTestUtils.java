@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
@@ -77,20 +78,32 @@ public class IntegrationTestUtils {
     }
   }
 
+  /** See {@link IntegrationTestUtils#createJarWithClasses(String, Class[])} */
+  public static URL createJarWithClasses(final Class<?>... classes) throws IOException {
+    return createJarWithClasses(null, classes);
+  }
   /**
    * Create a temporary jar on the filesystem with the bytes of the given classes.
    *
    * <p>The jar file will be removed when the jvm exits.
    *
+   * @param mainClassname The name of the class to use for Main-Class and Premain-Class. May be null
    * @param classes classes to package into the jar.
    * @return the location of the newly created jar.
    * @throws IOException
    */
-  public static URL createJarWithClasses(final Class<?>... classes) throws IOException {
+  public static URL createJarWithClasses(final String mainClassname, final Class<?>... classes)
+      throws IOException {
     final File tmpJar = File.createTempFile(UUID.randomUUID().toString() + "-", ".jar");
     tmpJar.deleteOnExit();
 
     final Manifest manifest = new Manifest();
+    if (mainClassname != null) {
+      Attributes mainAttributes = manifest.getMainAttributes();
+      mainAttributes.put(Attributes.Name.MANIFEST_VERSION, "1.0");
+      mainAttributes.put(Attributes.Name.MAIN_CLASS, mainClassname);
+      mainAttributes.put(new Attributes.Name("Premain-Class"), mainClassname);
+    }
     final JarOutputStream target = new JarOutputStream(new FileOutputStream(tmpJar), manifest);
     for (final Class<?> clazz : classes) {
       addToJar(clazz, target);
