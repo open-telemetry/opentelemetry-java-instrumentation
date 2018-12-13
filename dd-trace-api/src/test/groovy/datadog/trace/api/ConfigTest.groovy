@@ -31,7 +31,7 @@ class ConfigTest extends Specification {
     config.writerType == "DDAgentWriter"
     config.agentHost == "localhost"
     config.agentPort == 8126
-    config.prioritySamplingEnabled == false
+    config.prioritySamplingEnabled == true
     config.traceResolverEnabled == true
     config.serviceMapping == [:]
     config.mergedSpanTags == [:]
@@ -54,7 +54,7 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + AGENT_HOST, "somehost")
     System.setProperty(PREFIX + TRACE_AGENT_PORT, "123")
     System.setProperty(PREFIX + AGENT_PORT_LEGACY, "456")
-    System.setProperty(PREFIX + PRIORITY_SAMPLING, "true")
+    System.setProperty(PREFIX + PRIORITY_SAMPLING, "false")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, "false")
     System.setProperty(PREFIX + SERVICE_MAPPING, "a:1")
     System.setProperty(PREFIX + GLOBAL_TAGS, "b:2")
@@ -77,7 +77,7 @@ class ConfigTest extends Specification {
     config.writerType == "LoggingWriter"
     config.agentHost == "somehost"
     config.agentPort == 123
-    config.prioritySamplingEnabled == true
+    config.prioritySamplingEnabled == false
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]
@@ -177,7 +177,7 @@ class ConfigTest extends Specification {
     properties.setProperty(WRITER_TYPE, "LoggingWriter")
     properties.setProperty(AGENT_HOST, "somehost")
     properties.setProperty(TRACE_AGENT_PORT, "123")
-    properties.setProperty(PRIORITY_SAMPLING, "true")
+    properties.setProperty(PRIORITY_SAMPLING, "false")
     properties.setProperty(TRACE_RESOLVER_ENABLED, "false")
     properties.setProperty(SERVICE_MAPPING, "a:1")
     properties.setProperty(GLOBAL_TAGS, "b:2")
@@ -198,7 +198,7 @@ class ConfigTest extends Specification {
     config.writerType == "LoggingWriter"
     config.agentHost == "somehost"
     config.agentPort == 123
-    config.prioritySamplingEnabled == true
+    config.prioritySamplingEnabled == false
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]

@@ -42,21 +42,20 @@ class DDTracerTest extends Specification {
 
     then:
     tracer.serviceName == "unnamed-java-app"
-    tracer.sampler instanceof AllSampler
+    tracer.sampler instanceof RateByServiceSampler
     tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:8126/v0.3/traces } }"
 
     tracer.spanContextDecorators.size() == 12
   }
 
+
   def "verify overriding sampler"() {
     setup:
-    System.setProperty(PREFIX + PRIORITY_SAMPLING, "true")
-
+    System.setProperty(PREFIX + PRIORITY_SAMPLING, "false")
     when:
     def tracer = new DDTracer(new Config())
-
     then:
-    tracer.sampler instanceof RateByServiceSampler
+    tracer.sampler instanceof AllSampler
   }
 
   def "verify overriding writer"() {
@@ -136,7 +135,7 @@ class DDTracerTest extends Specification {
 
     where:
     key                      | value
-    Config.PRIORITY_SAMPLING | "true"
-    Config.PRIORITY_SAMPLING | "false"
+    PRIORITY_SAMPLING | "true"
+    PRIORITY_SAMPLING | "false"
   }
 }
