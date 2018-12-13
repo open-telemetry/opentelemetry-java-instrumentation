@@ -188,6 +188,8 @@ public class LoggerInstrumentation implements Instrumenter {
                       "getName",
                       "()Ljava/lang/String;",
                       false);
+                  // TODO: move dd- prefix to a constant once agent-bootstrap project is visible to
+                  // all subprojects
                   mv.visitLdcInsn("dd-");
                   mv.visitMethodInsn(
                       Opcodes.INVOKEVIRTUAL,

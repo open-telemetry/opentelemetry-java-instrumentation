@@ -54,16 +54,3 @@ tasks.withType(Test) {
 parent.subprojects.collect { it.tasks.withType(Test) } each {
   test.shouldRunAfter it
 }
-
-task jvmStartupTest(type: Exec) {
-  dependsOn project(':dd-java-agent').shadowJar
-  dependsOn project(':dd-java-agent-ittests').compileTestJava
-  workingDir "$buildDir/classes/java/test"
-  commandLine "java"
-  args "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
-  args "-Ddd.jmxfetch.enabled=true"
-  args "-Djava.system.class.loader=jvmbootstraptest.CustomClassloader"
-  args "jvmbootstraptest.JvmBootstrapTest"
-  description = "Runs JVM Bootstrapping tests"
-}
-test.finalizedBy 'jvmStartupTest'

@@ -52,6 +52,7 @@ public class MuzzleVersionScanPlugin {
                     .newInstance();
       }
       if (!(instrumenter instanceof Instrumenter.Default)) {
+        // only default Instrumenters use muzzle. Skip custom instrumenters.
         continue;
       }
       Method m = null;
@@ -98,6 +99,7 @@ public class MuzzleVersionScanPlugin {
                       .newInstance();
         }
         if (!(instrumenter instanceof Instrumenter.Default)) {
+          // only default Instrumenters use muzzle. Skip custom instrumenters.
           continue;
         }
         Instrumenter.Default defaultInstrumenter = (Instrumenter.Default) instrumenter;

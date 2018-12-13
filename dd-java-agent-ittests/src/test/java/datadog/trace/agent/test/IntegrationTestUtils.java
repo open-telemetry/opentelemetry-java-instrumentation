@@ -1,15 +1,22 @@
 package datadog.trace.agent.test;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.jar.JarEntry;
@@ -179,5 +186,54 @@ public class IntegrationTestUtils {
       System.gc();
       System.runFinalization();
     }
+  }
+
+  /**
+   * On a separate JVM, run the main method for a given class.
+   *
+   * @param mainClassName The name of the entry point class. Must declare a main method.
+   * @param printOutputStreams if true, print stdout and stderr of the child jvm
+   * @return the return code of the child jvm
+   * @throws Exception
+   */
+  public static int runOnSeparateJvm(
+      final String mainClassName,
+      final String[] jvmArgs,
+      final String[] mainMethodArgs,
+      final boolean printOutputStreams)
+      throws Exception {
+    final String separator = System.getProperty("file.separator");
+    final String classpath = System.getProperty("java.class.path");
+    final String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
+    final List<String> commands = new ArrayList();
+    commands.add(path);
+    commands.addAll(Arrays.asList(jvmArgs));
+    commands.add("-cp");
+    commands.add(classpath);
+    commands.add(mainClassName);
+    commands.addAll(Arrays.asList(mainMethodArgs));
+    final ProcessBuilder processBuilder = new ProcessBuilder(commands.toArray(new String[0]));
+    final Process process = processBuilder.start();
+    final int result = process.waitFor();
+
+    if (printOutputStreams) {
+      final BufferedReader stdInput =
+          new BufferedReader(new InputStreamReader(process.getInputStream(), UTF_8));
+
+      final BufferedReader stdError =
+          new BufferedReader(new InputStreamReader(process.getErrorStream(), UTF_8));
+      System.out.println("--- " + mainClassName + " stdout ---");
+      String s = null;
+      while ((s = stdInput.readLine()) != null) {
+        System.out.println(s);
+      }
+      System.out.println("--- stdout end ---");
+      System.out.println("--- " + mainClassName + " stderr ---");
+      while ((s = stdError.readLine()) != null) {
+        System.out.println(s);
+      }
+      System.out.println("--- stderr end ---");
+    }
+    return result;
   }
 }
