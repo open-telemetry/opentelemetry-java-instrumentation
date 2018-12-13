@@ -177,13 +177,10 @@ class DDSpanTest extends Specification {
     expect:
     parent.context().samplingPriority == PrioritySampling.SAMPLER_KEEP
     parent.getMetrics().get(DDSpanContext.PRIORITY_SAMPLING_KEY) == PrioritySampling.SAMPLER_KEEP
-    parent.getMetrics().get(DDSpanContext.SAMPLE_RATE_KEY) == 1.0
     child1.getSamplingPriority() == parent.getSamplingPriority()
     child1.getMetrics().get(DDSpanContext.PRIORITY_SAMPLING_KEY) == null
-    child1.getMetrics().get(DDSpanContext.SAMPLE_RATE_KEY) == null
     child2.getSamplingPriority() == parent.getSamplingPriority()
     child2.getMetrics().get(DDSpanContext.PRIORITY_SAMPLING_KEY) == null
-    child2.getMetrics().get(DDSpanContext.SAMPLE_RATE_KEY) == null
   }
 
   def "getRootSpan returns the root span"() {
