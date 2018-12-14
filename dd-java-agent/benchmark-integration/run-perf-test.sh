@@ -3,15 +3,17 @@
 # A script for measuring a server's throughput with or without a java agent.
 test_csv_file=/tmp/perf_results.csv
 server_output=/tmp/server_output.txt
-server_jar=$1
-agent_jars="${@:2}"
+server_type=$1
+server_package=$2
+agent_jars="${@:3}"
 server_pid=""
 agent_pid=$(lsof -i tcp:8126 | awk '$8 == "TCP" { print $2 }')
-
-if [ "$server_jar" = "" ]; then
-    echo "usage: ./run-perf-test.sh path-to-server-jar path-to-agent1 path-to-agent2..."
+if [[ "$server_package" = "" ]] || [[ "$server_type" != "play-zip" && "$server_type" != "jar" ]]; then
+    echo "usage: ./run-perf-test.sh [play-zip|jar] path-to-server-package path-to-agent1 path-to-agent2..."
     echo ""
-    echo "path-to-server-jar : Must be a jar which creates an http server on local port 8080 when started as a jar."
+    echo "[play-zip|jar] : Specify whether the server will be in zip format (play server) or jar format"
+    echo "path-to-server-package : Must be a jar or binary zip package which creates an http server on local port 8080 when started."
+    echo "    Note: if the server package is a zip, then the script will attempt to unzip to a temp directory and run the server from there."
     echo "path-to-agent*     : Each must be a javaagent jar, or NoAgent."
     echo ""
     echo "Example: This will run the perf tests against myserver.jar. It will run against no agent as a baseline, then against myagent-1.0.jar."
@@ -41,7 +43,9 @@ fi
 echo ""
 echo ""
 
-# Start up server jar passed into the scipt
+unzipped_server_path=""
+
+# Start up server passed into the script
 # Blocks until server is bound to local port 8080
 function start_server {
     agent_jar="$1"
@@ -49,8 +53,44 @@ function start_server {
     if [ "$agent_jar" != "" -a -f "$agent_jar" ]; then
         javaagent_arg="-javaagent:$agent_jar -Ddatadog.slf4j.simpleLogger.defaultLogLevel=off -Ddd.writer.type=$writer_type -Ddd.service.name=perf-test-app"
     fi
-    echo "starting server: java $javaagent_arg -jar $server_jar"
-    { /usr/bin/time -l java $javaagent_arg -Xms256m -Xmx256m -jar $server_jar ; } 2> $server_output  &
+
+    if [ "$server_type" = "jar" ]; then
+      echo "starting server: java $javaagent_arg -jar $server_package"
+      { /usr/bin/time -l java $javaagent_arg -Xms256m -Xmx256m -jar $server_package ; } 2> $server_output  &
+    else
+      # make a temp directory to hold the unzipped server
+      unzip_temp=`mktemp -d`
+      # perform the unzipping of the play zip
+      unzip ${server_package} -d ${unzip_temp} &> /dev/null
+
+      if [ $? -eq 0 ]; then
+        echo "Unzipped server package at ${unzip_temp}"
+      else
+        echo "Failed to unzip server package to ${unzip_temp}"
+        exit 2
+      fi
+
+      # get the unzipped directory name
+      unzipped_dirname=`basename ${unzip_temp}/*`
+      # unzipped server location, will be removed when the server is stopped
+      unzipped_server_path=${unzip_temp}
+
+      java_opts_env='JAVA_OPTS="'${javaagent_arg}'"'
+      # it appears the binary script will always be named playBinary at the time of writing
+      # no matter what the zip file is named.
+      play_script=${unzipped_server_path}/${unzipped_dirname}/bin/playBinary
+
+      # have to use env to set JAVA_OPTS because of a gradle play plugin bug:
+      # https://github.com/gradle/gradle/issues/4471
+      if [ "$agent_jar" != "" -a -f "$agent_jar" ]; then
+        utility_cmd="env JAVA_OPTS=${javaagent_arg} ${play_script}"
+      else
+        utility_cmd="${play_script}"
+      fi
+
+      echo "starting server: ${utility_cmd}"
+      { /usr/bin/time -l ${utility_cmd} ; } 2> $server_output &
+    fi
 
     # Block until server is up
     until nc -z localhost 8080; do
@@ -67,6 +107,11 @@ function stop_server {
     kill $server_pid
     wait
     server_pid=""
+    # clean up the unzipped server
+    if [[ ${unzipped_server_path} != "" ]] && [[ ${server_type} = "play-zip" ]] && [[ -d ${unzipped_server_path} ]]; then
+      echo "Cleaning up unzipped server at "${unzipped_server_path}
+      rm -rf ${unzipped_server_path}
+    fi
 }
 
 # Warmup and run wrk tests on a single endpoint.
