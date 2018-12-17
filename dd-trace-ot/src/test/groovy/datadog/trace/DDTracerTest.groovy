@@ -121,7 +121,7 @@ class DDTracerTest extends Specification {
     tracer.serviceName == DEFAULT_SERVICE_NAME
     tracer.sampler == sampler
     tracer.writer == writer
-    tracer.runtimeId.length() > 0
+    tracer.runtimeTags.size() > 0
   }
 
   def "Shares TraceCount with DDApi with #key = #value"() {

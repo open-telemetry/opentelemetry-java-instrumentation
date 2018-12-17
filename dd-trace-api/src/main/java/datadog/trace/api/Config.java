@@ -50,6 +50,8 @@ public class Config {
   public static final String JMX_FETCH_STATSD_PORT = "jmxfetch.statsd.port";
 
   public static final String RUNTIME_ID_TAG = "runtime-id";
+  public static final String LANGUAGES_TAG_KEY = "languages";
+  public static final String LANGUAGES_TAG_VALUE = "jvm";
   public static final String DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
   public static final String DD_AGENT_WRITER_TYPE = "DDAgentWriter";
@@ -183,8 +185,26 @@ public class Config {
     final Map<String, String> result = newHashMap(globalTags.size() + jmxTags.size() + 1);
     result.putAll(globalTags);
     result.putAll(jmxTags);
-    result.put(RUNTIME_ID_TAG, runtimeId);
+    result.putAll(getRuntimeTags());
+    // service name set here instead of getRuntimeTags because apm already manages the service tag
+    // and may chose to override it.
     result.put(SERVICE_NAME, serviceName);
+    return Collections.unmodifiableMap(result);
+  }
+
+  /**
+   * Return a map of tags required by the datadog backend to link runtime metrics (i.e. jmx) and
+   * traces.
+   *
+   * <p>These tags must be applied to every runtime metrics and placed on the root span of every
+   * trace.
+   *
+   * @return A map of tag-name -> tag-value
+   */
+  public Map<String, String> getRuntimeTags() {
+    final Map<String, String> result = newHashMap(3);
+    result.put(RUNTIME_ID_TAG, runtimeId);
+    result.put(LANGUAGES_TAG_KEY, LANGUAGES_TAG_VALUE);
     return Collections.unmodifiableMap(result);
   }
 
