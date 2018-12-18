@@ -5,6 +5,7 @@ import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.common.writer.ListWriter
+import datadog.trace.context.ScopeListener
 import io.opentracing.Scope
 import io.opentracing.Span
 import io.opentracing.noop.NoopSpan
@@ -15,6 +16,7 @@ import spock.lang.Timeout
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
 class ScopeManagerTest extends Specification {
@@ -405,6 +407,52 @@ class ScopeManagerTest extends Specification {
     contexts                                                         | _
     [new AtomicReferenceScope(true)]                                 | _
     [new AtomicReferenceScope(true), new AtomicReferenceScope(true)] | _
+  }
+
+  def "add scope listener"() {
+    setup:
+    AtomicInteger activatedCount = new AtomicInteger(0)
+    AtomicInteger closedCount = new AtomicInteger(0)
+
+    scopeManager.addScopeListener(new ScopeListener() {
+      @Override
+      void afterScopeActivated() {
+        activatedCount.incrementAndGet()
+      }
+
+      @Override
+      void afterScopeClose() {
+        closedCount.incrementAndGet()
+      }
+    })
+
+    when:
+    Scope scope1 = scopeManager.activate(NoopSpan.INSTANCE, true)
+
+    then:
+    activatedCount.get() == 1
+    closedCount.get() == 0
+
+    when:
+    Scope scope2 = scopeManager.activate(NoopSpan.INSTANCE, true)
+
+    then:
+    activatedCount.get() == 2
+    closedCount.get() == 0
+
+    when:
+    scope2.close()
+
+    then:
+    activatedCount.get() == 3
+    closedCount.get() == 1
+
+    when:
+    scope1.close()
+
+    then:
+    activatedCount.get() == 3
+    closedCount.get() == 2
   }
 
   boolean spanFinished(Span span) {

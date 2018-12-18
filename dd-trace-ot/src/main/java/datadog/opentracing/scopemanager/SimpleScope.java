@@ -1,5 +1,6 @@
 package datadog.opentracing.scopemanager;
 
+import datadog.trace.context.ScopeListener;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 
@@ -19,6 +20,9 @@ public class SimpleScope implements Scope {
     this.finishOnClose = finishOnClose;
     this.toRestore = scopeManager.tlsScope.get();
     scopeManager.tlsScope.set(this);
+    for (final ScopeListener listener : scopeManager.scopeListeners) {
+      listener.afterScopeActivated();
+    }
   }
 
   @Override
@@ -26,9 +30,17 @@ public class SimpleScope implements Scope {
     if (finishOnClose) {
       spanUnderScope.finish();
     }
+    for (final ScopeListener listener : scopeManager.scopeListeners) {
+      listener.afterScopeClose();
+    }
 
     if (scopeManager.tlsScope.get() == this) {
       scopeManager.tlsScope.set(toRestore);
+      if (toRestore != null) {
+        for (final ScopeListener listener : scopeManager.scopeListeners) {
+          listener.afterScopeActivated();
+        }
+      }
     }
   }
 
