@@ -1,0 +1,23 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+muzzle {
+  pass {
+    group = 'org.slf4j'
+    module = 'slf4j-api'
+    versions = '(,)'
+  }
+}
+
+dependencies {
+  compile project(':dd-trace-api')
+  compile project(':dd-java-agent:agent-tooling')
+
+  // no need to compileOnly against slf4j. Included with transitive dependency.
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+}
