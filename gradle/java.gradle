@@ -15,12 +15,15 @@ lombok { // optional: values below are the defaults
   sha256 = ""
 }
 
-apply plugin: "net.ltgt.errorprone"
-tasks.withType(JavaCompile) {
-  options.compilerArgs += ['-Xep:FutureReturnValueIgnored:OFF']
-  // workaround for: https://github.com/google/error-prone/issues/780
-  options.compilerArgs += ['-Xep:ParameterName:OFF']
-  options.compilerArgs += ['-XepDisableWarningsInGeneratedCode']
+if (project.hasProperty('enableErrorProne')) {
+  apply plugin: "net.ltgt.errorprone"
+  tasks.withType(JavaCompile) {
+    outputs.upToDateWhen { false }
+    options.compilerArgs += ['-Xep:FutureReturnValueIgnored:OFF']
+    // workaround for: https://github.com/google/error-prone/issues/780
+    options.compilerArgs += ['-Xep:ParameterName:OFF']
+    options.compilerArgs += ['-XepDisableWarningsInGeneratedCode']
+  }
 }
 
 apply plugin: "eclipse"
@@ -262,4 +265,3 @@ plugins.withType(BasePlugin) {
     otherTasks*.mustRunAfter deleteTasks
   }
 }
-
