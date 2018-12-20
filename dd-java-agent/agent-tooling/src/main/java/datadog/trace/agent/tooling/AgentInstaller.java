@@ -92,7 +92,6 @@ public class AgentInstaller {
             .or(nameStartsWith("org.aspectj."))
             .or(nameStartsWith("org.groovy."))
             .or(nameStartsWith("com.p6spy."))
-            .or(nameStartsWith("org.slf4j."))
             .or(nameStartsWith("com.newrelic."))
             .or(nameContains("javassist"))
             .or(nameContains(".asm."))

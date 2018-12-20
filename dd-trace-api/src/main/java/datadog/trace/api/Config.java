@@ -59,6 +59,9 @@ public class Config {
   public static final String DEFAULT_AGENT_HOST = "localhost";
   public static final int DEFAULT_TRACE_AGENT_PORT = 8126;
 
+  public static final String LOGS_INJECTION_ENABLED = "logs.injection";
+  public static final boolean DEFAULT_LOGS_INJECTION_ENABLED = false;
+
   private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
 
   private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = true;
@@ -91,6 +94,7 @@ public class Config {
   @Getter private final Integer jmxFetchRefreshBeansPeriod;
   @Getter private final String jmxFetchStatsdHost;
   @Getter private final Integer jmxFetchStatsdPort;
+  @Getter private final boolean logsInjectionEnabled;
 
   // Read order: System Properties -> Env Variables, [-> default value]
   // Visible for testing
@@ -128,6 +132,9 @@ public class Config {
     jmxFetchStatsdHost = getSettingFromEnvironment(JMX_FETCH_STATSD_HOST, null);
     jmxFetchStatsdPort =
         getIntegerSettingFromEnvironment(JMX_FETCH_STATSD_PORT, DEFAULT_JMX_FETCH_STATSD_PORT);
+
+    logsInjectionEnabled =
+        getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
   }
 
   // Read order: Properties -> Parent
@@ -169,6 +176,9 @@ public class Config {
     jmxFetchStatsdHost = properties.getProperty(JMX_FETCH_STATSD_HOST, parent.jmxFetchStatsdHost);
     jmxFetchStatsdPort =
         getPropertyIntegerValue(properties, JMX_FETCH_STATSD_PORT, parent.jmxFetchStatsdPort);
+
+    logsInjectionEnabled =
+        getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
   }
 
   public Map<String, String> getMergedSpanTags() {

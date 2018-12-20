@@ -17,6 +17,7 @@ import datadog.trace.common.sampling.Sampler;
 import datadog.trace.common.writer.DDAgentWriter;
 import datadog.trace.common.writer.DDApi;
 import datadog.trace.common.writer.Writer;
+import datadog.trace.context.ScopeListener;
 import io.opentracing.References;
 import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
@@ -352,6 +353,11 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   @Override
   public boolean addTraceInterceptor(final TraceInterceptor interceptor) {
     return interceptors.add(interceptor);
+  }
+
+  @Override
+  public void addScopeListener(ScopeListener listener) {
+    this.scopeManager.addScopeListener(listener);
   }
 
   @Override

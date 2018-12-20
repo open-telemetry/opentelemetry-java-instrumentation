@@ -3,6 +3,7 @@ package datadog.opentracing.scopemanager;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDSpanContext;
 import datadog.opentracing.PendingTrace;
+import datadog.trace.context.ScopeListener;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import java.io.Closeable;
@@ -50,6 +51,9 @@ public class ContinuableScope implements Scope, TraceScope {
     this.finishOnClose = finishOnClose;
     toRestore = scopeManager.tlsScope.get();
     scopeManager.tlsScope.set(this);
+    for (final ScopeListener listener : scopeManager.scopeListeners) {
+      listener.afterScopeActivated();
+    }
   }
 
   @Override
@@ -62,8 +66,17 @@ public class ContinuableScope implements Scope, TraceScope {
       spanUnderScope.finish();
     }
 
+    for (final ScopeListener listener : scopeManager.scopeListeners) {
+      listener.afterScopeClosed();
+    }
+
     if (scopeManager.tlsScope.get() == this) {
       scopeManager.tlsScope.set(toRestore);
+      if (toRestore != null) {
+        for (final ScopeListener listener : scopeManager.scopeListeners) {
+          listener.afterScopeActivated();
+        }
+      }
     }
   }
 

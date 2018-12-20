@@ -1,15 +1,19 @@
 package datadog.opentracing.scopemanager;
 
 import datadog.opentracing.DDSpan;
+import datadog.trace.context.ScopeListener;
 import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
 import io.opentracing.Span;
 import java.util.Deque;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ContextualScopeManager implements ScopeManager {
   static final ThreadLocal<Scope> tlsScope = new ThreadLocal<>();
   final Deque<ScopeContext> scopeContexts = new ConcurrentLinkedDeque<>();
+  final List<ScopeListener> scopeListeners = new CopyOnWriteArrayList<>();
 
   @Override
   public Scope activate(final Span span, final boolean finishOnClose) {
@@ -37,5 +41,10 @@ public class ContextualScopeManager implements ScopeManager {
 
   public void addScopeContext(final ScopeContext context) {
     scopeContexts.addFirst(context);
+  }
+
+  /** Attach a listener to scope activation events */
+  public void addScopeListener(ScopeListener listener) {
+    scopeListeners.add(listener);
   }
 }

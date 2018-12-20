@@ -1,6 +1,7 @@
 package datadog.trace.api;
 
 import datadog.trace.api.interceptor.TraceInterceptor;
+import datadog.trace.context.ScopeListener;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -26,6 +27,9 @@ public class GlobalTracer {
         public boolean addTraceInterceptor(TraceInterceptor traceInterceptor) {
           return false;
         }
+
+        @Override
+        public void addScopeListener(ScopeListener listener) {}
       };
   private static final AtomicReference<Tracer> provider = new AtomicReference<>(NO_OP);
 
