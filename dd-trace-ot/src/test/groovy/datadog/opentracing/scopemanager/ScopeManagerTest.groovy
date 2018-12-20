@@ -421,7 +421,7 @@ class ScopeManagerTest extends Specification {
       }
 
       @Override
-      void afterScopeClose() {
+      void afterScopeClosed() {
         closedCount.incrementAndGet()
       }
     })
@@ -453,6 +453,35 @@ class ScopeManagerTest extends Specification {
     then:
     activatedCount.get() == 3
     closedCount.get() == 2
+
+    when:
+    Scope continuableScope = tracer.buildSpan("foo").startActive(true)
+
+    then:
+    continuableScope instanceof ContinuableScope
+    activatedCount.get() == 4
+
+    when:
+    Scope childContinuableScope = tracer.buildSpan("child").startActive(true)
+
+    then:
+    childContinuableScope instanceof ContinuableScope
+    activatedCount.get() == 5
+    closedCount.get() == 2
+
+    when:
+    childContinuableScope.close()
+
+    then:
+    activatedCount.get() == 6
+    closedCount.get() == 3
+
+    when:
+    continuableScope.close()
+
+    then:
+    activatedCount.get() == 6
+    closedCount.get() == 4
   }
 
   boolean spanFinished(Span span) {

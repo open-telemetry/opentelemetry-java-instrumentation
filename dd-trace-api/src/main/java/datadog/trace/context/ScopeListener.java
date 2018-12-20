@@ -11,5 +11,5 @@ public interface ScopeListener {
   void afterScopeActivated();
 
   /** Called just after a scope is closed. */
-  void afterScopeClose();
+  void afterScopeClosed();
 }

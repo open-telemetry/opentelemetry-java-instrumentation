@@ -102,7 +102,7 @@ public class MDCInjectionInstrumentation extends Instrumenter.Default {
       }
 
       @Override
-      public void afterScopeClose() {
+      public void afterScopeClosed() {
         try {
           removeMethod.invoke(null, CorrelationIdentifier.getTraceIdKey());
           removeMethod.invoke(null, CorrelationIdentifier.getSpanIdKey());

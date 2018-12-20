@@ -67,7 +67,7 @@ public class ContinuableScope implements Scope, TraceScope {
     }
 
     for (final ScopeListener listener : scopeManager.scopeListeners) {
-      listener.afterScopeClose();
+      listener.afterScopeClosed();
     }
 
     if (scopeManager.tlsScope.get() == this) {
