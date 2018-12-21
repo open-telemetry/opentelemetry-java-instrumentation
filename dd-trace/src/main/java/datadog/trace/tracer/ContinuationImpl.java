@@ -1,6 +1,9 @@
 package datadog.trace.tracer;
 
+import lombok.extern.slf4j.Slf4j;
+
 /** Concrete implementation of a continuation */
+@Slf4j
 class ContinuationImpl implements Continuation {
 
   private final TraceInternal trace;
@@ -36,18 +39,20 @@ class ContinuationImpl implements Continuation {
     }
   }
 
-  // TODO: we may want to reconsider usage of 'finalize'. One of the problems seems to be that
-  // exceptions thrown in finalizer are eaten up and ignored, and may not even be logged by default.
-  // This may lead to fun debugging sessions.
   @Override
   protected synchronized void finalize() {
-    if (!closed) {
-      trace
-          .getTracer()
-          .reportWarning(
-              "Closing continuation due to GC, this will prevent trace from being reported: %s",
-              this);
-      closeContinuation(true);
+    try {
+      if (!closed) {
+        trace
+            .getTracer()
+            .reportWarning(
+                "Closing continuation due to GC, this will prevent trace from being reported: %s",
+                this);
+        closeContinuation(true);
+      }
+    } catch (final Throwable t) {
+      // Exceptions thrown in finalizer are eaten up and ignored, so log them instead
+      log.debug("Span finalizer had thrown an exception: ", t);
     }
   }
 

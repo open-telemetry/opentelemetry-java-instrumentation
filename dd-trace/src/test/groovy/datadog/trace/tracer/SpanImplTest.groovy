@@ -270,6 +270,18 @@ class SpanImplTest extends Specification {
     0 * tracer.reportError(_, *_)
   }
 
+  def "finalize catches all exceptions"() {
+    setup:
+    def span = new SpanImpl(trace, parentContext, startTimestamp)
+
+    when:
+    span.finalize()
+
+    then:
+    1 * startTimestamp.getDuration() >> { throw new Throwable() }
+    noExceptionThrown()
+  }
+
   def "span without timestamp"() {
     when:
     new SpanImpl(trace, parentContext, null)

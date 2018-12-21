@@ -6,8 +6,10 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /** Concrete implementation of a span */
+@Slf4j
 class SpanImpl implements Span {
 
   private final TraceInternal trace;
@@ -217,19 +219,22 @@ class SpanImpl implements Span {
     }
   }
 
-  // TODO: we may want to reconsider usage of 'finalize'. One of the problems seems to be that
-  // exceptions thrown in finalizer are eaten up and ignored, and may not even be logged by default.
-  // This may lead to fun debugging sessions.
   @Override
   protected synchronized void finalize() {
-    // Note: according to docs finalize is only called once for a given instance - even if instance
-    // if 'revived' from the dead by passing reference to some other object and then dies again.
-    if (!isFinished()) {
-      trace
-          .getTracer()
-          .reportWarning(
-              "Finishing span due to GC, this will prevent trace from being reported: %s", this);
-      finishSpan(startTimestamp.getDuration(), true);
+    try {
+      // Note: according to docs finalize is only called once for a given instance - even if
+      // instance is 'revived' from the dead by passing reference to some other object and
+      // then dies again.
+      if (!isFinished()) {
+        trace
+            .getTracer()
+            .reportWarning(
+                "Finishing span due to GC, this will prevent trace from being reported: %s", this);
+        finishSpan(startTimestamp.getDuration(), true);
+      }
+    } catch (final Throwable t) {
+      // Exceptions thrown in finalizer are eaten up and ignored, so log them instead
+      log.debug("Span finalizer had thrown an exception: ", t);
     }
   }
 

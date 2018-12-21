@@ -90,4 +90,16 @@ class ContinuationImplTest extends Specification {
     0 * tracer.reportError(_, *_)
   }
 
+  def "finalize catches all exceptions"() {
+    setup:
+    def continuation = new ContinuationImpl(trace, span)
+
+    when:
+    continuation.finalize()
+
+    then:
+    1 * trace.getTracer() >> { throw new Throwable() }
+    noExceptionThrown()
+  }
+
 }
