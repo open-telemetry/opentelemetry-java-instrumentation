@@ -11,6 +11,7 @@ import spock.lang.Shared
 import spock.lang.Unroll
 
 import javax.sql.DataSource
+import java.sql.CallableStatement
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -259,6 +260,62 @@ class JDBCInstrumentationTest extends AgentTestRunner {
   def "prepared statement query on #driver with #connection.getClass().getCanonicalName() generates a span"() {
     setup:
     PreparedStatement statement = connection.prepareStatement(query)
+    ResultSet resultSet = runUnderTrace("parent") {
+      return statement.executeQuery()
+    }
+
+    expect:
+    resultSet.next()
+    resultSet.getInt(1) == 3
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          operationName "parent"
+          parent()
+        }
+        span(1) {
+          operationName "${driver}.query"
+          serviceName driver
+          resourceName query
+          spanType DDSpanTypes.SQL
+          childOf span(0)
+          errored false
+          tags {
+            "db.type" driver
+            if (username != null) {
+              "db.user" username
+            }
+            "span.kind" Tags.SPAN_KIND_CLIENT
+            "span.type" DDSpanTypes.SQL
+            "component" "java-jdbc-prepared_statement"
+            "db.jdbc.url" jdbcUrls.get(driver)
+            "span.origin.type" String
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    cleanup:
+    statement.close()
+    connection.close()
+
+    where:
+    driver  | connection                                                | username | query
+    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "SELECT 3"
+    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "SELECT 3"
+    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "SELECT 3"
+    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "SELECT 3"
+    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+  }
+
+  @Unroll
+  def "prepared call on #driver with #connection.getClass().getCanonicalName() generates a span"() {
+    setup:
+    CallableStatement statement = connection.prepareCall(query)
     ResultSet resultSet = runUnderTrace("parent") {
       return statement.executeQuery()
     }

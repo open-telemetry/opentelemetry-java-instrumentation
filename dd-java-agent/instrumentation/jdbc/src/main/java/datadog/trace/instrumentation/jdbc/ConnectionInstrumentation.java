@@ -36,7 +36,8 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
     transformers.put(
         nameStartsWith("prepare")
             .and(takesArgument(0, String.class))
-            .and(returns(PreparedStatement.class)),
+            // Also include CallableStatement, which is a sub type of PreparedStatement
+            .and(returns(safeHasSuperType(named(PreparedStatement.class.getName())))),
         ConnectionPrepareAdvice.class.getName());
     return transformers;
   }
