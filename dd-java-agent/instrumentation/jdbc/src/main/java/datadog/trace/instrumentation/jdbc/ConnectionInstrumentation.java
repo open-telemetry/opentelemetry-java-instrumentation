@@ -2,7 +2,6 @@ package datadog.trace.instrumentation.jdbc;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
-import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -38,7 +37,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
         nameStartsWith("prepare")
             .and(takesArgument(0, String.class))
             // Also include CallableStatement, which is a sub type of PreparedStatement
-            .and(returns(isSubTypeOf(PreparedStatement.class))),
+            .and(returns(safeHasSuperType(named(PreparedStatement.class.getName())))),
         ConnectionPrepareAdvice.class.getName());
     return transformers;
   }
