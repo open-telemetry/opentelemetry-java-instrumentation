@@ -19,6 +19,9 @@ include ':dd-java-agent:testing'
 
 include ':dd-smoke-tests:wildfly'
 
+include ':dd-java-agent-ittests'
+include ':dd-java-agent-ittests:play-ittests'
+
 // instrumentation:
 include ':dd-java-agent:instrumentation:akka-http-10.0'
 include ':dd-java-agent:instrumentation:apache-httpclient-4'
