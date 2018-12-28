@@ -182,10 +182,13 @@ public class Config {
   }
 
   public Map<String, String> getMergedJmxTags() {
-    final Map<String, String> result = newHashMap(globalTags.size() + jmxTags.size() + 1);
+    final Map<String, String> runtimeTags = getRuntimeTags();
+    final Map<String, String> result =
+        newHashMap(
+            globalTags.size() + jmxTags.size() + runtimeTags.size() + 1 /* for serviceName */);
     result.putAll(globalTags);
     result.putAll(jmxTags);
-    result.putAll(getRuntimeTags());
+    result.putAll(runtimeTags);
     // service name set here instead of getRuntimeTags because apm already manages the service tag
     // and may chose to override it.
     result.put(SERVICE_NAME, serviceName);
