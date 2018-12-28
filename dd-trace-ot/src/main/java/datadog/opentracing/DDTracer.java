@@ -54,7 +54,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   /** Scope manager is in charge of managing the scopes from which spans are created */
   final ContextualScopeManager scopeManager = new ContextualScopeManager();
 
-  /** Tags required to link apm trades to runtime metrics */
+  /** Tags required to link apm traces to runtime metrics */
   final Map<String, String> runtimeTags;
   /** A set of tags that are added to every span */
   private final Map<String, String> defaultSpanTags;
@@ -627,7 +627,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           tags.putAll(((TagContext) parentContext).getTags());
         }
         // add runtime tags to the root span
-        for (Map.Entry<String, String> runtimeTag : runtimeTags.entrySet()) {
+        for (final Map.Entry<String, String> runtimeTag : runtimeTags.entrySet()) {
           tags.put(runtimeTag.getKey(), runtimeTag.getValue());
         }
 

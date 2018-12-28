@@ -50,8 +50,8 @@ public class Config {
   public static final String JMX_FETCH_STATSD_PORT = "jmxfetch.statsd.port";
 
   public static final String RUNTIME_ID_TAG = "runtime-id";
-  public static final String LANGUAGES_TAG_KEY = "languages";
-  public static final String LANGUAGES_TAG_VALUE = "jvm";
+  public static final String LANGUAGE_TAG_KEY = "language";
+  public static final String LANGUAGE_TAG_VALUE = "jvm";
   public static final String DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
   public static final String DD_AGENT_WRITER_TYPE = "DDAgentWriter";
@@ -202,9 +202,9 @@ public class Config {
    * @return A map of tag-name -> tag-value
    */
   public Map<String, String> getRuntimeTags() {
-    final Map<String, String> result = newHashMap(3);
+    final Map<String, String> result = newHashMap(2);
     result.put(RUNTIME_ID_TAG, runtimeId);
-    result.put(LANGUAGES_TAG_KEY, LANGUAGES_TAG_VALUE);
+    result.put(LANGUAGE_TAG_KEY, LANGUAGE_TAG_VALUE);
     return Collections.unmodifiableMap(result);
   }
 

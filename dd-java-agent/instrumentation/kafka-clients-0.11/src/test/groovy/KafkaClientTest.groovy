@@ -1,5 +1,4 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.Config
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.junit.ClassRule
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
@@ -75,59 +74,49 @@ class KafkaClientTest extends AgentTestRunner {
     received.value() == greeting
     received.key() == null
 
-    TEST_WRITER.waitForTraces(2)
-    TEST_WRITER.size() == 2
-
-    def t1 = TEST_WRITER.get(0)
-    t1.size() == 1
-    def t2 = TEST_WRITER.get(1)
-    t2.size() == 1
-
-    and: // PRODUCER span 0
-    def t1span1 = t1[0]
-
-    t1span1.context().operationName == "kafka.produce"
-    t1span1.serviceName == "kafka"
-    t1span1.resourceName == "Produce Topic $SHARED_TOPIC"
-    t1span1.type == "queue"
-    !t1span1.context().getErrorFlag()
-    t1span1.context().parentId == "0"
-
-    def t1tags1 = t1span1.context().tags
-    t1tags1["component"] == "java-kafka"
-    t1tags1["span.kind"] == "producer"
-    t1tags1["span.type"] == "queue"
-    t1tags1["thread.name"] != null
-    t1tags1["thread.id"] != null
-    t1tags1[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
-    t1tags1.size() == 6
-
-    and: // CONSUMER span 0
-    def t2span1 = t2[0]
-
-    t2span1.context().operationName == "kafka.consume"
-    t2span1.serviceName == "kafka"
-    t2span1.resourceName == "Consume Topic $SHARED_TOPIC"
-    t2span1.type == "queue"
-    !t2span1.context().getErrorFlag()
-    t2span1.context().parentId == t1span1.context().spanId
-
-    def t2tags1 = t2span1.context().tags
-    t2tags1["component"] == "java-kafka"
-    t2tags1["span.kind"] == "consumer"
-    t1tags1["span.type"] == "queue"
-    t2tags1["partition"] >= 0
-    t2tags1["offset"] == 0
-    t2tags1["thread.name"] != null
-    t2tags1["thread.id"] != null
-    t2tags1[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
-    t2tags1.size() == 8
+    assertTraces(2) {
+      trace(0, 1) {
+        // PRODUCER span 0
+        span(0) {
+          serviceName "kafka"
+          operationName "kafka.produce"
+          resourceName "Produce Topic $SHARED_TOPIC"
+          spanType "queue"
+          errored false
+          parent()
+          tags {
+            "component" "java-kafka"
+            "span.kind" "producer"
+            "span.type" "queue"
+            defaultTags()
+          }
+        }
+      }
+      trace(1, 1) {
+        // CONSUMER span 0
+        span(0) {
+          serviceName "kafka"
+          operationName "kafka.consume"
+          resourceName "Consume Topic $SHARED_TOPIC"
+          spanType "queue"
+          errored false
+          childOf TEST_WRITER[0][0]
+          tags {
+            "component" "java-kafka"
+            "span.kind" "consumer"
+            "span.type" "queue"
+            "partition" { it >= 0 }
+            "offset" 0
+            defaultTags(true)
+          }
+        }
+      }
+    }
 
     def headers = received.headers()
     headers.iterator().hasNext()
-    new String(headers.headers("x-datadog-trace-id").iterator().next().value()) == "$t1span1.traceId"
-    new String(headers.headers("x-datadog-parent-id").iterator().next().value()) == "$t1span1.spanId"
-
+    new String(headers.headers("x-datadog-trace-id").iterator().next().value()) == "${TEST_WRITER[0][0].traceId}"
+    new String(headers.headers("x-datadog-parent-id").iterator().next().value()) == "${TEST_WRITER[0][0].spanId}"
 
     cleanup:
     producerFactory.stop()
