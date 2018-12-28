@@ -55,8 +55,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   /** Scope manager is in charge of managing the scopes from which spans are created */
   final ContextualScopeManager scopeManager = new ContextualScopeManager();
 
-  /** Value for runtime-id tag */
-  private final String runtimeId;
+  /** Tags required to link apm traces to runtime metrics */
+  final Map<String, String> runtimeTags;
   /** A set of tags that are added to every span */
   private final Map<String, String> defaultSpanTags;
   /** A configured mapping of service names to update with new values */
@@ -102,7 +102,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   // This constructor is already used in the wild, so we have to keep it inside this API for now.
   public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
-    this(serviceName, writer, sampler, Config.get().getRuntimeId());
+    this(serviceName, writer, sampler, Config.get().getRuntimeTags());
   }
 
   private DDTracer(final String serviceName, final Config config) {
@@ -110,7 +110,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         serviceName,
         Writer.Builder.forConfig(config),
         Sampler.Builder.forConfig(config),
-        config.getRuntimeId(),
+        config.getRuntimeTags(),
         config.getMergedSpanTags(),
         config.getServiceMapping(),
         config.getHeaderTags());
@@ -122,12 +122,12 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final String serviceName,
       final Writer writer,
       final Sampler sampler,
-      final String runtimeId) {
+      final Map<String, String> runtimeTags) {
     this(
         serviceName,
         writer,
         sampler,
-        runtimeId,
+        runtimeTags,
         Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap());
@@ -142,12 +142,14 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         config.getServiceName(),
         writer,
         Sampler.Builder.forConfig(config),
-        config.getRuntimeId(),
+        config.getRuntimeTags(),
         config.getMergedSpanTags(),
         config.getServiceMapping(),
         config.getHeaderTags());
   }
 
+  /** @Deprecated. Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map)} instead. */
+  @Deprecated
   public DDTracer(
       final String serviceName,
       final Writer writer,
@@ -156,7 +158,33 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders) {
-    assert runtimeId != null;
+    this(
+        serviceName,
+        writer,
+        sampler,
+        customRuntimeTags(runtimeId),
+        defaultSpanTags,
+        serviceNameMappings,
+        taggedHeaders);
+  }
+
+  @Deprecated
+  private static Map<String, String> customRuntimeTags(final String runtimeId) {
+    final Map<String, String> runtimeTags = new HashMap<>();
+    runtimeTags.putAll(Config.get().getRuntimeTags());
+    runtimeTags.put(Config.RUNTIME_ID_TAG, runtimeId);
+    return Collections.unmodifiableMap(runtimeTags);
+  }
+
+  public DDTracer(
+      final String serviceName,
+      final Writer writer,
+      final Sampler sampler,
+      final Map<String, String> runtimeTags,
+      final Map<String, String> defaultSpanTags,
+      final Map<String, String> serviceNameMappings,
+      final Map<String, String> taggedHeaders) {
+    assert runtimeTags != null;
     assert defaultSpanTags != null;
     assert serviceNameMappings != null;
     assert taggedHeaders != null;
@@ -166,7 +194,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this.writer.start();
     this.sampler = sampler;
     this.defaultSpanTags = defaultSpanTags;
-    this.runtimeId = runtimeId;
+    this.runtimeTags = runtimeTags;
     this.serviceNameMappings = serviceNameMappings;
 
     shutdownCallback =
@@ -376,8 +404,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         + writer
         + ", sampler="
         + sampler
-        + ", runtimeId="
-        + runtimeId
         + ", defaultSpanTags="
         + defaultSpanTags
         + '}';
@@ -602,12 +628,14 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           samplingPriority = PrioritySampling.UNSET;
           baggage = null;
         }
-
         // Get header tags whether propagating or not.
         if (parentContext instanceof TagContext) {
           tags.putAll(((TagContext) parentContext).getTags());
         }
-        tags.put(Config.RUNTIME_ID_TAG, runtimeId);
+        // add runtime tags to the root span
+        for (final Map.Entry<String, String> runtimeTag : runtimeTags.entrySet()) {
+          tags.put(runtimeTag.getKey(), runtimeTag.getValue());
+        }
 
         parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
       }

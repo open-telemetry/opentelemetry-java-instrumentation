@@ -143,7 +143,8 @@ class TraceInterceptorTest extends Specification {
     tags["thread.name"] != null
     tags["thread.id"] != null
     tags["runtime-id"] != null
-    tags.size() == 7
+    tags["language"] != null
+    tags.size() == 8
   }
 
   def "register interceptor through bridge"() {

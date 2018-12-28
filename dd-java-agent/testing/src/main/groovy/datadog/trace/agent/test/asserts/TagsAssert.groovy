@@ -33,13 +33,16 @@ class TagsAssert {
     assertedTags.add("thread.name")
     assertedTags.add("thread.id")
     assertedTags.add(Config.RUNTIME_ID_TAG)
+    assertedTags.add(Config.LANGUAGE_TAG_KEY)
 
     assert tags["thread.name"] != null
     assert tags["thread.id"] != null
     if ("0" == spanParentId || distributedRootSpan) {
       assert tags[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
+      assert tags[Config.LANGUAGE_TAG_KEY] == Config.LANGUAGE_TAG_VALUE
     } else {
       assert tags[Config.RUNTIME_ID_TAG] == null
+      assert tags[Config.LANGUAGE_TAG_KEY] == null
     }
   }
 

@@ -52,9 +52,10 @@ class DDSpanBuilderTest extends Specification {
 
     then:
     span.getTags() == [
-      (DDTags.THREAD_NAME)   : Thread.currentThread().getName(),
-      (DDTags.THREAD_ID)     : Thread.currentThread().getId(),
-      (Config.RUNTIME_ID_TAG): config.getRuntimeId()
+      (DDTags.THREAD_NAME)     : Thread.currentThread().getName(),
+      (DDTags.THREAD_ID)       : Thread.currentThread().getId(),
+      (Config.RUNTIME_ID_TAG)  : config.getRuntimeId(),
+      (Config.LANGUAGE_TAG_KEY): Config.LANGUAGE_TAG_VALUE,
     ]
 
     when:
@@ -224,9 +225,9 @@ class DDSpanBuilderTest extends Specification {
     span.context().getResourceName() == expectedChildResourceName
     span.context().getSpanType() == expectedChildType
   }
-  
-  
-    def "should inherit the DD parent attributes addReference CHILD_OF"() {
+
+
+  def "should inherit the DD parent attributes addReference CHILD_OF"() {
     setup:
     def expectedName = "fakeName"
     def expectedParentServiceName = "fakeServiceName"
@@ -286,9 +287,9 @@ class DDSpanBuilderTest extends Specification {
     span.context().getResourceName() == expectedChildResourceName
     span.context().getSpanType() == expectedChildType
   }
-  
-  
-    def "should inherit the DD parent attributes add reference FOLLOWS_FROM"() {
+
+
+  def "should inherit the DD parent attributes add reference FOLLOWS_FROM"() {
     setup:
     def expectedName = "fakeName"
     def expectedParentServiceName = "fakeServiceName"
@@ -389,7 +390,8 @@ class DDSpanBuilderTest extends Specification {
     span.parentId == extractedContext.spanId
     span.samplingPriority == extractedContext.samplingPriority
     span.context().baggageItems == extractedContext.baggage
-    span.context().@tags == extractedContext.tags + [(Config.RUNTIME_ID_TAG): config.getRuntimeId()]
+    span.context().@tags == extractedContext.tags + [(Config.RUNTIME_ID_TAG)  : config.getRuntimeId(),
+                                                     (Config.LANGUAGE_TAG_KEY): Config.LANGUAGE_TAG_VALUE,]
 
     where:
     extractedContext                                                      | _
@@ -406,9 +408,10 @@ class DDSpanBuilderTest extends Specification {
 
     expect:
     span.tags == tags + [
-      (DDTags.THREAD_NAME)   : Thread.currentThread().getName(),
-      (DDTags.THREAD_ID)     : Thread.currentThread().getId(),
-      (Config.RUNTIME_ID_TAG): config.getRuntimeId()
+      (DDTags.THREAD_NAME)     : Thread.currentThread().getName(),
+      (DDTags.THREAD_ID)       : Thread.currentThread().getId(),
+      (Config.RUNTIME_ID_TAG)  : config.getRuntimeId(),
+      (Config.LANGUAGE_TAG_KEY): Config.LANGUAGE_TAG_VALUE,
     ]
 
     cleanup:
