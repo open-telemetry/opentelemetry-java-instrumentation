@@ -15,6 +15,7 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
+import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -64,11 +65,22 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
   @Override
   public Map<ElementMatcher, String> transformers() {
     final Map<ElementMatcher, String> transformers = new HashMap<>();
+    // This is mainly for compatibility with 10.0
     transformers.put(
         named("singleRequest").and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
         SingleRequestAdvice.class.getName());
+    // This is for 10.1+
+    transformers.put(
+        named("singleRequestImpl")
+            .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
+        SingleRequestAdvice.class.getName());
+    // This is mainly for compatibility with 10.0
     transformers.put(
         named("superPool").and(returns(named("akka.stream.scaladsl.Flow"))),
+        SuperPoolAdvice.class.getName());
+    // This is for 10.1+
+    transformers.put(
+        named("superPoolImpl").and(returns(named("akka.stream.scaladsl.Flow"))),
         SuperPoolAdvice.class.getName());
     return transformers;
   }
@@ -77,6 +89,17 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request) {
+      /*
+      Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
+      we cast 'wider net' and avoid instrumenting twice.
+      In the future we may want to separate these, but since lots of code is reused we would need to come up
+      with way of continuing to reusing it.
+       */
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpExt.class);
+      if (callDepth > 0) {
+        return null;
+      }
+
       Tracer.SpanBuilder builder =
           GlobalTracer.get()
               .buildSpan("akka-http.request")
@@ -108,7 +131,13 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Return final Future<HttpResponse> responseFuture,
         @Advice.Enter final Scope scope,
         @Advice.Thrown final Throwable throwable) {
+      if (scope == null) {
+        return;
+      }
+      CallDepthThreadLocalMap.reset(HttpExt.class);
+
       final Span span = scope.span();
+
       if (throwable == null) {
         responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
       } else {
@@ -121,10 +150,29 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   public static class SuperPoolAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static boolean methodEnter() {
+      /*
+      Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
+      we cast 'wider net' and avoid instrumenting twice.
+      In the future we may want to separate these, but since lots of code is reused we would need to come up
+      with way of continuing to reusing it.
+       */
+      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpExt.class);
+      return callDepth <= 0;
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static <T> void methodExit(
         @Advice.Return(readOnly = false)
-            Flow<Tuple2<HttpRequest, T>, Tuple2<Try<HttpResponse>, T>, NotUsed> flow) {
+            Flow<Tuple2<HttpRequest, T>, Tuple2<Try<HttpResponse>, T>, NotUsed> flow,
+        @Advice.Enter final boolean isApplied) {
+      if (!isApplied) {
+        return;
+      }
+      CallDepthThreadLocalMap.reset(HttpExt.class);
+
       flow = AkkaHttpClientTransformFlow.transform(flow);
     }
   }
