@@ -12,6 +12,7 @@ import io.opentracing.tag.Tags
 import spock.lang.Specification
 
 import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
+import static datadog.trace.api.DDTags.EVENT_SAMPLE_RATE
 import static java.util.Collections.emptyMap
 
 class SpanDecoratorTest extends Specification {
@@ -203,6 +204,30 @@ class SpanDecoratorTest extends Specification {
 
     where:
     type = "foo"
+  }
+
+  def "span metrics starts empty but added with rate limiting value of #rate"() {
+    expect:
+    span.metrics == [:]
+
+    when:
+    span.setTag(EVENT_SAMPLE_RATE, rate)
+
+    then:
+    span.metrics == result
+
+    where:
+    rate  | result
+    00    | [(EVENT_SAMPLE_RATE): 0]
+    1     | [(EVENT_SAMPLE_RATE): 1]
+    0f    | [(EVENT_SAMPLE_RATE): 0]
+    1f    | [(EVENT_SAMPLE_RATE): 1]
+    0.1   | [(EVENT_SAMPLE_RATE): 0.1]
+    1.1   | [(EVENT_SAMPLE_RATE): 1.1]
+    -1    | [(EVENT_SAMPLE_RATE): -1]
+    10    | [(EVENT_SAMPLE_RATE): 10]
+    "00"  | [:]
+    "str" | [:]
   }
 
   def "DBStatementAsResource should not interact on Mongo queries"() {

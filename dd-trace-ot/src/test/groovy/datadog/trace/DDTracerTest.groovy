@@ -45,7 +45,7 @@ class DDTracerTest extends Specification {
     tracer.sampler instanceof RateByServiceSampler
     tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:8126/v0.3/traces } }"
 
-    tracer.spanContextDecorators.size() == 12
+    tracer.spanContextDecorators.size() == 13
   }
 
 
