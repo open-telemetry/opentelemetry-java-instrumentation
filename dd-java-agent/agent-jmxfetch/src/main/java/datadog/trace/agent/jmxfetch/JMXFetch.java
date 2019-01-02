@@ -2,9 +2,16 @@ package datadog.trace.agent.jmxfetch;
 
 import com.google.common.collect.ImmutableList;
 import datadog.trace.api.Config;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.datadog.jmxfetch.App;
 import org.datadog.jmxfetch.AppConfig;
 
@@ -27,6 +34,7 @@ public class JMXFetch {
       return;
     }
 
+    final List<String> internalMetricsConfigs = getInternalMetricFiles();
     final List<String> metricsConfigs = config.getJmxFetchMetricsConfigs();
     final Integer checkPeriod = config.getJmxFetchCheckPeriod();
     final Integer refreshBeansPeriod = config.getJmxFetchRefreshBeansPeriod();
@@ -36,7 +44,8 @@ public class JMXFetch {
     final String logLevel = getLogLevel();
 
     log.error(
-        "JMXFetch config: {} {} {} {} {} {} {}",
+        "JMXFetch config: {} {} {} {} {} {} {} {}",
+        internalMetricsConfigs,
         metricsConfigs,
         checkPeriod,
         refreshBeansPeriod,
@@ -47,6 +56,7 @@ public class JMXFetch {
     final AppConfig appConfig =
         AppConfig.create(
             DEFAULT_CONFIGS,
+            internalMetricsConfigs,
             metricsConfigs,
             checkPeriod,
             refreshBeansPeriod,
@@ -93,6 +103,29 @@ public class JMXFetch {
             ? config.getAgentHost()
             : config.getJmxFetchStatsdHost();
     return "statsd:" + host + ":" + config.getJmxFetchStatsdPort();
+  }
+
+  private static List<String> getInternalMetricFiles() {
+    try {
+      final InputStream metricConfigsStream =
+          JMXFetch.class.getResourceAsStream("metricconfigs.txt");
+      if (metricConfigsStream == null) {
+        log.debug("metricconfigs not found. returning empty set");
+        return Collections.emptyList();
+      } else {
+        final String configs = IOUtils.toString(metricConfigsStream, StandardCharsets.UTF_8);
+        final String[] split = configs.split("\n");
+        final List<String> result = new ArrayList<>(split.length);
+        for (final String config : split) {
+          final URL resource = JMXFetch.class.getResource("metricconfigs/" + config);
+          result.add(resource.getPath().split("\\.jar!/")[1]);
+        }
+        return result;
+      }
+    } catch (final IOException e) {
+      log.debug("error reading metricconfigs. returning empty set", e);
+      return Collections.emptyList();
+    }
   }
 
   private static String getLogLocation() {
