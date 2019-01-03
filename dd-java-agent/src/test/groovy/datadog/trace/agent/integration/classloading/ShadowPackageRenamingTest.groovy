@@ -4,6 +4,7 @@ import com.google.common.collect.MapMaker
 import com.google.common.reflect.ClassPath
 import datadog.trace.agent.test.IntegrationTestUtils
 import io.opentracing.util.GlobalTracer
+import spock.lang.Ignore
 import spock.lang.Specification
 
 import java.lang.reflect.Field
@@ -33,6 +34,7 @@ class ShadowPackageRenamingTest extends Specification {
     agentSource.getFile() != userGuava.getFile()
   }
 
+  @Ignore("OT 0.32 removed this field.  Need to find another option.")
   def "java getLogger rewritten to safe logger"() {
     setup:
     Field logField = GlobalTracer.getDeclaredField("LOGGER")

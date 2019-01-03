@@ -6,7 +6,8 @@ import static datadog.opentracing.propagation.HttpCodec.validateUInt64BitsID;
 import datadog.opentracing.DDSpanContext;
 import datadog.trace.api.sampling.PrioritySampling;
 import io.opentracing.SpanContext;
-import io.opentracing.propagation.TextMap;
+import io.opentracing.propagation.TextMapExtract;
+import io.opentracing.propagation.TextMapInject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +33,7 @@ public class HaystackHttpCodec {
   public static class Injector implements HttpCodec.Injector {
 
     @Override
-    public void inject(final DDSpanContext context, final TextMap carrier) {
+    public void inject(final DDSpanContext context, final TextMapInject carrier) {
       carrier.put(TRACE_ID_KEY, context.getTraceId());
       carrier.put(SPAN_ID_KEY, context.getSpanId());
       carrier.put(PARENT_ID_KEY, context.getParentId());
@@ -56,14 +57,14 @@ public class HaystackHttpCodec {
     }
 
     @Override
-    public SpanContext extract(final TextMap carrier) {
+    public SpanContext extract(final TextMapExtract carrier) {
       try {
         Map<String, String> baggage = Collections.emptyMap();
         Map<String, String> tags = Collections.emptyMap();
         String traceId = ZERO;
         String spanId = ZERO;
-        int samplingPriority = PrioritySampling.SAMPLER_KEEP;
-        String origin = null; // Always null
+        final int samplingPriority = PrioritySampling.SAMPLER_KEEP;
+        final String origin = null; // Always null
 
         for (final Map.Entry<String, String> entry : carrier) {
           final String key = entry.getKey().toLowerCase();

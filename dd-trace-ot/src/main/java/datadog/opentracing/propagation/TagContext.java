@@ -26,6 +26,16 @@ public class TagContext implements SpanContext {
   }
 
   @Override
+  public String toTraceId() {
+    return "";
+  }
+
+  @Override
+  public String toSpanId() {
+    return "";
+  }
+
+  @Override
   public Iterable<Map.Entry<String, String>> baggageItems() {
     return Collections.emptyList();
   }
