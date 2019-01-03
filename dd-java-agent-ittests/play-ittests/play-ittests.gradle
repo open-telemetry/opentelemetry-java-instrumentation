@@ -83,16 +83,6 @@ def randomOpenPort() {
   }
 }
 
-task unzip(type: Copy) {
-  def zipFile = file("${buildDir}/distributions/playBinary.zip")
-  def outputDir = file("${buildDir}/unpacked/dist")
-
-  from zipTree(zipFile)
-  into outputDir
-
-  dependsOn 'dist'
-}
-
 task startServer(type: com.github.psxpaul.task.ExecFork) {
   playHttpPort = randomOpenPort()
 
@@ -100,7 +90,7 @@ task startServer(type: com.github.psxpaul.task.ExecFork) {
     throw new GradleException("Failed to get random port to start Play")
   }
 
-  workingDir = "${buildDir}/unpacked/dist/playBinary"
+  workingDir = "${buildDir}/stage/playBinary"
   commandLine = "${workingDir}/bin/playBinary"
   stopAfter = test
   // these params tells the ExecFork plugin to block on startServer task until the port is opened or the string is seen in the ouput
@@ -115,11 +105,11 @@ task startServer(type: com.github.psxpaul.task.ExecFork) {
       + " -Dhttp.address=127.0.0.1"
   ]
 
-  dependsOn unzip
+  dependsOn 'stage'
 }
 
 task deletePIDFile() {
-  delete "${buildDir}/unpacked/dist/playBinary/RUNNING_PID"
+  delete "${buildDir}/stage/playBinary/RUNNING_PID"
 }
 
 tasks.withType(Test) {
