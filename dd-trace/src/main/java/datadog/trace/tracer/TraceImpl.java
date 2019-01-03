@@ -1,5 +1,6 @@
 package datadog.trace.tracer;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import datadog.trace.tracer.writer.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -58,6 +59,7 @@ class TraceImpl implements TraceInternal {
   }
 
   @Override
+  @JsonValue
   public synchronized List<Span> getSpans() {
     if (!finished) {
       tracer.reportError("Cannot get spans, trace is not finished yet: %s", this);

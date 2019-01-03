@@ -1,8 +1,18 @@
 package datadog.trace.tracer;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import datadog.trace.api.DDTags;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 
 /** Concrete implementation of a span */
 @Slf4j
+// Disable autodetection of fields and accessors
+@JsonAutoDetect(
+    fieldVisibility = Visibility.NONE,
+    setterVisibility = Visibility.NONE,
+    getterVisibility = Visibility.NONE,
+    isGetterVisibility = Visibility.NONE,
+    creatorVisibility = Visibility.NONE)
 class SpanImpl implements Span {
 
   private final TraceInternal trace;
@@ -68,12 +85,32 @@ class SpanImpl implements Span {
     return context;
   }
 
+  @JsonGetter("trace_id")
+  @JsonSerialize(using = UInt64IDStringSerializer.class)
+  public String getTraceId() {
+    return context.getTraceId();
+  }
+
+  @JsonGetter("span_id")
+  @JsonSerialize(using = UInt64IDStringSerializer.class)
+  public String getSpanId() {
+    return context.getSpanId();
+  }
+
+  @JsonGetter("parent_id")
+  @JsonSerialize(using = UInt64IDStringSerializer.class)
+  public String getParentId() {
+    return context.getParentId();
+  }
+
   @Override
+  @JsonGetter("start")
   public Timestamp getStartTimestamp() {
     return startTimestamp;
   }
 
   @Override
+  @JsonGetter("duration")
   public Long getDuration() {
     return duration;
   }
@@ -84,6 +121,7 @@ class SpanImpl implements Span {
   }
 
   @Override
+  @JsonGetter("service")
   public String getService() {
     return service;
   }
@@ -98,6 +136,7 @@ class SpanImpl implements Span {
   }
 
   @Override
+  @JsonGetter("resource")
   public String getResource() {
     return resource;
   }
@@ -112,6 +151,7 @@ class SpanImpl implements Span {
   }
 
   @Override
+  @JsonGetter("type")
   public String getType() {
     return type;
   }
@@ -126,6 +166,7 @@ class SpanImpl implements Span {
   }
 
   @Override
+  @JsonGetter("name")
   public String getName() {
     return name;
   }
@@ -140,6 +181,8 @@ class SpanImpl implements Span {
   }
 
   @Override
+  @JsonGetter("error")
+  @JsonFormat(shape = JsonFormat.Shape.NUMBER)
   public boolean isErrored() {
     return errored;
   }
@@ -167,6 +210,15 @@ class SpanImpl implements Span {
     } else {
       this.errored = errored;
     }
+  }
+
+  @JsonGetter("meta")
+  synchronized Map<String, String> getMeta() {
+    final Map<String, String> result = new HashMap<>(meta.size());
+    for (final Map.Entry<String, Object> entry : meta.entrySet()) {
+      result.put(entry.getKey(), String.valueOf(entry.getValue()));
+    }
+    return result;
   }
 
   @Override
@@ -200,6 +252,8 @@ class SpanImpl implements Span {
   public void setMeta(final String key, final Number value) {
     setMeta(key, (Object) value);
   }
+
+  // FIXME: Add metrics support and json rendering for metrics
 
   @Override
   public synchronized void finish() {
@@ -262,5 +316,20 @@ class SpanImpl implements Span {
 
   private void reportSetterUsageError(final String fieldName) {
     reportUsageError("Attempted to set '%s' when span is already finished: %s", fieldName, this);
+  }
+
+  /** Helper to serialize string value as 64 bit unsigned integer */
+  private static class UInt64IDStringSerializer extends StdSerializer<String> {
+
+    public UInt64IDStringSerializer() {
+      super(String.class);
+    }
+
+    @Override
+    public void serialize(
+        final String value, final JsonGenerator jsonGenerator, final SerializerProvider provider)
+        throws IOException {
+      jsonGenerator.writeNumber(new BigInteger(value));
+    }
   }
 }
