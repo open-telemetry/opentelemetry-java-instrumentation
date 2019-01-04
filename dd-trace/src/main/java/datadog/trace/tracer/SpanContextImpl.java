@@ -1,6 +1,7 @@
 package datadog.trace.tracer;
 
 import datadog.trace.api.sampling.PrioritySampling;
+import java.math.BigInteger;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.EqualsAndHashCode;
 
@@ -53,9 +54,16 @@ class SpanContextImpl implements SpanContext {
     return new SpanContextImpl(traceId, parentId, generateNewId());
   }
 
+  /** @return Random 64bit unsigned number strictly greater than zero */
   static String generateNewId() {
-    // TODO: expand the range of numbers generated to be from 1 to uint 64 MAX
-    // Ensure the generated ID is in a valid range:
-    return String.valueOf(ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE));
+    // Note: we can probably optimize this using {@link ThreadLocalRandom#nextLong()}
+    // and {@link Long#toUnsignedString} but {@link Long#toUnsignedString} is only
+    // available in Java8+ and {@link ThreadLocalRandom#nextLong()} cannot
+    // generate negative numbers before Java8.
+    BigInteger result = BigInteger.ZERO;
+    while (result.equals(BigInteger.ZERO)) {
+      result = new BigInteger(64, ThreadLocalRandom.current());
+    }
+    return result.toString();
   }
 }
