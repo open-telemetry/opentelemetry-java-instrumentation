@@ -1,0 +1,119 @@
+// using this plugin will launch the server in the background and won't block the tests
+plugins {
+  id 'com.github.psxpaul.execfork' version '0.1.8'
+}
+
+ext {
+  serverName = 'wildfly'
+  serverModule = 'servlet'
+  serverVersion = '15.0.0.Final'
+  serverExtension = 'zip'
+  wildflyHttpPort = 8080
+  wildflyManagementPort = 9990
+}
+
+repositories {
+  ivy {
+    url 'https://download.jboss.org/'
+    layout 'pattern', {
+      artifact '/[organisation]/[revision]/[module]/[organisation]-[module]-[revision].[ext]'
+    }
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+description = 'Wildfly Smoke Tests.'
+
+dependencies {
+  // uses the ivy repository url to download the wildfly servlet zip
+  // organisation = serverName, revision = serverVersion, module = serverModule, ext = serverExtension
+  compile "${serverName}:${serverModule}:${serverVersion}@${serverExtension}"
+
+  testCompile project(':dd-trace-api')
+  testCompile project(':dd-trace-ot')
+  testCompile project(':dd-java-agent:testing')
+  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+}
+
+/** Open up a random, reusable port. */
+def randomOpenPort() {
+  final ServerSocket socket
+  try {
+    socket = new ServerSocket(0)
+    socket.setReuseAddress(true)
+    socket.close()
+    return socket.getLocalPort()
+  } catch (final IOException ioe) {
+    ioe.printStackTrace()
+    return -1
+  }
+}
+
+task unzip(type: Copy) {
+  def zipFileNamePrefix = "servlet"
+  def zipPath = project.configurations.compile.find {
+    it.name.startsWith(zipFileNamePrefix)
+  }
+  if (zipPath != null) {
+    def zipFile = file(zipPath)
+    def outputDir = file("${buildDir}")
+
+    from zipTree(zipFile)
+    into outputDir
+  } else {
+    throw new GradleException("Can't find server zip file that starts with: " + zipFileNamePrefix)
+  }
+}
+
+task startServer(type: com.github.psxpaul.task.ExecFork) {
+  wildflyHttpPort = randomOpenPort()
+  // not used, but to ensure https default port 8443 won't clash
+  int httpsPort = randomOpenPort()
+  wildflyManagementPort = randomOpenPort()
+
+  if (wildflyHttpPort == -1 || httpsPort == -1 || wildflyManagementPort == -1) {
+    throw new GradleException("Failed to get random ports to start Wildfly")
+  }
+
+  workingDir = "${buildDir}/wildfly-servlet-15.0.0.Final"
+  commandLine = "${workingDir}/bin/standalone.sh"
+  // ideally this should be good enough to use to stop wildfly, but wildfly needs to gracefully shutdown from jboss-cli.sh
+  // stopAfter = test
+  // these params tells the ExecFork plugin to block on startServer task until the port is opened or the string is seen in the ouput
+  waitForPort = wildflyHttpPort
+  waitForOutput = "Undertow HTTP listener default listening on 127.0.0.1:${wildflyHttpPort}"
+  environment = [
+    'JAVA_OPTS' :  "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
+    + " -Ddd.writer.type=LoggingWriter" + " -Ddd.service.name=java-app"
+      + " -Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug"
+      + " -Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
+      + " -Djboss.http.port=${wildflyHttpPort} -Djboss.https.port=${httpsPort}"
+      + " -Djboss.management.http.port=${wildflyManagementPort}"
+  ]
+
+  dependsOn unzip
+}
+
+task stopWildfly(type:Exec) {
+  project.getLogger().info("Shutting down Wildfly")
+  workingDir = "${buildDir}/wildfly-servlet-15.0.0.Final"
+  commandLine = "${workingDir}/bin/jboss-cli.sh"
+  args = [ "--connect", "--controller=localhost:${wildflyManagementPort}", "command=:shutdown" ]
+
+  dependsOn startServer
+}
+
+tasks.withType(Test) {
+  // so the test can get this property
+  jvmArgs "-Ddatadog.smoketest.server.port=${wildflyHttpPort}"
+
+  testLogging {
+    events "started"
+  }
+
+  dependsOn project(':dd-java-agent').shadowJar, startServer
+}
+
+// ensure that the wildfly server gets shutdown
+tasks.withType(Test).forEach { it.finalizedBy stopWildfly }
