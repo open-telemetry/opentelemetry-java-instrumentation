@@ -27,7 +27,7 @@ public class Timestamp {
   }
 
   /** @return clock instance used by this timestamp */
-  public Clock getClock() {
+  Clock getClock() {
     return clock;
   }
 

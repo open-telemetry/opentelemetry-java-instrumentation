@@ -280,7 +280,8 @@ class SpanImpl implements Span {
       // instance is 'revived' from the dead by passing reference to some other object and
       // then dies again.
       if (!isFinished()) {
-        log.debug("Finishing span due to GC, this will prevent trace from being reported: {}", this);
+        log.debug(
+            "Finishing span due to GC, this will prevent trace from being reported: {}", this);
         finishSpan(startTimestamp.getDuration(), true);
       }
     } catch (final Throwable t) {
