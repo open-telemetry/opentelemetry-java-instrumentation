@@ -5,8 +5,6 @@ plugins {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
-excludedClassesConverage += ['datadog.trace.bootstrap.*']
-
 dependencies {
   compile project(':dd-trace-api')
   compile deps.opentracing

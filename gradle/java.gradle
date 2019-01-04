@@ -3,7 +3,11 @@ apply plugin: 'groovy'
 
 apply from: "$rootDir/gradle/checkstyle.gradle"
 apply from: "$rootDir/gradle/codenarc.gradle"
-apply from: "$rootDir/gradle/jacoco.gradle"
+
+def applyCodeCoverage = !project.plugins.hasPlugin('com.github.johnrengelman.shadow')
+if (applyCodeCoverage) {
+  apply from: "$rootDir/gradle/jacoco.gradle"
+}
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
@@ -230,9 +234,11 @@ for (def env : System.getenv().entrySet()) {
       description "Runs $clonedTask.name under java ${javaName}"
       executable = javaPath
       onlyIf { isJavaVersionAllowed(javaVersion) && isTestingEnabled(javaName) }
-      jacoco {
-        // Disable jacoco for additional JVM tests to speed things up a bit
-        enabled = false
+      if(applyCodeCoverage) {
+        jacoco {
+          // Disable jacoco for additional JVM tests to speed things up a bit
+          enabled = false
+        }
       }
     }
 
