@@ -227,12 +227,7 @@ class SpanImplTest extends Specification {
 
     when: "finish/finalize span"
     span."$method"(*methodArgs)
-
-    then: "warning is reported"
-    _ * trace.getTracer() >> tracer
-    if (finalizeErrorReported) {
-      1 * tracer.reportWarning(_, span)
-    }
+    
     then: "interceptors called"
     interceptors.reverseEach({ interceptor ->
       then:

@@ -43,11 +43,7 @@ class ContinuationImpl implements Continuation {
   protected synchronized void finalize() {
     try {
       if (!closed) {
-        trace
-            .getTracer()
-            .reportWarning(
-                "Closing continuation due to GC, this will prevent trace from being reported: %s",
-                this);
+        log.debug("Closing continuation due to GC, this will prevent trace from being reported: {}", this);
         closeContinuation(true);
       }
     } catch (final Throwable t) {

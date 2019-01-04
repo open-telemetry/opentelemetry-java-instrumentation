@@ -115,17 +115,6 @@ public class Tracer {
     return null;
   }
 
-  // TODO: we can move these two into a separate class and move all '*Impl' and '*Internal' classes
-  // into separate package
-  // TODO: provide some sort of ratelimiting here to avoid filling up disk space.
-  /*
-   Report warning to the log/console. This never throws exception
-  */
-  void reportWarning(final String message, final Object... args) {
-    final String completeMessage = String.format(message, args);
-    log.debug(completeMessage);
-  }
-
   /*
    Report error to the log/console. This may throw an exception
   */
