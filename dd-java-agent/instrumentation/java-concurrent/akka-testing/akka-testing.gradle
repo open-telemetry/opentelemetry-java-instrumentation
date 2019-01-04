@@ -1,8 +1,6 @@
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/test-with-scala.gradle"
 
-excludedClassesConverage += ['*']
-
 dependencies {
   testCompile project(':dd-trace-api')
   testCompile project(':dd-trace-ot')
