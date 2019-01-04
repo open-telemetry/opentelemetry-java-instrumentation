@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.jdbc;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -26,9 +27,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -44,12 +45,10 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         nameStartsWith("execute").and(takesArguments(0)).and(isPublic()),
         PreparedStatementAdvice.class.getName());
-    return transformers;
   }
 
   public static class PreparedStatementAdvice {

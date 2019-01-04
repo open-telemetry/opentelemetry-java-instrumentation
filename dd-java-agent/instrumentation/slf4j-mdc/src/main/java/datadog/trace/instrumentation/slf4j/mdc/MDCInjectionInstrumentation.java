@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.slf4j.mdc;
 
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -11,10 +12,10 @@ import datadog.trace.api.GlobalTracer;
 import datadog.trace.context.ScopeListener;
 import java.lang.reflect.Method;
 import java.security.ProtectionDomain;
-import java.util.Collections;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
@@ -46,20 +47,19 @@ public class MDCInjectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public void postMatch(
-      TypeDescription typeDescription,
-      ClassLoader classLoader,
-      JavaModule module,
-      Class<?> classBeingRedefined,
-      ProtectionDomain protectionDomain) {
+      final TypeDescription typeDescription,
+      final ClassLoader classLoader,
+      final JavaModule module,
+      final Class<?> classBeingRedefined,
+      final ProtectionDomain protectionDomain) {
     if (classBeingRedefined != null) {
       MDCAdvice.mdcClassInitialized(classBeingRedefined);
     }
   }
 
   @Override
-  public Map<? extends ElementMatcher, String> transformers() {
-    return Collections.<ElementMatcher, String>singletonMap(
-        isTypeInitializer(), MDCAdvice.class.getName());
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(isTypeInitializer(), MDCAdvice.class.getName());
   }
 
   @Override
@@ -74,7 +74,7 @@ public class MDCInjectionInstrumentation extends Instrumenter.Default {
         final Method putMethod = mdcClass.getMethod("put", String.class, String.class);
         final Method removeMethod = mdcClass.getMethod("remove", String.class);
         GlobalTracer.get().addScopeListener(new MDCScopeListener(putMethod, removeMethod));
-      } catch (NoSuchMethodException e) {
+      } catch (final NoSuchMethodException e) {
         org.slf4j.LoggerFactory.getLogger(mdcClass).debug("Failed to add MDC span listener", e);
       }
     }
@@ -96,7 +96,7 @@ public class MDCInjectionInstrumentation extends Instrumenter.Default {
               null, CorrelationIdentifier.getTraceIdKey(), CorrelationIdentifier.getTraceId());
           putMethod.invoke(
               null, CorrelationIdentifier.getSpanIdKey(), CorrelationIdentifier.getSpanId());
-        } catch (Exception e) {
+        } catch (final Exception e) {
           log.debug("Exception setting mdc context", e);
         }
       }
@@ -106,7 +106,7 @@ public class MDCInjectionInstrumentation extends Instrumenter.Default {
         try {
           removeMethod.invoke(null, CorrelationIdentifier.getTraceIdKey());
           removeMethod.invoke(null, CorrelationIdentifier.getSpanIdKey());
-        } catch (Exception e) {
+        } catch (final Exception e) {
           log.debug("Exception removing mdc context", e);
         }
       }

@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.elasticsearch6;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,9 +17,9 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.action.Action;
@@ -57,16 +58,14 @@ public class Elasticsearch6TransportClientInstrumentation extends Instrumenter.D
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod()
             .and(named("execute"))
             .and(takesArgument(0, named("org.elasticsearch.action.Action")))
             .and(takesArgument(1, named("org.elasticsearch.action.ActionRequest")))
             .and(takesArgument(2, named("org.elasticsearch.action.ActionListener"))),
         Elasticsearch6TransportClientAdvice.class.getName());
-    return transformers;
   }
 
   public static class Elasticsearch6TransportClientAdvice {

@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.jsp;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -19,13 +20,13 @@ import io.opentracing.util.GlobalTracer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.jsp.HttpJspPage;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.LoggerFactory;
@@ -43,15 +44,13 @@ public final class JSPInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         named("_jspService")
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
             .and(isPublic()),
         HttpJspPageAdvice.class.getName());
-    return transformers;
   }
 
   public static class HttpJspPageAdvice {

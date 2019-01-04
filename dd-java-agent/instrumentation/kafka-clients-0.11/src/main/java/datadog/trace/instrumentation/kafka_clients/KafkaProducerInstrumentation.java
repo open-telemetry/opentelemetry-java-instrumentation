@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.kafka_clients;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,9 +17,9 @@ import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.producer.Callback;
@@ -51,16 +52,14 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod()
             .and(isPublic())
             .and(named("send"))
             .and(takesArgument(0, named("org.apache.kafka.clients.producer.ProducerRecord")))
             .and(takesArgument(1, named("org.apache.kafka.clients.producer.Callback"))),
         ProducerAdvice.class.getName());
-    return transformers;
   }
 
   public static class ProducerAdvice {

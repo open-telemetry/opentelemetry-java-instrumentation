@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.okhttp3;
 
 import static datadog.trace.instrumentation.okhttp3.OkHttpClientSpanDecorator.STANDARD_TAGS;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -9,9 +10,9 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.Interceptor;
@@ -48,12 +49,10 @@ public class OkHttp3Instrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isConstructor().and(takesArgument(0, named("okhttp3.OkHttpClient$Builder"))),
         OkHttp3Advice.class.getName());
-    return transformers;
   }
 
   public static class OkHttp3Advice {

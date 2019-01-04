@@ -1,10 +1,11 @@
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -20,10 +21,8 @@ public class IBMResourceLevelInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(named("toString"), ToStringAdvice.class.getName());
-    return transformers;
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(named("toString"), ToStringAdvice.class.getName());
   }
 
   public static class ToStringAdvice {

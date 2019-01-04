@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -49,8 +50,8 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("receive").and(takesArguments(0).or(takesArguments(1))).and(isPublic()),
         ConsumerAdvice.class.getName());

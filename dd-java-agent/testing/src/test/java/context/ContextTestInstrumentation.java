@@ -10,6 +10,7 @@ import datadog.trace.bootstrap.InstrumentationContext;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -25,8 +26,8 @@ public class ContextTestInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>(2);
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>(7);
     transformers.put(named("isInstrumented"), MarkInstrumentedAdvice.class.getName());
     transformers.put(
         named("incrementContextCount"), StoreAndIncrementApiUsageAdvice.class.getName());

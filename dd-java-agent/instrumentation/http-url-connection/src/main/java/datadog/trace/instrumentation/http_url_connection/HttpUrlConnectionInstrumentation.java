@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.http_url_connection;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -23,11 +24,11 @@ import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import javax.net.ssl.HttpsURLConnection;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -56,13 +57,12 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<String, String> contextStore() {
-    return Collections.singletonMap(
-        "java.net.HttpURLConnection", getClass().getName() + "$HttpUrlState");
+    return singletonMap("java.net.HttpURLConnection", getClass().getName() + "$HttpUrlState");
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    return Collections.<ElementMatcher, String>singletonMap(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod()
             .and(isPublic())
             .and(named("connect").or(named("getOutputStream")).or(named("getInputStream"))),
@@ -217,7 +217,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     public void finishSpan(final Throwable throwable) {
       try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
         Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+        span.log(singletonMap(ERROR_OBJECT, throwable));
       }
       span = null;
       finished = true;

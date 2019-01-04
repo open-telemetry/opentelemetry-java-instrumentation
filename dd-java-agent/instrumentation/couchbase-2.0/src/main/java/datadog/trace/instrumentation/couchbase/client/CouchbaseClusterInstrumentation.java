@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.couchbase.client;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -19,10 +20,10 @@ import io.opentracing.noop.NoopSpan;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import rx.Observable;
@@ -54,8 +55,8 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    return Collections.<ElementMatcher, String>singletonMap(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod().and(isPublic()).and(returns(named("rx.Observable"))),
         CouchbaseClientAdvice.class.getName());
   }
@@ -146,7 +147,7 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
       final Span span = spanRef.getAndSet(null);
       if (span != null) {
         Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+        span.log(singletonMap(ERROR_OBJECT, throwable));
         span.finish();
       }
     }

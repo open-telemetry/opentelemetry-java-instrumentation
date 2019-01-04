@@ -30,6 +30,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -143,8 +144,8 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("execute").and(takesArgument(0, Runnable.class)),
         SetExecuteRunnableStateAdvice.class.getName());

@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.hystrix;
 
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -9,9 +10,9 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
-import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -29,12 +30,10 @@ public class HystrixThreadPoolInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod().and(named("schedule")).and(takesArguments(1)),
         EnableAsyncAdvice.class.getName());
-    return transformers;
   }
 
   public static class EnableAsyncAdvice {

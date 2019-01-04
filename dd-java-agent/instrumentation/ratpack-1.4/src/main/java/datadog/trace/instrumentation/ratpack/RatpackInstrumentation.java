@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.ratpack;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -13,9 +14,9 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.instrumentation.ratpack.impl.RatpackServerAdvice;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -54,12 +55,10 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod().and(isStatic()).and(named("buildBaseRegistry")),
         RatpackServerAdvice.RatpackServerRegistryAdvice.class.getName());
-    return transformers;
   }
 
   @AutoService(Instrumenter.class)
@@ -89,12 +88,10 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
     }
 
     @Override
-    public Map<ElementMatcher, String> transformers() {
-      final Map<ElementMatcher, String> transformers = new HashMap<>();
-      transformers.put(
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
           named("register").and(takesArguments(ACTION_TYPE_DESCRIPTION)),
           RatpackServerAdvice.ExecStarterAdvice.class.getName());
-      return transformers;
     }
   }
 
@@ -126,12 +123,10 @@ public final class RatpackInstrumentation extends Instrumenter.Default {
     }
 
     @Override
-    public Map<ElementMatcher, String> transformers() {
-      final Map<ElementMatcher, String> transformers = new HashMap<>();
-      transformers.put(
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
           named("fork").and(returns(named("ratpack.exec.ExecStarter"))),
           RatpackServerAdvice.ExecutionAdvice.class.getName());
-      return transformers;
     }
   }
 }

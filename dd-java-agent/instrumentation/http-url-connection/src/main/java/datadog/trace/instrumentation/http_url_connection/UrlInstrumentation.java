@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.http_url_connection;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -16,9 +17,9 @@ import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.net.URL;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -37,12 +38,10 @@ public class UrlInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod().and(isPublic()).and(named("openConnection")),
         ConnectionErrorAdvice.class.getName());
-    return transformers;
   }
 
   public static class ConnectionErrorAdvice {

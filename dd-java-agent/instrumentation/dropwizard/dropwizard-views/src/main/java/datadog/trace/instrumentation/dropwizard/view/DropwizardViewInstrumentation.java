@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.dropwizard.view;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -19,9 +20,9 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -38,15 +39,13 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod()
             .and(named("render"))
             .and(takesArgument(0, named("io.dropwizard.views.View")))
             .and(isPublic()),
         RenderAdvice.class.getName());
-    return transformers;
   }
 
   public static class RenderAdvice {

@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -64,9 +65,10 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher, String> transformers() {
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     // We want the advice applied in a specific order, so use an ordered map.
-    final Map<ElementMatcher, String> transformers = new LinkedHashMap<>();
+    final Map<ElementMatcher<? super MethodDescription>, String> transformers =
+        new LinkedHashMap<>();
     transformers.put(
         isMethod()
             .and(

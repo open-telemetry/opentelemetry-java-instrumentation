@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.springweb;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -20,11 +21,11 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.Map;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.HttpRequestHandler;
@@ -46,8 +47,8 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    return Collections.<ElementMatcher, String>singletonMap(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod()
             .and(isPublic())
             .and(nameStartsWith("handle"))
@@ -129,7 +130,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
       if (throwable != null) {
         final Span span = scope.span();
         Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+        span.log(singletonMap(ERROR_OBJECT, throwable));
       }
       scope.close();
     }

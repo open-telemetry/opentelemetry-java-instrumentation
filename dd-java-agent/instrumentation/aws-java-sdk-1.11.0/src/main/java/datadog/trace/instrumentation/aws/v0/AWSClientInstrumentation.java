@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.aws.v0;
 
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -8,10 +9,10 @@ import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.util.GlobalTracer;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -41,10 +42,8 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(isConstructor(), AWSClientAdvice.class.getName());
-    return transformers;
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(isConstructor(), AWSClientAdvice.class.getName());
   }
 
   public static class AWSClientAdvice {

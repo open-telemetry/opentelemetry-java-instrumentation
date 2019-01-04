@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.servlet3;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.servlet3.Servlet3Advice.SERVLET_SPAN;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -14,12 +15,12 @@ import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.Span;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import java.util.Map;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -41,8 +42,8 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher, String> transformers() {
-    return Collections.singletonMap(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod().and(isPublic()).and(named("dispatch")), DispatchAdvice.class.getName());
   }
 

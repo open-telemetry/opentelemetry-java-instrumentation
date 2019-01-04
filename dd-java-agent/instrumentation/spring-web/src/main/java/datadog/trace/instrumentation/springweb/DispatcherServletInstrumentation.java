@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.servlet.ModelAndView;
@@ -35,8 +36,8 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         isMethod()
             .and(isProtected())

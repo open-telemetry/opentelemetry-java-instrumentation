@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
@@ -58,14 +59,14 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     // Instrumenting akka-streams bindAndHandle api was previously attempted.
     // This proved difficult as there was no clean way to close the async scope
     // in the graph logic after the user's request handler completes.
     //
     // Instead, we're instrumenting the bindAndHandle function helpers by
     // wrapping the scala functions with our own handlers.
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
+    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("bindAndHandleSync").and(takesArgument(0, named("scala.Function1"))),
         AkkaHttpSyncAdvice.class.getName());

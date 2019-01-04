@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.lettuce;
 
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
@@ -10,8 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import java.util.HashMap;
 import java.util.Map;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -42,9 +43,8 @@ public final class LettuceClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod()
             .and(isPrivate())
             .and(returns(named("io.lettuce.core.ConnectionFuture")))
@@ -53,6 +53,5 @@ public final class LettuceClientInstrumentation extends Instrumenter.Default {
             .and(takesArgument(1, named("io.lettuce.core.RedisURI"))),
         // Cannot reference class directly here because it would lead to class load failure on Java7
         PACKAGE + ".ConnectionFutureAdvice");
-    return transformers;
   }
 }

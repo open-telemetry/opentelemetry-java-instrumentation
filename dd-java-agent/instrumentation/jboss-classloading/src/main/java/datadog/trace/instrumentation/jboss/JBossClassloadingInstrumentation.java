@@ -8,6 +8,7 @@ import datadog.trace.agent.tooling.Utils;
 import java.security.ProtectionDomain;
 import java.util.Collections;
 import java.util.Map;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
@@ -25,11 +26,11 @@ public final class JBossClassloadingInstrumentation extends Instrumenter.Default
 
   @Override
   public void postMatch(
-      TypeDescription typeDescription,
-      ClassLoader classLoader,
-      JavaModule module,
-      Class<?> classBeingRedefined,
-      ProtectionDomain protectionDomain) {
+      final TypeDescription typeDescription,
+      final ClassLoader classLoader,
+      final JavaModule module,
+      final Class<?> classBeingRedefined,
+      final ProtectionDomain protectionDomain) {
     // Set the system prop to tell jboss to delegate classloads for datadog bootstrap classes
     final StringBuilder ddPrefixes = new StringBuilder("");
     for (int i = 0; i < Utils.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
@@ -47,7 +48,7 @@ public final class JBossClassloadingInstrumentation extends Instrumenter.Default
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.emptyMap();
   }
 }

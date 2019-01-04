@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.rabbitmq.amqp;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,9 +15,9 @@ import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
 import io.opentracing.Span;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -41,8 +42,8 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher, String> transformers() {
-    return Collections.singletonMap(isConstructor(), CommandConstructorAdvice.class.getName());
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(isConstructor(), CommandConstructorAdvice.class.getName());
   }
 
   public static class CommandConstructorAdvice {
