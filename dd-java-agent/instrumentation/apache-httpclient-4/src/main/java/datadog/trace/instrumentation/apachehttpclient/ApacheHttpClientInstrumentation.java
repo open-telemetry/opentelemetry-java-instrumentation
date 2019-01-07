@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.apachehttpclient;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -22,10 +23,10 @@ import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -57,8 +58,8 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<? extends ElementMatcher, String> transformers() {
-    return Collections.singletonMap(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod()
             .and(not(isAbstract()))
             .and(named("execute"))
@@ -137,7 +138,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
         if (throwable != null) {
           Tags.ERROR.set(span, Boolean.TRUE);
-          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+          span.log(singletonMap(ERROR_OBJECT, throwable));
           span.finish();
         }
         scope.close();

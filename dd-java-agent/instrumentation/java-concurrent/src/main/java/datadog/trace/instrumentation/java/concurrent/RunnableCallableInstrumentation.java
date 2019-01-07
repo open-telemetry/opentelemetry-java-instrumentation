@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -51,8 +52,8 @@ public final class RunnableCallableInstrumentation extends Instrumenter.Default 
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(named("run").and(takesArguments(0)), RunnableAdvice.class.getName());
     transformers.put(named("call").and(takesArguments(0)), CallableAdvice.class.getName());
     return transformers;

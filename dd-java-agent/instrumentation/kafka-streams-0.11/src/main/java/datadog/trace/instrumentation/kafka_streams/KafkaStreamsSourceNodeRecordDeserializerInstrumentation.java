@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.kafka_streams;
 
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -8,9 +9,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -30,16 +31,14 @@ public class KafkaStreamsSourceNodeRecordDeserializerInstrumentation extends Ins
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod()
             .and(isPublic())
             .and(named("deserialize"))
             .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecord")))
             .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
         SaveHeadersAdvice.class.getName());
-    return transformers;
   }
 
   public static class SaveHeadersAdvice {

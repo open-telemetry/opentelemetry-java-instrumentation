@@ -12,11 +12,11 @@ import com.google.common.collect.Sets;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Trace;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.description.NamedElement;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -83,9 +83,8 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(isAnnotatedWith(methodTraceMatcher), TraceAdvice.class.getName());
-    return transformers;
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return Collections.singletonMap(
+        isAnnotatedWith(methodTraceMatcher), TraceAdvice.class.getName());
   }
 }

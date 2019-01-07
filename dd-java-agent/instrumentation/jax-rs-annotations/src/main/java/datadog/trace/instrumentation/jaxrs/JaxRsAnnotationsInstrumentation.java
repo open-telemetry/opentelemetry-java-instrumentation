@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.jaxrs;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,12 +17,12 @@ import io.opentracing.util.GlobalTracer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -40,9 +41,8 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isAnnotatedWith(
             named("javax.ws.rs.Path")
                 .or(named("javax.ws.rs.DELETE"))
@@ -52,7 +52,6 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
                 .or(named("javax.ws.rs.POST"))
                 .or(named("javax.ws.rs.PUT"))),
         JaxRsAnnotationsAdvice.class.getName());
-    return transformers;
   }
 
   public static class JaxRsAnnotationsAdvice {

@@ -121,7 +121,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
     }
 
     @Override
-    public Map<ElementMatcher, String> transformers() {
+    public Map<ElementMatcher<? super MethodDescription>, String> transformers() {
       ElementMatcher.Junction<MethodDescription> methodMatchers = null;
       for (final String methodName : methodNames) {
         if (methodMatchers == null) {
@@ -131,7 +131,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
         }
       }
 
-      final Map<ElementMatcher, String> transformers = new HashMap<>();
+      final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
       transformers.put(methodMatchers, TraceAdvice.class.getName());
       return transformers;
     }

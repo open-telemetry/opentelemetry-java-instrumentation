@@ -19,6 +19,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.glassfish.jersey.client.ClientRequest;
@@ -45,8 +46,8 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(isMethod().and(isPublic()).and(named("invoke")), InvokeAdvice.class.getName());
     transformers.put(
         isMethod().and(isPublic()).and(named("submit")).and(returns(Future.class)),

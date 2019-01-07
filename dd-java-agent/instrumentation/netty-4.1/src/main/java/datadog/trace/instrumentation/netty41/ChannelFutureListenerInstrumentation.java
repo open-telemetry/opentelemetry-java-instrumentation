@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.netty41;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,10 +17,9 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -49,14 +49,12 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         isMethod()
             .and(named("operationComplete"))
             .and(takesArgument(0, named("io.netty.channel.ChannelFuture"))),
         OperationCompleteAdvice.class.getName());
-    return transformers;
   }
 
   public static class OperationCompleteAdvice {
@@ -87,7 +85,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
               .withTag(Tags.COMPONENT.getKey(), "netty")
               .start();
       Tags.ERROR.set(errorSpan, true);
-      errorSpan.log(Collections.singletonMap(ERROR_OBJECT, cause));
+      errorSpan.log(singletonMap(ERROR_OBJECT, cause));
       errorSpan.finish();
 
       return scope;

@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.play;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -19,12 +20,12 @@ import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.slf4j.LoggerFactory;
@@ -58,14 +59,12 @@ public final class PlayInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public Map<ElementMatcher, String> transformers() {
-    final Map<ElementMatcher, String> transformers = new HashMap<>();
-    transformers.put(
+  public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    return singletonMap(
         named("apply")
             .and(takesArgument(0, named("play.api.mvc.Request")))
             .and(returns(named("scala.concurrent.Future"))),
         PlayAdvice.class.getName());
-    return transformers;
   }
 
   public static class PlayAdvice {
@@ -187,7 +186,7 @@ public final class PlayInstrumentation extends Instrumenter.Default {
 
     public static void onError(final Span span, final Throwable t) {
       Tags.ERROR.set(span, Boolean.TRUE);
-      span.log(Collections.singletonMap(ERROR_OBJECT, t));
+      span.log(singletonMap(ERROR_OBJECT, t));
       Tags.HTTP_STATUS.set(span, 500);
     }
   }

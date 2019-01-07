@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
@@ -161,11 +162,11 @@ public interface Instrumenter {
     private class PostMatchHook implements AgentBuilder.RawMatcher {
       @Override
       public boolean matches(
-          TypeDescription typeDescription,
-          ClassLoader classLoader,
-          JavaModule module,
-          Class<?> classBeingRedefined,
-          ProtectionDomain protectionDomain) {
+          final TypeDescription typeDescription,
+          final ClassLoader classLoader,
+          final JavaModule module,
+          final Class<?> classBeingRedefined,
+          final ProtectionDomain protectionDomain) {
         postMatch(typeDescription, classLoader, module, classBeingRedefined, protectionDomain);
         return true;
       }
@@ -206,14 +207,14 @@ public interface Instrumenter {
      * @param protectionDomain protection domain of the class under load.
      */
     public void postMatch(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule module,
-        Class<?> classBeingRedefined,
-        ProtectionDomain protectionDomain) {}
+        final TypeDescription typeDescription,
+        final ClassLoader classLoader,
+        final JavaModule module,
+        final Class<?> classBeingRedefined,
+        final ProtectionDomain protectionDomain) {}
 
     /** @return A map of matcher->advice */
-    public abstract Map<? extends ElementMatcher, String> transformers();
+    public abstract Map<? extends ElementMatcher<? super MethodDescription>, String> transformers();
 
     /**
      * A map of {class-name -> context-class-name}. Keys (and their subclasses) will be associated
