@@ -24,6 +24,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
   private static final String MESSAGE = "an\nmultiline\nhttp\nresponse"
   private static final long TIMEOUT = 10000L
+  private static final int UNUSED_PORT = 61 // this port should always be closed
 
   @AutoCleanup
   @Shared
@@ -103,7 +104,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
   def "error request trace"() {
     setup:
-    def url = new URL("http://localhost:${server.address.port + 1}/test")
+    def url = new URL("http://localhost:$UNUSED_PORT/test")
 
     HttpRequest request = HttpRequest.create(url.toString())
     CompletionStage<HttpResponse> responseFuture =
@@ -222,7 +223,8 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
   def "error request pool trace"() {
     setup:
-    def url = new URL("http://localhost:${server.address.port + 1}/test")
+    // Use port number that really should be closed
+    def url = new URL("http://localhost:$UNUSED_PORT/test")
 
     CompletionStage<Pair<Try<HttpResponse>, Integer>> sink = Source
       .<Pair<HttpRequest, Integer>> single(new Pair(HttpRequest.create(url.toString()), 1))
