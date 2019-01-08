@@ -31,11 +31,11 @@ public class AsyncChild implements Runnable, Callable {
   }
 
   private void runImpl() {
-    if (doTraceableWork) {
-      asyncChild();
-    }
     while (blockThread.get()) {
       // busy-wait to block thread
+    }
+    if (doTraceableWork) {
+      asyncChild();
     }
   }
 
