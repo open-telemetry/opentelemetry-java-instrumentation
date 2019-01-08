@@ -17,7 +17,7 @@ import lombok.EqualsAndHashCode;
  *     nanosecond precision.
  */
 @EqualsAndHashCode
-public class Clock {
+class Clock {
 
   /** Tracer that created this clock */
   private final Tracer tracer;
@@ -27,7 +27,7 @@ public class Clock {
   /** Nano ticks counter when clock is created */
   private final long startNanoTicks;
 
-  public Clock(final Tracer tracer) {
+  Clock(final Tracer tracer) {
     this.tracer = tracer;
     startTimeNano = epochTimeNano();
     startNanoTicks = nanoTicks();

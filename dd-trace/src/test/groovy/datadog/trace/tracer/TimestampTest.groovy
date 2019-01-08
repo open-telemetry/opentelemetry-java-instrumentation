@@ -1,5 +1,6 @@
 package datadog.trace.tracer
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import nl.jqno.equalsverifier.EqualsVerifier
 import nl.jqno.equalsverifier.Warning
 import spock.lang.Specification
@@ -18,12 +19,28 @@ class TimestampTest extends Specification {
     getTracer() >> tracer
   }
 
+  ObjectMapper objectMapper = new ObjectMapper()
+
   def "test getter"() {
     when:
     def timestamp = new Timestamp(clock)
 
     then:
     timestamp.getClock() == clock
+  }
+
+  def "test getTime"() {
+    setup:
+    clock.nanoTicks() >> CLOCK_NANO_TICKS
+    clock.getStartTimeNano() >> CLOCK_START_TIME
+    clock.getStartNanoTicks() >> CLOCK_START_NANO_TICKS
+    def timestamp = new Timestamp(clock)
+
+    when:
+    def time = timestamp.getTime()
+
+    then:
+    time == 300
   }
 
   def "test getDuration with literal finish time"() {
@@ -62,6 +79,7 @@ class TimestampTest extends Specification {
 
   def "test getDuration with current time"() {
     setup:
+    clock.createCurrentTimestamp() >> { new Timestamp(clock) }
     clock.nanoTicks() >> CLOCK_START_NANO_TICKS >> FINISH_NANO_TICKS
     def timestamp = new Timestamp(clock)
 
@@ -101,5 +119,20 @@ class TimestampTest extends Specification {
 
     then:
     noExceptionThrown()
+  }
+
+  def "test JSON rendering"() {
+    setup:
+    clock.nanoTicks() >> CLOCK_NANO_TICKS
+    clock.getStartTimeNano() >> CLOCK_START_TIME
+    clock.getStartNanoTicks() >> CLOCK_START_NANO_TICKS
+    def timestamp = new Timestamp(clock)
+
+    when:
+    def string = objectMapper.writeValueAsString(timestamp)
+
+
+    then:
+    string == "300"
   }
 }

@@ -1,5 +1,7 @@
 package datadog.trace.tracer
 
+
+import com.fasterxml.jackson.databind.ObjectMapper
 import datadog.trace.api.DDTags
 import spock.lang.Specification
 
@@ -8,6 +10,7 @@ class SpanImplTest extends Specification {
   private static final String SERVICE_NAME = "service.name"
   private static final String PARENT_TRACE_ID = "trace id"
   private static final String PARENT_SPAN_ID = "span id"
+  private static final long START_TIME = 100
   private static final long DURATION = 321
 
   def interceptors = [Mock(name: "interceptor-1", Interceptor), Mock(name: "interceptor-2", Interceptor)]
@@ -20,12 +23,15 @@ class SpanImplTest extends Specification {
     getSpanId() >> PARENT_SPAN_ID
   }
   def startTimestamp = Mock(Timestamp) {
+    getTime() >> START_TIME
     getDuration() >> DURATION
     getDuration(_) >> { args -> args[0] + DURATION }
   }
   def trace = Mock(TraceImpl) {
     getTracer() >> tracer
   }
+
+  ObjectMapper objectMapper = new ObjectMapper()
 
   def "test setters and default values"() {
     when: "create span"
@@ -38,6 +44,9 @@ class SpanImplTest extends Specification {
     span.getContext().getTraceId() == PARENT_TRACE_ID
     span.getContext().getParentId() == PARENT_SPAN_ID
     span.getContext().getSpanId() ==~ /\d+/
+    span.getTraceId() == PARENT_TRACE_ID
+    span.getParentId() == PARENT_SPAN_ID
+    span.getSpanId() == span.getContext().getSpanId()
     span.getService() == SERVICE_NAME
     span.getResource() == null
     span.getType() == null
@@ -108,6 +117,19 @@ class SpanImplTest extends Specification {
     "string.key"  | "string"
     "boolean.key" | true
     "number.key"  | 123
+  }
+
+  def "test getMeta"() {
+    setup:
+    def span = new SpanImpl(trace, parentContext, startTimestamp)
+
+    when:
+    span.setMeta("number.key", 123)
+    span.setMeta("string.key", "meta string")
+    span.setMeta("boolean.key", true)
+
+    then:
+    span.getMeta() == ["number.key": "123", "string.key": "meta string", "boolean.key": "true"]
   }
 
   def "test meta setter on finished span for #key"() {
@@ -205,12 +227,7 @@ class SpanImplTest extends Specification {
 
     when: "finish/finalize span"
     span."$method"(*methodArgs)
-
-    then: "warning is reported"
-    _ * trace.getTracer() >> tracer
-    if (finalizeErrorReported) {
-      1 * tracer.reportWarning(_, span)
-    }
+    
     then: "interceptors called"
     interceptors.reverseEach({ interceptor ->
       then:
@@ -288,5 +305,65 @@ class SpanImplTest extends Specification {
 
     then:
     thrown TraceException
+  }
+
+  def "test JSON rendering"() {
+    setup: "create span"
+    def parentContext = new SpanContextImpl("123", "456", "789")
+    def span = new SpanImpl(trace, parentContext, startTimestamp)
+    span.setResource("test resource")
+    span.setType("test type")
+    span.setName("test name")
+    span.setMeta("number.key", 123)
+    span.setMeta("string.key", "meta string")
+    span.setMeta("boolean.key", true)
+    span.finish()
+
+    when: "convert to JSON"
+    def string = objectMapper.writeValueAsString(span)
+    def parsedSpan = objectMapper.readerFor(JsonSpan).readValue(string)
+
+    then:
+    parsedSpan == new JsonSpan(span)
+  }
+
+  def "test JSON rendering with throwable"() {
+    setup: "create span"
+    def parentContext = new SpanContextImpl("123", "456", "789")
+    def span = new SpanImpl(trace, parentContext, startTimestamp)
+    span.attachThrowable(new RuntimeException("test"))
+    span.finish()
+
+    when: "convert to JSON"
+    def string = objectMapper.writeValueAsString(span)
+    def parsedSpan = objectMapper.readerFor(JsonSpan).readValue(string)
+
+    then:
+    parsedSpan == new JsonSpan(span)
+  }
+
+  def "test JSON rendering with big ID values"() {
+    setup: "create span"
+    def parentContext = new SpanContextImpl(
+      new BigInteger(2).pow(64).subtract(1).toString(),
+      "123",
+      new BigInteger(2).pow(64).subtract(2).toString())
+    def span = new SpanImpl(trace, parentContext, startTimestamp)
+    span.finish()
+
+    when: "convert to JSON"
+    def string = objectMapper.writeValueAsString(span)
+    def parsedSpan = objectMapper.readValue(string, JsonSpan)
+
+    then:
+    parsedSpan == new JsonSpan(span)
+
+    when:
+    def json = objectMapper.readTree(string)
+
+    then: "make sure ids rendered as number"
+    json.get("trace_id").isNumber()
+    json.get("parent_id").isNumber()
+    json.get("span_id").isNumber()
   }
 }

@@ -2,6 +2,7 @@ package datadog.trace.tracer;
 
 import static java.lang.Math.max;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.EqualsAndHashCode;
 
 /**
@@ -26,13 +27,19 @@ public class Timestamp {
   }
 
   /** @return clock instance used by this timestamp */
-  public Clock getClock() {
+  Clock getClock() {
     return clock;
+  }
+
+  /** @return time since epoch in nanoseconds */
+  @JsonValue
+  public long getTime() {
+    return clock.getStartTimeNano() + startTicksOffset();
   }
 
   /** @return duration in nanoseconds from this time stamp to current time. */
   public long getDuration() {
-    return getDuration(new Timestamp(clock));
+    return getDuration(clock.createCurrentTimestamp());
   }
 
   /**
@@ -50,10 +57,7 @@ public class Timestamp {
               clock, finishTimestamp.clock);
       // Do our best to try to calculate nano-second time using millisecond clock start time and
       // nanosecond offset.
-      return max(
-          0,
-          (finishTimestamp.clock.getStartTimeNano() + finishTimestamp.startTicksOffset())
-              - (clock.getStartTimeNano() + startTicksOffset()));
+      return max(0, finishTimestamp.getTime() - getTime());
     }
     return max(0, finishTimestamp.nanoTicks - nanoTicks);
   }

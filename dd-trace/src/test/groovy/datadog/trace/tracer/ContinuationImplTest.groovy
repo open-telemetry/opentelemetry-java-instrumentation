@@ -76,8 +76,6 @@ class ContinuationImplTest extends Specification {
     continuation.isClosed()
     and: "continuation is reported as closed to a trace"
     1 * trace.closeContinuation(continuation, true)
-    and: "warning is reported"
-    1 * tracer.reportWarning(_, [continuation])
 
     when: "finalize continuation again"
     continuation.finalize()
@@ -98,7 +96,7 @@ class ContinuationImplTest extends Specification {
     continuation.finalize()
 
     then:
-    1 * trace.getTracer() >> { throw new Throwable() }
+    1 * trace.closeContinuation(_, _) >> { throw new Throwable() }
     noExceptionThrown()
   }
 

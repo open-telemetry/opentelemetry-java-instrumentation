@@ -1,9 +1,10 @@
 package datadog.trace.tracer
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import datadog.trace.tracer.sampling.Sampler
 import datadog.trace.tracer.writer.Writer
 import spock.lang.Specification
-
 
 class TraceImplTest extends Specification {
 
@@ -34,6 +35,8 @@ class TraceImplTest extends Specification {
     getSpanId() >> PARENT_SPAN_ID
   }
   def startTimestamp = Mock(Timestamp)
+
+  ObjectMapper objectMapper = new ObjectMapper()
 
   def "test getters"() {
     when:
@@ -455,5 +458,36 @@ class TraceImplTest extends Specification {
 
     then: "error is reported"
     thrown TraceException
+  }
+
+  def "test JSON rendering"() {
+    setup: "create trace"
+    def clock = new Clock(tracer)
+    def parentContext = new SpanContextImpl("123", "456", "789")
+    def trace = new TraceImpl(tracer, parentContext, clock.createCurrentTimestamp())
+    trace.getRootSpan().setResource("test resource")
+    trace.getRootSpan().setType("test type")
+    trace.getRootSpan().setName("test name")
+    trace.getRootSpan().setMeta("number.key", 123)
+    trace.getRootSpan().setMeta("string.key", "meta string")
+    trace.getRootSpan().setMeta("boolean.key", true)
+
+    def childSpan = trace.createSpan(trace.getRootSpan().getContext())
+    childSpan.setResource("child span test resource")
+    childSpan.setType("child span test type")
+    childSpan.setName("child span test name")
+    childSpan.setMeta("child.span.number.key", 123)
+    childSpan.setMeta("child.span.string.key", "meta string")
+    childSpan.setMeta("child.span.boolean.key", true)
+    childSpan.finish()
+
+    trace.getRootSpan().finish()
+
+    when: "convert to JSON"
+    def string = objectMapper.writeValueAsString(trace)
+    def parsedTrace = objectMapper.readValue(string, new TypeReference<List<JsonSpan>>() {})
+
+    then:
+    parsedTrace == [new JsonSpan(childSpan), new JsonSpan(trace.getRootSpan())]
   }
 }
