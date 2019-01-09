@@ -114,7 +114,7 @@ task deletePIDFile() {
 
 tasks.withType(Test) {
   // so the test can get this property
-  jvmArgs "-Ddatadog.ittest.server.port=${playHttpPort}"
+  jvmArgs "-Ddatadog.smoketest.server.port=${playHttpPort}"
 
   testLogging {
     events "started"

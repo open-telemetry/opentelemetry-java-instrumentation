@@ -8,7 +8,7 @@ import spock.lang.Specification
 class PlaySmokeTest extends Specification {
 
   OkHttpClient client = OkHttpUtils.client()
-  private int port = Integer.parseInt(System.getProperty("datadog.ittest.server.port", "8080"))
+  private int port = Integer.parseInt(System.getProperty("datadog.smoketest.server.port", "8080"))
 
   def "welcome endpoint #n th time"() {
     setup:
