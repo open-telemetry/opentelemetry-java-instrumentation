@@ -1,0 +1,127 @@
+plugins {
+  // using this plugin will launch the server in the background and won't block the tests
+  id 'com.github.psxpaul.execfork' version '0.1.8'
+  id 'play'
+}
+
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  playHttpPort = 8080
+}
+
+def playVersion = "2.6.20"
+def scalaVersion = System.getProperty("scala.binary.version", /* default = */ "2.12")
+
+model {
+  components {
+    play {
+      platform play: playVersion, scala: scalaVersion, java: '1.8'
+      injectedRoutesGenerator = true
+      sources {
+        scala {
+          source.srcDir "src/main/scala"
+        }
+        extraRoutes(RoutesSourceSet) {
+          source.srcDir "src/main/conf"
+        }
+      }
+    }
+  }
+  distributions {
+    playBinary {
+      contents {
+        from("src/main/conf") {
+          into "conf"
+        }
+      }
+    }
+  }
+}
+
+repositories {
+  jcenter()
+  maven {
+    name "lightbend-maven-releases"
+    url "https://repo.lightbend.com/lightbend/maven-release"
+  }
+  ivy {
+    name "lightbend-ivy-release"
+    url "https://repo.lightbend.com/lightbend/ivy-releases"
+    layout "ivy"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+description = 'Play Integration Tests.'
+
+dependencies {
+  play "com.typesafe.play:play-guice_$scalaVersion:$playVersion"
+  play "com.typesafe.play:play-logback_$scalaVersion:$playVersion"
+  play "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
+
+  play project(':dd-trace-api')
+  play deps.opentracing
+
+  testCompile project(':dd-trace-api')
+  testCompile project(':dd-trace-ot')
+  testCompile project(':dd-java-agent:testing')
+  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+}
+
+/** Open up a random, reusable port. */
+def randomOpenPort() {
+  final ServerSocket socket
+  try {
+    socket = new ServerSocket(0)
+    socket.setReuseAddress(true)
+    socket.close()
+    return socket.getLocalPort()
+  } catch (final IOException ioe) {
+    ioe.printStackTrace()
+    return -1
+  }
+}
+
+task startServer(type: com.github.psxpaul.task.ExecFork) {
+  playHttpPort = randomOpenPort()
+
+  if (playHttpPort == -1) {
+    throw new GradleException("Failed to get random port to start Play")
+  }
+
+  workingDir = "${buildDir}/stage/playBinary"
+  commandLine = "${workingDir}/bin/playBinary"
+  stopAfter = test
+  // these params tells the ExecFork plugin to block on startServer task until the port is opened or the string is seen in the ouput
+  waitForPort = playHttpPort
+  waitForOutput = "Listening for HTTP on /127.0.0.1:${playHttpPort}"
+  environment = [
+    'JAVA_OPTS' :  "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
+    + " -Ddd.writer.type=LoggingWriter" + " -Ddd.service.name=java-app"
+      + " -Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug"
+      + " -Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
+      + " -Dconfig.file=${workingDir}/conf/application.conf -Dhttp.port=${playHttpPort}"
+      + " -Dhttp.address=127.0.0.1"
+  ]
+
+  dependsOn 'stage'
+}
+
+task deletePIDFile() {
+  delete "${buildDir}/stage/playBinary/RUNNING_PID"
+}
+
+tasks.withType(Test) {
+  // so the test can get this property
+  jvmArgs "-Ddatadog.smoketest.server.port=${playHttpPort}"
+
+  testLogging {
+    events "started"
+  }
+
+  dependsOn project(':dd-java-agent').shadowJar, startServer
+}
+
+// clean up the PID file from the server
+tasks.withType(Test).forEach { it.finalizedBy deletePIDFile }

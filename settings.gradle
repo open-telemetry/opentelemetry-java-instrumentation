@@ -17,7 +17,9 @@ include ':dd-java-agent:agent-jmxfetch'
 // misc
 include ':dd-java-agent:testing'
 
+// smoke tests
 include ':dd-smoke-tests:wildfly'
+include ':dd-smoke-tests:play'
 
 // instrumentation:
 include ':dd-java-agent:instrumentation:akka-http-10.0'
