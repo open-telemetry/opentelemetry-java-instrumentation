@@ -2,7 +2,7 @@ package datadog.trace.tracer
 
 import datadog.trace.api.Config
 import datadog.trace.tracer.sampling.AllSampler
-import datadog.trace.tracer.writer.LoggingWriter
+import datadog.trace.tracer.writer.AgentWriter
 import datadog.trace.tracer.writer.SampleRateByService
 import datadog.trace.tracer.writer.Writer
 import spock.lang.Shared
@@ -25,7 +25,7 @@ class TracerTest extends Specification {
     def tracer = new Tracer(config)
 
     then:
-    tracer.getWriter() instanceof LoggingWriter
+    tracer.getWriter() instanceof AgentWriter
     tracer.getSampler() instanceof AllSampler
     tracer.getInterceptors() == []
     tracer.getDefaultServiceName() == config.getServiceName()

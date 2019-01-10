@@ -13,8 +13,12 @@ class AgentWriterTest extends Specification {
   // We make this slightly longer than flush time.
   private static final int FLUSH_DELAY = TimeUnit.SECONDS.toMillis(AgentWriter.FLUSH_TIME_SECONDS * 2)
 
+  private static final AGENT_URL = new URL("http://example.com")
+
   def sampleRateByService = Mock(SampleRateByService)
-  def client = Mock(AgentClient)
+  def client = Mock(AgentClient) {
+    getAgentUrl() >> AGENT_URL
+  }
 
   def "test happy path"() {
     setup:
@@ -109,6 +113,16 @@ class AgentWriterTest extends Specification {
     writer.close()
   }
 
+  def "test agent url getter"() {
+    setup:
+    def writer = new AgentWriter(client)
+
+    when:
+    def agentUrl = writer.getAgentUrl()
+
+    then:
+    agentUrl == AGENT_URL
+  }
 
   def "test default sample rate by service"() {
     setup:

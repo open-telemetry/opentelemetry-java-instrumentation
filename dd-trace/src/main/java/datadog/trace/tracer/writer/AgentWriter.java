@@ -1,6 +1,7 @@
 package datadog.trace.tracer.writer;
 
 import datadog.trace.tracer.Trace;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -51,6 +52,11 @@ public class AgentWriter implements Writer {
     shutdownCallback = new ShutdownCallback(executorService);
   }
 
+  /** @return Datadog agwent URL. Visible for testing. */
+  URL getAgentUrl() {
+    return task.getClient().getAgentUrl();
+  }
+
   @Override
   public void write(final Trace trace) {
     if (trace.isValid()) {
@@ -95,7 +101,7 @@ public class AgentWriter implements Writer {
   private static final class TracesSendingTask implements Runnable {
 
     /** The Datadog agent client */
-    private final AgentClient client;
+    @Getter private final AgentClient client;
     /** Queue size */
     private final int queueSize;
     /** In memory collection of traces waiting for departure */

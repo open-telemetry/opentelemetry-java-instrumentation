@@ -16,6 +16,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 
@@ -41,12 +42,12 @@ class AgentClient {
   private static final LogRateLimiter LOG_RATE_LIMITER =
       new LogRateLimiter(log, MILLISECONDS_BETWEEN_ERROR_LOG);
 
-  private final URL tracesUrl;
+  @Getter private final URL agentUrl;
 
   AgentClient(final String host, final int port) {
     final String url = "http://" + host + ":" + port + TRACES_ENDPOINT;
     try {
-      tracesUrl = new URL(url);
+      agentUrl = new URL(url);
     } catch (final MalformedURLException e) {
       // This should essentially mean agent should bail out from installing, we cannot meaningfully
       // recover from this.
@@ -90,7 +91,7 @@ class AgentClient {
   }
 
   private HttpURLConnection createHttpConnection() throws IOException {
-    final HttpURLConnection connection = (HttpURLConnection) tracesUrl.openConnection();
+    final HttpURLConnection connection = (HttpURLConnection) agentUrl.openConnection();
     connection.setDoOutput(true);
     connection.setDoInput(true);
 
