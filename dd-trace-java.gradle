@@ -22,6 +22,7 @@ allprojects {
   }
 
   apply from: "${rootDir}/gradle/dependencies.gradle"
+  apply from: "${rootDir}/gradle/util.gradle"
 }
 
 repositories {

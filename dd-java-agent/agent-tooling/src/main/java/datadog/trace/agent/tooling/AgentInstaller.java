@@ -80,7 +80,13 @@ public class AgentInstaller {
                             named("java.net.URL")
                                 .or(named("java.net.HttpURLConnection"))
                                 .or(nameStartsWith("java.util.concurrent."))
-                                .or(nameStartsWith("java.util.logging.")))))
+                                .or(
+                                    nameStartsWith("java.util.logging.")
+                                        // Concurrent instrumentation modifies the strucutre of
+                                        // Cleaner class incompaibly with java9+ modules.
+                                        // Working around until a long-term fix for modules can be
+                                        // put in place.
+                                        .and(not(named("java.util.logging.LogManager$Cleaner")))))))
             .or(nameStartsWith("com.sun.").and(not(nameStartsWith("com.sun.messaging."))))
             .or(
                 nameStartsWith("sun.")
