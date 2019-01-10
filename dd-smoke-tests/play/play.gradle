@@ -84,6 +84,7 @@ def randomOpenPort() {
 }
 
 task startServer(type: com.github.psxpaul.task.ExecFork) {
+  dependsOn project(':dd-java-agent').shadowJar
   playHttpPort = randomOpenPort()
 
   if (playHttpPort == -1) {
@@ -93,6 +94,7 @@ task startServer(type: com.github.psxpaul.task.ExecFork) {
   workingDir = "${buildDir}/stage/playBinary"
   commandLine = "${workingDir}/bin/playBinary"
   stopAfter = test
+  standardOutput "${buildDir}/reports/server.log"
   // these params tells the ExecFork plugin to block on startServer task until the port is opened or the string is seen in the ouput
   waitForPort = playHttpPort
   waitForOutput = "Listening for HTTP on /127.0.0.1:${playHttpPort}"
@@ -120,7 +122,7 @@ tasks.withType(Test) {
     events "started"
   }
 
-  dependsOn project(':dd-java-agent').shadowJar, startServer
+  dependsOn startServer
 }
 
 // clean up the PID file from the server
