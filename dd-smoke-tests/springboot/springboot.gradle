@@ -20,22 +20,6 @@ jar {
   }
 }
 
-
-// TODO: move to common util
-/** Open up a random, reusable port. */
-def randomOpenPort() {
-  final ServerSocket socket
-  try {
-    socket = new ServerSocket(0)
-    socket.setReuseAddress(true)
-    socket.close()
-    return socket.getLocalPort()
-  } catch (final IOException ioe) {
-    ioe.printStackTrace()
-    return -1
-  }
-}
-
 dependencies {
   compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.18.RELEASE'
 
