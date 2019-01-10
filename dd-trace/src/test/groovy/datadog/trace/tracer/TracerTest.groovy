@@ -3,6 +3,7 @@ package datadog.trace.tracer
 import datadog.trace.api.Config
 import datadog.trace.tracer.sampling.AllSampler
 import datadog.trace.tracer.writer.LoggingWriter
+import datadog.trace.tracer.writer.SampleRateByService
 import datadog.trace.tracer.writer.Writer
 import spock.lang.Shared
 import spock.lang.Specification
@@ -179,6 +180,11 @@ class TracerTest extends Specification {
     @Override
     void incrementTraceCount() {
       traceCount.incrementAndGet()
+    }
+
+    @Override
+    SampleRateByService getSampleRateByService() {
+      return null // Doesn't matter for now
     }
 
     @Override

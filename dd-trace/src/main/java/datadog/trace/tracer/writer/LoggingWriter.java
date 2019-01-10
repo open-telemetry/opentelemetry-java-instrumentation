@@ -17,6 +17,11 @@ public class LoggingWriter implements Writer {
   }
 
   @Override
+  public SampleRateByService getSampleRateByService() {
+    return SampleRateByService.EMPTY_INSTANCE;
+  }
+
+  @Override
   public void start() {
     // TODO: do we really need this? and if we do - who is responsible for calling this?
     log.debug("{} started", getClass().getSimpleName());

@@ -21,6 +21,9 @@ public interface Writer {
    */
   void incrementTraceCount();
 
+  /** @return Most up to date {@link SampleRateByService} instance. */
+  SampleRateByService getSampleRateByService();
+
   /** Start the writer */
   void start();
 

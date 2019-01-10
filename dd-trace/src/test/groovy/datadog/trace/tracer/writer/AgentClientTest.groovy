@@ -122,6 +122,21 @@ class AgentClientTest extends Specification {
     response == null
   }
 
+  def "test timeout"() {
+    setup:
+    stubFor(put(urlEqualTo(AgentClient.TRACES_ENDPOINT))
+      .willReturn(aResponse()
+      .withStatus(200)
+      .withChunkedDribbleDelay(5, AgentClient.READ_TIMEOUT * 2)))
+    def trace = createTrace("123")
+
+    when:
+    def response = client.sendTraces([trace], TRACE_COUNT)
+
+    then:
+    response == null
+  }
+
 
   def "test invalid url"() {
     when:

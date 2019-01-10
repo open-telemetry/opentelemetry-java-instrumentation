@@ -12,6 +12,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode
 class SampleRateByService {
 
+  static final SampleRateByService EMPTY_INSTANCE = new SampleRateByService(Collections.EMPTY_MAP);
+
   private final Map<String, Double> rateByService;
 
   @JsonCreator

@@ -32,6 +32,9 @@ class AgentClient {
   static final String DATADOG_META_TRACER_VERSION = "Datadog-Meta-Tracer-Version";
   static final String X_DATADOG_TRACE_COUNT = "X-Datadog-Trace-Count";
 
+  static final int CONNECT_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(1);
+  static final int READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(1);
+
   private static final long MILLISECONDS_BETWEEN_ERROR_LOG = TimeUnit.MINUTES.toMillis(5);
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new MessagePackFactory());
@@ -90,6 +93,12 @@ class AgentClient {
     final HttpURLConnection connection = (HttpURLConnection) tracesUrl.openConnection();
     connection.setDoOutput(true);
     connection.setDoInput(true);
+
+    // It is important to have timeout for agent request here: we need to finish request in some
+    // reasonable amount
+    // of time to allow following requests to be run.
+    connection.setConnectTimeout(CONNECT_TIMEOUT);
+    connection.setReadTimeout(READ_TIMEOUT);
 
     connection.setRequestMethod("PUT");
     connection.setRequestProperty(CONTENT_TYPE, MSGPACK);
