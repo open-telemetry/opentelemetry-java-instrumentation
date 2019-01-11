@@ -1,5 +1,6 @@
 import datadog.trace.api.Trace;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.ext.web.Router;
@@ -35,7 +36,7 @@ public class VertxWebTestServer extends AbstractVerticle {
   }
 
   @Override
-  public void start() {
+  public void start(final Future<Void> startFuture) {
     final Router router = Router.router(vertx);
 
     router
@@ -66,7 +67,10 @@ public class VertxWebTestServer extends AbstractVerticle {
               routingContext.response().putHeader("content-type", "text/html").end("Hello World");
             });
 
-    vertx.createHttpServer().requestHandler(router::accept).listen(port);
+    vertx
+        .createHttpServer()
+        .requestHandler(router::accept)
+        .listen(port, h -> startFuture.complete());
   }
 
   @Trace
