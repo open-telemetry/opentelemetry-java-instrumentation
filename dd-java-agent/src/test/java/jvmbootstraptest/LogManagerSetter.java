@@ -1,50 +1,39 @@
 package jvmbootstraptest;
 
-import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
-import java.security.ProtectionDomain;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.util.logging.LogManager;
 
 public class LogManagerSetter {
-  // Intentionally doing the string replace to bypass gradle shadow rename
-  // loggerClassName = java.util.logging.Logger
-  private static final String loggerClassName =
-      "java.util.logging.TMP".replaceFirst("TMP", "Logger");
-  private static final String loggerInternalName = loggerClassName.replace('.', '/');
-  private static final AtomicBoolean loggerInitialized = new AtomicBoolean(false);
+  private static final DatagramSocket socket;
+  private static final int localPort;
+
+  static {
+    try {
+      socket = new DatagramSocket(0);
+      localPort = socket.getLocalPort();
+    } catch (SocketException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   public static void premain(final String agentArgs, final Instrumentation inst) throws Exception {
-    inst.addTransformer(
-        new ClassFileTransformer() {
-          @Override
-          public byte[] transform(
-              ClassLoader loader,
-              String className,
-              Class<?> classBeingRedefined,
-              ProtectionDomain protectionDomain,
-              byte[] classfileBuffer)
-              throws IllegalClassFormatException {
-            if (loggerInternalName.equals(className)) {
-              loggerInitialized.compareAndSet(false, true);
-            }
-            return null;
-          }
-        });
+    // set jmxfetch port in premain before tracer's premain runs
+    System.setProperty("dd.jmxfetch.statsd.port", Integer.toString(localPort));
+    System.setProperty("dd.jmxfetch.statsd.host", "localhost");
   }
 
   public static void main(String... args) throws Exception {
-    final ClassLoader systemLoader = ClassLoader.getSystemClassLoader();
-
-    // once the logger class has been initialized, we know jmxfetch is running and can proceed with
-    // the test
-    while (!loggerInitialized.get()) {
-      Thread.sleep(1);
+    try {
+      // block until jmxfetch sends data
+      final byte[] buf = new byte[1500];
+      final DatagramPacket packet = new DatagramPacket(buf, buf.length);
+      socket.receive(packet);
+    } finally {
+      socket.close();
     }
-    systemLoader.loadClass(loggerClassName);
-    // at this point the logger is loaded and fully initialized
-
     System.setProperty("java.util.logging.manager", CustomLogManager.class.getName());
     customAssert(
         LogManager.getLogManager().getClass(),

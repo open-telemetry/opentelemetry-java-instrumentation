@@ -26,7 +26,7 @@ class CustomLogManagerTest extends Specification {
     expect:
     agentArg != null
     IntegrationTestUtils.runOnSeparateJvm(LogManagerSetter.getName()
-      , [agentArg, "-javaagent:" + customAgent.getPath(), "-Ddd.jmxfetch.enabled=true"] as String[]
+      , ["-javaagent:" + customAgent.getPath(), agentArg, "-Ddd.jmxfetch.enabled=true", "-Ddd.jmxfetch.refresh-beans-period=1", "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=off"] as String[]
       , "" as String[]
       , true) == 0
   }
