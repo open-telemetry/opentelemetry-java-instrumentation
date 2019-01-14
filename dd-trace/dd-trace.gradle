@@ -18,4 +18,5 @@ dependencies {
   testCompile deps.bytebuddy
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6' // Last version to support Java7
   testCompile group: 'nl.jqno.equalsverifier', name: 'equalsverifier', version: '2.5.2' // Last version to support Java7
+  testCompile group: 'com.github.tomakehurst', name: 'wiremock', 'version': '2.20.0'
 }
