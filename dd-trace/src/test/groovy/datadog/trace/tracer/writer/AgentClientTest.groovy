@@ -72,6 +72,7 @@ class AgentClientTest extends Specification {
     response.getRate("another test") == 0.2d
     response.getRate("doesn't exist") == null
     and: "request got expected parameters"
+    byte[] requestBody = null
     verify(putRequestedFor(urlEqualTo(AgentClient.TRACES_ENDPOINT))
       .withHeader(AgentClient.CONTENT_TYPE, equalTo(AgentClient.MSGPACK))
       .withHeader(AgentClient.DATADOG_META_LANG, equalTo("java"))
@@ -81,9 +82,12 @@ class AgentClientTest extends Specification {
       // .withHeader(AgentClient.DATADOG_META_TRACER_VERSION, equalTo("java"))
       .withHeader(AgentClient.X_DATADOG_TRACE_COUNT, equalTo(Integer.toString(TRACE_COUNT)))
       .andMatching({ Request request ->
-        // Note: it is hard to see what's wrong when this fails... is there a better way?
-        MatchResult.of(objectMapper.readValue(request.getBody(), new TypeReference<List<List<JsonSpan>>>() {}) == traces.collect {it.getSpans().collect {new JsonSpan(it)}})
+      requestBody = request.getBody()
+      MatchResult.of(true)
       }))
+    objectMapper.readValue(requestBody, new TypeReference<List<List<JsonSpan>>>() {}) == traces.collect {
+      it.getSpans().collect { new JsonSpan(it) }
+    }
   }
 
   def "test send empty list"() {

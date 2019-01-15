@@ -3,11 +3,13 @@ package datadog.trace.tracer
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
 
 /**
  * Helper class to parse serialized span to verify serialization logic
  */
 @EqualsAndHashCode
+@ToString
 class JsonSpan {
   @JsonProperty("trace_id")
   BigInteger traceId
@@ -31,7 +33,9 @@ class JsonSpan {
   String name
 
   @JsonProperty("error")
-  boolean error
+  // Somehow MsgPack formatter can not convert number to boolean with newer jackson so we have to do this manually
+  //@JsonFormat(shape = JsonFormat.Shape.NUMBER)
+  int error
 
   @JsonProperty("meta")
   Map<String, String> meta
@@ -52,7 +56,7 @@ class JsonSpan {
     type = span.getType()
     name = span.getName()
 
-    error = span.isErrored()
+    error = span.isErrored() ? 1 : 0
 
     meta = span.getMeta()
   }
