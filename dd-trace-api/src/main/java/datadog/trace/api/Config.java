@@ -29,6 +29,7 @@ public class Config {
   private static final Config INSTANCE = new Config();
 
   public static final String SERVICE_NAME = "service.name";
+  public static final String SERVICE = "service";
   public static final String WRITER_TYPE = "writer.type";
   public static final String AGENT_HOST = "agent.host";
   public static final String TRACE_AGENT_PORT = "trace.agent.port";
@@ -201,7 +202,8 @@ public class Config {
     result.putAll(runtimeTags);
     // service name set here instead of getRuntimeTags because apm already manages the service tag
     // and may chose to override it.
-    result.put(SERVICE_NAME, serviceName);
+    // Additionally, infra/JMX metrics require `service` rather than APM's `service.name` tag
+    result.put(SERVICE, serviceName);
     return Collections.unmodifiableMap(result);
   }
 
