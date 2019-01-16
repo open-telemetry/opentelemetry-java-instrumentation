@@ -49,6 +49,7 @@ public class Config {
   public static final String JMX_FETCH_REFRESH_BEANS_PERIOD = "jmxfetch.refresh-beans-period";
   public static final String JMX_FETCH_STATSD_HOST = "jmxfetch.statsd.host";
   public static final String JMX_FETCH_STATSD_PORT = "jmxfetch.statsd.port";
+  public static final String APP_CUSTOM_LOG_MANAGER = "app.customlogmanager";
 
   public static final String RUNTIME_ID_TAG = "runtime-id";
   public static final String LANGUAGE_TAG_KEY = "language";
@@ -72,6 +73,8 @@ public class Config {
   private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
 
   public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
+
+  private static final boolean DEFAULT_APP_CUSTOM_LOG_MANAGER = false;
 
   /**
    * this is a random UUID that gets generated on JVM start up and is attached to every root span
@@ -98,6 +101,7 @@ public class Config {
   @Getter private final String jmxFetchStatsdHost;
   @Getter private final Integer jmxFetchStatsdPort;
   @Getter private final boolean logsInjectionEnabled;
+  @Getter private final boolean appCustomLogManager;
 
   // Read order: System Properties -> Env Variables, [-> default value]
   // Visible for testing
@@ -138,6 +142,9 @@ public class Config {
 
     logsInjectionEnabled =
         getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
+
+    appCustomLogManager =
+        getBooleanSettingFromEnvironment(APP_CUSTOM_LOG_MANAGER, DEFAULT_APP_CUSTOM_LOG_MANAGER);
   }
 
   // Read order: Properties -> Parent
@@ -182,6 +189,9 @@ public class Config {
 
     logsInjectionEnabled =
         getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
+
+    appCustomLogManager =
+        getBooleanSettingFromEnvironment(APP_CUSTOM_LOG_MANAGER, DEFAULT_APP_CUSTOM_LOG_MANAGER);
   }
 
   public Map<String, String> getMergedSpanTags() {

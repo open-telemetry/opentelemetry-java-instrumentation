@@ -11,7 +11,7 @@ public class LogManagerSetter {
           "jmxfetch startup must be delayed when log manager system property is present.");
       customAssert(
           LogManager.getLogManager().getClass(),
-          LogManager.class
+          LogManagerSetter.class
               .getClassLoader()
               .loadClass(System.getProperty("java.util.logging.manager")),
           "Javaagent should not prevent setting a custom log manager");
@@ -20,7 +20,7 @@ public class LogManagerSetter {
       System.setProperty("java.util.logging.manager", CustomLogManager.class.getName());
       customAssert(
           LogManager.getLogManager().getClass(),
-          LogManager.class
+          LogManagerSetter.class
               .getClassLoader()
               .loadClass(System.getProperty("java.util.logging.manager")),
           "Javaagent should not prevent setting a custom log manager");
