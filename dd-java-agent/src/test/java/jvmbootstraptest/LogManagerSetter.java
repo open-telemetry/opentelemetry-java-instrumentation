@@ -1,44 +1,36 @@
 package jvmbootstraptest;
 
-import java.lang.instrument.Instrumentation;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.SocketException;
 import java.util.logging.LogManager;
 
 public class LogManagerSetter {
-  private static final DatagramSocket socket;
-  private static final int localPort;
-
-  static {
-    try {
-      socket = new DatagramSocket(0);
-      localPort = socket.getLocalPort();
-    } catch (SocketException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  public static void premain(final String agentArgs, final Instrumentation inst) throws Exception {
-    // set jmxfetch port in premain before tracer's premain runs
-    System.setProperty("dd.jmxfetch.statsd.port", Integer.toString(localPort));
-    System.setProperty("dd.jmxfetch.statsd.host", "localhost");
-  }
-
   public static void main(String... args) throws Exception {
-    try {
-      // block until jmxfetch sends data
-      final byte[] buf = new byte[1500];
-      final DatagramPacket packet = new DatagramPacket(buf, buf.length);
-      socket.receive(packet);
-    } finally {
-      socket.close();
+    if (System.getProperty("java.util.logging.manager") != null) {
+      customAssert(
+          isJmxfetchStarted(),
+          false,
+          "jmxfetch startup must be delayed when log manager system property is present.");
+      customAssert(
+          LogManager.getLogManager().getClass(),
+          LogManager.class
+              .getClassLoader()
+              .loadClass(System.getProperty("java.util.logging.manager")),
+          "Javaagent should not prevent setting a custom log manager");
+      customAssert(isJmxfetchStarted(), true, "jmxfetch should start after loading LogManager.");
+    } else if (System.getProperty("dd.app.customlogmanager") != null) {
+      System.setProperty("java.util.logging.manager", CustomLogManager.class.getName());
+      customAssert(
+          LogManager.getLogManager().getClass(),
+          LogManager.class
+              .getClassLoader()
+              .loadClass(System.getProperty("java.util.logging.manager")),
+          "Javaagent should not prevent setting a custom log manager");
+
+    } else {
+      customAssert(
+          isJmxfetchStarted(),
+          true,
+          "jmxfetch should start in premain when no custom log manager is set.");
     }
-    System.setProperty("java.util.logging.manager", CustomLogManager.class.getName());
-    customAssert(
-        LogManager.getLogManager().getClass(),
-        CustomLogManager.class,
-        "Javaagent should not prevent setting a custom log manager");
   }
 
   private static void customAssert(Object got, Object expected, String assertionMessage) {
@@ -46,5 +38,14 @@ public class LogManagerSetter {
       throw new RuntimeException(
           "Assertion failed. Expected <" + expected + "> got <" + got + "> " + assertionMessage);
     }
+  }
+
+  private static boolean isJmxfetchStarted() {
+    for (Thread thread : Thread.getAllStackTraces().keySet()) {
+      if ("dd-jmx-collector".equals(thread.getName())) {
+        return true;
+      }
+    }
+    return false;
   }
 }
