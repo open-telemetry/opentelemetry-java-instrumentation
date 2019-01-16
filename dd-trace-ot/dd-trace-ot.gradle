@@ -31,9 +31,7 @@ dependencies {
 
   compile deps.jackson
   compile deps.slf4j
-  // any higher versions seems to break ES tests with this exception:
-  // java.lang.NoSuchMethodError: com.fasterxml.jackson.dataformat.smile.SmileGenerator.getOutputContext()
-  compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.14'
+  compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.16'
 
   // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
   testAnnotationProcessor deps.autoservice
