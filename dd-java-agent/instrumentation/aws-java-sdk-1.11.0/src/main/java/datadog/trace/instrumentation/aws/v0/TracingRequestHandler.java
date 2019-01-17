@@ -18,7 +18,7 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import com.amazonaws.handlers.HandlerContextKey;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentracing.Span;
+import io.opentracing.Scope;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
@@ -28,7 +28,11 @@ import io.opentracing.tag.Tags;
 /** Tracing Request Handler */
 public class TracingRequestHandler extends RequestHandler2 {
 
-  private final HandlerContextKey<Span> contextKey = new HandlerContextKey<>("span");
+  // Note: aws1.x sdk doesn't have any truly async clients so we can store scope in request context
+  // safely.
+  private static final HandlerContextKey<Scope> SCOPE_CONTEXT_KEY =
+      new HandlerContextKey<>("DatadogScope");
+
   private final SpanContext parentContext; // for Async Client
   private final Tracer tracer;
 
@@ -64,30 +68,32 @@ public class TracingRequestHandler extends RequestHandler2 {
       spanBuilder.asChildOf(parentContext);
     }
 
-    final Span span = spanBuilder.start();
-    SpanDecorator.onRequest(request, span);
+    final Scope scope = spanBuilder.startActive(true);
+    SpanDecorator.onRequest(request, scope.span());
 
+    // We inject headers at aws-client level because aws requests may be signed and adding headers
+    // on http-client level may break signature.
     tracer.inject(
-        span.context(),
+        scope.span().context(),
         Format.Builtin.HTTP_HEADERS,
         new TextMapInjectAdapter(request.getHeaders()));
 
-    request.addHandlerContext(contextKey, span);
+    request.addHandlerContext(SCOPE_CONTEXT_KEY, scope);
   }
 
   /** {@inheritDoc} */
   @Override
   public void afterResponse(final Request<?> request, final Response<?> response) {
-    final Span span = request.getHandlerContext(contextKey);
-    SpanDecorator.onResponse(response, span);
-    span.finish();
+    final Scope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
+    SpanDecorator.onResponse(response, scope.span());
+    scope.close();
   }
 
   /** {@inheritDoc} */
   @Override
   public void afterError(final Request<?> request, final Response<?> response, final Exception e) {
-    final Span span = request.getHandlerContext(contextKey);
-    SpanDecorator.onError(e, span);
-    span.finish();
+    final Scope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
+    SpanDecorator.onError(e, scope.span());
+    scope.close();
   }
 }
