@@ -31,45 +31,62 @@ import java.util.jar.JarFile;
 
 /** Entry point for initializing the agent. */
 public class TracingAgent {
-  private static boolean inited = false;
+  // fields must be managed under class lock
   private static ClassLoader AGENT_CLASSLOADER = null;
   private static ClassLoader JMXFETCH_CLASSLOADER = null;
+  private static File bootstrapJar = null;
+  private static File toolingJar = null;
+  private static File jmxFetchJar = null;
 
   public static void premain(final String agentArgs, final Instrumentation inst) throws Exception {
-    startAgent(agentArgs, inst);
+    agentmain(agentArgs, inst);
   }
 
   public static void agentmain(final String agentArgs, final Instrumentation inst)
       throws Exception {
-    startAgent(agentArgs, inst);
+    startDatadogAgent(agentArgs, inst);
+    if (isAppUsingCustomLogManager()) {
+      /*
+       * java.util.logging.LogManager maintains a final static LogManager, which is created during class initialization.
+       *
+       * JMXFetch uses jre bootstrap classes which touch this class. This means applications which require a custom log manager may not have a chance to set the global log manager if jmxfetch runs first. JMXFetch will incorrectly set the global log manager in cases where the app sets the log manager system property or when the log manager class is not on the system classpath.
+       *
+       * Our solution is to delay the initilization of jmxfetch when we detect a custom log manager being used.
+       *
+       * Once we see the LogManager class loading, it's safe to start jmxfetch because the application is already setting the global log manager and jmxfetch won't be able to touch it due to classloader locking.
+       */
+      final Class<?> agentInstallerClass =
+          AGENT_CLASSLOADER.loadClass("datadog.trace.agent.tooling.AgentInstaller");
+      final Method registerCallbackMethod =
+          agentInstallerClass.getMethod("registerClassLoadCallback", String.class, Runnable.class);
+      registerCallbackMethod.invoke(
+          null,
+          "java.util.logging.LogManager",
+          new Runnable() {
+            @Override
+            public void run() {
+              try {
+                startJmxFetch();
+              } catch (Exception e) {
+                throw new RuntimeException(e);
+              }
+            }
+          });
+    } else {
+      startJmxFetch();
+    }
   }
 
-  private static synchronized void startAgent(final String agentArgs, final Instrumentation inst)
-      throws Exception {
-    if (!inited) {
-      final File toolingJar =
-          extractToTmpFile(
-              TracingAgent.class.getClassLoader(),
-              "agent-tooling-and-instrumentation.jar.zip",
-              "agent-tooling-and-instrumentation.jar");
-      final File jmxFetchJar =
-          extractToTmpFile(
-              TracingAgent.class.getClassLoader(), "agent-jmxfetch.jar.zip", "agent-jmxfetch.jar");
-      final File bootstrapJar =
-          extractToTmpFile(
-              TracingAgent.class.getClassLoader(),
-              "agent-bootstrap.jar.zip",
-              "agent-bootstrap.jar");
-
+  public static synchronized void startDatadogAgent(
+      final String agentArgs, final Instrumentation inst) throws Exception {
+    initializeJars();
+    if (AGENT_CLASSLOADER == null) {
       // bootstrap jar must be appended before agent classloader is created.
       inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
       final ClassLoader agentClassLoader = createDatadogClassLoader(bootstrapJar, toolingJar);
-      final ClassLoader jmxFetchClassLoader = createDatadogClassLoader(bootstrapJar, jmxFetchJar);
-
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         Thread.currentThread().setContextClassLoader(agentClassLoader);
-
         { // install agent
           final Class<?> agentInstallerClass =
               agentClassLoader.loadClass("datadog.trace.agent.tooling.AgentInstaller");
@@ -86,23 +103,55 @@ public class TracingAgent {
           final Method logVersionInfoMethod = tracerInstallerClass.getMethod("logVersionInfo");
           logVersionInfoMethod.invoke(null);
         }
-
-        Thread.currentThread().setContextClassLoader(jmxFetchClassLoader);
-        { // install jmxfetch tracer
-          // We would like jmxfetch to be loaded after APM agent to avoid needing to retransform
-          // classes
-          final Class<?> jmxFetchAgentClass =
-              jmxFetchClassLoader.loadClass("datadog.trace.agent.jmxfetch.JMXFetch");
-          final Method jmxFetchInstallerMethod = jmxFetchAgentClass.getMethod("run");
-          jmxFetchInstallerMethod.invoke(null);
-        }
-
         AGENT_CLASSLOADER = agentClassLoader;
+      } finally {
+        Thread.currentThread().setContextClassLoader(contextLoader);
+      }
+    }
+  }
+
+  public static synchronized void startJmxFetch() throws Exception {
+    initializeJars();
+    if (JMXFETCH_CLASSLOADER == null) {
+      final ClassLoader jmxFetchClassLoader = createDatadogClassLoader(bootstrapJar, jmxFetchJar);
+      final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+      try {
+        Thread.currentThread().setContextClassLoader(jmxFetchClassLoader);
+        final Class<?> jmxFetchAgentClass =
+            jmxFetchClassLoader.loadClass("datadog.trace.agent.jmxfetch.JMXFetch");
+        final Method jmxFetchInstallerMethod = jmxFetchAgentClass.getMethod("run");
+        jmxFetchInstallerMethod.invoke(null);
         JMXFETCH_CLASSLOADER = jmxFetchClassLoader;
       } finally {
         Thread.currentThread().setContextClassLoader(contextLoader);
       }
-      inited = true;
+    }
+  }
+
+  /**
+   * Extract embeded jars out of the dd-java-agent to a temporary location.
+   *
+   * <p>Has no effect if jars are already extracted.
+   */
+  private static synchronized void initializeJars() throws Exception {
+    if (bootstrapJar == null) {
+      bootstrapJar =
+          extractToTmpFile(
+              TracingAgent.class.getClassLoader(),
+              "agent-bootstrap.jar.zip",
+              "agent-bootstrap.jar");
+    }
+    if (toolingJar == null) {
+      toolingJar =
+          extractToTmpFile(
+              TracingAgent.class.getClassLoader(),
+              "agent-tooling-and-instrumentation.jar.zip",
+              "agent-tooling-and-instrumentation.jar");
+    }
+    if (jmxFetchJar == null) {
+      jmxFetchJar =
+          extractToTmpFile(
+              TracingAgent.class.getClassLoader(), "agent-jmxfetch.jar.zip", "agent-jmxfetch.jar");
     }
   }
 
@@ -184,6 +233,22 @@ public class TracingAgent {
     */
     final Method method = ClassLoader.class.getDeclaredMethod("getPlatformClassLoader");
     return (ClassLoader) method.invoke(null);
+  }
+
+  /**
+   * Search for java or datadog-tracer sysprops which indicate that a custom log manager will be
+   * used. Also search for any app classes known to set a custom log manager.
+   *
+   * @return true if we detect a custom log manager being used.
+   */
+  private static boolean isAppUsingCustomLogManager() {
+    final String tracerCustomLogManSysprop = "dd.app.customlogmanager";
+    return System.getProperty("java.util.logging.manager") != null
+        || Boolean.parseBoolean(System.getProperty(tracerCustomLogManSysprop))
+        || Boolean.parseBoolean(
+            System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase()))
+        // Classes known to set a custom log mananger
+        || ClassLoader.getSystemResource("org/jboss/modules/Main.class") != null;
   }
 
   /**

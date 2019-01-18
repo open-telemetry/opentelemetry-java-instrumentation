@@ -10,7 +10,9 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import datadog.trace.bootstrap.WeakMap;
 import java.lang.instrument.Instrumentation;
+import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
@@ -20,6 +22,8 @@ import net.bytebuddy.utility.JavaModule;
 
 @Slf4j
 public class AgentInstaller {
+  private static final Map<String, Runnable> classLoadCallbacks = new ConcurrentHashMap<>();
+
   static {
     // WeakMap is used by other classes below, so we need to register the provider first.
     registerWeakMapProvider();
@@ -54,6 +58,7 @@ public class AgentInstaller {
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(POOL_STRATEGY)
             .with(new LoggingListener())
+            .with(new ClassLoadListener())
             .with(LOCATION_STRATEGY)
             // FIXME: we cannot enable it yet due to BB/JVM bug, see
             // https://github.com/raphw/byte-buddy/issues/558
@@ -171,6 +176,54 @@ public class AgentInstaller {
         final ClassLoader classLoader,
         final JavaModule module,
         final boolean loaded) {}
+  }
+
+  /**
+   * Register a callback to run when a class is loading.
+   *
+   * <p>Caveats: 1: This callback will be invoked by a jvm class transformer. 2: Classes filtered
+   * out by {@link AgentInstaller}'s skip list will not be matched.
+   *
+   * @param className name of the class to match against
+   * @param classLoadCallback runnable to invoke when class name matches
+   */
+  public static void registerClassLoadCallback(
+      final String className, final Runnable classLoadCallback) {
+    classLoadCallbacks.put(className, classLoadCallback);
+  }
+
+  private static class ClassLoadListener implements AgentBuilder.Listener {
+    @Override
+    public void onDiscovery(
+        String typeName, ClassLoader classLoader, JavaModule javaModule, boolean b) {
+      for (Map.Entry<String, Runnable> entry : classLoadCallbacks.entrySet()) {
+        if (entry.getKey().equals(typeName)) {
+          entry.getValue().run();
+        }
+      }
+    }
+
+    @Override
+    public void onTransformation(
+        TypeDescription typeDescription,
+        ClassLoader classLoader,
+        JavaModule javaModule,
+        boolean b,
+        DynamicType dynamicType) {}
+
+    @Override
+    public void onIgnored(
+        TypeDescription typeDescription,
+        ClassLoader classLoader,
+        JavaModule javaModule,
+        boolean b) {}
+
+    @Override
+    public void onError(
+        String s, ClassLoader classLoader, JavaModule javaModule, boolean b, Throwable throwable) {}
+
+    @Override
+    public void onComplete(String s, ClassLoader classLoader, JavaModule javaModule, boolean b) {}
   }
 
   private AgentInstaller() {}
