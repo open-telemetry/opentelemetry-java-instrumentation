@@ -159,7 +159,8 @@ public abstract class AgentTestRunner extends Specification {
 
   @Before
   public void beforeTest() {
-    assert getTestTracer().activeSpan() == null : "Span is active before test has started";
+    assert getTestTracer().activeSpan() == null
+        : "Span is active before test has started: " + getTestTracer().activeSpan();
     TEST_WRITER.start();
   }
 
