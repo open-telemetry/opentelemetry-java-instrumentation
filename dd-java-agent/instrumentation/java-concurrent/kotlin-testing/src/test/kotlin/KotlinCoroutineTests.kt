@@ -3,10 +3,52 @@ import datadog.trace.context.TraceScope
 import io.opentracing.Scope
 import io.opentracing.util.GlobalTracer
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.select
 import java.util.concurrent.TimeUnit
 
 class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
+
+  @Trace
+  fun tracedAcrossChannels(): Int = runTest {
+    val producer = produce {
+      repeat(3){
+        tracedChild("produce_$it")
+        send(it)
+      }
+    }
+
+    val actor = actor<Int> {
+      consumeEach {
+        tracedChild("consume_$it")
+      }
+    }
+
+    producer.toChannel(actor)
+    actor.close()
+
+    7
+  }
+
+  @Trace
+  fun tracePreventedByCancellation(): Int {
+
+    kotlin.runCatching {
+      runTest {
+        tracedChild("preLaunch")
+
+        launch(start = CoroutineStart.UNDISPATCHED) {
+          throw Exception("Child Error")
+        }
+
+        yield()
+
+        tracedChild("postLaunch")
+      }
+    }
+
+    return 2
+  }
 
   @Trace
   fun tracedAcrossThreadsWithNested(): Int = runTest {

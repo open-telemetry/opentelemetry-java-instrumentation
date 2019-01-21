@@ -13,11 +13,39 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
     ThreadPoolDispatcherKt.newSingleThreadContext("Single-Thread"),
   ]
 
-  // Test delay
-  // Test channel
-  // Test cooperative cancellation
-  // Test parallel decomposition
-  // EventLoop?
+  def "kotlin traced across channels"() {
+    setup:
+    KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(dispatcher)
+    int expectedNumberOfSpans = kotlinTest.tracedAcrossChannels()
+    TEST_WRITER.waitForTraces(1)
+    List<DDSpan> trace = TEST_WRITER.get(0)
+
+    expect:
+    trace.size() == expectedNumberOfSpans
+    trace[0].operationName == "KotlinCoroutineTests.tracedAcrossChannels"
+    findSpan(trace, "produce_2").context().getParentId() == trace[0].context().getSpanId()
+    findSpan(trace, "consume_2").context().getParentId() == trace[0].context().getSpanId()
+
+    where:
+    dispatcher << dispatchersToTest
+  }
+
+  def "kotlin cancellation prevents trace"() {
+    setup:
+    KotlinCoroutineTests kotlinTest = new KotlinCoroutineTests(dispatcher)
+    int expectedNumberOfSpans = kotlinTest.tracePreventedByCancellation()
+    TEST_WRITER.waitForTraces(1)
+    List<DDSpan> trace = TEST_WRITER.get(0)
+
+    expect:
+    trace.size() == expectedNumberOfSpans
+    trace[0].operationName == "KotlinCoroutineTests.tracePreventedByCancellation"
+    findSpan(trace, "preLaunch").context().getParentId() == trace[0].context().getSpanId()
+    findSpan(trace, "postLaunch") == null
+
+    where:
+    dispatcher << dispatchersToTest
+  }
 
   def "kotlin propagates across nested jobs"() {
     setup:
@@ -72,7 +100,7 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
     dispatcher << dispatchersToTest
   }
 
-  private DDSpan findSpan(List<DDSpan> trace, String opName) {
+  private static DDSpan findSpan(List<DDSpan> trace, String opName) {
     for (DDSpan span : trace) {
       if (span.getOperationName() == opName) {
         return span
