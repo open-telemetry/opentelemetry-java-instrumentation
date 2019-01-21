@@ -5,7 +5,7 @@ import kotlinx.coroutines.ThreadPoolDispatcherKt
 
 class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
 
-  static def dispatchersToTest = [
+  static dispatchersToTest = [
     Dispatchers.Default,
     Dispatchers.IO,
     Dispatchers.Unconfined,

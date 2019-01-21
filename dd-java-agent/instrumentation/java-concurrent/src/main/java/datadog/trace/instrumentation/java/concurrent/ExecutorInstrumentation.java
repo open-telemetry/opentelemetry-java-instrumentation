@@ -160,11 +160,10 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
         nameMatches("invoke(Any|All)$").and(takesArgument(0, Callable.class)),
         SetCallableStateForCallableCollectionAdvice.class.getName());
     transformers.put( // kotlinx.coroutines.scheduling.CoroutineScheduler
-      named("dispatch")
-        .and(takesArgument(0, Runnable.class))
-        .and(takesArgument(1, named("kotlinx.coroutines.scheduling.TaskContext"))),
-      SetExecuteRunnableStateAdvice.class.getName());
-    
+        named("dispatch")
+            .and(takesArgument(0, Runnable.class))
+            .and(takesArgument(1, named("kotlinx.coroutines.scheduling.TaskContext"))),
+        SetExecuteRunnableStateAdvice.class.getName());
     return transformers;
   }
 
