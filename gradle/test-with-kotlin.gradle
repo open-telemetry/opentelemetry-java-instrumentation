@@ -2,8 +2,6 @@
 apply plugin: 'kotlin'
 
 kotlin {
-  //This option prevents compilation issues when switching branches while refactoring java code to kotlin.
-  //After we are done refactoring java -> kotlin when can disable this and use gradle build cache features.
   copyClassesToJavaOutput = true
 }
 
