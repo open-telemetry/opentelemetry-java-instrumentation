@@ -37,4 +37,12 @@ class LoggingWriterTest extends Specification {
     1 * trace.toString()
   }
 
+  def "test getter"() {
+    when:
+    def sampleRateByInstance = writer.getSampleRateByService()
+
+    then:
+    sampleRateByInstance == SampleRateByService.EMPTY_INSTANCE
+  }
+
 }

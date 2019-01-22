@@ -3,7 +3,6 @@ package datadog.trace.tracer;
 import datadog.trace.api.Config;
 import datadog.trace.tracer.sampling.AllSampler;
 import datadog.trace.tracer.sampling.Sampler;
-import datadog.trace.tracer.writer.LoggingWriter;
 import datadog.trace.tracer.writer.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,7 +39,7 @@ public class Tracer {
     // TODO: implement and include "standard" interceptors
     this(
         config,
-        new LoggingWriter(),
+        Writer.Builder.forConfig(config),
         new AllSampler(),
         Collections.unmodifiableList(new ArrayList<>(interceptors)));
   }
