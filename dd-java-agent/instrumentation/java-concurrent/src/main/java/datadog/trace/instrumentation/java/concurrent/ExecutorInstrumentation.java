@@ -60,6 +60,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
       "java.util.concurrent.Executors$FinalizableDelegatedExecutorService",
       "java.util.concurrent.Executors$DelegatedExecutorService",
       "javax.management.NotificationBroadcasterSupport$1",
+      "kotlinx.coroutines.scheduling.CoroutineScheduler",
       "scala.concurrent.Future$InternalCallbackExecutor$",
       "scala.concurrent.impl.ExecutionContextImpl",
       "scala.concurrent.impl.ExecutionContextImpl$$anon$1",
@@ -158,6 +159,11 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
     transformers.put(
         nameMatches("invoke(Any|All)$").and(takesArgument(0, Callable.class)),
         SetCallableStateForCallableCollectionAdvice.class.getName());
+    transformers.put( // kotlinx.coroutines.scheduling.CoroutineScheduler
+        named("dispatch")
+            .and(takesArgument(0, Runnable.class))
+            .and(takesArgument(1, named("kotlinx.coroutines.scheduling.TaskContext"))),
+        SetExecuteRunnableStateAdvice.class.getName());
     return transformers;
   }
 

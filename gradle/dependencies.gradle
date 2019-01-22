@@ -16,6 +16,8 @@ ext {
     lombok     : "1.18.4",
     bytebuddy  : "1.9.5",
     scala      : "2.11.12",
+    kotlin     : "1.3.11",
+    coroutines : "1.1.0"
   ]
 
   deps = [
@@ -58,5 +60,7 @@ ext {
       dependencies.create(group: 'org.slf4j', name: 'jul-to-slf4j', version: versions.slf4j),
     ],
     scala         : dependencies.create(group: 'org.scala-lang', name: 'scala-library', version: "${versions.scala}"),
+    kotlin        : dependencies.create(group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: "${versions.kotlin}"),
+    coroutines    : dependencies.create(group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: "${versions.coroutines}"),
   ]
 }

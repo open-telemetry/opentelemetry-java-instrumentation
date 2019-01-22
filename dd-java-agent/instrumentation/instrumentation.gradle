@@ -1,7 +1,13 @@
 // this project will run in isolation under the agent's classloader
 buildscript {
+  
+  repositories {
+    mavenCentral()
+  }
+  
   dependencies {
     classpath "net.bytebuddy:byte-buddy-gradle-plugin:${versions.bytebuddy}"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"
   }
 }
 plugins {
@@ -17,7 +23,7 @@ subprojects { subProj ->
   subProj.byteBuddy {
     transformation {
       // Applying NoOp optimizes build by applying bytebuddy plugin to only compileJava task
-      tasks = ['compileJava', 'compileScala']
+      tasks = ['compileJava', 'compileScala', 'compileKotlin']
       plugin = 'datadog.trace.agent.tooling.muzzle.MuzzleGradlePlugin$NoOp'
     }
   }
@@ -25,7 +31,7 @@ subprojects { subProj ->
   subProj.afterEvaluate {
     subProj.byteBuddy {
       transformation {
-        tasks = ['compileJava', 'compileScala']
+        tasks = ['compileJava', 'compileScala', 'compileKotlin']
         plugin = 'datadog.trace.agent.tooling.muzzle.MuzzleGradlePlugin'
         classPath = project(':dd-java-agent:agent-tooling').configurations.instrumentationMuzzle + subProj.configurations.compile + subProj.sourceSets.main.output
       }

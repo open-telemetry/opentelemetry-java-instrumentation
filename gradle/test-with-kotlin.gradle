@@ -1,0 +1,11 @@
+// Enable testing kotlin code in groovy spock tests.
+apply plugin: 'kotlin'
+
+kotlin {
+  copyClassesToJavaOutput = true
+}
+
+compileTestGroovy {
+  classpath = classpath.plus(files(compileTestKotlin.destinationDir))
+  dependsOn compileTestKotlin
+}

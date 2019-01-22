@@ -6,6 +6,7 @@ project.ext {
 
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/test-with-scala.gradle"
+apply from: "${rootDir}/gradle/test-with-kotlin.gradle"
 
 apply plugin: 'org.unbroken-dome.test-sets'
 
