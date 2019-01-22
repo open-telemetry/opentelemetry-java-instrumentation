@@ -41,6 +41,7 @@ public class Config {
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String JMX_TAGS = "trace.jmx.tags";
   public static final String HEADER_TAGS = "trace.header.tags";
+  public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
   public static final String JMX_FETCH_ENABLED = "jmxfetch.enabled";
@@ -70,6 +71,7 @@ public class Config {
 
   private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = true;
   private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
+  private static final int DEFAULT_MAX_TRACE_SIZE_BEFORE_PARTIAL_FLUSH = 0;
   private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
 
   public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
@@ -93,6 +95,7 @@ public class Config {
   private final Map<String, String> spanTags;
   private final Map<String, String> jmxTags;
   @Getter private final Map<String, String> headerTags;
+  @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
   @Getter private final boolean jmxFetchEnabled;
   @Getter private final List<String> jmxFetchMetricsConfigs;
@@ -125,6 +128,10 @@ public class Config {
     spanTags = getMapSettingFromEnvironment(SPAN_TAGS, null);
     jmxTags = getMapSettingFromEnvironment(JMX_TAGS, null);
     headerTags = getMapSettingFromEnvironment(HEADER_TAGS, null);
+
+    partialFlushMinSpans =
+        getIntegerSettingFromEnvironment(
+            PARTIAL_FLUSH_MIN_SPANS, DEFAULT_MAX_TRACE_SIZE_BEFORE_PARTIAL_FLUSH);
 
     runtimeContextFieldInjection =
         getBooleanSettingFromEnvironment(
@@ -169,6 +176,9 @@ public class Config {
     spanTags = getPropertyMapValue(properties, SPAN_TAGS, parent.spanTags);
     jmxTags = getPropertyMapValue(properties, JMX_TAGS, parent.jmxTags);
     headerTags = getPropertyMapValue(properties, HEADER_TAGS, parent.headerTags);
+
+    partialFlushMinSpans =
+        getPropertyIntegerValue(properties, PARTIAL_FLUSH_MIN_SPANS, parent.partialFlushMinSpans);
 
     runtimeContextFieldInjection =
         getPropertyBooleanValue(

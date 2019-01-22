@@ -40,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing API. */
@@ -61,6 +62,10 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   private final Map<String, String> defaultSpanTags;
   /** A configured mapping of service names to update with new values */
   private final Map<String, String> serviceNameMappings;
+
+  /** number of spans in a pending trace before they get flushed */
+  @Getter private final int maxTraceSizeBeforePartialFlush;
+
   /**
    * JVM shutdown callback, keeping a reference to it to remove this if DDTracer gets destroyed
    * earlier
@@ -113,7 +118,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         config.getRuntimeTags(),
         config.getMergedSpanTags(),
         config.getServiceMapping(),
-        config.getHeaderTags());
+        config.getHeaderTags(),
+        config.getPartialFlushMinSpans());
     log.debug("Using config: {}", config);
   }
 
@@ -130,7 +136,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         runtimeTags,
         Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap(),
-        Collections.<String, String>emptyMap());
+        Collections.<String, String>emptyMap(),
+        0);
   }
 
   public DDTracer(final Writer writer) {
@@ -145,10 +152,13 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         config.getRuntimeTags(),
         config.getMergedSpanTags(),
         config.getServiceMapping(),
-        config.getHeaderTags());
+        config.getHeaderTags(),
+        config.getPartialFlushMinSpans());
   }
 
-  /** @Deprecated. Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map)} instead. */
+  /**
+   * @Deprecated. Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
+   */
   @Deprecated
   public DDTracer(
       final String serviceName,
@@ -165,15 +175,31 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         customRuntimeTags(runtimeId),
         defaultSpanTags,
         serviceNameMappings,
-        taggedHeaders);
+        taggedHeaders,
+        defaultMaxTraceSizeBeforePartialFlush());
   }
 
+  /**
+   * @Deprecated. Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
+   */
   @Deprecated
-  private static Map<String, String> customRuntimeTags(final String runtimeId) {
-    final Map<String, String> runtimeTags = new HashMap<>();
-    runtimeTags.putAll(Config.get().getRuntimeTags());
-    runtimeTags.put(Config.RUNTIME_ID_TAG, runtimeId);
-    return Collections.unmodifiableMap(runtimeTags);
+  public DDTracer(
+      final String serviceName,
+      final Writer writer,
+      final Sampler sampler,
+      final Map<String, String> runtimeTags,
+      final Map<String, String> defaultSpanTags,
+      final Map<String, String> serviceNameMappings,
+      final Map<String, String> taggedHeaders) {
+    this(
+        serviceName,
+        writer,
+        sampler,
+        runtimeTags,
+        defaultSpanTags,
+        serviceNameMappings,
+        taggedHeaders,
+        defaultMaxTraceSizeBeforePartialFlush());
   }
 
   public DDTracer(
@@ -183,7 +209,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Map<String, String> runtimeTags,
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
-      final Map<String, String> taggedHeaders) {
+      final Map<String, String> taggedHeaders,
+      final int maxTraceSizeBeforePartialFlush) {
     assert runtimeTags != null;
     assert defaultSpanTags != null;
     assert serviceNameMappings != null;
@@ -196,6 +223,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this.defaultSpanTags = defaultSpanTags;
     this.runtimeTags = runtimeTags;
     this.serviceNameMappings = serviceNameMappings;
+    this.maxTraceSizeBeforePartialFlush = maxTraceSizeBeforePartialFlush;
 
     shutdownCallback =
         new Thread() {
@@ -330,7 +358,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
    *
    * @param trace a list of the spans related to the same trace
    */
-  void write(final PendingTrace trace) {
+  void write(final Collection<DDSpan> trace) {
     if (trace.isEmpty()) {
       return;
     }
@@ -350,6 +378,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       }
     }
     incrementTraceCount();
+    // TODO: current trace implementation doesn't guarantee that first span is the root span
+    // We may want to reconsider way this check is done.
     if (!writtenTrace.isEmpty() && sampler.sample(writtenTrace.get(0))) {
       writer.write(writtenTrace);
     }
@@ -384,8 +414,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   @Override
-  public void addScopeListener(ScopeListener listener) {
-    this.scopeManager.addScopeListener(listener);
+  public void addScopeListener(final ScopeListener listener) {
+    scopeManager.addScopeListener(listener);
   }
 
   @Override
@@ -407,6 +437,19 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         + ", defaultSpanTags="
         + defaultSpanTags
         + '}';
+  }
+
+  @Deprecated
+  private static Map<String, String> customRuntimeTags(final String runtimeId) {
+    final Map<String, String> runtimeTags = new HashMap<>();
+    runtimeTags.putAll(Config.get().getRuntimeTags());
+    runtimeTags.put(Config.RUNTIME_ID_TAG, runtimeId);
+    return Collections.unmodifiableMap(runtimeTags);
+  }
+
+  @Deprecated
+  private static int defaultMaxTraceSizeBeforePartialFlush() {
+    return Config.get().getPartialFlushMinSpans();
   }
 
   private static class CodecRegistry {

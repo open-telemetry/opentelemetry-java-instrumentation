@@ -6,7 +6,10 @@ import java.io.Closeable;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -195,11 +198,31 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     final int count = pendingReferenceCount.decrementAndGet();
     if (count == 0) {
       write();
+    } else {
+      if (tracer.getMaxTraceSizeBeforePartialFlush() > 0
+          && size() > tracer.getMaxTraceSizeBeforePartialFlush()) {
+        synchronized (this) {
+          if (size() > tracer.getMaxTraceSizeBeforePartialFlush()) {
+            final DDSpan rootSpan = getRootSpan();
+            final List<DDSpan> partialTrace = new ArrayList(size());
+            final Iterator<DDSpan> it = iterator();
+            while (it.hasNext()) {
+              final DDSpan span = it.next();
+              if (span != rootSpan) {
+                partialTrace.add(span);
+                it.remove();
+              }
+            }
+            log.debug("Writing partial trace {} of size {}", traceId, partialTrace.size());
+            tracer.write(partialTrace);
+          }
+        }
+      }
     }
     log.debug("traceId: {} -- Expired reference. count = {}", traceId, count);
   }
 
-  private void write() {
+  private synchronized void write() {
     if (isWritten.compareAndSet(false, true)) {
       SPAN_CLEANER.pendingTraces.remove(this);
       if (!isEmpty()) {
