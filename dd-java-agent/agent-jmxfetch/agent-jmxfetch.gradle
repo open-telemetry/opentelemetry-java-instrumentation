@@ -4,7 +4,7 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile 'com.datadoghq:jmxfetch:0.24.0'
+  compile 'com.datadoghq:jmxfetch:0.25.0'
   compile deps.slf4j
   compile project(':dd-trace-api')
 }
@@ -38,6 +38,10 @@ task copyMetricConfigs(type:Exec) {
   group 'Build Setup'
   description 'Copy metrics.yaml files from integrations-core into resources'
   commandLine './copy-metric-configs.sh', 'integrations-core', sourceSets.main.output.resourcesDir
+  doFirst {
+    // Ensure the resources directory is available.
+    file(sourceSets.main.output.resourcesDir).mkdirs()
+  }
 }
 
 processResources.dependsOn copyMetricConfigs
