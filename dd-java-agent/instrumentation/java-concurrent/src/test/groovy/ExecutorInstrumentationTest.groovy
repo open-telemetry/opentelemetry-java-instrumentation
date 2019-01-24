@@ -12,6 +12,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ForkJoinPool
+import java.util.concurrent.ForkJoinTask
 import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
@@ -19,16 +20,25 @@ import java.util.concurrent.TimeUnit
 
 class ExecutorInstrumentationTest extends AgentTestRunner {
   @Shared
-  Method executeMethod
+  Method executeRunnableMethod
+  @Shared
+  Method executeForkJoinTaskMethod
   @Shared
   Method submitRunnableMethod
   @Shared
   Method submitCallableMethod
+  @Shared
+  Method submitForkJoinTaskMethod
+  @Shared
+  Method invokeForkJoinTaskMethod
 
   def setupSpec() {
-    executeMethod = Executor.getMethod("execute", Runnable)
+    executeRunnableMethod = Executor.getMethod("execute", Runnable)
+    executeForkJoinTaskMethod = ForkJoinPool.getMethod("execute", ForkJoinTask)
     submitRunnableMethod = ExecutorService.getMethod("submit", Runnable)
     submitCallableMethod = ExecutorService.getMethod("submit", Callable)
+    submitForkJoinTaskMethod = ForkJoinPool.getMethod("submit", ForkJoinTask)
+    invokeForkJoinTaskMethod = ForkJoinPool.getMethod("invoke", ForkJoinTask)
   }
 
   // more useful name breaks java9 javac
@@ -66,12 +76,15 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     // Unfortunately, there's no simple way to test the cross product of methods/pools.
     where:
     poolImpl                                                                                      | method
+    new ForkJoinPool()                                                                            | executeRunnableMethod
+    new ForkJoinPool()                                                                            | executeForkJoinTaskMethod
     new ForkJoinPool()                                                                            | submitRunnableMethod
     new ForkJoinPool()                                                                            | submitCallableMethod
-    new ForkJoinPool()                                                                            | executeMethod
+    new ForkJoinPool()                                                                            | submitForkJoinTaskMethod
+    new ForkJoinPool()                                                                            | invokeForkJoinTaskMethod
+    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | executeRunnableMethod
     new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitRunnableMethod
     new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitCallableMethod
-    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | executeMethod
   }
 
   // more useful name breaks java9 javac
