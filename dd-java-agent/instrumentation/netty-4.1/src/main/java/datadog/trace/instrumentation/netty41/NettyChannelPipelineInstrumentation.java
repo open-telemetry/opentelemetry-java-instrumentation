@@ -40,8 +40,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
 
+  static final String INSTRUMENTATION_NAME = "netty";
+  static final String[] ADDITIONAL_INSTRUMENTATION_NAMES = {"netty-4.1"};
+
   public NettyChannelPipelineInstrumentation() {
-    super("netty", "netty-4.1");
+    super(INSTRUMENTATION_NAME, ADDITIONAL_INSTRUMENTATION_NAMES);
   }
 
   @Override
