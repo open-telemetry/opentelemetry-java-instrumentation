@@ -93,7 +93,12 @@ public class Servlet3Advice {
         } else {
           final AtomicBoolean activated = new AtomicBoolean(false);
           if (req.isAsyncStarted()) {
-            req.getAsyncContext().addListener(new TagSettingAsyncListener(activated, span));
+            try {
+              req.getAsyncContext().addListener(new TagSettingAsyncListener(activated, span));
+            } catch (final IllegalStateException e) {
+              // org.eclipse.jetty.server.Request may throw an exception here if request became
+              // finished after check above. We just ignore that exception and move on.
+            }
           }
           // Check again in case the request finished before adding the listener.
           if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
