@@ -1,8 +1,9 @@
 package datadog.opentracing
 
-import datadog.trace.agent.test.TestUtils
+
 import datadog.trace.api.Config
 import datadog.trace.common.writer.ListWriter
+import datadog.trace.util.gc.GCUtils
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Timeout
@@ -113,7 +114,7 @@ class PendingTraceTest extends Specification {
     when:
     def childRef = new WeakReference<>(child)
     child = null
-    TestUtils.awaitGC(childRef)
+    GCUtils.awaitGC(childRef)
     while (trace.pendingReferenceCount.get() > 0) {
       trace.clean()
     }

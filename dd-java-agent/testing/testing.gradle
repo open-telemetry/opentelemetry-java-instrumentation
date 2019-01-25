@@ -32,6 +32,8 @@ dependencies {
 
   compile deps.groovy
 
+  testCompile project(':utils:gc-utils')
+
   // test instrumenting java 1.1 bytecode
   testCompile group: 'net.sf.jt400', name: 'jt400', version: '6.1'
 

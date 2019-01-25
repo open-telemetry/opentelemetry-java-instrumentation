@@ -1,9 +1,8 @@
-package datadog.trace.tracer;
+package datadog.trace.util.gc;
 
 import java.lang.ref.WeakReference;
 
-// TODO: stop copy-pasting this!
-public class TestUtils {
+public abstract class GCUtils {
 
   public static void awaitGC() {
     Object obj = new Object();

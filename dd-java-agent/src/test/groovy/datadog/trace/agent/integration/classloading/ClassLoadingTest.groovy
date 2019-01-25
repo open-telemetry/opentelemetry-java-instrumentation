@@ -4,6 +4,7 @@ import datadog.test.ClassToInstrument
 import datadog.test.ClassToInstrumentChild
 import datadog.trace.agent.test.IntegrationTestUtils
 import datadog.trace.api.Trace
+import datadog.trace.util.gc.GCUtils
 import spock.lang.Specification
 
 import java.lang.ref.WeakReference
@@ -39,7 +40,7 @@ class ClassLoadingTest extends Specification {
     loader.loadClass(ClassToInstrument.getName())
     loader = null
 
-    IntegrationTestUtils.awaitGC(ref)
+    GCUtils.awaitGC(ref)
 
     then:
     null == ref.get()

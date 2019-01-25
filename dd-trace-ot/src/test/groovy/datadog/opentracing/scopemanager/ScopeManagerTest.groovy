@@ -3,9 +3,9 @@ package datadog.opentracing.scopemanager
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
-import datadog.trace.agent.test.TestUtils
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.context.ScopeListener
+import datadog.trace.util.gc.GCUtils
 import io.opentracing.Scope
 import io.opentracing.Span
 import io.opentracing.noop.NoopSpan
@@ -154,7 +154,7 @@ class ScopeManagerTest extends Specification {
     continuation.activate()
     if (forceGC) {
       continuation = null // Continuation references also hold up traces.
-      TestUtils.awaitGC() // The goal here is to make sure that continuation DOES NOT get GCed
+      GCUtils.awaitGC() // The goal here is to make sure that continuation DOES NOT get GCed
       while (((DDSpanContext) scope.span().context()).trace.clean()) {
       }
     }
@@ -204,7 +204,7 @@ class ScopeManagerTest extends Specification {
     if (forceGC) {
       def continuationRef = new WeakReference<>(continuation)
       continuation = null // Continuation references also hold up traces.
-      TestUtils.awaitGC(continuationRef)
+      GCUtils.awaitGC(continuationRef)
       while (traceCount.get() == 0) {
         // wait until trace count increments or timeout expires
       }
