@@ -34,7 +34,6 @@ class AgentWriterTest extends Specification {
         isValid() >> true
       }]
     def writer = new AgentWriter(client)
-    writer.start()
 
     when:
     for (def trace : traces) {
@@ -43,6 +42,10 @@ class AgentWriterTest extends Specification {
     incrementTraceCountBy.times {
       writer.incrementTraceCount()
     }
+
+    // Starting writer after submissions to make sure all updates go out in 1 request
+    writer.start()
+
     Thread.sleep(FLUSH_DELAY)
 
     then:
@@ -98,7 +101,7 @@ class AgentWriterTest extends Specification {
     Thread.sleep(FLUSH_DELAY)
 
     then:
-    1 * client.sendTraces([traces[0]], 0) >> { throw new IOException("test exception")}
+    1 * client.sendTraces([traces[0]], 0) >> { throw new IOException("test exception") }
     writer.getSampleRateByService() == SampleRateByService.EMPTY_INSTANCE
 
     when:
@@ -175,6 +178,6 @@ class AgentWriterTest extends Specification {
   }
 
   boolean isWriterThreadRunning() {
-    return Thread.getAllStackTraces().keySet().any{ t -> t.getName() == "dd-agent-writer" }
+    return Thread.getAllStackTraces().keySet().any { t -> t.getName() == "dd-agent-writer" }
   }
 }
