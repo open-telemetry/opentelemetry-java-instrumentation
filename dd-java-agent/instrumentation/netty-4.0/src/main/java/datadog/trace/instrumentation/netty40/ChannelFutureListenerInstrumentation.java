@@ -27,7 +27,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
 
   public ChannelFutureListenerInstrumentation() {
-    super("netty", "netty-4.0");
+    super(
+      NettyChannelPipelineInstrumentation.INSTRUMENTATION_NAME,
+      NettyChannelPipelineInstrumentation.ADDITIONAL_INSTRUMENTATION_NAMES);
   }
 
   @Override
