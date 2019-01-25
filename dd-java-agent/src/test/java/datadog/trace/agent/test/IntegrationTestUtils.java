@@ -11,7 +11,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.ArrayList;
@@ -185,20 +184,6 @@ public class IntegrationTestUtils {
             .loadClass("datadog.trace.agent.tooling.Constants")
             .getField("AGENT_PACKAGE_PREFIXES");
     return (String[]) f.get(null);
-  }
-
-  public static void awaitGC() {
-    Object obj = new Object();
-    final WeakReference<Object> ref = new WeakReference<>(obj);
-    obj = null;
-    awaitGC(ref);
-  }
-
-  public static void awaitGC(final WeakReference<?> ref) {
-    while (ref.get() != null) {
-      System.gc();
-      System.runFinalization();
-    }
   }
 
   /**

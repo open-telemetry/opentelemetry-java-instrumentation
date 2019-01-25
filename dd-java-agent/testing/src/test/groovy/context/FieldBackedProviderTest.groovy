@@ -3,6 +3,7 @@ package context
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
 import datadog.trace.api.Config
+import datadog.trace.util.gc.GCUtils
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.utility.JavaModule
 import spock.lang.Requires
@@ -101,7 +102,7 @@ class FieldBackedProviderTest extends AgentTestRunner {
     final int count = keyValue.get().incrementContextCount()
     WeakReference<KeyClass> instanceRef = new WeakReference(keyValue.get())
     keyValue.set(null)
-    TestUtils.awaitGC(instanceRef)
+    GCUtils.awaitGC(instanceRef)
 
     then:
     instanceRef.get() == null

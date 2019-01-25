@@ -1,7 +1,8 @@
 package datadog.trace.agent.tooling
 
-import datadog.trace.agent.test.TestUtils
+
 import datadog.trace.bootstrap.WeakMap
+import datadog.trace.util.gc.GCUtils
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -47,7 +48,7 @@ class WeakConcurrentSupplierTest extends Specification {
     when:
     def supplierRef = new WeakReference(supplier)
     supplier = null
-    TestUtils.awaitGC(supplierRef)
+    GCUtils.awaitGC(supplierRef)
 
     then:
     ref.get() == null
@@ -68,7 +69,7 @@ class WeakConcurrentSupplierTest extends Specification {
     when:
     def mapRef = new WeakReference(map)
     map = null
-    TestUtils.awaitGC(mapRef)
+    GCUtils.awaitGC(mapRef)
 
     then:
     ref.get() == null
@@ -84,7 +85,7 @@ class WeakConcurrentSupplierTest extends Specification {
     setup:
     def key = new Object()
     map.put(key, "value")
-    TestUtils.awaitGC()
+    GCUtils.awaitGC()
 
     expect:
     map.size() == 1
@@ -92,7 +93,7 @@ class WeakConcurrentSupplierTest extends Specification {
     when:
     def keyRef = new WeakReference(key)
     key = null
-    TestUtils.awaitGC(keyRef)
+    GCUtils.awaitGC(keyRef)
 
     if (name == "WeakConcurrent") {
       // Sleep enough time for cleanup thread to get scheduled.

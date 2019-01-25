@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
@@ -218,20 +217,6 @@ public class TestUtils {
     }
   }
 
-  public static void awaitGC() {
-    Object obj = new Object();
-    final WeakReference<Object> ref = new WeakReference<>(obj);
-    obj = null;
-    awaitGC(ref);
-  }
-
-  public static void awaitGC(final WeakReference<?> ref) {
-    while (ref.get() != null) {
-      System.gc();
-      System.runFinalization();
-    }
-  }
-
   public static ClassPath getTestClasspath() {
     return testClasspath;
   }
@@ -245,7 +230,7 @@ public class TestUtils {
     }
     try {
       return ClassPath.from(testClassLoader);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new RuntimeException(e);
     }
   }
@@ -254,15 +239,15 @@ public class TestUtils {
    * Parse JVM classpath and return ClassLoader containing all classpath entries. Inspired by Guava.
    */
   private static ClassLoader buildJavaClassPathClassLoader() {
-    ImmutableList.Builder<URL> urls = ImmutableList.builder();
-    for (String entry : Splitter.on(PATH_SEPARATOR.value()).split(JAVA_CLASS_PATH.value())) {
+    final ImmutableList.Builder<URL> urls = ImmutableList.builder();
+    for (final String entry : Splitter.on(PATH_SEPARATOR.value()).split(JAVA_CLASS_PATH.value())) {
       try {
         try {
           urls.add(new File(entry).toURI().toURL());
-        } catch (SecurityException e) { // File.toURI checks to see if the file is a directory
+        } catch (final SecurityException e) { // File.toURI checks to see if the file is a directory
           urls.add(new URL("file", null, new File(entry).getAbsolutePath()));
         }
-      } catch (MalformedURLException e) {
+      } catch (final MalformedURLException e) {
         System.err.println(
             String.format(
                 "Error injecting bootstrap jar: Malformed classpath entry: %s. %s", entry, e));

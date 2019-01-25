@@ -5,6 +5,7 @@ import datadog.trace.tracer.sampling.AllSampler
 import datadog.trace.tracer.writer.AgentWriter
 import datadog.trace.tracer.writer.SampleRateByService
 import datadog.trace.tracer.writer.Writer
+import datadog.trace.util.gc.GCUtils
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -125,7 +126,7 @@ class TracerTest extends Specification {
     span = null
     def traceRef = new WeakReference<>(rootSpan.getTrace())
     rootSpan = null
-    TestUtils.awaitGC(traceRef)
+    GCUtils.awaitGC(traceRef)
 
     then: "invalid trace is written"
     testWriter.waitForTraces(1)
@@ -151,7 +152,7 @@ class TracerTest extends Specification {
     continuation = null
     def traceRef = new WeakReference<>(rootSpan.getTrace())
     rootSpan = null
-    TestUtils.awaitGC(traceRef)
+    GCUtils.awaitGC(traceRef)
 
     then: "invalid trace is written"
     testWriter.waitForTraces(1)
