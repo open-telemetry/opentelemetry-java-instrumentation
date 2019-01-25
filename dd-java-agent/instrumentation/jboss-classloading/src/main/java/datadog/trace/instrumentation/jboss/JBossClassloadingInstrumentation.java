@@ -3,8 +3,8 @@ package datadog.trace.instrumentation.jboss;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
+import datadog.trace.agent.tooling.Constants;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.agent.tooling.Utils;
 import java.security.ProtectionDomain;
 import java.util.Collections;
 import java.util.Map;
@@ -32,18 +32,18 @@ public final class JBossClassloadingInstrumentation extends Instrumenter.Default
       final Class<?> classBeingRedefined,
       final ProtectionDomain protectionDomain) {
     // Set the system prop to tell jboss to delegate classloads for datadog bootstrap classes
-    final StringBuilder ddPrefixes = new StringBuilder("");
-    for (int i = 0; i < Utils.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
+    final StringBuilder prefixes = new StringBuilder("");
+    for (int i = 0; i < Constants.BOOTSTRAP_PACKAGE_PREFIXES.length; ++i) {
       if (i > 0) {
-        ddPrefixes.append(",");
+        prefixes.append(",");
       }
-      ddPrefixes.append(Utils.BOOTSTRAP_PACKAGE_PREFIXES[i]);
+      prefixes.append(Constants.BOOTSTRAP_PACKAGE_PREFIXES[i]);
     }
     final String existing = System.getProperty("jboss.modules.system.pkgs");
     if (null == existing) {
-      System.setProperty("jboss.modules.system.pkgs", ddPrefixes.toString());
-    } else if (!existing.contains(ddPrefixes)) {
-      System.setProperty("jboss.modules.system.pkgs", existing + "," + ddPrefixes.toString());
+      System.setProperty("jboss.modules.system.pkgs", prefixes.toString());
+    } else if (!existing.contains(prefixes)) {
+      System.setProperty("jboss.modules.system.pkgs", existing + "," + prefixes.toString());
     }
   }
 

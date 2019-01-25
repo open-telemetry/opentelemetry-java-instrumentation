@@ -99,7 +99,7 @@ public class IntegrationTestUtils {
 
     final Manifest manifest = new Manifest();
     if (mainClassname != null) {
-      Attributes mainAttributes = manifest.getMainAttributes();
+      final Attributes mainAttributes = manifest.getMainAttributes();
       mainAttributes.put(Attributes.Name.MANIFEST_VERSION, "1.0");
       mainAttributes.put(Attributes.Name.MAIN_CLASS, mainClassname);
       mainAttributes.put(new Attributes.Name("Premain-Class"), mainClassname);
@@ -174,7 +174,7 @@ public class IntegrationTestUtils {
   public static String[] getBootstrapPackagePrefixes() throws Exception {
     final Field f =
         getAgentClassLoader()
-            .loadClass("datadog.trace.agent.tooling.Utils")
+            .loadClass("datadog.trace.agent.tooling.Constants")
             .getField("BOOTSTRAP_PACKAGE_PREFIXES");
     return (String[]) f.get(null);
   }
@@ -182,7 +182,7 @@ public class IntegrationTestUtils {
   public static String[] getAgentPackagePrefixes() throws Exception {
     final Field f =
         getAgentClassLoader()
-            .loadClass("datadog.trace.agent.tooling.Utils")
+            .loadClass("datadog.trace.agent.tooling.Constants")
             .getField("AGENT_PACKAGE_PREFIXES");
     return (String[]) f.get(null);
   }
