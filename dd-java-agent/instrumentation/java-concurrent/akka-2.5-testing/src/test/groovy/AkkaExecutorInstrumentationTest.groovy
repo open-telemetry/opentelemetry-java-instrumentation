@@ -1,3 +1,5 @@
+import akka.dispatch.forkjoin.ForkJoinPool
+import akka.dispatch.forkjoin.ForkJoinTask
 import datadog.opentracing.DDSpan
 import datadog.opentracing.scopemanager.ContinuableScope
 import datadog.trace.agent.test.AgentTestRunner
@@ -11,34 +13,36 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
 import java.util.concurrent.Executor
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.ForkJoinPool
-import java.util.concurrent.ForkJoinTask
 import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-class ExecutorInstrumentationTest extends AgentTestRunner {
+/**
+ * Test executor instrumentation for Akka specific classes.
+ * This is to large extent a copy of ExecutorInstrumentationTest.
+ */
+class AkkaExecutorInstrumentationTest extends AgentTestRunner {
   @Shared
   Method executeRunnableMethod
   @Shared
-  Method executeForkJoinTaskMethod
+  Method akkaExecuteForkJoinTaskMethod
   @Shared
   Method submitRunnableMethod
   @Shared
   Method submitCallableMethod
   @Shared
-  Method submitForkJoinTaskMethod
+  Method akkaSubmitForkJoinTaskMethod
   @Shared
-  Method invokeForkJoinTaskMethod
+  Method akkaInvokeForkJoinTaskMethod
 
   def setupSpec() {
     executeRunnableMethod = Executor.getMethod("execute", Runnable)
-    executeForkJoinTaskMethod = ForkJoinPool.getMethod("execute", ForkJoinTask)
+    akkaExecuteForkJoinTaskMethod = ForkJoinPool.getMethod("execute", ForkJoinTask)
     submitRunnableMethod = ExecutorService.getMethod("submit", Runnable)
     submitCallableMethod = ExecutorService.getMethod("submit", Callable)
-    submitForkJoinTaskMethod = ForkJoinPool.getMethod("submit", ForkJoinTask)
-    invokeForkJoinTaskMethod = ForkJoinPool.getMethod("invoke", ForkJoinTask)
+    akkaSubmitForkJoinTaskMethod = ForkJoinPool.getMethod("submit", ForkJoinTask)
+    akkaInvokeForkJoinTaskMethod = ForkJoinPool.getMethod("invoke", ForkJoinTask)
   }
 
   // more useful name breaks java9 javac
@@ -54,9 +58,9 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
       void run() {
         ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
         // this child will have a span
-        m.invoke(pool, new JavaAsyncChild())
+        m.invoke(pool, new AkkaAsyncChild())
         // this child won't
-        m.invoke(pool, new JavaAsyncChild(false, false))
+        m.invoke(pool, new AkkaAsyncChild(false, false))
       }
     }.run()
 
@@ -77,16 +81,15 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     where:
     poolImpl                                                                                      | method
     new ForkJoinPool()                                                                            | executeRunnableMethod
-    new ForkJoinPool()                                                                            | executeForkJoinTaskMethod
+    new ForkJoinPool()                                                                            | akkaExecuteForkJoinTaskMethod
     new ForkJoinPool()                                                                            | submitRunnableMethod
     new ForkJoinPool()                                                                            | submitCallableMethod
-    new ForkJoinPool()                                                                            | submitForkJoinTaskMethod
-    new ForkJoinPool()                                                                            | invokeForkJoinTaskMethod
+    new ForkJoinPool()                                                                            | akkaSubmitForkJoinTaskMethod
+    new ForkJoinPool()                                                                            | akkaInvokeForkJoinTaskMethod
 
     new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | executeRunnableMethod
     new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitRunnableMethod
     new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitCallableMethod
-
   }
 
   // more useful name breaks java9 javac
@@ -95,7 +98,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     setup:
     def pool = poolImpl
     def m = method
-    List<JavaAsyncChild> children = new ArrayList<>()
+    List<AkkaAsyncChild> children = new ArrayList<>()
     List<Future> jobFutures = new ArrayList<>()
 
     new Runnable() {
@@ -111,10 +114,10 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
             // we do not really have a good way for attributing work to correct parent span
             // if we reuse Callable/Runnable.
             // Solution for now is to never reuse a Callable/Runnable.
-            final JavaAsyncChild child = new JavaAsyncChild(true, true)
+            final AkkaAsyncChild child = new AkkaAsyncChild(true, true)
             children.add(child)
             try {
-              Future f = m.invoke(pool, new JavaAsyncChild())
+              Future f = m.invoke(pool, new AkkaAsyncChild())
               jobFutures.add(f)
             } catch (InvocationTargetException e) {
               throw e.getCause()
@@ -126,7 +129,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
         for (Future f : jobFutures) {
           f.cancel(false)
         }
-        for (JavaAsyncChild child : children) {
+        for (AkkaAsyncChild child : children) {
           child.unblock()
         }
       }
@@ -139,11 +142,8 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     TEST_WRITER.size() == 1
 
     where:
-    poolImpl                                                                                      | method
-    new ForkJoinPool()                                                                            | submitRunnableMethod
-    new ForkJoinPool()                                                                            | submitCallableMethod
-
-    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitRunnableMethod
-    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitCallableMethod
+    poolImpl           | method
+    new ForkJoinPool() | submitRunnableMethod
+    new ForkJoinPool() | submitCallableMethod
   }
 }

@@ -29,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class RunnableCallableInstrumentation extends Instrumenter.Default {
 
   public RunnableCallableInstrumentation() {
-    super(ExecutorInstrumentation.EXEC_NAME);
+    super(AbstractExecutorInstrumentation.EXEC_NAME);
   }
 
   @Override

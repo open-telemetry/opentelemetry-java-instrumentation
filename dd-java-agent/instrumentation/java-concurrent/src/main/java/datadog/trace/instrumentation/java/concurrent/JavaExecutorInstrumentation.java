@@ -1,17 +1,13 @@
 package datadog.trace.instrumentation.java.concurrent;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
-import datadog.trace.bootstrap.WeakMap;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
@@ -19,11 +15,9 @@ import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
@@ -32,109 +26,11 @@ import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @Slf4j
 @AutoService(Instrumenter.class)
-public final class ExecutorInstrumentation extends Instrumenter.Default {
-  public static final String EXEC_NAME = "java_concurrent";
-
-  /**
-   * Only apply executor instrumentation to whitelisted executors. In the future, this restriction
-   * may be lifted to include all executors.
-   */
-  private static final Collection<String> WHITELISTED_EXECUTORS;
-  /**
-   * Some frameworks have their executors defined as anon classes inside other classes. Referencing
-   * anon classes by name would be fragile, so instead we will use list of class prefix names. Since
-   * checking this list is more expensive (O(n)) we should try to keep it short.
-   */
-  private static final Collection<String> WHITELISTED_EXECUTORS_PREFIXES;
-
-  static {
-    final String[] whitelist = {
-      "java.util.concurrent.AbstractExecutorService",
-      "java.util.concurrent.ThreadPoolExecutor",
-      "java.util.concurrent.ScheduledThreadPoolExecutor",
-      "java.util.concurrent.ForkJoinPool",
-      "java.util.concurrent.Executors$FinalizableDelegatedExecutorService",
-      "java.util.concurrent.Executors$DelegatedExecutorService",
-      "javax.management.NotificationBroadcasterSupport$1",
-      "kotlinx.coroutines.scheduling.CoroutineScheduler",
-      "scala.concurrent.Future$InternalCallbackExecutor$",
-      "scala.concurrent.impl.ExecutionContextImpl",
-      "scala.concurrent.impl.ExecutionContextImpl$$anon$1",
-      "scala.concurrent.forkjoin.ForkJoinPool",
-      "scala.concurrent.impl.ExecutionContextImpl$$anon$3",
-      "akka.dispatch.MessageDispatcher",
-      "akka.dispatch.Dispatcher",
-      "akka.dispatch.Dispatcher$LazyExecutorServiceDelegate",
-      "akka.actor.ActorSystemImpl$$anon$1",
-      "akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinPool",
-      "akka.dispatch.forkjoin.ForkJoinPool",
-      "akka.dispatch.BalancingDispatcher",
-      "akka.dispatch.ThreadPoolConfig$ThreadPoolExecutorServiceFactory$$anon$1",
-      "akka.dispatch.PinnedDispatcher",
-      "akka.dispatch.ExecutionContexts$sameThreadExecutionContext$",
-      "play.api.libs.streams.Execution$trampoline$",
-      "io.netty.channel.MultithreadEventLoopGroup",
-      "io.netty.util.concurrent.MultithreadEventExecutorGroup",
-      "io.netty.util.concurrent.AbstractEventExecutorGroup",
-      "io.netty.channel.epoll.EpollEventLoopGroup",
-      "io.netty.channel.nio.NioEventLoopGroup",
-      "io.netty.util.concurrent.GlobalEventExecutor",
-      "io.netty.util.concurrent.AbstractScheduledEventExecutor",
-      "io.netty.util.concurrent.AbstractEventExecutor",
-      "io.netty.util.concurrent.SingleThreadEventExecutor",
-      "io.netty.channel.nio.NioEventLoop",
-      "io.netty.channel.SingleThreadEventLoop",
-    };
-    WHITELISTED_EXECUTORS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(whitelist)));
-
-    final String[] whitelistPrefixes = {"slick.util.AsyncExecutor$"};
-    WHITELISTED_EXECUTORS_PREFIXES =
-        Collections.unmodifiableCollection(Arrays.asList(whitelistPrefixes));
-  }
-
-  public ExecutorInstrumentation() {
-    super(EXEC_NAME);
-  }
-
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface())
-        .and(safeHasSuperType(named(Executor.class.getName())))
-        .and(
-            new ElementMatcher<TypeDescription>() {
-              @Override
-              public boolean matches(final TypeDescription target) {
-                boolean whitelisted = WHITELISTED_EXECUTORS.contains(target.getName());
-
-                // Check for possible prefixes match only if not whitelisted already
-                if (!whitelisted) {
-                  for (final String name : WHITELISTED_EXECUTORS_PREFIXES) {
-                    if (target.getName().startsWith(name)) {
-                      whitelisted = true;
-                      break;
-                    }
-                  }
-                }
-
-                if (!whitelisted) {
-                  log.debug("Skipping executor instrumentation for {}", target.getName());
-                }
-                return whitelisted;
-              }
-            });
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      ExecutorInstrumentation.class.getName() + "$ConcurrentUtils",
-    };
-  }
+public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
@@ -154,7 +50,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
         SetExecuteRunnableStateAdvice.class.getName());
     transformers.put(
         named("execute").and(takesArgument(0, ForkJoinTask.class)),
-        SetExecuteForkJoinStateAdvice.class.getName());
+        SetJavaForkJoinStateAdvice.class.getName());
     transformers.put(
         named("submit").and(takesArgument(0, Runnable.class)),
         SetSubmitRunnableStateAdvice.class.getName());
@@ -163,13 +59,13 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
         SetCallableStateAdvice.class.getName());
     transformers.put(
         named("submit").and(takesArgument(0, ForkJoinTask.class)),
-        SetExecuteForkJoinStateAdvice.class.getName());
+        SetJavaForkJoinStateAdvice.class.getName());
     transformers.put(
         nameMatches("invoke(Any|All)$").and(takesArgument(0, Callable.class)),
         SetCallableStateForCallableCollectionAdvice.class.getName());
     transformers.put(
         nameMatches("invoke").and(takesArgument(0, ForkJoinTask.class)),
-        SetExecuteForkJoinStateAdvice.class.getName());
+        SetJavaForkJoinStateAdvice.class.getName());
     transformers.put( // kotlinx.coroutines.scheduling.CoroutineScheduler
         named("dispatch")
             .and(takesArgument(0, Runnable.class))
@@ -185,11 +81,11 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (ConcurrentUtils.shouldAttachStateToTask(task, executor)) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
         task = RunnableWrapper.wrapIfNeeded(task);
         final ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
-        return ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
+        return ExecutorInstrumentationUtils.setupState(contextStore, task, (TraceScope) scope);
       }
       return null;
     }
@@ -199,21 +95,21 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
         @Advice.This final Executor executor,
         @Advice.Enter final State state,
         @Advice.Thrown final Throwable throwable) {
-      ConcurrentUtils.cleanUpOnMethodExit(executor, state, throwable);
+      ExecutorInstrumentationUtils.cleanUpOnMethodExit(executor, state, throwable);
     }
   }
 
-  public static class SetExecuteForkJoinStateAdvice {
+  public static class SetJavaForkJoinStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static State enterJobSubmit(
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) final ForkJoinTask task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (ConcurrentUtils.shouldAttachStateToTask(task, executor)) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
         final ContextStore<ForkJoinTask, State> contextStore =
             InstrumentationContext.get(ForkJoinTask.class, State.class);
-        return ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
+        return ExecutorInstrumentationUtils.setupState(contextStore, task, (TraceScope) scope);
       }
       return null;
     }
@@ -223,7 +119,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
         @Advice.This final Executor executor,
         @Advice.Enter final State state,
         @Advice.Thrown final Throwable throwable) {
-      ConcurrentUtils.cleanUpOnMethodExit(executor, state, throwable);
+      ExecutorInstrumentationUtils.cleanUpOnMethodExit(executor, state, throwable);
     }
   }
 
@@ -234,11 +130,11 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (ConcurrentUtils.shouldAttachStateToTask(task, executor)) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
         task = RunnableWrapper.wrapIfNeeded(task);
         final ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
-        return ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
+        return ExecutorInstrumentationUtils.setupState(contextStore, task, (TraceScope) scope);
       }
       return null;
     }
@@ -254,7 +150,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
             InstrumentationContext.get(Future.class, State.class);
         contextStore.put(future, state);
       }
-      ConcurrentUtils.cleanUpOnMethodExit(executor, state, throwable);
+      ExecutorInstrumentationUtils.cleanUpOnMethodExit(executor, state, throwable);
     }
   }
 
@@ -265,11 +161,11 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
         @Advice.This final Executor executor,
         @Advice.Argument(value = 0, readOnly = false) Callable task) {
       final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (ConcurrentUtils.shouldAttachStateToTask(task, executor)) {
+      if (ExecutorInstrumentationUtils.shouldAttachStateToTask(task, executor)) {
         task = CallableWrapper.wrapIfNeeded(task);
         final ContextStore<Callable, State> contextStore =
             InstrumentationContext.get(Callable.class, State.class);
-        return ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
+        return ExecutorInstrumentationUtils.setupState(contextStore, task, (TraceScope) scope);
       }
       return null;
     }
@@ -285,7 +181,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
             InstrumentationContext.get(Future.class, State.class);
         contextStore.put(future, state);
       }
-      ConcurrentUtils.cleanUpOnMethodExit(executor, state, throwable);
+      ExecutorInstrumentationUtils.cleanUpOnMethodExit(executor, state, throwable);
     }
   }
 
@@ -306,7 +202,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
             wrappedTasks.add(task);
             final ContextStore<Callable, State> contextStore =
                 InstrumentationContext.get(Callable.class, State.class);
-            ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
+            ExecutorInstrumentationUtils.setupState(contextStore, task, (TraceScope) scope);
           }
         }
         tasks = wrappedTasks;
@@ -349,81 +245,6 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
           }
         }
       }
-    }
-  }
-
-  /** Utils for concurrent instrumentations. */
-  @Slf4j
-  public static class ConcurrentUtils {
-
-    private static final WeakMap<Executor, Boolean> DISABLED_EXECUTORS =
-        WeakMap.Provider.newWeakMap();
-
-    /**
-     * Checks if given task should get state attached.
-     *
-     * @param task task object
-     * @param executor executor this task was scheduled on
-     * @return true iff given task object should be wrapped
-     */
-    public static boolean shouldAttachStateToTask(final Object task, final Executor executor) {
-      final Scope scope = GlobalTracer.get().scopeManager().active();
-      return (scope instanceof TraceScope
-          && ((TraceScope) scope).isAsyncPropagating()
-          && task != null
-          && !ConcurrentUtils.isDisabled(executor));
-    }
-
-    /**
-     * Create task state given current scope.
-     *
-     * @param contextStore context storage
-     * @param task task instance
-     * @param scope current scope
-     * @param <T> task class type
-     * @return new state
-     */
-    public static <T> State setupState(
-        final ContextStore<T, State> contextStore, final T task, final TraceScope scope) {
-      final State state = contextStore.putIfAbsent(task, State.FACTORY);
-      final TraceScope.Continuation continuation = scope.capture();
-      if (state.setContinuation(continuation)) {
-        log.debug("created continuation {} from scope {}, state: {}", continuation, scope, state);
-      } else {
-        continuation.close(false);
-      }
-      return state;
-    }
-
-    /**
-     * Clean up after job submission method has exited.
-     *
-     * @param executor the current executor
-     * @param state task instrumentation state
-     * @param throwable throwable that may have been thrown
-     */
-    public static void cleanUpOnMethodExit(
-        final Executor executor, final State state, final Throwable throwable) {
-      if (null != state && null != throwable) {
-        /*
-        Note: this may potentially close somebody else's continuation if we didn't set it
-        up in setupState because it was already present before us. This should be safe but
-        may lead to non-attributed async work in some very rare cases.
-        Alternative is to not close continuation here if we did not set it up in setupState
-        but this may potentially lead to memory leaks if callers do not properly handle
-        exceptions.
-         */
-        state.closeContinuation();
-      }
-    }
-
-    public static void disableExecutor(final Executor executor) {
-      log.debug("Disabling Executor tracing for instance {}", executor);
-      DISABLED_EXECUTORS.put(executor, true);
-    }
-
-    public static boolean isDisabled(final Executor executor) {
-      return DISABLED_EXECUTORS.containsKey(executor);
     }
   }
 }

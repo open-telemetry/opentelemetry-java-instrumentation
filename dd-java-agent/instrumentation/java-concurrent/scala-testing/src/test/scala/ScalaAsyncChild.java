@@ -1,13 +1,13 @@
 import datadog.trace.api.Trace;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+import scala.concurrent.forkjoin.ForkJoinTask;
 
-public class AsyncChild extends ForkJoinTask implements Runnable, Callable {
+public class ScalaAsyncChild extends ForkJoinTask implements Runnable, Callable {
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;
 
-  public AsyncChild() {
+  public ScalaAsyncChild() {
     this(true, false);
   }
 
@@ -25,7 +25,7 @@ public class AsyncChild extends ForkJoinTask implements Runnable, Callable {
     return true;
   }
 
-  public AsyncChild(final boolean doTraceableWork, final boolean blockThread) {
+  public ScalaAsyncChild(final boolean doTraceableWork, final boolean blockThread) {
     this.doTraceableWork = doTraceableWork;
     this.blockThread = new AtomicBoolean(blockThread);
   }
