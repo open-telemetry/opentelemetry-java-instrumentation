@@ -28,8 +28,8 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
 
   public ChannelFutureListenerInstrumentation() {
     super(
-      NettyChannelPipelineInstrumentation.INSTRUMENTATION_NAME,
-      NettyChannelPipelineInstrumentation.ADDITIONAL_INSTRUMENTATION_NAMES);
+        NettyChannelPipelineInstrumentation.INSTRUMENTATION_NAME,
+        NettyChannelPipelineInstrumentation.ADDITIONAL_INSTRUMENTATION_NAMES);
   }
 
   @Override

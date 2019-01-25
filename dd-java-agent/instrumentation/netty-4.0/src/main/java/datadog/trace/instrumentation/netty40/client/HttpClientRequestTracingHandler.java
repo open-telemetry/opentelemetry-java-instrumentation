@@ -53,9 +53,12 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
             .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
             .start();
 
-    GlobalTracer.get()
+    // AWS calls are often signed, so we can't add headers without breaking the signature.
+    if (!request.headers().contains("amz-sdk-invocation-id")) {
+      GlobalTracer.get()
         .inject(
-            span.context(), Format.Builtin.HTTP_HEADERS, new NettyResponseInjectAdapter(request));
+          span.context(), Format.Builtin.HTTP_HEADERS, new NettyResponseInjectAdapter(request));
+    }
 
     ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).set(span);
 
