@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Exit on error:
+set -e
+
 # Debug mode:
 # set -x
 
@@ -33,8 +36,8 @@ if [ -z "$metrics_files" ]; then
 fi
 
 # reset file and ensure directories exists
-> $build_resources_output_directory/metricconfigs.txt
 mkdir -p $build_resources_output_directory/metricconfigs
+> $build_resources_output_directory/metricconfigs.txt
 
 for input_file in $metrics_files ; do
   # generate new name based on integration folder name which should look like this:
