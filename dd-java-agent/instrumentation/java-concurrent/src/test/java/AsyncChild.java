@@ -1,13 +1,28 @@
 import datadog.trace.api.Trace;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class AsyncChild implements Runnable, Callable {
+public class AsyncChild extends ForkJoinTask implements Runnable, Callable {
   private final AtomicBoolean blockThread;
   private final boolean doTraceableWork;
 
   public AsyncChild() {
     this(true, false);
+  }
+
+  @Override
+  public Object getRawResult() {
+    return null;
+  }
+
+  @Override
+  protected void setRawResult(final Object value) {}
+
+  @Override
+  protected boolean exec() {
+    runImpl();
+    return true;
   }
 
   public AsyncChild(final boolean doTraceableWork, final boolean blockThread) {

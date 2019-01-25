@@ -73,27 +73,8 @@ class AWSClientTest extends AgentTestRunner {
     client.requestHandler2s.size() == handlerCount
     client.requestHandler2s.get(0).getClass().getSimpleName() == "TracingRequestHandler"
 
-    assertTraces(2) {
-      trace(0, 1) {
-        span(0) {
-          operationName "http.request"
-          resourceName "$method /$url"
-          errored false
-          parent() // FIXME: This should be a child of the aws.http call.
-          tags {
-            "$Tags.COMPONENT.key" "apache-httpclient"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "$server.address/$url"
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
-            "$Tags.HTTP_METHOD.key" "$method"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
-            defaultTags()
-          }
-        }
-      }
-      trace(1, 1) {
+    assertTraces(1) {
+      trace(0, 2) {
         span(0) {
           serviceName "java-aws-sdk"
           operationName "aws.http"
@@ -107,18 +88,34 @@ class AWSClientTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD.key" "$method"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
-            "aws.service" String
+            "aws.service" { it.contains(service) }
             "aws.endpoint" "$server.address"
             "aws.operation" "${operation}Request"
             "aws.agent" "java-aws-sdk"
             defaultTags()
           }
         }
+        span(1) {
+          operationName "http.request"
+          resourceName "$method /$url"
+          errored false
+          childOf(span(0))
+          tags {
+            "$Tags.COMPONENT.key" "apache-httpclient"
+            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.HTTP_URL.key" "$server.address/$url"
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.HTTP_METHOD.key" "$method"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            defaultTags()
+          }
+        }
       }
     }
-    // Not sure why these are children of the aws.http span:
-    server.lastRequest.headers.get("x-datadog-trace-id") == TEST_WRITER[1][0].traceId
-    server.lastRequest.headers.get("x-datadog-parent-id") == TEST_WRITER[1][0].spanId
+    server.lastRequest.headers.get("x-datadog-trace-id") == TEST_WRITER[0][0].traceId
+    server.lastRequest.headers.get("x-datadog-parent-id") == TEST_WRITER[0][0].spanId
 
     where:
     service | operation           | method | url                  | handlerCount | call                                                                                                                                   | body               | client

@@ -930,7 +930,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   }
 
   private static String getContextFieldName(final String keyClassName) {
-    return "__datadogContext" + Utils.converToInnerClassName(keyClassName);
+    return "__datadogContext$" + Utils.converToInnerClassName(keyClassName);
   }
 
   private static String getContextGetterName(final String keyClassName) {

@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
@@ -140,6 +141,7 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
     final Map<String, String> map = new HashMap<>();
     map.put(Runnable.class.getName(), State.class.getName());
     map.put(Callable.class.getName(), State.class.getName());
+    map.put(ForkJoinTask.class.getName(), State.class.getName());
     map.put(Future.class.getName(), State.class.getName());
     return Collections.unmodifiableMap(map);
   }
@@ -151,14 +153,23 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
         named("execute").and(takesArgument(0, Runnable.class)),
         SetExecuteRunnableStateAdvice.class.getName());
     transformers.put(
+        named("execute").and(takesArgument(0, ForkJoinTask.class)),
+        SetExecuteForkJoinStateAdvice.class.getName());
+    transformers.put(
         named("submit").and(takesArgument(0, Runnable.class)),
         SetSubmitRunnableStateAdvice.class.getName());
     transformers.put(
         named("submit").and(takesArgument(0, Callable.class)),
         SetCallableStateAdvice.class.getName());
     transformers.put(
+        named("submit").and(takesArgument(0, ForkJoinTask.class)),
+        SetExecuteForkJoinStateAdvice.class.getName());
+    transformers.put(
         nameMatches("invoke(Any|All)$").and(takesArgument(0, Callable.class)),
         SetCallableStateForCallableCollectionAdvice.class.getName());
+    transformers.put(
+        nameMatches("invoke").and(takesArgument(0, ForkJoinTask.class)),
+        SetExecuteForkJoinStateAdvice.class.getName());
     transformers.put( // kotlinx.coroutines.scheduling.CoroutineScheduler
         named("dispatch")
             .and(takesArgument(0, Runnable.class))
@@ -178,6 +189,30 @@ public final class ExecutorInstrumentation extends Instrumenter.Default {
         task = RunnableWrapper.wrapIfNeeded(task);
         final ContextStore<Runnable, State> contextStore =
             InstrumentationContext.get(Runnable.class, State.class);
+        return ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
+      }
+      return null;
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void exitJobSubmit(
+        @Advice.This final Executor executor,
+        @Advice.Enter final State state,
+        @Advice.Thrown final Throwable throwable) {
+      ConcurrentUtils.cleanUpOnMethodExit(executor, state, throwable);
+    }
+  }
+
+  public static class SetExecuteForkJoinStateAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static State enterJobSubmit(
+        @Advice.This final Executor executor,
+        @Advice.Argument(value = 0, readOnly = false) final ForkJoinTask task) {
+      final Scope scope = GlobalTracer.get().scopeManager().active();
+      if (ConcurrentUtils.shouldAttachStateToTask(task, executor)) {
+        final ContextStore<ForkJoinTask, State> contextStore =
+            InstrumentationContext.get(ForkJoinTask.class, State.class);
         return ConcurrentUtils.setupState(contextStore, task, (TraceScope) scope);
       }
       return null;

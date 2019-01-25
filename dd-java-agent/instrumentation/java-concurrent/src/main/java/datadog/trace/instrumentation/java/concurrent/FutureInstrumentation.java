@@ -88,11 +88,6 @@ public final class FutureInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {ExecutorInstrumentation.class.getName() + "$ConcurrentUtils"};
-  }
-
-  @Override
   public Map<String, String> contextStore() {
     final Map<String, String> map = new HashMap<>();
     map.put(Future.class.getName(), State.class.getName());

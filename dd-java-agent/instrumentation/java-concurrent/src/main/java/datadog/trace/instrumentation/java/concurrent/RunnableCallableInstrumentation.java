@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.java.concurrent;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -22,6 +23,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
+/** Instrument {@link Runnable} and {@Callable} */
 @Slf4j
 @AutoService(Instrumenter.class)
 public final class RunnableCallableInstrumentation extends Instrumenter.Default {
@@ -39,7 +41,7 @@ public final class RunnableCallableInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      RunnableCallableInstrumentation.class.getName() + "$RunnableUtils",
+      AdviceUtils.class.getName(),
     };
   }
 
@@ -54,8 +56,10 @@ public final class RunnableCallableInstrumentation extends Instrumenter.Default 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(named("run").and(takesArguments(0)), RunnableAdvice.class.getName());
-    transformers.put(named("call").and(takesArguments(0)), CallableAdvice.class.getName());
+    transformers.put(
+        named("run").and(takesArguments(0)).and(isPublic()), RunnableAdvice.class.getName());
+    transformers.put(
+        named("call").and(takesArguments(0)).and(isPublic()), CallableAdvice.class.getName());
     return transformers;
   }
 
@@ -65,12 +69,12 @@ public final class RunnableCallableInstrumentation extends Instrumenter.Default 
     public static TraceScope enter(@Advice.This final Runnable thiz) {
       final ContextStore<Runnable, State> contextStore =
           InstrumentationContext.get(Runnable.class, State.class);
-      return RunnableUtils.startTaskScope(contextStore, thiz);
+      return AdviceUtils.startTaskScope(contextStore, thiz);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exit(@Advice.Enter final TraceScope scope) {
-      RunnableUtils.endTaskScope(scope);
+      AdviceUtils.endTaskScope(scope);
     }
   }
 
@@ -80,45 +84,12 @@ public final class RunnableCallableInstrumentation extends Instrumenter.Default 
     public static TraceScope enter(@Advice.This final Callable thiz) {
       final ContextStore<Callable, State> contextStore =
           InstrumentationContext.get(Callable.class, State.class);
-      return RunnableUtils.startTaskScope(contextStore, thiz);
+      return AdviceUtils.startTaskScope(contextStore, thiz);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exit(@Advice.Enter final TraceScope scope) {
-      RunnableUtils.endTaskScope(scope);
-    }
-  }
-
-  /** Helper utils for Runnable/Callable instrumentation */
-  @Slf4j
-  public static class RunnableUtils {
-
-    /**
-     * Start scope for a given task
-     *
-     * @param contextStore context storage for task's state
-     * @param task task to start scope for
-     * @param <T> task's type
-     * @return scope if scope was started, or null
-     */
-    public static <T> TraceScope startTaskScope(
-        final ContextStore<T, State> contextStore, final T task) {
-      final State state = contextStore.get(task);
-      if (state != null) {
-        final TraceScope.Continuation continuation = state.getAndResetContinuation();
-        if (continuation != null) {
-          final TraceScope scope = continuation.activate();
-          scope.setAsyncPropagation(true);
-          return scope;
-        }
-      }
-      return null;
-    }
-
-    public static void endTaskScope(final TraceScope scope) {
-      if (scope != null) {
-        scope.close();
-      }
+      AdviceUtils.endTaskScope(scope);
     }
   }
 }
