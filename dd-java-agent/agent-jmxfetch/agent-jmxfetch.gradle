@@ -44,6 +44,8 @@ task copyMetricConfigs(type:Exec) {
   }
 }
 
-processResources.dependsOn copyMetricConfigs
 copyMetricConfigs.dependsOn submodulesUpdate
-// Runs the copy task before processResources, so duplicate files in the local repo would overwrite imported ones.
+processResources.finalizedBy copyMetricConfigs
+copyMetricConfigs.mustRunAfter processResources
+// In CI, there seems to be a race condition where processResources overwrites the copied metric config files.
+// Ensure that task runs last to avoid this problem.

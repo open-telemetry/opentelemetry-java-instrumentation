@@ -4,7 +4,7 @@
 set -e
 
 # Debug mode:
-# set -x
+set -x
 
 function print_usage() {
   echo "Usage: $0 search_directory build_resources_output_directory"
