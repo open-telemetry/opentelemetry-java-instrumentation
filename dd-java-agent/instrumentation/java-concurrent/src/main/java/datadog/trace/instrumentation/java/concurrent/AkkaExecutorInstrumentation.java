@@ -26,6 +26,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumentation {
 
+  public AkkaExecutorInstrumentation() {
+    super(EXEC_NAME + ".akka_fork_join");
+  }
+
   @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(

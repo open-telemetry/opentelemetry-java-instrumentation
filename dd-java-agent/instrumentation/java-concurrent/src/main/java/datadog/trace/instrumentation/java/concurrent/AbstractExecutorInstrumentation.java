@@ -77,8 +77,8 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
         Collections.unmodifiableCollection(Arrays.asList(whitelistPrefixes));
   }
 
-  public AbstractExecutorInstrumentation() {
-    super(EXEC_NAME);
+  public AbstractExecutorInstrumentation(final String... additionalNames) {
+    super(EXEC_NAME, additionalNames);
   }
 
   @Override

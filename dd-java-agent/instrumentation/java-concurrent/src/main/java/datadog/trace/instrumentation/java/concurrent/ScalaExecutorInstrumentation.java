@@ -26,6 +26,10 @@ import scala.concurrent.forkjoin.ForkJoinTask;
 @AutoService(Instrumenter.class)
 public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrumentation {
 
+  public ScalaExecutorInstrumentation() {
+    super(EXEC_NAME + ".scala_fork_join");
+  }
+
   @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(
