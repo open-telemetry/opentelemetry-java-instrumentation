@@ -16,8 +16,12 @@ import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
 
   @Override
@@ -37,10 +41,6 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     final HttpRequest request = (HttpRequest) msg;
     final InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
 
-    String url = request.getUri();
-    if (request.headers().contains(HOST)) {
-      url = "http://" + request.headers().get(HOST) + url;
-    }
     final Span span =
         GlobalTracer.get()
             .buildSpan("netty.client.request")
@@ -48,14 +48,17 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
             .withTag(Tags.PEER_HOSTNAME.getKey(), remoteAddress.getHostName())
             .withTag(Tags.PEER_PORT.getKey(), remoteAddress.getPort())
             .withTag(Tags.HTTP_METHOD.getKey(), request.getMethod().name())
-            .withTag(Tags.HTTP_URL.getKey(), url)
+            .withTag(Tags.HTTP_URL.getKey(), formatUrl(request))
             .withTag(Tags.COMPONENT.getKey(), "netty-client")
             .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
             .start();
 
-    GlobalTracer.get()
-        .inject(
-            span.context(), Format.Builtin.HTTP_HEADERS, new NettyResponseInjectAdapter(request));
+    // AWS calls are often signed, so we can't add headers without breaking the signature.
+    if (!request.headers().contains("amz-sdk-invocation-id")) {
+      GlobalTracer.get()
+          .inject(
+              span.context(), Format.Builtin.HTTP_HEADERS, new NettyResponseInjectAdapter(request));
+    }
 
     ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).set(span);
 
@@ -70,6 +73,20 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     if (null != scope) {
       scope.close();
+    }
+  }
+
+  private String formatUrl(final HttpRequest request) {
+    try {
+      URI uri = new URI(request.getUri());
+      if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
+        uri = new URI("http://" + request.headers().get(HOST) + request.getUri());
+      }
+      return new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, null)
+          .toString();
+    } catch (final URISyntaxException e) {
+      log.debug("Cannot parse netty uri: {}", request.getUri());
+      return request.getUri();
     }
   }
 }
