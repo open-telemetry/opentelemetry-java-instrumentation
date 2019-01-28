@@ -20,6 +20,11 @@ compileSlickTestGroovy {
 }
 
 dependencies {
+  // This is needed for Scala ForJoinTask/Pool instrumentation
+  compileOnly deps.scala
+  // This is needed for Akka ForJoinTask/Pool instrumentation
+  compileOnly group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.0'
+
   compile project(':dd-trace-api')
   compile project(':dd-java-agent:agent-tooling')
 

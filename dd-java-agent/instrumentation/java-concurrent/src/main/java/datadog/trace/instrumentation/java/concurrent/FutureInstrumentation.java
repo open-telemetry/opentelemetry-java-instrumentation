@@ -67,7 +67,7 @@ public final class FutureInstrumentation extends Instrumenter.Default {
   }
 
   public FutureInstrumentation() {
-    super(ExecutorInstrumentation.EXEC_NAME);
+    super(AbstractExecutorInstrumentation.EXEC_NAME);
   }
 
   @Override

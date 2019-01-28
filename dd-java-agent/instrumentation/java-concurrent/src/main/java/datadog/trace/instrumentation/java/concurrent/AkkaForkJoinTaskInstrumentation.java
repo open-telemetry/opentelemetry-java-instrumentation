@@ -7,6 +7,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import akka.dispatch.forkjoin.ForkJoinPool;
+import akka.dispatch.forkjoin.ForkJoinTask;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
@@ -17,8 +19,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -29,21 +29,21 @@ import net.bytebuddy.matcher.ElementMatcher;
  * Instrument {@link ForkJoinTask}.
  *
  * <p>Note: There are quite a few separate implementations of {@code ForkJoinTask}/{@code
- * ForkJoinPool}: JVM, akka, scala, netty to name a few. For now we only deal with JVM one because
- * there are known cases when JVM {@code ForkJoinTask} is supplied as {@code Runnable} into {@code
- * ForkJoinPool}.
+ * ForkJoinPool}: JVM, Akka, Scala, Netty to name a few. This class handles Akka version.
  */
 @Slf4j
 @AutoService(Instrumenter.class)
-public final class ForkJoinTaskInstrumentation extends Instrumenter.Default {
+public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default {
 
-  public ForkJoinTaskInstrumentation() {
-    super(ExecutorInstrumentation.EXEC_NAME);
+  static final String TASK_CLASS_NAME = "akka.dispatch.forkjoin.ForkJoinTask";
+
+  public AkkaForkJoinTaskInstrumentation() {
+    super(AbstractExecutorInstrumentation.EXEC_NAME);
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named(ForkJoinTask.class.getName())));
+    return not(isInterface()).and(safeHasSuperType(named(TASK_CLASS_NAME)));
   }
 
   @Override
@@ -58,7 +58,7 @@ public final class ForkJoinTaskInstrumentation extends Instrumenter.Default {
     final Map<String, String> map = new HashMap<>();
     map.put(Runnable.class.getName(), State.class.getName());
     map.put(Callable.class.getName(), State.class.getName());
-    map.put(ForkJoinTask.class.getName(), State.class.getName());
+    map.put(TASK_CLASS_NAME, State.class.getName());
     return Collections.unmodifiableMap(map);
   }
 

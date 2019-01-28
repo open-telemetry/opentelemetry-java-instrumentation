@@ -27,7 +27,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
 
   public ThreadPoolExecutorInstrumentation() {
-    super(ExecutorInstrumentation.EXEC_NAME);
+    super(AbstractExecutorInstrumentation.EXEC_NAME);
   }
 
   @Override
@@ -38,7 +38,8 @@ public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      ExecutorInstrumentation.class.getName() + "$ConcurrentUtils",
+      ThreadPoolExecutorInstrumentation.class.getPackage().getName()
+          + ".ExecutorInstrumentationUtils",
       ThreadPoolExecutorInstrumentation.class.getName() + "$GenericRunnable",
     };
   }
@@ -56,7 +57,7 @@ public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void disableIfQueueWrongType(
         @Advice.This final ThreadPoolExecutor executor,
-        @Advice.Argument(4) final BlockingQueue queue) {
+        @Advice.Argument(4) final BlockingQueue<Runnable> queue) {
 
       if (queue.size() == 0) {
         try {
@@ -65,7 +66,7 @@ public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
         } catch (final ClassCastException | IllegalArgumentException e) {
           // These errors indicate the queue is fundamentally incompatible with wrapped runnables.
           // We must disable the executor instance to avoid passing wrapped runnables later.
-          ExecutorInstrumentation.ConcurrentUtils.disableExecutor(executor);
+          ExecutorInstrumentationUtils.disableExecutor(executor);
         } catch (final Exception e) {
           // Other errors might indicate the queue is not fully initialized.
           // We might want to disable for those too, but for now just ignore.
