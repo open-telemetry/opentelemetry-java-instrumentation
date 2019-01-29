@@ -2,6 +2,7 @@ package datadog.trace.tracer
 
 import datadog.trace.api.Config
 import datadog.trace.tracer.sampling.AllSampler
+import datadog.trace.tracer.sampling.Sampler
 import datadog.trace.tracer.writer.AgentWriter
 import datadog.trace.tracer.writer.SampleRateByService
 import datadog.trace.tracer.writer.Writer
@@ -46,6 +47,19 @@ class TracerTest extends Specification {
     "some-service" | "some-service"
   }
 
+  def "close closes writer"() {
+    setup:
+    def writer = Mock(Writer)
+    def tracer = Tracer.builder().writer(writer).build()
+
+    when:
+    tracer.close()
+
+    then: "closed writer"
+    1 * writer.close()
+    0 * _  // don't allow any other interaction
+  }
+
   def "test create current timestamp"() {
     setup:
     def tracer = Tracer.builder().config(config).build()
@@ -84,6 +98,34 @@ class TracerTest extends Specification {
     testWriter.validity == [true]
     rootSpan.getTrace().getSpans() == [rootSpan, span]
     testWriter.traceCount.get() == 1
+  }
+
+  def "sampler called on span completion"() {
+    setup:
+    def sampler = Mock(Sampler)
+    def tracer = Tracer.builder().sampler(sampler).build()
+
+    when:
+    tracer.buildTrace(null).finish()
+
+    then: "closed writer"
+    1 * sampler.sample(_ as Trace)
+    0 * _  // don't allow any other interaction
+  }
+
+  def "interceptor called on span events"() {
+    setup:
+    def interceptor = Mock(Interceptor)
+    def tracer = Tracer.builder().interceptors([interceptor]).build()
+
+    when:
+    tracer.buildTrace(null).finish()
+
+    then: "closed writer"
+    1 * interceptor.afterSpanStarted(_ as Span)
+    1 * interceptor.beforeSpanFinished(_ as Span)
+    1 * interceptor.beforeTraceWritten(_ as Trace)
+    0 * _  // don't allow any other interaction
   }
 
   def "test inject"() {
