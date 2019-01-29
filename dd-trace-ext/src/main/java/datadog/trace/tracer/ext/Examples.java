@@ -12,7 +12,7 @@ class Examples {
   public static void test() {
     final Throwable someThrowable = null;
     // registration
-    TracerContext.registerGlobalContext(new TracerContext(new Tracer()), false);
+    TracerContext.registerGlobalContext(new TracerContext(Tracer.builder().build()), false);
 
     // scope
     final TracerContext ctx = TracerContext.getGlobalContext();

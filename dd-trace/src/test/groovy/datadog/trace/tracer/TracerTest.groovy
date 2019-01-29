@@ -23,7 +23,7 @@ class TracerTest extends Specification {
   // TODO: add more tests for different config options and interceptors
   def "test getters"() {
     when:
-    def tracer = new Tracer(config)
+    def tracer = Tracer.builder().config(config).build()
 
     then:
     tracer.getWriter() instanceof AgentWriter
@@ -32,9 +32,23 @@ class TracerTest extends Specification {
     tracer.getDefaultServiceName() == config.getServiceName()
   }
 
+  def "test defaultServiceName=#serviceName"() {
+    when:
+    def tracer = Tracer.builder().defaultServiceName(serviceName).build()
+
+    then:
+    tracer.config.serviceName == expected
+
+    where:
+    serviceName    | expected
+    null           | Config.DEFAULT_SERVICE_NAME
+    ""             | Config.DEFAULT_SERVICE_NAME
+    "some-service" | "some-service"
+  }
+
   def "test create current timestamp"() {
     setup:
-    def tracer = new Tracer(config)
+    def tracer = Tracer.builder().config(config).build()
 
     when:
     def timestamp = tracer.createCurrentTimestamp()
@@ -45,7 +59,7 @@ class TracerTest extends Specification {
 
   def "test trace happy path"() {
     setup:
-    def tracer = new Tracer(config, testWriter, new AllSampler(), [])
+    def tracer = Tracer.builder().config(config).writer(testWriter).build()
 
     when:
     def rootSpan = tracer.buildTrace(null)
@@ -76,7 +90,7 @@ class TracerTest extends Specification {
     //TODO implement this test properly
     setup:
     def context = Mock(SpanContext)
-    def tracer = new Tracer(config, testWriter, new AllSampler(), [])
+    def tracer = Tracer.builder().config(config).writer(testWriter).build()
 
     when:
     tracer.inject(context, null, null)
@@ -88,7 +102,7 @@ class TracerTest extends Specification {
   def "test extract"() {
     //TODO implement this test properly
     setup:
-    def tracer = new Tracer(config, testWriter, new AllSampler(), [])
+    def tracer = Tracer.builder().config(config).writer(testWriter).build()
 
     when:
     def context = tracer.extract(null, null)
@@ -100,7 +114,7 @@ class TracerTest extends Specification {
   def testReportError() {
     //TODO implement this test properly
     setup:
-    def tracer = new Tracer(config, testWriter, new AllSampler(), [])
+    def tracer = Tracer.builder().config(config).writer(testWriter).build()
 
     when:
     tracer.reportError("message %s", 123)
@@ -111,7 +125,7 @@ class TracerTest extends Specification {
 
   def "test trace that had a GCed span"() {
     setup:
-    def tracer = new Tracer(config, testWriter, new AllSampler(), [])
+    def tracer = Tracer.builder().config(config).writer(testWriter).build()
 
     when: "trace and spans get created"
     def rootSpan = tracer.buildTrace(null)
@@ -137,7 +151,7 @@ class TracerTest extends Specification {
 
   def "test trace that had a GCed continuation"() {
     setup:
-    def tracer = new Tracer(config, testWriter, new AllSampler(), [])
+    def tracer = Tracer.builder().config(config).writer(testWriter).build()
 
     when: "trace and spans get created"
     def rootSpan = tracer.buildTrace(null)

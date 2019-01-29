@@ -4,56 +4,52 @@ import datadog.trace.api.Config;
 import datadog.trace.tracer.sampling.AllSampler;
 import datadog.trace.tracer.sampling.Sampler;
 import datadog.trace.tracer.writer.Writer;
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 /** A Tracer creates {@link Trace}s and holds common settings across traces. */
 @Slf4j
-public class Tracer {
+public class Tracer implements Closeable {
 
   /** Writer is an charge of reporting traces and spans to the desired endpoint */
   private final Writer writer;
+
   /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
   private final Sampler sampler;
+
   /** Settings for this tracer. */
   private final Config config;
 
   /** Interceptors to be called on certain trace and span events */
   private final List<Interceptor> interceptors;
 
-  public Tracer() {
-    this(Config.get());
-  }
-
-  public Tracer(final List<Interceptor> interceptors) {
-    this(Config.get(), interceptors);
-  }
-
-  public Tracer(final Config config) {
-    this(config, Collections.<Interceptor>emptyList());
-  }
-
-  public Tracer(final Config config, final List<Interceptor> interceptors) {
-    // TODO: implement and include "standard" interceptors
-    this(
-        config,
-        Writer.Builder.forConfig(config),
-        new AllSampler(),
-        Collections.unmodifiableList(new ArrayList<>(interceptors)));
-  }
-
-  Tracer(
+  @Builder
+  private Tracer(
+      final String defaultServiceName,
       final Config config,
       final Writer writer,
       final Sampler sampler,
       final List<Interceptor> interceptors) {
-    this.config = config;
-    // TODO: we probably need to implement some sort of 'close' method for Tracer
-    this.writer = writer;
-    this.sampler = sampler;
-    this.interceptors = Collections.unmodifiableList(new ArrayList<>(interceptors));
+    // Apply defaults:
+    final Properties serviceNameConfig = new Properties();
+    if (defaultServiceName != null && !defaultServiceName.trim().isEmpty()) {
+      serviceNameConfig.setProperty(Config.SERVICE_NAME, defaultServiceName);
+    }
+    this.config = config != null ? config : Config.get(serviceNameConfig);
+    this.writer = writer != null ? writer : Writer.Builder.forConfig(this.config);
+    this.sampler = sampler != null ? sampler : new AllSampler();
+
+    // TODO: implement and include "standard" interceptors
+    this.interceptors =
+        interceptors != null
+            ? Collections.unmodifiableList(new ArrayList<>(interceptors))
+            : Collections.<Interceptor>emptyList();
   }
 
   /** @return {@link Writer} used by this tracer */
@@ -122,5 +118,10 @@ public class Tracer {
     final String completeMessage = String.format(message, args);
     log.debug(completeMessage);
     throw new TraceException(completeMessage);
+  }
+
+  @Override
+  public void close() throws IOException {
+    writer.close();
   }
 }
