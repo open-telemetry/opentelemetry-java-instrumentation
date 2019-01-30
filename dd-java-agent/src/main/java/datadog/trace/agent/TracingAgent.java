@@ -46,6 +46,7 @@ public class TracingAgent {
       throws Exception {
     startDatadogAgent(agentArgs, inst);
     if (isAppUsingCustomLogManager()) {
+      System.out.println("Custom logger found.  Delaying JMXFetch initialization.");
       /*
        * java.util.logging.LogManager maintains a final static LogManager, which is created during class initialization.
        *
@@ -67,7 +68,7 @@ public class TracingAgent {
             public void run() {
               try {
                 startJmxFetch();
-              } catch (Exception e) {
+              } catch (final Exception e) {
                 throw new RuntimeException(e);
               }
             }
@@ -111,6 +112,7 @@ public class TracingAgent {
   }
 
   public static synchronized void startJmxFetch() throws Exception {
+    System.out.println("Starting JMXFetch.");
     initializeJars();
     if (JMXFETCH_CLASSLOADER == null) {
       final ClassLoader jmxFetchClassLoader = createDatadogClassLoader(bootstrapJar, jmxFetchJar);
@@ -243,6 +245,19 @@ public class TracingAgent {
    */
   private static boolean isAppUsingCustomLogManager() {
     final String tracerCustomLogManSysprop = "dd.app.customlogmanager";
+    if ("debug"
+        .equalsIgnoreCase(System.getProperty("datadog.slf4j.simpleLogger.defaultLogLevel"))) {
+      System.out.println(
+          "Prop - logging.manager: " + System.getProperty("java.util.logging.manager"));
+      System.out.println(
+          "Prop - customlogmanager: " + System.getProperty(tracerCustomLogManSysprop));
+      System.out.println(
+          "Env - customlogmanager: "
+              + System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase()));
+      System.out.println(
+          "Classpath - jboss: " + ClassLoader.getSystemResource("org/jboss/modules/Main.class")
+              != null);
+    }
     return System.getProperty("java.util.logging.manager") != null
         || Boolean.parseBoolean(System.getProperty(tracerCustomLogManSysprop))
         || Boolean.parseBoolean(
