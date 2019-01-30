@@ -30,21 +30,6 @@ class TracerTest extends Specification {
     tracer.getWriter() instanceof AgentWriter
     tracer.getSampler() instanceof AllSampler
     tracer.getInterceptors() == []
-    tracer.getDefaultServiceName() == config.getServiceName()
-  }
-
-  def "test defaultServiceName=#serviceName"() {
-    when:
-    def tracer = Tracer.builder().defaultServiceName(serviceName).build()
-
-    then:
-    tracer.config.serviceName == expected
-
-    where:
-    serviceName    | expected
-    null           | Config.DEFAULT_SERVICE_NAME
-    ""             | Config.DEFAULT_SERVICE_NAME
-    "some-service" | "some-service"
   }
 
   def "close closes writer"() {

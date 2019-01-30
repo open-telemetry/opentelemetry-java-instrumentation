@@ -87,7 +87,6 @@ public interface Span {
    */
   void setErrored(boolean errored);
 
-  /** */
   /**
    * Attach a throwable to this span.
    *
@@ -129,7 +128,4 @@ public interface Span {
    * @param finishTimestampNanoseconds Epoch time in nanoseconds.
    */
   void finish(long finishTimestampNanoseconds);
-
-  // TODO: OpenTracing Span#log methods. Do we need something here to support them? Current DDSpan
-  // does not implement.
 }

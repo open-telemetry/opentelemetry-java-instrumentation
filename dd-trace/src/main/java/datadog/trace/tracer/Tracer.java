@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,17 +30,12 @@ public class Tracer implements Closeable {
 
   @Builder
   private Tracer(
-      final String defaultServiceName,
       final Config config,
       final Writer writer,
       final Sampler sampler,
       final List<Interceptor> interceptors) {
     // Apply defaults:
-    final Properties serviceNameConfig = new Properties();
-    if (defaultServiceName != null && !defaultServiceName.trim().isEmpty()) {
-      serviceNameConfig.setProperty(Config.SERVICE_NAME, defaultServiceName);
-    }
-    this.config = config != null ? config : Config.get(serviceNameConfig);
+    this.config = config != null ? config : Config.get();
     this.writer = writer != null ? writer : Writer.Builder.forConfig(this.config);
     this.sampler = sampler != null ? sampler : new AllSampler();
 

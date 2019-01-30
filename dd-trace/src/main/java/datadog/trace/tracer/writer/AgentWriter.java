@@ -52,7 +52,7 @@ public class AgentWriter implements Writer {
     shutdownCallback = new ShutdownCallback(executorService);
   }
 
-  /** @return Datadog agwent URL. Visible for testing. */
+  /** @return Datadog agent URL. Visible for testing. */
   URL getAgentUrl() {
     return task.getClient().getAgentUrl();
   }
