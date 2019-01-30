@@ -58,11 +58,11 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
-        @Advice.Argument(0) String method,
-        @Advice.Argument(1) String endpoint,
+        @Advice.Argument(0) final String method,
+        @Advice.Argument(1) final String endpoint,
         @Advice.Argument(value = 5, readOnly = false) ResponseListener responseListener) {
 
-      Scope scope =
+      final Scope scope =
           GlobalTracer.get()
               .buildSpan("elasticsearch.rest.query")
               .withTag(DDTags.SERVICE_NAME, "elasticsearch")
@@ -78,9 +78,10 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(@Advice.Enter Scope scope, @Advice.Thrown Throwable throwable) {
+    public static void stopSpan(
+        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        Span span = scope.span();
+        final Span span = scope.span();
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
         span.finish();

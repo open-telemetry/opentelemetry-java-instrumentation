@@ -6,8 +6,15 @@ ext {
 muzzle {
   pass {
     group = "org.elasticsearch.client"
-    module = "rest" // elasticsearch-rest-client ?
+    module = "relasticsearch-rest-client"
     versions = "[6.4,)"
+    assertInverse = true
+  }
+
+  fail {
+    group = "org.elasticsearch.client"
+    module = "rest"
+    versions = "(,)"
     assertInverse = true
   }
 }

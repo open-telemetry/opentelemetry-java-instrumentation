@@ -10,6 +10,12 @@ muzzle {
     versions = "[5.0,6.4)"
     assertInverse = true
   }
+
+  pass {
+    group = "org.elasticsearch.client"
+    module = "elasticsearch-rest-client"
+    versions = "[5.0,6.4)"
+  }
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
@@ -43,11 +49,6 @@ dependencies {
   testCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '5.0.0'
   testCompile group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.0.0'
 
-  /*
-   We know that 6.3.+ Doesn't work because they've reworked relevant code.
-   See https://github.com/elastic/elasticsearch/commit/0be443c5bbd4c7eb5776740d8fb7117224124cce#diff-d5bb3520f960a753d8f8a3a2686dfd6b
-   Lock on 6.2.+ to fix tests.
-   */
   latestDepTestCompile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.3.+'
   latestDepTestCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '6.3.+'
   latestDepTestCompile group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.3.+'
