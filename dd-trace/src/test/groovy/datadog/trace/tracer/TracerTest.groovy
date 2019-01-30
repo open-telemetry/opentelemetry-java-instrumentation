@@ -2,6 +2,7 @@ package datadog.trace.tracer
 
 import datadog.trace.api.Config
 import datadog.trace.tracer.sampling.AllSampler
+import datadog.trace.tracer.sampling.Sampler
 import datadog.trace.tracer.writer.AgentWriter
 import datadog.trace.tracer.writer.SampleRateByService
 import datadog.trace.tracer.writer.Writer
@@ -23,18 +24,30 @@ class TracerTest extends Specification {
   // TODO: add more tests for different config options and interceptors
   def "test getters"() {
     when:
-    def tracer = new Tracer(config)
+    def tracer = Tracer.builder().config(config).build()
 
     then:
     tracer.getWriter() instanceof AgentWriter
     tracer.getSampler() instanceof AllSampler
     tracer.getInterceptors() == []
-    tracer.getDefaultServiceName() == config.getServiceName()
+  }
+
+  def "close closes writer"() {
+    setup:
+    def writer = Mock(Writer)
+    def tracer = Tracer.builder().writer(writer).build()
+
+    when:
+    tracer.close()
+
+    then: "closed writer"
+    1 * writer.close()
+    0 * _  // don't allow any other interaction
   }
 
   def "test create current timestamp"() {
     setup:
-    def tracer = new Tracer(config)
+    def tracer = Tracer.builder().config(config).build()
 
     when:
     def timestamp = tracer.createCurrentTimestamp()
@@ -45,7 +58,7 @@ class TracerTest extends Specification {
 
   def "test trace happy path"() {
     setup:
-    def tracer = new Tracer(config, testWriter, new AllSampler(), [])
+    def tracer = Tracer.builder().config(config).writer(testWriter).build()
 
     when:
     def rootSpan = tracer.buildTrace(null)
@@ -72,11 +85,39 @@ class TracerTest extends Specification {
     testWriter.traceCount.get() == 1
   }
 
+  def "sampler called on span completion"() {
+    setup:
+    def sampler = Mock(Sampler)
+    def tracer = Tracer.builder().sampler(sampler).build()
+
+    when:
+    tracer.buildTrace(null).finish()
+
+    then: "closed writer"
+    1 * sampler.sample(_ as Trace)
+    0 * _  // don't allow any other interaction
+  }
+
+  def "interceptor called on span events"() {
+    setup:
+    def interceptor = Mock(Interceptor)
+    def tracer = Tracer.builder().interceptors([interceptor]).build()
+
+    when:
+    tracer.buildTrace(null).finish()
+
+    then: "closed writer"
+    1 * interceptor.afterSpanStarted(_ as Span)
+    1 * interceptor.beforeSpanFinished(_ as Span)
+    1 * interceptor.beforeTraceWritten(_ as Trace)
+    0 * _  // don't allow any other interaction
+  }
+
   def "test inject"() {
     //TODO implement this test properly
     setup:
     def context = Mock(SpanContext)
-    def tracer = new Tracer(config, testWriter, new AllSampler(), [])
+    def tracer = Tracer.builder().config(config).writer(testWriter).build()
 
     when:
     tracer.inject(context, null, null)
@@ -88,7 +129,7 @@ class TracerTest extends Specification {
   def "test extract"() {
     //TODO implement this test properly
     setup:
-    def tracer = new Tracer(config, testWriter, new AllSampler(), [])
+    def tracer = Tracer.builder().config(config).writer(testWriter).build()
 
     when:
     def context = tracer.extract(null, null)
@@ -100,7 +141,7 @@ class TracerTest extends Specification {
   def testReportError() {
     //TODO implement this test properly
     setup:
-    def tracer = new Tracer(config, testWriter, new AllSampler(), [])
+    def tracer = Tracer.builder().config(config).writer(testWriter).build()
 
     when:
     tracer.reportError("message %s", 123)
@@ -111,7 +152,7 @@ class TracerTest extends Specification {
 
   def "test trace that had a GCed span"() {
     setup:
-    def tracer = new Tracer(config, testWriter, new AllSampler(), [])
+    def tracer = Tracer.builder().config(config).writer(testWriter).build()
 
     when: "trace and spans get created"
     def rootSpan = tracer.buildTrace(null)
@@ -137,7 +178,7 @@ class TracerTest extends Specification {
 
   def "test trace that had a GCed continuation"() {
     setup:
-    def tracer = new Tracer(config, testWriter, new AllSampler(), [])
+    def tracer = Tracer.builder().config(config).writer(testWriter).build()
 
     when: "trace and spans get created"
     def rootSpan = tracer.buildTrace(null)

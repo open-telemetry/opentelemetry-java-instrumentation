@@ -1,6 +1,12 @@
 description = 'dd-trace'
 apply from: "${rootDir}/gradle/java.gradle"
 
+minimumBranchCoverage = 0.9
+minimumInstructionCoverage = 0.9
+excludedClassesConverage += [
+  'datadog.trace.tracer.Tracer.TracerBuilder',
+]
+
 dependencies {
   annotationProcessor deps.autoservice
   implementation deps.autoservice
