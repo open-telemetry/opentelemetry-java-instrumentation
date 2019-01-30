@@ -6,8 +6,8 @@ ext {
 muzzle {
   pass {
     group = "org.elasticsearch.client"
-    module = "rest"
-    versions = "[5.0,6.4)"
+    module = "rest" // elasticsearch-rest-client ?
+    versions = "[6.4,)"
     assertInverse = true
   }
 }
@@ -21,7 +21,7 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'org.elasticsearch.client', name: 'rest', version: '5.0.0'
+  compileOnly group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.4.0'
 
   compile project(':dd-java-agent:agent-tooling')
 
@@ -39,20 +39,12 @@ dependencies {
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
 
-  testCompile group: 'org.elasticsearch.client', name: 'rest', version: '5.0.0'
-  testCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '5.0.0'
-  testCompile group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.0.0'
+  testCompile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.4.0'
+  testCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '6.4.0'
+  testCompile group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.4.0'
 
-  /*
-   We know that 6.3.+ Doesn't work because they've reworked relevant code.
-   See https://github.com/elastic/elasticsearch/commit/0be443c5bbd4c7eb5776740d8fb7117224124cce#diff-d5bb3520f960a753d8f8a3a2686dfd6b
-   Lock on 6.2.+ to fix tests.
-   */
-  latestDepTestCompile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '6.3.+'
-  latestDepTestCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '6.3.+'
-  latestDepTestCompile group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.3.+'
-}
-
-configurations.latestDepTestCompile {
-  exclude group: "org.elasticsearch.client", module: "rest"
+  latestDepTestCompile group: 'org.elasticsearch.client', name: 'elasticsearch-rest-client', version: '+'
+  latestDepTestCompile group: 'org.elasticsearch.client', name: 'transport', version: '6.+'
+  latestDepTestCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '6.+'
+  latestDepTestCompile group: 'org.elasticsearch.plugin', name: 'transport-netty4-client', version: '6.+'
 }

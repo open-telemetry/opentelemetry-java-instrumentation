@@ -100,13 +100,4 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
       }
     }
   }
-
-//  static class TestNode extends Node {
-//    TestNode(Environment environment, Collection<Class<? extends Plugin>> classpathPlugins) {
-//      super(environment, classpathPlugins, false)
-//    }
-//
-//    @Override
-//    protected void registerDerivedNodeNameWithLogger(String nodeName) {}
-//  }
 }

@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.elasticsearch5;
+package datadog.trace.instrumentation.elasticsearch6_4;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static java.util.Collections.singletonMap;
@@ -23,18 +23,19 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.ResponseListener;
 
 @AutoService(Instrumenter.class)
-public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Default {
+public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Default {
 
-  public Elasticsearch5RestClientInstrumentation() {
-    super("elasticsearch", "elasticsearch-rest", "elasticsearch-rest-5");
+  public Elasticsearch6RestClientInstrumentation() {
+    super("elasticsearch", "elasticsearch-rest", "elasticsearch-rest-6");
   }
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {"datadog.trace.instrumentation.elasticsearch5.RestResponseListener"};
+    return new String[] {"datadog.trace.instrumentation.elasticsearch6_4.RestResponseListener"};
   }
 
   @Override
@@ -46,11 +47,10 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod()
-            .and(named("performRequestAsync").or(named("performRequestAsyncNoCatch")))
-            .and(takesArguments(7))
-            .and(takesArgument(0, named("java.lang.String"))) // method
-            .and(takesArgument(1, named("java.lang.String"))) // endpoint
-            .and(takesArgument(5, named("org.elasticsearch.client.ResponseListener"))),
+            .and(named("performRequestAsyncNoCatch"))
+            .and(takesArguments(2))
+            .and(takesArgument(0, named("org.elasticsearch.client.Request")))
+            .and(takesArgument(1, named("org.elasticsearch.client.ResponseListener"))),
         ElasticsearchRestClientAdvice.class.getName());
   }
 
@@ -58,17 +58,16 @@ public class Elasticsearch5RestClientInstrumentation extends Instrumenter.Defaul
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
-        @Advice.Argument(0) String method,
-        @Advice.Argument(1) String endpoint,
-        @Advice.Argument(value = 5, readOnly = false) ResponseListener responseListener) {
+        @Advice.Argument(0) Request request,
+        @Advice.Argument(value = 1, readOnly = false) ResponseListener responseListener) {
 
       Scope scope =
           GlobalTracer.get()
               .buildSpan("elasticsearch.rest.query")
               .withTag(DDTags.SERVICE_NAME, "elasticsearch")
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.ELASTICSEARCH)
-              .withTag(Tags.HTTP_METHOD.getKey(), method)
-              .withTag(Tags.HTTP_URL.getKey(), endpoint)
+              .withTag(Tags.HTTP_METHOD.getKey(), request.getMethod())
+              .withTag(Tags.HTTP_URL.getKey(), request.getEndpoint())
               .withTag(Tags.COMPONENT.getKey(), "elasticsearch-java")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
               .startActive(false);

@@ -8,13 +8,16 @@ import io.opentracing.tag.Tags
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.util.EntityUtils
+import org.elasticsearch.client.Request
 import org.elasticsearch.client.Response
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestClientBuilder
 import org.elasticsearch.common.io.FileSystemUtils
 import org.elasticsearch.common.settings.Settings
+import org.elasticsearch.env.Environment
 import org.elasticsearch.node.InternalSettingsPreparer
 import org.elasticsearch.node.Node
+import org.elasticsearch.plugins.Plugin
 import org.elasticsearch.transport.Netty4Plugin
 import spock.lang.Shared
 
@@ -46,7 +49,7 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
       .put("transport.tcp.port", tcpPort)
       .put("cluster.name", "test-cluster")
       .build()
-    testNode = new Node(InternalSettingsPreparer.prepareEnvironment(settings, null), [Netty4Plugin])
+    testNode = new TestNode(InternalSettingsPreparer.prepareEnvironment(settings, null), [Netty4Plugin])
     testNode.start()
 
     client = RestClient.builder(new HttpHost("localhost", httpPort))
@@ -71,7 +74,8 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
 
   def "test elasticsearch status"() {
     setup:
-    Response response = client.performRequest("GET", "_cluster/health")
+    Request request = new Request("GET", "_cluster/health")
+    Response response = client.performRequest(request)
 
     Map result = new JsonSlurper().parseText(EntityUtils.toString(response.entity))
 
@@ -101,12 +105,12 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
     }
   }
 
-//  static class TestNode extends Node {
-//    TestNode(Environment environment, Collection<Class<? extends Plugin>> classpathPlugins) {
-//      super(environment, classpathPlugins, false)
-//    }
-//
-//    @Override
-//    protected void registerDerivedNodeNameWithLogger(String nodeName) {}
-//  }
+  static class TestNode extends Node {
+    TestNode(Environment environment, Collection<Class<? extends Plugin>> classpathPlugins) {
+      super(environment, classpathPlugins, false)
+    }
+
+    @Override
+    protected void registerDerivedNodeNameWithLogger(String nodeName) {}
+  }
 }
