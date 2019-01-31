@@ -46,7 +46,7 @@ public class TracingAgent {
       throws Exception {
     startDatadogAgent(agentArgs, inst);
     if (isAppUsingCustomLogManager()) {
-      System.out.println("Custom logger found.  Delaying JMXFetch initialization.");
+      System.out.println("Custom logger detected.  Delaying JMXFetch initialization.");
       /*
        * java.util.logging.LogManager maintains a final static LogManager, which is created during class initialization.
        *
@@ -112,7 +112,6 @@ public class TracingAgent {
   }
 
   public static synchronized void startJmxFetch() throws Exception {
-    System.out.println("Starting JMXFetch.");
     initializeJars();
     if (JMXFETCH_CLASSLOADER == null) {
       final ClassLoader jmxFetchClassLoader = createDatadogClassLoader(bootstrapJar, jmxFetchJar);
@@ -261,8 +260,11 @@ public class TracingAgent {
     return System.getProperty("java.util.logging.manager") != null
         || Boolean.parseBoolean(customLogManagerProp)
         || Boolean.parseBoolean(customLogManagerEnv)
-        // JBoss/Wildfly known to set custom log manager
-        || System.getenv("JBOSS_HOME") != null;
+        // Allow setting to skip these automatic checks:
+        || ((customLogManagerProp == null && customLogManagerEnv == null)
+            && (
+            // JBoss/Wildfly known to set custom log manager
+            System.getenv("JBOSS_HOME") != null));
   }
 
   /**
