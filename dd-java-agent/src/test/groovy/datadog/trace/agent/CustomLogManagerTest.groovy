@@ -30,14 +30,25 @@ class CustomLogManagerTest extends Specification {
     IntegrationTestUtils.runOnSeparateJvm(LogManagerSetter.getName()
       , [agentArg, "-Ddd.jmxfetch.enabled=true", "-Ddd.jmxfetch.refresh-beans-period=1", "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=off"] as String[]
       , "" as String[]
+      , [:]
+      , true) == 0
+  }
+
+  def "jmxfetch starts up in premain if configured log manager on system classpath"() {
+    expect:
+    IntegrationTestUtils.runOnSeparateJvm(LogManagerSetter.getName()
+      , [agentArg, "-Ddd.jmxfetch.enabled=true", "-Ddd.jmxfetch.refresh-beans-period=1", "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=off", "-Djava.util.logging.manager=jvmbootstraptest.CustomLogManager"] as String[]
+      , "" as String[]
+      , [:]
       , true) == 0
   }
 
   def "jmxfetch startup is delayed with java.util.logging.manager sysprop"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogManagerSetter.getName()
-      , [agentArg, "-Ddd.jmxfetch.enabled=true", "-Ddd.jmxfetch.refresh-beans-period=1", "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=off", "-Djava.util.logging.manager=jvmbootstraptest.CustomLogManager"] as String[]
+      , [agentArg, "-Ddd.jmxfetch.enabled=true", "-Ddd.jmxfetch.refresh-beans-period=1", "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=off", "-Djava.util.logging.manager=jvmbootstraptest.MissingLogManager"] as String[]
       , "" as String[]
+      , [:]
       , true) == 0
   }
 
@@ -46,6 +57,16 @@ class CustomLogManagerTest extends Specification {
     IntegrationTestUtils.runOnSeparateJvm(LogManagerSetter.getName()
       , [agentArg, "-Ddd.jmxfetch.enabled=true", "-Ddd.jmxfetch.refresh-beans-period=1", "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=off", "-Ddd.app.customlogmanager=true"] as String[]
       , "" as String[]
+      , [:]
+      , true) == 0
+  }
+
+  def "jmxfetch startup delayed with JBOSS_HOME environment variable"() {
+    expect:
+    IntegrationTestUtils.runOnSeparateJvm(LogManagerSetter.getName()
+      , [agentArg, "-Ddd.jmxfetch.enabled=true", "-Ddd.jmxfetch.refresh-beans-period=1", "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=off", "-Ddd.app.customlogmanager=true"] as String[]
+      , "" as String[]
+      , ["JBOSS_HOME": "/"]
       , true) == 0
   }
 }

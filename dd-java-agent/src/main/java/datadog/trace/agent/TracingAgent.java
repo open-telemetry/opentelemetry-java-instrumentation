@@ -276,7 +276,7 @@ public class TracingAgent {
 
     final String logManagerProp = System.getProperty("java.util.logging.manager");
     if (logManagerProp != null) {
-      final boolean onSysClasspath = ClassLoader.getSystemResource(logManagerProp) == null;
+      final boolean onSysClasspath = ClassLoader.getSystemResource(logManagerProp) != null;
       if (debugEnabled) {
         System.out.println("Prop - logging.manager: " + logManagerProp);
         System.out.println("logging.manager on system classpath: " + onSysClasspath);
