@@ -51,7 +51,7 @@ class HystrixTest extends AgentTestRunner {
         }
         span(1) {
           serviceName "unnamed-java-app"
-          operationName "HystrixTest\$1.run"
+          operationName "hystrix.cmd"
           resourceName "HystrixTest\$1.run"
           spanType null
           childOf span(0)
@@ -125,7 +125,7 @@ class HystrixTest extends AgentTestRunner {
         }
         span(1) {
           serviceName "unnamed-java-app"
-          operationName "HystrixTest\$2.getFallback"
+          operationName "hystrix.cmd"
           resourceName "HystrixTest\$2.getFallback"
           spanType null
           childOf span(0)
@@ -137,7 +137,7 @@ class HystrixTest extends AgentTestRunner {
         }
         span(2) {
           serviceName "unnamed-java-app"
-          operationName "HystrixTest\$2.run"
+          operationName "hystrix.cmd"
           resourceName "HystrixTest\$2.run"
           spanType null
           childOf span(0)

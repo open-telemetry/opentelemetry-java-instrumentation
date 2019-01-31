@@ -51,5 +51,6 @@ out/
 /workspace
 dd-java-agent/benchmark-integration/perf-test-settings.rc
 derby.log
+.java-version
 
 !dd-java-agent/benchmark/releases/*.jar
