@@ -243,32 +243,51 @@ public class TracingAgent {
    * @return true if we detect a custom log manager being used.
    */
   private static boolean isAppUsingCustomLogManager() {
+    final boolean debugEnabled =
+        "debug".equalsIgnoreCase(System.getProperty("datadog.slf4j.simpleLogger.defaultLogLevel"));
+
     final String tracerCustomLogManSysprop = "dd.app.customlogmanager";
     final String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
     final String customLogManagerEnv =
         System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase());
 
-    if ("debug"
-        .equalsIgnoreCase(System.getProperty("datadog.slf4j.simpleLogger.defaultLogLevel"))) {
-      System.out.println(
-          "Prop - logging.manager: " + System.getProperty("java.util.logging.manager"));
-      System.out.println("Prop - customlogmanager: " + customLogManagerProp);
-      System.out.println("Env - customlogmanager: " + customLogManagerEnv);
-      System.out.println("ENV - jboss: " + System.getenv("JBOSS_HOME"));
+    if (customLogManagerProp != null || customLogManagerEnv != null) {
+      if (debugEnabled) {
+        System.out.println("Prop - customlogmanager: " + customLogManagerProp);
+        System.out.println("Env - customlogmanager: " + customLogManagerEnv);
+      }
+      // Allow setting to skip these automatic checks:
+      return Boolean.parseBoolean(customLogManagerProp)
+          || Boolean.parseBoolean(customLogManagerEnv);
     }
 
-    return System.getProperty("java.util.logging.manager") != null
-        || Boolean.parseBoolean(customLogManagerProp)
-        || Boolean.parseBoolean(customLogManagerEnv)
-        // Allow setting to skip these automatic checks:
-        || ((customLogManagerProp == null && customLogManagerEnv == null)
-            && (
-            // JBoss/Wildfly is known to set a custom log manager
-            // Originally we were checking for the presence of a jboss class,
-            // but it turns out other non-jboss applications have jboss classes on the classpath.
-            // This would cause jmxfetch initialization to be delayed indefinitely.
-            // Checking for an environment variable required by jboss instead.
-            System.getenv("JBOSS_HOME") != null));
+    final String jbossHome = System.getenv("JBOSS_HOME");
+    if (jbossHome != null) {
+      if (debugEnabled) {
+        System.out.println("Env - jboss: " + jbossHome);
+      }
+      // JBoss/Wildfly is known to set a custom log manager after startup.
+      // Originally we were checking for the presence of a jboss class,
+      // but it seems some non-jboss applications have jboss classes on the classpath.
+      // This would cause jmxfetch initialization to be delayed indefinitely.
+      // Checking for an environment variable required by jboss instead.
+      return true;
+    }
+
+    final String logManagerProp = System.getProperty("java.util.logging.manager");
+    if (logManagerProp != null) {
+      final boolean onSysClasspath = ClassLoader.getSystemResource(logManagerProp) == null;
+      if (debugEnabled) {
+        System.out.println("Prop - logging.manager: " + logManagerProp);
+        System.out.println("logging.manager on system classpath: " + onSysClasspath);
+      }
+      // Some applications set java.util.logging.manager but never actually initialize the logger.
+      // Check to see if the configured manager is on the system classpath.
+      // If so, it should be safe to initialize jmxfetch which will setup the log manager.
+      return !onSysClasspath;
+    }
+
+    return false;
   }
 
   /**
