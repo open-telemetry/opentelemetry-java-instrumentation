@@ -245,25 +245,24 @@ public class TracingAgent {
    */
   private static boolean isAppUsingCustomLogManager() {
     final String tracerCustomLogManSysprop = "dd.app.customlogmanager";
+    final String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
+    final String customLogManagerEnv =
+        System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase());
+
     if ("debug"
         .equalsIgnoreCase(System.getProperty("datadog.slf4j.simpleLogger.defaultLogLevel"))) {
       System.out.println(
           "Prop - logging.manager: " + System.getProperty("java.util.logging.manager"));
-      System.out.println(
-          "Prop - customlogmanager: " + System.getProperty(tracerCustomLogManSysprop));
-      System.out.println(
-          "Env - customlogmanager: "
-              + System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase()));
-      System.out.println(
-          "Classpath - jboss: " + ClassLoader.getSystemResource("org/jboss/modules/Main.class")
-              != null);
+      System.out.println("Prop - customlogmanager: " + customLogManagerProp);
+      System.out.println("Env - customlogmanager: " + customLogManagerEnv);
+      System.out.println("ENV - jboss: " + System.getenv("JBOSS_HOME"));
     }
+
     return System.getProperty("java.util.logging.manager") != null
-        || Boolean.parseBoolean(System.getProperty(tracerCustomLogManSysprop))
-        || Boolean.parseBoolean(
-            System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase()))
-        // Classes known to set a custom log mananger
-        || ClassLoader.getSystemResource("org/jboss/modules/Main.class") != null;
+        || Boolean.parseBoolean(customLogManagerProp)
+        || Boolean.parseBoolean(customLogManagerEnv)
+        // JBoss/Wildfly known to set custom log manager
+        || System.getenv("JBOSS_HOME") != null;
   }
 
   /**
