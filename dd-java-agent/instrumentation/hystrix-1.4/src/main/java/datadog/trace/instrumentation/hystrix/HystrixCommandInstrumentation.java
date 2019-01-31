@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public class HystrixCommandInstrumentation extends Instrumenter.Default {
 
-  private static final String operationName = "hystrix.cmd";
+  private static final String OPERATION_NAME = "hystrix.cmd";
 
   public HystrixCommandInstrumentation() {
     super("hystrix");
@@ -63,7 +63,7 @@ public class HystrixCommandInstrumentation extends Instrumenter.Default {
       final String resourceName = className + "." + method.getName();
 
       return GlobalTracer.get()
-          .buildSpan(operationName)
+          .buildSpan(OPERATION_NAME)
           .withTag(DDTags.RESOURCE_NAME, resourceName)
           .withTag(Tags.COMPONENT.getKey(), "hystrix")
           .startActive(true);
