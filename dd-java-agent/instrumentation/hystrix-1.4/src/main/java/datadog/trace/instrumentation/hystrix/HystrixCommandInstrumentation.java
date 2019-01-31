@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
@@ -24,6 +25,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public class HystrixCommandInstrumentation extends Instrumenter.Default {
+
+  private static final String operationName = "hystrix.cmd";
 
   public HystrixCommandInstrumentation() {
     super("hystrix");
@@ -57,10 +60,11 @@ public class HystrixCommandInstrumentation extends Instrumenter.Default {
           }
         }
       }
-      final String operationName = className + "." + method.getName();
+      final String resourceName = className + "." + method.getName();
 
       return GlobalTracer.get()
           .buildSpan(operationName)
+          .withTag(DDTags.RESOURCE_NAME, resourceName)
           .withTag(Tags.COMPONENT.getKey(), "hystrix")
           .startActive(true);
     }
