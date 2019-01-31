@@ -263,7 +263,11 @@ public class TracingAgent {
         // Allow setting to skip these automatic checks:
         || ((customLogManagerProp == null && customLogManagerEnv == null)
             && (
-            // JBoss/Wildfly known to set custom log manager
+            // JBoss/Wildfly is known to set a custom log manager
+            // Originally we were checking for the presence of a jboss class,
+            // but it turns out other non-jboss applications have jboss classes on the classpath.
+            // This would cause jmxfetch initialization to be delayed indefinitely.
+            // Checking for an environment variable required by jboss instead.
             System.getenv("JBOSS_HOME") != null));
   }
 
