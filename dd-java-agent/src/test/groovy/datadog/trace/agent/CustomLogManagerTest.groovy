@@ -69,4 +69,13 @@ class CustomLogManagerTest extends Specification {
       , ["JBOSS_HOME": "/"]
       , true) == 0
   }
+
+  def "jmxfetch startup in premain forced by customlogmanager=false"() {
+    expect:
+    IntegrationTestUtils.runOnSeparateJvm(LogManagerSetter.getName()
+      , [agentArg, "-Ddd.jmxfetch.enabled=true", "-Ddd.jmxfetch.refresh-beans-period=1", "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=off", "-Ddd.app.customlogmanager=false", "-Djava.util.logging.manager=jvmbootstraptest.CustomLogManager"] as String[]
+      , "" as String[]
+      , ["JBOSS_HOME": "/"]
+      , true) == 0
+  }
 }

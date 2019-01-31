@@ -4,7 +4,22 @@ import java.util.logging.LogManager;
 
 public class LogManagerSetter {
   public static void main(final String... args) throws Exception {
-    if (System.getProperty("java.util.logging.manager") != null) {
+    if (System.getProperty("dd.app.customlogmanager") != null) {
+      if (Boolean.valueOf(System.getProperty("dd.app.customlogmanager"))) {
+        System.setProperty("java.util.logging.manager", CustomLogManager.class.getName());
+        customAssert(
+            LogManager.getLogManager().getClass(),
+            LogManagerSetter.class
+                .getClassLoader()
+                .loadClass(System.getProperty("java.util.logging.manager")),
+            "Javaagent should not prevent setting a custom log manager");
+      } else {
+        customAssert(
+            isJmxfetchStarted(),
+            true,
+            "jmxfetch should start in premain when customlogmanager=false.");
+      }
+    } else if (System.getProperty("java.util.logging.manager") != null) {
       if (ClassLoader.getSystemResource(System.getProperty("java.util.logging.manager")) == null) {
         customAssert(
             isJmxfetchStarted(),
@@ -25,15 +40,6 @@ public class LogManagerSetter {
             true,
             "jmxfetch should start in premain when custom log manager found on classpath.");
       }
-    } else if (System.getProperty("dd.app.customlogmanager") != null) {
-      System.setProperty("java.util.logging.manager", CustomLogManager.class.getName());
-      customAssert(
-          LogManager.getLogManager().getClass(),
-          LogManagerSetter.class
-              .getClassLoader()
-              .loadClass(System.getProperty("java.util.logging.manager")),
-          "Javaagent should not prevent setting a custom log manager");
-
     } else if (System.getenv("JBOSS_HOME") != null) {
       System.setProperty("java.util.logging.manager", CustomLogManager.class.getName());
       customAssert(
