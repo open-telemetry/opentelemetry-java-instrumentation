@@ -46,7 +46,7 @@ public class TracingAgent {
       throws Exception {
     startDatadogAgent(agentArgs, inst);
     if (isAppUsingCustomLogManager()) {
-      System.out.println("Custom logger found.  Delaying JMXFetch initialization.");
+      System.out.println("Custom logger detected.  Delaying JMXFetch initialization.");
       /*
        * java.util.logging.LogManager maintains a final static LogManager, which is created during class initialization.
        *
@@ -112,7 +112,6 @@ public class TracingAgent {
   }
 
   public static synchronized void startJmxFetch() throws Exception {
-    System.out.println("Starting JMXFetch.");
     initializeJars();
     if (JMXFETCH_CLASSLOADER == null) {
       final ClassLoader jmxFetchClassLoader = createDatadogClassLoader(bootstrapJar, jmxFetchJar);
@@ -245,25 +244,31 @@ public class TracingAgent {
    */
   private static boolean isAppUsingCustomLogManager() {
     final String tracerCustomLogManSysprop = "dd.app.customlogmanager";
+    final String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
+    final String customLogManagerEnv =
+        System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase());
+
     if ("debug"
         .equalsIgnoreCase(System.getProperty("datadog.slf4j.simpleLogger.defaultLogLevel"))) {
       System.out.println(
           "Prop - logging.manager: " + System.getProperty("java.util.logging.manager"));
-      System.out.println(
-          "Prop - customlogmanager: " + System.getProperty(tracerCustomLogManSysprop));
-      System.out.println(
-          "Env - customlogmanager: "
-              + System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase()));
-      System.out.println(
-          "Classpath - jboss: " + ClassLoader.getSystemResource("org/jboss/modules/Main.class")
-              != null);
+      System.out.println("Prop - customlogmanager: " + customLogManagerProp);
+      System.out.println("Env - customlogmanager: " + customLogManagerEnv);
+      System.out.println("ENV - jboss: " + System.getenv("JBOSS_HOME"));
     }
+
     return System.getProperty("java.util.logging.manager") != null
-        || Boolean.parseBoolean(System.getProperty(tracerCustomLogManSysprop))
-        || Boolean.parseBoolean(
-            System.getenv(tracerCustomLogManSysprop.replace('.', '_').toUpperCase()))
-        // Classes known to set a custom log mananger
-        || ClassLoader.getSystemResource("org/jboss/modules/Main.class") != null;
+        || Boolean.parseBoolean(customLogManagerProp)
+        || Boolean.parseBoolean(customLogManagerEnv)
+        // Allow setting to skip these automatic checks:
+        || ((customLogManagerProp == null && customLogManagerEnv == null)
+            && (
+            // JBoss/Wildfly is known to set a custom log manager
+            // Originally we were checking for the presence of a jboss class,
+            // but it turns out other non-jboss applications have jboss classes on the classpath.
+            // This would cause jmxfetch initialization to be delayed indefinitely.
+            // Checking for an environment variable required by jboss instead.
+            System.getenv("JBOSS_HOME") != null));
   }
 
   /**
