@@ -15,19 +15,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
-public final class DispatcherHandlerInstrumentation extends Instrumenter.Default {
-
-  public static final String PACKAGE =
-      DispatcherHandlerInstrumentation.class.getPackage().getName();
-
-  public DispatcherHandlerInstrumentation() {
-    super("spring-webflux");
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {PACKAGE + ".DispatcherHandlerMonoBiConsumer"};
-  }
+public final class DispatcherHandlerInstrumentation extends AbstractWebfluxInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

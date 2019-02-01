@@ -195,8 +195,11 @@ public class AgentInstaller {
   private static class ClassLoadListener implements AgentBuilder.Listener {
     @Override
     public void onDiscovery(
-        String typeName, ClassLoader classLoader, JavaModule javaModule, boolean b) {
-      for (Map.Entry<String, Runnable> entry : classLoadCallbacks.entrySet()) {
+        final String typeName,
+        final ClassLoader classLoader,
+        final JavaModule javaModule,
+        final boolean b) {
+      for (final Map.Entry<String, Runnable> entry : classLoadCallbacks.entrySet()) {
         if (entry.getKey().equals(typeName)) {
           entry.getValue().run();
         }
@@ -205,25 +208,33 @@ public class AgentInstaller {
 
     @Override
     public void onTransformation(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule javaModule,
-        boolean b,
-        DynamicType dynamicType) {}
+        final TypeDescription typeDescription,
+        final ClassLoader classLoader,
+        final JavaModule javaModule,
+        final boolean b,
+        final DynamicType dynamicType) {}
 
     @Override
     public void onIgnored(
-        TypeDescription typeDescription,
-        ClassLoader classLoader,
-        JavaModule javaModule,
-        boolean b) {}
+        final TypeDescription typeDescription,
+        final ClassLoader classLoader,
+        final JavaModule javaModule,
+        final boolean b) {}
 
     @Override
     public void onError(
-        String s, ClassLoader classLoader, JavaModule javaModule, boolean b, Throwable throwable) {}
+        final String s,
+        final ClassLoader classLoader,
+        final JavaModule javaModule,
+        final boolean b,
+        final Throwable throwable) {}
 
     @Override
-    public void onComplete(String s, ClassLoader classLoader, JavaModule javaModule, boolean b) {}
+    public void onComplete(
+        final String s,
+        final ClassLoader classLoader,
+        final JavaModule javaModule,
+        final boolean b) {}
   }
 
   private AgentInstaller() {}
