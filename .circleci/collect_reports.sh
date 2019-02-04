@@ -8,6 +8,8 @@ set -e
 REPORTS_DIR=./reports
 mkdir -p $REPORTS_DIR >/dev/null 2>&1
 
+cp /tmp/hs_err_pid*.log $REPORTS_DIR || true
+
 function save_reports () {
     project_to_save=$1
     echo "saving reports for $project_to_save"
