@@ -41,6 +41,7 @@ public class Config {
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String JMX_TAGS = "trace.jmx.tags";
   public static final String HEADER_TAGS = "trace.header.tags";
+  public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
   public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
@@ -71,6 +72,7 @@ public class Config {
 
   private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = true;
   private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
+  private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final int DEFAULT_MAX_TRACE_SIZE_BEFORE_PARTIAL_FLUSH = 0;
   private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
 
@@ -95,6 +97,7 @@ public class Config {
   private final Map<String, String> spanTags;
   private final Map<String, String> jmxTags;
   @Getter private final Map<String, String> headerTags;
+  @Getter private final boolean httpClientSplitByDomain;
   @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
   @Getter private final boolean jmxFetchEnabled;
@@ -128,6 +131,10 @@ public class Config {
     spanTags = getMapSettingFromEnvironment(SPAN_TAGS, null);
     jmxTags = getMapSettingFromEnvironment(JMX_TAGS, null);
     headerTags = getMapSettingFromEnvironment(HEADER_TAGS, null);
+
+    httpClientSplitByDomain =
+        getBooleanSettingFromEnvironment(
+            HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN);
 
     partialFlushMinSpans =
         getIntegerSettingFromEnvironment(
@@ -176,6 +183,10 @@ public class Config {
     spanTags = getPropertyMapValue(properties, SPAN_TAGS, parent.spanTags);
     jmxTags = getPropertyMapValue(properties, JMX_TAGS, parent.jmxTags);
     headerTags = getPropertyMapValue(properties, HEADER_TAGS, parent.headerTags);
+
+    httpClientSplitByDomain =
+        getBooleanSettingFromEnvironment(
+            HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN);
 
     partialFlushMinSpans =
         getPropertyIntegerValue(properties, PARTIAL_FLUSH_MIN_SPANS, parent.partialFlushMinSpans);
@@ -243,7 +254,7 @@ public class Config {
     return Collections.unmodifiableMap(result);
   }
 
-  private static String getSettingFromEnvironment(final String name, final String defaultValue) {
+  public static String getSettingFromEnvironment(final String name, final String defaultValue) {
     final String completeName = PREFIX + name;
     final String value =
         System.getProperties()
@@ -261,7 +272,7 @@ public class Config {
     return parseList(getSettingFromEnvironment(name, defaultValue));
   }
 
-  private static Boolean getBooleanSettingFromEnvironment(
+  public static Boolean getBooleanSettingFromEnvironment(
       final String name, final Boolean defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
     return value == null ? defaultValue : Boolean.valueOf(value);

@@ -8,6 +8,7 @@ import akka.stream.StreamTcpException
 import akka.stream.javadsl.Sink
 import akka.stream.javadsl.Source
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -18,6 +19,9 @@ import spock.lang.Shared
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.ExecutionException
 
+import static datadog.trace.agent.test.TestUtils.setFinal
+import static datadog.trace.agent.test.TestUtils.setFinalStatic
+import static datadog.trace.agent.test.TestUtils.withSystemProperty
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
@@ -56,12 +60,14 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     def url = server.address.resolve("/" + route).toURL()
 
     HttpRequest request = HttpRequest.create(url.toString())
-    CompletionStage<HttpResponse> responseFuture =
-      Http.get(system)
-        .singleRequest(request, materializer)
 
     when:
-    HttpResponse response = responseFuture.toCompletableFuture().get()
+    HttpResponse response = withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+      resetConfig()
+      Http.get(system)
+        .singleRequest(request, materializer)
+        .toCompletableFuture().get()
+    }
     String message = readMessage(response)
 
     then:
@@ -75,7 +81,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           parent()
-          serviceName "unnamed-java-app"
+          serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "GET /$route"
           spanType DDSpanTypes.HTTP_CLIENT
@@ -87,6 +93,8 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$Tags.PEER_HOSTNAME.key" server.address.host
+            "$Tags.PEER_PORT.key" server.address.port
             "$Tags.COMPONENT.key" "akka-http-client"
             if (expectedError) {
               "$Tags.ERROR.key" true
@@ -100,6 +108,8 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     route     | expectedStatus | expectedError | expectedMessage
     "success" | 200            | false         | MESSAGE
     "error"   | 500            | true          | null
+
+    renameService = true
   }
 
   def "error request trace"() {
@@ -108,8 +118,11 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
     HttpRequest request = HttpRequest.create(url.toString())
     CompletionStage<HttpResponse> responseFuture =
-      Http.get(system)
-        .singleRequest(request, materializer)
+      withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+        resetConfig()
+        Http.get(system)
+          .singleRequest(request, materializer)
+      }
 
     when:
     responseFuture.toCompletableFuture().get()
@@ -120,7 +133,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           parent()
-          serviceName "unnamed-java-app"
+          serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "GET /test"
           spanType DDSpanTypes.HTTP_CLIENT
@@ -131,6 +144,8 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$Tags.PEER_HOSTNAME.key" server.address.host
+            "$Tags.PEER_PORT.key" UNUSED_PORT
             "$Tags.COMPONENT.key" "akka-http-client"
             "$Tags.ERROR.key" true
             errorTags(StreamTcpException, { it.contains("Tcp command") })
@@ -138,6 +153,9 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
         }
       }
     }
+
+    where:
+    renameService << [false, true]
   }
 
   def "singleRequest exception trace"() {
@@ -168,6 +186,8 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
       }
     }
 
+    where:
+    renameService << [false, true]
   }
 
   def "#route pool request trace"() {
@@ -180,7 +200,10 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
       .runWith(Sink.<Pair<Try<HttpResponse>, Integer>> head(), materializer)
 
     when:
-    HttpResponse response = sink.toCompletableFuture().get().first().get()
+    HttpResponse response = withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+      resetConfig()
+      sink.toCompletableFuture().get().first().get()
+    }
     String message = readMessage(response)
 
     then:
@@ -194,7 +217,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           parent()
-          serviceName "unnamed-java-app"
+          serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "GET /$route"
           spanType DDSpanTypes.HTTP_CLIENT
@@ -206,6 +229,8 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$Tags.PEER_HOSTNAME.key" server.address.host
+            "$Tags.PEER_PORT.key" server.address.port
             "$Tags.COMPONENT.key" "akka-http-client"
             if (expectedError) {
               "$Tags.ERROR.key" true
@@ -219,6 +244,8 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     route     | expectedStatus | expectedError | expectedMessage
     "success" | 200            | false         | MESSAGE
     "error"   | 500            | true          | null
+
+    renameService = true
   }
 
   def "error request pool trace"() {
@@ -226,11 +253,14 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     // Use port number that really should be closed
     def url = new URL("http://localhost:$UNUSED_PORT/test")
 
-    CompletionStage<Pair<Try<HttpResponse>, Integer>> sink = Source
-      .<Pair<HttpRequest, Integer>> single(new Pair(HttpRequest.create(url.toString()), 1))
-      .via(pool)
-      .runWith(Sink.<Pair<Try<HttpResponse>, Integer>> head(), materializer)
-    def response = sink.toCompletableFuture().get().first()
+    def response = withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+      resetConfig()
+      Source
+        .<Pair<HttpRequest, Integer>> single(new Pair(HttpRequest.create(url.toString()), 1))
+        .via(pool)
+        .runWith(Sink.<Pair<Try<HttpResponse>, Integer>> head(), materializer)
+        .toCompletableFuture().get().first()
+    }
 
     when:
     response.get()
@@ -241,7 +271,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           parent()
-          serviceName "unnamed-java-app"
+          serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName "akka-http.request"
           resourceName "GET /test"
           spanType DDSpanTypes.HTTP_CLIENT
@@ -252,6 +282,8 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
+            "$Tags.PEER_HOSTNAME.key" server.address.host
+            "$Tags.PEER_PORT.key" UNUSED_PORT
             "$Tags.COMPONENT.key" "akka-http-client"
             "$Tags.ERROR.key" true
             errorTags(StreamTcpException, { it.contains("Tcp command") })
@@ -259,10 +291,19 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
         }
       }
     }
+
+    where:
+    renameService << [false, true]
   }
 
   String readMessage(HttpResponse response) {
     response.entity().toStrict(TIMEOUT, materializer).toCompletableFuture().get().getData().utf8String()
+  }
+
+  def resetConfig() {
+    def runtimeId = Config.get().runtimeId
+    setFinalStatic(Config.getDeclaredField("INSTANCE"), new Config())
+    setFinal(Config.getDeclaredField("runtimeId"), Config.get(), runtimeId)
   }
 
 }

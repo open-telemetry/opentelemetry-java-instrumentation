@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
@@ -120,6 +121,9 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       if (null != uri) {
         Tags.PEER_PORT.set(span, uri.getPort() == -1 ? 80 : uri.getPort());
         Tags.PEER_HOSTNAME.set(span, uri.getHost());
+        if (Config.get().isHttpClientSplitByDomain()) {
+          span.setTag(DDTags.SERVICE_NAME, uri.getHost());
+        }
       }
       return scope;
     }

@@ -1,5 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.TestUtils
+import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.http_url_connection.UrlInstrumentation
@@ -7,6 +8,9 @@ import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
 
 import static datadog.trace.agent.test.TestUtils.runUnderTrace
+import static datadog.trace.agent.test.TestUtils.setFinal
+import static datadog.trace.agent.test.TestUtils.setFinalStatic
+import static datadog.trace.agent.test.TestUtils.withSystemProperty
 import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.COMPONENT_NAME
 import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
@@ -16,12 +20,16 @@ class UrlConnectionTest extends AgentTestRunner {
 
   def "trace request with connection failure #scheme"() {
     when:
-    runUnderTrace("someTrace") {
-      URLConnection connection = url.openConnection()
-      connection.setConnectTimeout(10000)
-      connection.setReadTimeout(10000)
-      assert GlobalTracer.get().scopeManager().active() != null
-      connection.inputStream
+    withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+      resetConfig()
+
+      runUnderTrace("someTrace") {
+        URLConnection connection = url.openConnection()
+        connection.setConnectTimeout(10000)
+        connection.setReadTimeout(10000)
+        assert GlobalTracer.get().scopeManager().active() != null
+        connection.inputStream
+      }
     }
 
     then:
@@ -40,6 +48,7 @@ class UrlConnectionTest extends AgentTestRunner {
           }
         }
         span(1) {
+          serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName OPERATION_NAME
           childOf span(0)
           errored true
@@ -59,9 +68,9 @@ class UrlConnectionTest extends AgentTestRunner {
     }
 
     where:
-    scheme  | _
-    "http"  | _
-    "https" | _
+    scheme  | renameService
+    "http"  | true
+    "https" | false
 
     url = new URI("$scheme://localhost:$INVALID_PORT").toURL()
   }
@@ -71,8 +80,12 @@ class UrlConnectionTest extends AgentTestRunner {
     def url = new URI("file:/some-random-file%abc").toURL()
 
     when:
-    runUnderTrace("someTrace") {
-      url.openConnection()
+    withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+      resetConfig()
+
+      runUnderTrace("someTrace") {
+        url.openConnection()
+      }
     }
 
     then:
@@ -91,6 +104,7 @@ class UrlConnectionTest extends AgentTestRunner {
           }
         }
         span(1) {
+          serviceName "unnamed-java-app"
           operationName "file.request"
           childOf span(0)
           errored true
@@ -107,5 +121,14 @@ class UrlConnectionTest extends AgentTestRunner {
         }
       }
     }
+
+    where:
+    renameService << [false, true]
+  }
+
+  def resetConfig() {
+    def runtimeId = Config.get().runtimeId
+    setFinalStatic(Config.getDeclaredField("INSTANCE"), new Config())
+    setFinal(Config.getDeclaredField("runtimeId"), Config.get(), runtimeId)
   }
 }

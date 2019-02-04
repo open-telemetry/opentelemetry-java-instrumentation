@@ -20,6 +20,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.URL;
@@ -30,6 +31,7 @@ import java.util.concurrent.Callable;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import lombok.SneakyThrows;
 
 public class TestUtils {
   private static final ClassPath testClasspath = computeTestClasspath();
@@ -74,6 +76,22 @@ public class TestUtils {
     }
   }
 
+  public static void setFinalStatic(final Field field, final Object newValue) throws Exception {
+    setFinal(field, null, newValue);
+  }
+
+  public static void setFinal(final Field field, final Object instance, final Object newValue)
+      throws Exception {
+    field.setAccessible(true);
+
+    final Field modifiersField = Field.class.getDeclaredField("modifiers");
+    modifiersField.setAccessible(true);
+    modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+    field.set(instance, newValue);
+  }
+
+  @SneakyThrows
   public static <T extends Object> Object withSystemProperty(
       final String name, final String value, final Callable<T> r) {
     if (value == null) {
@@ -83,8 +101,6 @@ public class TestUtils {
     }
     try {
       return r.call();
-    } catch (final Exception e) {
-      throw new IllegalStateException(e);
     } finally {
       System.clearProperty(name);
     }
