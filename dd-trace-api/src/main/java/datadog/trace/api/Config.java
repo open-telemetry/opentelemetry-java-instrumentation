@@ -40,6 +40,8 @@ public class Config {
   public static final String GLOBAL_TAGS = "trace.global.tags";
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String JMX_TAGS = "trace.jmx.tags";
+  public static final String TRACE_ANNOTATIONS = "trace.annotations";
+  public static final String TRACE_METHODS = "trace.methods";
   public static final String HEADER_TAGS = "trace.header.tags";
   public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
   public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
