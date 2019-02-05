@@ -256,6 +256,15 @@ public class Config {
     return Collections.unmodifiableMap(result);
   }
 
+  /**
+   * Helper method that takes the name, adds a "dd." prefix then checks for System Properties of
+   * that name. If none found, the name is converted to an Environment Variable and used to check
+   * the env. If setting not configured in either location, defaultValue is returned.
+   *
+   * @param name
+   * @param defaultValue
+   * @return
+   */
   public static String getSettingFromEnvironment(final String name, final String defaultValue) {
     final String completeName = PREFIX + name;
     final String value =
@@ -274,6 +283,13 @@ public class Config {
     return parseList(getSettingFromEnvironment(name, defaultValue));
   }
 
+  /**
+   * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Boolean.
+   *
+   * @param name
+   * @param defaultValue
+   * @return
+   */
   public static Boolean getBooleanSettingFromEnvironment(
       final String name, final Boolean defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
