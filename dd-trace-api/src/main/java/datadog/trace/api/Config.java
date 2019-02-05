@@ -187,8 +187,8 @@ public class Config {
     headerTags = getPropertyMapValue(properties, HEADER_TAGS, parent.headerTags);
 
     httpClientSplitByDomain =
-        getBooleanSettingFromEnvironment(
-            HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN);
+        getPropertyBooleanValue(
+            properties, HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, parent.httpClientSplitByDomain);
 
     partialFlushMinSpans =
         getPropertyIntegerValue(properties, PARTIAL_FLUSH_MIN_SPANS, parent.partialFlushMinSpans);

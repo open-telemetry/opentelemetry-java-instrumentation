@@ -55,7 +55,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
   def "trace request with propagation"() {
     when:
 
-    String response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    String response = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       runUnderTrace("parent") {
         if (responseHandler) {
           client.execute(new HttpGet(successUrl), responseHandler)
@@ -87,7 +87,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
     request.addHeader(new BasicHeader("is-dd-server", "false"))
 
     when:
-    HttpResponse response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    HttpResponse response = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       runUnderTrace("parent") {
         client.execute(request)
       }

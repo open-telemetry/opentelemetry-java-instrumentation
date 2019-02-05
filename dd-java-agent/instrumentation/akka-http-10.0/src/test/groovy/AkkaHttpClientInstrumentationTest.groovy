@@ -60,7 +60,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     HttpRequest request = HttpRequest.create(url.toString())
 
     when:
-    HttpResponse response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    HttpResponse response = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       Http.get(system)
         .singleRequest(request, materializer)
         .toCompletableFuture().get()
@@ -113,7 +113,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
     HttpRequest request = HttpRequest.create(url.toString())
     CompletionStage<HttpResponse> responseFuture =
-      withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+      withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
         Http.get(system)
           .singleRequest(request, materializer)
       }
@@ -189,7 +189,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     def url = server.address.resolve("/" + route).toURL()
 
     when:
-    HttpResponse response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    HttpResponse response = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       Source
         .<Pair<HttpRequest, Integer>> single(new Pair(HttpRequest.create(url.toString()), 1))
         .via(pool)
@@ -243,7 +243,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     // Use port number that really should be closed
     def url = new URL("http://localhost:$UNUSED_PORT/test")
 
-    def response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    def response = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       Source
         .<Pair<HttpRequest, Integer>> single(new Pair(HttpRequest.create(url.toString()), 1))
         .via(pool)

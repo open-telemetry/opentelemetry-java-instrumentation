@@ -5,7 +5,33 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
 
-import static datadog.trace.api.Config.*
+import static datadog.trace.api.Config.AGENT_HOST
+import static datadog.trace.api.Config.AGENT_PORT_LEGACY
+import static datadog.trace.api.Config.DEFAULT_JMX_FETCH_STATSD_PORT
+import static datadog.trace.api.Config.GLOBAL_TAGS
+import static datadog.trace.api.Config.HEADER_TAGS
+import static datadog.trace.api.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
+import static datadog.trace.api.Config.JMX_FETCH_CHECK_PERIOD
+import static datadog.trace.api.Config.JMX_FETCH_ENABLED
+import static datadog.trace.api.Config.JMX_FETCH_METRICS_CONFIGS
+import static datadog.trace.api.Config.JMX_FETCH_REFRESH_BEANS_PERIOD
+import static datadog.trace.api.Config.JMX_FETCH_STATSD_HOST
+import static datadog.trace.api.Config.JMX_FETCH_STATSD_PORT
+import static datadog.trace.api.Config.JMX_TAGS
+import static datadog.trace.api.Config.LANGUAGE_TAG_KEY
+import static datadog.trace.api.Config.LANGUAGE_TAG_VALUE
+import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
+import static datadog.trace.api.Config.PREFIX
+import static datadog.trace.api.Config.PRIORITY_SAMPLING
+import static datadog.trace.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
+import static datadog.trace.api.Config.RUNTIME_ID_TAG
+import static datadog.trace.api.Config.SERVICE
+import static datadog.trace.api.Config.SERVICE_MAPPING
+import static datadog.trace.api.Config.SERVICE_NAME
+import static datadog.trace.api.Config.SPAN_TAGS
+import static datadog.trace.api.Config.TRACE_AGENT_PORT
+import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
+import static datadog.trace.api.Config.WRITER_TYPE
 
 class ConfigTest extends Specification {
   @Rule
@@ -37,6 +63,7 @@ class ConfigTest extends Specification {
     config.mergedSpanTags == [:]
     config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.headerTags == [:]
+    config.httpClientSplitByDomain == false
     config.partialFlushMinSpans == 0
     config.runtimeContextFieldInjection == true
     config.jmxFetchEnabled == false
@@ -62,6 +89,7 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + SPAN_TAGS, "c:3")
     System.setProperty(PREFIX + JMX_TAGS, "d:4")
     System.setProperty(PREFIX + HEADER_TAGS, "e:5")
+    System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "15")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
     System.setProperty(PREFIX + JMX_FETCH_ENABLED, "true")
@@ -85,6 +113,7 @@ class ConfigTest extends Specification {
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.headerTags == [e: "5"]
+    config.httpClientSplitByDomain == true
     config.partialFlushMinSpans == 15
     config.runtimeContextFieldInjection == false
     config.jmxFetchEnabled == true
@@ -187,6 +216,7 @@ class ConfigTest extends Specification {
     properties.setProperty(SPAN_TAGS, "c:3")
     properties.setProperty(JMX_TAGS, "d:4")
     properties.setProperty(HEADER_TAGS, "e:5")
+    properties.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     properties.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
     properties.setProperty(JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
     properties.setProperty(JMX_FETCH_CHECK_PERIOD, "100")
@@ -208,6 +238,7 @@ class ConfigTest extends Specification {
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.headerTags == [e: "5"]
+    config.httpClientSplitByDomain == true
     config.partialFlushMinSpans == 15
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100
