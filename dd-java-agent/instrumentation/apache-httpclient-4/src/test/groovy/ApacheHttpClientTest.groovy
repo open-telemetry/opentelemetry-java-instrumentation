@@ -14,11 +14,9 @@ import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.TestUtils.runUnderTrace
-import static datadog.trace.agent.test.TestUtils.setFinal
-import static datadog.trace.agent.test.TestUtils.setFinalStatic
-import static datadog.trace.agent.test.TestUtils.withSystemProperty
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
 
 class ApacheHttpClientTest extends AgentTestRunner {
 
@@ -57,8 +55,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
   def "trace request with propagation"() {
     when:
 
-    String response = withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
-      resetConfig()
+    String response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
       runUnderTrace("parent") {
         if (responseHandler) {
           client.execute(new HttpGet(successUrl), responseHandler)
@@ -90,8 +87,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
     request.addHeader(new BasicHeader("is-dd-server", "false"))
 
     when:
-    HttpResponse response = withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
-      resetConfig()
+    HttpResponse response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
       runUnderTrace("parent") {
         client.execute(request)
       }
@@ -149,11 +145,5 @@ class ApacheHttpClientTest extends AgentTestRunner {
         "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
       }
     }
-  }
-
-  def resetConfig() {
-    def runtimeId = Config.get().runtimeId
-    setFinalStatic(Config.getDeclaredField("INSTANCE"), new Config())
-    setFinal(Config.getDeclaredField("runtimeId"), Config.get(), runtimeId)
   }
 }

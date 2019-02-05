@@ -5,10 +5,8 @@ import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-import static datadog.trace.agent.test.TestUtils.setFinal
-import static datadog.trace.agent.test.TestUtils.setFinalStatic
-import static datadog.trace.agent.test.TestUtils.withSystemProperty
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
 
 class OkHttp3Test extends AgentTestRunner {
 
@@ -26,8 +24,7 @@ class OkHttp3Test extends AgentTestRunner {
       .url("http://localhost:$server.address.port/ping")
       .build()
 
-    def response = withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
-      resetConfig()
+    def response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
       client.newCall(request).execute()
     }
 
@@ -78,11 +75,5 @@ class OkHttp3Test extends AgentTestRunner {
 
     where:
     renameService << [false, true]
-  }
-
-  def resetConfig() {
-    def runtimeId = Config.get().runtimeId
-    setFinalStatic(Config.getDeclaredField("INSTANCE"), new Config())
-    setFinal(Config.getDeclaredField("runtimeId"), Config.get(), runtimeId)
   }
 }

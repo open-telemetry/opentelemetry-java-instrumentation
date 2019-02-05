@@ -19,10 +19,8 @@ import spock.lang.Shared
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.ExecutionException
 
-import static datadog.trace.agent.test.TestUtils.setFinal
-import static datadog.trace.agent.test.TestUtils.setFinalStatic
-import static datadog.trace.agent.test.TestUtils.withSystemProperty
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
 
 class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
@@ -62,8 +60,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     HttpRequest request = HttpRequest.create(url.toString())
 
     when:
-    HttpResponse response = withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
-      resetConfig()
+    HttpResponse response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
       Http.get(system)
         .singleRequest(request, materializer)
         .toCompletableFuture().get()
@@ -118,8 +115,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
     HttpRequest request = HttpRequest.create(url.toString())
     CompletionStage<HttpResponse> responseFuture =
-      withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
-        resetConfig()
+      withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
         Http.get(system)
           .singleRequest(request, materializer)
       }
@@ -200,8 +196,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
       .runWith(Sink.<Pair<Try<HttpResponse>, Integer>> head(), materializer)
 
     when:
-    HttpResponse response = withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
-      resetConfig()
+    HttpResponse response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
       sink.toCompletableFuture().get().first().get()
     }
     String message = readMessage(response)
@@ -253,8 +248,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     // Use port number that really should be closed
     def url = new URL("http://localhost:$UNUSED_PORT/test")
 
-    def response = withSystemProperty("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
-      resetConfig()
+    def response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
       Source
         .<Pair<HttpRequest, Integer>> single(new Pair(HttpRequest.create(url.toString()), 1))
         .via(pool)
@@ -299,11 +293,4 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
   String readMessage(HttpResponse response) {
     response.entity().toStrict(TIMEOUT, materializer).toCompletableFuture().get().getData().utf8String()
   }
-
-  def resetConfig() {
-    def runtimeId = Config.get().runtimeId
-    setFinalStatic(Config.getDeclaredField("INSTANCE"), new Config())
-    setFinal(Config.getDeclaredField("runtimeId"), Config.get(), runtimeId)
-  }
-
 }
