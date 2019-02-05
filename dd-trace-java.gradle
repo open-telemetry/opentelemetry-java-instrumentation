@@ -59,5 +59,6 @@ allprojects {
   tasks.withType(JavaForkOptions) {
     maxHeapSize = System.properties["datadog.forkedMaxHeapSize"]
     minHeapSize = System.properties["datadog.forkedMinHeapSize"]
+    jvmArgs "-XX:ErrorFile=/tmp/hs_err_pid%p.log"
   }
 }

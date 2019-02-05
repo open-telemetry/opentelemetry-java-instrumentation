@@ -235,6 +235,12 @@ for (def env : System.getenv().entrySet()) {
     def newTask = task "${clonedTask.name}Java${javaName}Generated"(type: clonedTask.class) {
       description "Runs $clonedTask.name under java ${javaName}"
       executable = javaPath
+
+      if (javaName == "7") {
+        // Disable JIT for this method. Somtimes Java7 JVM crashes trying to compile it.
+        jvmArgs '-XX:CompileCommand=exclude,net.bytebuddy.description.type.TypeDescription$Generic$Visitor$Substitutor::onParameterizedType'
+      }
+
       onlyIf { isJavaVersionAllowed(javaVersion) && isTestingEnabled(javaName) }
       if (applyCodeCoverage) {
         jacoco {
