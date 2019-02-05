@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.netty.bootstrap.ServerBootstrap
@@ -35,7 +35,7 @@ class Netty40ServerTest extends AgentTestRunner {
   def "test server request/response"() {
     setup:
     EventLoopGroup eventLoopGroup = new NioEventLoopGroup()
-    int port = TestUtils.randomOpenPort()
+    int port = PortUtils.randomOpenPort()
     initializeServer(eventLoopGroup, port, handlers, HttpResponseStatus.OK)
 
     def request = new Request.Builder()
@@ -88,7 +88,7 @@ class Netty40ServerTest extends AgentTestRunner {
   def "test #responseCode response handling"() {
     setup:
     EventLoopGroup eventLoopGroup = new NioEventLoopGroup()
-    int port = TestUtils.randomOpenPort()
+    int port = PortUtils.randomOpenPort()
     initializeServer(eventLoopGroup, port, new HttpServerCodec(), responseCode)
 
     def request = new Request.Builder().url("http://localhost:$port/").get().build()

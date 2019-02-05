@@ -1,6 +1,6 @@
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -12,7 +12,7 @@ import org.elasticsearch.node.Node
 import org.elasticsearch.node.NodeBuilder
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.TestUtils.runUnderTrace
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 @RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch2NodeClientTest extends AgentTestRunner {
@@ -30,8 +30,8 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
   def client = testNode.client()
 
   def setupSpec() {
-    httpPort = TestUtils.randomOpenPort()
-    tcpPort = TestUtils.randomOpenPort()
+    httpPort = PortUtils.randomOpenPort()
+    tcpPort = PortUtils.randomOpenPort()
 
     esWorkingDir = File.createTempDir("test-es-working-dir-", "")
     esWorkingDir.deleteOnExit()

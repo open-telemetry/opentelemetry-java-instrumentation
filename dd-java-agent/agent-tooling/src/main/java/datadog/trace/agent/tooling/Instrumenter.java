@@ -227,15 +227,5 @@ public interface Instrumenter {
     protected boolean defaultEnabled() {
       return getConfigEnabled("dd.integrations.enabled", true);
     }
-
-    // TODO: move common config helpers to Utils
-
-    public static String getPropOrEnv(final String name) {
-      return System.getProperty(name, System.getenv(propToEnvName(name)));
-    }
-
-    public static String propToEnvName(final String name) {
-      return name.toUpperCase().replace(".", "_");
-    }
   }
 }

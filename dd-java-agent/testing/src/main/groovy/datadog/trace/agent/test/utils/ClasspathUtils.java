@@ -1,113 +1,28 @@
-package datadog.trace.agent.test;
+package datadog.trace.agent.test.utils;
 
 import static com.google.common.base.StandardSystemProperty.JAVA_CLASS_PATH;
 import static com.google.common.base.StandardSystemProperty.PATH_SEPARATOR;
-import static io.opentracing.log.Fields.ERROR_OBJECT;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.ClassPath;
+import datadog.trace.agent.test.AgentTestRunner;
 import datadog.trace.agent.tooling.Utils;
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.net.MalformedURLException;
-import java.net.ServerSocket;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Collections;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-public class TestUtils {
+public class ClasspathUtils {
   private static final ClassPath testClasspath = computeTestClasspath();
-
-  public static void registerOrReplaceGlobalTracer(final Tracer tracer) {
-    try {
-      GlobalTracer.register(tracer);
-    } catch (final Exception e) {
-      // Force it anyway using reflection
-      Field field = null;
-      try {
-        field = GlobalTracer.class.getDeclaredField("tracer");
-        field.setAccessible(true);
-        field.set(null, tracer);
-      } catch (final Exception e2) {
-        throw new IllegalStateException(e2);
-      } finally {
-        if (null != field) {
-          field.setAccessible(false);
-        }
-      }
-    }
-
-    if (!GlobalTracer.isRegistered()) {
-      throw new RuntimeException("Unable to register the global tracer.");
-    }
-  }
-
-  /** Get the tracer implementation out of the GlobalTracer */
-  public static Tracer getUnderlyingGlobalTracer() {
-    Field field = null;
-    try {
-      field = GlobalTracer.class.getDeclaredField("tracer");
-      field.setAccessible(true);
-      return (Tracer) field.get(GlobalTracer.get());
-    } catch (final Exception e2) {
-      throw new IllegalStateException(e2);
-    } finally {
-      if (null != field) {
-        field.setAccessible(false);
-      }
-    }
-  }
-
-  public static <T extends Object> Object withSystemProperty(
-      final String name, final String value, final Callable<T> r) {
-    if (value == null) {
-      System.clearProperty(name);
-    } else {
-      System.setProperty(name, value);
-    }
-    try {
-      return r.call();
-    } catch (final Exception e) {
-      throw new IllegalStateException(e);
-    } finally {
-      System.clearProperty(name);
-    }
-  }
-
-  public static <T extends Object> Object runUnderTrace(
-      final String rootOperationName, final Callable<T> r) throws Exception {
-    final Scope scope = GlobalTracer.get().buildSpan(rootOperationName).startActive(true);
-    ((TraceScope) scope).setAsyncPropagation(true);
-
-    try {
-      return r.call();
-    } catch (final Exception e) {
-      final Span span = scope.span();
-      Tags.ERROR.set(span, true);
-      span.log(Collections.singletonMap(ERROR_OBJECT, e));
-
-      throw e;
-    } finally {
-      ((TraceScope) scope).setAsyncPropagation(false);
-      scope.close();
-    }
-  }
 
   public static byte[] convertToByteArray(final InputStream resource) throws IOException {
     final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -201,20 +116,6 @@ public class TestUtils {
     jarOutputStream.putNextEntry(entry);
     jarOutputStream.write(bytes, 0, bytes.length);
     jarOutputStream.closeEntry();
-  }
-
-  /** Open up a random, reusable port. */
-  public static int randomOpenPort() {
-    final ServerSocket socket;
-    try {
-      socket = new ServerSocket(0);
-      socket.setReuseAddress(true);
-      socket.close();
-      return socket.getLocalPort();
-    } catch (final IOException ioe) {
-      ioe.printStackTrace();
-      return -1;
-    }
   }
 
   public static ClassPath getTestClasspath() {

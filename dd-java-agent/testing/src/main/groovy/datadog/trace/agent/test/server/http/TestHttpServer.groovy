@@ -1,8 +1,8 @@
 package datadog.trace.agent.test.server.http
 
 import datadog.opentracing.DDSpan
-import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.asserts.ListWriterAssert
+import datadog.trace.agent.test.utils.PortUtils
 import io.opentracing.SpanContext
 import io.opentracing.Tracer
 import io.opentracing.propagation.Format
@@ -45,7 +45,7 @@ class TestHttpServer implements AutoCloseable {
   private final AtomicReference<HandlerApi.RequestApi> last = new AtomicReference<>()
 
   private TestHttpServer() {
-    int port = TestUtils.randomOpenPort()
+    int port = PortUtils.randomOpenPort()
     internalServer = new Server(port)
     internalServer.stopAtShutdown = true
     address = new URI("http://localhost:$port")

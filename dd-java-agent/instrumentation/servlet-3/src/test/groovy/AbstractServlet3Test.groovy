@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import okhttp3.Credentials
@@ -30,7 +30,7 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
     .build()
 
   @Shared
-  int port = TestUtils.randomOpenPort()
+  int port = PortUtils.randomOpenPort()
   @Shared
   protected String user = "user"
   @Shared

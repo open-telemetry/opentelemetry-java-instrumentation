@@ -13,6 +13,7 @@ import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.scaladsl.Flow;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
@@ -101,17 +102,21 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      Tracer.SpanBuilder builder =
+      final Tracer.SpanBuilder builder =
           GlobalTracer.get()
               .buildSpan("akka-http.request")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
               .withTag(Tags.COMPONENT.getKey(), "akka-http-client");
       if (request != null) {
-        builder =
-            builder
-                .withTag(Tags.HTTP_METHOD.getKey(), request.method().value())
-                .withTag(Tags.HTTP_URL.getKey(), request.getUri().toString());
+        builder
+            .withTag(Tags.HTTP_METHOD.getKey(), request.method().value())
+            .withTag(Tags.HTTP_URL.getKey(), request.getUri().toString())
+            .withTag(Tags.PEER_PORT.getKey(), request.getUri().port())
+            .withTag(Tags.PEER_HOSTNAME.getKey(), request.getUri().host().address());
+        if (Config.get().isHttpClientSplitByDomain()) {
+          builder.withTag(DDTags.SERVICE_NAME, request.getUri().host().address());
+        }
       }
       final Scope scope = builder.startActive(false);
 

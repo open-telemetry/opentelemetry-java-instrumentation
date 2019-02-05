@@ -1,6 +1,7 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
+import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -13,8 +14,9 @@ import org.apache.http.message.BasicHeader
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
 
 class ApacheHttpClientTest extends AgentTestRunner {
 
@@ -52,11 +54,14 @@ class ApacheHttpClientTest extends AgentTestRunner {
 
   def "trace request with propagation"() {
     when:
-    String response = runUnderTrace("parent") {
-      if (responseHandler) {
-        client.execute(new HttpGet(successUrl), responseHandler)
-      } else {
-        client.execute(new HttpGet(successUrl)).entity.content.text
+
+    String response = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
+      runUnderTrace("parent") {
+        if (responseHandler) {
+          client.execute(new HttpGet(successUrl), responseHandler)
+        } else {
+          client.execute(new HttpGet(successUrl)).entity.content.text
+        }
       }
     }
 
@@ -67,12 +72,13 @@ class ApacheHttpClientTest extends AgentTestRunner {
       server.distributedRequestTrace(it, 0, TEST_WRITER[1][1])
       trace(1, 2) {
         parentSpan(it, 0)
-        successClientSpan(it, 1, span(0))
+        successClientSpan(it, 1, span(0), renameService)
       }
     }
 
     where:
     responseHandler << [null, handler]
+    renameService << [false, true]
   }
 
   def "trace request without propagation"() {
@@ -81,8 +87,10 @@ class ApacheHttpClientTest extends AgentTestRunner {
     request.addHeader(new BasicHeader("is-dd-server", "false"))
 
     when:
-    HttpResponse response = runUnderTrace("parent") {
-      client.execute(request)
+    HttpResponse response = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
+      runUnderTrace("parent") {
+        client.execute(request)
+      }
     }
 
     then:
@@ -91,9 +99,12 @@ class ApacheHttpClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         parentSpan(it, 0)
-        successClientSpan(it, 1, span(0))
+        successClientSpan(it, 1, span(0), renameService)
       }
     }
+
+    where:
+    renameService << [false, true]
   }
 
   def parentSpan(TraceAssert trace, int index, Throwable exception = null) {
@@ -112,10 +123,10 @@ class ApacheHttpClientTest extends AgentTestRunner {
     }
   }
 
-  def successClientSpan(TraceAssert trace, int index, DDSpan parent, status = 200, route = "success", Throwable exception = null) {
+  def successClientSpan(TraceAssert trace, int index, DDSpan parent, boolean renameService, status = 200, route = "success", Throwable exception = null) {
     trace.span(index) {
       childOf parent
-      serviceName "unnamed-java-app"
+      serviceName renameService ? "localhost" : "unnamed-java-app"
       operationName "http.request"
       resourceName "GET /$route"
       errored exception != null

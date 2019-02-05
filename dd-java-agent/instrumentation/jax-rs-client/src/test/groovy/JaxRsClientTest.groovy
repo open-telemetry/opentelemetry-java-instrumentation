@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -23,7 +23,7 @@ import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 class JaxRsClientTest extends AgentTestRunner {
 
   @Shared
-  def emptyPort = TestUtils.randomOpenPort()
+  def emptyPort = PortUtils.randomOpenPort()
 
   @AutoCleanup
   @Shared

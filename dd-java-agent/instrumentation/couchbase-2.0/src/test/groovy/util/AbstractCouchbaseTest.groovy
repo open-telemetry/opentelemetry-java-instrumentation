@@ -15,7 +15,7 @@ import com.couchbase.mock.BucketConfiguration
 import com.couchbase.mock.CouchbaseMock
 import com.couchbase.mock.http.query.QueryServer
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.PortUtils
 import spock.lang.Shared
 
 import java.util.concurrent.RejectedExecutionException
@@ -27,7 +27,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
   private static final PASSWORD = "password"
 
   @Shared
-  private int port = TestUtils.randomOpenPort()
+  private int port = PortUtils.randomOpenPort()
 
   @Shared
   private String testBucketName = this.getClass().simpleName

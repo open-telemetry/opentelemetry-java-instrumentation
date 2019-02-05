@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.okhttp3;
 
+import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
@@ -54,6 +55,10 @@ public class TracingCallFactory implements Call.Factory {
               .withTag(DDTags.SERVICE_NAME, COMPONENT_NAME)
               .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
               .startActive(false);
+
+      if (Config.get().isHttpClientSplitByDomain()) {
+        scope.span().setTag(DDTags.SERVICE_NAME, request.url().host());
+      }
 
       /** In case of exception network interceptor is not called */
       final OkHttpClient.Builder okBuilder = okHttpClient.newBuilder();
