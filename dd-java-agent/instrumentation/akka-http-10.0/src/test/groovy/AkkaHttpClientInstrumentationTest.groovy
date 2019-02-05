@@ -102,11 +102,9 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     }
 
     where:
-    route     | expectedStatus | expectedError | expectedMessage
-    "success" | 200            | false         | MESSAGE
-    "error"   | 500            | true          | null
-
-    renameService = true
+    route     | expectedStatus | expectedError | expectedMessage | renameService
+    "success" | 200            | false         | MESSAGE         | true
+    "error"   | 500            | true          | null            | false
   }
 
   def "error request trace"() {
@@ -190,14 +188,13 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     setup:
     def url = server.address.resolve("/" + route).toURL()
 
-    CompletionStage<Pair<Try<HttpResponse>, Integer>> sink = Source
-      .<Pair<HttpRequest, Integer>> single(new Pair(HttpRequest.create(url.toString()), 1))
-      .via(pool)
-      .runWith(Sink.<Pair<Try<HttpResponse>, Integer>> head(), materializer)
-
     when:
     HttpResponse response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
-      sink.toCompletableFuture().get().first().get()
+      Source
+        .<Pair<HttpRequest, Integer>> single(new Pair(HttpRequest.create(url.toString()), 1))
+        .via(pool)
+        .runWith(Sink.<Pair<Try<HttpResponse>, Integer>> head(), materializer)
+        .toCompletableFuture().get().first().get()
     }
     String message = readMessage(response)
 
@@ -236,11 +233,9 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
     }
 
     where:
-    route     | expectedStatus | expectedError | expectedMessage
-    "success" | 200            | false         | MESSAGE
-    "error"   | 500            | true          | null
-
-    renameService = true
+    route     | expectedStatus | expectedError | expectedMessage | renameService
+    "success" | 200            | false         | MESSAGE         | true
+    "error"   | 500            | true          | null            | false
   }
 
   def "error request pool trace"() {

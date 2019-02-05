@@ -30,7 +30,9 @@ object AkkaHttpClientTransformFlow {
         .withTag(Tags.COMPONENT.getKey, "akka-http-client")
         .withTag(Tags.HTTP_URL.getKey, request.getUri.toString)
         .start()
-      if (Config.get.isHttpClientSplitByDomain) span.setTag(DDTags.SERVICE_NAME, request.getUri.host.address)
+      if (Config.get.isHttpClientSplitByDomain) {
+        span.setTag(DDTags.SERVICE_NAME, request.getUri.host.address)
+      }
       val headers = new AkkaHttpClientInstrumentation.AkkaHttpHeaders(request)
       GlobalTracer.get.inject(span.context, Format.Builtin.HTTP_HEADERS, headers)
       (headers.getRequest, data)
