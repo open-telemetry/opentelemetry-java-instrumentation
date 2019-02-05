@@ -4,13 +4,13 @@ import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.HttpMethods.GET
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.Trace
 
 import scala.concurrent.{Await, Future}
 
 object AkkaHttpTestAsyncWebServer {
-  val port = TestUtils.randomOpenPort()
+  val port = PortUtils.randomOpenPort()
   implicit val system = ActorSystem("my-system")
   implicit val materializer = ActorMaterializer()
   // needed for the future flatMap/onComplete in the end
@@ -60,7 +60,7 @@ object AkkaHttpTestAsyncWebServer {
 }
 
 object AkkaHttpTestSyncWebServer {
-  val port = TestUtils.randomOpenPort()
+  val port = PortUtils.randomOpenPort()
   implicit val system = ActorSystem("my-system")
   implicit val materializer = ActorMaterializer()
   // needed for the future flatMap/onComplete in the end

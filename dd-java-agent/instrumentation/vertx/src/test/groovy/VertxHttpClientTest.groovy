@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.netty.channel.AbstractChannel
@@ -15,8 +15,8 @@ import spock.lang.Shared
 
 import java.util.concurrent.CompletableFuture
 
-import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class VertxHttpClientTest extends AgentTestRunner {
 
@@ -50,10 +50,10 @@ class VertxHttpClientTest extends AgentTestRunner {
     def responseFuture = new CompletableFuture<HttpClientResponse>()
     def messageFuture = new CompletableFuture<String>()
     httpClient.getNow(server.address.port, server.address.host, "/" + route, { response ->
-        responseFuture.complete(response)
-        response.bodyHandler({buffer ->
-          messageFuture.complete(buffer.toString())
-        })
+      responseFuture.complete(response)
+      response.bodyHandler({ buffer ->
+        messageFuture.complete(buffer.toString())
+      })
     })
 
     when:
@@ -102,7 +102,7 @@ class VertxHttpClientTest extends AgentTestRunner {
 
   def "test connection failure"() {
     setup:
-    def invalidPort = TestUtils.randomOpenPort()
+    def invalidPort = PortUtils.randomOpenPort()
 
     def errorFuture = new CompletableFuture<Throwable>()
 

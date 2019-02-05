@@ -70,7 +70,7 @@ class TraceUtils {
   private static void setFinal(final Field field, final Object instance, final Object newValue) throws Exception {
     field.setAccessible(true)
 
-    final Field modifiersField = Field.class.getDeclaredField("modifiers")
+    final Field modifiersField = Field.getDeclaredField("modifiers")
     modifiersField.setAccessible(true)
     modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL)
 

@@ -1,7 +1,7 @@
 package context
 
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.ClasspathUtils
 import datadog.trace.api.Config
 import datadog.trace.util.gc.GCUtils
 import net.bytebuddy.agent.ByteBuddyAgent
@@ -128,8 +128,8 @@ class FieldBackedProviderTest extends AgentTestRunner {
 
   def "context classes are redefine safe"() {
     when:
-    ByteBuddyAgent.getInstrumentation().redefineClasses(new ClassDefinition(KeyClass, TestUtils.convertToByteArray(KeyClass)))
-    ByteBuddyAgent.getInstrumentation().redefineClasses(new ClassDefinition(UntransformableKeyClass, TestUtils.convertToByteArray(UntransformableKeyClass)))
+    ByteBuddyAgent.getInstrumentation().redefineClasses(new ClassDefinition(KeyClass, ClasspathUtils.convertToByteArray(KeyClass)))
+    ByteBuddyAgent.getInstrumentation().redefineClasses(new ClassDefinition(UntransformableKeyClass, ClasspathUtils.convertToByteArray(UntransformableKeyClass)))
 
     then:
     new KeyClass().isInstrumented()

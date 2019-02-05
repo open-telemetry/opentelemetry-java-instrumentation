@@ -2,7 +2,7 @@ package springdata
 
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -40,8 +40,8 @@ class Elasticsearch2SpringTemplateTest extends AgentTestRunner {
   ElasticsearchTemplate template
 
   def setupSpec() {
-    httpPort = TestUtils.randomOpenPort()
-    tcpPort = TestUtils.randomOpenPort()
+    httpPort = PortUtils.randomOpenPort()
+    tcpPort = PortUtils.randomOpenPort()
 
     esWorkingDir = File.createTempDir("test-es-working-dir-", "")
     esWorkingDir.deleteOnExit()

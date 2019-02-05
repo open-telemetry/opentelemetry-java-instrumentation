@@ -3,7 +3,7 @@ package springdata
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import com.google.common.collect.ImmutableSet
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -26,7 +26,7 @@ import spock.lang.Shared
 
 import java.util.concurrent.atomic.AtomicLong
 
-import static datadog.trace.agent.test.TestUtils.runUnderTrace
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
 @RetryOnFailure(times = 3, delaySeconds = 1)
@@ -51,8 +51,8 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
   ElasticsearchTemplate template
 
   def setupSpec() {
-    httpPort = TestUtils.randomOpenPort()
-    tcpPort = TestUtils.randomOpenPort()
+    httpPort = PortUtils.randomOpenPort()
+    tcpPort = PortUtils.randomOpenPort()
 
     esWorkingDir = File.createTempDir("test-es-working-dir-", "")
     esWorkingDir.deleteOnExit()

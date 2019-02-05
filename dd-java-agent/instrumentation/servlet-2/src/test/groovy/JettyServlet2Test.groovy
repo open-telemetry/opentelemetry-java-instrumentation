@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import okhttp3.Credentials
@@ -35,7 +35,7 @@ class JettyServlet2Test extends AgentTestRunner {
   private ServletContextHandler servletContext
 
   def setup() {
-    port = TestUtils.randomOpenPort()
+    port = PortUtils.randomOpenPort()
     jettyServer = new Server(port)
     servletContext = new ServletContextHandler()
     servletContext.contextPath = "/ctx"

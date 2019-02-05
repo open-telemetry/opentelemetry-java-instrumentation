@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.netty.channel.AbstractChannel
@@ -12,8 +12,8 @@ import spock.lang.Shared
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
-import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
 class Netty41ClientTest extends AgentTestRunner {
@@ -79,7 +79,7 @@ class Netty41ClientTest extends AgentTestRunner {
 
   def "test connection failure"() {
     setup:
-    def invalidPort = TestUtils.randomOpenPort()
+    def invalidPort = PortUtils.randomOpenPort()
 
     def responseFuture = runUnderTrace("parent") {
       asyncHttpClient.prepareGet("http://localhost:$invalidPort/").execute()

@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import okhttp3.OkHttpClient
@@ -21,7 +21,7 @@ class SparkJavaBasedTest extends AgentTestRunner {
   OkHttpClient client = OkHttpUtils.client()
 
   def setupSpec() {
-    port = TestUtils.randomOpenPort()
+    port = PortUtils.randomOpenPort()
     TestSparkJavaApplication.initSpark(port)
   }
 

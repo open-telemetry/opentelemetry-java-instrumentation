@@ -1,5 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.lettuce.core.ClientOptions
@@ -33,7 +33,7 @@ class LettuceReactiveClientTest extends AgentTestRunner {
   RedisCommands<String, ?> syncCommands
 
   def setupSpec() {
-    int port = TestUtils.randomOpenPort()
+    int port = PortUtils.randomOpenPort()
     String dbAddr = HOST + ":" + port + "/" + DB_INDEX
     embeddedDbUri = "redis://" + dbAddr
 

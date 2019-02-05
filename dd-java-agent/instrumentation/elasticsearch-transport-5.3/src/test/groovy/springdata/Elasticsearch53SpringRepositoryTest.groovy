@@ -9,7 +9,7 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.TestUtils.runUnderTrace
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 @RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {

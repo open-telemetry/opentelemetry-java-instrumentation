@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
 import datadog.trace.agent.test.asserts.ListWriterAssert;
+import datadog.trace.agent.test.utils.GlobalTracerUtils;
 import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.GlobalTracer;
@@ -88,7 +89,7 @@ public abstract class AgentTestRunner extends Specification {
           }
         };
     TEST_TRACER = new DDTracer(TEST_WRITER);
-    TestUtils.registerOrReplaceGlobalTracer((Tracer) TEST_TRACER);
+    GlobalTracerUtils.registerOrReplaceGlobalTracer((Tracer) TEST_TRACER);
     GlobalTracer.registerIfAbsent((datadog.trace.api.Tracer) TEST_TRACER);
   }
 

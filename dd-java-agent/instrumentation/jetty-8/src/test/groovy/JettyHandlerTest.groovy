@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import okhttp3.OkHttpClient
@@ -23,7 +23,7 @@ class JettyHandlerTest extends AgentTestRunner {
     System.setProperty("dd.integration.jetty.enabled", "true")
   }
 
-  int port = TestUtils.randomOpenPort()
+  int port = PortUtils.randomOpenPort()
   Server server = new Server(port)
 
   OkHttpClient client = OkHttpUtils.client()

@@ -7,7 +7,7 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
-import static datadog.trace.agent.test.TestUtils.runUnderTrace
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class HystrixTest extends AgentTestRunner {
   // Uncomment for debugging:

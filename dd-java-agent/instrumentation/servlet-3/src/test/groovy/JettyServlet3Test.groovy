@@ -1,4 +1,4 @@
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.PortUtils
 import org.eclipse.jetty.security.ConstraintMapping
 import org.eclipse.jetty.security.ConstraintSecurityHandler
 import org.eclipse.jetty.security.HashLoginService
@@ -17,7 +17,7 @@ class JettyServlet3Test extends AbstractServlet3Test<ServletContextHandler> {
   private Server jettyServer
 
   def setupSpec() {
-    port = TestUtils.randomOpenPort()
+    port = PortUtils.randomOpenPort()
     jettyServer = new Server(port)
 
     ServletContextHandler servletContext = new ServletContextHandler(null, "/$context")

@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import okhttp3.Request
 import play.api.test.TestServer
@@ -21,7 +21,7 @@ class Play26Test extends AgentTestRunner {
   def client = OkHttpUtils.client()
 
   def setupSpec() {
-    port = TestUtils.randomOpenPort()
+    port = PortUtils.randomOpenPort()
     testServer = Helpers.testServer(port, Play26TestUtils.buildTestApp())
     testServer.start()
   }

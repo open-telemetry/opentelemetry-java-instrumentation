@@ -1,7 +1,7 @@
 import com.google.common.io.Files
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -49,7 +49,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
     baseDir.deleteOnExit()
     expectedJspClassFilesDir = baseDir.getCanonicalFile().getAbsolutePath() + expectedJspClassFilesDir
 
-    port = TestUtils.randomOpenPort()
+    port = PortUtils.randomOpenPort()
 
     tomcatServer = new Tomcat()
     tomcatServer.setBaseDir(baseDir.getAbsolutePath())

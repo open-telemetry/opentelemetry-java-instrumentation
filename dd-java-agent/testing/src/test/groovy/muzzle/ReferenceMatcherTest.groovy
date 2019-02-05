@@ -1,7 +1,7 @@
 package muzzle
 
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.ClasspathUtils
 import datadog.trace.agent.tooling.muzzle.Reference
 import datadog.trace.agent.tooling.muzzle.Reference.Source
 import datadog.trace.agent.tooling.muzzle.ReferenceCreator
@@ -24,14 +24,14 @@ import static muzzle.TestClasses.MethodBodyAdvice
 class ReferenceMatcherTest extends AgentTestRunner {
 
   @Shared
-  ClassLoader safeClasspath = new URLClassLoader([TestUtils.createJarWithClasses(MethodBodyAdvice.A,
+  ClassLoader safeClasspath = new URLClassLoader([ClasspathUtils.createJarWithClasses(MethodBodyAdvice.A,
     MethodBodyAdvice.B,
     MethodBodyAdvice.SomeInterface,
     MethodBodyAdvice.SomeImplementation)] as URL[],
     (ClassLoader) null)
 
   @Shared
-  ClassLoader unsafeClasspath = new URLClassLoader([TestUtils.createJarWithClasses(MethodBodyAdvice.A,
+  ClassLoader unsafeClasspath = new URLClassLoader([ClasspathUtils.createJarWithClasses(MethodBodyAdvice.A,
     MethodBodyAdvice.SomeInterface,
     MethodBodyAdvice.SomeImplementation)] as URL[],
     (ClassLoader) null)
@@ -68,7 +68,7 @@ class ReferenceMatcherTest extends AgentTestRunner {
   def "muzzle type pool caches"() {
     setup:
     ClassLoader cl = new CountingClassLoader(
-      [TestUtils.createJarWithClasses(MethodBodyAdvice.A,
+      [ClasspathUtils.createJarWithClasses(MethodBodyAdvice.A,
         MethodBodyAdvice.B,
         MethodBodyAdvice.SomeInterface,
         MethodBodyAdvice.SomeImplementation)] as URL[],
