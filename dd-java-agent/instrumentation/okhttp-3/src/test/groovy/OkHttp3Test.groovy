@@ -24,7 +24,7 @@ class OkHttp3Test extends AgentTestRunner {
       .url("http://localhost:$server.address.port/ping")
       .build()
 
-    def response = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    def response = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       client.newCall(request).execute()
     }
 

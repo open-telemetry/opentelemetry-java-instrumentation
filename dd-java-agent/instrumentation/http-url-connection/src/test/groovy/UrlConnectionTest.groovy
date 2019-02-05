@@ -17,7 +17,7 @@ class UrlConnectionTest extends AgentTestRunner {
 
   def "trace request with connection failure #scheme"() {
     when:
-    withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       runUnderTrace("someTrace") {
         URLConnection connection = url.openConnection()
         connection.setConnectTimeout(10000)
@@ -75,7 +75,7 @@ class UrlConnectionTest extends AgentTestRunner {
     def url = new URI("file:/some-random-file%abc").toURL()
 
     when:
-    withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       runUnderTrace("someTrace") {
         url.openConnection()
       }

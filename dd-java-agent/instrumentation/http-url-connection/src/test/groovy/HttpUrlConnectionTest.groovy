@@ -33,7 +33,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
 
   def "trace request with propagation (useCaches: #useCaches)"() {
     setup:
-    withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       runUnderTrace("someTrace") {
         HttpURLConnection connection = server.address.toURL().openConnection()
         connection.useCaches = useCaches
@@ -114,7 +114,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
 
   def "trace request without propagation (useCaches: #useCaches)"() {
     setup:
-    withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       runUnderTrace("someTrace") {
         HttpURLConnection connection = server.address.toURL().openConnection()
         connection.useCaches = useCaches
@@ -195,7 +195,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
 
   def "test response code"() {
     setup:
-    withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       runUnderTrace("someTrace") {
         HttpURLConnection connection = server.address.toURL().openConnection()
         connection.setRequestMethod("HEAD")
@@ -242,7 +242,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
 
   def "test broken API usage"() {
     setup:
-    HttpURLConnection conn = withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    HttpURLConnection conn = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       runUnderTrace("someTrace") {
         HttpURLConnection connection = server.address.toURL().openConnection()
         connection.setRequestProperty("Connection", "close")
@@ -294,7 +294,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
 
   def "test post request"() {
     setup:
-    withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       runUnderTrace("someTrace") {
         HttpURLConnection connection = server.address.toURL().openConnection()
         connection.setRequestMethod("POST")
@@ -383,7 +383,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
 
   def "top level httpurlconnection tracing disabled"() {
     setup:
-    withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       HttpURLConnection connection = server.address.toURL().openConnection()
       connection.addRequestProperty("is-dd-server", "false")
       def stream = connection.inputStream
@@ -422,7 +422,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
 
   def "rest template"() {
     setup:
-    withConfigOverride("dd.$Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN", "$renameService") {
+    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       runUnderTrace("someTrace") {
         RestTemplate restTemplate = new RestTemplate()
         String res = restTemplate.postForObject(server.address.toString(), "Hello", String)

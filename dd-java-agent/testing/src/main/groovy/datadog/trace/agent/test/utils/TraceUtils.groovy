@@ -35,6 +35,7 @@ class TraceUtils {
     }
   }
 
+  // TODO: ideally all users of this should switch to using Config object (and withConfigOverride) instead.
   @SneakyThrows
   static <T extends Object> Object withSystemProperty(final String name, final String value, final Callable<T> r) {
     if (value == null) {
@@ -51,15 +52,14 @@ class TraceUtils {
 
   @SneakyThrows
   static <T extends Object> Object withConfigOverride(final String name, final String value, final Callable<T> r) {
-    return withSystemProperty(name, value) {
-      def existingConfig = Config.get()  // We can't reference INSTANCE directly or the reflection below will fail.
-      setFinalStatic(Config.getDeclaredField("INSTANCE"), new Config())
-      setFinal(Config.getDeclaredField("runtimeId"), Config.get(), existingConfig.runtimeId)
-      try {
-        return r.call()
-      } finally {
-        setFinalStatic(Config.getDeclaredField("INSTANCE"), existingConfig)
-      }
+    def existingConfig = Config.get()  // We can't reference INSTANCE directly or the reflection below will fail.
+    Properties properties = new Properties()
+    properties.put(name, value)
+    setFinalStatic(Config.getDeclaredField("INSTANCE"), new Config(properties, existingConfig))
+    try {
+      return r.call()
+    } finally {
+      setFinalStatic(Config.getDeclaredField("INSTANCE"), existingConfig)
     }
   }
 
