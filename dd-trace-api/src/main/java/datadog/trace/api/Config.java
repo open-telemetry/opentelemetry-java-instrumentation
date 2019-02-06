@@ -6,7 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 public class Config {
   /** Config keys below */
   private static final String PREFIX = "dd.";
+
+  private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
 
   private static final Config INSTANCE = new Config();
 
@@ -256,6 +260,23 @@ public class Config {
     return Collections.unmodifiableMap(result);
   }
 
+  public static boolean integrationEnabled(
+      final Set<String> integrationNames, final boolean defaultEnabled) {
+    // If default is enabled, we want to enable individually,
+    // if default is disabled, we want to disable individually.
+    boolean anyEnabled = defaultEnabled;
+    for (final String name : integrationNames) {
+      final boolean configEnabled =
+          getBooleanSettingFromEnvironment("integration." + name + ".enabled", defaultEnabled);
+      if (defaultEnabled) {
+        anyEnabled &= configEnabled;
+      } else {
+        anyEnabled |= configEnabled;
+      }
+    }
+    return anyEnabled;
+  }
+
   /**
    * Helper method that takes the name, adds a "dd." prefix then checks for System Properties of
    * that name. If none found, the name is converted to an Environment Variable and used to check
@@ -303,7 +324,7 @@ public class Config {
   }
 
   private static String propertyToEnvironmentName(final String name) {
-    return name.toUpperCase().replace(".", "_").replace("-", "_");
+    return ENV_REPLACEMENT.matcher(name.toUpperCase()).replaceAll("_");
   }
 
   private static Map<String, String> getPropertyMapValue(

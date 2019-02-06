@@ -117,8 +117,11 @@ public class JMXFetch {
         final String[] split = configs.split("\n");
         final List<String> result = new ArrayList<>(split.length);
         for (final String config : split) {
-          final URL resource = JMXFetch.class.getResource("metricconfigs/" + config);
-          result.add(resource.getPath().split("\\.jar!/")[1]);
+          if (Config.integrationEnabled(
+              Collections.singleton(config.replace(".yaml", "")), false)) {
+            final URL resource = JMXFetch.class.getResource("metricconfigs/" + config);
+            result.add(resource.getPath().split("\\.jar!/")[1]);
+          }
         }
         return result;
       }

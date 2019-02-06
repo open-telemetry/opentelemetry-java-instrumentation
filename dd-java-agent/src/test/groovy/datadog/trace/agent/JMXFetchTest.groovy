@@ -49,4 +49,36 @@ class JMXFetchTest extends Specification {
     Thread.currentThread().setContextClassLoader(currentContextLoader)
   }
 
+  def "test jmxfetch config"() {
+    setup:
+    names.each {
+      System.setProperty("dd.integration.${it}.enabled", "$enable")
+    }
+    def classLoader = IntegrationTestUtils.getJmxFetchClassLoader()
+    // Have to set this so JMXFetch knows where to find resources
+    Thread.currentThread().setContextClassLoader(classLoader)
+    final Class<?> jmxFetchAgentClass =
+      classLoader.loadClass("datadog.trace.agent.jmxfetch.JMXFetch")
+    final Method jmxFetchInstallerMethod = jmxFetchAgentClass.getDeclaredMethod("getInternalMetricFiles")
+    jmxFetchInstallerMethod.setAccessible(true)
+
+    expect:
+    jmxFetchInstallerMethod.invoke(null).sort() == result.sort()
+
+    cleanup:
+    names.each {
+      System.clearProperty("dd.integration.${it}.enabled")
+    }
+
+    where:
+    names               | enable | result
+    []                  | true   | []
+    ["tomcat"]          | false  | []
+    ["tomcat"]          | true   | ["datadog/trace/agent/jmxfetch/metricconfigs/tomcat.yaml"]
+    ["kafka"]           | true   | ["datadog/trace/agent/jmxfetch/metricconfigs/kafka.yaml"]
+    ["tomcat", "kafka"] | true   | ["datadog/trace/agent/jmxfetch/metricconfigs/tomcat.yaml", "datadog/trace/agent/jmxfetch/metricconfigs/kafka.yaml"]
+    ["tomcat", "kafka"] | false  | []
+    ["invalid"]         | true   | []
+  }
+
 }
