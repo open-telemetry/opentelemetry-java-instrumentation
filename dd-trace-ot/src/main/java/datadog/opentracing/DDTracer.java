@@ -334,20 +334,20 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Override
   public <T> void inject(final SpanContext spanContext, final Format<T> format, final T carrier) {
-    if (!(carrier instanceof TextMap)) {
-      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
-    } else {
+    if (carrier instanceof TextMap) {
       injector.inject((DDSpanContext) spanContext, (TextMap) carrier);
+    } else {
+      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
     }
   }
 
   @Override
   public <T> SpanContext extract(final Format<T> format, final T carrier) {
-    if (!(carrier instanceof TextMap)) {
+    if (carrier instanceof TextMap) {
+      return extractor.extract((TextMap) carrier);
+    } else {
       log.debug("Unsupported format for propagation - {}", format.getClass().getName());
       return null;
-    } else {
-      return extractor.extract((TextMap) carrier);
     }
   }
 
