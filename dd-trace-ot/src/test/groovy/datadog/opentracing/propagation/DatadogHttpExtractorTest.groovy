@@ -1,160 +1,18 @@
 package datadog.opentracing.propagation
 
-import datadog.opentracing.DDSpanContext
-import datadog.opentracing.DDTracer
-import datadog.opentracing.PendingTrace
 import datadog.trace.api.sampling.PrioritySampling
-import datadog.trace.common.writer.ListWriter
 import io.opentracing.propagation.TextMapExtractAdapter
-import io.opentracing.propagation.TextMapInjectAdapter
-import spock.lang.Shared
 import spock.lang.Specification
 
-import static datadog.opentracing.propagation.HTTPCodec.BIG_INTEGER_UINT64_MAX
+import static datadog.opentracing.propagation.DatadogHttpCodec.BIG_INTEGER_UINT64_MAX
+import static datadog.opentracing.propagation.DatadogHttpCodec.OT_BAGGAGE_PREFIX
+import static datadog.opentracing.propagation.DatadogHttpCodec.SAMPLING_PRIORITY_KEY
+import static datadog.opentracing.propagation.DatadogHttpCodec.SPAN_ID_KEY
+import static datadog.opentracing.propagation.DatadogHttpCodec.TRACE_ID_KEY
 
-class HTTPCodecTest extends Specification {
-  @Shared
-  private static final String OT_BAGGAGE_PREFIX = "ot-baggage-"
-  @Shared
-  private static final String TRACE_ID_KEY = "x-datadog-trace-id"
-  @Shared
-  private static final String SPAN_ID_KEY = "x-datadog-parent-id"
-  @Shared
-  private static final String SAMPLING_PRIORITY_KEY = "x-datadog-sampling-priority"
+class DatadogHttpExtractorTest extends Specification {
 
-  HTTPCodec codec = new HTTPCodec(["SOME_HEADER": "some-tag"])
-
-  def "inject http headers"() {
-    setup:
-    def writer = new ListWriter()
-    def tracer = new DDTracer(writer)
-    final DDSpanContext mockedContext =
-      new DDSpanContext(
-        "1",
-        "2",
-        "0",
-        "fakeService",
-        "fakeOperation",
-        "fakeResource",
-        samplingPriority,
-        new HashMap<String, String>() {
-          {
-            put("k1", "v1")
-            put("k2", "v2")
-          }
-        },
-        false,
-        "fakeType",
-        null,
-        new PendingTrace(tracer, "1", [:]),
-        tracer)
-
-    final Map<String, String> carrier = new HashMap<>()
-
-    codec.inject(mockedContext, new TextMapInjectAdapter(carrier))
-
-    expect:
-    carrier.get(TRACE_ID_KEY) == "1"
-    carrier.get(SPAN_ID_KEY) == "2"
-    carrier.get(SAMPLING_PRIORITY_KEY) == (samplingPriority == PrioritySampling.UNSET ? null : String.valueOf(samplingPriority))
-    carrier.get(OT_BAGGAGE_PREFIX + "k1") == "v1"
-    carrier.get(OT_BAGGAGE_PREFIX + "k2") == "v2"
-
-    where:
-    samplingPriority              | _
-    PrioritySampling.UNSET        | _
-    PrioritySampling.SAMPLER_KEEP | _
-  }
-
-  def "inject http headers with larger than Java long IDs"() {
-    String largeTraceId = "9523372036854775807"
-    String largeSpanId = "15815582334751494918"
-    String largeParentId = "15815582334751494914"
-    setup:
-    def writer = new ListWriter()
-    def tracer = new DDTracer(writer)
-    final DDSpanContext mockedContext =
-      new DDSpanContext(
-        largeTraceId,
-        largeSpanId,
-        largeParentId,
-        "fakeService",
-        "fakeOperation",
-        "fakeResource",
-        samplingPriority,
-        new HashMap<String, String>() {
-          {
-            put("k1", "v1")
-            put("k2", "v2")
-          }
-        },
-        false,
-        "fakeType",
-        null,
-        new PendingTrace(tracer, largeTraceId, [:]),
-        tracer)
-
-    final Map<String, String> carrier = new HashMap<>()
-
-    codec.inject(mockedContext, new TextMapInjectAdapter(carrier))
-
-    expect:
-    carrier.get(TRACE_ID_KEY) == largeTraceId
-    carrier.get(SPAN_ID_KEY) == largeSpanId
-    carrier.get(SAMPLING_PRIORITY_KEY) == (samplingPriority == PrioritySampling.UNSET ? null : String.valueOf(samplingPriority))
-    carrier.get(OT_BAGGAGE_PREFIX + "k1") == "v1"
-    carrier.get(OT_BAGGAGE_PREFIX + "k2") == "v2"
-
-    where:
-    samplingPriority              | _
-    PrioritySampling.UNSET        | _
-    PrioritySampling.SAMPLER_KEEP | _
-  }
-
-  def "inject http headers with uint 64 max IDs"() {
-    String largeTraceId = "18446744073709551615"
-    String largeSpanId = "18446744073709551614"
-    String largeParentId = "18446744073709551613"
-    setup:
-    def writer = new ListWriter()
-    def tracer = new DDTracer(writer)
-    final DDSpanContext mockedContext =
-      new DDSpanContext(
-        largeTraceId,
-        largeSpanId,
-        largeParentId,
-        "fakeService",
-        "fakeOperation",
-        "fakeResource",
-        samplingPriority,
-        new HashMap<String, String>() {
-          {
-            put("k1", "v1")
-            put("k2", "v2")
-          }
-        },
-        false,
-        "fakeType",
-        null,
-        new PendingTrace(tracer, largeTraceId, [:]),
-        tracer)
-
-    final Map<String, String> carrier = new HashMap<>()
-
-    codec.inject(mockedContext, new TextMapInjectAdapter(carrier))
-
-    expect:
-    carrier.get(TRACE_ID_KEY) == largeTraceId
-    carrier.get(SPAN_ID_KEY) == largeSpanId
-    carrier.get(SAMPLING_PRIORITY_KEY) == (samplingPriority == PrioritySampling.UNSET ? null : String.valueOf(samplingPriority))
-    carrier.get(OT_BAGGAGE_PREFIX + "k1") == "v1"
-    carrier.get(OT_BAGGAGE_PREFIX + "k2") == "v2"
-
-    where:
-    samplingPriority              | _
-    PrioritySampling.UNSET        | _
-    PrioritySampling.SAMPLER_KEEP | _
-  }
+  DatadogHttpCodec.Extractor extractor = new DatadogHttpCodec.Extractor(["SOME_HEADER": "some-tag"])
 
   def "extract http headers"() {
     setup:
@@ -170,7 +28,7 @@ class HTTPCodecTest extends Specification {
       actual.put(SAMPLING_PRIORITY_KEY, String.valueOf(samplingPriority))
     }
 
-    final ExtractedContext context = codec.extract(new TextMapExtractAdapter(actual))
+    final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(actual))
 
     expect:
     context.getTraceId() == "1"
@@ -192,7 +50,7 @@ class HTTPCodecTest extends Specification {
       SOME_HEADER: "my-interesting-info",
     ]
 
-    TagContext context = codec.extract(new TextMapExtractAdapter(actual))
+    TagContext context = extractor.extract(new TextMapExtractAdapter(actual))
 
     expect:
     !(context instanceof ExtractedContext)
@@ -201,7 +59,7 @@ class HTTPCodecTest extends Specification {
 
   def "extract empty headers returns null"() {
     expect:
-    codec.extract(new TextMapExtractAdapter(["ignored-header": "ignored-value"])) == null
+    extractor.extract(new TextMapExtractAdapter(["ignored-header": "ignored-value"])) == null
   }
 
   def "extract http headers with larger than Java long IDs"() {
@@ -220,7 +78,7 @@ class HTTPCodecTest extends Specification {
       actual.put(SAMPLING_PRIORITY_KEY, String.valueOf(samplingPriority))
     }
 
-    final ExtractedContext context = codec.extract(new TextMapExtractAdapter(actual))
+    final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(actual))
 
     expect:
     context.getTraceId() == largeTraceId
@@ -251,7 +109,7 @@ class HTTPCodecTest extends Specification {
       actual.put(SAMPLING_PRIORITY_KEY, String.valueOf(samplingPriority))
     }
 
-    final ExtractedContext context = codec.extract(new TextMapExtractAdapter(actual))
+    final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(actual))
 
     expect:
     context.getTraceId() == BIG_INTEGER_UINT64_MAX.toString()
@@ -282,7 +140,7 @@ class HTTPCodecTest extends Specification {
     }
 
     when:
-    codec.extract(new TextMapExtractAdapter(actual))
+    extractor.extract(new TextMapExtractAdapter(actual))
 
     then:
     def iae = thrown(IllegalArgumentException)
@@ -310,7 +168,7 @@ class HTTPCodecTest extends Specification {
     }
 
     when:
-    codec.extract(new TextMapExtractAdapter(actual))
+    extractor.extract(new TextMapExtractAdapter(actual))
 
     then:
     thrown(IllegalArgumentException)
@@ -336,7 +194,7 @@ class HTTPCodecTest extends Specification {
     }
 
     when:
-    codec.extract(new TextMapExtractAdapter(actual))
+    extractor.extract(new TextMapExtractAdapter(actual))
 
     then:
     thrown(IllegalArgumentException)

@@ -2,9 +2,8 @@ package datadog.opentracing;
 
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
-import datadog.opentracing.propagation.Codec;
+import datadog.opentracing.propagation.DatadogHttpCodec;
 import datadog.opentracing.propagation.ExtractedContext;
-import datadog.opentracing.propagation.HTTPCodec;
 import datadog.opentracing.propagation.TagContext;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
@@ -24,6 +23,7 @@ import io.opentracing.ScopeManager;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
+import io.opentracing.propagation.TextMap;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -84,7 +84,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
               return Integer.compare(o1.priority(), o2.priority());
             }
           });
-  private final CodecRegistry registry;
+
+  private final DatadogHttpCodec.Injector injector;
+  private final DatadogHttpCodec.Extractor extractor;
 
   private final AtomicInteger traceCount;
 
@@ -238,9 +240,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       // The JVM is already shutting down.
     }
 
-    registry = new CodecRegistry();
-    registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec(taggedHeaders));
-    registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec(taggedHeaders));
+    injector = new DatadogHttpCodec.Injector();
+    extractor = new DatadogHttpCodec.Extractor(taggedHeaders);
+
     if (this.writer instanceof DDAgentWriter) {
       final DDApi api = ((DDAgentWriter) this.writer).getApi();
       traceCount = api.getTraceCounter();
@@ -332,24 +334,21 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Override
   public <T> void inject(final SpanContext spanContext, final Format<T> format, final T carrier) {
-
-    final Codec<T> codec = registry.get(format);
-    if (codec == null) {
-      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
+    if (carrier instanceof TextMap) {
+      injector.inject((DDSpanContext) spanContext, (TextMap) carrier);
     } else {
-      codec.inject((DDSpanContext) spanContext, carrier);
+      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
     }
   }
 
   @Override
   public <T> SpanContext extract(final Format<T> format, final T carrier) {
-    final Codec<T> codec = registry.get(format);
-    if (codec == null) {
-      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
+    if (carrier instanceof TextMap) {
+      return extractor.extract((TextMap) carrier);
     } else {
-      return codec.extract(carrier);
+      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
+      return null;
     }
-    return null;
   }
 
   /**
@@ -450,19 +449,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   @Deprecated
   private static int defaultMaxTraceSizeBeforePartialFlush() {
     return Config.get().getPartialFlushMinSpans();
-  }
-
-  private static class CodecRegistry {
-
-    private final Map<Format<?>, Codec<?>> codecs = new HashMap<>();
-
-    <T> Codec<T> get(final Format<T> format) {
-      return (Codec<T>) codecs.get(format);
-    }
-
-    public <T> void register(final Format<T> format, final Codec<T> codec) {
-      codecs.put(format, codec);
-    }
   }
 
   /** Spans are built using this builder */

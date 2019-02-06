@@ -78,7 +78,7 @@ class DDTracerTest extends Specification {
     when:
     def config = new Config()
     def tracer = new DDTracer(config)
-    def taggedHeaders = tracer.registry.codecs.values().first().taggedHeaders
+    def taggedHeaders = tracer.extractor.taggedHeaders
 
     then:
     tracer.defaultSpanTags == map
