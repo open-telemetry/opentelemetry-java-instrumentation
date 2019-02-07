@@ -1,12 +1,6 @@
-package datadog.trace.instrumentation.springwebflux
+package dd.trace.instrumentation.springwebflux
 
-import org.springframework.boot.SpringApplication
-import org.springframework.boot.WebApplicationType
-import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.autoconfigure.web.reactive.ReactiveWebServerFactoryAutoConfiguration
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
@@ -18,6 +12,8 @@ import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
+import java.time.Duration
+
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST
 import static org.springframework.web.reactive.function.server.RouterFunctions.route
@@ -25,31 +21,9 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @SpringBootApplication
 class SpringWebFluxTestApplication {
 
-  static void main(String[] args) {
-    SpringApplication app = new SpringApplication(SpringWebFluxTestApplication)
-    app.setWebApplicationType(WebApplicationType.REACTIVE)
-    app.run(args)
-  }
-
-  @TestConfiguration
-  @AutoConfigureBefore(ReactiveWebServerFactoryAutoConfiguration)
-  class ForceNettyAutoConfiguration {
-    @Bean
-    NettyReactiveWebServerFactory nettyFactory() {
-      return new NettyReactiveWebServerFactory()
-    }
-  }
-
-
   @Bean
   RouterFunction<ServerResponse> echoRouterFunction(EchoHandler echoHandler) {
     return route(POST("/echo"), new EchoHandlerFunction(echoHandler))
-      .andRoute(POST("/fail-echo"), new HandlerFunction<ServerResponse>() {
-      @Override
-      Mono<ServerResponse> handle(ServerRequest request) {
-        return echoHandler.echo(null)
-      }
-    })
   }
 
   @Bean
@@ -74,10 +48,20 @@ class SpringWebFluxTestApplication {
       Mono<ServerResponse> handle(ServerRequest request) {
         return greetingHandler.doubleGreet()
       }
-    }).andRoute(GET("/greet-counter/{count}"), new HandlerFunction<ServerResponse>() {
+    }).andRoute(GET("/greet-delayed"), new HandlerFunction<ServerResponse>() {
       @Override
       Mono<ServerResponse> handle(ServerRequest request) {
-        return greetingHandler.counterGreet(request)
+        return greetingHandler.defaultGreet().delayElement(Duration.ofMillis(100))
+      }
+    }).andRoute(GET("/greet-failfast/{id}"), new HandlerFunction<ServerResponse>() {
+      @Override
+      Mono<ServerResponse> handle(ServerRequest request) {
+        throw new RuntimeException("bad things happen")
+      }
+    }).andRoute(GET("/greet-failmono/{id}"), new HandlerFunction<ServerResponse>() {
+      @Override
+      Mono<ServerResponse> handle(ServerRequest request) {
+        return Mono.error(new RuntimeException("bad things happen"))
       }
     })
   }

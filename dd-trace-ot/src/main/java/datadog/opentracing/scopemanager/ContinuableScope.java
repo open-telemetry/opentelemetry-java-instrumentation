@@ -77,6 +77,11 @@ public class ContinuableScope implements Scope, TraceScope {
           listener.afterScopeActivated();
         }
       }
+    } else {
+      log.debug(
+          "Tried to close {} scope when {} is on top. Ignoring!",
+          this,
+          scopeManager.tlsScope.get());
     }
   }
 
@@ -130,7 +135,10 @@ public class ContinuableScope implements Scope, TraceScope {
     @Override
     public ContinuableScope activate() {
       if (used.compareAndSet(false, true)) {
-        return new ContinuableScope(scopeManager, openCount, this, spanUnderScope, finishOnClose);
+        final ContinuableScope scope =
+            new ContinuableScope(scopeManager, openCount, this, spanUnderScope, finishOnClose);
+        log.debug("Activating continuation {}, scope: {}", this, scope);
+        return scope;
       } else {
         log.debug(
             "Failed to activate continuation. Reusing a continuation not allowed.  Returning a new scope. Spans will not be linked.");

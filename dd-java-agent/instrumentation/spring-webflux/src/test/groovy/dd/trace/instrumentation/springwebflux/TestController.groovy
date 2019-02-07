@@ -1,18 +1,14 @@
-package datadog.trace.instrumentation.springwebflux
+package dd.trace.instrumentation.springwebflux
 
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+
+import java.time.Duration
 
 @RestController
 class TestController {
-
-  @GetMapping("/failfoo/{id}")
-  Mono<FooModel> getFooModelFail(@PathVariable("id") long id) {
-    return Mono.just(new FooModel((id / 0), "fail"))
-  }
 
   @GetMapping("/foo")
   Mono<FooModel> getFooModel() {
@@ -29,9 +25,18 @@ class TestController {
     return Mono.just(new FooModel(id, name))
   }
 
-  @GetMapping(value = "/annotation-foos/{count}")
-  Flux<FooModel> getXFooModels(@PathVariable("count") long count) {
-    FooModel[] foos = FooModel.createXFooModels(count)
-    return Flux.just(foos)
+  @GetMapping("/foo-delayed")
+  Mono<FooModel> getFooDelayed() {
+    return Mono.just(new FooModel(3L, "delayed")).delayElement(Duration.ofMillis(100))
+  }
+
+  @GetMapping("/foo-failfast/{id}")
+  Mono<FooModel> getFooFailFast(@PathVariable("id") long id) {
+    throw new RuntimeException("bad things happen")
+  }
+
+  @GetMapping("/foo-failmono/{id}")
+  Mono<FooModel> getFooFailMono(@PathVariable("id") long id) {
+    return Mono.error(new RuntimeException("bad things happen"))
   }
 }

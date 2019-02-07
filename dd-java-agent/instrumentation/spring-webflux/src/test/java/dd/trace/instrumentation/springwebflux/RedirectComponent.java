@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.springwebflux;
+package dd.trace.instrumentation.springwebflux;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+// Need to keep this in Java because groovy creates crazy proxies around lambdas
 @Component
 public class RedirectComponent {
   @Bean
