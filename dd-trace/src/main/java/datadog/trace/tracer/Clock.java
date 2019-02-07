@@ -48,6 +48,15 @@ class Clock {
   }
 
   /**
+   * Create new timestamp instance for current time.
+   *
+   * @return new timestamp capturing current time.
+   */
+  public Timestamp createTimestampForTime(final long time, final TimeUnit unit) {
+    return new Timestamp(this, time, unit);
+  }
+
+  /**
    * Get the current nanos ticks (i.e. System.nanoTime()), this method can't be use for date
    * accuracy (only duration calculations).
    *
