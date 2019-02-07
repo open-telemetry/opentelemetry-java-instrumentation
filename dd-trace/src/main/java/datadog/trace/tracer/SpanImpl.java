@@ -212,6 +212,7 @@ class SpanImpl implements Span {
     }
   }
 
+  @Override
   @JsonGetter("meta")
   synchronized Map<String, String> getMeta() {
     final Map<String, String> result = new HashMap<>(meta.size());
@@ -264,6 +265,7 @@ class SpanImpl implements Span {
     }
   }
 
+  // FIXME: This should take a Timestamp object instead.
   @Override
   public synchronized void finish(final long finishTimestampNanoseconds) {
     if (isFinished()) {

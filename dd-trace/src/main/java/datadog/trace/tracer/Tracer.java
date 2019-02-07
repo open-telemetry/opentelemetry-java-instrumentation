@@ -5,7 +5,6 @@ import datadog.trace.tracer.sampling.AllSampler;
 import datadog.trace.tracer.sampling.Sampler;
 import datadog.trace.tracer.writer.Writer;
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +28,12 @@ public class Tracer implements Closeable {
   /** Interceptors to be called on certain trace and span events */
   private final List<Interceptor> interceptors;
 
+  /**
+   * JVM shutdown callback, keeping a reference to it to remove this if DDTracer gets destroyed
+   * earlier
+   */
+  private final Thread shutdownCallback;
+
   @Builder
   private Tracer(
       final Config config,
@@ -45,6 +50,19 @@ public class Tracer implements Closeable {
         interceptors != null
             ? Collections.unmodifiableList(new ArrayList<>(interceptors))
             : Collections.<Interceptor>emptyList();
+
+    shutdownCallback =
+        new Thread() {
+          @Override
+          public void run() {
+            close();
+          }
+        };
+    try {
+      Runtime.getRuntime().addShutdownHook(shutdownCallback);
+    } catch (final IllegalStateException ex) {
+      // The JVM is already shutting down.
+    }
   }
 
   /** @return {@link Writer} used by this tracer */
@@ -124,7 +142,13 @@ public class Tracer implements Closeable {
   }
 
   @Override
-  public void close() throws IOException {
+  public void finalize() {
+    Runtime.getRuntime().removeShutdownHook(shutdownCallback);
+    shutdownCallback.run();
+  }
+
+  @Override
+  public void close() {
     writer.close();
   }
 }
