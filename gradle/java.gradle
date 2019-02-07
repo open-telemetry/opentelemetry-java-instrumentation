@@ -49,7 +49,7 @@ jar {
   duplicatesStrategy = 'fail'
 }
 
-task packageSources(type: Jar) {
+tasks.register("packageSources", Jar) {
   classifier = 'sources'
   from sourceSets.main.allSource
 }
@@ -70,7 +70,7 @@ dependencies {
   testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
 }
 
-tasks.withType(Javadoc) {
+tasks.withType(Javadoc).configureEach {
   options.encoding = "utf-8"
   options.docEncoding = "utf-8"
   options.charSet = "utf-8"
@@ -96,14 +96,15 @@ javadoc {
   }
 }
 
-task sourceJar(type: Jar) {
+tasks.register("sourceJar", Jar) {
   from sourceSets.main.allJava
   classifier = 'sources'
 }
 
-task javaDocJar(type: Jar, dependsOn: javadoc) {
+tasks.register("javaDocJar", Jar) {
   from javadoc.destinationDir
   classifier = 'javadoc'
+  dependsOn javadoc
 }
 
 artifacts {
@@ -113,7 +114,7 @@ artifacts {
 
 project.afterEvaluate {
   if (project.plugins.hasPlugin('org.unbroken-dome.test-sets') && configurations.hasProperty("latestDepTestRuntime")) {
-    tasks.withType(Test) {
+    tasks.withType(Test).configureEach {
       doFirst {
         def testArtifacts = configurations.testRuntime.resolvedConfiguration.resolvedArtifacts
         def latestTestArtifacts = configurations.latestDepTestRuntime.resolvedConfiguration.resolvedArtifacts
@@ -140,7 +141,7 @@ if (project.plugins.hasPlugin('com.github.johnrengelman.shadow')) {
 }
 
 if (project.hasProperty("removeJarVersionNumbers") && removeJarVersionNumbers) {
-  tasks.withType(AbstractArchiveTask) {
+  tasks.withType(AbstractArchiveTask).configureEach {
     version = null
   }
 }
@@ -200,7 +201,7 @@ def isTestingEnabled(String javaName) {
 }
 
 // Disable default test tasks if current JVM doesn't match version requirements
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   if (name.endsWith("Generated")) {
     return
   }
@@ -226,7 +227,7 @@ for (def env : System.getenv().entrySet()) {
   }
   tasks.check.dependsOn parentTask
 
-  tasks.withType(Test) {
+  tasks.withType(Test).configureEach {
     if (name.endsWith("Generated")) {
       return
     }
@@ -256,7 +257,7 @@ for (def env : System.getenv().entrySet()) {
 
 // Disable all tests if skipTests property was specified
 if (project.hasProperty("skipTests")) {
-  tasks.withType(Test) {
+  tasks.withType(Test).configureEach {
     onlyIf { false }
   }
 }

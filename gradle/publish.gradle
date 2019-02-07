@@ -24,7 +24,7 @@ afterEvaluate {
   assert description: "Project $project.path is published, must have a description"
 }
 
-tasks.withType(Upload).matching { it.name != "install" }.all {
+tasks.withType(Upload).matching { it.name != "install" }.configureEach {
   rootProject.subprojects {
     mustRunAfter tasks.matching { it instanceof VerificationTask }
   }

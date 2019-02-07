@@ -69,7 +69,7 @@ dependencies {
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
 }
 
-task startServer(type: com.github.psxpaul.task.ExecFork) {
+tasks.register("startServer", com.github.psxpaul.task.ExecFork) {
   dependsOn project(':dd-java-agent').shadowJar
   playHttpPort = randomOpenPort()
 
@@ -96,11 +96,11 @@ task startServer(type: com.github.psxpaul.task.ExecFork) {
   dependsOn 'stage'
 }
 
-task deletePIDFile() {
+tasks.register("deletePIDFile") {
   delete "${buildDir}/stage/playBinary/RUNNING_PID"
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   // so the test can get this property
   jvmArgs "-Ddatadog.smoketest.server.port=${playHttpPort}"
 
@@ -109,7 +109,7 @@ tasks.withType(Test) {
   }
 
   dependsOn startServer
-}
 
-// clean up the PID file from the server
-tasks.withType(Test).forEach { it.finalizedBy deletePIDFile }
+  // clean up the PID file from the server
+  finalizedBy deletePIDFile
+}

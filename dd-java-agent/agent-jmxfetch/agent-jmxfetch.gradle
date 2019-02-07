@@ -28,13 +28,13 @@ jar {
   classifier = 'unbundled'
 }
 
-task submodulesUpdate(type:Exec) {
+tasks.register("submodulesUpdate", Exec) {
   group 'Build Setup'
   description 'Initializes and updates integrations-core git submodule'
   commandLine 'git', 'submodule', 'update', '--init', 'integrations-core'
 }
 
-task copyMetricConfigs(type:Exec) {
+tasks.register("copyMetricConfigs", Exec) {
   group 'Build Setup'
   description 'Copy metrics.yaml files from integrations-core into resources'
   commandLine './copy-metric-configs.sh', 'integrations-core', sourceSets.main.output.resourcesDir
