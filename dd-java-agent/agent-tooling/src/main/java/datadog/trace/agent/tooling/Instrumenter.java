@@ -1,13 +1,13 @@
 package datadog.trace.agent.tooling;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.failSafe;
-import static datadog.trace.agent.tooling.Utils.getConfigEnabled;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import datadog.trace.agent.tooling.context.FieldBackedProvider;
 import datadog.trace.agent.tooling.context.InstrumentationContextProvider;
 import datadog.trace.agent.tooling.muzzle.Reference;
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
+import datadog.trace.api.Config;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Collections;
@@ -52,20 +52,7 @@ public interface Instrumenter {
       instrumentationNames.add(instrumentationName);
       instrumentationPrimaryName = instrumentationName;
 
-      // If default is enabled, we want to enable individually,
-      // if default is disabled, we want to disable individually.
-      final boolean defaultEnabled = defaultEnabled();
-      boolean anyEnabled = defaultEnabled;
-      for (final String name : instrumentationNames) {
-        final boolean configEnabled =
-            getConfigEnabled("dd.integration." + name + ".enabled", defaultEnabled);
-        if (defaultEnabled) {
-          anyEnabled &= configEnabled;
-        } else {
-          anyEnabled |= configEnabled;
-        }
-      }
-      enabled = anyEnabled;
+      enabled = Config.integrationEnabled(instrumentationNames, defaultEnabled());
       contextProvider = new FieldBackedProvider(this);
     }
 
@@ -225,7 +212,7 @@ public interface Instrumenter {
     }
 
     protected boolean defaultEnabled() {
-      return getConfigEnabled("dd.integrations.enabled", true);
+      return Config.getBooleanSettingFromEnvironment("integrations.enabled", true);
     }
   }
 }
