@@ -183,6 +183,78 @@ class ScopeManagerTest extends Specification {
     false     | true
   }
 
+  def "Continuation.close closes parent scope"() {
+    setup:
+    def builder = tracer.buildSpan("test")
+    def scope = (ContinuableScope) builder.startActive(true)
+    scope.setAsyncPropagation(true)
+    def continuation = scope.capture()
+
+    when:
+    /*
+    Note: this API is inherently broken. Our scope implementation doesn't allow us to close scopes
+    in random order, yet when we close continuation we attempt to close scope by default.
+    And in fact continuation trying to close parent scope is most likely a bug.
+     */
+    continuation.close(true)
+
+    then:
+    scopeManager.active() == null
+    !spanFinished(scope.span())
+
+    when:
+    scope.span().finish()
+
+    then:
+    scopeManager.active() == null
+  }
+
+  def "Continuation.close doesn't close parent scope"() {
+    setup:
+    def builder = tracer.buildSpan("test")
+    def scope = (ContinuableScope) builder.startActive(true)
+    scope.setAsyncPropagation(true)
+    def continuation = scope.capture()
+
+    when:
+    continuation.close(false)
+
+    then:
+    scopeManager.active() == scope
+  }
+
+  def "Continuation.close doesn't close parent scope, span finishes"() {
+    /*
+    This is highly confusing behaviour. Sequence of events is as following:
+      * Scope gets created along with span and with finishOnClose == true.
+      * Continuation gets created for that scope.
+      * Scope is closed.
+        At this point scope is not really closed. It is removed from scope
+        stack, but it is still alive because there is a live continuation attached
+        to it. This also means span is not closed.
+      * Continuation is closed.
+        This triggers final closing of scope and closing of the span.
+
+     This is confusing because expected behaviour is for span to be closed
+     with the scope when finishOnClose = true, but in fact span lingers until
+     continuation is closed.
+     */
+    setup:
+    def builder = tracer.buildSpan("test")
+    def scope = (ContinuableScope) builder.startActive(true)
+    scope.setAsyncPropagation(true)
+    def continuation = scope.capture()
+    scope.close()
+
+    when:
+    continuation.close(false)
+
+    then:
+    scopeManager.active() == null
+    spanFinished(scope.span())
+    writer == [[scope.span()]]
+  }
+
   @Timeout(value = 60, unit = TimeUnit.SECONDS)
   def "hard reference on continuation prevents trace from reporting"() {
     setup:

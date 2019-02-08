@@ -159,7 +159,7 @@ public class ContinuableScope implements Scope, TraceScope {
         if (closeContinuationScope) {
           ContinuableScope.this.close();
         } else {
-          // Same in in 'close()' above.
+          // Same as in 'close()' above.
           if (openCount.decrementAndGet() == 0 && finishOnClose) {
             spanUnderScope.finish();
           }

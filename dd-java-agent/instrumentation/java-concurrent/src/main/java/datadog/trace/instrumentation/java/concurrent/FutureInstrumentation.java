@@ -61,7 +61,8 @@ public final class FutureInstrumentation extends Instrumenter.Default {
       "akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinTask",
       "com.google.common.util.concurrent.SettableFuture",
       "com.google.common.util.concurrent.AbstractFuture$TrustedFuture",
-      "com.google.common.util.concurrent.AbstractFuture"
+      "com.google.common.util.concurrent.AbstractFuture",
+      "io.netty.util.concurrent.ScheduledFutureTask"
     };
     WHITELISTED_FUTURES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(whitelist)));
   }

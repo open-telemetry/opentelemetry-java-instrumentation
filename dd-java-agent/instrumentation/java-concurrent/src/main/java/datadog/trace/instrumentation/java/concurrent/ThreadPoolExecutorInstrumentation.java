@@ -66,7 +66,7 @@ public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
         } catch (final ClassCastException | IllegalArgumentException e) {
           // These errors indicate the queue is fundamentally incompatible with wrapped runnables.
           // We must disable the executor instance to avoid passing wrapped runnables later.
-          ExecutorInstrumentationUtils.disableExecutor(executor);
+          ExecutorInstrumentationUtils.disableExecutorForWrappedTasks(executor);
         } catch (final Exception e) {
           // Other errors might indicate the queue is not fully initialized.
           // We might want to disable for those too, but for now just ignore.
