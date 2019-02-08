@@ -64,7 +64,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   private final Map<String, String> serviceNameMappings;
 
   /** number of spans in a pending trace before they get flushed */
-  @Getter private final int maxTraceSizeBeforePartialFlush;
+  @Getter private final int partialFlushMinSpans;
 
   /**
    * JVM shutdown callback, keeping a reference to it to remove this if DDTracer gets destroyed
@@ -178,7 +178,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         defaultSpanTags,
         serviceNameMappings,
         taggedHeaders,
-        defaultMaxTraceSizeBeforePartialFlush());
+        Config.get().getPartialFlushMinSpans());
   }
 
   /**
@@ -201,7 +201,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         defaultSpanTags,
         serviceNameMappings,
         taggedHeaders,
-        defaultMaxTraceSizeBeforePartialFlush());
+        Config.get().getPartialFlushMinSpans());
   }
 
   public DDTracer(
@@ -212,7 +212,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders,
-      final int maxTraceSizeBeforePartialFlush) {
+      final int partialFlushMinSpans) {
     assert runtimeTags != null;
     assert defaultSpanTags != null;
     assert serviceNameMappings != null;
@@ -225,7 +225,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this.defaultSpanTags = defaultSpanTags;
     this.runtimeTags = runtimeTags;
     this.serviceNameMappings = serviceNameMappings;
-    this.maxTraceSizeBeforePartialFlush = maxTraceSizeBeforePartialFlush;
+    this.partialFlushMinSpans = partialFlushMinSpans;
 
     shutdownCallback =
         new Thread() {
@@ -444,11 +444,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     runtimeTags.putAll(Config.get().getRuntimeTags());
     runtimeTags.put(Config.RUNTIME_ID_TAG, runtimeId);
     return Collections.unmodifiableMap(runtimeTags);
-  }
-
-  @Deprecated
-  private static int defaultMaxTraceSizeBeforePartialFlush() {
-    return Config.get().getPartialFlushMinSpans();
   }
 
   /** Spans are built using this builder */
