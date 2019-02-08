@@ -261,8 +261,12 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Override
   public void finalize() {
-    Runtime.getRuntime().removeShutdownHook(shutdownCallback);
-    shutdownCallback.run();
+    try {
+      Runtime.getRuntime().removeShutdownHook(shutdownCallback);
+      shutdownCallback.run();
+    } catch (final Exception e) {
+      log.error("Error while finalizing DDTracer.", e);
+    }
   }
 
   /**
