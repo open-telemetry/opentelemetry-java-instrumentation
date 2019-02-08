@@ -199,10 +199,9 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     if (count == 0) {
       write();
     } else {
-      if (tracer.getMaxTraceSizeBeforePartialFlush() > 0
-          && size() > tracer.getMaxTraceSizeBeforePartialFlush()) {
+      if (tracer.getPartialFlushMinSpans() > 0 && size() > tracer.getPartialFlushMinSpans()) {
         synchronized (this) {
-          if (size() > tracer.getMaxTraceSizeBeforePartialFlush()) {
+          if (size() > tracer.getPartialFlushMinSpans()) {
             final DDSpan rootSpan = getRootSpan();
             final List<DDSpan> partialTrace = new ArrayList(size());
             final Iterator<DDSpan> it = iterator();

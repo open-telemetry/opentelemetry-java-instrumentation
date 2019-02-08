@@ -79,7 +79,7 @@ public class Config {
   private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = true;
   private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
-  private static final int DEFAULT_MAX_TRACE_SIZE_BEFORE_PARTIAL_FLUSH = 0;
+  private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 0;
   private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
 
   public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
@@ -143,8 +143,7 @@ public class Config {
             HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN);
 
     partialFlushMinSpans =
-        getIntegerSettingFromEnvironment(
-            PARTIAL_FLUSH_MIN_SPANS, DEFAULT_MAX_TRACE_SIZE_BEFORE_PARTIAL_FLUSH);
+        getIntegerSettingFromEnvironment(PARTIAL_FLUSH_MIN_SPANS, DEFAULT_PARTIAL_FLUSH_MIN_SPANS);
 
     runtimeContextFieldInjection =
         getBooleanSettingFromEnvironment(
