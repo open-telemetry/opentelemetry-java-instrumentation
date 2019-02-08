@@ -5,6 +5,9 @@ import nl.jqno.equalsverifier.EqualsVerifier
 import nl.jqno.equalsverifier.Warning
 import spock.lang.Specification
 
+import static java.util.concurrent.TimeUnit.MICROSECONDS
+import static java.util.concurrent.TimeUnit.NANOSECONDS
+
 class TimestampTest extends Specification {
 
   private static final long CLOCK_START_TIME = 100
@@ -37,10 +40,32 @@ class TimestampTest extends Specification {
     def timestamp = new Timestamp(clock)
 
     when:
+    def duration = timestamp.getDuration(FINISH_TIME)
+
+    then:
+    duration == 400
+    0 * tracer._
+  }
+
+  def "test timestamp with custom time"() {
+    setup:
+    clock.nanoTicks() >> CLOCK_NANO_TICKS
+    clock.getStartTimeNano() >> CLOCK_START_TIME
+    clock.getStartNanoTicks() >> CLOCK_START_NANO_TICKS
+    def timestamp = new Timestamp(clock, CLOCK_START_TIME + offset, unit)
+
+    when:
     def time = timestamp.getTime()
 
     then:
-    time == 300
+    time == expected
+
+    where:
+    offset | unit         | expected
+    10     | NANOSECONDS  | 410
+    -20    | NANOSECONDS  | 380
+    3      | MICROSECONDS | 103300
+    -4     | MICROSECONDS | 96300
   }
 
   def "test getDuration with literal finish time"() {

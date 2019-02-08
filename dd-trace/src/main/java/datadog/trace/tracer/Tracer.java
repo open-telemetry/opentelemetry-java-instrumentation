@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,6 +73,14 @@ public class Tracer implements Closeable {
    */
   public Timestamp createCurrentTimestamp() {
     return new Clock(this).createCurrentTimestamp();
+  }
+
+  /**
+   * @return timestamp for given time. Note: this is mainly useful when there is no 'current' trace.
+   *     If there is 'current' trace already then one should use it to get timestamps.
+   */
+  public Timestamp createTimestampForTime(final long time, final TimeUnit unit) {
+    return new Clock(this).createTimestampForTime(time, unit);
   }
 
   /**

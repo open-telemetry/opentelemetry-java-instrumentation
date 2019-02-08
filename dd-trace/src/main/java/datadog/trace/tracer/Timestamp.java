@@ -3,6 +3,7 @@ package datadog.trace.tracer;
 import static java.lang.Math.max;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.concurrent.TimeUnit;
 import lombok.EqualsAndHashCode;
 
 /**
@@ -24,6 +25,20 @@ public class Timestamp {
   Timestamp(final Clock clock) {
     this.clock = clock;
     nanoTicks = clock.nanoTicks();
+  }
+
+  /**
+   * Create timestamp for a given clock and given start time and precision
+   *
+   * @param clock clock instance
+   */
+  Timestamp(final Clock clock, final long time, final TimeUnit unit) {
+    this.clock = clock;
+    final long currentTime = clock.epochTimeNano();
+    final long currentTick = clock.nanoTicks();
+    final long desiredTime = unit.toNanos(time);
+    final long offset = currentTime - desiredTime;
+    nanoTicks = currentTick - offset;
   }
 
   /** @return clock instance used by this timestamp */
