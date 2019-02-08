@@ -214,8 +214,8 @@ class SpanImpl implements Span {
 
   @Override
   @JsonGetter("meta")
-  synchronized Map<String, String> getMeta() {
-    final Map<String, String> result = new HashMap<>(meta.size());
+  public synchronized Map<String, Object> getMeta() {
+    final Map<String, Object> result = new HashMap<>(meta.size());
     for (final Map.Entry<String, Object> entry : meta.entrySet()) {
       result.put(entry.getKey(), String.valueOf(entry.getValue()));
     }

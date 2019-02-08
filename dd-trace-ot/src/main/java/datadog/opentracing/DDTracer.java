@@ -25,6 +25,7 @@ import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import java.io.Closeable;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -227,13 +228,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this.serviceNameMappings = serviceNameMappings;
     this.maxTraceSizeBeforePartialFlush = maxTraceSizeBeforePartialFlush;
 
-    shutdownCallback =
-        new Thread() {
-          @Override
-          public void run() {
-            close();
-          }
-        };
+    shutdownCallback = new ShutdownHook(this);
     try {
       Runtime.getRuntime().addShutdownHook(shutdownCallback);
     } catch (final IllegalStateException ex) {
@@ -722,6 +717,22 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       }
 
       return context;
+    }
+  }
+
+  private static class ShutdownHook extends Thread {
+    private final WeakReference<DDTracer> reference;
+
+    private ShutdownHook(final DDTracer tracer) {
+      reference = new WeakReference<>(tracer);
+    }
+
+    @Override
+    public void run() {
+      final DDTracer tracer = reference.get();
+      if (tracer != null) {
+        tracer.close();
+      }
     }
   }
 }

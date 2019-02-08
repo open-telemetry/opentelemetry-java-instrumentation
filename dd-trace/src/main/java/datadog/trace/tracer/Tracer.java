@@ -5,6 +5,7 @@ import datadog.trace.tracer.sampling.AllSampler;
 import datadog.trace.tracer.sampling.Sampler;
 import datadog.trace.tracer.writer.Writer;
 import java.io.Closeable;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +30,7 @@ public class Tracer implements Closeable {
   private final List<Interceptor> interceptors;
 
   /**
-   * JVM shutdown callback, keeping a reference to it to remove this if DDTracer gets destroyed
+   * JVM shutdown callback, keeping a reference to it to remove this if Tracer gets destroyed
    * earlier
    */
   private final Thread shutdownCallback;
@@ -51,13 +52,7 @@ public class Tracer implements Closeable {
             ? Collections.unmodifiableList(new ArrayList<>(interceptors))
             : Collections.<Interceptor>emptyList();
 
-    shutdownCallback =
-        new Thread() {
-          @Override
-          public void run() {
-            close();
-          }
-        };
+    shutdownCallback = new ShutdownHook(this);
     try {
       Runtime.getRuntime().addShutdownHook(shutdownCallback);
     } catch (final IllegalStateException ex) {
@@ -150,5 +145,21 @@ public class Tracer implements Closeable {
   @Override
   public void close() {
     writer.close();
+  }
+
+  private static class ShutdownHook extends Thread {
+    private final WeakReference<Tracer> reference;
+
+    private ShutdownHook(final Tracer tracer) {
+      reference = new WeakReference<>(tracer);
+    }
+
+    @Override
+    public void run() {
+      final Tracer tracer = reference.get();
+      if (tracer != null) {
+        tracer.close();
+      }
+    }
   }
 }
