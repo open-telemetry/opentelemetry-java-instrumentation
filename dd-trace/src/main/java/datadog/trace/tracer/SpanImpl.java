@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -213,9 +215,19 @@ class SpanImpl implements Span {
   }
 
   @Override
-  @JsonGetter("meta")
+  @JsonIgnore
   public synchronized Map<String, Object> getMeta() {
-    final Map<String, Object> result = new HashMap<>(meta.size());
+    return Collections.unmodifiableMap(meta);
+  }
+
+  /**
+   * The agent expects meta's values to be strings.
+   *
+   * @return a copy of meta with all values converted to strings.
+   */
+  @JsonGetter("meta")
+  synchronized Map<String, String> getMetaString() {
+    final Map<String, String> result = new HashMap<>(meta.size());
     for (final Map.Entry<String, Object> entry : meta.entrySet()) {
       result.put(entry.getKey(), String.valueOf(entry.getValue()));
     }

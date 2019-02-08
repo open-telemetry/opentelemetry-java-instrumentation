@@ -99,7 +99,7 @@ public interface Span {
   /**
    * Get all the metadata attached to this span.
    *
-   * @return
+   * @return immutable map of span metadata.
    */
   Map<String, Object> getMeta();
 

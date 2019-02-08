@@ -43,7 +43,7 @@ class JsonSpan {
   @JsonCreator
   JsonSpan() {}
 
-  JsonSpan(Span span) {
+  JsonSpan(SpanImpl span) {
     traceId = new BigInteger(span.getContext().getTraceId())
     parentId = new BigInteger(span.getContext().getParentId())
     spanId = new BigInteger(span.getContext().getSpanId())
@@ -58,6 +58,6 @@ class JsonSpan {
 
     error = span.isErrored() ? 1 : 0
 
-    meta = span.getMeta()
+    meta = span.getMetaString()
   }
 }
