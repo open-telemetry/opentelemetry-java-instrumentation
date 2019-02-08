@@ -36,7 +36,9 @@ public class State {
   public void closeContinuation() {
     final TraceScope.Continuation continuation = continuationRef.getAndSet(null);
     if (continuation != null) {
-      continuation.close();
+      // We have opened this continuation, we shall not close parent scope when we close it,
+      // otherwise owners of that scope will get confused.
+      continuation.close(false);
     }
   }
 
