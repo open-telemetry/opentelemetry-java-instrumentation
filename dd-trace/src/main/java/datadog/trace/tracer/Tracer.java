@@ -148,6 +148,8 @@ public class Tracer implements Closeable {
 
   @Override
   public void close() {
+    // FIXME: Handle the possibility of close being called more than once or not at all.
+    // FIXME: Depends on order of execution between finalize, GC, and the shutdown hook.
     writer.close();
   }
 
