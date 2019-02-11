@@ -129,7 +129,8 @@ class SpanImplTest extends Specification {
     span.setMeta("boolean.key", true)
 
     then:
-    span.getMeta() == ["number.key": "123", "string.key": "meta string", "boolean.key": "true"]
+    span.getMeta() == ["number.key": 123, "string.key": "meta string", "boolean.key": true]
+    span.getMetaString() == ["number.key": "123", "string.key": "meta string", "boolean.key": "true"]
   }
 
   def "test meta setter on finished span for #key"() {
@@ -227,7 +228,7 @@ class SpanImplTest extends Specification {
 
     when: "finish/finalize span"
     span."$method"(*methodArgs)
-    
+
     then: "interceptors called"
     interceptors.reverseEach({ interceptor ->
       then:

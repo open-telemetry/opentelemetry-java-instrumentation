@@ -1,5 +1,7 @@
 package datadog.trace.tracer;
 
+import java.util.Map;
+
 /**
  * A single measurement of time with arbitrary key-value attributes.
  *
@@ -95,6 +97,13 @@ public interface Span {
   void attachThrowable(Throwable throwable);
 
   /**
+   * Get all the metadata attached to this span.
+   *
+   * @return immutable map of span metadata.
+   */
+  Map<String, Object> getMeta();
+
+  /**
    * Get a meta value on a span.
    *
    * @param key The meta key
@@ -127,5 +136,6 @@ public interface Span {
    *
    * @param finishTimestampNanoseconds Epoch time in nanoseconds.
    */
+  // FIXME: This should take a Timestamp object instead.
   void finish(long finishTimestampNanoseconds);
 }

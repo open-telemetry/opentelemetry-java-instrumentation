@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -212,8 +213,18 @@ class SpanImpl implements Span {
     }
   }
 
+  @Override
+  public synchronized Map<String, Object> getMeta() {
+    return Collections.unmodifiableMap(meta);
+  }
+
+  /**
+   * The agent expects meta's values to be strings.
+   *
+   * @return a copy of meta with all values converted to strings.
+   */
   @JsonGetter("meta")
-  synchronized Map<String, String> getMeta() {
+  synchronized Map<String, String> getMetaString() {
     final Map<String, String> result = new HashMap<>(meta.size());
     for (final Map.Entry<String, Object> entry : meta.entrySet()) {
       result.put(entry.getKey(), String.valueOf(entry.getValue()));
@@ -264,6 +275,7 @@ class SpanImpl implements Span {
     }
   }
 
+  // FIXME: This should take a Timestamp object instead.
   @Override
   public synchronized void finish(final long finishTimestampNanoseconds) {
     if (isFinished()) {
