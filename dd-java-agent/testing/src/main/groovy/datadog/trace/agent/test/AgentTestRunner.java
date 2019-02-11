@@ -24,6 +24,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.type.TypeDescription;
@@ -54,6 +55,7 @@ import spock.lang.Specification;
  */
 @RunWith(SpockRunner.class)
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
+@Slf4j
 public abstract class AgentTestRunner extends Specification {
   /**
    * For test runs, agent's global tracer will report to this list writer.
@@ -114,9 +116,11 @@ public abstract class AgentTestRunner extends Specification {
       final JavaModule module,
       final boolean loaded,
       final Throwable throwable) {
-    System.err.println(
-        "Unexpected instrumentation error when instrumenting " + typeName + " on " + classLoader);
-    throwable.printStackTrace();
+    log.error(
+        "Unexpected instrumentation error when instrumenting {} on {}",
+        typeName,
+        classLoader,
+        throwable);
     return true;
   }
 
@@ -162,6 +166,7 @@ public abstract class AgentTestRunner extends Specification {
   public void beforeTest() {
     assert getTestTracer().activeSpan() == null
         : "Span is active before test has started: " + getTestTracer().activeSpan();
+    log.debug("Starting test: '{}'", getSpecificationContext().getCurrentIteration().getName());
     TEST_WRITER.start();
   }
 
