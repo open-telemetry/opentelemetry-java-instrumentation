@@ -30,7 +30,6 @@ class TraceUtils {
 
       throw e
     } finally {
-      ((TraceScope) scope).setAsyncPropagation(false)
       scope.close()
     }
   }

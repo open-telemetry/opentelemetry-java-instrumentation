@@ -8,11 +8,8 @@ import io.opentracing.util.GlobalTracer
 import spock.lang.Shared
 
 import java.lang.reflect.InvocationTargetException
-import java.lang.reflect.Method
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
-import java.util.concurrent.Executor
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
@@ -23,31 +20,21 @@ import java.util.concurrent.TimeUnit
  * This is to large extent a copy of ExecutorInstrumentationTest.
  */
 class AkkaExecutorInstrumentationTest extends AgentTestRunner {
-  @Shared
-  Method executeRunnableMethod
-  @Shared
-  Method akkaExecuteForkJoinTaskMethod
-  @Shared
-  Method submitRunnableMethod
-  @Shared
-  Method submitCallableMethod
-  @Shared
-  Method akkaSubmitForkJoinTaskMethod
-  @Shared
-  Method akkaInvokeForkJoinTaskMethod
 
-  def setupSpec() {
-    executeRunnableMethod = Executor.getMethod("execute", Runnable)
-    akkaExecuteForkJoinTaskMethod = ForkJoinPool.getMethod("execute", ForkJoinTask)
-    submitRunnableMethod = ExecutorService.getMethod("submit", Runnable)
-    submitCallableMethod = ExecutorService.getMethod("submit", Callable)
-    akkaSubmitForkJoinTaskMethod = ForkJoinPool.getMethod("submit", ForkJoinTask)
-    akkaInvokeForkJoinTaskMethod = ForkJoinPool.getMethod("invoke", ForkJoinTask)
-  }
+  @Shared
+  def executeRunnable = { e, c -> e.execute((Runnable) c) }
+  @Shared
+  def akkaExecuteForkJoinTask = { e, c -> e.execute((ForkJoinTask) c) }
+  @Shared
+  def submitRunnable = { e, c -> e.submit((Runnable) c) }
+  @Shared
+  def submitCallable = { e, c -> e.submit((Callable) c) }
+  @Shared
+  def akkaSubmitForkJoinTask = { e, c -> e.submit((ForkJoinTask) c) }
+  @Shared
+  def akkaInvokeForkJoinTask = { e, c -> e.invoke((ForkJoinTask) c) }
 
-  // more useful name breaks java9 javac
-  // def "#poolImpl.getClass().getSimpleName() #method.getName() propagates"()
-  def "#poolImpl #method propagates"() {
+  def "#poolImpl '#name' propagates"() {
     setup:
     def pool = poolImpl
     def m = method
@@ -58,9 +45,9 @@ class AkkaExecutorInstrumentationTest extends AgentTestRunner {
       void run() {
         ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
         // this child will have a span
-        m.invoke(pool, new AkkaAsyncChild())
+        m(pool, new AkkaAsyncChild())
         // this child won't
-        m.invoke(pool, new AkkaAsyncChild(false, false))
+        m(pool, new AkkaAsyncChild(false, false))
       }
     }.run()
 
@@ -79,22 +66,21 @@ class AkkaExecutorInstrumentationTest extends AgentTestRunner {
 
     // Unfortunately, there's no simple way to test the cross product of methods/pools.
     where:
-    poolImpl                                                                                      | method
-    new ForkJoinPool()                                                                            | executeRunnableMethod
-    new ForkJoinPool()                                                                            | akkaExecuteForkJoinTaskMethod
-    new ForkJoinPool()                                                                            | submitRunnableMethod
-    new ForkJoinPool()                                                                            | submitCallableMethod
-    new ForkJoinPool()                                                                            | akkaSubmitForkJoinTaskMethod
-    new ForkJoinPool()                                                                            | akkaInvokeForkJoinTaskMethod
+    name                   | method                  | poolImpl
+    "execute Runnable"     | executeRunnable         | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
+    "submit Runnable"      | submitRunnable          | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
+    "submit Callable"      | submitCallable          | new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1))
 
-    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | executeRunnableMethod
-    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitRunnableMethod
-    new ThreadPoolExecutor(1, 1, 1000, TimeUnit.NANOSECONDS, new ArrayBlockingQueue<Runnable>(1)) | submitCallableMethod
+    // ForkJoinPool has additional set of method overloads for ForkJoinTask to deal with
+    "execute Runnable"     | executeRunnable         | new ForkJoinPool()
+    "execute ForkJoinTask" | akkaExecuteForkJoinTask | new ForkJoinPool()
+    "submit Runnable"      | submitRunnable          | new ForkJoinPool()
+    "submit Callable"      | submitCallable          | new ForkJoinPool()
+    "submit ForkJoinTask"  | akkaSubmitForkJoinTask  | new ForkJoinPool()
+    "invoke ForkJoinTask"  | akkaInvokeForkJoinTask  | new ForkJoinPool()
   }
 
-  // more useful name breaks java9 javac
-  // def "#poolImpl.getClass().getSimpleName() #method.getName() propagates"()
-  def "#poolImpl reports after canceled jobs"() {
+  def "#poolImpl '#name' reports after canceled jobs"() {
     setup:
     def pool = poolImpl
     def m = method
@@ -117,7 +103,7 @@ class AkkaExecutorInstrumentationTest extends AgentTestRunner {
             final AkkaAsyncChild child = new AkkaAsyncChild(true, true)
             children.add(child)
             try {
-              Future f = m.invoke(pool, new AkkaAsyncChild())
+              Future f = m(pool, new AkkaAsyncChild())
               jobFutures.add(f)
             } catch (InvocationTargetException e) {
               throw e.getCause()
@@ -142,8 +128,8 @@ class AkkaExecutorInstrumentationTest extends AgentTestRunner {
     TEST_WRITER.size() == 1
 
     where:
-    poolImpl           | method
-    new ForkJoinPool() | submitRunnableMethod
-    new ForkJoinPool() | submitCallableMethod
+    name              | method         | poolImpl
+    "submit Runnable" | submitRunnable | new ForkJoinPool()
+    "submit Callable" | submitCallable | new ForkJoinPool()
   }
 }
