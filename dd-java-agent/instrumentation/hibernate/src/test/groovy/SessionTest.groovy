@@ -1,5 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
+import io.opentracing.tag.Tags
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.boot.MetadataSources
@@ -7,7 +9,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder
 import spock.lang.Shared
 
-class HibernateTest extends AgentTestRunner {
+class SessionTest extends AgentTestRunner {
 
   @Shared
   private SessionFactory sessionFactory
@@ -20,10 +22,8 @@ class HibernateTest extends AgentTestRunner {
     try {
       sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
     } catch (Exception e) {
-      System.out.println(e.toString());
-      StandardServiceRegistryBuilder.destroy(registry);
+      StandardServiceRegistryBuilder.destroy(registry)
     }
-
   }
 
   def cleanupSpec() {
@@ -41,18 +41,7 @@ class HibernateTest extends AgentTestRunner {
     session.getTransaction().commit()
     session.close()
 
-//    session = sessionFactory.openSession()
-//    session.beginTransaction()
-//    List result = session.createQuery("from Value").list()
-//    for (Value value : (List<Value>) result) {
-//      System.out.println(value.getName())
-//    }
-//    session.getTransaction().commit()
-//    session.close()
-
     expect:
-//    result.size() == 2
-
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
@@ -68,8 +57,43 @@ class HibernateTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        span(1) {
+          serviceName "hibernate"
+          resourceName "hibernate.transaction.commit"
+          operationName "hibernate.transaction.commit"
+          spanType DDSpanTypes.HIBERNATE
+          childOf span(0)
+          tags {
+            "$Tags.COMPONENT.key" "hibernate-java"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            defaultTags()
+          }
+        }
+        span(2) {
+          serviceName "hibernate"
+          resourceName "hibernate.save"
+          operationName "hibernate.save"
+          spanType DDSpanTypes.HIBERNATE
+          childOf span(0)
+          tags {
+            "$Tags.COMPONENT.key" "hibernate-java"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            defaultTags()
+          }
+        }
+        span(3) {
+          serviceName "hibernate"
+          resourceName "hibernate.save"
+          operationName "hibernate.save"
+          spanType DDSpanTypes.HIBERNATE
+          childOf span(0)
+          tags {
+            "$Tags.COMPONENT.key" "hibernate-java"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            defaultTags()
+          }
+        }
       }
     }
   }
-
 }

@@ -35,9 +35,9 @@ import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 
 @AutoService(Instrumenter.class)
-public class HibernateInstrumentation extends Instrumenter.Default {
+public class SessionInstrumentation extends Instrumenter.Default {
 
-  public HibernateInstrumentation() {
+  public SessionInstrumentation() {
     super("hibernate");
   }
 
