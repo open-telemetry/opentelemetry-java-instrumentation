@@ -14,6 +14,7 @@ public class DDSpanTypes {
   public static final String REDIS = "redis";
   public static final String MEMCACHED = "memcached";
   public static final String ELASTICSEARCH = "elasticsearch";
+  public static final String HIBERNATE = "hibernate"; // TODO: Could this just be "db", or "orm"?
 
   public static final String MESSAGE_CLIENT = "queue";
   public static final String MESSAGE_CONSUMER = "queue";
