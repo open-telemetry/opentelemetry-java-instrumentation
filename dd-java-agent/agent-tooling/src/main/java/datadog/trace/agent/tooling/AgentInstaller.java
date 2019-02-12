@@ -18,6 +18,7 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.utility.JavaModule;
 
 @Slf4j
@@ -64,6 +65,12 @@ public class AgentInstaller {
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
             .ignore(any(), skipClassLoader())
+            // Unlikely to ever need to instrument an annotation:
+            .or(ElementMatchers.<TypeDescription>isAnnotation())
+            // Unlikely to ever need to instrument an enum:
+            .or(ElementMatchers.<TypeDescription>isEnum())
+            // Exclude generated classes like proxies:
+            .or(ElementMatchers.<TypeDescription>isSynthetic())
             .or(
                 nameStartsWith("datadog.trace.")
                     // FIXME: We should remove this once
