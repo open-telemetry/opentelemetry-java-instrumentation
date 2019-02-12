@@ -12,8 +12,6 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
-import io.opentracing.Scope;
-import io.opentracing.Span;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +31,7 @@ public class TransactionInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> map = new HashMap<>();
-    map.put("org.hibernate.Transaction", Span.class.getName());
+    map.put("org.hibernate.Transaction", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
@@ -41,6 +39,7 @@ public class TransactionInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
+      "datadog.trace.instrumentation.hibernate.SessionState",
     };
   }
 
@@ -64,10 +63,10 @@ public class TransactionInstrumentation extends Instrumenter.Default {
   public static class TransactionCommitAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startCommit(@Advice.This final Transaction transaction) {
+    public static SessionState startCommit(@Advice.This final Transaction transaction) {
 
-      final ContextStore<Transaction, Span> contextStore =
-          InstrumentationContext.get(Transaction.class, Span.class);
+      final ContextStore<Transaction, SessionState> contextStore =
+          InstrumentationContext.get(Transaction.class, SessionState.class);
 
       return SessionMethodUtils.startScopeFrom(
           contextStore, transaction, "hibernate.transaction.commit");
@@ -76,10 +75,10 @@ public class TransactionInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endCommit(
         @Advice.This final Transaction transaction,
-        @Advice.Enter final Scope scope,
+        @Advice.Enter final SessionState state,
         @Advice.Thrown final Throwable throwable) {
 
-      SessionMethodUtils.closeScope(scope, throwable);
+      SessionMethodUtils.closeScope(state, throwable);
     }
   }
 }

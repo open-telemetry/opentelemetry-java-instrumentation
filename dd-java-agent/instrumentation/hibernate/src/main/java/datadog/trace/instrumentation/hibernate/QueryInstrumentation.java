@@ -12,8 +12,6 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
-import io.opentracing.Scope;
-import io.opentracing.Span;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +31,7 @@ public class QueryInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> map = new HashMap<>();
-    map.put("org.hibernate.query.Query", Span.class.getName());
+    map.put("org.hibernate.query.Query", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
@@ -41,6 +39,7 @@ public class QueryInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
+      "datadog.trace.instrumentation.hibernate.SessionState",
     };
   }
 
@@ -65,10 +64,10 @@ public class QueryInstrumentation extends Instrumenter.Default {
   public static class QueryListAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startList(@Advice.This final Query query) {
+    public static SessionState startList(@Advice.This final Query query) {
 
-      final ContextStore<Query, Span> contextStore =
-          InstrumentationContext.get(Query.class, Span.class);
+      final ContextStore<Query, SessionState> contextStore =
+          InstrumentationContext.get(Query.class, SessionState.class);
 
       return SessionMethodUtils.startScopeFrom(contextStore, query, "hibernate.query.list");
     }
@@ -76,10 +75,10 @@ public class QueryInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endList(
         @Advice.This final Query query,
-        @Advice.Enter final Scope scope,
+        @Advice.Enter final SessionState state,
         @Advice.Thrown final Throwable throwable) {
 
-      SessionMethodUtils.closeScope(scope, throwable);
+      SessionMethodUtils.closeScope(state, throwable);
     }
   }
 }

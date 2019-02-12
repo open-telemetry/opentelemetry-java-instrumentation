@@ -10,33 +10,73 @@ import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
+import javax.persistence.Entity;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 
 public class SessionMethodUtils {
 
+  public static String entityName(final Object entityOrName) {
+    String name = "unknown object";
+    if (entityOrName == null) {
+      return name; // Hibernate can internally call save(null, Entity).
+    }
+    if (entityOrName instanceof String) {
+      name = (String) entityOrName;
+    } else if (entityOrName.getClass().isAnnotationPresent(Entity.class)) {
+      // This is the object being replicated.
+      name = entityOrName.getClass().getName();
+    }
+    return name;
+  }
+
   // Starts a scope as a child from a Span, where the Span is attached to the given spanKey using
   // the given contextStore.
-  public static <T> Scope startScopeFrom(
-      final ContextStore<T, Span> contextStore, final T spanKey, final String operationName) {
+  public static <T> SessionState startScopeFrom(
+      final ContextStore<T, SessionState> contextStore,
+      final T spanKey,
+      final String operationName,
+      final String resourceName) {
 
-    final Span span = contextStore.get(spanKey);
+    final SessionState sessionState = contextStore.get(spanKey);
+
+    if (sessionState.getMethodScope() != null) {
+      // This method call was re-entrant. Do nothing, since it is being traced by the parent/first
+      // call.
+      return sessionState;
+    }
 
     final Scope scope =
         GlobalTracer.get()
             .buildSpan(operationName)
-            .asChildOf(span) // Can be null.
+            .asChildOf(sessionState.getSessionSpan())
             .withTag(DDTags.SERVICE_NAME, "hibernate")
             .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HIBERNATE)
+            .withTag(DDTags.RESOURCE_NAME, resourceName)
             .withTag(Tags.COMPONENT.getKey(), "hibernate-java")
             .startActive(true);
+    sessionState.setMethodScope(scope);
 
-    return scope;
+    return sessionState;
+  }
+
+  public static <T> SessionState startScopeFrom(
+      final ContextStore<T, SessionState> contextStore,
+      final T spanKey,
+      final String operationName) {
+    return startScopeFrom(contextStore, spanKey, operationName, operationName);
   }
 
   // Closes a Scope/Span, adding an error tag if the given Throwable is not null.
-  public static void closeScope(final Scope scope, final Throwable throwable) {
+  public static void closeScope(final SessionState sessionState, final Throwable throwable) {
 
+    if (sessionState == null || sessionState.getMethodScope() == null) {
+      // This method call was re-entrant. Do nothing, since it is being traced by the parent/first
+      // call.
+      return;
+    }
+
+    final Scope scope = sessionState.getMethodScope();
     final Span span = scope.span();
     if (throwable != null) {
       Tags.ERROR.set(span, true);
@@ -45,14 +85,15 @@ public class SessionMethodUtils {
 
     span.finish();
     scope.close();
+    sessionState.setMethodScope(null);
   }
 
   // Copies a span from the given Session ContextStore into the targetContextStore. Used to
   // propagate a Span from a Session to transient Session objects such as Transaction and Query.
   public static <T> void attachSpanFromSession(
-      final ContextStore<Session, Span> sessionContextStore,
+      final ContextStore<Session, SessionState> sessionContextStore,
       final SharedSessionContract session,
-      final ContextStore<T, Span> targetContextStore,
+      final ContextStore<T, SessionState> targetContextStore,
       final T target) {
 
     if (!(session instanceof Session)
@@ -61,11 +102,11 @@ public class SessionMethodUtils {
       return;
     }
 
-    final Span span = sessionContextStore.get((Session) session);
-    if (span == null) {
+    final SessionState state = sessionContextStore.get((Session) session);
+    if (state == null) {
       return;
     }
 
-    targetContextStore.putIfAbsent(target, span);
+    targetContextStore.putIfAbsent(target, state);
   }
 }

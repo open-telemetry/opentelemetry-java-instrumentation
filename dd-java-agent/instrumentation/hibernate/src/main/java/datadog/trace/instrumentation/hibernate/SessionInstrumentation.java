@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.hibernate;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.hibernate.SessionMethodUtils.entityName;
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -8,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
@@ -16,7 +18,6 @@ import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
-import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
@@ -44,9 +45,9 @@ public class SessionInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> map = new HashMap<>();
-    map.put("org.hibernate.Session", Span.class.getName());
-    map.put("org.hibernate.query.Query", Span.class.getName());
-    map.put("org.hibernate.Transaction", Span.class.getName());
+    map.put("org.hibernate.Session", SessionState.class.getName());
+    map.put("org.hibernate.query.Query", SessionState.class.getName());
+    map.put("org.hibernate.Transaction", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
@@ -54,6 +55,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
+      "datadog.trace.instrumentation.hibernate.SessionState",
     };
   }
 
@@ -70,6 +72,8 @@ public class SessionInstrumentation extends Instrumenter.Default {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
+    // Session lifecycle. A span will cover openSession->Session.close, but no scope will be
+    // generated.
     transformers.put(
         isMethod()
             .and(named("openSession"))
@@ -83,12 +87,34 @@ public class SessionInstrumentation extends Instrumenter.Default {
             .and(isDeclaredBy(safeHasSuperType(named("org.hibernate.Session"))))
             .and(takesArguments(0)),
         SessionCloseAdvice.class.getName());
+
+    // Session synchronous methods we want to instrument.
     transformers.put(
         isMethod()
-            .and(named("save"))
+            .and(
+                named("save")
+                    .or(named("replicate"))
+                    .or(named("saveOrUpdate"))
+                    .or(named("update"))
+                    .or(named("merge"))
+                    .or(named("persist"))
+                    .or(named("lock"))
+                    .or(named("refresh"))
+                    .or(named("delete")))
+            .and(isDeclaredBy(safeHasSuperType(named("org.hibernate.Session")))),
+        SessionMethodAdvice.class.getName());
+    // Handle the generic and non-generic 'get' separately.
+    transformers.put(
+        isMethod()
+            .and(named("get"))
             .and(isDeclaredBy(safeHasSuperType(named("org.hibernate.Session"))))
-            .and(takesArguments(1)),
-        SessionSaveAdvice.class.getName());
+            .and(returns(named("java.lang.Object")))
+            .and(takesArgument(0, named("java.lang.String"))),
+        SessionMethodAdvice.class.getName());
+
+    // These methods return some object that we want to instrument, and so the Advice will pin the
+    // current Span to
+    // the returned object using a ContextStore.
     transformers.put(
         isMethod()
             .and(named("beginTransaction").or(named("getTransaction")))
@@ -99,8 +125,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
     transformers.put(
         isMethod()
             .and(named("createQuery"))
-            .and(isDeclaredBy(safeHasSuperType(named("org.hibernate.SharedSessionContract"))))
-            .and(takesArguments(1)),
+            .and(isDeclaredBy(safeHasSuperType(named("org.hibernate.SharedSessionContract")))),
         GetQueryAdvice.class.getName());
 
     return transformers;
@@ -120,9 +145,9 @@ public class SessionInstrumentation extends Instrumenter.Default {
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
               .start();
 
-      final ContextStore<Session, Span> contextStore =
-          InstrumentationContext.get(Session.class, Span.class);
-      contextStore.putIfAbsent(session, span);
+      final ContextStore<Session, SessionState> contextStore =
+          InstrumentationContext.get(Session.class, SessionState.class);
+      contextStore.putIfAbsent(session, new SessionState(span));
     }
   }
 
@@ -132,13 +157,17 @@ public class SessionInstrumentation extends Instrumenter.Default {
     public static void closeSession(
         @Advice.This final Session session, @Advice.Thrown final Throwable throwable) {
 
-      final ContextStore<Session, Span> contextStore =
-          InstrumentationContext.get(Session.class, Span.class);
-      final Span span = contextStore.get(session);
-
-      if (span == null) {
+      final ContextStore<Session, SessionState> contextStore =
+          InstrumentationContext.get(Session.class, SessionState.class);
+      final SessionState state = contextStore.get(session);
+      if (state == null || state.getSessionSpan() == null) {
         return;
       }
+      if (state.getMethodScope() != null) {
+        System.err.println("THIS IS WRONG"); // TODO: proper warning/logging.
+      }
+      final Span span = state.getSessionSpan();
+
       if (throwable != null) {
         Tags.ERROR.set(span, true);
         span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
@@ -147,24 +176,27 @@ public class SessionInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class SessionSaveAdvice {
+  public static class SessionMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSave(
-        @Advice.This final Session session, @Advice.Argument(0) final Object entity) {
+    public static SessionState startSave(
+        @Advice.This final Session session,
+        @Advice.Origin("#m") final String name,
+        @Advice.Argument(0) final Object entity) {
 
-      final ContextStore<Session, Span> contextStore =
-          InstrumentationContext.get(Session.class, Span.class);
-      return SessionMethodUtils.startScopeFrom(contextStore, session, "hibernate.save");
+      final ContextStore<Session, SessionState> contextStore =
+          InstrumentationContext.get(Session.class, SessionState.class);
+      return SessionMethodUtils.startScopeFrom(
+          contextStore, session, "hibernate." + name, entityName(entity));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endSave(
         @Advice.This final Session session,
-        @Advice.Enter final Scope scope,
+        @Advice.Enter final SessionState sessionState,
         @Advice.Thrown final Throwable throwable) {
 
-      SessionMethodUtils.closeScope(scope, throwable);
+      SessionMethodUtils.closeScope(sessionState, throwable);
     }
   }
 
@@ -179,10 +211,10 @@ public class SessionInstrumentation extends Instrumenter.Default {
         return;
       }
 
-      final ContextStore<Session, Span> sessionContextStore =
-          InstrumentationContext.get(Session.class, Span.class);
-      final ContextStore<Query, Span> queryContextStore =
-          InstrumentationContext.get(Query.class, Span.class);
+      final ContextStore<Session, SessionState> sessionContextStore =
+          InstrumentationContext.get(Session.class, SessionState.class);
+      final ContextStore<Query, SessionState> queryContextStore =
+          InstrumentationContext.get(Query.class, SessionState.class);
 
       SessionMethodUtils.attachSpanFromSession(
           sessionContextStore, session, queryContextStore, query);
@@ -196,10 +228,10 @@ public class SessionInstrumentation extends Instrumenter.Default {
         @Advice.This final AbstractSharedSessionContract session,
         @Advice.Return(readOnly = false) final Transaction transaction) {
 
-      final ContextStore<Session, Span> sessionContextStore =
-          InstrumentationContext.get(Session.class, Span.class);
-      final ContextStore<Transaction, Span> transactionContextStore =
-          InstrumentationContext.get(Transaction.class, Span.class);
+      final ContextStore<Session, SessionState> sessionContextStore =
+          InstrumentationContext.get(Session.class, SessionState.class);
+      final ContextStore<Transaction, SessionState> transactionContextStore =
+          InstrumentationContext.get(Transaction.class, SessionState.class);
 
       SessionMethodUtils.attachSpanFromSession(
           sessionContextStore, session, transactionContextStore, transaction);
