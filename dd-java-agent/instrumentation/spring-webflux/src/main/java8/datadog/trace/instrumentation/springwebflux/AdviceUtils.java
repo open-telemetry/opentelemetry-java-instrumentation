@@ -1,18 +1,17 @@
 package datadog.trace.instrumentation.springwebflux;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
-
+import datadog.trace.instrumentation.reactor.core.ReactorCoreAdviceUtils;
 import io.opentracing.Span;
-import io.opentracing.tag.Tags;
-import java.util.Collections;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.server.ServerWebExchange;
 
+@Slf4j
 public class AdviceUtils {
 
   public static final String SPAN_ATTRIBUTE = "datadog.trace.instrumentation.springwebflux.Span";
   public static final String PARENT_SPAN_ATTRIBUTE =
-      "datadog.trace.instrumentation.springwebflux.ParentSpan";
+    "datadog.trace.instrumentation.springwebflux.ParentSpan";
 
   public static String parseOperationName(final Object handler) {
     final String className = parseClassName(handler.getClass());
@@ -43,23 +42,13 @@ public class AdviceUtils {
 
   public static void finishSpanIfPresent(
     final ServerWebExchange exchange, final Throwable throwable) {
-    // Span could have been removed and finished by other thread before we got here
-    finishSpanIfPresent((Span) exchange.getAttributes().remove(SPAN_ATTRIBUTE), throwable);
+    ReactorCoreAdviceUtils.finishSpanIfPresent(
+      (Span) exchange.getAttributes().remove(SPAN_ATTRIBUTE), throwable);
   }
 
   public static void finishSpanIfPresent(
     final ServerRequest serverRequest, final Throwable throwable) {
-    // Span could have been removed and finished by other thread before we got here
-    finishSpanIfPresent((Span) serverRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
-  }
-
-  private static void finishSpanIfPresent(final Span span, final Throwable throwable) {
-    if (span != null) {
-      if (throwable != null) {
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-      }
-      span.finish();
-    }
+    ReactorCoreAdviceUtils.finishSpanIfPresent(
+      (Span) serverRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
   }
 }

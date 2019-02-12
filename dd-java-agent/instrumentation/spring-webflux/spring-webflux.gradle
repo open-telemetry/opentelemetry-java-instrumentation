@@ -25,6 +25,12 @@ compileMain_java8Java {
   sourceCompatibility = 1.8
   targetCompatibility = 1.8
 }
+// Note: ideally lombok plugin would do this for us, but currently it doesn't support custom
+// source sets. See https://github.com/franzbecker/gradle-lombok/issues/17.
+dependencies {
+  main_java8CompileOnly "org.projectlombok:lombok:${project.lombok.version}" transitive false
+  main_java8AnnotationProcessor "org.projectlombok:lombok:${project.lombok.version}" transitive false
+}
 
 apply plugin: 'org.unbroken-dome.test-sets'
 
@@ -44,7 +50,8 @@ compileLatestDepTestJava {
 }
 
 dependencies {
-
+  // We use helpers from this project
+  main_java8CompileOnly project(':dd-java-agent:instrumentation:reactor-core-3.1')
   main_java8CompileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
 
   main_java8Compile project(':dd-java-agent:agent-tooling')
@@ -53,12 +60,12 @@ dependencies {
   main_java8Compile deps.opentracing
 
   compileOnly sourceSets.main_java8.compileClasspath
-
   compile sourceSets.main_java8.output
 
-  compileOnly group: 'org.springframework', name: 'spring-webflux', version: '5.0.0.RELEASE'
-
   compile project(':dd-java-agent:agent-tooling')
+  // We are using utils class from reactor-core instrumentation.
+  // TODO: It is unclear why we need to use `compile` here (instead of 'compileOnly')
+  compile project(':dd-java-agent:instrumentation:reactor-core-3.1')
 
   compile deps.bytebuddy
   compile deps.opentracing
@@ -66,9 +73,10 @@ dependencies {
   implementation deps.autoservice
 
   testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
   testCompile project(':dd-java-agent:instrumentation:trace-annotation')
   testCompile project(':dd-java-agent:instrumentation:netty-4.1')
-  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  testCompile project(':dd-java-agent:instrumentation:reactor-core-3.1')
 
   testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-webflux', version: '2.0.0.RELEASE'
   testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.0.0.RELEASE'

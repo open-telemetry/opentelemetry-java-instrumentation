@@ -1,5 +1,6 @@
 package dd.trace.instrumentation.springwebflux
 
+import datadog.trace.api.Trace
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.http.MediaType
@@ -9,7 +10,6 @@ import org.springframework.web.reactive.function.server.HandlerFunction
 import org.springframework.web.reactive.function.server.RouterFunction
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 import java.time.Duration
@@ -63,6 +63,23 @@ class SpringWebFluxTestApplication {
       Mono<ServerResponse> handle(ServerRequest request) {
         return Mono.error(new RuntimeException("bad things happen"))
       }
+    }).andRoute(GET("/greet-traced-method/{id}"), new HandlerFunction<ServerResponse>() {
+      @Override
+      Mono<ServerResponse> handle(ServerRequest request) {
+        return greetingHandler.intResponse(Mono.just(tracedMethod(request.pathVariable("id").toInteger())))
+      }
+    }).andRoute(GET("/greet-mono-from-callable/{id}"), new HandlerFunction<ServerResponse>() {
+      @Override
+      Mono<ServerResponse> handle(ServerRequest request) {
+        return greetingHandler.intResponse(Mono.fromCallable {
+          return tracedMethod(request.pathVariable("id").toInteger())
+        })
+      }
+    }).andRoute(GET("/greet-delayed-mono/{id}"), new HandlerFunction<ServerResponse>() {
+      @Override
+      Mono<ServerResponse> handle(ServerRequest request) {
+        return greetingHandler.intResponse(Mono.just(request.pathVariable("id").toInteger()).delayElement(Duration.ofMillis(100)).map { i -> tracedMethod(i) })
+      }
     })
   }
 
@@ -90,11 +107,15 @@ class SpringWebFluxTestApplication {
         .body(BodyInserters.fromObject(DEFAULT_RESPONSE + " " + request.pathVariable("name") + " " + request.pathVariable("word")))
     }
 
-    Mono<ServerResponse> counterGreet(ServerRequest request) {
-      final int countTo = Integer.valueOf(request.pathVariable("count"))
-      FooModel[] fooArray = FooModel.createXFooModels(countTo)
-      return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-        .body(Flux.fromArray(fooArray), FooModel)
+    Mono<ServerResponse> intResponse(Mono<FooModel> mono) {
+      return ServerResponse.ok().contentType(MediaType.TEXT_PLAIN)
+        .body(BodyInserters.fromPublisher(mono.map { i -> DEFAULT_RESPONSE + " " + i.id }, String))
+
     }
+  }
+
+  @Trace()
+  private static FooModel tracedMethod(long id) {
+    return new FooModel(id, "tracedMethod")
   }
 }

@@ -3,11 +3,14 @@ package datadog.trace.instrumentation.springwebflux;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.reactor.core.ReactorCoreAdviceUtils;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
+import java.util.function.Function;
 import net.bytebuddy.asm.Advice;
+import org.reactivestreams.Publisher;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -42,12 +45,11 @@ public class DispatcherHandlerAdvice {
     @Advice.Enter final Scope scope,
     @Advice.Thrown final Throwable throwable,
     @Advice.Argument(0) final ServerWebExchange exchange,
-    @Advice.Return(readOnly = false) Mono<?> returnMono) {
-    if (throwable == null && returnMono != null) {
-      returnMono =
-        returnMono
-          .doOnSuccessOrError(new DispatcherHandlerOnSuccessOrError<>(exchange))
-          .doOnCancel(new DispatcherHandlerOnCancel(exchange));
+    @Advice.Return(readOnly = false) Mono<Object> mono) {
+    if (throwable == null && mono != null) {
+      final Function<? super Mono<Object>, ? extends Publisher<Object>> function =
+        ReactorCoreAdviceUtils.finishSpanNextOrError();
+      mono = ReactorCoreAdviceUtils.setPublisherSpan(mono, scope.span());
     } else if (throwable != null) {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
     }
