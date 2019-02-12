@@ -32,8 +32,8 @@ repositories {
 
 description = 'dd-trace-java'
 
-task traceAgentTest {}
-task latestDepTest {}
+tasks.register("traceAgentTest")
+tasks.register("latestDepTest")
 
 // Applied here to allow publishing of artifactory build info
 apply from: "${rootDir}/gradle/publish.gradle"
@@ -50,13 +50,13 @@ buildScan {
   }
 }
 
-ext.gradleWrapperVersion = '4.10.2'
-task wrapper(type: Wrapper) {
+ext.gradleWrapperVersion = '4.10.3'
+tasks.register("wrapper", Wrapper) {
   gradleVersion = gradleWrapperVersion
 }
 
 allprojects {
-  tasks.withType(JavaForkOptions) {
+  tasks.withType(JavaForkOptions).configureEach {
     maxHeapSize = System.properties["datadog.forkedMaxHeapSize"]
     minHeapSize = System.properties["datadog.forkedMinHeapSize"]
     jvmArgs "-XX:ErrorFile=/tmp/hs_err_pid%p.log"

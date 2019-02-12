@@ -42,13 +42,13 @@ dependencies {
 }
 
 // See comment for FieldBackedProviderFieldInjectionDisabledTest about why this hack is here
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   if (name != "testDisabledFieldInjection") {
     exclude "context/FieldBackedProviderFieldInjectionDisabledTest.class"
   }
 }
 
-task testDisabledFieldInjection(type: Test) {
+tasks.register("testDisabledFieldInjection", Test) {
   systemProperties "dd.trace.runtime.context.field.injection": "false"
   include "context/FieldBackedProviderFieldInjectionDisabledTest.class"
 }
