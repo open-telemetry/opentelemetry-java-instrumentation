@@ -40,7 +40,6 @@ import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -88,8 +87,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   private final DatadogHttpCodec.Injector injector;
   private final DatadogHttpCodec.Extractor extractor;
-
-  private final AtomicInteger traceCount;
 
   /** By default, report to local agent and collect all traces. */
   public DDTracer() {
@@ -240,12 +237,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
     if (this.writer instanceof DDAgentWriter) {
       final DDApi api = ((DDAgentWriter) this.writer).getApi();
-      traceCount = api.getTraceCounter();
       if (sampler instanceof DDApi.ResponseListener) {
         api.addResponseListener((DDApi.ResponseListener) this.sampler);
       }
-    } else {
-      traceCount = new AtomicInteger(0);
     }
 
     registerClassLoader(ClassLoader.getSystemClassLoader());
@@ -385,7 +379,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   /** Increment the reported trace count, but do not write a trace. */
   void incrementTraceCount() {
-    traceCount.incrementAndGet();
+    writer.incrementTraceCount();
   }
 
   @Override

@@ -132,7 +132,7 @@ class DDTracerTest extends Specification {
 
     expect:
     tracer.writer instanceof DDAgentWriter
-    tracer.traceCount.is(((DDAgentWriter) tracer.writer).getApi().traceCount)
+    tracer.writer.traceCount.is(((DDAgentWriter) tracer.writer).traceCount)
 
     where:
     key               | value

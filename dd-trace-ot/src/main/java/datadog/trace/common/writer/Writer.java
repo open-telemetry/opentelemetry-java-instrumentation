@@ -2,12 +2,13 @@ package datadog.trace.common.writer;
 
 import datadog.opentracing.DDSpan;
 import datadog.trace.api.Config;
+import java.io.Closeable;
 import java.util.List;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 
 /** A writer is responsible to send collected spans to some place */
-public interface Writer {
+public interface Writer extends Closeable {
 
   /**
    * Write a trace represented by the entire list of all the finished spans
@@ -23,7 +24,11 @@ public interface Writer {
    * Indicates to the writer that no future writing will come and it should terminates all
    * connections and tasks
    */
+  @Override
   void close();
+
+  /** Count that a trace was captured for stats, but without reporting it. */
+  void incrementTraceCount();
 
   @Slf4j
   final class Builder {

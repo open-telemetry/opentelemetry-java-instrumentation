@@ -45,6 +45,9 @@ public class ListWriter extends CopyOnWriteArrayList<List<DDSpan>> implements Wr
   }
 
   @Override
+  public void incrementTraceCount() {}
+
+  @Override
   public void start() {
     close();
   }
@@ -64,6 +67,6 @@ public class ListWriter extends CopyOnWriteArrayList<List<DDSpan>> implements Wr
 
   @Override
   public String toString() {
-    return "ListWriter { size=" + this.size() + " }";
+    return "ListWriter { size=" + size() + " }";
   }
 }

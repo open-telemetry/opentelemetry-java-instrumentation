@@ -1,6 +1,7 @@
 package datadog.trace.common.writer;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import datadog.opentracing.DDSpan;
@@ -8,11 +9,11 @@ import datadog.opentracing.DDTraceOTInfo;
 import datadog.trace.common.writer.unixdomainsockets.UnixDomainSocketFactory;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -20,6 +21,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okio.BufferedSink;
+import org.msgpack.core.MessagePack;
+import org.msgpack.core.MessagePacker;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 
 /** The API pointing to a DD agent */
@@ -38,7 +42,6 @@ public class DDApi {
 
   private final List<ResponseListener> responseListeners = new ArrayList<>();
 
-  private final AtomicInteger traceCount = new AtomicInteger(0);
   private volatile long nextAllowedLogTime = 0;
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new MessagePackFactory());
@@ -76,10 +79,6 @@ public class DDApi {
     }
   }
 
-  public AtomicInteger getTraceCounter() {
-    return traceCount;
-  }
-
   /**
    * Send traces to the DD agent
    *
@@ -87,12 +86,63 @@ public class DDApi {
    * @return the staus code returned
    */
   public boolean sendTraces(final List<List<DDSpan>> traces) {
-    final int totalSize = traceCount.getAndSet(0);
+    final List<byte[]> serializedTraces = new ArrayList<>(traces.size());
+    int sizeInBytes = 0;
+    for (final List<DDSpan> trace : traces) {
+      try {
+        final byte[] serializedTrace = serializeTrace(trace);
+        sizeInBytes += serializedTrace.length;
+        serializedTraces.add(serializedTrace);
+      } catch (final JsonProcessingException e) {
+        log.warn("Error serializing trace", e);
+      }
+    }
+
+    return sendSerializedTraces(serializedTraces.size(), sizeInBytes, serializedTraces);
+  }
+
+  byte[] serializeTrace(final List<DDSpan> trace) throws JsonProcessingException {
+    return OBJECT_MAPPER.writeValueAsBytes(trace);
+  }
+
+  boolean sendSerializedTraces(
+      final int representativeCount, final Integer sizeInBytes, final List<byte[]> traces) {
     try {
-      final RequestBody body = RequestBody.create(MSGPACK, OBJECT_MAPPER.writeValueAsBytes(traces));
+      final RequestBody body =
+          new RequestBody() {
+            @Override
+            public MediaType contentType() {
+              return MSGPACK;
+            }
+
+            @Override
+            public long contentLength() {
+              final int traceCount = traces.size();
+              // Need to allocate additional to handle MessagePacker.packArrayHeader
+              if (traceCount < (1 << 4)) {
+                return sizeInBytes + 1; // byte
+              } else if (traceCount < (1 << 16)) {
+                return sizeInBytes + 2; // short
+              } else {
+                return sizeInBytes + 4; // int
+              }
+            }
+
+            @Override
+            public void writeTo(final BufferedSink sink) throws IOException {
+              final OutputStream out = sink.outputStream();
+              final MessagePacker packer = MessagePack.newDefaultPacker(out);
+              packer.packArrayHeader(traces.size());
+              for (final byte[] trace : traces) {
+                packer.writePayload(trace);
+              }
+              packer.close();
+              out.close();
+            }
+          };
       final Request request =
           prepareRequest(tracesUrl)
-              .addHeader(X_DATADOG_TRACE_COUNT, String.valueOf(totalSize))
+              .addHeader(X_DATADOG_TRACE_COUNT, String.valueOf(representativeCount))
               .put(body)
               .build();
 
@@ -100,17 +150,18 @@ public class DDApi {
         if (response.code() != 200) {
           if (log.isDebugEnabled()) {
             log.debug(
-                "Error while sending {} of {} traces to the DD agent. Status: {}, ResponseMessage: ",
+                "Error while sending {} of {} traces to the DD agent. Status: {}, Response: {}, Body: {}",
                 traces.size(),
-                totalSize,
+                representativeCount,
                 response.code(),
-                response.message());
+                response.message(),
+                response.body().string());
           } else if (nextAllowedLogTime < System.currentTimeMillis()) {
             nextAllowedLogTime = System.currentTimeMillis() + MILLISECONDS_BETWEEN_ERROR_LOG;
             log.warn(
                 "Error while sending {} of {} traces to the DD agent. Status: {} (going silent for {} seconds)",
                 traces.size(),
-                totalSize,
+                representativeCount,
                 response.code(),
                 response.message(),
                 TimeUnit.MILLISECONDS.toMinutes(MILLISECONDS_BETWEEN_ERROR_LOG));
@@ -118,14 +169,18 @@ public class DDApi {
           return false;
         }
 
-        log.debug("Successfully sent {} of {} traces to the DD agent.", traces.size(), totalSize);
+        log.debug(
+            "Successfully sent {} of {} traces to the DD agent.",
+            traces.size(),
+            representativeCount);
 
         final String responseString = response.body().string().trim();
         try {
           if (!"".equals(responseString) && !"OK".equalsIgnoreCase(responseString)) {
             final JsonNode parsedResponse = OBJECT_MAPPER.readTree(responseString);
+            final String endpoint = tracesUrl.toString();
             for (final ResponseListener listener : responseListeners) {
-              listener.onResponse(tracesUrl.toString(), parsedResponse);
+              listener.onResponse(endpoint, parsedResponse);
             }
           }
         } catch (final JsonParseException e) {
@@ -139,7 +194,7 @@ public class DDApi {
             "Error while sending "
                 + traces.size()
                 + " of "
-                + totalSize
+                + representativeCount
                 + " traces to the DD agent.",
             e);
       } else if (nextAllowedLogTime < System.currentTimeMillis()) {
@@ -147,7 +202,7 @@ public class DDApi {
         log.warn(
             "Error while sending {} of {} traces to the DD agent. {}: {} (going silent for {} minutes)",
             traces.size(),
-            totalSize,
+            representativeCount,
             e.getClass().getName(),
             e.getMessage(),
             TimeUnit.MILLISECONDS.toMinutes(MILLISECONDS_BETWEEN_ERROR_LOG));
