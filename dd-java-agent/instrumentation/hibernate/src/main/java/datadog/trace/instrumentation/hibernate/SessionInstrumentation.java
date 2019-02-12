@@ -14,13 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,7 +28,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
-import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 
@@ -64,23 +60,13 @@ public class SessionInstrumentation extends Instrumenter.Default {
     return not(isInterface())
         .and(
             safeHasSuperType(
-                named("org.hibernate.SessionFactory")
-                    .or(named("org.hibernate.Session"))
+                named("org.hibernate.Session")
                     .or(named("org.hibernate.internal.AbstractSharedSessionContract"))));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    // Session lifecycle. A span will cover openSession->Session.close, but no scope will be
-    // generated.
-    transformers.put(
-        isMethod()
-            .and(named("openSession"))
-            .and(isDeclaredBy(safeHasSuperType(named("org.hibernate.SessionFactory"))))
-            .and(takesArguments(0))
-            .and(returns(named("org.hibernate.Session"))),
-        SessionFactoryAdvice.class.getName());
     transformers.put(
         isMethod()
             .and(named("close"))
@@ -129,26 +115,6 @@ public class SessionInstrumentation extends Instrumenter.Default {
         GetQueryAdvice.class.getName());
 
     return transformers;
-  }
-
-  public static class SessionFactoryAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void openSession(@Advice.Return(readOnly = false) final Session session) {
-
-      final Span span =
-          GlobalTracer.get()
-              .buildSpan("hibernate.session")
-              .withTag(DDTags.SERVICE_NAME, "hibernate")
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HIBERNATE)
-              .withTag(Tags.COMPONENT.getKey(), "hibernate-java")
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-              .start();
-
-      final ContextStore<Session, SessionState> contextStore =
-          InstrumentationContext.get(Session.class, SessionState.class);
-      contextStore.putIfAbsent(session, new SessionState(span));
-    }
   }
 
   public static class SessionCloseAdvice {
@@ -225,7 +191,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getTransaction(
-        @Advice.This final AbstractSharedSessionContract session,
+        @Advice.This final SharedSessionContract session,
         @Advice.Return(readOnly = false) final Transaction transaction) {
 
       final ContextStore<Session, SessionState> sessionContextStore =
