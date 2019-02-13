@@ -24,7 +24,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.hibernate.Session;
+import org.hibernate.SharedSessionContract;
 
 @AutoService(Instrumenter.class)
 public class SessionFactoryInstrumentation extends Instrumenter.Default {
@@ -36,7 +36,7 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> map = new HashMap<>();
-    map.put("org.hibernate.Session", SessionState.class.getName());
+    map.put("org.hibernate.SharedSessionContract", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
@@ -59,9 +59,11 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
     // generated.
     transformers.put(
         isMethod()
-            .and(named("openSession"))
+            .and(named("openSession").or(named("openStatelessSession")))
             .and(takesArguments(0))
-            .and(returns(named("org.hibernate.Session"))),
+            .and(
+                returns(
+                    named("org.hibernate.Session").or(named("org.hibernate.StatelessSession")))),
         SessionFactoryAdvice.class.getName());
 
     return transformers;
@@ -70,7 +72,7 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
   public static class SessionFactoryAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void openSession(@Advice.Return(readOnly = false) final Session session) {
+    public static void openSession(@Advice.Return final SharedSessionContract session) {
 
       final Span span =
           GlobalTracer.get()
@@ -81,8 +83,8 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
               .start();
 
-      final ContextStore<Session, SessionState> contextStore =
-          InstrumentationContext.get(Session.class, SessionState.class);
+      final ContextStore<SharedSessionContract, SessionState> contextStore =
+          InstrumentationContext.get(SharedSessionContract.class, SessionState.class);
       contextStore.putIfAbsent(session, new SessionState(span));
     }
   }

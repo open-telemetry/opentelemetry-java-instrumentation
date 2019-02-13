@@ -11,7 +11,6 @@ import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
 import javax.persistence.Entity;
-import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 
 public class SessionMethodUtils {
@@ -39,6 +38,11 @@ public class SessionMethodUtils {
       final String resourceName) {
 
     final SessionState sessionState = contextStore.get(spanKey);
+
+    if (sessionState == null) {
+      // No state found. Maybe the instrumentation isn't working correctly.
+      return null;
+    }
 
     if (sessionState.getMethodScope() != null) {
       // This method call was re-entrant. Do nothing, since it is being traced by the parent/first
@@ -91,18 +95,18 @@ public class SessionMethodUtils {
   // Copies a span from the given Session ContextStore into the targetContextStore. Used to
   // propagate a Span from a Session to transient Session objects such as Transaction and Query.
   public static <T> void attachSpanFromSession(
-      final ContextStore<Session, SessionState> sessionContextStore,
+      final ContextStore<SharedSessionContract, SessionState> sessionContextStore,
       final SharedSessionContract session,
       final ContextStore<T, SessionState> targetContextStore,
       final T target) {
 
-    if (!(session instanceof Session)
+    if (!(session instanceof SharedSessionContract)
         || sessionContextStore == null
         || targetContextStore == null) {
       return;
     }
 
-    final SessionState state = sessionContextStore.get((Session) session);
+    final SessionState state = sessionContextStore.get((SharedSessionContract) session);
     if (state == null) {
       return;
     }
