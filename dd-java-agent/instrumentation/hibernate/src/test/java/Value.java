@@ -4,9 +4,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity
 @Table
+@NamedQuery(name = "TestNamedQuery", query = "from Value")
 public class Value {
 
   private Long id;

@@ -182,6 +182,73 @@ class SessionTest extends AgentTestRunner {
     "get"                     | "get"          | "Value"          | false   | ["Session", "StatelessSession"] | { sesh, val ->
       sesh.get("Value", val.getId())
     }
+    "insert"                  | "insert"       | "Value"          | false   | ["StatelessSession"]            | { sesh, val ->
+      sesh.insert("Value", new Value("insert me"))
+    }
+  }
+
+
+  def "test attaches State to query created via #queryMethodName"() {
+    setup:
+    Session session = sessionFactory.openSession()
+    session.beginTransaction()
+    Query query = queryBuildMethod(session)
+    List result = query.list()
+    session.getTransaction().commit()
+    session.close()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          serviceName "hibernate"
+          resourceName "hibernate.session"
+          operationName "hibernate.session"
+          spanType DDSpanTypes.HIBERNATE
+          parent()
+          tags {
+            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            defaultTags()
+          }
+        }
+        span(1) {
+          serviceName "hibernate"
+          resourceName "hibernate.transaction.commit"
+          operationName "hibernate.transaction.commit"
+          spanType DDSpanTypes.HIBERNATE
+          childOf span(0)
+          tags {
+            "$Tags.COMPONENT.key" "hibernate-java"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            defaultTags()
+          }
+        }
+        span(2) {
+          serviceName "hibernate"
+          resourceName "hibernate.query.list"
+          operationName "hibernate.query.list"
+          spanType DDSpanTypes.HIBERNATE
+          childOf span(0)
+          tags {
+            "$Tags.COMPONENT.key" "hibernate-java"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    where:
+    queryMethodName                     | queryBuildMethod
+    "createQuery"                       | { sess -> sess.createQuery("from Value") }
+    "createQuery with resultClass"      | { sess -> sess.createQuery("from Value", Value.class) }
+    "createNamedQuery"                  | { sess -> sess.createNamedQuery("TestNamedQuery") }
+    "createNamedQuery with resultClass" | { sess -> sess.createNamedQuery("TestNamedQuery", Value.class) }
+    "getNamedQuery"                     | { sess -> sess.getNamedQuery("TestNamedQuery") }
+    "createSQLQuery"                    | { sess -> sess.createSQLQuery("SELECT * FROM Value") }
+    "createNativeQuery"                 | { sess -> sess.createNativeQuery("SELECT * FROM Value") }
   }
 }
 

@@ -27,7 +27,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
-import org.hibernate.query.spi.QueryImplementor;
 
 @AutoService(Instrumenter.class)
 public class SessionInstrumentation extends Instrumenter.Default {
@@ -76,6 +75,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
                     .or(named("persist"))
                     .or(named("lock"))
                     .or(named("refresh"))
+                    .or(named("insert"))
                     .or(named("delete"))),
         SessionMethodAdvice.class.getName());
     // Handle the generic and non-generic 'get' separately.
@@ -95,7 +95,9 @@ public class SessionInstrumentation extends Instrumenter.Default {
             .and(returns(named("org.hibernate.Transaction"))),
         GetTransactionAdvice.class.getName());
 
-    transformers.put(isMethod().and(named("createQuery")), GetQueryAdvice.class.getName());
+    transformers.put(
+        isMethod().and(returns(safeHasSuperType(named("org.hibernate.query.Query")))),
+        GetQueryAdvice.class.getName());
 
     return transformers;
   }
@@ -154,12 +156,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getQuery(
-        @Advice.This final SharedSessionContract session,
-        @Advice.Return final QueryImplementor query) {
-
-      if (!(query instanceof Query)) {
-        return;
-      }
+        @Advice.This final SharedSessionContract session, @Advice.Return final Query query) {
 
       final ContextStore<SharedSessionContract, SessionState> sessionContextStore =
           InstrumentationContext.get(SharedSessionContract.class, SessionState.class);
