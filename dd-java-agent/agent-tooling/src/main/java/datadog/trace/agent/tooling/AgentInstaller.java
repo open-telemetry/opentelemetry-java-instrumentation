@@ -69,8 +69,6 @@ public class AgentInstaller {
             .or(ElementMatchers.<TypeDescription>isAnnotation())
             // Unlikely to ever need to instrument an enum:
             .or(ElementMatchers.<TypeDescription>isEnum())
-            // Exclude generated classes like proxies:
-            .or(ElementMatchers.<TypeDescription>isSynthetic())
             .or(
                 nameStartsWith("datadog.trace.")
                     // FIXME: We should remove this once
