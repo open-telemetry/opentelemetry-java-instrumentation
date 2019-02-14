@@ -13,9 +13,10 @@ public abstract class AbstractWebfluxInstrumentation extends Instrumenter.Defaul
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      // Some code comes from reactor's instrumentation's helper
+      "datadog.trace.instrumentation.reactor.core.ReactorCoreAdviceUtils",
+      "datadog.trace.instrumentation.reactor.core.ReactorCoreAdviceUtils$TracingSubscriber",
       PACKAGE + ".AdviceUtils",
-      PACKAGE + ".DispatcherHandlerOnSuccessOrError",
-      PACKAGE + ".DispatcherHandlerOnCancel",
       PACKAGE + ".RouteOnSuccessOrError"
     };
   }

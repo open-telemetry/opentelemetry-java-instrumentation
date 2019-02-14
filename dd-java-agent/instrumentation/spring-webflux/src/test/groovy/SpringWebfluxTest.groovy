@@ -17,7 +17,6 @@ import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.context.annotation.Bean
 import org.springframework.web.server.ResponseStatusException
 
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [SpringWebFluxTestApplication, ForceNettyAutoConfiguration])
 class SpringWebfluxTest extends AgentTestRunner {
 
@@ -109,6 +108,97 @@ class SpringWebfluxTest extends AgentTestRunner {
     "annotation API with one parameter"  | "/foo/1"             | "/foo/{id}"            | "getFooModel"   | new FooModel(1L, "pass").toString()
     "annotation API with two parameters" | "/foo/2/world"       | "/foo/{id}/{name}"     | "getFooModel"   | new FooModel(2L, "world").toString()
     "annotation API delayed response"    | "/foo-delayed"       | "/foo-delayed"         | "getFooDelayed" | new FooModel(3L, "delayed").toString()
+  }
+
+  def "GET test with async response #testName"() {
+    setup:
+    String url = "http://localhost:$port$urlPath"
+    def request = new Request.Builder().url(url).get().build()
+    when:
+    def response = client.newCall(request).execute()
+
+    then:
+    response.code == 200
+    response.body().string() == expectedResponseBody
+    assertTraces(1) {
+      println TEST_WRITER
+      trace(0, 3) {
+        span(0) {
+          if (annotatedMethod == null) {
+            // Functional API
+            resourceNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
+            operationNameContains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle")
+          } else {
+            // Annotation API
+            resourceName TestController.getSimpleName() + "." + annotatedMethod
+            operationName TestController.getSimpleName() + "." + annotatedMethod
+          }
+          spanType DDSpanTypes.HTTP_SERVER
+          childOf(span(1))
+          tags {
+            "$Tags.COMPONENT.key" "spring-webflux-controller"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            if (annotatedMethod == null) {
+              // Functional API
+              "request.predicate" "(GET && $urlPathWithVariables)"
+              "handler.type" { String tagVal ->
+                return tagVal.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
+              }
+            } else {
+              // Annotation API
+              "handler.type" TestController.getName()
+            }
+            defaultTags()
+          }
+        }
+        span(1) {
+          resourceName "GET $urlPathWithVariables"
+          operationName "netty.request"
+          spanType DDSpanTypes.HTTP_SERVER
+          parent()
+          tags {
+            "$Tags.COMPONENT.key" "netty"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" Integer
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.HTTP_URL.key" url
+            defaultTags()
+          }
+        }
+        span(2) {
+          serviceName "unnamed-java-app"
+          if (annotatedMethod == null) {
+            // Functional API
+            resourceName "SpringWebFluxTestApplication.tracedMethod"
+            operationName "SpringWebFluxTestApplication.tracedMethod"
+          } else {
+            // Annotation API
+            resourceName "TestController.tracedMethod"
+            operationName "TestController.tracedMethod"
+          }
+          childOf(span(0))
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "trace"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    where:
+    testName                                  | urlPath                       | urlPathWithVariables             | annotatedMethod       | expectedResponseBody
+    "functional API traced method from mono"  | "/greet-mono-from-callable/4" | "/greet-mono-from-callable/{id}" | null                  | SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 4"
+    "functional API traced method"            | "/greet-traced-method/5"      | "/greet-traced-method/{id}"      | null                  | SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 5"
+    "functional API traced method with delay" | "/greet-delayed-mono/6"       | "/greet-delayed-mono/{id}"       | null                  | SpringWebFluxTestApplication.GreetingHandler.DEFAULT_RESPONSE + " 6"
+
+    "annotation API traced method from mono"  | "/foo-mono-from-callable/7"   | "/foo-mono-from-callable/{id}"   | "getMonoFromCallable" | new FooModel(7L, "tracedMethod").toString()
+    "annotation API traced method"            | "/foo-traced-method/8"        | "/foo-traced-method/{id}"        | "getTracedMethod"     | new FooModel(8L, "tracedMethod").toString()
+    "annotation API traced method with delay" | "/foo-delayed-mono/9"         | "/foo-delayed-mono/{id}"         | "getFooDelayedMono"   | new FooModel(9L, "tracedMethod").toString()
   }
 
   def "404 GET test"() {
