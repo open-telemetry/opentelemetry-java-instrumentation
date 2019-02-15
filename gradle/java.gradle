@@ -228,7 +228,9 @@ for (def env : System.getenv().entrySet()) {
   tasks.check.dependsOn parentTask
 
   tasks.withType(Test).configureEach {
-    if (name.endsWith("Generated")) {
+//    if (name.endsWith("Generated")) {
+    if (!name.equals("test")) {
+      // The way we're copying the test doesn't currently work with "test-sets" generated tests.
       return
     }
 
