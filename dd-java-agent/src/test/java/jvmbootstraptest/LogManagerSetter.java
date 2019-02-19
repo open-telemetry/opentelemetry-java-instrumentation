@@ -20,7 +20,9 @@ public class LogManagerSetter {
             "jmxfetch should start in premain when customlogmanager=false.");
       }
     } else if (System.getProperty("java.util.logging.manager") != null) {
-      if (ClassLoader.getSystemResource(System.getProperty("java.util.logging.manager")) == null) {
+      if (ClassLoader.getSystemResource(
+              System.getProperty("java.util.logging.manager").replaceAll("\\.", "/") + ".class")
+          == null) {
         customAssert(
             isJmxfetchStarted(),
             false,
