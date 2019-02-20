@@ -44,6 +44,8 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -80,6 +82,8 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/param/$param/"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -118,6 +122,8 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/param/asdf1234/"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -137,6 +143,8 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/error"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -170,6 +178,8 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/invalid"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -191,6 +201,8 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/error"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -226,6 +238,8 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/error/qwerty/"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -248,6 +262,8 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/error"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -278,6 +294,8 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/validated"
             "http.method" "POST"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -314,6 +332,8 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/validated"
             "http.method" "POST"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -339,6 +359,8 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/error"
             "http.method" "POST"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"

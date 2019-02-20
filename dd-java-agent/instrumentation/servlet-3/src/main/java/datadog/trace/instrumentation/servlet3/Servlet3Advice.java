@@ -1,8 +1,5 @@
 package datadog.trace.instrumentation.servlet3;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
-
-import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
@@ -12,7 +9,6 @@ import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.security.Principal;
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -43,14 +39,11 @@ public class Servlet3Advice {
         GlobalTracer.get()
             .buildSpan("servlet.request")
             .asChildOf(extractedContext)
-            .withTag(Tags.COMPONENT.getKey(), "java-web-servlet")
-            .withTag(Tags.HTTP_METHOD.getKey(), httpServletRequest.getMethod())
-            .withTag(Tags.HTTP_URL.getKey(), httpServletRequest.getRequestURL().toString())
-            .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
-            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
             .withTag("span.origin.type", servlet.getClass().getName())
-            .withTag("servlet.context", httpServletRequest.getContextPath())
             .startActive(false);
+
+    Servlet3Decorator.INSTANCE.afterStart(scope.span());
+    Servlet3Decorator.INSTANCE.onRequest(scope.span(), httpServletRequest);
 
     if (scope instanceof TraceScope) {
       ((TraceScope) scope).setAsyncPropagation(true);
@@ -82,12 +75,13 @@ public class Servlet3Advice {
         final Span span = scope.span();
 
         if (throwable != null) {
+          Servlet3Decorator.INSTANCE.onResponse(span, resp);
           if (resp.getStatus() == HttpServletResponse.SC_OK) {
             // exception is thrown in filter chain, but status code is incorrect
             Tags.HTTP_STATUS.set(span, 500);
           }
-          Tags.ERROR.set(span, Boolean.TRUE);
-          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+          Servlet3Decorator.INSTANCE.onError(span, throwable);
+          Servlet3Decorator.INSTANCE.beforeFinish(span);
           req.removeAttribute(SERVLET_SPAN);
           span.finish(); // Finish the span manually since finishSpanOnClose was false
         } else {
@@ -102,7 +96,8 @@ public class Servlet3Advice {
           }
           // Check again in case the request finished before adding the listener.
           if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
-            Tags.HTTP_STATUS.set(span, resp.getStatus());
+            Servlet3Decorator.INSTANCE.onResponse(span, resp);
+            Servlet3Decorator.INSTANCE.beforeFinish(span);
             req.removeAttribute(SERVLET_SPAN);
             span.finish(); // Finish the span manually since finishSpanOnClose was false
           }

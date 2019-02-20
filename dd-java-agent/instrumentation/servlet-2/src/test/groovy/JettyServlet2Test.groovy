@@ -91,6 +91,8 @@ class JettyServlet2Test extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "TestServlet2\$Sync"
             "servlet.context" "/ctx"
@@ -136,6 +138,8 @@ class JettyServlet2Test extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "TestServlet2\$Sync"
             "servlet.context" "/ctx"
@@ -177,6 +181,8 @@ class JettyServlet2Test extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "TestServlet2\$Sync"
             "servlet.context" "/ctx"

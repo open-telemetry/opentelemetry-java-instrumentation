@@ -98,6 +98,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER
@@ -177,6 +179,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/getQuery.jsp"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER
@@ -253,6 +257,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/post.jsp"
             "http.method" "POST"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER
@@ -326,6 +332,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER
@@ -413,6 +421,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/includes/includeHtml.jsp"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER
@@ -485,6 +495,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/includes/includeMulti.jsp"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER
@@ -625,6 +637,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER

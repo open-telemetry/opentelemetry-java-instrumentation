@@ -89,6 +89,8 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
             "servlet.context" "/$context"
@@ -155,6 +157,8 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
               "http.method" "GET"
               "span.kind" "server"
               "component" "java-web-servlet"
+              "peer.hostname" "localhost"
+              "peer.port" port
               "span.type" DDSpanTypes.HTTP_SERVER
               "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
               "http.status_code" 200
@@ -179,6 +183,8 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" {
               it == "TestServlet3\$$origin" || it == "TestServlet3\$DispatchRecursive" || it == ApplicationFilterChain.name
@@ -211,6 +217,8 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
             "http.status_code" 200
@@ -269,6 +277,8 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
             "http.status_code" 200
@@ -291,6 +301,8 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" {
               it == "TestServlet3\$$origin" || it == "TestServlet3\$DispatchRecursive" || it == ApplicationFilterChain.name
@@ -379,6 +391,8 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
             "servlet.context" "/$context"
@@ -423,6 +437,8 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
             "servlet.context" "/$context"
