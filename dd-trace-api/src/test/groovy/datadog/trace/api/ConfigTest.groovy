@@ -312,7 +312,41 @@ class ConfigTest extends Specification {
     ["test-prop", "disabled-prop"] | true           | false
     ["disabled-env", "test-env"]   | true           | false
 
-    integrationNames = names.toSet()
+    integrationNames = new TreeSet<>(names)
+  }
+
+  def "verify integration trace analytics config"() {
+    setup:
+    environmentVariables.set("DD_INTEGRATION_ORDER_ANALYTICS_ENABLED", "false")
+    environmentVariables.set("DD_INTEGRATION_TEST_ENV_ANALYTICS_ENABLED", "true")
+    environmentVariables.set("DD_INTEGRATION_DISABLED_ENV_ANALYTICS_ENABLED", "false")
+
+    System.setProperty("dd.integration.order.analytics.enabled", "true")
+    System.setProperty("dd.integration.test-prop.analytics.enabled", "true")
+    System.setProperty("dd.integration.disabled-prop.analytics.enabled", "false")
+
+    expect:
+    Config.traceAnalyticsIntegrationEnabled(integrationNames, defaultEnabled) == expected
+
+    where:
+    names                          | defaultEnabled | expected
+    []                             | true           | true
+    []                             | false          | false
+    ["invalid"]                    | true           | true
+    ["invalid"]                    | false          | false
+    ["test-prop"]                  | false          | true
+    ["test-env"]                   | false          | true
+    ["disabled-prop"]              | true           | false
+    ["disabled-env"]               | true           | false
+    ["other", "test-prop"]         | false          | true
+    ["other", "test-env"]          | false          | true
+    ["order"]                      | false          | true
+    ["test-prop", "disabled-prop"] | false          | true
+    ["disabled-env", "test-env"]   | false          | true
+    ["test-prop", "disabled-prop"] | true           | false
+    ["disabled-env", "test-env"]   | true           | false
+
+    integrationNames = new TreeSet<>(names)
   }
 
   def "verify mapping configs on tracer"() {

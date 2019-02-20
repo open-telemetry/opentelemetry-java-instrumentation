@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
+import java.util.SortedSet;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import lombok.Getter;
@@ -44,6 +44,7 @@ public class Config {
   public static final String GLOBAL_TAGS = "trace.global.tags";
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String JMX_TAGS = "trace.jmx.tags";
+  public static final String TRACE_ANALYTICS_ENABLED = "trace.analytics.enabled";
   public static final String TRACE_ANNOTATIONS = "trace.annotations";
   public static final String TRACE_METHODS = "trace.methods";
   public static final String HEADER_TAGS = "trace.header.tags";
@@ -260,13 +261,31 @@ public class Config {
   }
 
   public static boolean integrationEnabled(
-      final Set<String> integrationNames, final boolean defaultEnabled) {
+      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
     // If default is enabled, we want to enable individually,
     // if default is disabled, we want to disable individually.
     boolean anyEnabled = defaultEnabled;
     for (final String name : integrationNames) {
       final boolean configEnabled =
           getBooleanSettingFromEnvironment("integration." + name + ".enabled", defaultEnabled);
+      if (defaultEnabled) {
+        anyEnabled &= configEnabled;
+      } else {
+        anyEnabled |= configEnabled;
+      }
+    }
+    return anyEnabled;
+  }
+
+  public static boolean traceAnalyticsIntegrationEnabled(
+      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
+    // If default is enabled, we want to enable individually,
+    // if default is disabled, we want to disable individually.
+    boolean anyEnabled = defaultEnabled;
+    for (final String name : integrationNames) {
+      final boolean configEnabled =
+          getBooleanSettingFromEnvironment(
+              "integration." + name + ".analytics.enabled", defaultEnabled);
       if (defaultEnabled) {
         anyEnabled &= configEnabled;
       } else {
@@ -314,6 +333,18 @@ public class Config {
       final String name, final Boolean defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
     return value == null ? defaultValue : Boolean.valueOf(value);
+  }
+
+  /**
+   * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Float.
+   *
+   * @param name
+   * @param defaultValue
+   * @return
+   */
+  public static Float getFloatSettingFromEnvironment(final String name, final Float defaultValue) {
+    final String value = getSettingFromEnvironment(name, null);
+    return value == null ? defaultValue : Float.valueOf(value);
   }
 
   private static Integer getIntegerSettingFromEnvironment(

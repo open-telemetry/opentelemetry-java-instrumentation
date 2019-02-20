@@ -11,10 +11,10 @@ import datadog.trace.api.Config;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.method.MethodDescription;
@@ -39,7 +39,7 @@ public interface Instrumenter {
 
   @Slf4j
   abstract class Default implements Instrumenter {
-    private final Set<String> instrumentationNames;
+    private final SortedSet<String> instrumentationNames;
     private final String instrumentationPrimaryName;
     private final InstrumentationContextProvider contextProvider;
     protected final boolean enabled;
@@ -48,7 +48,7 @@ public interface Instrumenter {
         getClass().getPackage() == null ? "" : getClass().getPackage().getName();
 
     public Default(final String instrumentationName, final String... additionalNames) {
-      instrumentationNames = new HashSet<>(Arrays.asList(additionalNames));
+      instrumentationNames = new TreeSet<>(Arrays.asList(additionalNames));
       instrumentationNames.add(instrumentationName);
       instrumentationPrimaryName = instrumentationName;
 
