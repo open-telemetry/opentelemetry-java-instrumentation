@@ -11,7 +11,7 @@ public class DDDecoratorsFactory {
         new DBStatementAsResourceName(),
         new DBTypeDecorator(),
         new ErrorFlag(),
-        new EventSampleRateDecorator(),
+        new AnalyticsSampleRateDecorator(),
         new OperationDecorator(),
         new PeerServiceDecorator(),
         new ResourceNameDecorator(),
