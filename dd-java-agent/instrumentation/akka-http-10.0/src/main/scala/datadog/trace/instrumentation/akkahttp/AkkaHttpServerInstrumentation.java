@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.akkahttp;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -10,8 +9,6 @@ import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.Materializer;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -20,7 +17,6 @@ import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -54,7 +50,11 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
       AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper",
       AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper$1",
       AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper$2",
-      AkkaHttpServerInstrumentation.class.getName() + "$AkkaHttpServerHeaders"
+      AkkaHttpServerInstrumentation.class.getName() + "$AkkaHttpServerHeaders",
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ServerDecorator",
+      "datadog.trace.agent.decorator.HttpServerDecorator",
+      packageName + ".AkkaHttpServerDecorator",
     };
   }
 
@@ -104,12 +104,10 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
           GlobalTracer.get()
               .buildSpan("akka-http.request")
               .asChildOf(extractedContext)
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
-              .withTag(Tags.HTTP_METHOD.getKey(), request.method().value())
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER)
-              .withTag(Tags.COMPONENT.getKey(), "akka-http-server")
-              .withTag(Tags.HTTP_URL.getKey(), request.getUri().toString())
               .startActive(false);
+
+      AkkaHttpServerDecorator.INSTANCE.afterStart(scope.span());
+      AkkaHttpServerDecorator.INSTANCE.onRequest(scope.span(), request);
 
       if (scope instanceof TraceScope) {
         ((TraceScope) scope).setAsyncPropagation(true);
@@ -118,7 +116,8 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     }
 
     public static void finishSpan(final Span span, final HttpResponse response) {
-      Tags.HTTP_STATUS.set(span, response.status().intValue());
+      AkkaHttpServerDecorator.INSTANCE.onResponse(span, response);
+      AkkaHttpServerDecorator.INSTANCE.beforeFinish(span);
 
       if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
         ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(false);
@@ -127,9 +126,9 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     }
 
     public static void finishSpan(final Span span, final Throwable t) {
-      Tags.ERROR.set(span, true);
-      span.log(Collections.singletonMap(ERROR_OBJECT, t));
+      AkkaHttpServerDecorator.INSTANCE.onError(span, t);
       Tags.HTTP_STATUS.set(span, 500);
+      AkkaHttpServerDecorator.INSTANCE.beforeFinish(span);
 
       if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
         ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(false);
