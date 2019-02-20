@@ -50,7 +50,7 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
           GlobalTracer.get()
               .buildSpan("jsp.compile")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
+              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER)
               .startActive(true);
 
       final Span span = scope.span();
