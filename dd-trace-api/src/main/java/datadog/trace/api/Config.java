@@ -332,7 +332,7 @@ public class Config {
   public static Boolean getBooleanSettingFromEnvironment(
       final String name, final Boolean defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
-    return value == null ? defaultValue : Boolean.valueOf(value);
+    return value == null || value.trim().isEmpty() ? defaultValue : Boolean.valueOf(value);
   }
 
   /**
@@ -344,13 +344,23 @@ public class Config {
    */
   public static Float getFloatSettingFromEnvironment(final String name, final Float defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
-    return value == null ? defaultValue : Float.valueOf(value);
+    try {
+      return value == null ? defaultValue : Float.valueOf(value);
+    } catch (final NumberFormatException e) {
+      log.warn("Invalid configuration for " + name, e);
+      return defaultValue;
+    }
   }
 
   private static Integer getIntegerSettingFromEnvironment(
       final String name, final Integer defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
-    return value == null ? defaultValue : Integer.valueOf(value);
+    try {
+      return value == null ? defaultValue : Integer.valueOf(value);
+    } catch (final NumberFormatException e) {
+      log.warn("Invalid configuration for " + name, e);
+      return defaultValue;
+    }
   }
 
   private static String propertyToEnvironmentName(final String name) {
@@ -360,25 +370,25 @@ public class Config {
   private static Map<String, String> getPropertyMapValue(
       final Properties properties, final String name, final Map<String, String> defaultValue) {
     final String value = properties.getProperty(name);
-    return value == null ? defaultValue : parseMap(value, name);
+    return value == null || value.trim().isEmpty() ? defaultValue : parseMap(value, name);
   }
 
   private static List<String> getPropertyListValue(
       final Properties properties, final String name, final List<String> defaultValue) {
     final String value = properties.getProperty(name);
-    return value == null ? defaultValue : parseList(value);
+    return value == null || value.trim().isEmpty() ? defaultValue : parseList(value);
   }
 
   private static Boolean getPropertyBooleanValue(
       final Properties properties, final String name, final Boolean defaultValue) {
     final String value = properties.getProperty(name);
-    return value == null ? defaultValue : Boolean.valueOf(value);
+    return value == null || value.trim().isEmpty() ? defaultValue : Boolean.valueOf(value);
   }
 
   private static Integer getPropertyIntegerValue(
       final Properties properties, final String name, final Integer defaultValue) {
     final String value = properties.getProperty(name);
-    return value == null ? defaultValue : Integer.valueOf(value);
+    return value == null || value.trim().isEmpty() ? defaultValue : Integer.valueOf(value);
   }
 
   private static Map<String, String> parseMap(final String str, final String settingName) {
