@@ -73,7 +73,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
         if (method != null && bestMatchingPattern != null) {
           final String resourceName = method + " " + bestMatchingPattern;
           parentScope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
-          parentScope.span().setTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET);
+          parentScope.span().setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
         }
       }
 
