@@ -12,9 +12,12 @@ public abstract class AbstractAwsClientInstrumentation extends Instrumenter.Defa
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      AwsClientInstrumentation.class.getPackage().getName() + ".TracingExecutionInterceptor",
-      AwsClientInstrumentation.class.getPackage().getName()
-          + ".TracingExecutionInterceptor$InjectAdapter"
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      "datadog.trace.agent.decorator.HttpClientDecorator",
+      packageName + ".AwsSdkClientDecorator",
+      packageName + ".TracingExecutionInterceptor",
+      packageName + ".TracingExecutionInterceptor$InjectAdapter"
     };
   }
 }

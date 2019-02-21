@@ -19,38 +19,18 @@ import com.amazonaws.Response;
 import com.amazonaws.handlers.HandlerContextKey;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentracing.Scope;
-import io.opentracing.SpanContext;
-import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMapInjectAdapter;
-import io.opentracing.tag.Tags;
+import io.opentracing.util.GlobalTracer;
 
 /** Tracing Request Handler */
 public class TracingRequestHandler extends RequestHandler2 {
+  public static TracingRequestHandler INSTANCE = new TracingRequestHandler();
 
   // Note: aws1.x sdk doesn't have any truly async clients so we can store scope in request context
   // safely.
   private static final HandlerContextKey<Scope> SCOPE_CONTEXT_KEY =
       new HandlerContextKey<>("DatadogScope");
-
-  private final SpanContext parentContext; // for Async Client
-  private final Tracer tracer;
-
-  public TracingRequestHandler(final Tracer tracer) {
-    parentContext = null;
-    this.tracer = tracer;
-  }
-
-  /**
-   * In case of Async Client: beforeRequest runs in separate thread therefore we need to inject
-   * parent context to build chain
-   *
-   * @param parentContext parent context
-   */
-  public TracingRequestHandler(final SpanContext parentContext, final Tracer tracer) {
-    this.parentContext = parentContext;
-    this.tracer = tracer;
-  }
 
   @Override
   public AmazonWebServiceRequest beforeMarshalling(final AmazonWebServiceRequest request) {
@@ -60,23 +40,17 @@ public class TracingRequestHandler extends RequestHandler2 {
   /** {@inheritDoc} */
   @Override
   public void beforeRequest(final Request<?> request) {
-    // Note: not setting Component tag here because it is always set by SpanDecorator
-    final Tracer.SpanBuilder spanBuilder =
-        tracer.buildSpan("aws.command").withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
-
-    if (parentContext != null) {
-      spanBuilder.asChildOf(parentContext);
-    }
-
-    final Scope scope = spanBuilder.startActive(true);
-    SpanDecorator.onRequest(request, scope.span());
+    final Scope scope = GlobalTracer.get().buildSpan("aws.command").startActive(true);
+    AwsSdkClientDecorator.INSTANCE.afterStart(scope.span());
+    AwsSdkClientDecorator.INSTANCE.onRequest(scope.span(), request);
 
     // We inject headers at aws-client level because aws requests may be signed and adding headers
     // on http-client level may break signature.
-    tracer.inject(
-        scope.span().context(),
-        Format.Builtin.HTTP_HEADERS,
-        new TextMapInjectAdapter(request.getHeaders()));
+    GlobalTracer.get()
+        .inject(
+            scope.span().context(),
+            Format.Builtin.HTTP_HEADERS,
+            new TextMapInjectAdapter(request.getHeaders()));
 
     request.addHandlerContext(SCOPE_CONTEXT_KEY, scope);
   }
@@ -85,7 +59,8 @@ public class TracingRequestHandler extends RequestHandler2 {
   @Override
   public void afterResponse(final Request<?> request, final Response<?> response) {
     final Scope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
-    SpanDecorator.onResponse(response, scope.span());
+    AwsSdkClientDecorator.INSTANCE.onResponse(scope.span(), response);
+    AwsSdkClientDecorator.INSTANCE.beforeFinish(scope.span());
     scope.close();
   }
 
@@ -93,7 +68,8 @@ public class TracingRequestHandler extends RequestHandler2 {
   @Override
   public void afterError(final Request<?> request, final Response<?> response, final Exception e) {
     final Scope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
-    SpanDecorator.onError(e, scope.span());
+    AwsSdkClientDecorator.INSTANCE.onError(scope.span(), e);
+    AwsSdkClientDecorator.INSTANCE.beforeFinish(scope.span());
     scope.close();
   }
 }
