@@ -160,6 +160,36 @@ class ConfigTest extends Specification {
     config.agentPort == 123
   }
 
+  def "default when configured incorrectly"() {
+    setup:
+    System.setProperty(PREFIX + SERVICE_NAME, " ")
+    System.setProperty(PREFIX + WRITER_TYPE, " ")
+    System.setProperty(PREFIX + AGENT_HOST, " ")
+    System.setProperty(PREFIX + TRACE_AGENT_PORT, " ")
+    System.setProperty(PREFIX + AGENT_PORT_LEGACY, "invalid")
+    System.setProperty(PREFIX + PRIORITY_SAMPLING, "3")
+    System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, " ")
+    System.setProperty(PREFIX + SERVICE_MAPPING, " ")
+    System.setProperty(PREFIX + HEADER_TAGS, "1")
+    System.setProperty(PREFIX + SPAN_TAGS, "invalid")
+    System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "invalid")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.serviceName == " "
+    config.writerType == " "
+    config.agentHost == " "
+    config.agentPort == 8126
+    config.prioritySamplingEnabled == false
+    config.traceResolverEnabled == true
+    config.serviceMapping == [:]
+    config.mergedSpanTags == [:]
+    config.headerTags == [:]
+    config.httpClientSplitByDomain == false
+  }
+
   def "sys props and env vars overrides for trace_agent_port and agent_port_legacy as expected"() {
     setup:
     if (overridePortEnvVar) {
@@ -349,6 +379,33 @@ class ConfigTest extends Specification {
     integrationNames = new TreeSet<>(names)
   }
 
+  def "test getFloatSettingFromEnvironment(#name)"() {
+    setup:
+    environmentVariables.set("DD_ENV_ZERO_TEST", "0.0")
+    environmentVariables.set("DD_ENV_FLOAT_TEST", "1.0")
+    environmentVariables.set("DD_FLOAT_TEST", "0.2")
+
+    System.setProperty("dd.prop.zero.test", "0")
+    System.setProperty("dd.prop.float.test", "0.3")
+    System.setProperty("dd.float.test", "0.4")
+    System.setProperty("dd.negative.test", "-1")
+
+    expect:
+    Config.getFloatSettingFromEnvironment(name, defaultValue) == (float) expected
+
+    where:
+    name              | expected
+    "env.zero.test"   | 0.0
+    "prop.zero.test"  | 0
+    "env.float.test"  | 1.0
+    "prop.float.test" | 0.3
+    "float.test"      | 0.4
+    "negative.test"   | -1.0
+    "default.test"    | 10.0
+
+    defaultValue = 10.0
+  }
+
   def "verify mapping configs on tracer"() {
     setup:
     System.setProperty(PREFIX + SERVICE_MAPPING, mapString)
@@ -402,6 +459,7 @@ class ConfigTest extends Specification {
     where:
     mapString | map
     null      | [:]
+    ""        | [:]
   }
 
   def "verify empty value list configs on tracer"() {

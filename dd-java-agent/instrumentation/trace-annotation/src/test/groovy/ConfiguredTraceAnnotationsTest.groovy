@@ -4,8 +4,8 @@ import dd.test.trace.annotation.SayTracedHello
 
 import java.util.concurrent.Callable
 
-import static TraceAnnotationsInstrumentation.DEFAULT_ANNOTATIONS
 import static datadog.trace.agent.test.utils.TraceUtils.withSystemProperty
+import static datadog.trace.instrumentation.trace_annotation.TraceAnnotationsInstrumentation.DEFAULT_ANNOTATIONS
 
 class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
 
@@ -46,11 +46,10 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
 
   def "test configuration #value"() {
     setup:
-    def config = null
-    withSystemProperty("dd.trace.annotations", value) {
-      def instrumentation = new TraceAnnotationsInstrumentation()
-      config = instrumentation.additionalTraceAnnotations
+    def config = withSystemProperty("dd.trace.annotations", value) {
+      new TraceAnnotationsInstrumentation().additionalTraceAnnotations
     }
+
     expect:
     config == expected.toSet()
 
