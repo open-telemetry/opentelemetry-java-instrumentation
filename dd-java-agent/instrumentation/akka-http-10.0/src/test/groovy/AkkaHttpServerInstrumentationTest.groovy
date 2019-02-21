@@ -56,6 +56,8 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "http://localhost:$port/test"
             "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" port
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
@@ -98,6 +100,8 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" 500
             "$Tags.HTTP_URL.key" "http://localhost:$port/$endpoint"
             "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" port
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
@@ -138,6 +142,8 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" 500
             "$Tags.HTTP_URL.key" "http://localhost:$port/server-error"
             "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" port
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
@@ -177,6 +183,8 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" 404
             "$Tags.HTTP_URL.key" "http://localhost:$port/not-found"
             "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" port
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"

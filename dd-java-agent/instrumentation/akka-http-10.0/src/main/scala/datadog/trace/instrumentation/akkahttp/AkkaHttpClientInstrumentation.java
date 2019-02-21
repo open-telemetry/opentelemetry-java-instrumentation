@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.akkahttp;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -13,18 +12,12 @@ import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.scaladsl.Flow;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.Config;
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -55,12 +48,14 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     return new String[] {
       AkkaHttpClientInstrumentation.class.getName() + "$OnCompleteHandler",
       AkkaHttpClientInstrumentation.class.getName() + "$AkkaHttpHeaders",
-      AkkaHttpClientInstrumentation.class.getPackage().getName() + ".AkkaHttpClientTransformFlow",
-      AkkaHttpClientInstrumentation.class.getPackage().getName() + ".AkkaHttpClientTransformFlow$",
-      AkkaHttpClientInstrumentation.class.getPackage().getName()
-          + ".AkkaHttpClientTransformFlow$$anonfun$transform$1",
-      AkkaHttpClientInstrumentation.class.getPackage().getName()
-          + ".AkkaHttpClientTransformFlow$$anonfun$transform$2",
+      packageName + ".AkkaHttpClientTransformFlow",
+      packageName + ".AkkaHttpClientTransformFlow$",
+      packageName + ".AkkaHttpClientTransformFlow$$anonfun$transform$1",
+      packageName + ".AkkaHttpClientTransformFlow$$anonfun$transform$2",
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      "datadog.trace.agent.decorator.HttpClientDecorator",
+      packageName + ".AkkaHttpClientDecorator",
     };
   }
 
@@ -102,23 +97,9 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Tracer.SpanBuilder builder =
-          GlobalTracer.get()
-              .buildSpan("akka-http.request")
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
-              .withTag(Tags.COMPONENT.getKey(), "akka-http-client");
-      if (request != null) {
-        builder
-            .withTag(Tags.HTTP_METHOD.getKey(), request.method().value())
-            .withTag(Tags.HTTP_URL.getKey(), request.getUri().toString())
-            .withTag(Tags.PEER_PORT.getKey(), request.getUri().port())
-            .withTag(Tags.PEER_HOSTNAME.getKey(), request.getUri().host().address());
-        if (Config.get().isHttpClientSplitByDomain()) {
-          builder.withTag(DDTags.SERVICE_NAME, request.getUri().host().address());
-        }
-      }
-      final Scope scope = builder.startActive(false);
+      final Scope scope = GlobalTracer.get().buildSpan("akka-http.request").startActive(false);
+      AkkaHttpClientDecorator.INSTANCE.afterStart(scope.span());
+      AkkaHttpClientDecorator.INSTANCE.onRequest(scope.span(), request);
 
       if (request != null) {
         final AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
@@ -147,8 +128,8 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
       if (throwable == null) {
         responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
       } else {
-        Tags.ERROR.set(span, Boolean.TRUE);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+        AkkaHttpClientDecorator.INSTANCE.onError(span, throwable);
+        AkkaHttpClientDecorator.INSTANCE.beforeFinish(span);
         span.finish();
       }
       scope.close();
@@ -193,11 +174,11 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     @Override
     public Void apply(final Try<HttpResponse> result) {
       if (result.isSuccess()) {
-        Tags.HTTP_STATUS.set(span, result.get().status().intValue());
+        AkkaHttpClientDecorator.INSTANCE.onResponse(span, result.get());
       } else {
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, result.failed().get()));
+        AkkaHttpClientDecorator.INSTANCE.onError(span, result.failed().get());
       }
+      AkkaHttpClientDecorator.INSTANCE.beforeFinish(span);
       span.finish();
       return null;
     }

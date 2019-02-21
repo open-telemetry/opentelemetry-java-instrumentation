@@ -58,6 +58,8 @@ class Play26Test extends AgentTestRunner {
             "http.status_code" 200
             "http.url" "http://localhost:$port/helloplay/spock"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" DDSpanTypes.HTTP_SERVER
             "component" "akka-http-server"
@@ -109,6 +111,8 @@ class Play26Test extends AgentTestRunner {
             "http.status_code" 500
             "http.url" "http://localhost:$port/make-error"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" DDSpanTypes.HTTP_SERVER
             "component" "akka-http-server"
@@ -160,6 +164,8 @@ class Play26Test extends AgentTestRunner {
             "http.status_code" 500
             "http.url" "http://localhost:$port/exception"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" DDSpanTypes.HTTP_SERVER
             "component" "akka-http-server"
@@ -214,6 +220,8 @@ class Play26Test extends AgentTestRunner {
             "http.status_code" 404
             "http.url" "http://localhost:$port/nowhere"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" DDSpanTypes.HTTP_SERVER
             "component" "akka-http-server"
