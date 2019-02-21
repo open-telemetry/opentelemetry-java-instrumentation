@@ -97,6 +97,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/$forwardFromFileName"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER
@@ -209,6 +211,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/forwards/forwardToHtml.jsp"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER
@@ -281,6 +285,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER
@@ -458,6 +464,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/forwards/forwardToJspForward.jsp"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER
@@ -600,6 +608,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/forwards/forwardToCompileError.jsp"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER
@@ -694,6 +704,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/forwards/forwardToNonExistent.jsp"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.type" DDSpanTypes.HTTP_SERVER
