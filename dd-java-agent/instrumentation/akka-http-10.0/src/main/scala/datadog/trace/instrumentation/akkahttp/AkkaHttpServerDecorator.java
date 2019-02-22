@@ -5,7 +5,7 @@ import akka.http.scaladsl.model.HttpResponse;
 import datadog.trace.agent.decorator.HttpServerDecorator;
 
 public class AkkaHttpServerDecorator extends HttpServerDecorator<HttpRequest, HttpResponse> {
-  public static final AkkaHttpServerDecorator INSTANCE = new AkkaHttpServerDecorator();
+  public static final AkkaHttpServerDecorator DECORATE = new AkkaHttpServerDecorator();
 
   @Override
   protected String[] instrumentationNames() {

@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.datastax.cassandra;
 
+import static datadog.trace.instrumentation.datastax.cassandra.CassandraClientDecorator.DECORATE;
+
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.CloseFuture;
 import com.datastax.driver.core.Cluster;
@@ -209,21 +211,21 @@ public class TracingSession implements Session {
 
   private Span buildSpan(final String query) {
     final Span span = tracer.buildSpan("cassandra.execute").start();
-    CassandraClientDecorator.INSTANCE.afterStart(span);
-    CassandraClientDecorator.INSTANCE.onSession(span, session);
-    CassandraClientDecorator.INSTANCE.onStatement(span, query);
+    DECORATE.afterStart(span);
+    DECORATE.onSession(span, session);
+    DECORATE.onStatement(span, query);
     return span;
   }
 
   private static void finishSpan(final Span span, final ResultSet resultSet) {
-    CassandraClientDecorator.INSTANCE.onResponse(span, resultSet);
-    CassandraClientDecorator.INSTANCE.beforeFinish(span);
+    DECORATE.onResponse(span, resultSet);
+    DECORATE.beforeFinish(span);
     span.finish();
   }
 
   private static void finishSpan(final Span span, final Exception e) {
-    CassandraClientDecorator.INSTANCE.onError(span, e);
-    CassandraClientDecorator.INSTANCE.beforeFinish(span);
+    DECORATE.onError(span, e);
+    DECORATE.beforeFinish(span);
     span.finish();
   }
 }

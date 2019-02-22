@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.servlet3;
 
+import static datadog.trace.instrumentation.servlet3.Servlet3Decorator.DECORATE;
+
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.io.IOException;
@@ -20,9 +22,8 @@ public class TagSettingAsyncListener implements AsyncListener {
   @Override
   public void onComplete(final AsyncEvent event) throws IOException {
     if (activated.compareAndSet(false, true)) {
-      Servlet3Decorator.INSTANCE.onResponse(
-          span, (HttpServletResponse) event.getSuppliedResponse());
-      Servlet3Decorator.INSTANCE.beforeFinish(span);
+      DECORATE.onResponse(span, (HttpServletResponse) event.getSuppliedResponse());
+      DECORATE.beforeFinish(span);
       span.finish();
     }
   }
@@ -32,7 +33,7 @@ public class TagSettingAsyncListener implements AsyncListener {
     if (activated.compareAndSet(false, true)) {
       Tags.ERROR.set(span, Boolean.TRUE);
       span.setTag("timeout", event.getAsyncContext().getTimeout());
-      Servlet3Decorator.INSTANCE.beforeFinish(span);
+      DECORATE.beforeFinish(span);
       span.finish();
     }
   }
@@ -45,8 +46,8 @@ public class TagSettingAsyncListener implements AsyncListener {
         // exception is thrown in filter chain, but status code is incorrect
         Tags.HTTP_STATUS.set(span, 500);
       }
-      Servlet3Decorator.INSTANCE.onError(span, event.getThrowable());
-      Servlet3Decorator.INSTANCE.beforeFinish(span);
+      DECORATE.onError(span, event.getThrowable());
+      DECORATE.beforeFinish(span);
       span.finish();
     }
   }

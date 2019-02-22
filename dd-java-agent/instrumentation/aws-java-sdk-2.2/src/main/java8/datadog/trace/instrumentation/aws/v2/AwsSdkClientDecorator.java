@@ -11,7 +11,7 @@ import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
 public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, SdkHttpResponse> {
-  public static final AwsSdkClientDecorator INSTANCE = new AwsSdkClientDecorator();
+  public static final AwsSdkClientDecorator DECORATE = new AwsSdkClientDecorator();
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 

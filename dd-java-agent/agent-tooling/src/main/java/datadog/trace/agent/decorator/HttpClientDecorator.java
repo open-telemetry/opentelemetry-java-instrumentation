@@ -23,6 +23,11 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     return DDSpanTypes.HTTP_CLIENT;
   }
 
+  @Override
+  protected String service() {
+    return null;
+  }
+
   public Span onRequest(final Span span, final REQUEST request) {
     assert span != null;
     if (request != null) {

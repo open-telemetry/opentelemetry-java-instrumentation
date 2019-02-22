@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.servlet2;
 
+import static datadog.trace.instrumentation.servlet2.Servlet2Decorator.DECORATE;
+
 import datadog.trace.api.DDTags;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
@@ -37,8 +39,8 @@ public class Servlet2Advice {
             .withTag("span.origin.type", servlet.getClass().getName())
             .startActive(true);
 
-    Servlet2Decorator.INSTANCE.afterStart(scope.span());
-    Servlet2Decorator.INSTANCE.onRequest(scope.span(), httpServletRequest);
+    DECORATE.afterStart(scope.span());
+    DECORATE.onRequest(scope.span(), httpServletRequest);
 
     if (scope instanceof TraceScope) {
       ((TraceScope) scope).setAsyncPropagation(true);
@@ -64,9 +66,9 @@ public class Servlet2Advice {
     }
 
     if (scope != null) {
-      Servlet2Decorator.INSTANCE.onResponse(scope.span(), response);
-      Servlet2Decorator.INSTANCE.onError(scope.span(), throwable);
-      Servlet2Decorator.INSTANCE.beforeFinish(scope.span());
+      DECORATE.onResponse(scope.span(), response);
+      DECORATE.onError(scope.span(), throwable);
+      DECORATE.beforeFinish(scope.span());
 
       if (scope instanceof TraceScope) {
         ((TraceScope) scope).setAsyncPropagation(false);

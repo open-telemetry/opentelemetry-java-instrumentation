@@ -6,7 +6,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
 public class Servlet2Decorator extends HttpServerDecorator<HttpServletRequest, ServletResponse> {
-  public static final Servlet2Decorator INSTANCE = new Servlet2Decorator();
+  public static final Servlet2Decorator DECORATE = new Servlet2Decorator();
 
   @Override
   protected String[] instrumentationNames() {

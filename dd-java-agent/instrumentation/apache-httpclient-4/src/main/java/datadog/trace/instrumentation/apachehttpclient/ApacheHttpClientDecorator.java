@@ -6,7 +6,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 
 public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriRequest, HttpResponse> {
-  public static final ApacheHttpClientDecorator INSTANCE = new ApacheHttpClientDecorator();
+  public static final ApacheHttpClientDecorator DECORATE = new ApacheHttpClientDecorator();
 
   @Override
   protected String[] instrumentationNames() {
@@ -16,11 +16,6 @@ public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriReques
   @Override
   protected String component() {
     return "apache-httpclient";
-  }
-
-  @Override
-  protected String service() {
-    return null;
   }
 
   @Override

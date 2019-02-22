@@ -13,6 +13,8 @@
  */
 package datadog.trace.instrumentation.aws.v2;
 
+import static datadog.trace.instrumentation.aws.v2.AwsSdkClientDecorator.DECORATE;
+
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -46,7 +48,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void beforeExecution(
       final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
     final Span span = GlobalTracer.get().buildSpan("aws.command").start();
-    AwsSdkClientDecorator.INSTANCE.afterStart(span);
+    DECORATE.afterStart(span);
     executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
   }
 
@@ -56,8 +58,8 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
     final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
     final SdkHttpRequest httpRequest = context.httpRequest();
 
-    AwsSdkClientDecorator.INSTANCE.onRequest(span, httpRequest);
-    AwsSdkClientDecorator.INSTANCE.onAttributes(span, executionAttributes);
+    DECORATE.onRequest(span, httpRequest);
+    DECORATE.onAttributes(span, executionAttributes);
   }
 
   @Override
@@ -86,9 +88,9 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
       final Context.AfterExecution context, final ExecutionAttributes executionAttributes) {
     final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
     // Call onResponse on both types of responses:
-    AwsSdkClientDecorator.INSTANCE.onResponse(span, context.response());
-    AwsSdkClientDecorator.INSTANCE.onResponse(span, context.httpResponse());
-    AwsSdkClientDecorator.INSTANCE.beforeFinish(span);
+    DECORATE.onResponse(span, context.response());
+    DECORATE.onResponse(span, context.httpResponse());
+    DECORATE.beforeFinish(span);
     span.finish();
   }
 
@@ -96,7 +98,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void onExecutionFailure(
       final Context.FailedExecution context, final ExecutionAttributes executionAttributes) {
     final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-    AwsSdkClientDecorator.INSTANCE.onError(span, context.exception());
+    DECORATE.onError(span, context.exception());
   }
 
   public static Consumer<ClientOverrideConfiguration.Builder> getOverrideConfigurationConsumer() {
