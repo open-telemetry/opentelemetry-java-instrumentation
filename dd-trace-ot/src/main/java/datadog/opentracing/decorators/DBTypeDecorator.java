@@ -22,8 +22,8 @@ public class DBTypeDecorator extends AbstractDecorator {
 
     // Assign service name
     if (!super.shouldSetTag(context, tag, value)) {
-      if ("couchbase".equals(value)) {
-        // Couchbase instrumentation has different behavior.
+      if ("couchbase".equals(value) || "elasticsearch".equals(value)) {
+        // these instrumentation have different behavior.
         return true;
       }
       // Assign span type to DB
