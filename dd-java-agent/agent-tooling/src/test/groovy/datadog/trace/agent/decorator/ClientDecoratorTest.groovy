@@ -23,6 +23,7 @@ class ClientDecoratorTest extends BaseDecoratorTest {
     1 * span.setTag(Tags.SPAN_KIND.key, "client")
     1 * span.setTag(DDTags.SPAN_TYPE, decorator.spanType())
     1 * span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, 1.0)
+    _ * span.setTag(_, _) // Want to allow other calls from child implementations.
     0 * _
 
     where:

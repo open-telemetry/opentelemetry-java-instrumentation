@@ -9,7 +9,7 @@ import io.opentracing.Span;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response> {
+public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response> {
   public static final AwsSdkClientDecorator INSTANCE = new AwsSdkClientDecorator();
 
   static final String COMPONENT_NAME = "java-aws-sdk";

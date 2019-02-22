@@ -13,8 +13,8 @@ public class DBTypeDecorator extends AbstractDecorator {
 
   public DBTypeDecorator() {
     super();
-    this.setMatchingTag(Tags.DB_TYPE.getKey());
-    this.setReplacementTag(DDTags.SERVICE_NAME);
+    setMatchingTag(Tags.DB_TYPE.getKey());
+    setReplacementTag(DDTags.SERVICE_NAME);
   }
 
   @Override
@@ -22,6 +22,10 @@ public class DBTypeDecorator extends AbstractDecorator {
 
     // Assign service name
     if (!super.shouldSetTag(context, tag, value)) {
+      if ("couchbase".equals(value)) {
+        // Couchbase instrumentation has different behavior.
+        return true;
+      }
       // Assign span type to DB
       // Special case: Mongo, set to mongodb
       if ("mongo".equals(value)) {
