@@ -11,7 +11,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 
-class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
+public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
   public static final CassandraClientDecorator INSTANCE = new CassandraClientDecorator();
 
   @Override

@@ -20,8 +20,10 @@ public abstract class DatabaseClientDecorator<SESSION> extends ClientDecorator {
 
   public Span onSession(final Span span, final SESSION statement) {
     assert span != null;
-    Tags.DB_USER.set(span, dbUser(statement));
-    Tags.DB_INSTANCE.set(span, dbInstance(statement));
+    if (statement != null) {
+      Tags.DB_USER.set(span, dbUser(statement));
+      Tags.DB_INSTANCE.set(span, dbInstance(statement));
+    }
     return span;
   }
 
