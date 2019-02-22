@@ -5,7 +5,7 @@ import akka.http.scaladsl.model.HttpResponse;
 import datadog.trace.agent.decorator.HttpClientDecorator;
 
 public class AkkaHttpClientDecorator extends HttpClientDecorator<HttpRequest, HttpResponse> {
-  public static final AkkaHttpClientDecorator INSTANCE = new AkkaHttpClientDecorator();
+  public static final AkkaHttpClientDecorator DECORATE = new AkkaHttpClientDecorator();
 
   @Override
   protected String[] instrumentationNames() {
@@ -15,11 +15,6 @@ public class AkkaHttpClientDecorator extends HttpClientDecorator<HttpRequest, Ht
   @Override
   protected String component() {
     return "akka-http-client";
-  }
-
-  @Override
-  protected String service() {
-    return null;
   }
 
   @Override

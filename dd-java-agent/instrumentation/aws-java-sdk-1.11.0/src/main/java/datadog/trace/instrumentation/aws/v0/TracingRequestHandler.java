@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.aws.v0;
 
+import static datadog.trace.instrumentation.aws.v0.AwsSdkClientDecorator.DECORATE;
+
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -24,12 +26,11 @@ public class TracingRequestHandler extends RequestHandler2 {
     return request;
   }
 
-  /** {@inheritDoc} */
   @Override
   public void beforeRequest(final Request<?> request) {
     final Scope scope = GlobalTracer.get().buildSpan("aws.command").startActive(true);
-    AwsSdkClientDecorator.INSTANCE.afterStart(scope.span());
-    AwsSdkClientDecorator.INSTANCE.onRequest(scope.span(), request);
+    DECORATE.afterStart(scope.span());
+    DECORATE.onRequest(scope.span(), request);
 
     // We inject headers at aws-client level because aws requests may be signed and adding headers
     // on http-client level may break signature.
@@ -42,21 +43,19 @@ public class TracingRequestHandler extends RequestHandler2 {
     request.addHandlerContext(SCOPE_CONTEXT_KEY, scope);
   }
 
-  /** {@inheritDoc} */
   @Override
   public void afterResponse(final Request<?> request, final Response<?> response) {
     final Scope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
-    AwsSdkClientDecorator.INSTANCE.onResponse(scope.span(), response);
-    AwsSdkClientDecorator.INSTANCE.beforeFinish(scope.span());
+    DECORATE.onResponse(scope.span(), response);
+    DECORATE.beforeFinish(scope.span());
     scope.close();
   }
 
-  /** {@inheritDoc} */
   @Override
   public void afterError(final Request<?> request, final Response<?> response, final Exception e) {
     final Scope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
-    AwsSdkClientDecorator.INSTANCE.onError(scope.span(), e);
-    AwsSdkClientDecorator.INSTANCE.beforeFinish(scope.span());
+    DECORATE.onError(scope.span(), e);
+    DECORATE.beforeFinish(scope.span());
     scope.close();
   }
 }

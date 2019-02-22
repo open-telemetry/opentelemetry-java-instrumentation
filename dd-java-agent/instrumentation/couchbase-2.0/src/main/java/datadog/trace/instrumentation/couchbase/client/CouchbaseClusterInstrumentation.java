@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.couchbase.client;
 
+import static datadog.trace.instrumentation.couchbase.client.CouchbaseClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -109,7 +110,7 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
 
       // just replace the no-op span.
       spanRef.set(
-          CouchbaseClientDecorator.INSTANCE.afterStart(
+          DECORATE.afterStart(
               GlobalTracer.get()
                   .buildSpan("couchbase.call")
                   .withTag(DDTags.RESOURCE_NAME, resourceName)
@@ -129,7 +130,7 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
       final Span span = spanRef.getAndSet(null);
 
       if (span != null) {
-        CouchbaseClientDecorator.INSTANCE.beforeFinish(span);
+        DECORATE.beforeFinish(span);
         span.finish();
       }
     }
@@ -146,8 +147,8 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
     public void call(final Throwable throwable) {
       final Span span = spanRef.getAndSet(null);
       if (span != null) {
-        CouchbaseClientDecorator.INSTANCE.onError(span, throwable);
-        CouchbaseClientDecorator.INSTANCE.beforeFinish(span);
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
         span.finish();
       }
     }

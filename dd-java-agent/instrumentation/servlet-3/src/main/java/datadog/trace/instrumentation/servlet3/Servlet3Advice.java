@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.servlet3;
 
+import static datadog.trace.instrumentation.servlet3.Servlet3Decorator.DECORATE;
+
 import datadog.trace.api.DDTags;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
@@ -42,8 +44,8 @@ public class Servlet3Advice {
             .withTag("span.origin.type", servlet.getClass().getName())
             .startActive(false);
 
-    Servlet3Decorator.INSTANCE.afterStart(scope.span());
-    Servlet3Decorator.INSTANCE.onRequest(scope.span(), httpServletRequest);
+    DECORATE.afterStart(scope.span());
+    DECORATE.onRequest(scope.span(), httpServletRequest);
 
     if (scope instanceof TraceScope) {
       ((TraceScope) scope).setAsyncPropagation(true);
@@ -75,13 +77,13 @@ public class Servlet3Advice {
         final Span span = scope.span();
 
         if (throwable != null) {
-          Servlet3Decorator.INSTANCE.onResponse(span, resp);
+          DECORATE.onResponse(span, resp);
           if (resp.getStatus() == HttpServletResponse.SC_OK) {
             // exception is thrown in filter chain, but status code is incorrect
             Tags.HTTP_STATUS.set(span, 500);
           }
-          Servlet3Decorator.INSTANCE.onError(span, throwable);
-          Servlet3Decorator.INSTANCE.beforeFinish(span);
+          DECORATE.onError(span, throwable);
+          DECORATE.beforeFinish(span);
           req.removeAttribute(SERVLET_SPAN);
           span.finish(); // Finish the span manually since finishSpanOnClose was false
         } else {
@@ -96,8 +98,8 @@ public class Servlet3Advice {
           }
           // Check again in case the request finished before adding the listener.
           if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
-            Servlet3Decorator.INSTANCE.onResponse(span, resp);
-            Servlet3Decorator.INSTANCE.beforeFinish(span);
+            DECORATE.onResponse(span, resp);
+            DECORATE.beforeFinish(span);
             req.removeAttribute(SERVLET_SPAN);
             span.finish(); // Finish the span manually since finishSpanOnClose was false
           }

@@ -4,7 +4,7 @@ import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 
 class CouchbaseClientDecorator extends DatabaseClientDecorator {
-  public static final CouchbaseClientDecorator INSTANCE = new CouchbaseClientDecorator();
+  public static final CouchbaseClientDecorator DECORATE = new CouchbaseClientDecorator();
 
   @Override
   protected String[] instrumentationNames() {

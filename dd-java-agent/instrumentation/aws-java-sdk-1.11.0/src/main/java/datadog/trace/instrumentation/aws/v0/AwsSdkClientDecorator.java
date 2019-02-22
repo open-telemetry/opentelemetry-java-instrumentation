@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response> {
-  public static final AwsSdkClientDecorator INSTANCE = new AwsSdkClientDecorator();
+  public static final AwsSdkClientDecorator DECORATE = new AwsSdkClientDecorator();
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 

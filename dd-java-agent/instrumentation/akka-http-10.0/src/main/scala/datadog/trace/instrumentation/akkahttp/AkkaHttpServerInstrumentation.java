@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.akkahttp;
 
+import static datadog.trace.instrumentation.akkahttp.AkkaHttpServerDecorator.DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -106,8 +107,8 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
               .asChildOf(extractedContext)
               .startActive(false);
 
-      AkkaHttpServerDecorator.INSTANCE.afterStart(scope.span());
-      AkkaHttpServerDecorator.INSTANCE.onRequest(scope.span(), request);
+      DECORATE.afterStart(scope.span());
+      DECORATE.onRequest(scope.span(), request);
 
       if (scope instanceof TraceScope) {
         ((TraceScope) scope).setAsyncPropagation(true);
@@ -116,8 +117,8 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     }
 
     public static void finishSpan(final Span span, final HttpResponse response) {
-      AkkaHttpServerDecorator.INSTANCE.onResponse(span, response);
-      AkkaHttpServerDecorator.INSTANCE.beforeFinish(span);
+      DECORATE.onResponse(span, response);
+      DECORATE.beforeFinish(span);
 
       if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
         ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(false);
@@ -126,9 +127,9 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     }
 
     public static void finishSpan(final Span span, final Throwable t) {
-      AkkaHttpServerDecorator.INSTANCE.onError(span, t);
+      DECORATE.onError(span, t);
       Tags.HTTP_STATUS.set(span, 500);
-      AkkaHttpServerDecorator.INSTANCE.beforeFinish(span);
+      DECORATE.beforeFinish(span);
 
       if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
         ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(false);

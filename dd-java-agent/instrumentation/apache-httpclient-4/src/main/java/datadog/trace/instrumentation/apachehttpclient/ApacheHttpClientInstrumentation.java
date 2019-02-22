@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.apachehttpclient;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.apachehttpclient.ApacheHttpClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -92,8 +93,8 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       final Scope scope = tracer.buildSpan("http.request").startActive(true);
       final Span span = scope.span();
 
-      ApacheHttpClientDecorator.INSTANCE.afterStart(span);
-      ApacheHttpClientDecorator.INSTANCE.onRequest(span, request);
+      DECORATE.afterStart(span);
+      DECORATE.onRequest(span, request);
 
       // Wrap the handler so we capture the status code
       if (handler1 instanceof ResponseHandler) {
@@ -121,11 +122,11 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
           final Span span = scope.span();
 
           if (result instanceof HttpResponse) {
-            ApacheHttpClientDecorator.INSTANCE.onResponse(span, (HttpResponse) result);
+            DECORATE.onResponse(span, (HttpResponse) result);
           } // else they probably provided a ResponseHandler.
 
-          ApacheHttpClientDecorator.INSTANCE.onError(span, throwable);
-          ApacheHttpClientDecorator.INSTANCE.beforeFinish(span);
+          DECORATE.onError(span, throwable);
+          DECORATE.beforeFinish(span);
         } finally {
           scope.close();
           CallDepthThreadLocalMap.reset(HttpClient.class);
@@ -147,7 +148,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
     public Object handleResponse(final HttpResponse response)
         throws ClientProtocolException, IOException {
       if (null != span) {
-        ApacheHttpClientDecorator.INSTANCE.onResponse(span, response);
+        DECORATE.onResponse(span, response);
       }
       return handler.handleResponse(response);
     }

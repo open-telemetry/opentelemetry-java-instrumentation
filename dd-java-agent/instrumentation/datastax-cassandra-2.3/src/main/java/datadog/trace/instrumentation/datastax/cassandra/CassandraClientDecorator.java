@@ -12,7 +12,7 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 
 public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
-  public static final CassandraClientDecorator INSTANCE = new CassandraClientDecorator();
+  public static final CassandraClientDecorator DECORATE = new CassandraClientDecorator();
 
   @Override
   protected String[] instrumentationNames() {

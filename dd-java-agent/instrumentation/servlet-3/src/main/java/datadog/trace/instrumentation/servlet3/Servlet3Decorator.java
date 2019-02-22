@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class Servlet3Decorator
     extends HttpServerDecorator<HttpServletRequest, HttpServletResponse> {
-  public static final Servlet3Decorator INSTANCE = new Servlet3Decorator();
+  public static final Servlet3Decorator DECORATE = new Servlet3Decorator();
 
   @Override
   protected String[] instrumentationNames() {

@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.akkahttp;
 
+import static datadog.trace.instrumentation.akkahttp.AkkaHttpClientDecorator.DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -98,8 +99,8 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
       }
 
       final Scope scope = GlobalTracer.get().buildSpan("akka-http.request").startActive(false);
-      AkkaHttpClientDecorator.INSTANCE.afterStart(scope.span());
-      AkkaHttpClientDecorator.INSTANCE.onRequest(scope.span(), request);
+      DECORATE.afterStart(scope.span());
+      DECORATE.onRequest(scope.span(), request);
 
       if (request != null) {
         final AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
@@ -128,8 +129,8 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
       if (throwable == null) {
         responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
       } else {
-        AkkaHttpClientDecorator.INSTANCE.onError(span, throwable);
-        AkkaHttpClientDecorator.INSTANCE.beforeFinish(span);
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
         span.finish();
       }
       scope.close();
@@ -174,11 +175,11 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     @Override
     public Void apply(final Try<HttpResponse> result) {
       if (result.isSuccess()) {
-        AkkaHttpClientDecorator.INSTANCE.onResponse(span, result.get());
+        DECORATE.onResponse(span, result.get());
       } else {
-        AkkaHttpClientDecorator.INSTANCE.onError(span, result.failed().get());
+        DECORATE.onError(span, result.failed().get());
       }
-      AkkaHttpClientDecorator.INSTANCE.beforeFinish(span);
+      DECORATE.beforeFinish(span);
       span.finish();
       return null;
     }
