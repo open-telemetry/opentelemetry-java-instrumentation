@@ -2,6 +2,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
+import org.hibernate.Query
 import org.hibernate.Session
 import org.hibernate.SessionFactory
 import org.hibernate.boot.MetadataSources
@@ -40,23 +41,18 @@ class QueryTest extends AgentTestRunner {
     }
   }
 
-  def "test hibernate query"() {
+  def "test hibernate query.#queryMethodName"() {
     setup:
 
     Session session = sessionFactory.openSession()
     session.beginTransaction()
-    List result = session.createQuery("from Value").list()
-    for (Value value : (List<Value>) result) {
-      System.out.println(value.getName())
-    }
+    queryInteraction(session)
     session.getTransaction().commit()
     session.close()
 
     expect:
-    result.size() == 2
-
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 4) {
         span(0) {
           serviceName "hibernate"
           resourceName "hibernate.session"
@@ -84,8 +80,8 @@ class QueryTest extends AgentTestRunner {
         }
         span(2) {
           serviceName "hibernate"
-          resourceName "hibernate.query.list"
-          operationName "hibernate.query.list"
+          resourceName "hibernate.query.$queryMethodName"
+          operationName "hibernate.query.$queryMethodName"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
@@ -94,7 +90,34 @@ class QueryTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        span(3) {
+          serviceName "h2"
+          childOf span(2)
+        }
       }
+    }
+
+    where:
+    queryMethodName | isError | queryInteraction
+    "list"          | false   | { sess ->
+      Query q = sess.createQuery("from Value")
+      q.list()
+    }
+    "executeUpdate" | false   | { sess ->
+      Query q = sess.createQuery("update Value set name = 'alyx'")
+      q.executeUpdate()
+    }
+    "uniqueResult"  | false   | { sess ->
+      Query q = sess.createQuery("from Value where id = 1")
+      q.uniqueResult()
+    }
+    "iterate"       | false   | { sess ->
+      Query q = sess.createQuery("from Value")
+      q.iterate()
+    }
+    "scroll"        | false   | { sess ->
+      Query q = sess.createQuery("from Value")
+      q.scroll()
     }
   }
 

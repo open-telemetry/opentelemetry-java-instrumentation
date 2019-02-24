@@ -2,7 +2,6 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
-import lombok.NonNull
 import org.hibernate.*
 import org.hibernate.boot.MetadataSources
 import org.hibernate.boot.registry.StandardServiceRegistry
@@ -14,6 +13,12 @@ class SessionTest extends AgentTestRunner {
   @Shared
   private SessionFactory sessionFactory
 
+  @Shared
+  private Map<String, Closure> sessionBuilders
+
+  @Shared
+  private List<Value> prepopulated
+
   def setupSpec() {
     final StandardServiceRegistry registry =
       new StandardServiceRegistryBuilder()
@@ -24,6 +29,25 @@ class SessionTest extends AgentTestRunner {
     } catch (Exception e) {
       StandardServiceRegistryBuilder.destroy(registry)
     }
+
+    // Test two different types of Session. Groovy doesn't allow testing the cross-product/combinations of two data
+    // tables, so we get this hack instead.
+    sessionBuilders = new HashMap<>();
+    sessionBuilders.put("Session", { return sessionFactory.openSession() })
+    sessionBuilders.put("StatelessSession", { return sessionFactory.openStatelessSession() })
+
+    // Pre-populate the DB, so delete/update can be tested.
+    Session writer = sessionFactory.openSession()
+    writer.beginTransaction()
+    prepopulated = new ArrayList<>()
+    for (int i = 0; i < 2; i++) {
+      prepopulated.add(new Value("Hello :)"))
+      writer.save(prepopulated.get(i))
+    }
+    writer.getTransaction().commit()
+    writer.close()
+    TEST_WRITER.waitForTraces(1)
+    TEST_WRITER.clear()
   }
 
   def cleanupSpec() {
@@ -32,46 +56,17 @@ class SessionTest extends AgentTestRunner {
     }
   }
 
-  @lombok.Value
-  static class SessionTypeTest {
-    // Lombok can't get the types right for the constructor.
-    SessionTypeTest(Closure fn) {
-      sessionBuilder = fn
-    }
 
-    @NonNull
-    Closure sessionBuilder
-    @NonNull
-    Value value = new Value("Hello :)")
-  }
-
-  def "test hibernate #testName"() {
+  def "test hibernate action #testName"() {
     setup:
-    // Test two different types of Session. Groovy doesn't allow testing the cross-product/combinations of two data
-    // tables, so we get this hack instead.
-    Map<String, SessionTypeTest> sessionTests = new HashMap<>();
-    sessionTests.put("Session", new SessionTypeTest({ return sessionFactory.openSession() }))
-    sessionTests.put("StatelessSession", new SessionTypeTest({ return sessionFactory.openStatelessSession() }))
-
-    // Pre-populate the DB, so delete/update can be tested.
-    Session writer = sessionFactory.openSession()
-    writer.beginTransaction()
-    for (SessionTypeTest sessionTypeTest : sessionTests.values()) {
-      writer.save(sessionTypeTest.value)
-    }
-    writer.getTransaction().commit()
-    writer.close()
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
 
     // Test for each implementation of Session.
     for (String sessionImplementation : sessionImplementations) {
-      SessionTypeTest sessionTypeTest = sessionTests.get(sessionImplementation)
-      def session = sessionTypeTest.getSessionBuilder().call()
+      def session = sessionBuilders.get(sessionImplementation)()
       session.beginTransaction()
 
       try {
-        sessionMethodTest.call(session, sessionTypeTest.getValue())
+        sessionMethodTest.call(session, prepopulated.get(0))
       } catch (Exception e) {
         // We expected this, we should see the error field set on the span.
       }
@@ -83,7 +78,7 @@ class SessionTest extends AgentTestRunner {
     expect:
     assertTraces(sessionImplementations.size()) {
       for (int i = 0; i < sessionImplementations.size(); i++) {
-        trace(i, 3) {
+        trace(i, 4) {
           span(0) {
             serviceName "hibernate"
             resourceName "hibernate.session"
@@ -127,63 +122,294 @@ class SessionTest extends AgentTestRunner {
               defaultTags()
             }
           }
+          span(3) {
+            serviceName "h2"
+            childOf span(2)
+          }
         }
       }
     }
 
     where:
-    testName                  | methodName     | resource         | isError | sessionImplementations          | sessionMethodTest
-    "replicate"               | "replicate"    | "Value"          | false   | ["Session"]                     | { sesh, val ->
+    testName                                  | methodName | resource | isError | sessionImplementations          | sessionMethodTest
+    "lock"                                    | "lock"     | "Value"  | false   | ["Session"]                     | { sesh, val ->
+      sesh.lock(val, LockMode.READ)
+    }
+    "refresh"                                 | "refresh"  | "Value"  | false   | ["Session", "StatelessSession"] | { sesh, val ->
+      sesh.refresh(val)
+    }
+    "get"                                     | "get"      | "Value"  | false   | ["Session", "StatelessSession"] | { sesh, val ->
+      sesh.get("Value", val.getId())
+    }
+    "insert"                                  | "insert"   | "Value"  | false   | ["StatelessSession"]            | { sesh, val ->
+      sesh.insert("Value", new Value("insert me"))
+    }
+    "update (StatelessSession)"               | "update"   | "Value"  | false   | ["StatelessSession"]            | { sesh, val ->
+      val.setName("New name")
+      sesh.update(val)
+    }
+    "update by entityName (StatelessSession)" | "update"   | "Value"  | false   | ["StatelessSession"]            | { sesh, val ->
+      val.setName("New name")
+      sesh.update("Value", val)
+    }
+    "delete (Session)"                        | "delete"   | "Value"  | false   | ["StatelessSession"]            | { sesh, val ->
+      sesh.delete(val)
+    }
+  }
+
+  def "test hibernate replicate: #testName"() {
+    setup:
+
+    // Test for each implementation of Session.
+    def session = sessionFactory.openSession()
+    session.beginTransaction()
+
+    try {
+      sessionMethodTest.call(session, prepopulated.get(0))
+    } catch (Exception e) {
+      // We expected this, we should see the error field set on the span.
+    }
+
+    session.getTransaction().commit()
+    session.close()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 5) {
+        span(0) {
+          serviceName "hibernate"
+          resourceName "hibernate.session"
+          operationName "hibernate.session"
+          spanType DDSpanTypes.HIBERNATE
+          parent()
+          tags {
+            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            defaultTags()
+          }
+        }
+        span(1) {
+          serviceName "hibernate"
+          resourceName "hibernate.transaction.commit"
+          operationName "hibernate.transaction.commit"
+          spanType DDSpanTypes.HIBERNATE
+          childOf span(0)
+          tags {
+            "$Tags.COMPONENT.key" "hibernate-java"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            defaultTags()
+          }
+        }
+        span(2) {
+          serviceName "h2"
+          childOf span(1)
+        }
+        span(3) {
+          serviceName "hibernate"
+          resourceName resource
+          operationName "hibernate.$methodName"
+          spanType DDSpanTypes.HIBERNATE
+          childOf span(0)
+          if (isError) {
+            errored true
+          }
+          tags {
+            if (isError) {
+              errorTags(MappingException, "Unknown entity: java.lang.Long")
+            }
+            "$Tags.COMPONENT.key" "hibernate-java"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            defaultTags()
+          }
+        }
+        span(4) {
+          serviceName "h2"
+          childOf span(3)
+        }
+      }
+
+    }
+
+    where:
+    testName                  | methodName  | resource | isError | sessionMethodTest
+    "replicate"               | "replicate" | "Value"  | false   | { sesh, val ->
       Value replicated = new Value(val.getName() + " replicated")
       replicated.setId(val.getId())
       sesh.replicate(replicated, ReplicationMode.OVERWRITE)
     }
-    "replicate by entityName" | "replicate"    | "Value"          | false   | ["Session"]                     | { sesh, val ->
+    "replicate by entityName" | "replicate" | "Value"  | false   | { sesh, val ->
       Value replicated = new Value(val.getName() + " replicated")
       replicated.setId(val.getId())
       sesh.replicate("Value", replicated, ReplicationMode.OVERWRITE)
     }
-    "failed replicate"        | "replicate"    | "unknown object" | true    | ["Session"]                     | { sesh, val ->
-      sesh.replicate(new Long(123) /* Not a valid entity */, ReplicationMode.OVERWRITE)
+  }
+
+  def "test hibernate failed replicate"() {
+    setup:
+
+    // Test for each implementation of Session.
+    def session = sessionFactory.openSession()
+    session.beginTransaction()
+
+    try {
+      session.replicate(new Long(123) /* Not a valid entity */, ReplicationMode.OVERWRITE)
+    } catch (Exception e) {
+      // We expected this, we should see the error field set on the span.
     }
-    "save"                    | "save"         | "Value"          | false   | ["Session"]                     | { sesh, val ->
+
+    session.getTransaction().commit()
+    session.close()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          serviceName "hibernate"
+          resourceName "hibernate.session"
+          operationName "hibernate.session"
+          spanType DDSpanTypes.HIBERNATE
+          parent()
+          tags {
+            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            defaultTags()
+          }
+        }
+        span(1) {
+          serviceName "hibernate"
+          resourceName "hibernate.transaction.commit"
+          operationName "hibernate.transaction.commit"
+          spanType DDSpanTypes.HIBERNATE
+          childOf span(0)
+          tags {
+            "$Tags.COMPONENT.key" "hibernate-java"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            defaultTags()
+          }
+        }
+        span(2) {
+          serviceName "hibernate"
+          resourceName "unknown object"
+          operationName "hibernate.replicate"
+          spanType DDSpanTypes.HIBERNATE
+          childOf span(0)
+          tags {
+            errorTags(MappingException, "Unknown entity: java.lang.Long")
+
+            "$Tags.COMPONENT.key" "hibernate-java"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+            defaultTags()
+          }
+        }
+      }
+
+    }
+  }
+
+
+  def "test hibernate commit action #testName"() {
+    setup:
+
+    // Test for each implementation of Session.
+    for (String sessionImplementation : sessionImplementations) {
+      def session = sessionBuilders.get(sessionImplementation)()
+      session.beginTransaction()
+
+      try {
+        sessionMethodTest.call(session, prepopulated.get(0))
+      } catch (Exception e) {
+        // We expected this, we should see the error field set on the span.
+      }
+
+      session.getTransaction().commit()
+      session.close()
+    }
+
+    expect:
+    assertTraces(sessionImplementations.size()) {
+      for (int i = 0; i < sessionImplementations.size(); i++) {
+        trace(i, 4) {
+          span(0) {
+            serviceName "hibernate"
+            resourceName "hibernate.session"
+            operationName "hibernate.session"
+            spanType DDSpanTypes.HIBERNATE
+            parent()
+            tags {
+              "$Tags.COMPONENT.key" "hibernate-java"
+              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+              "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+              defaultTags()
+            }
+          }
+          span(1) {
+            serviceName "hibernate"
+            resourceName "hibernate.transaction.commit"
+            operationName "hibernate.transaction.commit"
+            spanType DDSpanTypes.HIBERNATE
+            childOf span(0)
+            tags {
+              "$Tags.COMPONENT.key" "hibernate-java"
+              "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+              defaultTags()
+            }
+          }
+          span(2) {
+            serviceName "h2"
+            childOf span(1)
+          }
+          span(3) {
+            serviceName "hibernate"
+            resourceName resource
+            operationName "hibernate.$methodName"
+            spanType DDSpanTypes.HIBERNATE
+            childOf span(0)
+            if (isError) {
+              errored true
+            }
+            tags {
+              if (isError) {
+                errorTags(MappingException, "Unknown entity: java.lang.Long")
+              }
+              "$Tags.COMPONENT.key" "hibernate-java"
+              "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+              defaultTags()
+            }
+          }
+        }
+      }
+    }
+
+    where:
+    testName                         | methodName     | resource | isError | sessionImplementations | sessionMethodTest
+    "save"                           | "save"         | "Value"  | false   | ["Session"]            | { sesh, val ->
       sesh.save(new Value("Another value"))
     }
-    "saveOrUpdate save"       | "saveOrUpdate" | "Value"          | false   | ["Session"]                     | { sesh, val ->
+    "saveOrUpdate save"              | "saveOrUpdate" | "Value"  | false   | ["Session"]            | { sesh, val ->
       sesh.saveOrUpdate(new Value("Value"))
     }
-    "saveOrUpdate update"     | "saveOrUpdate" | "Value"          | false   | ["Session"]                     | { sesh, val ->
+    "saveOrUpdate update"            | "saveOrUpdate" | "Value"  | false   | ["Session"]            | { sesh, val ->
       val.setName("New name")
       sesh.saveOrUpdate(val)
     }
-    "update"                  | "update"       | "Value"          | false   | ["Session", "StatelessSession"] | { sesh, val ->
+    "merge"                          | "merge"        | "Value"  | false   | ["Session"]            | { sesh, val ->
+      sesh.merge(new Value("merge me in"))
+    }
+    "persist"                        | "persist"      | "Value"  | false   | ["Session"]            | { sesh, val ->
+      sesh.persist(new Value("merge me in"))
+    }
+    "update (Session)"               | "update"       | "Value"  | false   | ["Session"]            | { sesh, val ->
       val.setName("New name")
       sesh.update(val)
     }
-    "update by entityName"    | "update"       | "Value"          | false   | ["Session", "StatelessSession"] | { sesh, val ->
+    "update by entityName (Session)" | "update"       | "Value"  | false   | ["Session"]            | { sesh, val ->
       val.setName("New name")
       sesh.update("Value", val)
     }
-    "merge"                   | "merge"        | "Value"          | false   | ["Session"]                     | { sesh, val ->
-      sesh.merge(new Value("merge me in"))
-    }
-    "persist"                 | "persist"      | "Value"          | false   | ["Session"]                     | { sesh, val ->
-      sesh.persist(new Value("merge me in"))
-    }
-    "lock"                    | "lock"         | "Value"          | false   | ["Session"]                     | { sesh, val ->
-      sesh.lock(val, LockMode.READ)
-    }
-    "refresh"                 | "refresh"      | "Value"          | false   | ["Session", "StatelessSession"] | { sesh, val ->
-      sesh.refresh(val)
-    }
-    "delete"                  | "delete"       | "Value"          | false   | ["Session", "StatelessSession"] | { sesh, val ->
+    "delete (Session)"               | "delete"       | "Value"  | false   | ["Session"]            | { sesh, val ->
       sesh.delete(val)
-    }
-    "get"                     | "get"          | "Value"          | false   | ["Session", "StatelessSession"] | { sesh, val ->
-      sesh.get("Value", val.getId())
-    }
-    "insert"                  | "insert"       | "Value"          | false   | ["StatelessSession"]            | { sesh, val ->
-      sesh.insert("Value", new Value("insert me"))
     }
   }
 
@@ -199,7 +425,7 @@ class SessionTest extends AgentTestRunner {
 
     expect:
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 4) {
         span(0) {
           serviceName "hibernate"
           resourceName "hibernate.session"
@@ -237,18 +463,18 @@ class SessionTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        span(3) {
+          serviceName "h2"
+          childOf span(2)
+        }
       }
     }
 
     where:
-    queryMethodName                     | queryBuildMethod
-    "createQuery"                       | { sess -> sess.createQuery("from Value") }
-    "createQuery with resultClass"      | { sess -> sess.createQuery("from Value", Value.class) }
-    "createNamedQuery"                  | { sess -> sess.createNamedQuery("TestNamedQuery") }
-    "createNamedQuery with resultClass" | { sess -> sess.createNamedQuery("TestNamedQuery", Value.class) }
-    "getNamedQuery"                     | { sess -> sess.getNamedQuery("TestNamedQuery") }
-    "createSQLQuery"                    | { sess -> sess.createSQLQuery("SELECT * FROM Value") }
-    "createNativeQuery"                 | { sess -> sess.createNativeQuery("SELECT * FROM Value") }
+    queryMethodName  | queryBuildMethod
+    "createQuery"    | { sess -> sess.createQuery("from Value") }
+    "getNamedQuery"  | { sess -> sess.getNamedQuery("TestNamedQuery") }
+    "createSQLQuery" | { sess -> sess.createSQLQuery("SELECT * FROM Value") }
   }
 }
 

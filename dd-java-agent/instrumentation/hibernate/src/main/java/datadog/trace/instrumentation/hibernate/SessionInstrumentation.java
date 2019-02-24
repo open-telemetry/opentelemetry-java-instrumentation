@@ -23,10 +23,12 @@ import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.hibernate.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
-import org.hibernate.query.Query;
+import org.hibernate.engine.HibernateIterator;
 
 @AutoService(Instrumenter.class)
 public class SessionInstrumentation extends Instrumenter.Default {
@@ -39,8 +41,9 @@ public class SessionInstrumentation extends Instrumenter.Default {
   public Map<String, String> contextStore() {
     final Map<String, String> map = new HashMap<>();
     map.put("org.hibernate.SharedSessionContract", SessionState.class.getName());
-    map.put("org.hibernate.query.Query", SessionState.class.getName());
+    map.put("org.hibernate.Query", SessionState.class.getName());
     map.put("org.hibernate.Transaction", SessionState.class.getName());
+    map.put("org.hibernate.engine.HibernateIterator", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
@@ -76,7 +79,12 @@ public class SessionInstrumentation extends Instrumenter.Default {
                     .or(named("lock"))
                     .or(named("refresh"))
                     .or(named("insert"))
-                    .or(named("delete"))),
+                    .or(named("delete"))
+                    // Iterator methods.
+                    .or(named("iterate"))
+                    // Lazy-load methods.
+                    .or(named("immediateLoad"))
+                    .or(named("internalLoad"))),
         SessionMethodAdvice.class.getName());
     // Handle the generic and non-generic 'get' separately.
     transformers.put(
@@ -96,7 +104,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
         GetTransactionAdvice.class.getName());
 
     transformers.put(
-        isMethod().and(returns(safeHasSuperType(named("org.hibernate.query.Query")))),
+        isMethod().and(returns(safeHasSuperType(named("org.hibernate.Query")))),
         GetQueryAdvice.class.getName());
 
     return transformers;
@@ -131,7 +139,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
   public static class SessionMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SessionState startSave(
+    public static SessionState startMethod(
         @Advice.This final SharedSessionContract session,
         @Advice.Origin("#m") final String name,
         @Advice.Argument(0) final Object entity) {
@@ -143,12 +151,26 @@ public class SessionInstrumentation extends Instrumenter.Default {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void endSave(
+    public static void endMethod(
         @Advice.This final SharedSessionContract session,
         @Advice.Enter final SessionState sessionState,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned) {
 
       SessionMethodUtils.closeScope(sessionState, throwable);
+
+      // Attach instrumentation to any returned object.
+      if (returned == null) {
+        return;
+      }
+      final ContextStore<SharedSessionContract, SessionState> sessionContextStore =
+          InstrumentationContext.get(SharedSessionContract.class, SessionState.class);
+      if (returned instanceof HibernateIterator) {
+        final ContextStore<HibernateIterator, SessionState> iteratorContextStore =
+            InstrumentationContext.get(HibernateIterator.class, SessionState.class);
+        SessionMethodUtils.attachSpanFromStore(
+            sessionContextStore, session, iteratorContextStore, (HibernateIterator) returned);
+      }
     }
   }
 
@@ -163,7 +185,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
       final ContextStore<Query, SessionState> queryContextStore =
           InstrumentationContext.get(Query.class, SessionState.class);
 
-      SessionMethodUtils.attachSpanFromSession(
+      SessionMethodUtils.attachSpanFromStore(
           sessionContextStore, session, queryContextStore, query);
     }
   }
@@ -180,7 +202,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
       final ContextStore<Transaction, SessionState> transactionContextStore =
           InstrumentationContext.get(Transaction.class, SessionState.class);
 
-      SessionMethodUtils.attachSpanFromSession(
+      SessionMethodUtils.attachSpanFromStore(
           sessionContextStore, session, transactionContextStore, transaction);
     }
   }

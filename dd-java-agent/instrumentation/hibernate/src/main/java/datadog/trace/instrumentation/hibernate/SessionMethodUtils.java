@@ -11,7 +11,6 @@ import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
 import javax.persistence.Entity;
-import org.hibernate.SharedSessionContract;
 
 public class SessionMethodUtils {
 
@@ -82,31 +81,27 @@ public class SessionMethodUtils {
 
     final Scope scope = sessionState.getMethodScope();
     final Span span = scope.span();
-    if (throwable != null) {
-      Tags.ERROR.set(span, true);
-      span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+    if (span != null) {
+      if (throwable != null) {
+        Tags.ERROR.set(span, true);
+        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+      }
+      span.finish();
     }
 
-    span.finish();
     scope.close();
     sessionState.setMethodScope(null);
   }
 
   // Copies a span from the given Session ContextStore into the targetContextStore. Used to
   // propagate a Span from a Session to transient Session objects such as Transaction and Query.
-  public static <T> void attachSpanFromSession(
-      final ContextStore<SharedSessionContract, SessionState> sessionContextStore,
-      final SharedSessionContract session,
+  public static <S, T> void attachSpanFromStore(
+      final ContextStore<S, SessionState> sourceContextStore,
+      final S source,
       final ContextStore<T, SessionState> targetContextStore,
       final T target) {
 
-    if (!(session instanceof SharedSessionContract)
-        || sessionContextStore == null
-        || targetContextStore == null) {
-      return;
-    }
-
-    final SessionState state = sessionContextStore.get((SharedSessionContract) session);
+    final SessionState state = sourceContextStore.get(source);
     if (state == null) {
       return;
     }

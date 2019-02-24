@@ -1,33 +1,32 @@
 // Set properties before any plugins get loaded
 project.ext {
   // Execute tests on all JVMs, even rare and outdated ones
-//  coreJavaInstrumentation = true
-//  minJavaVersionForTests = JavaVersion.VERSION_1_7
+  coreJavaInstrumentation = true
+  minJavaVersionForTests = JavaVersion.VERSION_1_7
 }
 
-//muzzle {
-//  pass {
-//    group = "org.hibernate"
-//    module = "hibernate-core"
-//    versions = "[5.4.2.Final]"
-//    assertInverse = true
-//  }
-//}
+muzzle {
+  pass {
+    group = "org.hibernate"
+    module = "hibernate-core"
+    versions = "[5.0.0.Final, 5.+]"
+    assertInverse = true
+  }
+}
 
 apply from: "${rootDir}/gradle/java.gradle"
 
 apply plugin: 'org.unbroken-dome.test-sets'
 
-//testSets {
-//  latestDepTest {
-//    dirName = 'test'
-//  }
-//}
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
 
 dependencies {
-  compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '5.4.1.Final'
+  compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '5.0.0.Final'
 
-//  compile project(':dd-trace-api')
   compile project(':dd-java-agent:agent-tooling')
 
   compile deps.bytebuddy
@@ -36,8 +35,12 @@ dependencies {
   implementation deps.autoservice
 
   testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:jdbc')
 
 
-  testCompile group: 'org.hibernate', name: 'hibernate-core', version: '5.4.1.Final'
+  testCompile group: 'org.hibernate', name: 'hibernate-core', version: '5.0.0.Final'
   testCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
+
+  latestDepTestCompile group: 'org.hibernate', name: 'hibernate-core', version: '5.+'
+  latestDepTestCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
 }

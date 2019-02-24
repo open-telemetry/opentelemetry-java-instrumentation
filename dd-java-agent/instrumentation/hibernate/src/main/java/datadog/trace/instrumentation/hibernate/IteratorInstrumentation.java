@@ -5,7 +5,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -18,19 +17,19 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.hibernate.Query;
+import org.hibernate.engine.HibernateIterator;
 
 @AutoService(Instrumenter.class)
-public class QueryInstrumentation extends Instrumenter.Default {
+public class IteratorInstrumentation extends Instrumenter.Default {
 
-  public QueryInstrumentation() {
+  public IteratorInstrumentation() {
     super("hibernate");
   }
 
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> map = new HashMap<>();
-    map.put("org.hibernate.Query", SessionState.class.getName());
+    map.put("org.hibernate.engine.HibernateIterator", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
@@ -44,41 +43,34 @@ public class QueryInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.Query")));
+    return not(isInterface())
+        .and(safeHasSuperType(named("org.hibernate.engine.HibernateIterator")));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        isMethod()
-            .and(
-                named("list")
-                    .or(named("executeUpdate"))
-                    .or(named("uniqueResult"))
-                    .or(named("iterate"))
-                    .or(named("scroll"))) // TODO(will): Instrument the ScrollableWhatever returned
-            .and(takesArguments(0)),
-        QueryMethodAdvice.class.getName());
-
+        isMethod().and(named("next").or(named("remove"))), IteratorAdvice.class.getName());
     return transformers;
   }
 
-  public static class QueryMethodAdvice {
+  public static class IteratorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SessionState startMethod(
-        @Advice.This final Query query, @Advice.Origin("#m") final String name) {
+        @Advice.This final HibernateIterator iterator, @Advice.Origin("#m") final String name) {
 
-      final ContextStore<Query, SessionState> contextStore =
-          InstrumentationContext.get(Query.class, SessionState.class);
+      final ContextStore<HibernateIterator, SessionState> contextStore =
+          InstrumentationContext.get(HibernateIterator.class, SessionState.class);
 
-      return SessionMethodUtils.startScopeFrom(contextStore, query, "hibernate.query." + name);
+      return SessionMethodUtils.startScopeFrom(
+          contextStore, iterator, "hibernate.iterator." + name);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.This final Query query,
+        @Advice.This final HibernateIterator iterator,
         @Advice.Enter final SessionState state,
         @Advice.Thrown final Throwable throwable) {
 
