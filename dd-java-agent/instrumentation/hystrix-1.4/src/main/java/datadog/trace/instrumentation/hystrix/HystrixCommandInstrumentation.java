@@ -16,7 +16,6 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -49,13 +48,15 @@ public class HystrixCommandInstrumentation extends Instrumenter.Default {
   public static class TraceAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(@Advice.This final HystrixCommand<?> command, @Advice.Origin final Method method) {
+    public static Scope startSpan(
+        @Advice.This final HystrixCommand<?> command,
+        @Advice.Origin("#m") final String methodName) {
 
       final String commandName = command.getCommandKey().name();
       final String groupName = command.getCommandGroup().name();
       final boolean circuitOpen = command.isCircuitBreakerOpen();
 
-      final String resourceName = groupName + "." + commandName + "." + method.getName();
+      final String resourceName = groupName + "." + commandName + "." + methodName;
 
       return GlobalTracer.get()
           .buildSpan(OPERATION_NAME)
