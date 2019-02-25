@@ -1,8 +1,7 @@
 package datadog.trace.instrumentation.grpc.client;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.grpc.client.GrpcClientDecorator.DECORATE;
 
-import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
@@ -17,8 +16,6 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
-import io.opentracing.tag.Tags;
-import java.util.Collections;
 
 public class TracingClientInterceptor implements ClientInterceptor {
 
@@ -34,27 +31,22 @@ public class TracingClientInterceptor implements ClientInterceptor {
       final CallOptions callOptions,
       final Channel next) {
 
-    final Scope scope =
+    final Span span =
         tracer
             .buildSpan("grpc.client")
             .withTag(DDTags.RESOURCE_NAME, method.getFullMethodName())
-            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.RPC)
-            .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-            .withTag(Tags.COMPONENT.getKey(), "grpc-client")
-            .startActive(false);
-    final Span span = scope.span();
+            .start();
+    DECORATE.afterStart(span);
 
     final ClientCall<ReqT, RespT> result;
-    try {
+    try (final Scope ignore = tracer.scopeManager().activate(span, false)) {
       // call other interceptors
       result = next.newCall(method, callOptions);
     } catch (final Throwable e) {
-      Tags.ERROR.set(span, true);
-      span.log(Collections.singletonMap(ERROR_OBJECT, e));
+      DECORATE.onError(span, e);
+      DECORATE.beforeFinish(span);
       span.finish();
       throw e;
-    } finally {
-      scope.close();
     }
 
     return new TracingClientCall<>(tracer, span, result);
@@ -79,8 +71,8 @@ public class TracingClientInterceptor implements ClientInterceptor {
       try (final Scope ignored = tracer.scopeManager().activate(span, false)) {
         super.start(new TracingClientCallListener<>(tracer, span, responseListener), headers);
       } catch (final Throwable e) {
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, e));
+        DECORATE.onError(span, e);
+        DECORATE.beforeFinish(span);
         span.finish();
         throw e;
       }
@@ -91,8 +83,8 @@ public class TracingClientInterceptor implements ClientInterceptor {
       try (final Scope ignored = tracer.scopeManager().activate(span, false)) {
         super.sendMessage(message);
       } catch (final Throwable e) {
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, e));
+        DECORATE.onError(span, e);
+        DECORATE.beforeFinish(span);
         span.finish();
         throw e;
       }
@@ -118,41 +110,30 @@ public class TracingClientInterceptor implements ClientInterceptor {
               .buildSpan("grpc.message")
               .asChildOf(span)
               .withTag("message.type", message.getClass().getName())
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.RPC)
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-              .withTag(Tags.COMPONENT.getKey(), "grpc-client")
               .startActive(true);
+      final Span messageSpan = scope.span();
+      DECORATE.afterStart(messageSpan);
       try {
         delegate().onMessage(message);
       } catch (final Throwable e) {
-        final Span span = scope.span();
-        Tags.ERROR.set(span, true);
-        this.span.log(Collections.singletonMap(ERROR_OBJECT, e));
-        this.span.finish();
+        DECORATE.onError(messageSpan, e);
         throw e;
       } finally {
+        DECORATE.beforeFinish(messageSpan);
         scope.close();
       }
     }
 
     @Override
     public void onClose(final Status status, final Metadata trailers) {
-      span.setTag("status.code", status.getCode().name());
-      if (status.getDescription() != null) {
-        span.setTag("status.description", status.getDescription());
-      }
-      if (!status.isOk()) {
-        Tags.ERROR.set(span, true);
-      }
-      if (status.getCause() != null) {
-        span.log(Collections.singletonMap(ERROR_OBJECT, status.getCause()));
-      }
+      DECORATE.onClose(span, status);
       // Finishes span.
       try (final Scope ignored = tracer.scopeManager().activate(span, true)) {
         delegate().onClose(status, trailers);
+        DECORATE.beforeFinish(span);
       } catch (final Throwable e) {
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, e));
+        DECORATE.onError(span, e);
+        DECORATE.beforeFinish(span);
         span.finish();
         throw e;
       }
@@ -163,8 +144,8 @@ public class TracingClientInterceptor implements ClientInterceptor {
       try (final Scope ignored = tracer.scopeManager().activate(span, false)) {
         delegate().onReady();
       } catch (final Throwable e) {
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, e));
+        DECORATE.onError(span, e);
+        DECORATE.beforeFinish(span);
         span.finish();
         throw e;
       }
