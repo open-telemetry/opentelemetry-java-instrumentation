@@ -17,9 +17,10 @@ public class ExtractedContext extends TagContext {
       final String traceId,
       final String spanId,
       final int samplingPriority,
+      final String origin,
       final Map<String, String> baggage,
       final Map<String, String> tags) {
-    super(tags);
+    super(origin, tags);
     this.traceId = traceId;
     this.spanId = spanId;
     this.samplingPriority = samplingPriority;

@@ -47,7 +47,6 @@ class TestHttpServer implements AutoCloseable {
   private TestHttpServer() {
     int port = PortUtils.randomOpenPort()
     internalServer = new Server(port)
-    internalServer.stopAtShutdown = true
     address = new URI("http://localhost:$port")
   }
 
@@ -62,6 +61,8 @@ class TestHttpServer implements AutoCloseable {
     internalServer.handler = handlerList
     System.out.println("Starting server $this on port $address.port")
     internalServer.start()
+    // set after starting, otherwise two callbacks get added.
+    internalServer.stopAtShutdown = true
     return this
   }
 

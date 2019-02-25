@@ -36,6 +36,8 @@ subprojects { subProj ->
         classPath = project(':dd-java-agent:agent-tooling').configurations.instrumentationMuzzle + subProj.configurations.compile + subProj.sourceSets.main.output
       }
     }
+
+    instr_project.tasks.test.dependsOn(subProj.tasks.test)
   }
 
   instr_project.dependencies {

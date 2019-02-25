@@ -610,6 +610,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Map<String, String> baggage;
       final PendingTrace parentTrace;
       final int samplingPriority;
+      final String origin;
 
       final DDSpanContext context;
       SpanContext parentContext = parent;
@@ -629,6 +630,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         baggage = ddsc.getBaggageItems();
         parentTrace = ddsc.getTrace();
         samplingPriority = PrioritySampling.UNSET;
+        origin = null;
         if (serviceName == null) {
           serviceName = ddsc.getServiceName();
         }
@@ -643,12 +645,21 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           traceId = extractedContext.getTraceId();
           parentSpanId = extractedContext.getSpanId();
           samplingPriority = extractedContext.getSamplingPriority();
+          origin = extractedContext.getOrigin();
           baggage = extractedContext.getBaggage();
+        } else if (parentContext instanceof TagContext) {
+          // Start a new trace with origin
+          traceId = generateNewId();
+          parentSpanId = "0";
+          samplingPriority = PrioritySampling.UNSET;
+          origin = ((TagContext) parentContext).getOrigin();
+          baggage = null;
         } else {
           // Start a new trace
           traceId = generateNewId();
           parentSpanId = "0";
           samplingPriority = PrioritySampling.UNSET;
+          origin = null;
           baggage = null;
         }
         // Get header tags whether propagating or not.
@@ -679,6 +690,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
               operationName,
               resourceName,
               samplingPriority,
+              origin,
               baggage,
               errorFlag,
               spanType,

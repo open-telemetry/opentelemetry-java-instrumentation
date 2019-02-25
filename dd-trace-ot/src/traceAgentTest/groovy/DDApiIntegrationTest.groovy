@@ -26,6 +26,7 @@ class DDApiIntegrationTest {
       "fakeOperation",
       "fakeResource",
       PrioritySampling.UNSET,
+      null,
       Collections.emptyMap(),
       false,
       "fakeType",
