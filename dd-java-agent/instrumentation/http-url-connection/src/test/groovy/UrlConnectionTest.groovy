@@ -8,7 +8,6 @@ import io.opentracing.util.GlobalTracer
 
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
-import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.COMPONENT_NAME
 import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
 class UrlConnectionTest extends AgentTestRunner {
@@ -48,7 +47,7 @@ class UrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT.key" COMPONENT_NAME
+            "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$url"

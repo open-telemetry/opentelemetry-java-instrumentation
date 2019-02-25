@@ -11,7 +11,6 @@ import spock.lang.Shared
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
-import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.COMPONENT_NAME
 import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
 class HttpUrlConnectionTest extends AgentTestRunner {
@@ -76,7 +75,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" COMPONENT_NAME
+            "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
@@ -93,7 +92,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" COMPONENT_NAME
+            "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
@@ -157,7 +156,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" COMPONENT_NAME
+            "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
@@ -174,7 +173,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" COMPONENT_NAME
+            "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
@@ -222,7 +221,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" COMPONENT_NAME
+            "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
@@ -270,7 +269,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" COMPONENT_NAME
+            "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
@@ -335,7 +334,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" COMPONENT_NAME
+            "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
@@ -402,7 +401,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT.key" COMPONENT_NAME
+            "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
@@ -448,7 +447,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" COMPONENT_NAME
+            "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$server.address"
