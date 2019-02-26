@@ -9,10 +9,16 @@ import java.util.Map;
  * returned here even if the rest of the request would have returned null.
  */
 public class TagContext implements SpanContext {
+  private final String origin;
   private final Map<String, String> tags;
 
-  public TagContext(final Map<String, String> tags) {
+  public TagContext(final String origin, final Map<String, String> tags) {
+    this.origin = origin;
     this.tags = tags;
+  }
+
+  public String getOrigin() {
+    return origin;
   }
 
   public Map<String, String> getTags() {

@@ -97,6 +97,7 @@ class URLAsResourceNameTest extends Specification {
         "fakeOperation",
         "fakeResource",
         PrioritySampling.UNSET,
+        null,
         Collections.<String, String> emptyMap(),
         false,
         "fakeType",

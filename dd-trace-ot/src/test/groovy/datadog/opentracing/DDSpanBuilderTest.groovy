@@ -1,11 +1,14 @@
 package datadog.opentracing
 
 import datadog.opentracing.propagation.ExtractedContext
+import datadog.opentracing.propagation.TagContext
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
+import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import spock.lang.Specification
 
+import static datadog.opentracing.DDSpanContext.ORIGIN_KEY
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
@@ -382,6 +385,7 @@ class DDSpanBuilderTest extends Specification {
 
   def "ExtractedContext should populate new span details"() {
     setup:
+    def thread = Thread.currentThread()
     final DDSpan span = tracer.buildSpan("op name")
       .asChildOf(extractedContext).start()
 
@@ -389,14 +393,37 @@ class DDSpanBuilderTest extends Specification {
     span.traceId == extractedContext.traceId
     span.parentId == extractedContext.spanId
     span.samplingPriority == extractedContext.samplingPriority
+    span.context().origin == extractedContext.origin
     span.context().baggageItems == extractedContext.baggage
     span.context().@tags == extractedContext.tags + [(Config.RUNTIME_ID_TAG)  : config.getRuntimeId(),
-                                                     (Config.LANGUAGE_TAG_KEY): Config.LANGUAGE_TAG_VALUE,]
+                                                     (Config.LANGUAGE_TAG_KEY): Config.LANGUAGE_TAG_VALUE,
+                                                     (DDTags.THREAD_NAME)     : thread.name, (DDTags.THREAD_ID): thread.id]
 
     where:
-    extractedContext                                                      | _
-    new ExtractedContext("1", "2", 0, [:], [:])                           | _
-    new ExtractedContext("3", "4", 1, ["asdf": "qwer"], ["zxcv": "1234"]) | _
+    extractedContext                                                                                                  | _
+    new ExtractedContext("1", "2", 0, null, [:], [:])                                                                 | _
+    new ExtractedContext("3", "4", 1, "some-origin", ["asdf": "qwer"], [(ORIGIN_KEY): "some-origin", "zxcv": "1234"]) | _
+  }
+
+  def "TagContext should populate default span details"() {
+    setup:
+    def thread = Thread.currentThread()
+    final DDSpan span = tracer.buildSpan("op name").asChildOf(tagContext).start()
+
+    expect:
+    span.traceId != "0"
+    span.parentId == "0"
+    span.samplingPriority == PrioritySampling.SAMPLER_KEEP // Since we're using the RateByServiceSampler
+    span.context().origin == tagContext.origin
+    span.context().baggageItems == [:]
+    span.context().@tags == tagContext.tags + [(Config.RUNTIME_ID_TAG)  : config.getRuntimeId(),
+                                               (Config.LANGUAGE_TAG_KEY): Config.LANGUAGE_TAG_VALUE,
+                                               (DDTags.THREAD_NAME)     : thread.name, (DDTags.THREAD_ID): thread.id]
+
+    where:
+    tagContext                                                                   | _
+    new TagContext(null, [:])                                                    | _
+    new TagContext("some-origin", [(ORIGIN_KEY): "some-origin", "asdf": "qwer"]) | _
   }
 
   def "global span tags populated on each span"() {

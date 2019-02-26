@@ -50,6 +50,7 @@ class DDSpanSerializationTest extends Specification {
         "operation",
         null,
         samplingPriority,
+        null,
         new HashMap<>(baggage),
         false,
         "type",
@@ -90,6 +91,7 @@ class DDSpanSerializationTest extends Specification {
       "fakeOperation",
       "fakeResource",
       PrioritySampling.UNSET,
+      null,
       Collections.emptyMap(),
       false,
       "fakeType",
@@ -117,10 +119,10 @@ class DDSpanSerializationTest extends Specification {
     }
 
     where:
-    value | _
-    BigInteger.ZERO | _
-    BigInteger.ONE | _
+    value                                                       | _
+    BigInteger.ZERO                                             | _
+    BigInteger.ONE                                              | _
     BigInteger.valueOf(Long.MAX_VALUE).subtract(BigInteger.ONE) | _
-    BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE) | _
+    BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE)      | _
   }
 }

@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DDSpanContext implements io.opentracing.SpanContext {
   public static final String PRIORITY_SAMPLING_KEY = "_sampling_priority_v1";
   public static final String SAMPLE_RATE_KEY = "_sample_rate";
+  public static final String ORIGIN_KEY = "_dd.origin";
 
   private static final Map<String, Number> EMPTY_METRICS = Collections.emptyMap();
 
@@ -62,6 +63,8 @@ public class DDSpanContext implements io.opentracing.SpanContext {
    * <p>For thread safety, this boolean is only modified or accessed under instance lock.
    */
   private boolean samplingPriorityLocked = false;
+  /** The origin of the trace. (eg. Synthetics) */
+  private final String origin;
   /** Metrics on the span */
   private final AtomicReference<Map<String, Number>> metrics = new AtomicReference<>();
 
@@ -77,6 +80,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final String operationName,
       final String resourceName,
       final int samplingPriority,
+      final String origin,
       final Map<String, String> baggageItems,
       final boolean errorFlag,
       final String spanType,
@@ -111,10 +115,20 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.resourceName = resourceName;
     this.errorFlag = errorFlag;
     this.spanType = spanType;
+    this.origin = origin;
 
     if (samplingPriority != PrioritySampling.UNSET) {
       setSamplingPriority(samplingPriority);
     }
+
+    if (spanType != null) {
+      this.tags.put(DDTags.SPAN_TYPE, spanType);
+    }
+    if (origin != null) {
+      this.tags.put(ORIGIN_KEY, origin);
+    }
+    this.tags.put(DDTags.THREAD_NAME, threadName);
+    this.tags.put(DDTags.THREAD_ID, threadId);
   }
 
   public String getTraceId() {
@@ -167,6 +181,11 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   public void setSpanType(final String spanType) {
     this.spanType = spanType;
+    if (spanType == null) {
+      tags.remove(DDTags.SPAN_TYPE);
+    } else {
+      tags.put(DDTags.SPAN_TYPE, spanType);
+    }
   }
 
   public void setSamplingPriority(final int newPriority) {
@@ -233,6 +252,15 @@ public class DDSpanContext implements io.opentracing.SpanContext {
             "{} : locked samplingPriority to {}", this, getMetrics().get(PRIORITY_SAMPLING_KEY));
       }
       return samplingPriorityLocked;
+    }
+  }
+
+  public String getOrigin() {
+    final DDSpan rootSpan = trace.getRootSpan();
+    if (null != rootSpan) {
+      return rootSpan.context().origin;
+    } else {
+      return origin;
     }
   }
 
@@ -312,12 +340,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   }
 
   public synchronized Map<String, Object> getTags() {
-    tags.put(DDTags.THREAD_NAME, threadName);
-    tags.put(DDTags.THREAD_ID, threadId);
-    final String spanType = getSpanType();
-    if (spanType != null) {
-      tags.put(DDTags.SPAN_TYPE, spanType);
-    }
     return Collections.unmodifiableMap(tags);
   }
 
