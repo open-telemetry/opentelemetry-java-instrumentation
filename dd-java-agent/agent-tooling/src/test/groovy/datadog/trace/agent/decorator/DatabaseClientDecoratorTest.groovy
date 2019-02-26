@@ -35,7 +35,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    decorator.onSession(span, session)
+    decorator.onConnection(span, session)
 
     then:
     if (session) {
@@ -81,7 +81,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     thrown(AssertionError)
 
     when:
-    decorator.onSession(null, null)
+    decorator.onConnection(null, null)
 
     then:
     thrown(AssertionError)

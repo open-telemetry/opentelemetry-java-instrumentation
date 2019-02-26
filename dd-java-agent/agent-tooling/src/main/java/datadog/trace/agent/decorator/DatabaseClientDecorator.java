@@ -3,13 +3,13 @@ package datadog.trace.agent.decorator;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 
-public abstract class DatabaseClientDecorator<SESSION> extends ClientDecorator {
+public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorator {
 
   protected abstract String dbType();
 
-  protected abstract String dbUser(SESSION session);
+  protected abstract String dbUser(CONNECTION connection);
 
-  protected abstract String dbInstance(SESSION session);
+  protected abstract String dbInstance(CONNECTION connection);
 
   @Override
   public Span afterStart(final Span span) {
@@ -18,11 +18,11 @@ public abstract class DatabaseClientDecorator<SESSION> extends ClientDecorator {
     return super.afterStart(span);
   }
 
-  public Span onSession(final Span span, final SESSION statement) {
+  public Span onConnection(final Span span, final CONNECTION connection) {
     assert span != null;
-    if (statement != null) {
-      Tags.DB_USER.set(span, dbUser(statement));
-      Tags.DB_INSTANCE.set(span, dbInstance(statement));
+    if (connection != null) {
+      Tags.DB_USER.set(span, dbUser(connection));
+      Tags.DB_INSTANCE.set(span, dbInstance(connection));
     }
     return span;
   }
