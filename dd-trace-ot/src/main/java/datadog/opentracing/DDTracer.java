@@ -645,27 +645,23 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           traceId = extractedContext.getTraceId();
           parentSpanId = extractedContext.getSpanId();
           samplingPriority = extractedContext.getSamplingPriority();
-          origin = extractedContext.getOrigin();
           baggage = extractedContext.getBaggage();
-        } else if (parentContext instanceof TagContext) {
-          // Start a new trace with origin
-          traceId = generateNewId();
-          parentSpanId = "0";
-          samplingPriority = PrioritySampling.UNSET;
-          origin = ((TagContext) parentContext).getOrigin();
-          baggage = null;
         } else {
           // Start a new trace
           traceId = generateNewId();
           parentSpanId = "0";
           samplingPriority = PrioritySampling.UNSET;
-          origin = null;
           baggage = null;
         }
-        // Get header tags whether propagating or not.
+
+        // Get header tags and set origin whether propagating or not.
         if (parentContext instanceof TagContext) {
           tags.putAll(((TagContext) parentContext).getTags());
+          origin = ((TagContext) parentContext).getOrigin();
+        } else {
+          origin = null;
         }
+
         // add runtime tags to the root span
         for (final Map.Entry<String, String> runtimeTag : runtimeTags.entrySet()) {
           tags.put(runtimeTag.getKey(), runtimeTag.getValue());

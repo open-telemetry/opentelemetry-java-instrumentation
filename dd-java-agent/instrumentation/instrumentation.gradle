@@ -37,6 +37,7 @@ subprojects { subProj ->
       }
     }
 
+    // Make it so all instrumentation subproject tests can be run with a single command.
     instr_project.tasks.test.dependsOn(subProj.tasks.test)
   }
 
