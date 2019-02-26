@@ -7,16 +7,13 @@ import java.util.Set;
 
 public class LettuceInstrumentationUtil {
 
-  public static final String SERVICE_NAME = "redis";
-  public static final String COMPONENT_NAME = SERVICE_NAME + "-client";
-
   public static final String[] NON_INSTRUMENTING_COMMAND_WORDS =
       new String[] {"SHUTDOWN", "DEBUG", "OOM", "SEGFAULT"};
 
   public static final String[] AGENT_CRASHING_COMMANDS_WORDS =
       new String[] {"CLIENT", "CLUSTER", "COMMAND", "CONFIG", "DEBUG", "SCRIPT"};
 
-  public static final String AGENT_CRASHING_COMMAND_PREFIX = "COMMAMND-NAME:";
+  public static final String AGENT_CRASHING_COMMAND_PREFIX = "COMMAND-NAME:";
 
   public static final Set<String> nonInstrumentingCommands =
       new HashSet<>(Arrays.asList(NON_INSTRUMENTING_COMMAND_WORDS));
@@ -29,10 +26,11 @@ public class LettuceInstrumentationUtil {
    * added and the command is executed) because these commands have no return values/call backs, so
    * we must close the span early in order to provide info for the users
    *
-   * @param commandName a redis command, without any prefixes
+   * @param command
    * @return true if finish the span early (the command will not have a return value)
    */
-  public static boolean doFinishSpanEarly(final String commandName) {
+  public static boolean doFinishSpanEarly(final RedisCommand command) {
+    final String commandName = LettuceInstrumentationUtil.getCommandName(command);
     return nonInstrumentingCommands.contains(commandName);
   }
 

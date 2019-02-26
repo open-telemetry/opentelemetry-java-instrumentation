@@ -18,9 +18,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default {
 
-  public static final String PACKAGE =
-      LettuceReactiveCommandsInstrumentation.class.getPackage().getName();
-
   public LettuceReactiveCommandsInstrumentation() {
     super("lettuce", "lettuce-5-rx");
   }
@@ -33,12 +30,16 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      PACKAGE + ".LettuceInstrumentationUtil",
-      PACKAGE + ".rx.LettuceMonoCreationAdvice",
-      PACKAGE + ".rx.LettuceMonoDualConsumer",
-      PACKAGE + ".rx.LettuceFluxCreationAdvice",
-      PACKAGE + ".rx.LettuceFluxTerminationRunnable",
-      PACKAGE + ".rx.LettuceFluxTerminationRunnable$FluxOnSubscribeConsumer"
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      "datadog.trace.agent.decorator.DatabaseClientDecorator",
+      packageName + ".LettuceClientDecorator",
+      packageName + ".LettuceInstrumentationUtil",
+      packageName + ".rx.LettuceMonoCreationAdvice",
+      packageName + ".rx.LettuceMonoDualConsumer",
+      packageName + ".rx.LettuceFluxCreationAdvice",
+      packageName + ".rx.LettuceFluxTerminationRunnable",
+      packageName + ".rx.LettuceFluxTerminationRunnable$FluxOnSubscribeConsumer"
     };
   }
 
@@ -51,7 +52,7 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
             .and(takesArgument(0, named("java.util.function.Supplier")))
             .and(returns(named("reactor.core.publisher.Mono"))),
         // Cannot reference class directly here because it would lead to class load failure on Java7
-        PACKAGE + ".rx.LettuceMonoCreationAdvice");
+        packageName + ".rx.LettuceMonoCreationAdvice");
     transformers.put(
         isMethod()
             .and(nameStartsWith("create"))
@@ -59,7 +60,7 @@ public class LettuceReactiveCommandsInstrumentation extends Instrumenter.Default
             .and(takesArgument(0, named("java.util.function.Supplier")))
             .and(returns(named("reactor.core.publisher.Flux"))),
         // Cannot reference class directly here because it would lead to class load failure on Java7
-        PACKAGE + ".rx.LettuceFluxCreationAdvice");
+        packageName + ".rx.LettuceFluxCreationAdvice");
 
     return transformers;
   }

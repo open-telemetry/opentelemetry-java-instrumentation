@@ -1,10 +1,8 @@
 package datadog.trace.instrumentation.lettuce;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 
 import io.opentracing.Span;
-import io.opentracing.tag.Tags;
-import java.util.Collections;
 import java.util.concurrent.CancellationException;
 import java.util.function.BiFunction;
 
@@ -22,21 +20,19 @@ public class LettuceAsyncBiFunction<T extends Object, U extends Throwable, R ext
 
   private final Span span;
 
-  public LettuceAsyncBiFunction(Span span) {
+  public LettuceAsyncBiFunction(final Span span) {
     this.span = span;
   }
 
   @Override
-  public R apply(T t, Throwable throwable) {
-    if (throwable != null) {
-      if (throwable instanceof CancellationException) {
-        this.span.setTag("db.command.cancelled", true);
-      } else {
-        Tags.ERROR.set(this.span, true);
-        this.span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-      }
+  public R apply(final T t, final Throwable throwable) {
+    if (throwable instanceof CancellationException) {
+      span.setTag("db.command.cancelled", true);
+    } else {
+      DECORATE.onError(span, throwable);
     }
-    this.span.finish();
+    DECORATE.beforeFinish(span);
+    span.finish();
     return null;
   }
 }
