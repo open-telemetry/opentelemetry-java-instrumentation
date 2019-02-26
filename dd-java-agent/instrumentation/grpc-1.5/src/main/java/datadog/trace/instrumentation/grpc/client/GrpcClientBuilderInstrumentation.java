@@ -34,6 +34,9 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
       "datadog.trace.instrumentation.grpc.client.TracingClientInterceptor",
       "datadog.trace.instrumentation.grpc.client.TracingClientInterceptor$TracingClientCall",
       "datadog.trace.instrumentation.grpc.client.TracingClientInterceptor$TracingClientCallListener",
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      packageName + ".GrpcClientDecorator",
     };
   }
 

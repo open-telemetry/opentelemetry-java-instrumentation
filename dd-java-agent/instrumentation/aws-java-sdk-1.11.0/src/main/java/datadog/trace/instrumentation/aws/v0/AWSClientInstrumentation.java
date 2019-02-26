@@ -8,7 +8,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.util.GlobalTracer;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -36,8 +35,11 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.aws.v0.TracingRequestHandler",
-      "datadog.trace.instrumentation.aws.v0.SpanDecorator"
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      "datadog.trace.agent.decorator.HttpClientDecorator",
+      packageName + ".AwsSdkClientDecorator",
+      packageName + ".TracingRequestHandler",
     };
   }
 
@@ -59,7 +61,7 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
         }
       }
       if (!hasDDHandler) {
-        handlers.add(new TracingRequestHandler(GlobalTracer.get()));
+        handlers.add(TracingRequestHandler.INSTANCE);
       }
     }
   }

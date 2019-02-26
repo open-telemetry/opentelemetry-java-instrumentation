@@ -61,7 +61,8 @@ public final class FutureInstrumentation extends Instrumenter.Default {
       "akka.dispatch.ForkJoinExecutorConfigurator$AkkaForkJoinTask",
       "com.google.common.util.concurrent.SettableFuture",
       "com.google.common.util.concurrent.AbstractFuture$TrustedFuture",
-      "com.google.common.util.concurrent.AbstractFuture"
+      "com.google.common.util.concurrent.AbstractFuture",
+      "io.netty.util.concurrent.ScheduledFutureTask"
     };
     WHITELISTED_FUTURES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(whitelist)));
   }
@@ -102,15 +103,15 @@ public final class FutureInstrumentation extends Instrumenter.Default {
 
   public static class CanceledFutureAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void exit(
-        @Advice.This final Future<?> future, @Advice.Return final boolean canceled) {
-      if (canceled) {
-        final ContextStore<Future, State> contextStore =
-            InstrumentationContext.get(Future.class, State.class);
-        final State state = contextStore.get(future);
-        if (state != null) {
-          state.closeContinuation();
-        }
+    public static void exit(@Advice.This final Future<?> future) {
+      // Try to close continuation even if future was not cancelled:
+      // the expectation is that continuation should be closed after 'cancel'
+      // is called, one way or another
+      final ContextStore<Future, State> contextStore =
+          InstrumentationContext.get(Future.class, State.class);
+      final State state = contextStore.get(future);
+      if (state != null) {
+        state.closeContinuation();
       }
     }
   }

@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import okhttp3.Credentials
@@ -30,7 +30,7 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
     .build()
 
   @Shared
-  int port = TestUtils.randomOpenPort()
+  int port = PortUtils.randomOpenPort()
   @Shared
   protected String user = "user"
   @Shared
@@ -82,15 +82,17 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
           serviceName context
           operationName "servlet.request"
           resourceName "GET /$context/$path"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
             "http.url" "http://localhost:$port/$context/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
+            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
-            "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" "/$context"
             "http.status_code" 200
             if (auth) {
@@ -148,15 +150,17 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             serviceName context
             operationName "servlet.request"
             resourceName "GET /$context/dispatch/$path"
-            spanType DDSpanTypes.WEB_SERVLET
+            spanType DDSpanTypes.HTTP_SERVER
             errored false
             tags {
               "http.url" "http://localhost:$port/$context/dispatch/$path"
               "http.method" "GET"
               "span.kind" "server"
               "component" "java-web-servlet"
+              "peer.hostname" "localhost"
+              "peer.port" port
+              "span.type" DDSpanTypes.HTTP_SERVER
               "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
-              "span.type" DDSpanTypes.WEB_SERVLET
               "http.status_code" 200
               "servlet.context" "/$context"
               "servlet.dispatch" "/dispatch/recursive?depth=${depth - i - 1}"
@@ -171,7 +175,7 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
           serviceName context
           operationName "servlet.request"
           resourceName "GET /$context/$path"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           errored false
           childOf TEST_WRITER[depth + 1][0]
           tags {
@@ -179,10 +183,12 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
+            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" {
               it == "TestServlet3\$$origin" || it == "TestServlet3\$DispatchRecursive" || it == ApplicationFilterChain.name
             }
-            "span.type" DDSpanTypes.WEB_SERVLET
             "http.status_code" 200
             "servlet.context" "/$context"
             defaultTags(true)
@@ -204,15 +210,17 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
           serviceName context
           operationName "servlet.request"
           resourceName "GET /$context/dispatch/$path"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
             "http.url" "http://localhost:$port/$context/dispatch/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
+            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
-            "span.type" DDSpanTypes.WEB_SERVLET
             "http.status_code" 200
             "servlet.context" "/$context"
             "servlet.dispatch" "/$path"
@@ -262,15 +270,17 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
           serviceName context
           operationName "servlet.request"
           resourceName "GET /$context/dispatch/$path"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
             "http.url" "http://localhost:$port/$context/dispatch/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
+            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
-            "span.type" DDSpanTypes.WEB_SERVLET
             "http.status_code" 200
             "servlet.context" "/$context"
             "servlet.dispatch" "/$path"
@@ -283,7 +293,7 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
           serviceName context
           operationName "servlet.request"
           resourceName "GET /$context/$path"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           errored false
           childOf TEST_WRITER[0][0]
           tags {
@@ -291,10 +301,12 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
+            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" {
               it == "TestServlet3\$$origin" || it == "TestServlet3\$DispatchRecursive" || it == ApplicationFilterChain.name
             }
-            "span.type" DDSpanTypes.WEB_SERVLET
             "http.status_code" 200
             "servlet.context" "/$context"
             defaultTags(true)
@@ -371,7 +383,7 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
           serviceName context
           operationName "servlet.request"
           resourceName "GET /$context/$path"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           errored true
           parent()
           tags {
@@ -379,7 +391,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
-            "span.type" DDSpanTypes.WEB_SERVLET
+            "peer.hostname" "localhost"
+            "peer.port" port
+            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
             "servlet.context" "/$context"
             "http.status_code" 500
@@ -415,7 +429,7 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
           serviceName context
           operationName "servlet.request"
           resourceName "GET /$context/$path"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           errored true
           parent()
           tags {
@@ -423,7 +437,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
-            "span.type" DDSpanTypes.WEB_SERVLET
+            "peer.hostname" "localhost"
+            "peer.port" port
+            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
             "servlet.context" "/$context"
             "http.status_code" 500

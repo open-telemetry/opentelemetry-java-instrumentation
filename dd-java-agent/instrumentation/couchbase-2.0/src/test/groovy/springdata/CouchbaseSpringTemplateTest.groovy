@@ -51,6 +51,8 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "$Tags.COMPONENT.key" "couchbase-client"
+            "$Tags.DB_TYPE.key" "couchbase"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "bucket" name
             defaultTags()
           }
@@ -66,6 +68,8 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "$Tags.COMPONENT.key" "couchbase-client"
+            "$Tags.DB_TYPE.key" "couchbase"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "bucket" name
             defaultTags()
           }
@@ -81,6 +85,8 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "$Tags.COMPONENT.key" "couchbase-client"
+            "$Tags.DB_TYPE.key" "couchbase"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "bucket" name
             defaultTags()
           }
@@ -96,6 +102,8 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
           tags {
             "$DDTags.SPAN_TYPE" DDSpanTypes.COUCHBASE
             "$Tags.COMPONENT.key" "couchbase-client"
+            "$Tags.DB_TYPE.key" "couchbase"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "bucket" name
             defaultTags()
           }

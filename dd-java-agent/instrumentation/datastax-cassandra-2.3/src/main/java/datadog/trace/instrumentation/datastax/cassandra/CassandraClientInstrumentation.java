@@ -9,9 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.datastax.driver.core.Session;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
-import java.lang.reflect.Constructor;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -33,9 +31,13 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.datastax.cassandra.TracingSession",
-      "datadog.trace.instrumentation.datastax.cassandra.TracingSession$1",
-      "datadog.trace.instrumentation.datastax.cassandra.TracingSession$2"
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      "datadog.trace.agent.decorator.DatabaseClientDecorator",
+      packageName + ".CassandraClientDecorator",
+      packageName + ".TracingSession",
+      packageName + ".TracingSession$1",
+      packageName + ".TracingSession$2",
     };
   }
 
@@ -62,12 +64,7 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
       if (session.getClass().getName().endsWith("cassandra.TracingSession")) {
         return;
       }
-
-      final Class<?> clazz =
-          Class.forName("datadog.trace.instrumentation.datastax.cassandra.TracingSession");
-      final Constructor<?> constructor = clazz.getDeclaredConstructor(Session.class, Tracer.class);
-      constructor.setAccessible(true);
-      session = (Session) constructor.newInstance(session, GlobalTracer.get());
+      session = new TracingSession(session, GlobalTracer.get());
     }
   }
 }

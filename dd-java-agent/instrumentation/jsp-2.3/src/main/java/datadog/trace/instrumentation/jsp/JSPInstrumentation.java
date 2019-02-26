@@ -62,7 +62,7 @@ public final class JSPInstrumentation extends Instrumenter.Default {
           GlobalTracer.get()
               .buildSpan("jsp.render")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.WEB_SERVLET)
+              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER)
               .withTag("span.origin.type", obj.getClass().getSimpleName())
               .withTag("servlet.context", req.getContextPath())
               .startActive(true);

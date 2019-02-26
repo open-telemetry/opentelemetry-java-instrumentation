@@ -1,20 +1,20 @@
 package datadog.trace.agent.tooling;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.failSafe;
-import static datadog.trace.agent.tooling.Utils.getConfigEnabled;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
 import datadog.trace.agent.tooling.context.FieldBackedProvider;
 import datadog.trace.agent.tooling.context.InstrumentationContextProvider;
 import datadog.trace.agent.tooling.muzzle.Reference;
 import datadog.trace.agent.tooling.muzzle.ReferenceMatcher;
+import datadog.trace.api.Config;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.method.MethodDescription;
@@ -39,7 +39,7 @@ public interface Instrumenter {
 
   @Slf4j
   abstract class Default implements Instrumenter {
-    private final Set<String> instrumentationNames;
+    private final SortedSet<String> instrumentationNames;
     private final String instrumentationPrimaryName;
     private final InstrumentationContextProvider contextProvider;
     protected final boolean enabled;
@@ -48,24 +48,11 @@ public interface Instrumenter {
         getClass().getPackage() == null ? "" : getClass().getPackage().getName();
 
     public Default(final String instrumentationName, final String... additionalNames) {
-      instrumentationNames = new HashSet<>(Arrays.asList(additionalNames));
+      instrumentationNames = new TreeSet<>(Arrays.asList(additionalNames));
       instrumentationNames.add(instrumentationName);
       instrumentationPrimaryName = instrumentationName;
 
-      // If default is enabled, we want to enable individually,
-      // if default is disabled, we want to disable individually.
-      final boolean defaultEnabled = defaultEnabled();
-      boolean anyEnabled = defaultEnabled;
-      for (final String name : instrumentationNames) {
-        final boolean configEnabled =
-            getConfigEnabled("dd.integration." + name + ".enabled", defaultEnabled);
-        if (defaultEnabled) {
-          anyEnabled &= configEnabled;
-        } else {
-          anyEnabled |= configEnabled;
-        }
-      }
-      enabled = anyEnabled;
+      enabled = Config.integrationEnabled(instrumentationNames, defaultEnabled());
       contextProvider = new FieldBackedProvider(this);
     }
 
@@ -225,17 +212,7 @@ public interface Instrumenter {
     }
 
     protected boolean defaultEnabled() {
-      return getConfigEnabled("dd.integrations.enabled", true);
-    }
-
-    // TODO: move common config helpers to Utils
-
-    public static String getPropOrEnv(final String name) {
-      return System.getProperty(name, System.getenv(propToEnvName(name)));
-    }
-
-    public static String propToEnvName(final String name) {
-      return name.toUpperCase().replace(".", "_");
+      return Config.getBooleanSettingFromEnvironment("integrations.enabled", true);
     }
   }
 }

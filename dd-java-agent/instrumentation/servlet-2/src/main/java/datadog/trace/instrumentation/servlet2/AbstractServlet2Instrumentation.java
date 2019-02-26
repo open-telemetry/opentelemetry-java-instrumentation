@@ -21,8 +21,12 @@ public abstract class AbstractServlet2Instrumentation extends Instrumenter.Defau
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.servlet2.HttpServletRequestExtractAdapter",
-      "datadog.trace.instrumentation.servlet2.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator"
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ServerDecorator",
+      "datadog.trace.agent.decorator.HttpServerDecorator",
+      packageName + ".HttpServletRequestExtractAdapter",
+      packageName + ".HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
+      packageName + ".Servlet2Decorator",
     };
   }
 }

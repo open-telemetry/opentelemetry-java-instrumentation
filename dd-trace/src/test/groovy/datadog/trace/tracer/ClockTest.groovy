@@ -43,6 +43,17 @@ class ClockTest extends Specification {
     timestamp.getClock() == clock
   }
 
+  def "test timestamp creation with custom time"() {
+    setup:
+    def clock = new Clock(tracer)
+
+    when:
+    def timestamp = clock.createTimestampForTime(1, TimeUnit.SECONDS)
+
+    then:
+    timestamp.getClock() == clock
+  }
+
   def "test equals"() {
     when:
     EqualsVerifier.forClass(Clock).suppress(Warning.STRICT_INHERITANCE).verify()

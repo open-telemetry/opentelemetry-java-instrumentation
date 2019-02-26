@@ -21,7 +21,7 @@ ext {
   modifyPom = { pomModifications << it }
 }
 
-tasks.withType(Upload) {
+tasks.withType(Upload).configureEach {
   repositories.withType(org.gradle.api.artifacts.maven.MavenResolver) {
     it.pom.whenConfigured { pom ->
       pomModifications.each {

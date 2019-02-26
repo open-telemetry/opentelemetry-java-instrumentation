@@ -36,7 +36,7 @@ dependencies {
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
 }
 
-task unzip(type: Copy) {
+tasks.register("unzip", Copy) {
   def zipFileNamePrefix = "servlet"
   def zipPath = project.configurations.compile.find {
     it.name.startsWith(zipFileNamePrefix)
@@ -52,7 +52,7 @@ task unzip(type: Copy) {
   }
 }
 
-task startServer(type: com.github.psxpaul.task.ExecFork) {
+tasks.register("startServer", com.github.psxpaul.task.ExecFork) {
   dependsOn project(':dd-java-agent').shadowJar
 
   wildflyHttpPort = randomOpenPort()
@@ -73,8 +73,8 @@ task startServer(type: com.github.psxpaul.task.ExecFork) {
   waitForPort = wildflyHttpPort
   waitForOutput = "Undertow HTTP listener default listening on 127.0.0.1:${wildflyHttpPort}"
   environment = [
-    'JAVA_OPTS' :  "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
-    + " -Ddd.writer.type=LoggingWriter" + " -Ddd.service.name=java-app"
+    'JAVA_OPTS': "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
+      + " -Ddd.writer.type=LoggingWriter" + " -Ddd.service.name=java-app"
       + " -Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug"
       + " -Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
       + " -Djboss.http.port=${wildflyHttpPort} -Djboss.https.port=${httpsPort}"
@@ -84,16 +84,16 @@ task startServer(type: com.github.psxpaul.task.ExecFork) {
   dependsOn unzip
 }
 
-task stopWildfly(type:Exec) {
+tasks.register("stopWildfly", Exec) {
   project.getLogger().info("Shutting down Wildfly")
   workingDir = "${buildDir}/wildfly-servlet-15.0.0.Final"
   commandLine = "${workingDir}/bin/jboss-cli.sh"
-  args = [ "--connect", "--controller=localhost:${wildflyManagementPort}", "command=:shutdown" ]
+  args = ["--connect", "--controller=localhost:${wildflyManagementPort}", "command=:shutdown"]
 
   dependsOn startServer
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   // so the test can get this property
   jvmArgs "-Ddatadog.smoketest.server.port=${wildflyHttpPort}"
 
@@ -102,7 +102,7 @@ tasks.withType(Test) {
   }
 
   dependsOn startServer
-}
 
-// ensure that the wildfly server gets shutdown
-tasks.withType(Test).forEach { it.finalizedBy stopWildfly }
+  // ensure that the wildfly server gets shutdown
+  finalizedBy stopWildfly
+}

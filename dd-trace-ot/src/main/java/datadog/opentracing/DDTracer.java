@@ -2,9 +2,8 @@ package datadog.opentracing;
 
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
-import datadog.opentracing.propagation.Codec;
+import datadog.opentracing.propagation.DatadogHttpCodec;
 import datadog.opentracing.propagation.ExtractedContext;
-import datadog.opentracing.propagation.HTTPCodec;
 import datadog.opentracing.propagation.TagContext;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
@@ -24,7 +23,9 @@ import io.opentracing.ScopeManager;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
+import io.opentracing.propagation.TextMap;
 import java.io.Closeable;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -64,7 +65,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   private final Map<String, String> serviceNameMappings;
 
   /** number of spans in a pending trace before they get flushed */
-  @Getter private final int maxTraceSizeBeforePartialFlush;
+  @Getter private final int partialFlushMinSpans;
 
   /**
    * JVM shutdown callback, keeping a reference to it to remove this if DDTracer gets destroyed
@@ -84,7 +85,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
               return Integer.compare(o1.priority(), o2.priority());
             }
           });
-  private final CodecRegistry registry;
+
+  private final DatadogHttpCodec.Injector injector;
+  private final DatadogHttpCodec.Extractor extractor;
 
   private final AtomicInteger traceCount;
 
@@ -176,7 +179,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         defaultSpanTags,
         serviceNameMappings,
         taggedHeaders,
-        defaultMaxTraceSizeBeforePartialFlush());
+        Config.get().getPartialFlushMinSpans());
   }
 
   /**
@@ -199,7 +202,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         defaultSpanTags,
         serviceNameMappings,
         taggedHeaders,
-        defaultMaxTraceSizeBeforePartialFlush());
+        Config.get().getPartialFlushMinSpans());
   }
 
   public DDTracer(
@@ -210,7 +213,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders,
-      final int maxTraceSizeBeforePartialFlush) {
+      final int partialFlushMinSpans) {
     assert runtimeTags != null;
     assert defaultSpanTags != null;
     assert serviceNameMappings != null;
@@ -223,24 +226,18 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this.defaultSpanTags = defaultSpanTags;
     this.runtimeTags = runtimeTags;
     this.serviceNameMappings = serviceNameMappings;
-    this.maxTraceSizeBeforePartialFlush = maxTraceSizeBeforePartialFlush;
+    this.partialFlushMinSpans = partialFlushMinSpans;
 
-    shutdownCallback =
-        new Thread() {
-          @Override
-          public void run() {
-            close();
-          }
-        };
+    shutdownCallback = new ShutdownHook(this);
     try {
       Runtime.getRuntime().addShutdownHook(shutdownCallback);
     } catch (final IllegalStateException ex) {
       // The JVM is already shutting down.
     }
 
-    registry = new CodecRegistry();
-    registry.register(Format.Builtin.HTTP_HEADERS, new HTTPCodec(taggedHeaders));
-    registry.register(Format.Builtin.TEXT_MAP, new HTTPCodec(taggedHeaders));
+    injector = new DatadogHttpCodec.Injector();
+    extractor = new DatadogHttpCodec.Extractor(taggedHeaders);
+
     if (this.writer instanceof DDAgentWriter) {
       final DDApi api = ((DDAgentWriter) this.writer).getApi();
       traceCount = api.getTraceCounter();
@@ -264,8 +261,12 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Override
   public void finalize() {
-    Runtime.getRuntime().removeShutdownHook(shutdownCallback);
-    shutdownCallback.run();
+    try {
+      Runtime.getRuntime().removeShutdownHook(shutdownCallback);
+      shutdownCallback.run();
+    } catch (final Exception e) {
+      log.error("Error while finalizing DDTracer.", e);
+    }
   }
 
   /**
@@ -332,24 +333,21 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Override
   public <T> void inject(final SpanContext spanContext, final Format<T> format, final T carrier) {
-
-    final Codec<T> codec = registry.get(format);
-    if (codec == null) {
-      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
+    if (carrier instanceof TextMap) {
+      injector.inject((DDSpanContext) spanContext, (TextMap) carrier);
     } else {
-      codec.inject((DDSpanContext) spanContext, carrier);
+      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
     }
   }
 
   @Override
   public <T> SpanContext extract(final Format<T> format, final T carrier) {
-    final Codec<T> codec = registry.get(format);
-    if (codec == null) {
-      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
+    if (carrier instanceof TextMap) {
+      return extractor.extract((TextMap) carrier);
     } else {
-      return codec.extract(carrier);
+      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
+      return null;
     }
-    return null;
   }
 
   /**
@@ -445,24 +443,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     runtimeTags.putAll(Config.get().getRuntimeTags());
     runtimeTags.put(Config.RUNTIME_ID_TAG, runtimeId);
     return Collections.unmodifiableMap(runtimeTags);
-  }
-
-  @Deprecated
-  private static int defaultMaxTraceSizeBeforePartialFlush() {
-    return Config.get().getPartialFlushMinSpans();
-  }
-
-  private static class CodecRegistry {
-
-    private final Map<Format<?>, Codec<?>> codecs = new HashMap<>();
-
-    <T> Codec<T> get(final Format<T> format) {
-      return (Codec<T>) codecs.get(format);
-    }
-
-    public <T> void register(final Format<T> format, final Codec<T> codec) {
-      codecs.put(format, codec);
-    }
   }
 
   /** Spans are built using this builder */
@@ -736,6 +716,22 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       }
 
       return context;
+    }
+  }
+
+  private static class ShutdownHook extends Thread {
+    private final WeakReference<DDTracer> reference;
+
+    private ShutdownHook(final DDTracer tracer) {
+      reference = new WeakReference<>(tracer);
+    }
+
+    @Override
+    public void run() {
+      final DDTracer tracer = reference.get();
+      if (tracer != null) {
+        tracer.close();
+      }
     }
   }
 }

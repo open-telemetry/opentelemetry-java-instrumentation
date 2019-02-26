@@ -6,7 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.SortedSet;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,8 @@ public class Config {
   /** Config keys below */
   private static final String PREFIX = "dd.";
 
+  private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
+
   private static final Config INSTANCE = new Config();
 
   public static final String SERVICE_NAME = "service.name";
@@ -40,7 +44,11 @@ public class Config {
   public static final String GLOBAL_TAGS = "trace.global.tags";
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String JMX_TAGS = "trace.jmx.tags";
+  public static final String TRACE_ANALYTICS_ENABLED = "trace.analytics.enabled";
+  public static final String TRACE_ANNOTATIONS = "trace.annotations";
+  public static final String TRACE_METHODS = "trace.methods";
   public static final String HEADER_TAGS = "trace.header.tags";
+  public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
   public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
@@ -71,7 +79,8 @@ public class Config {
 
   private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = true;
   private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
-  private static final int DEFAULT_MAX_TRACE_SIZE_BEFORE_PARTIAL_FLUSH = 0;
+  private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
+  private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 0;
   private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
 
   public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
@@ -95,6 +104,7 @@ public class Config {
   private final Map<String, String> spanTags;
   private final Map<String, String> jmxTags;
   @Getter private final Map<String, String> headerTags;
+  @Getter private final boolean httpClientSplitByDomain;
   @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
   @Getter private final boolean jmxFetchEnabled;
@@ -129,9 +139,12 @@ public class Config {
     jmxTags = getMapSettingFromEnvironment(JMX_TAGS, null);
     headerTags = getMapSettingFromEnvironment(HEADER_TAGS, null);
 
+    httpClientSplitByDomain =
+        getBooleanSettingFromEnvironment(
+            HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN);
+
     partialFlushMinSpans =
-        getIntegerSettingFromEnvironment(
-            PARTIAL_FLUSH_MIN_SPANS, DEFAULT_MAX_TRACE_SIZE_BEFORE_PARTIAL_FLUSH);
+        getIntegerSettingFromEnvironment(PARTIAL_FLUSH_MIN_SPANS, DEFAULT_PARTIAL_FLUSH_MIN_SPANS);
 
     runtimeContextFieldInjection =
         getBooleanSettingFromEnvironment(
@@ -176,6 +189,10 @@ public class Config {
     spanTags = getPropertyMapValue(properties, SPAN_TAGS, parent.spanTags);
     jmxTags = getPropertyMapValue(properties, JMX_TAGS, parent.jmxTags);
     headerTags = getPropertyMapValue(properties, HEADER_TAGS, parent.headerTags);
+
+    httpClientSplitByDomain =
+        getPropertyBooleanValue(
+            properties, HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, parent.httpClientSplitByDomain);
 
     partialFlushMinSpans =
         getPropertyIntegerValue(properties, PARTIAL_FLUSH_MIN_SPANS, parent.partialFlushMinSpans);
@@ -243,7 +260,51 @@ public class Config {
     return Collections.unmodifiableMap(result);
   }
 
-  private static String getSettingFromEnvironment(final String name, final String defaultValue) {
+  public static boolean integrationEnabled(
+      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
+    // If default is enabled, we want to enable individually,
+    // if default is disabled, we want to disable individually.
+    boolean anyEnabled = defaultEnabled;
+    for (final String name : integrationNames) {
+      final boolean configEnabled =
+          getBooleanSettingFromEnvironment("integration." + name + ".enabled", defaultEnabled);
+      if (defaultEnabled) {
+        anyEnabled &= configEnabled;
+      } else {
+        anyEnabled |= configEnabled;
+      }
+    }
+    return anyEnabled;
+  }
+
+  public static boolean traceAnalyticsIntegrationEnabled(
+      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
+    // If default is enabled, we want to enable individually,
+    // if default is disabled, we want to disable individually.
+    boolean anyEnabled = defaultEnabled;
+    for (final String name : integrationNames) {
+      final boolean configEnabled =
+          getBooleanSettingFromEnvironment(
+              "integration." + name + ".analytics.enabled", defaultEnabled);
+      if (defaultEnabled) {
+        anyEnabled &= configEnabled;
+      } else {
+        anyEnabled |= configEnabled;
+      }
+    }
+    return anyEnabled;
+  }
+
+  /**
+   * Helper method that takes the name, adds a "dd." prefix then checks for System Properties of
+   * that name. If none found, the name is converted to an Environment Variable and used to check
+   * the env. If setting not configured in either location, defaultValue is returned.
+   *
+   * @param name
+   * @param defaultValue
+   * @return
+   */
+  public static String getSettingFromEnvironment(final String name, final String defaultValue) {
     final String completeName = PREFIX + name;
     final String value =
         System.getProperties()
@@ -261,44 +322,73 @@ public class Config {
     return parseList(getSettingFromEnvironment(name, defaultValue));
   }
 
-  private static Boolean getBooleanSettingFromEnvironment(
+  /**
+   * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Boolean.
+   *
+   * @param name
+   * @param defaultValue
+   * @return
+   */
+  public static Boolean getBooleanSettingFromEnvironment(
       final String name, final Boolean defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
-    return value == null ? defaultValue : Boolean.valueOf(value);
+    return value == null || value.trim().isEmpty() ? defaultValue : Boolean.valueOf(value);
+  }
+
+  /**
+   * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Float.
+   *
+   * @param name
+   * @param defaultValue
+   * @return
+   */
+  public static Float getFloatSettingFromEnvironment(final String name, final Float defaultValue) {
+    final String value = getSettingFromEnvironment(name, null);
+    try {
+      return value == null ? defaultValue : Float.valueOf(value);
+    } catch (final NumberFormatException e) {
+      log.warn("Invalid configuration for " + name, e);
+      return defaultValue;
+    }
   }
 
   private static Integer getIntegerSettingFromEnvironment(
       final String name, final Integer defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
-    return value == null ? defaultValue : Integer.valueOf(value);
+    try {
+      return value == null ? defaultValue : Integer.valueOf(value);
+    } catch (final NumberFormatException e) {
+      log.warn("Invalid configuration for " + name, e);
+      return defaultValue;
+    }
   }
 
   private static String propertyToEnvironmentName(final String name) {
-    return name.toUpperCase().replace(".", "_").replace("-", "_");
+    return ENV_REPLACEMENT.matcher(name.toUpperCase()).replaceAll("_");
   }
 
   private static Map<String, String> getPropertyMapValue(
       final Properties properties, final String name, final Map<String, String> defaultValue) {
     final String value = properties.getProperty(name);
-    return value == null ? defaultValue : parseMap(value, name);
+    return value == null || value.trim().isEmpty() ? defaultValue : parseMap(value, name);
   }
 
   private static List<String> getPropertyListValue(
       final Properties properties, final String name, final List<String> defaultValue) {
     final String value = properties.getProperty(name);
-    return value == null ? defaultValue : parseList(value);
+    return value == null || value.trim().isEmpty() ? defaultValue : parseList(value);
   }
 
   private static Boolean getPropertyBooleanValue(
       final Properties properties, final String name, final Boolean defaultValue) {
     final String value = properties.getProperty(name);
-    return value == null ? defaultValue : Boolean.valueOf(value);
+    return value == null || value.trim().isEmpty() ? defaultValue : Boolean.valueOf(value);
   }
 
   private static Integer getPropertyIntegerValue(
       final Properties properties, final String name, final Integer defaultValue) {
     final String value = properties.getProperty(name);
-    return value == null ? defaultValue : Integer.valueOf(value);
+    return value == null || value.trim().isEmpty() ? defaultValue : Integer.valueOf(value);
   }
 
   private static Map<String, String> parseMap(final String str, final String settingName) {

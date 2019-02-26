@@ -1,8 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
-import io.netty.channel.AbstractChannel
 import io.opentracing.tag.Tags
 import org.asynchttpclient.AsyncHttpClient
 import org.asynchttpclient.DefaultAsyncHttpClientConfig
@@ -12,8 +11,8 @@ import spock.lang.Shared
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
-import static datadog.trace.agent.test.TestUtils.runUnderTrace
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
 class Netty40ClientTest extends AgentTestRunner {
@@ -79,7 +78,7 @@ class Netty40ClientTest extends AgentTestRunner {
 
   def "test connection failure"() {
     setup:
-    def invalidPort = TestUtils.randomOpenPort()
+    def invalidPort = PortUtils.randomOpenPort()
 
     def responseFuture = runUnderTrace("parent") {
       asyncHttpClient.prepareGet("http://localhost:$invalidPort/").execute()
@@ -106,11 +105,13 @@ class Netty40ClientTest extends AgentTestRunner {
           errored true
           tags {
             "$Tags.COMPONENT.key" "netty"
+            Class errorClass = ConnectException
             try {
-              errorTags ConnectException, "Connection refused: localhost/127.0.0.1:$invalidPort"
-            } catch (AssertionError e) {
-              errorTags AbstractChannel.AnnotatedConnectException, "Connection refused: localhost/127.0.0.1:$invalidPort"
+              errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')
+            } catch (ClassNotFoundException e) {
+              // Older versions use 'java.net.ConnectException' and do not have 'io.netty.channel.AbstractChannel$AnnotatedConnectException'
             }
+            errorTags errorClass, "Connection refused: localhost/127.0.0.1:$invalidPort"
             defaultTags()
           }
         }

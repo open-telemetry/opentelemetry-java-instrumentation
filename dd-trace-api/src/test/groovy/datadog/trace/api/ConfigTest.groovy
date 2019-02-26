@@ -5,7 +5,33 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 import spock.lang.Specification
 
-import static datadog.trace.api.Config.*
+import static datadog.trace.api.Config.AGENT_HOST
+import static datadog.trace.api.Config.AGENT_PORT_LEGACY
+import static datadog.trace.api.Config.DEFAULT_JMX_FETCH_STATSD_PORT
+import static datadog.trace.api.Config.GLOBAL_TAGS
+import static datadog.trace.api.Config.HEADER_TAGS
+import static datadog.trace.api.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
+import static datadog.trace.api.Config.JMX_FETCH_CHECK_PERIOD
+import static datadog.trace.api.Config.JMX_FETCH_ENABLED
+import static datadog.trace.api.Config.JMX_FETCH_METRICS_CONFIGS
+import static datadog.trace.api.Config.JMX_FETCH_REFRESH_BEANS_PERIOD
+import static datadog.trace.api.Config.JMX_FETCH_STATSD_HOST
+import static datadog.trace.api.Config.JMX_FETCH_STATSD_PORT
+import static datadog.trace.api.Config.JMX_TAGS
+import static datadog.trace.api.Config.LANGUAGE_TAG_KEY
+import static datadog.trace.api.Config.LANGUAGE_TAG_VALUE
+import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
+import static datadog.trace.api.Config.PREFIX
+import static datadog.trace.api.Config.PRIORITY_SAMPLING
+import static datadog.trace.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
+import static datadog.trace.api.Config.RUNTIME_ID_TAG
+import static datadog.trace.api.Config.SERVICE
+import static datadog.trace.api.Config.SERVICE_MAPPING
+import static datadog.trace.api.Config.SERVICE_NAME
+import static datadog.trace.api.Config.SPAN_TAGS
+import static datadog.trace.api.Config.TRACE_AGENT_PORT
+import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
+import static datadog.trace.api.Config.WRITER_TYPE
 
 class ConfigTest extends Specification {
   @Rule
@@ -37,6 +63,7 @@ class ConfigTest extends Specification {
     config.mergedSpanTags == [:]
     config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.headerTags == [:]
+    config.httpClientSplitByDomain == false
     config.partialFlushMinSpans == 0
     config.runtimeContextFieldInjection == true
     config.jmxFetchEnabled == false
@@ -62,6 +89,7 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + SPAN_TAGS, "c:3")
     System.setProperty(PREFIX + JMX_TAGS, "d:4")
     System.setProperty(PREFIX + HEADER_TAGS, "e:5")
+    System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "15")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
     System.setProperty(PREFIX + JMX_FETCH_ENABLED, "true")
@@ -85,6 +113,7 @@ class ConfigTest extends Specification {
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.headerTags == [e: "5"]
+    config.httpClientSplitByDomain == true
     config.partialFlushMinSpans == 15
     config.runtimeContextFieldInjection == false
     config.jmxFetchEnabled == true
@@ -129,6 +158,36 @@ class ConfigTest extends Specification {
     config.writerType == "DDAgentWriter"
     config.agentHost == "somewhere"
     config.agentPort == 123
+  }
+
+  def "default when configured incorrectly"() {
+    setup:
+    System.setProperty(PREFIX + SERVICE_NAME, " ")
+    System.setProperty(PREFIX + WRITER_TYPE, " ")
+    System.setProperty(PREFIX + AGENT_HOST, " ")
+    System.setProperty(PREFIX + TRACE_AGENT_PORT, " ")
+    System.setProperty(PREFIX + AGENT_PORT_LEGACY, "invalid")
+    System.setProperty(PREFIX + PRIORITY_SAMPLING, "3")
+    System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, " ")
+    System.setProperty(PREFIX + SERVICE_MAPPING, " ")
+    System.setProperty(PREFIX + HEADER_TAGS, "1")
+    System.setProperty(PREFIX + SPAN_TAGS, "invalid")
+    System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "invalid")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.serviceName == " "
+    config.writerType == " "
+    config.agentHost == " "
+    config.agentPort == 8126
+    config.prioritySamplingEnabled == false
+    config.traceResolverEnabled == true
+    config.serviceMapping == [:]
+    config.mergedSpanTags == [:]
+    config.headerTags == [:]
+    config.httpClientSplitByDomain == false
   }
 
   def "sys props and env vars overrides for trace_agent_port and agent_port_legacy as expected"() {
@@ -187,6 +246,7 @@ class ConfigTest extends Specification {
     properties.setProperty(SPAN_TAGS, "c:3")
     properties.setProperty(JMX_TAGS, "d:4")
     properties.setProperty(HEADER_TAGS, "e:5")
+    properties.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     properties.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
     properties.setProperty(JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
     properties.setProperty(JMX_FETCH_CHECK_PERIOD, "100")
@@ -208,6 +268,7 @@ class ConfigTest extends Specification {
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.headerTags == [e: "5"]
+    config.httpClientSplitByDomain == true
     config.partialFlushMinSpans == 15
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100
@@ -248,6 +309,101 @@ class ConfigTest extends Specification {
     then:
     config.serviceName == "unnamed-java-app"
     config.writerType == "DDAgentWriter"
+  }
+
+  def "verify integration config"() {
+    setup:
+    environmentVariables.set("DD_INTEGRATION_ORDER_ENABLED", "false")
+    environmentVariables.set("DD_INTEGRATION_TEST_ENV_ENABLED", "true")
+    environmentVariables.set("DD_INTEGRATION_DISABLED_ENV_ENABLED", "false")
+
+    System.setProperty("dd.integration.order.enabled", "true")
+    System.setProperty("dd.integration.test-prop.enabled", "true")
+    System.setProperty("dd.integration.disabled-prop.enabled", "false")
+
+    expect:
+    Config.integrationEnabled(integrationNames, defaultEnabled) == expected
+
+    where:
+    names                          | defaultEnabled | expected
+    []                             | true           | true
+    []                             | false          | false
+    ["invalid"]                    | true           | true
+    ["invalid"]                    | false          | false
+    ["test-prop"]                  | false          | true
+    ["test-env"]                   | false          | true
+    ["disabled-prop"]              | true           | false
+    ["disabled-env"]               | true           | false
+    ["other", "test-prop"]         | false          | true
+    ["other", "test-env"]          | false          | true
+    ["order"]                      | false          | true
+    ["test-prop", "disabled-prop"] | false          | true
+    ["disabled-env", "test-env"]   | false          | true
+    ["test-prop", "disabled-prop"] | true           | false
+    ["disabled-env", "test-env"]   | true           | false
+
+    integrationNames = new TreeSet<>(names)
+  }
+
+  def "verify integration trace analytics config"() {
+    setup:
+    environmentVariables.set("DD_INTEGRATION_ORDER_ANALYTICS_ENABLED", "false")
+    environmentVariables.set("DD_INTEGRATION_TEST_ENV_ANALYTICS_ENABLED", "true")
+    environmentVariables.set("DD_INTEGRATION_DISABLED_ENV_ANALYTICS_ENABLED", "false")
+
+    System.setProperty("dd.integration.order.analytics.enabled", "true")
+    System.setProperty("dd.integration.test-prop.analytics.enabled", "true")
+    System.setProperty("dd.integration.disabled-prop.analytics.enabled", "false")
+
+    expect:
+    Config.traceAnalyticsIntegrationEnabled(integrationNames, defaultEnabled) == expected
+
+    where:
+    names                          | defaultEnabled | expected
+    []                             | true           | true
+    []                             | false          | false
+    ["invalid"]                    | true           | true
+    ["invalid"]                    | false          | false
+    ["test-prop"]                  | false          | true
+    ["test-env"]                   | false          | true
+    ["disabled-prop"]              | true           | false
+    ["disabled-env"]               | true           | false
+    ["other", "test-prop"]         | false          | true
+    ["other", "test-env"]          | false          | true
+    ["order"]                      | false          | true
+    ["test-prop", "disabled-prop"] | false          | true
+    ["disabled-env", "test-env"]   | false          | true
+    ["test-prop", "disabled-prop"] | true           | false
+    ["disabled-env", "test-env"]   | true           | false
+
+    integrationNames = new TreeSet<>(names)
+  }
+
+  def "test getFloatSettingFromEnvironment(#name)"() {
+    setup:
+    environmentVariables.set("DD_ENV_ZERO_TEST", "0.0")
+    environmentVariables.set("DD_ENV_FLOAT_TEST", "1.0")
+    environmentVariables.set("DD_FLOAT_TEST", "0.2")
+
+    System.setProperty("dd.prop.zero.test", "0")
+    System.setProperty("dd.prop.float.test", "0.3")
+    System.setProperty("dd.float.test", "0.4")
+    System.setProperty("dd.negative.test", "-1")
+
+    expect:
+    Config.getFloatSettingFromEnvironment(name, defaultValue) == (float) expected
+
+    where:
+    name              | expected
+    "env.zero.test"   | 0.0
+    "prop.zero.test"  | 0
+    "env.float.test"  | 1.0
+    "prop.float.test" | 0.3
+    "float.test"      | 0.4
+    "negative.test"   | -1.0
+    "default.test"    | 10.0
+
+    defaultValue = 10.0
   }
 
   def "verify mapping configs on tracer"() {
@@ -303,6 +459,7 @@ class ConfigTest extends Specification {
     where:
     mapString | map
     null      | [:]
+    ""        | [:]
   }
 
   def "verify empty value list configs on tracer"() {

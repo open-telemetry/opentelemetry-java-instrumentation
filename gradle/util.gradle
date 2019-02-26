@@ -1,4 +1,4 @@
-task artifacts {
+tasks.register("artifacts") {
   group = "Help"
   description = "Displays the artifacts associated with each configuration of " + project
   doFirst {

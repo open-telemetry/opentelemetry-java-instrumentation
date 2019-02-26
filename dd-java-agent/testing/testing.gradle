@@ -5,8 +5,7 @@ minimumInstructionCoverage = 0.5
 excludedClassesConverage += [
   'datadog.trace.agent.test.asserts.*Assert',
   'datadog.trace.agent.test.AgentTestRunner.ErrorCountingListener',
-  'datadog.trace.agent.test.OkHttpUtils',
-  'datadog.trace.agent.test.TestUtils',
+  'datadog.trace.agent.test.utils.*',
   // Avoid applying jacoco instrumentation to classes instrumented by tested agent
   'context.ContextTestInstrumentation**',
 ]
@@ -43,13 +42,13 @@ dependencies {
 }
 
 // See comment for FieldBackedProviderFieldInjectionDisabledTest about why this hack is here
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   if (name != "testDisabledFieldInjection") {
     exclude "context/FieldBackedProviderFieldInjectionDisabledTest.class"
   }
 }
 
-task testDisabledFieldInjection(type: Test) {
+tasks.register("testDisabledFieldInjection", Test) {
   systemProperties "dd.trace.runtime.context.field.injection": "false"
   include "context/FieldBackedProviderFieldInjectionDisabledTest.class"
 }

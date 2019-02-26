@@ -33,7 +33,7 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {"datadog.trace.instrumentation.servlet3.HttpServletRequestInjectAdapter"};
+    return new String[] {packageName + ".HttpServletRequestInjectAdapter"};
   }
 
   @Override

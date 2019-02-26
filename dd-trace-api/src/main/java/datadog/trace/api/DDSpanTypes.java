@@ -3,7 +3,7 @@ package datadog.trace.api;
 public class DDSpanTypes {
   public static final String HTTP_CLIENT = "http";
   public static final String HTTP_SERVER = "web";
-  public static final String WEB_SERVLET = HTTP_SERVER;
+  @Deprecated public static final String WEB_SERVLET = HTTP_SERVER;
   public static final String RPC = "rpc";
   public static final String CACHE = "cache";
 

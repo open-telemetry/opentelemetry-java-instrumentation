@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.netty.handler.codec.http.HttpResponseStatus
@@ -21,7 +21,7 @@ class VertxServerTest extends AgentTestRunner {
   Vertx server
 
   def setupSpec() {
-    port = TestUtils.randomOpenPort()
+    port = PortUtils.randomOpenPort()
     server = VertxWebTestServer.start(port)
   }
 
@@ -110,7 +110,7 @@ class VertxServerTest extends AgentTestRunner {
     }
 
     where:
-    responseCode                             | name         | path           | error
+    responseCode                             | name         | path          | error
     HttpResponseStatus.OK                    | "GET /"      | ""            | false
     HttpResponseStatus.NOT_FOUND             | "404"        | "doesnt-exit" | false
     HttpResponseStatus.INTERNAL_SERVER_ERROR | "GET /error" | "error"       | true

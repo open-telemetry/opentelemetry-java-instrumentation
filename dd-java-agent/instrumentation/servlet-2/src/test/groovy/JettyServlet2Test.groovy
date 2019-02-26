@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.TestUtils
 import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import okhttp3.Credentials
@@ -35,7 +35,7 @@ class JettyServlet2Test extends AgentTestRunner {
   private ServletContextHandler servletContext
 
   def setup() {
-    port = TestUtils.randomOpenPort()
+    port = PortUtils.randomOpenPort()
     jettyServer = new Server(port)
     servletContext = new ServletContextHandler()
     servletContext.contextPath = "/ctx"
@@ -84,15 +84,17 @@ class JettyServlet2Test extends AgentTestRunner {
           serviceName "ctx"
           operationName "servlet.request"
           resourceName "GET /ctx/$path"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
             "http.url" "http://localhost:$port/ctx/$path"
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
+            "peer.hostname" "localhost"
+            "peer.port" port
+            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "TestServlet2\$Sync"
-            "span.type" DDSpanTypes.WEB_SERVLET
             "servlet.context" "/ctx"
             if (auth) {
               "$DDTags.USER_NAME" "user"
@@ -128,7 +130,7 @@ class JettyServlet2Test extends AgentTestRunner {
           serviceName "ctx"
           operationName "servlet.request"
           resourceName "GET /ctx/$path"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           errored true
           parent()
           tags {
@@ -136,7 +138,9 @@ class JettyServlet2Test extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
-            "span.type" DDSpanTypes.WEB_SERVLET
+            "peer.hostname" "localhost"
+            "peer.port" port
+            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "TestServlet2\$Sync"
             "servlet.context" "/ctx"
             errorTags(RuntimeException, "some $path error")
@@ -169,7 +173,7 @@ class JettyServlet2Test extends AgentTestRunner {
           serviceName "ctx"
           operationName "servlet.request"
           resourceName "GET /ctx/$path"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           errored false
           parent()
           tags {
@@ -177,7 +181,9 @@ class JettyServlet2Test extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
-            "span.type" DDSpanTypes.WEB_SERVLET
+            "peer.hostname" "localhost"
+            "peer.port" port
+            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "TestServlet2\$Sync"
             "servlet.context" "/ctx"
             defaultTags()

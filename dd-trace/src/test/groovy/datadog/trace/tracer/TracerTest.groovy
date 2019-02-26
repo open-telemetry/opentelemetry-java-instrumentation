@@ -45,6 +45,26 @@ class TracerTest extends Specification {
     0 * _  // don't allow any other interaction
   }
 
+  def "finalize closes writer"() {
+    setup:
+    def writer = Mock(Writer)
+    def tracer = Tracer.builder().writer(writer).build()
+
+    when:
+    tracer.finalize()
+
+    then: "closed writer"
+    1 * writer.close()
+    0 * _  // don't allow any other interaction
+
+    when:
+    tracer.finalize()
+
+    then: "thrown error swallowed"
+    1 * writer.close() >> { throw new Exception("test error") }
+    0 * _  // don't allow any other interaction
+  }
+
   def "test create current timestamp"() {
     setup:
     def tracer = Tracer.builder().config(config).build()

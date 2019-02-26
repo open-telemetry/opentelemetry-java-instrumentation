@@ -1,10 +1,12 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
 
 class OkHttp3Test extends AgentTestRunner {
 
@@ -22,7 +24,9 @@ class OkHttp3Test extends AgentTestRunner {
       .url("http://localhost:$server.address.port/ping")
       .build()
 
-    def response = client.newCall(request).execute()
+    def response = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
+      client.newCall(request).execute()
+    }
 
     expect:
     response.body.string() == "pong"
@@ -43,7 +47,7 @@ class OkHttp3Test extends AgentTestRunner {
         }
         span(1) {
           operationName "okhttp.http"
-          serviceName "okhttp"
+          serviceName renameService ? "localhost" : "okhttp"
           resourceName "GET /ping"
           errored false
           childOf(span(0))
@@ -68,5 +72,8 @@ class OkHttp3Test extends AgentTestRunner {
 
     cleanup:
     server.close()
+
+    where:
+    renameService << [false, true]
   }
 }

@@ -1,0 +1,81 @@
+// Set properties before any plugins get loaded
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+muzzle {
+  pass {
+    group = "io.projectreactor"
+    module = "reactor-core"
+    versions = "[3.1.0.RELEASE,)"
+    assertInverse = true
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+sourceSets {
+  main_java8 {
+    java.srcDirs "${project.projectDir}/src/main/java8"
+  }
+}
+
+compileMain_java8Java {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+}
+// Note: ideally lombok plugin would do this for us, but currently it doesn't support custom
+// source sets. See https://github.com/franzbecker/gradle-lombok/issues/17.
+dependencies {
+  main_java8CompileOnly "org.projectlombok:lombok:${project.lombok.version}" transitive false
+  main_java8AnnotationProcessor "org.projectlombok:lombok:${project.lombok.version}" transitive false
+}
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+compileTestJava {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+
+compileLatestDepTestJava {
+  sourceCompatibility = "1.8"
+  targetCompatibility = "1.8"
+}
+
+dependencies {
+
+  main_java8CompileOnly group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
+
+  main_java8Compile project(':dd-java-agent:agent-tooling')
+
+  main_java8Compile deps.bytebuddy
+  main_java8Compile deps.opentracing
+
+  compileOnly sourceSets.main_java8.compileClasspath
+
+  compile sourceSets.main_java8.output
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:trace-annotation')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+
+  testCompile group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
+
+  latestDepTestCompile group: 'io.projectreactor', name: 'reactor-core', version: '3.+'
+  // Looks like later versions on reactor need this dependency for some reason even though it is marked as optional.
+  latestDepTestCompile group: 'io.micrometer', name: 'micrometer-core', version: '1.+'
+}

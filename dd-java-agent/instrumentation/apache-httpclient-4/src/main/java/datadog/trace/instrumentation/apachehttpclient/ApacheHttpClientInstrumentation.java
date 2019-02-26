@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.apachehttpclient;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.apachehttpclient.ApacheHttpClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -11,18 +11,14 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
-import java.net.URI;
 import java.util.Iterator;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -41,7 +37,7 @@ import org.apache.http.client.methods.HttpUriRequest;
 public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   public ApacheHttpClientInstrumentation() {
-    super("httpclient");
+    super("httpclient", "apache-httpclient", "apache-http-client");
   }
 
   @Override
@@ -54,6 +50,10 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
     return new String[] {
       getClass().getName() + "$HttpHeadersInjectAdapter",
       getClass().getName() + "$WrappingStatusSettingResponseHandler",
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      "datadog.trace.agent.decorator.HttpClientDecorator",
+      packageName + ".ApacheHttpClientDecorator",
     };
   }
 
@@ -90,17 +90,11 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
       final Tracer tracer = GlobalTracer.get();
-      final Scope scope =
-          tracer
-              .buildSpan("http.request")
-              .withTag(Tags.COMPONENT.getKey(), "apache-httpclient")
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
-              .withTag(Tags.HTTP_METHOD.getKey(), request.getRequestLine().getMethod())
-              .withTag(Tags.HTTP_URL.getKey(), request.getRequestLine().getUri())
-              .startActive(true);
-
+      final Scope scope = tracer.buildSpan("http.request").startActive(true);
       final Span span = scope.span();
+
+      DECORATE.afterStart(span);
+      DECORATE.onRequest(span, request);
 
       // Wrap the handler so we capture the status code
       if (handler1 instanceof ResponseHandler) {
@@ -115,12 +109,6 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         tracer.inject(
             span.context(), Format.Builtin.HTTP_HEADERS, new HttpHeadersInjectAdapter(request));
       }
-      final URI uri = request.getURI();
-      // zuul users have encountered cases where getURI returns null
-      if (null != uri) {
-        Tags.PEER_PORT.set(span, uri.getPort() == -1 ? 80 : uri.getPort());
-        Tags.PEER_HOSTNAME.set(span, uri.getHost());
-      }
       return scope;
     }
 
@@ -130,19 +118,19 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
       if (scope != null) {
-        final Span span = scope.span();
+        try {
+          final Span span = scope.span();
 
-        if (result instanceof HttpResponse) {
-          Tags.HTTP_STATUS.set(span, ((HttpResponse) result).getStatusLine().getStatusCode());
-        } // else they probably provided a ResponseHandler.
+          if (result instanceof HttpResponse) {
+            DECORATE.onResponse(span, (HttpResponse) result);
+          } // else they probably provided a ResponseHandler.
 
-        if (throwable != null) {
-          Tags.ERROR.set(span, Boolean.TRUE);
-          span.log(singletonMap(ERROR_OBJECT, throwable));
-          span.finish();
+          DECORATE.onError(span, throwable);
+          DECORATE.beforeFinish(span);
+        } finally {
+          scope.close();
+          CallDepthThreadLocalMap.reset(HttpClient.class);
         }
-        scope.close();
-        CallDepthThreadLocalMap.reset(HttpClient.class);
       }
     }
   }
@@ -160,7 +148,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
     public Object handleResponse(final HttpResponse response)
         throws ClientProtocolException, IOException {
       if (null != span) {
-        Tags.HTTP_STATUS.set(span, response.getStatusLine().getStatusCode());
+        DECORATE.onResponse(span, response);
       }
       return handler.handleResponse(response);
     }

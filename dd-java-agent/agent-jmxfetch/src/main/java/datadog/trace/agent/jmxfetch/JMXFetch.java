@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.datadog.jmxfetch.App;
@@ -116,9 +118,14 @@ public class JMXFetch {
         final String configs = IOUtils.toString(metricConfigsStream, StandardCharsets.UTF_8);
         final String[] split = configs.split("\n");
         final List<String> result = new ArrayList<>(split.length);
+        final SortedSet<String> integrationName = new TreeSet<>();
         for (final String config : split) {
-          final URL resource = JMXFetch.class.getResource("metricconfigs/" + config);
-          result.add(resource.getPath().split("\\.jar!/")[1]);
+          integrationName.clear();
+          integrationName.add(config.replace(".yaml", ""));
+          if (Config.integrationEnabled(integrationName, false)) {
+            final URL resource = JMXFetch.class.getResource("metricconfigs/" + config);
+            result.add(resource.getPath().split("\\.jar!/")[1]);
+          }
         }
         return result;
       }

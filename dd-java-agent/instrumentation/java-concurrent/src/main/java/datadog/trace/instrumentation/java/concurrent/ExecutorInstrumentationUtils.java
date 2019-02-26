@@ -2,6 +2,8 @@ package datadog.trace.instrumentation.java.concurrent;
 
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.WeakMap;
+import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper;
+import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
@@ -13,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ExecutorInstrumentationUtils {
 
-  private static final WeakMap<Executor, Boolean> DISABLED_EXECUTORS =
+  private static final WeakMap<Executor, Boolean> EXECUTORS_DISABLED_FOR_WRAPPED_TASKS =
       WeakMap.Provider.newWeakMap();
 
   /**
@@ -28,7 +30,7 @@ public class ExecutorInstrumentationUtils {
     return (scope instanceof TraceScope
         && ((TraceScope) scope).isAsyncPropagating()
         && task != null
-        && !ExecutorInstrumentationUtils.isDisabled(executor));
+        && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task));
   }
 
   /**
@@ -74,12 +76,19 @@ public class ExecutorInstrumentationUtils {
     }
   }
 
-  public static void disableExecutor(final Executor executor) {
-    log.debug("Disabling Executor tracing for instance {}", executor);
-    DISABLED_EXECUTORS.put(executor, true);
+  public static void disableExecutorForWrappedTasks(final Executor executor) {
+    log.debug("Disabling Executor tracing for wrapped tasks for instance {}", executor);
+    EXECUTORS_DISABLED_FOR_WRAPPED_TASKS.put(executor, true);
   }
 
-  public static boolean isDisabled(final Executor executor) {
-    return DISABLED_EXECUTORS.containsKey(executor);
+  /**
+   * Check if Executor can accept given task.
+   *
+   * <p>Disabled executors cannot accept wrapped tasks, non wrapped tasks (i.e. tasks with injected
+   * fields) should still work fine.
+   */
+  public static boolean isExecutorDisabledForThisTask(final Executor executor, final Object task) {
+    return (task instanceof RunnableWrapper || task instanceof CallableWrapper)
+        && EXECUTORS_DISABLED_FOR_WRAPPED_TASKS.containsKey(executor);
   }
 }

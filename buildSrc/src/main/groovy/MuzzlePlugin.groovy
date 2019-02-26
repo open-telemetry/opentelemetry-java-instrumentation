@@ -59,6 +59,7 @@ class MuzzlePlugin implements Plugin<Project> {
             .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
           assertionMethod.invoke(null, instrumentationCL, userCL, true)
         }
+        println "Muzzle executing for $project"
       }
     }
     def printReferences = project.task('printReferences') {

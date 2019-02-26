@@ -16,6 +16,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.jar.Attributes;
@@ -198,12 +199,13 @@ public class IntegrationTestUtils {
       final String mainClassName,
       final String[] jvmArgs,
       final String[] mainMethodArgs,
+      final Map<String, String> envVars,
       final boolean printOutputStreams)
       throws Exception {
     final String separator = System.getProperty("file.separator");
     final String classpath = System.getProperty("java.class.path");
     final String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
-    final List<String> commands = new ArrayList();
+    final List<String> commands = new ArrayList<>();
     commands.add(path);
     commands.addAll(Arrays.asList(jvmArgs));
     commands.add("-cp");
@@ -211,6 +213,7 @@ public class IntegrationTestUtils {
     commands.add(mainClassName);
     commands.addAll(Arrays.asList(mainMethodArgs));
     final ProcessBuilder processBuilder = new ProcessBuilder(commands.toArray(new String[0]));
+    processBuilder.environment().putAll(envVars);
     final Process process = processBuilder.start();
     final int result = process.waitFor();
 

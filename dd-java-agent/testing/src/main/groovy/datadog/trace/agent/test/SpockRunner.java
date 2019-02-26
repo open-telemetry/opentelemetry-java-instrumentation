@@ -1,6 +1,7 @@
 package datadog.trace.agent.test;
 
 import com.google.common.reflect.ClassPath;
+import datadog.trace.agent.test.utils.ClasspathUtils;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -148,14 +149,14 @@ public class SpockRunner extends Sputnik {
 
   private static File createBootstrapJar() throws IOException {
     final Set<String> bootstrapClasses = new HashSet<>();
-    for (final ClassPath.ClassInfo info : TestUtils.getTestClasspath().getAllClasses()) {
+    for (final ClassPath.ClassInfo info : ClasspathUtils.getTestClasspath().getAllClasses()) {
       // if info starts with bootstrap prefix: add to bootstrap jar
       if (isBootstrapClass(info.getName())) {
         bootstrapClasses.add(info.getResourceName());
       }
     }
     return new File(
-        TestUtils.createJarWithClasses(
+        ClasspathUtils.createJarWithClasses(
                 AgentTestRunner.class.getClassLoader(), bootstrapClasses.toArray(new String[0]))
             .getFile());
   }

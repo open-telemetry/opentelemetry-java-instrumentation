@@ -5,10 +5,11 @@ import datadog.trace.tracer.sampling.AllSampler;
 import datadog.trace.tracer.sampling.Sampler;
 import datadog.trace.tracer.writer.Writer;
 import java.io.Closeable;
-import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +29,12 @@ public class Tracer implements Closeable {
   /** Interceptors to be called on certain trace and span events */
   private final List<Interceptor> interceptors;
 
+  /**
+   * JVM shutdown callback, keeping a reference to it to remove this if Tracer gets destroyed
+   * earlier
+   */
+  private final Thread shutdownCallback;
+
   @Builder
   private Tracer(
       final Config config,
@@ -44,6 +51,13 @@ public class Tracer implements Closeable {
         interceptors != null
             ? Collections.unmodifiableList(new ArrayList<>(interceptors))
             : Collections.<Interceptor>emptyList();
+
+    shutdownCallback = new ShutdownHook(this);
+    try {
+      Runtime.getRuntime().addShutdownHook(shutdownCallback);
+    } catch (final IllegalStateException ex) {
+      // The JVM is already shutting down.
+    }
   }
 
   /** @return {@link Writer} used by this tracer */
@@ -72,6 +86,14 @@ public class Tracer implements Closeable {
    */
   public Timestamp createCurrentTimestamp() {
     return new Clock(this).createCurrentTimestamp();
+  }
+
+  /**
+   * @return timestamp for given time. Note: this is mainly useful when there is no 'current' trace.
+   *     If there is 'current' trace already then one should use it to get timestamps.
+   */
+  public Timestamp createTimestampForTime(final long time, final TimeUnit unit) {
+    return new Clock(this).createTimestampForTime(time, unit);
   }
 
   /**
@@ -115,7 +137,35 @@ public class Tracer implements Closeable {
   }
 
   @Override
-  public void close() throws IOException {
+  public void finalize() {
+    try {
+      Runtime.getRuntime().removeShutdownHook(shutdownCallback);
+      shutdownCallback.run();
+    } catch (final Exception e) {
+      log.error("Error while finalizing Tracer.", e);
+    }
+  }
+
+  @Override
+  public void close() {
+    // FIXME: Handle the possibility of close being called more than once or not at all.
+    // FIXME: Depends on order of execution between finalize, GC, and the shutdown hook.
     writer.close();
+  }
+
+  private static class ShutdownHook extends Thread {
+    private final WeakReference<Tracer> reference;
+
+    private ShutdownHook(final Tracer tracer) {
+      reference = new WeakReference<>(tracer);
+    }
+
+    @Override
+    public void run() {
+      final Tracer tracer = reference.get();
+      if (tracer != null) {
+        tracer.close();
+      }
+    }
   }
 }

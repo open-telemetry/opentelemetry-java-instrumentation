@@ -15,7 +15,7 @@ def isCI = System.getenv("CI") != null
 
 allprojects {
   group = 'com.datadoghq'
-  version = '0.23.0-SNAPSHOT'
+  version = '0.25.0-SNAPSHOT'
 
   if (isCI) {
     buildDir = "${rootDir}/workspace/${projectDir.path.replace(rootDir.path, '')}/build/"
@@ -32,8 +32,8 @@ repositories {
 
 description = 'dd-trace-java'
 
-task traceAgentTest {}
-task latestDepTest {}
+tasks.register("traceAgentTest")
+tasks.register("latestDepTest")
 
 // Applied here to allow publishing of artifactory build info
 apply from: "${rootDir}/gradle/publish.gradle"
@@ -50,14 +50,15 @@ buildScan {
   }
 }
 
-ext.gradleWrapperVersion = '4.10.2'
-task wrapper(type: Wrapper) {
+ext.gradleWrapperVersion = '4.10.3'
+tasks.register("wrapper", Wrapper) {
   gradleVersion = gradleWrapperVersion
 }
 
 allprojects {
-  tasks.withType(JavaForkOptions) {
+  tasks.withType(JavaForkOptions).configureEach {
     maxHeapSize = System.properties["datadog.forkedMaxHeapSize"]
     minHeapSize = System.properties["datadog.forkedMinHeapSize"]
+    jvmArgs "-XX:ErrorFile=/tmp/hs_err_pid%p.log"
   }
 }

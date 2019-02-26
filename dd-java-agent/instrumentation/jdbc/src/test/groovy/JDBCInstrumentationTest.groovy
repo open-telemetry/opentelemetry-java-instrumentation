@@ -17,7 +17,7 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
 
-import static datadog.trace.agent.test.TestUtils.runUnderTrace
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class JDBCInstrumentationTest extends AgentTestRunner {
 

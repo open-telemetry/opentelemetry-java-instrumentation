@@ -38,12 +38,14 @@ class SpringBootBasedTest extends AgentTestRunner {
         span(0) {
           operationName "servlet.request"
           resourceName "GET /"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored false
           tags {
             "http.url" "http://localhost:$port/"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -74,12 +76,14 @@ class SpringBootBasedTest extends AgentTestRunner {
         span(0) {
           operationName "servlet.request"
           resourceName(status.value == 404 ? "404" : "GET /param/{parameter}/")
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored false
           tags {
             "http.url" "http://localhost:$port/param/$param/"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -112,12 +116,14 @@ class SpringBootBasedTest extends AgentTestRunner {
         span(0) {
           operationName "servlet.request"
           resourceName "GET /param/?/"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored false
           tags {
             "http.url" "http://localhost:$port/param/asdf1234/"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -131,12 +137,14 @@ class SpringBootBasedTest extends AgentTestRunner {
         span(0) {
           operationName "servlet.request"
           resourceName "GET /error"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored false
           tags {
             "http.url" "http://localhost:$port/error"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -164,12 +172,14 @@ class SpringBootBasedTest extends AgentTestRunner {
         span(0) {
           operationName "servlet.request"
           resourceName "404"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored false
           tags {
             "http.url" "http://localhost:$port/invalid"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -185,12 +195,14 @@ class SpringBootBasedTest extends AgentTestRunner {
         span(0) {
           operationName "servlet.request"
           resourceName "404"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored false
           tags {
             "http.url" "http://localhost:$port/error"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -220,12 +232,14 @@ class SpringBootBasedTest extends AgentTestRunner {
         span(0) {
           operationName "servlet.request"
           resourceName "GET /error/{parameter}/"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored true
           tags {
             "http.url" "http://localhost:$port/error/qwerty/"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -242,12 +256,14 @@ class SpringBootBasedTest extends AgentTestRunner {
         span(0) {
           operationName "servlet.request"
           resourceName "GET /error"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored true
           tags {
             "http.url" "http://localhost:$port/error"
             "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -272,12 +288,14 @@ class SpringBootBasedTest extends AgentTestRunner {
         span(0) {
           operationName "servlet.request"
           resourceName "POST /validated"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored false
           tags {
             "http.url" "http://localhost:$port/validated"
             "http.method" "POST"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -308,12 +326,14 @@ class SpringBootBasedTest extends AgentTestRunner {
         span(0) {
           operationName "servlet.request"
           resourceName "POST /validated"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored false
           tags {
             "http.url" "http://localhost:$port/validated"
             "http.method" "POST"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -333,12 +353,14 @@ class SpringBootBasedTest extends AgentTestRunner {
         span(0) {
           operationName "servlet.request"
           resourceName "POST /error"
-          spanType DDSpanTypes.WEB_SERVLET
+          spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored false
           tags {
             "http.url" "http://localhost:$port/error"
             "http.method" "POST"
+            "peer.hostname" "localhost"
+            "peer.port" port
             "span.kind" "server"
             "span.type" "web"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -360,7 +382,7 @@ class SpringBootBasedTest extends AgentTestRunner {
       childOf(trace.span(0))
       errored errorType != null
       tags {
-        "$DDTags.SPAN_TYPE" DDSpanTypes.WEB_SERVLET
+        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
         "$Tags.COMPONENT.key" "spring-web-controller"
         if (errorType) {
           "error.msg" String

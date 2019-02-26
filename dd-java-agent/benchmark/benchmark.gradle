@@ -54,7 +54,7 @@ jmh {
 }
 
 // configured as a separate task since the 'jmh' task did not like adding a javaagent argument.
-task jmhAgent(type: JavaExec, dependsOn: project.tasks.jmhCompileGeneratedClasses) {
+tasks.register("jmhAgent", JavaExec) {
   classpath = files(project.jmhCompileGeneratedClasses.destinationDir)
   classpath += sourceSets.jmh.runtimeClasspath
   main = "org.openjdk.jmh.Main"
@@ -66,6 +66,7 @@ task jmhAgent(type: JavaExec, dependsOn: project.tasks.jmhCompileGeneratedClasse
 
 //  args += ["-wi", "2"]
 //  args += ["-i", "5"]
+  dependsOn project.tasks.jmhCompileGeneratedClasses
 }
 
 tasks.jmhAgent.dependsOn project(':dd-java-agent').shadowJar

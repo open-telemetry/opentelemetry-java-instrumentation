@@ -31,7 +31,9 @@ class SpringTemplateJMS1Test extends AgentTestRunner {
     session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
 
     template = new JmsTemplate(connectionFactory)
-    template.receiveTimeout = TimeUnit.SECONDS.toMillis(10)
+    // Make this longer than timeout on TEST_WRITER.waitForTraces
+    // Otherwise caller might give up waiting before callee has a chance to respond.
+    template.receiveTimeout = TimeUnit.SECONDS.toMillis(21)
   }
 
   def cleanupSpec() {

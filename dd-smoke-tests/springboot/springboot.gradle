@@ -29,7 +29,7 @@ dependencies {
   testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
 }
 
-task startServer(type: com.github.psxpaul.task.ExecFork) {
+tasks.register("startServer", com.github.psxpaul.task.ExecFork) {
   springbootHttpPort = randomOpenPort()
   dependsOn project(':dd-java-agent').shadowJar, shadowJar
 
@@ -51,7 +51,7 @@ task startServer(type: com.github.psxpaul.task.ExecFork) {
   stopAfter = test
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
   jvmArgs "-Ddatadog.smoketest.server.port=${springbootHttpPort}"
 
   dependsOn startServer
