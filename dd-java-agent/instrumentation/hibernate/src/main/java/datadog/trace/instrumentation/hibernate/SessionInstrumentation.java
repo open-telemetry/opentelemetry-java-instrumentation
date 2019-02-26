@@ -25,6 +25,7 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
@@ -43,6 +44,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
     map.put("org.hibernate.SharedSessionContract", SessionState.class.getName());
     map.put("org.hibernate.Query", SessionState.class.getName());
     map.put("org.hibernate.Transaction", SessionState.class.getName());
+    map.put("org.hibernate.Criteria", SessionState.class.getName());
     map.put("org.hibernate.engine.HibernateIterator", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
   }
@@ -106,6 +108,10 @@ public class SessionInstrumentation extends Instrumenter.Default {
     transformers.put(
         isMethod().and(returns(safeHasSuperType(named("org.hibernate.Query")))),
         GetQueryAdvice.class.getName());
+
+    transformers.put(
+        isMethod().and(returns(safeHasSuperType(named("org.hibernate.Criteria")))),
+        GetCriteriaAdvice.class.getName());
 
     return transformers;
   }
@@ -204,6 +210,22 @@ public class SessionInstrumentation extends Instrumenter.Default {
 
       SessionMethodUtils.attachSpanFromStore(
           sessionContextStore, session, transactionContextStore, transaction);
+    }
+  }
+
+  public static class GetCriteriaAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void getCriteria(
+        @Advice.This final SharedSessionContract session, @Advice.Return final Criteria criteria) {
+
+      final ContextStore<SharedSessionContract, SessionState> sessionContextStore =
+          InstrumentationContext.get(SharedSessionContract.class, SessionState.class);
+      final ContextStore<Criteria, SessionState> criteriaContextStore =
+          InstrumentationContext.get(Criteria.class, SessionState.class);
+
+      SessionMethodUtils.attachSpanFromStore(
+          sessionContextStore, session, criteriaContextStore, criteria);
     }
   }
 }

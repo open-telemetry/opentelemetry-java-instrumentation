@@ -1,59 +1,20 @@
-import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.hibernate.*
-import org.hibernate.boot.MetadataSources
-import org.hibernate.boot.registry.StandardServiceRegistry
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder
 import spock.lang.Shared
 
-class SessionTest extends AgentTestRunner {
-
-  @Shared
-  private SessionFactory sessionFactory
+class SessionTest extends AbstractHibernateTest {
 
   @Shared
   private Map<String, Closure> sessionBuilders
 
-  @Shared
-  private List<Value> prepopulated
-
   def setupSpec() {
-    final StandardServiceRegistry registry =
-      new StandardServiceRegistryBuilder()
-        .configure()
-        .build()
-    try {
-      sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory();
-    } catch (Exception e) {
-      StandardServiceRegistryBuilder.destroy(registry)
-    }
-
     // Test two different types of Session. Groovy doesn't allow testing the cross-product/combinations of two data
     // tables, so we get this hack instead.
     sessionBuilders = new HashMap<>();
     sessionBuilders.put("Session", { return sessionFactory.openSession() })
     sessionBuilders.put("StatelessSession", { return sessionFactory.openStatelessSession() })
-
-    // Pre-populate the DB, so delete/update can be tested.
-    Session writer = sessionFactory.openSession()
-    writer.beginTransaction()
-    prepopulated = new ArrayList<>()
-    for (int i = 0; i < 2; i++) {
-      prepopulated.add(new Value("Hello :)"))
-      writer.save(prepopulated.get(i))
-    }
-    writer.getTransaction().commit()
-    writer.close()
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.clear()
-  }
-
-  def cleanupSpec() {
-    if (sessionFactory != null) {
-      sessionFactory.close()
-    }
   }
 
 

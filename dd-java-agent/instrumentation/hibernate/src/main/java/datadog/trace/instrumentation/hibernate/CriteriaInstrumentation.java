@@ -17,19 +17,19 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.hibernate.Query;
+import org.hibernate.Criteria;
 
 @AutoService(Instrumenter.class)
-public class QueryInstrumentation extends Instrumenter.Default {
+public class CriteriaInstrumentation extends Instrumenter.Default {
 
-  public QueryInstrumentation() {
+  public CriteriaInstrumentation() {
     super("hibernate");
   }
 
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> map = new HashMap<>();
-    map.put("org.hibernate.Query", SessionState.class.getName());
+    map.put("org.hibernate.Criteria", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
@@ -43,40 +43,35 @@ public class QueryInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.Query")));
+    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.Criteria")));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        isMethod()
-            .and(
-                named("list")
-                    .or(named("executeUpdate"))
-                    .or(named("uniqueResult"))
-                    .or(named("iterate"))
-                    .or(named("scroll"))),
-        QueryMethodAdvice.class.getName());
+        isMethod().and(named("list").or(named("uniqueResult")).or(named("scroll"))),
+        CriteriaMethodAdvice.class.getName());
 
     return transformers;
   }
 
-  public static class QueryMethodAdvice {
+  public static class CriteriaMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SessionState startMethod(
-        @Advice.This final Query query, @Advice.Origin("#m") final String name) {
+        @Advice.This final Criteria criteria, @Advice.Origin("#m") final String name) {
 
-      final ContextStore<Query, SessionState> contextStore =
-          InstrumentationContext.get(Query.class, SessionState.class);
+      final ContextStore<Criteria, SessionState> contextStore =
+          InstrumentationContext.get(Criteria.class, SessionState.class);
 
-      return SessionMethodUtils.startScopeFrom(contextStore, query, "hibernate.query." + name);
+      return SessionMethodUtils.startScopeFrom(
+          contextStore, criteria, "hibernate.criteria." + name);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.This final Query query,
+        @Advice.This final Criteria criteria,
         @Advice.Enter final SessionState state,
         @Advice.Thrown final Throwable throwable) {
 
