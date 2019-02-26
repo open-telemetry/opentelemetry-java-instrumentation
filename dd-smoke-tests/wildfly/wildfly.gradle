@@ -72,6 +72,7 @@ tasks.register("startServer", com.github.psxpaul.task.ExecFork) {
   // these params tells the ExecFork plugin to block on startServer task until the port is opened or the string is seen in the ouput
   waitForPort = wildflyHttpPort
   waitForOutput = "Undertow HTTP listener default listening on 127.0.0.1:${wildflyHttpPort}"
+  timeout = 240
   environment = [
     'JAVA_OPTS': "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
       + " -Ddd.writer.type=LoggingWriter" + " -Ddd.service.name=java-app"
