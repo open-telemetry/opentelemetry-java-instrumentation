@@ -1,13 +1,11 @@
 package datadog.trace.instrumentation.hibernate;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 
 import datadog.trace.bootstrap.ContextStore;
 import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 
 public class SessionMethodUtils {
 
@@ -37,8 +35,8 @@ public class SessionMethodUtils {
             .buildSpan(operationName)
             .asChildOf(sessionState.getSessionSpan())
             .startActive(true);
-    HibernateDecorator.INSTANCE.afterStart(scope.span());
-    HibernateDecorator.INSTANCE.onOperation(scope.span(), entity);
+    DECORATOR.afterStart(scope.span());
+    DECORATOR.onOperation(scope.span(), entity);
 
     sessionState.setMethodScope(scope);
     return sessionState;
@@ -57,14 +55,11 @@ public class SessionMethodUtils {
     final Scope scope = sessionState.getMethodScope();
     final Span span = scope.span();
     if (span != null) {
-      if (throwable != null) {
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-      }
+      DECORATOR.onError(span, throwable);
       if (entity != null) {
-        HibernateDecorator.INSTANCE.onOperation(span, entity);
+        DECORATOR.onOperation(span, entity);
       }
-      HibernateDecorator.INSTANCE.beforeFinish(span);
+      DECORATOR.beforeFinish(span);
       span.finish();
     }
 

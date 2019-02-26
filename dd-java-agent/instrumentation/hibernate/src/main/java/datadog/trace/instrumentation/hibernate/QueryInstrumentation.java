@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.hibernate;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -75,8 +76,7 @@ public class QueryInstrumentation extends Instrumenter.Default {
       // Note: We don't know what the entity is until the method is returning.
       final SessionState state =
           SessionMethodUtils.startScopeFrom(contextStore, query, "hibernate.query." + name, null);
-      HibernateDecorator.INSTANCE.onStatement(
-          state.getMethodScope().span(), query.getQueryString());
+      DECORATOR.onStatement(state.getMethodScope().span(), query.getQueryString());
       return state;
     }
 

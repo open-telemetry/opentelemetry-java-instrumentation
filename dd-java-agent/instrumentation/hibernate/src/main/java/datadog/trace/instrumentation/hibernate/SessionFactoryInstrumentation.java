@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.hibernate;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -77,8 +78,8 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
     public static void openSession(@Advice.Return final SharedSessionContract session) {
 
       final Span span = GlobalTracer.get().buildSpan("hibernate.session").start();
-      HibernateDecorator.INSTANCE.afterStart(span);
-      HibernateDecorator.INSTANCE.onSession(span, session);
+      DECORATOR.afterStart(span);
+      DECORATOR.onSession(span, session);
 
       final ContextStore<SharedSessionContract, SessionState> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, SessionState.class);

@@ -6,7 +6,7 @@ import java.util.List;
 import javax.persistence.Entity;
 
 public class HibernateDecorator extends OrmClientDecorator {
-  public static final HibernateDecorator INSTANCE = new HibernateDecorator();
+  public static final HibernateDecorator DECORATOR = new HibernateDecorator();
 
   @Override
   protected String service() {
@@ -44,7 +44,7 @@ public class HibernateDecorator extends OrmClientDecorator {
   }
 
   @Override
-  public <ENTITY> String entityName(final ENTITY entity) {
+  public String entityName(final Object entity) {
     String name = null;
     if (entity instanceof String) {
       // We were given an entity name, not the entity itself.

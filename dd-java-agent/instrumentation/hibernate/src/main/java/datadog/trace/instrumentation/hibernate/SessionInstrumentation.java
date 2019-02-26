@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.hibernate;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -136,8 +137,8 @@ public class SessionInstrumentation extends Instrumenter.Default {
       }
 
       final Span span = state.getSessionSpan();
-      HibernateDecorator.INSTANCE.onError(span, throwable);
-      HibernateDecorator.INSTANCE.beforeFinish(span);
+      DECORATOR.onError(span, throwable);
+      DECORATOR.beforeFinish(span);
       span.finish();
     }
   }
