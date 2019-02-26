@@ -52,11 +52,14 @@ class HystrixTest extends AgentTestRunner {
         span(1) {
           serviceName "unnamed-java-app"
           operationName "hystrix.cmd"
-          resourceName "HystrixTest\$1.run"
+          resourceName "ExampleGroup.HystrixTest\$1.run"
           spanType null
           childOf span(0)
           errored false
           tags {
+            "hystrix.command" "HystrixTest\$1"
+            "hystrix.group" "ExampleGroup"
+            "hystrix.circuit-open" false
             "$Tags.COMPONENT.key" "hystrix"
             defaultTags()
           }
@@ -126,11 +129,14 @@ class HystrixTest extends AgentTestRunner {
         span(1) {
           serviceName "unnamed-java-app"
           operationName "hystrix.cmd"
-          resourceName "HystrixTest\$2.getFallback"
+          resourceName "ExampleGroup.HystrixTest\$2.getFallback"
           spanType null
           childOf span(0)
           errored false
           tags {
+            "hystrix.command" "HystrixTest\$2"
+            "hystrix.group" "ExampleGroup"
+            "hystrix.circuit-open" false
             "$Tags.COMPONENT.key" "hystrix"
             defaultTags()
           }
@@ -138,11 +144,14 @@ class HystrixTest extends AgentTestRunner {
         span(2) {
           serviceName "unnamed-java-app"
           operationName "hystrix.cmd"
-          resourceName "HystrixTest\$2.run"
+          resourceName "ExampleGroup.HystrixTest\$2.run"
           spanType null
           childOf span(0)
           errored true
           tags {
+            "hystrix.command" "HystrixTest\$2"
+            "hystrix.group" "ExampleGroup"
+            "hystrix.circuit-open" false
             "$Tags.COMPONENT.key" "hystrix"
             errorTags(IllegalArgumentException)
             defaultTags()

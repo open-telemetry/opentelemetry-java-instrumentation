@@ -9,13 +9,13 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
+import com.netflix.hystrix.HystrixCommand;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -48,24 +48,23 @@ public class HystrixCommandInstrumentation extends Instrumenter.Default {
   public static class TraceAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(@Advice.Origin final Method method) {
-      final Class<?> declaringClass = method.getDeclaringClass();
-      String className = declaringClass.getSimpleName();
-      if (className.isEmpty()) {
-        className = declaringClass.getName();
-        if (declaringClass.getPackage() != null) {
-          final String pkgName = declaringClass.getPackage().getName();
-          if (!pkgName.isEmpty()) {
-            className = declaringClass.getName().replace(pkgName, "").substring(1);
-          }
-        }
-      }
-      final String resourceName = className + "." + method.getName();
+    public static Scope startSpan(
+        @Advice.This final HystrixCommand<?> command,
+        @Advice.Origin("#m") final String methodName) {
+
+      final String commandName = command.getCommandKey().name();
+      final String groupName = command.getCommandGroup().name();
+      final boolean circuitOpen = command.isCircuitBreakerOpen();
+
+      final String resourceName = groupName + "." + commandName + "." + methodName;
 
       return GlobalTracer.get()
           .buildSpan(OPERATION_NAME)
           .withTag(DDTags.RESOURCE_NAME, resourceName)
           .withTag(Tags.COMPONENT.getKey(), "hystrix")
+          .withTag("hystrix.command", commandName)
+          .withTag("hystrix.group", groupName)
+          .withTag("hystrix.circuit-open", circuitOpen)
           .startActive(true);
     }
 
