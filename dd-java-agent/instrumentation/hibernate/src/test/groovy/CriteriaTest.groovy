@@ -64,7 +64,7 @@ class CriteriaTest extends AgentTestRunner {
           spanType DDSpanTypes.HIBERNATE
           parent()
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
@@ -77,7 +77,8 @@ class CriteriaTest extends AgentTestRunner {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
@@ -89,7 +90,8 @@ class CriteriaTest extends AgentTestRunner {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }

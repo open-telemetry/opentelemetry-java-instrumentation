@@ -69,7 +69,7 @@ public class TransactionInstrumentation extends Instrumenter.Default {
           InstrumentationContext.get(Transaction.class, SessionState.class);
 
       return SessionMethodUtils.startScopeFrom(
-          contextStore, transaction, "hibernate.transaction.commit");
+          contextStore, transaction, "hibernate.transaction.commit", null);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -78,7 +78,7 @@ public class TransactionInstrumentation extends Instrumenter.Default {
         @Advice.Enter final SessionState state,
         @Advice.Thrown final Throwable throwable) {
 
-      SessionMethodUtils.closeScope(state, throwable);
+      SessionMethodUtils.closeScope(state, throwable, null);
     }
   }
 }

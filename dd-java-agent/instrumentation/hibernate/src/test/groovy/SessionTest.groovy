@@ -47,7 +47,7 @@ class SessionTest extends AbstractHibernateTest {
             spanType DDSpanTypes.HIBERNATE
             parent()
             tags {
-              "$Tags.COMPONENT.key" "hibernate-java"
+              "$Tags.COMPONENT.key" "java-hibernate"
               "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
               "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
               defaultTags()
@@ -60,7 +60,8 @@ class SessionTest extends AbstractHibernateTest {
             spanType DDSpanTypes.HIBERNATE
             childOf span(0)
             tags {
-              "$Tags.COMPONENT.key" "hibernate-java"
+              "$Tags.COMPONENT.key" "java-hibernate"
+              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
               "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
               defaultTags()
             }
@@ -78,7 +79,8 @@ class SessionTest extends AbstractHibernateTest {
               if (isError) {
                 errorTags(MappingException, "Unknown entity: java.lang.Long")
               }
-              "$Tags.COMPONENT.key" "hibernate-java"
+              "$Tags.COMPONENT.key" "java-hibernate"
+              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
               "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
               defaultTags()
             }
@@ -144,7 +146,7 @@ class SessionTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           parent()
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
@@ -157,7 +159,8 @@ class SessionTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
@@ -179,7 +182,8 @@ class SessionTest extends AbstractHibernateTest {
             if (isError) {
               errorTags(MappingException, "Unknown entity: java.lang.Long")
             }
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
@@ -232,7 +236,7 @@ class SessionTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           parent()
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
@@ -245,21 +249,23 @@ class SessionTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
         span(2) {
           serviceName "hibernate"
-          resourceName "unknown object"
+          resourceName "hibernate.replicate"
           operationName "hibernate.replicate"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
             errorTags(MappingException, "Unknown entity: java.lang.Long")
 
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
@@ -299,7 +305,7 @@ class SessionTest extends AbstractHibernateTest {
             spanType DDSpanTypes.HIBERNATE
             parent()
             tags {
-              "$Tags.COMPONENT.key" "hibernate-java"
+              "$Tags.COMPONENT.key" "java-hibernate"
               "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
               "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
               defaultTags()
@@ -312,7 +318,8 @@ class SessionTest extends AbstractHibernateTest {
             spanType DDSpanTypes.HIBERNATE
             childOf span(0)
             tags {
-              "$Tags.COMPONENT.key" "hibernate-java"
+              "$Tags.COMPONENT.key" "java-hibernate"
+              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
               "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
               defaultTags()
             }
@@ -334,7 +341,8 @@ class SessionTest extends AbstractHibernateTest {
               if (isError) {
                 errorTags(MappingException, "Unknown entity: java.lang.Long")
               }
-              "$Tags.COMPONENT.key" "hibernate-java"
+              "$Tags.COMPONENT.key" "java-hibernate"
+              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
               "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
               defaultTags()
             }
@@ -394,7 +402,7 @@ class SessionTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           parent()
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
@@ -407,19 +415,21 @@ class SessionTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
         span(2) {
           serviceName "hibernate"
-          resourceName "hibernate.query.list"
+          resourceName "$resource"
           operationName "hibernate.query.list"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
@@ -432,10 +442,10 @@ class SessionTest extends AbstractHibernateTest {
     }
 
     where:
-    queryMethodName  | queryBuildMethod
-    "createQuery"    | { sess -> sess.createQuery("from Value") }
-    "getNamedQuery"  | { sess -> sess.getNamedQuery("TestNamedQuery") }
-    "createSQLQuery" | { sess -> sess.createSQLQuery("SELECT * FROM Value") }
+    queryMethodName  | resource              | queryBuildMethod
+    "createQuery"    | "Value"               | { sess -> sess.createQuery("from Value") }
+    "getNamedQuery"  | "Value"               | { sess -> sess.getNamedQuery("TestNamedQuery") }
+    "createSQLQuery" | "SELECT * FROM Value" | { sess -> sess.createSQLQuery("SELECT * FROM Value") }
   }
 }
 

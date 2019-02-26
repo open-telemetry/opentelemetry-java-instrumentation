@@ -25,7 +25,7 @@ class QueryTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           parent()
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
@@ -38,19 +38,21 @@ class QueryTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
         span(2) {
           serviceName "hibernate"
-          resourceName "hibernate.query.$queryMethodName"
-          operationName "hibernate.query.$queryMethodName"
+          resourceName "$resource"
+          operationName "hibernate.$queryMethodName"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
@@ -63,24 +65,24 @@ class QueryTest extends AbstractHibernateTest {
     }
 
     where:
-    queryMethodName | isError | queryInteraction
-    "list"          | false   | { sess ->
+    queryMethodName       | isError | resource                         | queryInteraction
+    "query.list"          | false   | "Value"                          | { sess ->
       Query q = sess.createQuery("from Value")
       q.list()
     }
-    "executeUpdate" | false   | { sess ->
+    "query.executeUpdate" | false   | "update Value set name = 'alyx'" | { sess ->
       Query q = sess.createQuery("update Value set name = 'alyx'")
       q.executeUpdate()
     }
-    "uniqueResult"  | false   | { sess ->
+    "query.uniqueResult"  | false   | "Value"                          | { sess ->
       Query q = sess.createQuery("from Value where id = 1")
       q.uniqueResult()
     }
-    "iterate"       | false   | { sess ->
+    "iterate"             | false   | "from Value"                     | { sess ->
       Query q = sess.createQuery("from Value")
       q.iterate()
     }
-    "scroll"        | false   | { sess ->
+    "query.scroll"        | false   | "from Value"                     | { sess ->
       Query q = sess.createQuery("from Value")
       q.scroll()
     }
@@ -109,7 +111,7 @@ class QueryTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           parent()
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
@@ -122,7 +124,8 @@ class QueryTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
@@ -134,7 +137,8 @@ class QueryTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
@@ -146,19 +150,21 @@ class QueryTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
         span(4) {
           serviceName "hibernate"
-          resourceName "hibernate.query.iterate"
-          operationName "hibernate.query.iterate"
+          resourceName "from Value"
+          operationName "hibernate.iterate"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "hibernate-java"
+            "$Tags.COMPONENT.key" "java-hibernate"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }

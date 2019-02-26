@@ -16,8 +16,10 @@ import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 
 @AutoService(Instrumenter.class)
 public class QueryInstrumentation extends Instrumenter.Default {
@@ -55,7 +57,6 @@ public class QueryInstrumentation extends Instrumenter.Default {
                 named("list")
                     .or(named("executeUpdate"))
                     .or(named("uniqueResult"))
-                    .or(named("iterate"))
                     .or(named("scroll"))),
         QueryMethodAdvice.class.getName());
 
@@ -71,16 +72,29 @@ public class QueryInstrumentation extends Instrumenter.Default {
       final ContextStore<Query, SessionState> contextStore =
           InstrumentationContext.get(Query.class, SessionState.class);
 
-      return SessionMethodUtils.startScopeFrom(contextStore, query, "hibernate.query." + name);
+      // Note: We don't know what the entity is until the method is returning.
+      final SessionState state =
+          SessionMethodUtils.startScopeFrom(contextStore, query, "hibernate.query." + name, null);
+      HibernateDecorator.INSTANCE.onStatement(
+          state.getMethodScope().span(), query.getQueryString());
+      return state;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.This final Query query,
         @Advice.Enter final SessionState state,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned) {
 
-      SessionMethodUtils.closeScope(state, throwable);
+      Object entity = returned;
+      if (returned == null || query instanceof SQLQuery) {
+        // Not a method that returns results, or the query returns a table rather than an ORM
+        // object.
+        entity = query.getQueryString();
+      }
+
+      SessionMethodUtils.closeScope(state, throwable, entity);
     }
   }
 }

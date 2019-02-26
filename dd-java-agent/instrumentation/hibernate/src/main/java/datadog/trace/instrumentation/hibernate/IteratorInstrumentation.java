@@ -16,6 +16,7 @@ import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.engine.HibernateIterator;
 
@@ -65,16 +66,17 @@ public class IteratorInstrumentation extends Instrumenter.Default {
           InstrumentationContext.get(HibernateIterator.class, SessionState.class);
 
       return SessionMethodUtils.startScopeFrom(
-          contextStore, iterator, "hibernate.iterator." + name);
+          contextStore, iterator, "hibernate.iterator." + name, null);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
         @Advice.This final HibernateIterator iterator,
         @Advice.Enter final SessionState state,
-        @Advice.Thrown final Throwable throwable) {
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object entity) {
 
-      SessionMethodUtils.closeScope(state, throwable);
+      SessionMethodUtils.closeScope(state, throwable, entity);
     }
   }
 }

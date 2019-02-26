@@ -10,12 +10,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import io.opentracing.Span;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,6 +41,11 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.instrumentation.hibernate.SessionState",
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      "datadog.trace.agent.decorator.DatabaseClientDecorator",
+      "datadog.trace.agent.decorator.OrmClientDecorator",
+      packageName + ".HibernateDecorator",
     };
   }
 
@@ -74,14 +76,9 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return final SharedSessionContract session) {
 
-      final Span span =
-          GlobalTracer.get()
-              .buildSpan("hibernate.session")
-              .withTag(DDTags.SERVICE_NAME, "hibernate")
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HIBERNATE)
-              .withTag(Tags.COMPONENT.getKey(), "hibernate-java")
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-              .start();
+      final Span span = GlobalTracer.get().buildSpan("hibernate.session").start();
+      HibernateDecorator.INSTANCE.afterStart(span);
+      HibernateDecorator.INSTANCE.onSession(span, session);
 
       final ContextStore<SharedSessionContract, SessionState> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, SessionState.class);
