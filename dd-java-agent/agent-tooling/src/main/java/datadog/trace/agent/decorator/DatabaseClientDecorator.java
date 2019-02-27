@@ -18,6 +18,13 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
     return super.afterStart(span);
   }
 
+  /**
+   * This should be called when the connection is being used, not when it's created.
+   *
+   * @param span
+   * @param connection
+   * @return
+   */
   public Span onConnection(final Span span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {

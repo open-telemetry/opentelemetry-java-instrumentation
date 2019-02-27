@@ -30,7 +30,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     serviceName << ["test-service", "other-service", null]
   }
 
-  def "test onSession"() {
+  def "test onConnection"() {
     setup:
     def decorator = newDecorator()
 
