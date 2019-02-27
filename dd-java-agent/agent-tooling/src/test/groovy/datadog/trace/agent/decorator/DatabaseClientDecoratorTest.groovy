@@ -75,7 +75,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    decorator.afterStart(null)
+    decorator.afterStart((Span) null)
 
     then:
     thrown(AssertionError)
