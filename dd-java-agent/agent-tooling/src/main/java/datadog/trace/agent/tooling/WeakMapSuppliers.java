@@ -170,6 +170,11 @@ class WeakMapSuppliers {
       public void put(final K key, final V value) {
         map.put(key, value);
       }
+
+      @Override
+      public void putIfAbsent(final K key, final V value) {
+        map.putIfAbsent(key, value);
+      }
     }
 
     static class Inline implements WeakMap.Supplier {

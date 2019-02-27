@@ -16,6 +16,8 @@ public interface WeakMap<K, V> {
 
   void put(K key, V value);
 
+  void putIfAbsent(K key, V value);
+
   @Slf4j
   class Provider {
     private static final AtomicReference<Supplier> provider =
@@ -79,6 +81,19 @@ public interface WeakMap<K, V> {
     @Override
     public void put(final K key, final V value) {
       map.put(key, value);
+    }
+
+    @Override
+    public void putIfAbsent(final K key, final V value) {
+      // We can't use putIfAbsent since it was added in 1.8.
+      // As a result, we must use double check locking.
+      if (!map.containsKey(key)) {
+        synchronized (this) {
+          if (!map.containsKey(key)) {
+            map.put(key, value);
+          }
+        }
+      }
     }
 
     @Override
