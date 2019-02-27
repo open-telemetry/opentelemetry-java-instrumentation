@@ -154,6 +154,22 @@ class BaseDecoratorTest extends Specification {
     true    | "test2"   | ""         | true            | 1.0
   }
 
+  def "test spanNameForMethod"() {
+    when:
+    def result = decorator.spanNameForMethod(method)
+
+    then:
+    result == "${name}.run"
+
+    where:
+    target                         | name
+    SomeInnerClass                 | "SomeInnerClass"
+    SomeNestedClass                | "SomeNestedClass"
+    SampleJavaClass.anonymousClass | "SampleJavaClass\$1"
+
+    method = target.getDeclaredMethod("run")
+  }
+
   def newDecorator() {
     return newDecorator(false)
   }
@@ -217,5 +233,13 @@ class BaseDecoratorTest extends Specification {
             return "test-component"
           }
         }
+  }
+
+  class SomeInnerClass implements Runnable {
+    void run() {}
+  }
+
+  static class SomeNestedClass implements Runnable {
+    void run() {}
   }
 }

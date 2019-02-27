@@ -84,10 +84,17 @@ public abstract class BaseDecorator {
     return span;
   }
 
+  /**
+   * This method is used to generate an acceptable span (operation) name based on a given method
+   * reference. Anonymous classes are named based on their parent.
+   *
+   * @param method
+   * @return
+   */
   public String spanNameForMethod(final Method method) {
     final Class<?> declaringClass = method.getDeclaringClass();
-    String className = declaringClass.getSimpleName();
-    if (className.isEmpty()) {
+    String className;
+    if (declaringClass.isAnonymousClass()) {
       className = declaringClass.getName();
       if (declaringClass.getPackage() != null) {
         final String pkgName = declaringClass.getPackage().getName();
@@ -95,6 +102,8 @@ public abstract class BaseDecorator {
           className = declaringClass.getName().replace(pkgName, "").substring(1);
         }
       }
+    } else {
+      className = declaringClass.getSimpleName();
     }
     return className + "." + method.getName();
   }
