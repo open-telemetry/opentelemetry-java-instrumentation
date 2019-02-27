@@ -9,19 +9,19 @@ import reactor.core.publisher.Mono;
 public class LettuceMonoCreationAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static String extractCommandName(
+  public static RedisCommand extractCommandName(
       @Advice.Argument(0) final Supplier<RedisCommand> supplier) {
-    return LettuceInstrumentationUtil.getCommandName(supplier.get());
+    return supplier.get();
   }
 
   // throwables wouldn't matter here, because no spans have been started due to redis command not
   // being run until the user subscribes to the Mono publisher
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void monitorSpan(
-      @Advice.Enter final String commandName, @Advice.Return(readOnly = false) Mono<?> publisher) {
-
-    boolean finishSpanOnClose = LettuceInstrumentationUtil.doFinishSpanEarly(commandName);
-    LettuceMonoDualConsumer mdc = new LettuceMonoDualConsumer(commandName, finishSpanOnClose);
+      @Advice.Enter final RedisCommand command,
+      @Advice.Return(readOnly = false) Mono<?> publisher) {
+    final boolean finishSpanOnClose = LettuceInstrumentationUtil.doFinishSpanEarly(command);
+    final LettuceMonoDualConsumer mdc = new LettuceMonoDualConsumer(command, finishSpanOnClose);
     publisher = publisher.doOnSubscribe(mdc);
     // register the call back to close the span only if necessary
     if (!finishSpanOnClose) {

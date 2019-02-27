@@ -1,15 +1,10 @@
 package datadog.trace.instrumentation.lettuce.rx;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
-import datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil;
-import io.opentracing.Scope;
+import io.lettuce.core.protocol.RedisCommand;
 import io.opentracing.Span;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import java.util.function.Consumer;
 import org.reactivestreams.Subscription;
 import org.slf4j.LoggerFactory;
@@ -23,8 +18,9 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
   private int numResults = 0;
   private FluxOnSubscribeConsumer onSubscribeConsumer = null;
 
-  public LettuceFluxTerminationRunnable(final String commandName, final boolean finishSpanOnClose) {
-    this.onSubscribeConsumer = new FluxOnSubscribeConsumer(this, commandName, finishSpanOnClose);
+  public LettuceFluxTerminationRunnable(
+      final RedisCommand command, final boolean finishSpanOnClose) {
+    onSubscribeConsumer = new FluxOnSubscribeConsumer(this, command, finishSpanOnClose);
   }
 
   public FluxOnSubscribeConsumer getOnSubscribeConsumer() {
@@ -32,16 +28,14 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
   }
 
   private void finishSpan(final boolean isCommandCancelled, final Throwable throwable) {
-    if (this.span != null) {
-      this.span.setTag("db.command.results.count", this.numResults);
+    if (span != null) {
+      span.setTag("db.command.results.count", numResults);
       if (isCommandCancelled) {
-        this.span.setTag("db.command.cancelled", true);
+        span.setTag("db.command.cancelled", true);
       }
-      if (throwable != null) {
-        Tags.ERROR.set(this.span, true);
-        this.span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-      }
-      this.span.finish();
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
+      span.finish();
     } else {
       LoggerFactory.getLogger(Flux.class)
           .error(
@@ -56,13 +50,13 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
         || SignalType.ON_ERROR.equals(signal.getType())) {
       finishSpan(false, signal.getThrowable());
     } else if (SignalType.ON_NEXT.equals(signal.getType())) {
-      ++this.numResults;
+      ++numResults;
     }
   }
 
   @Override
   public void run() {
-    if (this.span != null) {
+    if (span != null) {
       finishSpan(true, null);
     } else {
       LoggerFactory.getLogger(Flux.class)
@@ -75,39 +69,28 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
   public static class FluxOnSubscribeConsumer implements Consumer<Subscription> {
 
     private final LettuceFluxTerminationRunnable owner;
-    private final String commandName;
+    private final RedisCommand command;
     private final boolean finishSpanOnClose;
 
     public FluxOnSubscribeConsumer(
         final LettuceFluxTerminationRunnable owner,
-        final String commandName,
+        final RedisCommand command,
         final boolean finishSpanOnClose) {
       this.owner = owner;
-      this.commandName = commandName;
+      this.command = command;
       this.finishSpanOnClose = finishSpanOnClose;
     }
 
     @Override
     public void accept(final Subscription subscription) {
-      final Scope scope =
-          GlobalTracer.get()
-              .buildSpan(LettuceInstrumentationUtil.SERVICE_NAME + ".query")
-              .startActive(finishSpanOnClose);
-      final Span span = scope.span();
-      this.owner.span = span;
-
-      Tags.DB_TYPE.set(span, LettuceInstrumentationUtil.SERVICE_NAME);
-      Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
-      Tags.COMPONENT.set(span, LettuceInstrumentationUtil.COMPONENT_NAME);
-
-      // should be command name only, but use workaround to prepend string to agent crashing
-      // commands
-      span.setTag(
-          DDTags.RESOURCE_NAME,
-          LettuceInstrumentationUtil.getCommandResourceName(this.commandName));
-      span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
-      span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.REDIS);
-      scope.close();
+      final Span span = GlobalTracer.get().buildSpan("redis.query").start();
+      owner.span = span;
+      DECORATE.afterStart(span);
+      DECORATE.onCommand(span, command);
+      if (finishSpanOnClose) {
+        DECORATE.beforeFinish(span);
+        span.finish();
+      }
     }
   }
 }

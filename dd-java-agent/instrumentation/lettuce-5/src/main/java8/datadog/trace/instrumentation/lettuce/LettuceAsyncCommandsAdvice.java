@@ -1,39 +1,26 @@
 package datadog.trace.instrumentation.lettuce;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.lettuce.LettuceInstrumentationUtil.doFinishSpanEarly;
 
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import net.bytebuddy.asm.Advice;
 
 public class LettuceAsyncCommandsAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope startSpan(@Advice.Argument(0) final RedisCommand command) {
-    final String commandName = LettuceInstrumentationUtil.getCommandName(command);
 
     final Scope scope =
-        GlobalTracer.get()
-            .buildSpan(LettuceInstrumentationUtil.SERVICE_NAME + ".query")
-            .startActive(LettuceInstrumentationUtil.doFinishSpanEarly(commandName));
+        GlobalTracer.get().buildSpan("redis.query").startActive(doFinishSpanEarly(command));
 
     final Span span = scope.span();
-    Tags.DB_TYPE.set(span, LettuceInstrumentationUtil.SERVICE_NAME);
-    Tags.SPAN_KIND.set(span, Tags.SPAN_KIND_CLIENT);
-    Tags.COMPONENT.set(span, LettuceInstrumentationUtil.COMPONENT_NAME);
-
-    span.setTag(
-        DDTags.RESOURCE_NAME, LettuceInstrumentationUtil.getCommandResourceName(commandName));
-    span.setTag(DDTags.SERVICE_NAME, LettuceInstrumentationUtil.SERVICE_NAME);
-    span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.REDIS);
-
+    DECORATE.afterStart(span);
+    DECORATE.onCommand(span, command);
     return scope;
   }
 
@@ -46,17 +33,16 @@ public class LettuceAsyncCommandsAdvice {
 
     final Span span = scope.span();
     if (throwable != null) {
-      Tags.ERROR.set(span, true);
-      span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
       span.finish();
       scope.close();
       return;
     }
 
-    final String commandName = LettuceInstrumentationUtil.getCommandName(command);
     // close spans on error or normal completion
-    if (!LettuceInstrumentationUtil.doFinishSpanEarly(commandName)) {
-      asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(scope.span()));
+    if (!doFinishSpanEarly(command)) {
+      asyncCommand.handleAsync(new LettuceAsyncBiFunction<>(span));
     }
     scope.close();
   }
