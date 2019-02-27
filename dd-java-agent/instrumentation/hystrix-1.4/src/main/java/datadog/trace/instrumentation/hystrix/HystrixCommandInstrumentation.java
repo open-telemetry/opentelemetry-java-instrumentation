@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.hystrix;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.hystrix.HystrixDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -11,12 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import com.netflix.hystrix.HystrixCommand;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -34,9 +30,14 @@ public class HystrixCommandInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    // Not adding a version restriction because this should work with any version and add some
-    // benefit.
     return not(isInterface()).and(safeHasSuperType(named("com.netflix.hystrix.HystrixCommand")));
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "datadog.trace.agent.decorator.BaseDecorator", packageName + ".HystrixDecorator",
+    };
   }
 
   @Override
@@ -52,30 +53,17 @@ public class HystrixCommandInstrumentation extends Instrumenter.Default {
         @Advice.This final HystrixCommand<?> command,
         @Advice.Origin("#m") final String methodName) {
 
-      final String commandName = command.getCommandKey().name();
-      final String groupName = command.getCommandGroup().name();
-      final boolean circuitOpen = command.isCircuitBreakerOpen();
-
-      final String resourceName = groupName + "." + commandName + "." + methodName;
-
-      return GlobalTracer.get()
-          .buildSpan(OPERATION_NAME)
-          .withTag(DDTags.RESOURCE_NAME, resourceName)
-          .withTag(Tags.COMPONENT.getKey(), "hystrix")
-          .withTag("hystrix.command", commandName)
-          .withTag("hystrix.group", groupName)
-          .withTag("hystrix.circuit-open", circuitOpen)
-          .startActive(true);
+      final Scope scope = GlobalTracer.get().buildSpan(OPERATION_NAME).startActive(true);
+      DECORATE.afterStart(scope);
+      DECORATE.onCommand(scope, command, methodName);
+      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
-      if (throwable != null) {
-        final Span span = scope.span();
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-      }
+      DECORATE.onError(scope, throwable);
+      DECORATE.beforeFinish(scope);
       scope.close();
     }
   }
