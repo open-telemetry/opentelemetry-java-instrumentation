@@ -50,7 +50,9 @@ public abstract class BaseDecorator {
 
   public Span afterStart(final Span span) {
     assert span != null;
-    span.setTag(DDTags.SPAN_TYPE, spanType());
+    if (spanType() != null) {
+      span.setTag(DDTags.SPAN_TYPE, spanType());
+    }
     Tags.COMPONENT.set(span, component());
     if (traceAnalyticsEnabled) {
       span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, traceAnalyticsSampleRate);
