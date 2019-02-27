@@ -28,6 +28,7 @@ import org.hibernate.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.engine.HibernateIterator;
+import org.hibernate.procedure.ProcedureCall;
 
 @AutoService(Instrumenter.class)
 public class SessionInstrumentation extends Instrumenter.Default {
@@ -43,6 +44,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
     map.put("org.hibernate.Query", SessionState.class.getName());
     map.put("org.hibernate.Transaction", SessionState.class.getName());
     map.put("org.hibernate.Criteria", SessionState.class.getName());
+    map.put("org.hibernate.procedure.ProcedureCall", SessionState.class.getName());
     map.put("org.hibernate.engine.HibernateIterator", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
   }
@@ -115,6 +117,10 @@ public class SessionInstrumentation extends Instrumenter.Default {
     transformers.put(
         isMethod().and(returns(safeHasSuperType(named("org.hibernate.Criteria")))),
         GetCriteriaAdvice.class.getName());
+
+    transformers.put(
+        isMethod().and(returns(safeHasSuperType(named("org.hibernate.procedure.ProcedureCall")))),
+        GetProcedureCallAdvice.class.getName());
 
     return transformers;
   }
@@ -226,6 +232,23 @@ public class SessionInstrumentation extends Instrumenter.Default {
 
       SessionMethodUtils.attachSpanFromStore(
           sessionContextStore, session, criteriaContextStore, criteria);
+    }
+  }
+
+  public static class GetProcedureCallAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void getProcedureCall(
+        @Advice.This final SharedSessionContract session,
+        @Advice.Return final ProcedureCall returned) {
+
+      final ContextStore<SharedSessionContract, SessionState> sessionContextStore =
+          InstrumentationContext.get(SharedSessionContract.class, SessionState.class);
+      final ContextStore<ProcedureCall, SessionState> returnedContextStore =
+          InstrumentationContext.get(ProcedureCall.class, SessionState.class);
+
+      SessionMethodUtils.attachSpanFromStore(
+          sessionContextStore, session, returnedContextStore, returned);
     }
   }
 }

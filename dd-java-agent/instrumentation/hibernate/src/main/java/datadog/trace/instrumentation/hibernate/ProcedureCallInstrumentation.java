@@ -1,12 +1,10 @@
 package datadog.trace.instrumentation.hibernate;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -19,19 +17,19 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.hibernate.Transaction;
+import org.hibernate.procedure.ProcedureCall;
 
 @AutoService(Instrumenter.class)
-public class TransactionInstrumentation extends Instrumenter.Default {
+public class ProcedureCallInstrumentation extends Instrumenter.Default {
 
-  public TransactionInstrumentation() {
+  public ProcedureCallInstrumentation() {
     super("hibernate");
   }
 
   @Override
   public Map<String, String> contextStore() {
     final Map<String, String> map = new HashMap<>();
-    map.put("org.hibernate.Transaction", SessionState.class.getName());
+    map.put("org.hibernate.procedure.ProcedureCall", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
@@ -50,39 +48,36 @@ public class TransactionInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.Transaction")));
+    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.procedure.ProcedureCall")));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        isMethod()
-            .and(named("commit"))
-            .and(isDeclaredBy(safeHasSuperType(named("org.hibernate.Transaction"))))
-            .and(takesArguments(0)),
-        TransactionCommitAdvice.class.getName());
+        isMethod().and(named("getOutputs")), ProcedureCallMethodAdvice.class.getName());
+
     return transformers;
   }
 
-  public static class TransactionCommitAdvice {
+  public static class ProcedureCallMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SessionState startCommit(@Advice.This final Transaction transaction) {
+    public static SessionState startMethod(
+        @Advice.This final ProcedureCall call, @Advice.Origin("#m") final String name) {
 
-      final ContextStore<Transaction, SessionState> contextStore =
-          InstrumentationContext.get(Transaction.class, SessionState.class);
+      final ContextStore<ProcedureCall, SessionState> contextStore =
+          InstrumentationContext.get(ProcedureCall.class, SessionState.class);
 
-      return SessionMethodUtils.startScopeFrom(
-          contextStore, transaction, "hibernate.transaction.commit", null);
+      final SessionState state =
+          SessionMethodUtils.startScopeFrom(
+              contextStore, call, "hibernate.procedure." + name, call.getProcedureName());
+      return state;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void endCommit(
-        @Advice.This final Transaction transaction,
-        @Advice.Enter final SessionState state,
-        @Advice.Thrown final Throwable throwable) {
-
+    public static void endMethod(
+        @Advice.Enter final SessionState state, @Advice.Thrown final Throwable throwable) {
       SessionMethodUtils.closeScope(state, throwable, null);
     }
   }
