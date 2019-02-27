@@ -43,7 +43,7 @@ class SlickTest extends AgentTestRunner {
             "$Tags.DB_TYPE.key" SlickUtils.Driver()
             "$Tags.DB_USER.key" SlickUtils.Username()
 
-            "db.jdbc.url" SlickUtils.Url()
+            "db.instance" SlickUtils.Url()
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
 
             defaultTags()
