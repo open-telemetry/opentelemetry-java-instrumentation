@@ -1,5 +1,4 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
@@ -19,11 +18,9 @@ import javax.ws.rs.core.Response
 import java.util.concurrent.ExecutionException
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 
 class JaxRsClientTest extends AgentTestRunner {
-
-  @Shared
-  def emptyPort = PortUtils.randomOpenPort()
 
   @AutoCleanup
   @Shared
@@ -61,12 +58,13 @@ class JaxRsClientTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-
             "$Tags.COMPONENT.key" "jax-rs.client"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "$server.address/ping"
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" server.address.port
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             defaultTags()
           }
@@ -90,7 +88,7 @@ class JaxRsClientTest extends AgentTestRunner {
   def "#lib connection failure creates errored span"() {
     when:
     Client client = builder.build()
-    WebTarget service = client.target("http://localhost:$emptyPort/ping")
+    WebTarget service = client.target("http://localhost:$UNUSABLE_PORT/ping")
     if (async) {
       AsyncInvoker request = service.request(MediaType.TEXT_PLAIN).async()
       request.get().get()
@@ -115,7 +113,9 @@ class JaxRsClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "jax-rs.client"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_URL.key" "http://localhost:$emptyPort/ping"
+            "$Tags.HTTP_URL.key" "http://localhost:$UNUSABLE_PORT/ping"
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" UNUSABLE_PORT
             "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             errorTags ProcessingException, String
             defaultTags()

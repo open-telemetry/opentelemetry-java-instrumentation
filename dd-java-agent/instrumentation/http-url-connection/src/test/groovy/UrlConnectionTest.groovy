@@ -6,13 +6,12 @@ import datadog.trace.instrumentation.http_url_connection.UrlInstrumentation
 import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
 
+import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
 import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
 class UrlConnectionTest extends AgentTestRunner {
-
-  private static final int UNUSED_PORT = 61 // this port should always be closed
 
   def "trace request with connection failure #scheme"() {
     when:
@@ -53,7 +52,7 @@ class UrlConnectionTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "$url"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" UNUSED_PORT
+            "$Tags.PEER_PORT.key" UNUSABLE_PORT
             errorTags ConnectException, String
             defaultTags()
           }
@@ -66,7 +65,7 @@ class UrlConnectionTest extends AgentTestRunner {
     "http"  | true
     "https" | false
 
-    url = new URI("$scheme://localhost:$UNUSED_PORT").toURL()
+    url = new URI("$scheme://localhost:$UNUSABLE_PORT").toURL()
   }
 
   def "trace request with connection failure to a local file with broken url path"() {
