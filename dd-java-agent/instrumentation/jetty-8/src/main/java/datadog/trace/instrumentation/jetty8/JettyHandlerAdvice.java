@@ -1,8 +1,7 @@
 package datadog.trace.instrumentation.jetty8;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.jetty8.JettyDecorator.DECORATE;
 
-import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
@@ -11,7 +10,6 @@ import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -31,28 +29,20 @@ public class JettyHandlerAdvice {
     final SpanContext extractedContext =
         GlobalTracer.get()
             .extract(Format.Builtin.HTTP_HEADERS, new HttpServletRequestExtractAdapter(req));
-    final String resourceName = req.getMethod() + " " + source.getClass().getName();
     final Scope scope =
         GlobalTracer.get()
             .buildSpan("jetty.request")
             .asChildOf(extractedContext)
-            .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
-            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER)
-            .withTag("servlet.context", req.getContextPath())
             .withTag("span.origin.type", source.getClass().getName())
             .startActive(false);
 
+    DECORATE.afterStart(scope.span());
+    DECORATE.onRequest(scope.span(), req);
+    final String resourceName = req.getMethod() + " " + source.getClass().getName();
+    scope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
+
     if (scope instanceof TraceScope) {
       ((TraceScope) scope).setAsyncPropagation(true);
-    }
-
-    final Span span = scope.span();
-    Tags.COMPONENT.set(span, "jetty-handler");
-    Tags.HTTP_METHOD.set(span, req.getMethod());
-    Tags.HTTP_URL.set(span, req.getRequestURL().toString());
-    span.setTag(DDTags.RESOURCE_NAME, resourceName);
-    if (req.getUserPrincipal() != null) {
-      span.setTag(DDTags.USER_NAME, req.getUserPrincipal().getName());
     }
     return scope;
   }
@@ -63,20 +53,19 @@ public class JettyHandlerAdvice {
       @Advice.Argument(3) final HttpServletResponse resp,
       @Advice.Enter final Scope scope,
       @Advice.Thrown final Throwable throwable) {
-
     if (scope != null) {
       final Span span = scope.span();
+      if (req.getUserPrincipal() != null) {
+        span.setTag(DDTags.USER_NAME, req.getUserPrincipal().getName());
+      }
       if (throwable != null) {
+        DECORATE.onResponse(span, resp);
         if (resp.getStatus() == HttpServletResponse.SC_OK) {
           // exception is thrown in filter chain, but status code is incorrect
           Tags.HTTP_STATUS.set(span, 500);
         }
-        Tags.ERROR.set(span, Boolean.TRUE);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(false);
-        }
-        scope.close();
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
         span.finish(); // Finish the span manually since finishSpanOnClose was false
       } else {
         final AtomicBoolean activated = new AtomicBoolean(false);
@@ -88,15 +77,14 @@ public class JettyHandlerAdvice {
             // finished after check above. We just ignore that exception and move on.
           }
         }
+        // Check again in case the request finished before adding the listener.
         if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
-          Tags.HTTP_STATUS.set(span, resp.getStatus());
-          if (scope instanceof TraceScope) {
-            ((TraceScope) scope).setAsyncPropagation(false);
-          }
+          DECORATE.onResponse(span, resp);
+          DECORATE.beforeFinish(span);
           span.finish(); // Finish the span manually since finishSpanOnClose was false
         }
-        scope.close();
       }
+      scope.close();
     }
   }
 }

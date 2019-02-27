@@ -37,9 +37,13 @@ public final class HandlerInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.jetty8.HttpServletRequestExtractAdapter",
-      "datadog.trace.instrumentation.jetty8.HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
-      "datadog.trace.instrumentation.jetty8.TagSettingAsyncListener"
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ServerDecorator",
+      "datadog.trace.agent.decorator.HttpServerDecorator",
+      packageName + ".JettyDecorator",
+      packageName + ".HttpServletRequestExtractAdapter",
+      packageName + ".HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
+      packageName + ".TagSettingAsyncListener"
     };
   }
 
