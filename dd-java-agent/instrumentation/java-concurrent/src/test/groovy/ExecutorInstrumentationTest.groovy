@@ -5,6 +5,7 @@ import datadog.trace.api.Trace
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper
 import io.opentracing.util.GlobalTracer
+import spock.lang.Retry
 import spock.lang.Shared
 
 import java.lang.reflect.InvocationTargetException
@@ -18,6 +19,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
+@Retry
 class ExecutorInstrumentationTest extends AgentTestRunner {
 
   @Shared

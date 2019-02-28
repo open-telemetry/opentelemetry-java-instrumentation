@@ -5,6 +5,7 @@ import datadog.trace.api.Trace
 import io.opentracing.util.GlobalTracer
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.concurrent.forkjoin.ForkJoinTask
+import spock.lang.Retry
 import spock.lang.Shared
 
 import java.lang.reflect.InvocationTargetException
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit
  * Test executor instrumentation for Scala specific classes.
  * This is to large extent a copy of ExecutorInstrumentationTest.
  */
+@Retry
 class ScalaExecutorInstrumentationTest extends AgentTestRunner {
 
   @Shared

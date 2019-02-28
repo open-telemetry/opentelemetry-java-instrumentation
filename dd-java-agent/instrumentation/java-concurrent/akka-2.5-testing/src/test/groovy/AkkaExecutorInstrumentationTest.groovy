@@ -5,6 +5,7 @@ import datadog.opentracing.scopemanager.ContinuableScope
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
 import io.opentracing.util.GlobalTracer
+import spock.lang.Retry
 import spock.lang.Shared
 
 import java.lang.reflect.InvocationTargetException
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit
  * Test executor instrumentation for Akka specific classes.
  * This is to large extent a copy of ExecutorInstrumentationTest.
  */
+@Retry
 class AkkaExecutorInstrumentationTest extends AgentTestRunner {
 
   @Shared
