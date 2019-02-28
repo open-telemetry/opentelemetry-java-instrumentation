@@ -37,15 +37,12 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
   File baseDir
   @Shared
   String baseUrl
-  @Shared
-  String expectedJspClassFilesDir = "/work/Tomcat/localhost/$jspWebappContext/org/apache/jsp/"
 
   OkHttpClient client = OkHttpUtils.client()
 
   def setupSpec() {
     baseDir = Files.createTempDir()
     baseDir.deleteOnExit()
-    expectedJspClassFilesDir = baseDir.getCanonicalFile().getAbsolutePath() + expectedJspClassFilesDir
 
     port = PortUtils.randomOpenPort()
 
@@ -112,10 +109,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/$forwardFromFileName"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" jspForwardFromClassName
             "servlet.context" "/$jspWebappContext"
@@ -128,10 +123,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/$forwardDestFileName"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" jspForwardDestClassName
             "servlet.context" "/$jspWebappContext"
@@ -145,10 +138,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/$forwardDestFileName"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspForwardDestClassPrefix$jspForwardDestClassName"
@@ -161,10 +152,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/$forwardFromFileName"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspForwardFromClassPrefix$jspForwardFromClassName"
@@ -221,10 +210,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/forwards/forwardToHtml.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "forwardToHtml_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -237,10 +224,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/forwards/forwardToHtml.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToHtml_jsp"
@@ -292,10 +277,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/forwards/forwardToIncludeMulti.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "forwardToIncludeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -308,10 +291,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/includes/includeMulti.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -325,10 +306,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/common/javaLoopH2.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -342,10 +321,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/common/javaLoopH2.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -358,10 +335,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/common/javaLoopH2.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -375,10 +350,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/common/javaLoopH2.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -391,10 +364,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/includes/includeMulti.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
@@ -407,10 +378,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/forwards/forwardToIncludeMulti.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToIncludeMulti_jsp"
@@ -462,10 +431,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/forwards/forwardToJspForward.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "forwardToJspForward_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -478,10 +445,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/forwards/forwardToSimpleJava.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "forwardToSimpleJava_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -495,10 +460,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/common/loop.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "loop_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -512,10 +475,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/common/loop.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.loop_jsp"
@@ -528,10 +489,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/forwards/forwardToSimpleJava.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToSimpleJava_jsp"
@@ -544,10 +503,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/forwards/forwardToJspForward.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToJspForward_jsp"
@@ -600,10 +557,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/forwards/forwardToCompileError.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "forwardToCompileError_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -617,16 +572,12 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/compileError.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.compileError_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            "jsp.javaFile" expectedJspClassFilesDir + "compileError_jsp.java"
-            "jsp.classpath" String
             errorTags(JasperException, String)
             defaultTags()
           }
@@ -636,10 +587,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/forwards/forwardToCompileError.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToCompileError_jsp"
@@ -691,10 +640,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/forwards/forwardToNonExistent.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "forwardToNonExistent_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -707,10 +654,8 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/forwards/forwardToNonExistent.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.forwards.forwardToNonExistent_jsp"

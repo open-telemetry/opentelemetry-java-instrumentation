@@ -39,15 +39,12 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
   File baseDir
   @Shared
   String baseUrl
-  @Shared
-  String expectedJspClassFilesDir = "/work/Tomcat/localhost/$jspWebappContext/org/apache/jsp/"
-
+  
   OkHttpClient client = OkHttpUtils.client()
 
   def setupSpec() {
     baseDir = Files.createTempDir()
     baseDir.deleteOnExit()
-    expectedJspClassFilesDir = baseDir.getCanonicalFile().getAbsolutePath() + expectedJspClassFilesDir
 
     port = PortUtils.randomOpenPort()
 
@@ -113,10 +110,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/$jspFileName"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
@@ -129,10 +124,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/$jspFileName"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
@@ -191,10 +184,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/getQuery.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "getQuery_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -207,10 +198,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/getQuery.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
@@ -266,10 +255,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/post.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "post_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -282,10 +269,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/post.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
@@ -339,10 +324,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/$jspFileName"
-          spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
@@ -363,10 +346,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/$jspFileName"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassName"
@@ -424,10 +405,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/includes/includeHtml.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "includeHtml_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -440,10 +419,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/includes/includeHtml.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
@@ -495,10 +472,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/includes/includeMulti.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -511,10 +486,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/common/javaLoopH2.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -527,10 +500,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/common/javaLoopH2.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -543,10 +514,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/common/javaLoopH2.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
@@ -559,10 +528,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/common/javaLoopH2.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
@@ -575,10 +542,8 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/includes/includeMulti.jsp"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
@@ -631,16 +596,12 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/$jspFileName"
-          spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {
-            "span.kind" "server"
             "component" "jsp-http-servlet"
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
-            "jsp.javaFile" expectedJspClassFilesDir + jspClassNamePrefix.replace('.', '/') + jspClassName + ".java"
-            "jsp.classpath" String
             errorTags(JasperException, String)
             defaultTags()
           }
