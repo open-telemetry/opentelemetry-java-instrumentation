@@ -69,6 +69,8 @@ class JettyHandlerTest extends AgentTestRunner {
             "component" "jetty-handler"
             "span.origin.type" handler.class.name
             "http.status_code" 200
+            "peer.hostname" "localhost"
+            "peer.port" port
             defaultTags()
           }
         }
@@ -163,6 +165,8 @@ class JettyHandlerTest extends AgentTestRunner {
             "component" "jetty-handler"
             "span.origin.type" handler.class.name
             "http.status_code" 500
+            "peer.hostname" "localhost"
+            "peer.port" port
             errorTags RuntimeException
             defaultTags()
           }
@@ -184,6 +188,8 @@ class JettyHandlerTest extends AgentTestRunner {
               "component" "jetty-handler"
               "span.origin.type" handler.class.name
               "http.status_code" 500
+              "peer.hostname" "localhost"
+              "peer.port" port
               "error" true
               defaultTags()
             }
