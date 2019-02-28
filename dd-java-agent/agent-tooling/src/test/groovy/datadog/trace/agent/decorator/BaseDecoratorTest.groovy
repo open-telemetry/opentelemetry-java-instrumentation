@@ -1,6 +1,7 @@
 package datadog.trace.agent.decorator
 
 import datadog.trace.api.DDTags
+import io.opentracing.Scope
 import io.opentracing.Span
 import io.opentracing.tag.Tags
 import spock.lang.Shared
@@ -52,36 +53,81 @@ class BaseDecoratorTest extends Specification {
 
   def "test assert null span"() {
     when:
-    decorator.afterStart(null)
+    decorator.afterStart((Span) null)
 
     then:
     thrown(AssertionError)
 
     when:
-    decorator.onError(null, null)
+    decorator.onError((Span) null, null)
 
     then:
     thrown(AssertionError)
 
     when:
-    decorator.beforeFinish(null)
+    decorator.beforeFinish((Span) null)
 
     then:
     thrown(AssertionError)
   }
 
+  def "test assert null scope"() {
+    when:
+    decorator.afterStart((Scope) null)
+
+    then:
+    thrown(AssertionError)
+
+    when:
+    decorator.onError((Scope) null, null)
+
+    then:
+    thrown(AssertionError)
+
+    when:
+    decorator.beforeFinish((Scope) null)
+
+    then:
+    thrown(AssertionError)
+  }
+
+  def "test assert non-null scope"() {
+    setup:
+    def span = Mock(Span)
+    def scope = Mock(Scope)
+
+    when:
+    decorator.afterStart(scope)
+
+    then:
+    1 * scope.span() >> span
+
+    when:
+    decorator.onError(scope, null)
+
+    then:
+    1 * scope.span() >> span
+
+    when:
+    decorator.beforeFinish(scope)
+
+    then:
+    1 * scope.span() >> span
+  }
+
   def "test analytics rate default disabled"() {
     when:
-    BaseDecorator dec = newDecorator(defaultEnabled)
+    BaseDecorator dec = newDecorator(defaultEnabled, hasConfigNames)
 
     then:
     dec.traceAnalyticsEnabled == defaultEnabled
-    dec.traceAnalyticsSampleRate == sampleRate
+    dec.traceAnalyticsSampleRate == sampleRate.floatValue()
 
     where:
-    defaultEnabled | sampleRate
-    true           | 1.0
-    false          | 1.0
+    defaultEnabled | hasConfigNames | sampleRate
+    true           | false          | 1.0
+    false          | false          | 1.0
+    false          | true           | 1.0
   }
 
   def "test analytics rate enabled"() {
@@ -108,16 +154,32 @@ class BaseDecoratorTest extends Specification {
     true    | "test2"   | ""         | true            | 1.0
   }
 
+  def "test spanNameForMethod"() {
+    when:
+    def result = decorator.spanNameForMethod(method)
+
+    then:
+    result == "${name}.run"
+
+    where:
+    target                         | name
+    SomeInnerClass                 | "SomeInnerClass"
+    SomeNestedClass                | "SomeNestedClass"
+    SampleJavaClass.anonymousClass | "SampleJavaClass\$1"
+
+    method = target.getDeclaredMethod("run")
+  }
+
   def newDecorator() {
     return newDecorator(false)
   }
 
-  def newDecorator(final Boolean analyticsEnabledDefault) {
-    return analyticsEnabledDefault ?
+  def newDecorator(boolean analyticsEnabledDefault, boolean emptyInstrumentationNames = false) {
+    return emptyInstrumentationNames ?
       new BaseDecorator() {
         @Override
         protected String[] instrumentationNames() {
-          return ["test1", "test2"]
+          return []
         }
 
         @Override
@@ -134,21 +196,50 @@ class BaseDecoratorTest extends Specification {
           return true
         }
       } :
-      new BaseDecorator() {
-        @Override
-        protected String[] instrumentationNames() {
-          return ["test1", "test2"]
-        }
+      analyticsEnabledDefault ?
+        new BaseDecorator() {
+          @Override
+          protected String[] instrumentationNames() {
+            return ["test1", "test2"]
+          }
 
-        @Override
-        protected String spanType() {
-          return "test-type"
-        }
+          @Override
+          protected String spanType() {
+            return "test-type"
+          }
 
-        @Override
-        protected String component() {
-          return "test-component"
+          @Override
+          protected String component() {
+            return "test-component"
+          }
+
+          protected boolean traceAnalyticsDefault() {
+            return true
+          }
+        } :
+        new BaseDecorator() {
+          @Override
+          protected String[] instrumentationNames() {
+            return ["test1", "test2"]
+          }
+
+          @Override
+          protected String spanType() {
+            return "test-type"
+          }
+
+          @Override
+          protected String component() {
+            return "test-component"
+          }
         }
-      }
+  }
+
+  class SomeInnerClass implements Runnable {
+    void run() {}
+  }
+
+  static class SomeNestedClass implements Runnable {
+    void run() {}
   }
 }

@@ -83,6 +83,13 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
   }
 
   @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "datadog.trace.agent.decorator.BaseDecorator", packageName + ".TraceDecorator",
+    };
+  }
+
+  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
         isAnnotatedWith(methodTraceMatcher), TraceAdvice.class.getName());
