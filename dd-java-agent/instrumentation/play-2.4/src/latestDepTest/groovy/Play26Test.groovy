@@ -61,7 +61,6 @@ class Play26Test extends AgentTestRunner {
             "peer.hostname" "localhost"
             "peer.port" port
             "span.kind" "server"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "component" "akka-http-server"
           }
         }
@@ -76,7 +75,6 @@ class Play26Test extends AgentTestRunner {
             "http.url" "/helloplay/:from"
             "http.method" "GET"
             "span.kind" "server"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "component" "play-action"
           }
         }
@@ -114,7 +112,6 @@ class Play26Test extends AgentTestRunner {
             "peer.hostname" "localhost"
             "peer.port" port
             "span.kind" "server"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "component" "akka-http-server"
             "error" true
           }
@@ -131,7 +128,6 @@ class Play26Test extends AgentTestRunner {
             "http.url" "/make-error"
             "http.method" "GET"
             "span.kind" "server"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "component" "play-action"
             "error" true
           }
@@ -167,7 +163,6 @@ class Play26Test extends AgentTestRunner {
             "peer.hostname" "localhost"
             "peer.port" port
             "span.kind" "server"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "component" "akka-http-server"
             "error" true
           }
@@ -184,7 +179,6 @@ class Play26Test extends AgentTestRunner {
             "http.url" "/exception"
             "http.method" "GET"
             "span.kind" "server"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "component" "play-action"
             "error" true
             "error.msg" "oh no"
@@ -223,7 +217,6 @@ class Play26Test extends AgentTestRunner {
             "peer.hostname" "localhost"
             "peer.port" port
             "span.kind" "server"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "component" "akka-http-server"
           }
         }
@@ -238,7 +231,6 @@ class Play26Test extends AgentTestRunner {
             "http.status_code" 404
             "http.method" "GET"
             "span.kind" "server"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "component" "play-action"
           }
         }

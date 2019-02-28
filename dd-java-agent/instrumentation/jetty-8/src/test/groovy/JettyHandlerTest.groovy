@@ -2,7 +2,6 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import okhttp3.OkHttpClient
 import org.eclipse.jetty.continuation.Continuation
 import org.eclipse.jetty.continuation.ContinuationSupport
@@ -69,7 +68,6 @@ class JettyHandlerTest extends AgentTestRunner {
             "span.kind" "server"
             "component" "jetty-handler"
             "span.origin.type" handler.class.name
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "http.status_code" 200
             defaultTags()
           }
@@ -117,6 +115,7 @@ class JettyHandlerTest extends AgentTestRunner {
             serviceName "unnamed-java-app"
             operationName "jetty.request"
             resourceName "GET ${handler.class.name}"
+            spanType DDSpanTypes.HTTP_SERVER
           }
         }
       }
@@ -163,7 +162,6 @@ class JettyHandlerTest extends AgentTestRunner {
             "span.kind" "server"
             "component" "jetty-handler"
             "span.origin.type" handler.class.name
-            "span.type" DDSpanTypes.HTTP_SERVER
             "http.status_code" 500
             errorTags RuntimeException
             defaultTags()
@@ -185,7 +183,6 @@ class JettyHandlerTest extends AgentTestRunner {
               "span.kind" "server"
               "component" "jetty-handler"
               "span.origin.type" handler.class.name
-              "span.type" DDSpanTypes.HTTP_SERVER
               "http.status_code" 500
               "error" true
               defaultTags()

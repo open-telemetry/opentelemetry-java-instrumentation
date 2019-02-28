@@ -13,7 +13,6 @@ import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -108,6 +107,7 @@ class AWSClientTest extends AgentTestRunner {
           serviceName "java-aws-sdk"
           operationName "aws.http"
           resourceName "$service.$operation"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           parent()
           tags {
@@ -116,7 +116,6 @@ class AWSClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "$server.address"
             "$Tags.HTTP_METHOD.key" "$method"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "aws.service" { it.contains(service) }
             "aws.endpoint" "$server.address"
             "aws.operation" "${operation}Request"
@@ -127,6 +126,7 @@ class AWSClientTest extends AgentTestRunner {
         span(1) {
           operationName "http.request"
           resourceName "$method /$url"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           childOf(span(0))
           tags {
@@ -137,7 +137,6 @@ class AWSClientTest extends AgentTestRunner {
             "$Tags.PEER_PORT.key" server.address.port
             "$Tags.HTTP_METHOD.key" "$method"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             defaultTags()
           }
         }

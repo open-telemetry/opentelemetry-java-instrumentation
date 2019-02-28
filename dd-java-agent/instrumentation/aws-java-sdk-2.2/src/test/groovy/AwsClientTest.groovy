@@ -1,6 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
@@ -69,6 +68,7 @@ class AwsClientTest extends AgentTestRunner {
           serviceName "java-aws-sdk"
           operationName "aws.http"
           resourceName "$service.$operation"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           parent()
           tags {
@@ -79,7 +79,6 @@ class AwsClientTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "aws.service" "$service"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
@@ -90,6 +89,7 @@ class AwsClientTest extends AgentTestRunner {
         span(1) {
           operationName "http.request"
           resourceName "$method $path"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           childOf(span(0))
           tags {
@@ -100,7 +100,6 @@ class AwsClientTest extends AgentTestRunner {
             "$Tags.PEER_PORT.key" server.address.port
             "$Tags.HTTP_METHOD.key" "$method"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             defaultTags()
           }
         }
@@ -162,6 +161,7 @@ class AwsClientTest extends AgentTestRunner {
           serviceName "java-aws-sdk"
           operationName "aws.http"
           resourceName "$service.$operation"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           parent()
           tags {
@@ -172,7 +172,6 @@ class AwsClientTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "aws.service" "$service"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
@@ -186,6 +185,7 @@ class AwsClientTest extends AgentTestRunner {
         span(0) {
           operationName "netty.client.request"
           resourceName "$method $path"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           parent()
           tags {
@@ -196,7 +196,6 @@ class AwsClientTest extends AgentTestRunner {
             "$Tags.PEER_PORT.key" server.address.port
             "$Tags.HTTP_METHOD.key" "$method"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             defaultTags()
           }
         }
@@ -222,7 +221,7 @@ class AwsClientTest extends AgentTestRunner {
             <RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId>
           </ResponseMetadata>
         </DeleteOptionGroupResponse>
-      """          | RdsAsyncClient.builder()
+      """       | RdsAsyncClient.builder()
   }
 
   // TODO: add timeout tests?

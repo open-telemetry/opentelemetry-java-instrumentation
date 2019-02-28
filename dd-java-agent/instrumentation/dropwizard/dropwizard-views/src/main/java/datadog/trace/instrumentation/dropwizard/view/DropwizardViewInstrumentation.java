@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.dropwizard.views.View;
 import io.opentracing.Scope;
@@ -59,7 +58,6 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
               .withTag(DDTags.RESOURCE_NAME, "View " + view.getTemplateName())
               .withTag(Tags.COMPONENT.getKey(), "dropwizard-view")
               .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER)
               .withTag("span.origin.type", obj.getClass().getSimpleName())
               .startActive(true);
 

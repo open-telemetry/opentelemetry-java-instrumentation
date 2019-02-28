@@ -139,12 +139,11 @@ class TraceInterceptorTest extends Specification {
     tags["number-tag"] == 5.0
     tags["string-tag"] == "howdy"
 
-    tags["span.type"] == "modifiedST-null"
     tags["thread.name"] != null
     tags["thread.id"] != null
     tags["runtime-id"] != null
     tags["language"] != null
-    tags.size() == 8
+    tags.size() == 7
   }
 
   def "register interceptor through bridge"() {

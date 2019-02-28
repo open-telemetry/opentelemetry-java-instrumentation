@@ -41,7 +41,6 @@ class OkHttp3Test extends AgentTestRunner {
           parent()
           tags {
             "component" "okhttp"
-            "span.type" DDSpanTypes.HTTP_CLIENT
             defaultTags()
           }
         }
@@ -49,12 +48,12 @@ class OkHttp3Test extends AgentTestRunner {
           operationName "okhttp.http"
           serviceName renameService ? "localhost" : "okhttp"
           resourceName "GET /ping"
+          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           childOf(span(0))
           tags {
             defaultTags()
             "component" "okhttp"
-            "span.type" DDSpanTypes.HTTP_CLIENT
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200

@@ -91,7 +91,6 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "component" "java-web-servlet"
             "peer.hostname" "localhost"
             "peer.port" port
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
             "servlet.context" "/$context"
             "http.status_code" 200
@@ -159,7 +158,6 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
               "component" "java-web-servlet"
               "peer.hostname" "localhost"
               "peer.port" port
-              "span.type" DDSpanTypes.HTTP_SERVER
               "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
               "http.status_code" 200
               "servlet.context" "/$context"
@@ -185,7 +183,6 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "component" "java-web-servlet"
             "peer.hostname" "localhost"
             "peer.port" port
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" {
               it == "TestServlet3\$$origin" || it == "TestServlet3\$DispatchRecursive" || it == ApplicationFilterChain.name
             }
@@ -219,7 +216,6 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "component" "java-web-servlet"
             "peer.hostname" "localhost"
             "peer.port" port
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
             "http.status_code" 200
             "servlet.context" "/$context"
@@ -279,7 +275,6 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "component" "java-web-servlet"
             "peer.hostname" "localhost"
             "peer.port" port
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
             "http.status_code" 200
             "servlet.context" "/$context"
@@ -303,7 +298,6 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "component" "java-web-servlet"
             "peer.hostname" "localhost"
             "peer.port" port
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" {
               it == "TestServlet3\$$origin" || it == "TestServlet3\$DispatchRecursive" || it == ApplicationFilterChain.name
             }
@@ -342,6 +336,7 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             span(0) {
               operationName "servlet.request"
               resourceName "GET /$context/dispatch/async"
+              spanType DDSpanTypes.HTTP_SERVER
               parent()
             }
           }
@@ -350,6 +345,7 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
           span(0) {
             operationName "servlet.request"
             resourceName "GET /$context/async"
+            spanType DDSpanTypes.HTTP_SERVER
             if (dispatched) {
               childOf TEST_WRITER[i][0]
             } else {
@@ -393,7 +389,6 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "component" "java-web-servlet"
             "peer.hostname" "localhost"
             "peer.port" port
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
             "servlet.context" "/$context"
             "http.status_code" 500
@@ -439,7 +434,6 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "component" "java-web-servlet"
             "peer.hostname" "localhost"
             "peer.port" port
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
             "servlet.context" "/$context"
             "http.status_code" 500

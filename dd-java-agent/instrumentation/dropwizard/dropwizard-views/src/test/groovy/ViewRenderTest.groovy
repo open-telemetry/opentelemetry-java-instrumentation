@@ -27,7 +27,6 @@ class ViewRenderTest extends AgentTestRunner {
             "component" "dropwizard-view"
             "span.origin.type" renderer.class.simpleName
             "span.kind" "server"
-            "span.type" "web"
             defaultTags()
           }
         }
