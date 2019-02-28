@@ -6,7 +6,7 @@ public abstract class AbstractAwsClientInstrumentation extends Instrumenter.Defa
   private static final String INSTRUMENTATION_NAME = "aws-sdk";
 
   public AbstractAwsClientInstrumentation() {
-    super(INSTRUMENTATION_NAME);
+    super("hibernate-core");
   }
 
   @Override

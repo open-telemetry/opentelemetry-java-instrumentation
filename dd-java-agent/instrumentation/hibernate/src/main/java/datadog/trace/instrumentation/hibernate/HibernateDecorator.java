@@ -1,7 +1,5 @@
 package datadog.trace.instrumentation.hibernate;
 
-import static datadog.trace.instrumentation.hibernate.HibernateInstrumentation.INSTRUMENTATION_NAME;
-
 import datadog.trace.agent.decorator.OrmClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import java.util.List;
@@ -17,7 +15,7 @@ public class HibernateDecorator extends OrmClientDecorator {
 
   @Override
   protected String[] instrumentationNames() {
-    return new String[] {INSTRUMENTATION_NAME};
+    return new String[] {"hibernate-core"};
   }
 
   @Override

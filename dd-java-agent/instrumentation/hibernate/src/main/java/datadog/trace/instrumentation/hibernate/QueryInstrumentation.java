@@ -2,7 +2,6 @@ package datadog.trace.instrumentation.hibernate;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
-import static datadog.trace.instrumentation.hibernate.HibernateInstrumentation.INSTRUMENTATION_NAME;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -26,7 +25,7 @@ import org.hibernate.SQLQuery;
 public class QueryInstrumentation extends Instrumenter.Default {
 
   public QueryInstrumentation() {
-    super(INSTRUMENTATION_NAME);
+    super("hibernate-core");
   }
 
   @Override
