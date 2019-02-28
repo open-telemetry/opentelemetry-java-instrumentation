@@ -1,8 +1,7 @@
 package datadog.trace.instrumentation.jms;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.instrumentation.jms.JmsUtil.toResourceName;
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.jms.JMSDecorator.CONSUMER_DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -11,17 +10,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
-import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +40,14 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".JmsUtil", packageName + ".MessagePropertyTextMap"};
+    return new String[] {
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      packageName + ".JMSDecorator",
+      packageName + ".JMSDecorator$1",
+      packageName + ".JMSDecorator$2",
+      packageName + ".MessagePropertyTextMap",
+    };
   }
 
   @Override
@@ -78,20 +79,10 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
       Tracer.SpanBuilder spanBuilder =
           GlobalTracer.get()
               .buildSpan("jms.consume")
-              .withTag(DDTags.SERVICE_NAME, "jms")
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_CONSUMER)
-              .withTag(Tags.COMPONENT.getKey(), "jms")
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CONSUMER)
               .withTag("span.origin.type", consumer.getClass().getName())
               .withStartTimestamp(TimeUnit.MILLISECONDS.toMicros(startTime));
 
-      if (message == null) {
-        spanBuilder = spanBuilder.withTag(DDTags.RESOURCE_NAME, "JMS " + method.getName());
-      } else {
-        spanBuilder =
-            spanBuilder.withTag(
-                DDTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));
-
+      if (message != null) {
         final SpanContext extractedContext =
             GlobalTracer.get()
                 .extract(Format.Builtin.TEXT_MAP, new MessagePropertyTextMap(message));
@@ -100,15 +91,16 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
         }
       }
 
-      final Scope scope = spanBuilder.startActive(true);
-      final Span span = scope.span();
-
-      if (throwable != null) {
-        Tags.ERROR.set(span, Boolean.TRUE);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+      final Span span = spanBuilder.start();
+      CONSUMER_DECORATE.afterStart(span);
+      if (message == null) {
+        CONSUMER_DECORATE.onReceive(span, method);
+      } else {
+        CONSUMER_DECORATE.onConsume(span, message);
       }
-
-      scope.close();
+      CONSUMER_DECORATE.onError(span, throwable);
+      CONSUMER_DECORATE.beforeFinish(span);
+      span.finish();
     }
   }
 }
