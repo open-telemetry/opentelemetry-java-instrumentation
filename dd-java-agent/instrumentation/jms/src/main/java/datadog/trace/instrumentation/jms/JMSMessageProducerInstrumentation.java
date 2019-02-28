@@ -1,8 +1,7 @@
 package datadog.trace.instrumentation.jms;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.instrumentation.jms.JmsUtil.toResourceName;
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.jms.JMSDecorator.PRODUCER_DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -11,15 +10,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.Scope;
-import io.opentracing.Span;
 import io.opentracing.propagation.Format;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.jms.Destination;
@@ -45,7 +39,14 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {packageName + ".JmsUtil", packageName + ".MessagePropertyTextMap"};
+    return new String[] {
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      packageName + ".JMSDecorator",
+      packageName + ".JMSDecorator$1",
+      packageName + ".JMSDecorator$2",
+      packageName + ".MessagePropertyTextMap",
+    };
   }
 
   @Override
@@ -79,18 +80,14 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       } catch (final JMSException e) {
         defaultDestination = null;
       }
+
       final Scope scope =
           GlobalTracer.get()
               .buildSpan("jms.produce")
-              .withTag(DDTags.SERVICE_NAME, "jms")
-              .withTag(
-                  DDTags.RESOURCE_NAME,
-                  "Produced for " + toResourceName(message, defaultDestination))
-              .withTag(Tags.COMPONENT.getKey(), "jms")
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_PRODUCER)
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_PRODUCER)
               .withTag("span.origin.type", producer.getClass().getName())
               .startActive(true);
+      PRODUCER_DECORATE.afterStart(scope);
+      PRODUCER_DECORATE.onProduce(scope, message, defaultDestination);
 
       GlobalTracer.get()
           .inject(
@@ -104,11 +101,8 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
         @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
 
       if (scope != null) {
-        if (throwable != null) {
-          final Span span = scope.span();
-          Tags.ERROR.set(span, Boolean.TRUE);
-          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-        }
+        PRODUCER_DECORATE.onError(scope, throwable);
+        PRODUCER_DECORATE.beforeFinish(scope);
         scope.close();
         CallDepthThreadLocalMap.reset(MessageProducer.class);
       }
@@ -130,13 +124,10 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
       final Scope scope =
           GlobalTracer.get()
               .buildSpan("jms.produce")
-              .withTag(DDTags.SERVICE_NAME, "jms")
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_PRODUCER)
-              .withTag(DDTags.RESOURCE_NAME, "Produced for " + toResourceName(message, destination))
-              .withTag(Tags.COMPONENT.getKey(), "jms")
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_PRODUCER)
               .withTag("span.origin.type", producer.getClass().getName())
               .startActive(true);
+      PRODUCER_DECORATE.afterStart(scope);
+      PRODUCER_DECORATE.onProduce(scope, message, destination);
 
       GlobalTracer.get()
           .inject(
@@ -148,13 +139,9 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
-
       if (scope != null) {
-        if (throwable != null) {
-          final Span span = scope.span();
-          Tags.ERROR.set(span, Boolean.TRUE);
-          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-        }
+        PRODUCER_DECORATE.onError(scope, throwable);
+        PRODUCER_DECORATE.beforeFinish(scope);
         scope.close();
         CallDepthThreadLocalMap.reset(MessageProducer.class);
       }
