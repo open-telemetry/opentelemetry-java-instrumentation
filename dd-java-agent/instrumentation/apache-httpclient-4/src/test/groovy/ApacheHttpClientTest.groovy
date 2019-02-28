@@ -3,7 +3,6 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.apache.http.HttpResponse
 import org.apache.http.client.HttpClient
@@ -129,6 +128,7 @@ class ApacheHttpClientTest extends AgentTestRunner {
       serviceName renameService ? "localhost" : "unnamed-java-app"
       operationName "http.request"
       resourceName "GET /$route"
+      spanType DDSpanTypes.HTTP_CLIENT
       errored exception != null
       tags {
         defaultTags()
@@ -142,7 +142,6 @@ class ApacheHttpClientTest extends AgentTestRunner {
         "$Tags.PEER_PORT.key" server.address.port
         "$Tags.HTTP_METHOD.key" "GET"
         "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
       }
     }
   }

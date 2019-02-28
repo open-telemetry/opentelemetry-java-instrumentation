@@ -93,7 +93,6 @@ class JettyServlet2Test extends AgentTestRunner {
             "component" "java-web-servlet"
             "peer.hostname" "localhost"
             "peer.port" port
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "TestServlet2\$Sync"
             "servlet.context" "/ctx"
             if (auth) {
@@ -140,7 +139,6 @@ class JettyServlet2Test extends AgentTestRunner {
             "component" "java-web-servlet"
             "peer.hostname" "localhost"
             "peer.port" port
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "TestServlet2\$Sync"
             "servlet.context" "/ctx"
             errorTags(RuntimeException, "some $path error")
@@ -183,7 +181,6 @@ class JettyServlet2Test extends AgentTestRunner {
             "component" "java-web-servlet"
             "peer.hostname" "localhost"
             "peer.port" port
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "TestServlet2\$Sync"
             "servlet.context" "/ctx"
             defaultTags()

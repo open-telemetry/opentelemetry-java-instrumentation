@@ -2,7 +2,6 @@ import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import groovy.json.JsonSlurper
 import io.opentracing.tag.Tags
 import org.apache.http.HttpHost
@@ -95,7 +94,6 @@ class Elasticsearch5RestClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_URL.key" "_cluster/health"
             "$Tags.PEER_HOSTNAME.key" "localhost"

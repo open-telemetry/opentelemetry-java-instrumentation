@@ -208,7 +208,7 @@ class DDSpanBuilderTest extends Specification {
     span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
     span.context().getServiceName() == expectedParentServiceName
     span.context().getResourceName() == expectedName
-    span.context().getSpanType() == expectedParentType
+    span.context().getSpanType() == null
 
     when:
     // ServiceName and SpanType are always overwritten by the child  if they are present
@@ -270,7 +270,7 @@ class DDSpanBuilderTest extends Specification {
     span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
     span.context().getServiceName() == expectedParentServiceName
     span.context().getResourceName() == expectedName
-    span.context().getSpanType() == expectedParentType
+    span.context().getSpanType() == null
 
     when:
     // ServiceName and SpanType are always overwritten by the child  if they are present
@@ -332,7 +332,7 @@ class DDSpanBuilderTest extends Specification {
     span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
     span.context().getServiceName() == expectedParentServiceName
     span.context().getResourceName() == expectedName
-    span.context().getSpanType() == expectedParentType
+    span.context().getSpanType() == null
 
     when:
     // ServiceName and SpanType are always overwritten by the child  if they are present

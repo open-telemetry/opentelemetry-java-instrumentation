@@ -634,9 +634,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         if (serviceName == null) {
           serviceName = ddsc.getServiceName();
         }
-        if (spanType == null) {
-          spanType = ddsc.getSpanType();
-        }
 
       } else {
         if (parentContext instanceof ExtractedContext) {

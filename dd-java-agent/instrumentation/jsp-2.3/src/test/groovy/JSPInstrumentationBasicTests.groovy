@@ -102,7 +102,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
@@ -119,7 +118,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -136,7 +134,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -183,7 +180,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
@@ -200,7 +196,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "getQuery_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -217,7 +212,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.getQuery_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -261,7 +255,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
@@ -278,7 +271,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "post_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -295,7 +287,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.post_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -336,7 +327,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 500
@@ -354,7 +344,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -379,7 +368,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -425,7 +413,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
@@ -442,7 +429,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "includeHtml_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -459,7 +445,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeHtml_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -499,7 +484,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 200
@@ -516,7 +500,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "includeMulti_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -533,7 +516,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -550,7 +532,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -567,7 +548,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "javaLoopH2_jsp"
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
@@ -584,7 +564,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.common.javaLoopH2_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -601,7 +580,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.includes.includeMulti_jsp"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"
@@ -641,7 +619,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "peer.port" port
             "span.kind" "server"
             "component" "java-web-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 500
@@ -659,7 +636,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "span.kind" "server"
             "component" "jsp-http-servlet"
-            "span.type" DDSpanTypes.HTTP_SERVER
             "servlet.context" "/$jspWebappContext"
             "jsp.classFQCN" "org.apache.jsp.$jspClassNamePrefix$jspClassName"
             "jsp.compiler" "org.apache.jasper.compiler.JDTCompiler"

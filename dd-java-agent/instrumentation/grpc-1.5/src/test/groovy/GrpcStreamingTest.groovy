@@ -1,6 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import example.GreeterGrpc
 import example.Helloworld
 import io.grpc.BindableService
@@ -93,7 +92,6 @@ class GrpcStreamingTest extends AgentTestRunner {
           errored false
           tags {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT.key" "grpc-server"
             defaultTags(true)
           }
@@ -108,7 +106,6 @@ class GrpcStreamingTest extends AgentTestRunner {
             errored false
             tags {
               "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-              "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
               "$Tags.COMPONENT.key" "grpc-server"
               "message.type" "example.Helloworld\$Response"
               defaultTags()
@@ -127,7 +124,6 @@ class GrpcStreamingTest extends AgentTestRunner {
           tags {
             "status.code" "OK"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT.key" "grpc-client"
             defaultTags()
           }
@@ -142,7 +138,6 @@ class GrpcStreamingTest extends AgentTestRunner {
             errored false
             tags {
               "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-              "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
               "$Tags.COMPONENT.key" "grpc-client"
               "message.type" "example.Helloworld\$Response"
               defaultTags()

@@ -13,7 +13,6 @@ public class SpanTypeDecorator extends AbstractDecorator {
   @Override
   public boolean shouldSetTag(final DDSpanContext context, final String tag, final Object value) {
     context.setSpanType(String.valueOf(value));
-    // TODO: Do we really want a span type tag since it already exists on the span?
-    return true;
+    return false;
   }
 }

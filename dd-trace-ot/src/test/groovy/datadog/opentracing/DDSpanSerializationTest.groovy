@@ -1,5 +1,6 @@
 package datadog.opentracing
 
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.collect.Maps
 import datadog.trace.api.DDTags
@@ -60,7 +61,6 @@ class DDSpanSerializationTest extends Specification {
 
     baggage.put(DDTags.THREAD_NAME, Thread.currentThread().getName())
     baggage.put(DDTags.THREAD_ID, String.valueOf(Thread.currentThread().getId()))
-    baggage.put(DDTags.SPAN_TYPE, context.getSpanType())
 
     DDSpan span = new DDSpan(100L, context)
     if (samplingPriority != PrioritySampling.UNSET) {
@@ -69,8 +69,10 @@ class DDSpanSerializationTest extends Specification {
     span.finish(133L)
     ObjectMapper serializer = new ObjectMapper()
 
+    def actualTree = serializer.readTree(serializer.writeValueAsString(span))
+    def expectedTree = serializer.readTree(serializer.writeValueAsString(expected))
     expect:
-    serializer.readTree(serializer.writeValueAsString(span)) == serializer.readTree(serializer.writeValueAsString(expected))
+    actualTree == expectedTree
 
     where:
     samplingPriority              | _

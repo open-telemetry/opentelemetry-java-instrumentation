@@ -1,6 +1,4 @@
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
 import org.glassfish.jersey.client.JerseyClientBuilder
@@ -65,7 +63,6 @@ class JaxRsClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "$server.address/ping"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             defaultTags()
           }
         }
@@ -116,7 +113,6 @@ class JaxRsClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "http://localhost:$UNUSABLE_PORT/ping"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" UNUSABLE_PORT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             errorTags ProcessingException, String
             defaultTags()
           }

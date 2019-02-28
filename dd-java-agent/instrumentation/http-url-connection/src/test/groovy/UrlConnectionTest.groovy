@@ -1,7 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.http_url_connection.UrlInstrumentation
 import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
@@ -43,12 +42,13 @@ class UrlConnectionTest extends AgentTestRunner {
         span(1) {
           serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName OPERATION_NAME
+          resourceName "GET /"
+          spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored true
           tags {
             "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$url"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.PEER_HOSTNAME.key" "localhost"
@@ -97,13 +97,14 @@ class UrlConnectionTest extends AgentTestRunner {
         span(1) {
           serviceName "unnamed-java-app"
           operationName "file.request"
+          resourceName "$url.path"
+          spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored true
           tags {
             "$Tags.COMPONENT.key" UrlInstrumentation.COMPONENT
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             // FIXME: These tags really make no sense for non-http connections, why do we set them?
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_URL.key" "$url"
             "$Tags.PEER_PORT.key" 80
             errorTags IllegalArgumentException, String

@@ -1,6 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
@@ -51,7 +50,6 @@ class JedisClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "redis-command"
             "$Tags.DB_TYPE.key" "redis"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             defaultTags()
           }
         }
@@ -78,7 +76,6 @@ class JedisClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "redis-command"
             "$Tags.DB_TYPE.key" "redis"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             defaultTags()
           }
         }
@@ -93,7 +90,6 @@ class JedisClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "redis-command"
             "$Tags.DB_TYPE.key" "redis"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             defaultTags()
           }
         }
@@ -120,7 +116,6 @@ class JedisClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "redis-command"
             "$Tags.DB_TYPE.key" "redis"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             defaultTags()
           }
         }
@@ -135,7 +130,6 @@ class JedisClientTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "redis-command"
             "$Tags.DB_TYPE.key" "redis"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             defaultTags()
           }
         }

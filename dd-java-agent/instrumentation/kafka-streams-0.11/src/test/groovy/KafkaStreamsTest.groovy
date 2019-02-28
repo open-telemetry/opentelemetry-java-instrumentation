@@ -128,7 +128,6 @@ class KafkaStreamsTest extends AgentTestRunner {
           tags {
             "component" "java-kafka"
             "span.kind" "producer"
-            "span.type" "queue"
             defaultTags()
           }
         }
@@ -147,7 +146,6 @@ class KafkaStreamsTest extends AgentTestRunner {
           tags {
             "component" "java-kafka"
             "span.kind" "producer"
-            "span.type" "queue"
             defaultTags()
           }
         }
@@ -164,7 +162,6 @@ class KafkaStreamsTest extends AgentTestRunner {
           tags {
             "component" "java-kafka"
             "span.kind" "consumer"
-            "span.type" "queue"
             "partition" { it >= 0 }
             "offset" 0
             defaultTags(true)
@@ -184,7 +181,6 @@ class KafkaStreamsTest extends AgentTestRunner {
           tags {
             "component" "java-kafka"
             "span.kind" "consumer"
-            "span.type" "queue"
             "partition" { it >= 0 }
             "offset" 0
             defaultTags(true)

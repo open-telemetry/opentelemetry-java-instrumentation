@@ -121,9 +121,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       setSamplingPriority(samplingPriority);
     }
 
-    if (spanType != null) {
-      this.tags.put(DDTags.SPAN_TYPE, spanType);
-    }
     if (origin != null) {
       this.tags.put(ORIGIN_KEY, origin);
     }
@@ -181,11 +178,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   public void setSpanType(final String spanType) {
     this.spanType = spanType;
-    if (spanType == null) {
-      tags.remove(DDTags.SPAN_TYPE);
-    } else {
-      tags.put(DDTags.SPAN_TYPE, spanType);
-    }
   }
 
   public void setSamplingPriority(final int newPriority) {

@@ -10,7 +10,6 @@ import akka.stream.javadsl.Source
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import scala.util.Try
 import spock.lang.AutoCleanup
@@ -89,7 +88,6 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "${server.address}/$route"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.PEER_HOSTNAME.key" server.address.host
             "$Tags.PEER_PORT.key" server.address.port
             "$Tags.COMPONENT.key" "akka-http-client"
@@ -137,7 +135,6 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" url.toString()
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.PEER_HOSTNAME.key" server.address.host
             "$Tags.PEER_PORT.key" UNUSABLE_PORT
             "$Tags.COMPONENT.key" "akka-http-client"
@@ -171,7 +168,6 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
           tags {
             defaultTags()
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT.key" "akka-http-client"
             "$Tags.ERROR.key" true
             errorTags(NullPointerException)
@@ -220,7 +216,6 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "${server.address}/$route"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.PEER_HOSTNAME.key" server.address.host
             "$Tags.PEER_PORT.key" server.address.port
             "$Tags.COMPONENT.key" "akka-http-client"
@@ -270,7 +265,6 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" url.toString()
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.PEER_HOSTNAME.key" server.address.host
             "$Tags.PEER_PORT.key" UNUSABLE_PORT
             "$Tags.COMPONENT.key" "akka-http-client"

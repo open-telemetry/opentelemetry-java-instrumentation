@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.MoreExecutors
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
@@ -631,7 +630,6 @@ class SpymemcachedTest extends AgentTestRunner {
 
       tags {
         defaultTags()
-        "${DDTags.SPAN_TYPE}" DDSpanTypes.MEMCACHED
         "${Tags.COMPONENT.key}" COMPONENT_NAME
         "${Tags.SPAN_KIND.key}" Tags.SPAN_KIND_CLIENT
         "${Tags.DB_TYPE.key}" CompletionListener.DB_TYPE

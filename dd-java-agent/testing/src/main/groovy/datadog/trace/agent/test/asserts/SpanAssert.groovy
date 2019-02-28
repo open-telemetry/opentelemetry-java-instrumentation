@@ -8,6 +8,7 @@ import static TagsAssert.assertTags
 
 class SpanAssert {
   private final DDSpan span
+  private final checked = [:]
 
   private SpanAssert(span) {
     this.span = span
@@ -21,6 +22,7 @@ class SpanAssert {
     clone.delegate = asserter
     clone.resolveStrategy = Closure.DELEGATE_FIRST
     clone(asserter)
+    asserter.assertDefaults()
   }
 
   def assertSpanNameContains(String spanName, String... shouldContainArr) {
@@ -31,48 +33,67 @@ class SpanAssert {
 
   def serviceName(String name) {
     assert span.serviceName == name
+    checked.serviceName = true
   }
 
   def operationName(String name) {
     assert span.operationName == name
+    checked.operationName = true
   }
 
   def operationNameContains(String... operationNameParts) {
     assertSpanNameContains(span.operationName, operationNameParts)
+    checked.operationName = true
   }
 
   def resourceName(String name) {
     assert span.resourceName == name
+    checked.resourceName = true
   }
 
   def resourceNameContains(String... resourceNameParts) {
     assertSpanNameContains(span.resourceName, resourceNameParts)
+    checked.resourceName = true
   }
 
   def spanType(String type) {
     assert span.spanType == type
-    assert span.tags["span.type"] == type
+    assert span.tags["span.type"] == null
+    checked.spanType = true
   }
 
   def parent() {
     assert span.parentId == "0"
+    checked.parentId = true
   }
 
   def parentId(String parentId) {
     assert span.parentId == parentId
+    checked.parentId = true
   }
 
   def traceId(String traceId) {
     assert span.traceId == traceId
+    checked.traceId = true
   }
 
   def childOf(DDSpan parent) {
-    assert span.parentId == parent.spanId
-    assert span.traceId == parent.traceId
+    parentId(parent.spanId)
+    traceId(parent.traceId)
   }
 
   def errored(boolean errored) {
     assert span.isError() == errored
+    checked.errored = true
+  }
+
+  void assertDefaults() {
+    if (!checked.spanType) {
+      spanType(null)
+    }
+    if (!checked.errored) {
+      errored(false)
+    }
   }
 
   void tags(@ClosureParams(value = SimpleType, options = ['datadog.trace.agent.test.asserts.TagsAssert'])
