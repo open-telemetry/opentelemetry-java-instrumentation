@@ -14,7 +14,7 @@
     <property name="connection.password"/>
     <property name="dialect">org.hibernate.dialect.H2Dialect</property>
 
-    <property name="connection.pool_size">1</property>
+    <property name="connection.pool_size">3</property>
     <property name="cache.provider_class">org.hibernate.cache.internal.NoCacheProvider</property>
     <property name="show_sql">true</property>
 

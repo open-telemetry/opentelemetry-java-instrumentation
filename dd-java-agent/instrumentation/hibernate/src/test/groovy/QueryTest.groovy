@@ -9,14 +9,23 @@ class QueryTest extends AbstractHibernateTest {
   def "test hibernate query.#queryMethodName single call"() {
     setup:
 
+    // With Transaction
     Session session = sessionFactory.openSession()
     session.beginTransaction()
     queryInteraction(session)
     session.getTransaction().commit()
     session.close()
 
+    // Without Transaction
+    if (!requiresTransaction) {
+      session = sessionFactory.openSession()
+      queryInteraction(session)
+      session.close()
+    }
+
     expect:
-    assertTraces(1) {
+    assertTraces(requiresTransaction ? 1 : 2) {
+      // With Transaction
       trace(0, 4) {
         span(0) {
           serviceName "hibernate"
@@ -62,27 +71,62 @@ class QueryTest extends AbstractHibernateTest {
           childOf span(2)
         }
       }
+      if (!requiresTransaction) {
+        // Without Transaction
+        trace(1, 3) {
+          span(0) {
+            serviceName "hibernate"
+            resourceName "hibernate.session"
+            operationName "hibernate.session"
+            spanType DDSpanTypes.HIBERNATE
+            parent()
+            tags {
+              "$Tags.COMPONENT.key" "java-hibernate"
+              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+              "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+              defaultTags()
+            }
+          }
+          span(1) {
+            serviceName "hibernate"
+            resourceName "$resource"
+            operationName "hibernate.$queryMethodName"
+            spanType DDSpanTypes.HIBERNATE
+            childOf span(0)
+            tags {
+              "$Tags.COMPONENT.key" "java-hibernate"
+              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+              "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
+              defaultTags()
+            }
+          }
+          span(2) {
+            serviceName "h2"
+            childOf span(1)
+          }
+        }
+      }
     }
 
     where:
-    queryMethodName       | isError | resource                         | queryInteraction
-    "query.list"          | false   | "Value"                          | { sess ->
+    queryMethodName       | resource                         | requiresTransaction | queryInteraction
+    "query.list"          | "Value"                          | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.list()
     }
-    "query.executeUpdate" | false   | "update Value set name = 'alyx'" | { sess ->
+    "query.executeUpdate" | "update Value set name = 'alyx'" | true                | { sess ->
       Query q = sess.createQuery("update Value set name = 'alyx'")
       q.executeUpdate()
     }
-    "query.uniqueResult"  | false   | "Value"                          | { sess ->
+    "query.uniqueResult"  | "Value"                          | false               | { sess ->
       Query q = sess.createQuery("from Value where id = 1")
       q.uniqueResult()
     }
-    "iterate"             | false   | "from Value"                     | { sess ->
+    "iterate"             | "from Value"                     | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.iterate()
     }
-    "query.scroll"        | false   | "from Value"                     | { sess ->
+    "query.scroll"        | "from Value"                     | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.scroll()
     }

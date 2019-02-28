@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.hibernate;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
+import static datadog.trace.instrumentation.hibernate.HibernateInstrumentation.INSTRUMENTATION_NAME;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -34,7 +35,7 @@ import org.hibernate.procedure.ProcedureCall;
 public class SessionInstrumentation extends Instrumenter.Default {
 
   public SessionInstrumentation() {
-    super("hibernate");
+    super(INSTRUMENTATION_NAME);
   }
 
   @Override
@@ -93,7 +94,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
                     .or(named("immediateLoad"))
                     .or(named("internalLoad"))),
         SessionMethodAdvice.class.getName());
-    // Handle the generic and non-generic 'get' separately.
+    // Handle the non-generic 'get' separately.
     transformers.put(
         isMethod()
             .and(named("get"))
@@ -106,7 +107,6 @@ public class SessionInstrumentation extends Instrumenter.Default {
     transformers.put(
         isMethod()
             .and(named("beginTransaction").or(named("getTransaction")))
-            .and(takesArguments(0))
             .and(returns(named("org.hibernate.Transaction"))),
         GetTransactionAdvice.class.getName());
 
@@ -139,7 +139,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
         return;
       }
       if (state.getMethodScope() != null) {
-        System.err.println("THIS IS WRONG"); // TODO: proper warning/logging.
+        state.getMethodScope().close();
       }
 
       final Span span = state.getSessionSpan();
