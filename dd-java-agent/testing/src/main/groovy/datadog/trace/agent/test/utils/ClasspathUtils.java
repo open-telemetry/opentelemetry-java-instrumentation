@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -155,5 +156,25 @@ public class ClasspathUtils {
       }
     }
     return new URLClassLoader(urls.build().toArray(new URL[0]), null);
+  }
+
+  // Moved this to a java class because groovy was adding a hard ref to classLoader
+  public static boolean isClassLoaded(final String className, final ClassLoader classLoader) {
+    try {
+      final Method findLoadedClassMethod =
+          ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
+      try {
+        findLoadedClassMethod.setAccessible(true);
+        final Class<?> loadedClass =
+            (Class<?>) findLoadedClassMethod.invoke(classLoader, className);
+        return null != loadedClass && loadedClass.getClassLoader() == classLoader;
+      } catch (final Exception e) {
+        throw new IllegalStateException(e);
+      } finally {
+        findLoadedClassMethod.setAccessible(false);
+      }
+    } catch (final NoSuchMethodException e) {
+      throw new IllegalStateException(e);
+    }
   }
 }

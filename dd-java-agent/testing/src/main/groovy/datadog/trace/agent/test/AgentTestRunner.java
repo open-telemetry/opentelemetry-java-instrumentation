@@ -178,13 +178,13 @@ public abstract class AgentTestRunner extends Specification {
 
   @AfterClass
   public static synchronized void agentCleanup() {
-    assert INSTRUMENTATION_ERROR_COUNT.get() == 0
-        : INSTRUMENTATION_ERROR_COUNT.get() + " Instrumentation errors during test";
-
     if (null != activeTransformer) {
       INSTRUMENTATION.removeTransformer(activeTransformer);
       activeTransformer = null;
     }
+    // Cleanup before assertion.
+    assert INSTRUMENTATION_ERROR_COUNT.get() == 0
+        : INSTRUMENTATION_ERROR_COUNT.get() + " Instrumentation errors during test";
   }
 
   public static void assertTraces(
