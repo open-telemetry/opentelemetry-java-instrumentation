@@ -5,7 +5,6 @@ import datadog.trace.api.Trace
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper
 import io.opentracing.util.GlobalTracer
-import spock.lang.Retry
 import spock.lang.Shared
 
 import java.lang.reflect.InvocationTargetException
@@ -19,7 +18,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
-@Retry
 class ExecutorInstrumentationTest extends AgentTestRunner {
 
   @Shared
@@ -176,10 +174,10 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
             // we do not really have a good way for attributing work to correct parent span
             // if we reuse Callable/Runnable.
             // Solution for now is to never reuse a Callable/Runnable.
-            final JavaAsyncChild child = new JavaAsyncChild(true, true)
+            final JavaAsyncChild child = new JavaAsyncChild(false, true)
             children.add(child)
             try {
-              Future f = m(pool, new JavaAsyncChild())
+              Future f = m(pool, child)
               jobFutures.add(f)
             } catch (InvocationTargetException e) {
               throw e.getCause()
