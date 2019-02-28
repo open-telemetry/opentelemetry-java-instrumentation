@@ -1,0 +1,34 @@
+
+muzzle {
+  pass {
+    group = "org.apache.tomcat"
+    module = 'tomcat-catalina'
+    versions = "[3.0.14,)"
+    assertInverse = true
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compile project(':dd-java-agent:agent-tooling')
+  compile deps.bytebuddy
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+
+  //This seems to be the earliest version that has org.apache.catalina.loader.WebappClassLoaderBase
+  //Older versions would require slightly different instrumentation.
+  testCompile group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '8.0.14'
+
+  latestDepTestCompile group: 'org.apache.tomcat', name: 'tomcat-catalina', version: '+'
+}
