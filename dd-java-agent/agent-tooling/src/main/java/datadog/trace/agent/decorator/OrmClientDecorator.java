@@ -5,9 +5,9 @@ import io.opentracing.Span;
 
 public abstract class OrmClientDecorator extends DatabaseClientDecorator {
 
-  public abstract <ENTITY> String entityName(final ENTITY entity);
+  public abstract String entityName(final Object entity);
 
-  public <ENTITY> Span onOperation(final Span span, final ENTITY entity) {
+  public Span onOperation(final Span span, final Object entity) {
 
     assert span != null;
     if (entity != null) {
