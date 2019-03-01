@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.kafka_streams;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.kafka_streams.KafkaStreamsDecorator.CONSUMER_DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
@@ -11,15 +11,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
-import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -30,9 +25,6 @@ import org.apache.kafka.streams.processor.internals.StampedRecord;
 public class KafkaStreamsProcessorInstrumentation {
   // These two instrumentations work together to apply StreamTask.process.
   // The combination of these are needed because there's not a good instrumentation point.
-
-  public static final String[] HELPER_CLASS_NAMES =
-      new String[] {"datadog.trace.instrumentation.kafka_streams.TextMapExtractAdapter"};
 
   @AutoService(Instrumenter.class)
   public static class StartInstrumentation extends Instrumenter.Default {
@@ -48,7 +40,12 @@ public class KafkaStreamsProcessorInstrumentation {
 
     @Override
     public String[] helperClassNames() {
-      return HELPER_CLASS_NAMES;
+      return new String[] {
+        "datadog.trace.agent.decorator.BaseDecorator",
+        "datadog.trace.agent.decorator.ClientDecorator",
+        packageName + ".KafkaStreamsDecorator",
+        packageName + ".TextMapExtractAdapter"
+      };
     }
 
     @Override
@@ -74,17 +71,13 @@ public class KafkaStreamsProcessorInstrumentation {
                 .extract(
                     Format.Builtin.TEXT_MAP, new TextMapExtractAdapter(record.value.headers()));
 
-        GlobalTracer.get()
-            .buildSpan("kafka.consume")
-            .asChildOf(extractedContext)
-            .withTag(DDTags.SERVICE_NAME, "kafka")
-            .withTag(DDTags.RESOURCE_NAME, "Consume Topic " + record.topic())
-            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_CONSUMER)
-            .withTag(Tags.COMPONENT.getKey(), "java-kafka")
-            .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CONSUMER)
-            .withTag("partition", record.partition())
-            .withTag("offset", record.offset())
-            .startActive(true);
+        final Scope scope =
+            GlobalTracer.get()
+                .buildSpan("kafka.consume")
+                .asChildOf(extractedContext)
+                .startActive(true);
+        CONSUMER_DECORATE.afterStart(scope);
+        CONSUMER_DECORATE.onConsume(scope, record);
       }
     }
   }
@@ -103,7 +96,12 @@ public class KafkaStreamsProcessorInstrumentation {
 
     @Override
     public String[] helperClassNames() {
-      return HELPER_CLASS_NAMES;
+      return new String[] {
+        "datadog.trace.agent.decorator.BaseDecorator",
+        "datadog.trace.agent.decorator.ClientDecorator",
+        packageName + ".KafkaStreamsDecorator",
+        packageName + ".TextMapExtractAdapter"
+      };
     }
 
     @Override
@@ -119,11 +117,8 @@ public class KafkaStreamsProcessorInstrumentation {
       public static void stopSpan(@Advice.Thrown final Throwable throwable) {
         final Scope scope = GlobalTracer.get().scopeManager().active();
         if (scope != null) {
-          if (throwable != null) {
-            final Span span = scope.span();
-            Tags.ERROR.set(span, Boolean.TRUE);
-            span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-          }
+          CONSUMER_DECORATE.onError(scope, throwable);
+          CONSUMER_DECORATE.beforeFinish(scope);
           scope.close();
         }
       }
