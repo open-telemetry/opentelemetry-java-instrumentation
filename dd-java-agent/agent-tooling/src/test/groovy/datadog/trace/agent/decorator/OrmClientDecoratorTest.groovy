@@ -27,6 +27,17 @@ class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
     "name set"        | "not null" | "name"     || true
   }
 
+  def "test onOperation null span"() {
+    setup:
+    decorator = newDecorator({ e -> null })
+
+    when:
+    decorator.onOperation(null, null)
+
+    then:
+    thrown(AssertionError)
+  }
+
 
   def newDecorator(name) {
     return new OrmClientDecorator() {
