@@ -21,10 +21,10 @@ class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
     0 * _
 
     where:
-    testName          | entity     | entityName || isSet
-    "null entity"     | null       | "name"     || false
-    "null entityName" | "not null" | null       || false
-    "name set"        | "not null" | "name"     || true
+    testName          | entity     | entityName | isSet
+    "null entity"     | null       | "name"     | false
+    "null entityName" | "not null" | null       | false
+    "name set"        | "not null" | "name"     | true
   }
 
   def "test onOperation null span"() {
