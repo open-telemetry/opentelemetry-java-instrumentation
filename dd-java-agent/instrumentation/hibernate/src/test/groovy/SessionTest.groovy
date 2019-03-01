@@ -15,7 +15,7 @@ class SessionTest extends AbstractHibernateTest {
   def setupSpec() {
     // Test two different types of Session. Groovy doesn't allow testing the cross-product/combinations of two data
     // tables, so we get this hack instead.
-    sessionBuilders = new HashMap<>();
+    sessionBuilders = new HashMap<>()
     sessionBuilders.put("Session", { return sessionFactory.openSession() })
     sessionBuilders.put("StatelessSession", { return sessionFactory.openStatelessSession() })
   }
@@ -373,7 +373,7 @@ class SessionTest extends AbstractHibernateTest {
     Session session = sessionFactory.openSession()
     session.beginTransaction()
     Query query = queryBuildMethod(session)
-    List result = query.list()
+    query.list()
     session.getTransaction().commit()
     session.close()
 
@@ -457,7 +457,7 @@ class SessionTest extends AbstractHibernateTest {
     session1.close()
     session3.close()
 
-    scope.close();
+    scope.close()
 
 
     expect:

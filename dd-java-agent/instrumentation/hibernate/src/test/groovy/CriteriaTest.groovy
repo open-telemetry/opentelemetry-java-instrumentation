@@ -12,7 +12,7 @@ class CriteriaTest extends AbstractHibernateTest {
     setup:
     Session session = sessionFactory.openSession()
     session.beginTransaction()
-    Criteria criteria = session.createCriteria(Value.class)
+    Criteria criteria = session.createCriteria(Value)
       .add(Restrictions.like("name", "Hello"))
       .addOrder(Order.desc("name"))
     interaction.call(criteria)
