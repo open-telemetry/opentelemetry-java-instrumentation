@@ -59,6 +59,7 @@ class VertxServerTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "http://localhost:$port/test"
             "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             defaultTags(true)
@@ -95,6 +96,7 @@ class VertxServerTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" responseCode.code()
             "$Tags.HTTP_URL.key" "http://localhost:$port/$path"
             "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             if (error) {

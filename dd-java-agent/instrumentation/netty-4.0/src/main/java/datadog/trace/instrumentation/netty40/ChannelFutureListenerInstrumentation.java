@@ -42,7 +42,11 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       packageName + ".AttributeKeys",
+      "datadog.trace.agent.decorator.BaseDecorator",
       // server helpers
+      "datadog.trace.agent.decorator.ServerDecorator",
+      "datadog.trace.agent.decorator.HttpServerDecorator",
+      packageName + ".server.NettyHttpServerDecorator",
       packageName + ".server.NettyRequestExtractAdapter",
       packageName + ".server.HttpServerRequestTracingHandler",
       packageName + ".server.HttpServerResponseTracingHandler",

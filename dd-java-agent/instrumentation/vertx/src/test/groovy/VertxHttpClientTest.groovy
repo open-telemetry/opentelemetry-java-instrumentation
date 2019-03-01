@@ -80,6 +80,7 @@ class VertxHttpClientTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" expectedStatus
             "$Tags.HTTP_URL.key" "${server.address}/$route"
             "$Tags.PEER_HOSTNAME.key" server.address.host
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" server.address.port
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT

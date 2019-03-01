@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.netty40.server;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator.DECORATE;
 
 import datadog.trace.instrumentation.netty40.AttributeKeys;
 import io.netty.channel.ChannelHandlerContext;
@@ -9,7 +9,6 @@ import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
-import java.util.Collections;
 
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
 
@@ -26,14 +25,13 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
     try {
       ctx.write(msg, prm);
     } catch (final Throwable throwable) {
-      Tags.ERROR.set(span, Boolean.TRUE);
-      span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+      DECORATE.onError(span, throwable);
       Tags.HTTP_STATUS.set(span, 500);
       span.finish(); // Finish the span manually since finishSpanOnClose was false
       throw throwable;
     }
-
-    Tags.HTTP_STATUS.set(span, response.getStatus().code());
+    DECORATE.onResponse(span, response);
+    DECORATE.beforeFinish(span);
     span.finish(); // Finish the span manually since finishSpanOnClose was false
   }
 }

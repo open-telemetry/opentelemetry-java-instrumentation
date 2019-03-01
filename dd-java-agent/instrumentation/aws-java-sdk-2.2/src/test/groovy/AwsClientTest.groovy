@@ -193,6 +193,7 @@ class AwsClientTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" expectedUrl
             "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" server.address.port
             "$Tags.HTTP_METHOD.key" "$method"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT

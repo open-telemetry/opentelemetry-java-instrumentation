@@ -8,6 +8,10 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.lang.reflect.Method;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.TreeSet;
@@ -82,6 +86,22 @@ public abstract class BaseDecorator {
     if (throwable != null) {
       Tags.ERROR.set(span, true);
       span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+    }
+    return span;
+  }
+
+  public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
+    assert span != null;
+    if (remoteConnection != null) {
+      span.setTag(Tags.PEER_HOSTNAME.getKey(), remoteConnection.getHostName());
+      span.setTag(Tags.PEER_PORT.getKey(), remoteConnection.getPort());
+
+      final InetAddress remoteAddress = remoteConnection.getAddress();
+      if (remoteAddress instanceof Inet4Address) {
+        Tags.PEER_HOST_IPV4.set(span, remoteAddress.getHostAddress());
+      } else if (remoteAddress instanceof Inet6Address) {
+        Tags.PEER_HOST_IPV6.set(span, remoteAddress.getHostAddress());
+      }
     }
     return span;
   }
