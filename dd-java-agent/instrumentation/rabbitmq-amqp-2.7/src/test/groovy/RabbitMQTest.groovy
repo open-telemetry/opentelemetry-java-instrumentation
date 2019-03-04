@@ -22,6 +22,7 @@ import org.testcontainers.containers.GenericContainer
 import spock.lang.Requires
 import spock.lang.Shared
 
+import java.time.Duration
 import java.util.concurrent.Phaser
 
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
@@ -56,6 +57,7 @@ class RabbitMQTest extends AgentTestRunner {
     if ("true" != System.getenv("CI")) {
       rabbbitMQContainer = new GenericContainer('rabbitmq:latest')
         .withExposedPorts(defaultRabbitMQPort)
+        .withStartupTimeout(Duration.ofSeconds(120))
 //        .withLogConsumer { output ->
 //        print output.utf8String
 //      }
