@@ -25,6 +25,8 @@ public class JMXFetch {
 
   private static final int SLEEP_AFTER_JMXFETCH_EXITS = 5000;
 
+  private static final String UNIX_DOMAIN_SOCKET_PREFIX = "unix://";
+
   public static final void run() {
     run(Config.get());
   }
@@ -100,11 +102,18 @@ public class JMXFetch {
       return "console";
     }
 
-    final String host =
+    String host =
         config.getJmxFetchStatsdHost() == null
             ? config.getAgentHost()
             : config.getJmxFetchStatsdHost();
-    return "statsd:" + host + ":" + config.getJmxFetchStatsdPort();
+    int port = config.getJmxFetchStatsdPort();
+
+    if (host.startsWith(UNIX_DOMAIN_SOCKET_PREFIX)) {
+      host = host.substring(UNIX_DOMAIN_SOCKET_PREFIX.length());
+      // Port equal to zero tells the java dogstatsd client to use UDS
+      port = 0;
+    }
+    return "statsd:" + host + ":" + port;
   }
 
   private static List<String> getInternalMetricFiles() {
