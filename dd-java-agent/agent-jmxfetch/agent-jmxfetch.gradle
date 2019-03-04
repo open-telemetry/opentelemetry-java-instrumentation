@@ -4,7 +4,7 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile 'com.datadoghq:jmxfetch:0.25.0'
+  compile 'com.datadoghq:jmxfetch:0.27.0'
   compile deps.slf4j
   compile project(':dd-trace-api')
 }
