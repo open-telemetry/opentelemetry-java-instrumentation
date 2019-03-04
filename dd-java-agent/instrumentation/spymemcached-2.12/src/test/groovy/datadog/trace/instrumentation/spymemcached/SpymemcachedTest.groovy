@@ -17,6 +17,7 @@ import org.testcontainers.containers.GenericContainer
 import spock.lang.Requires
 import spock.lang.Shared
 
+import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.ExecutorService
@@ -63,6 +64,7 @@ class SpymemcachedTest extends AgentTestRunner {
     if ("true" != System.getenv("CI")) {
       memcachedContainer = new GenericContainer('memcached:latest')
         .withExposedPorts(defaultMemcachedPort)
+        .withStartupTimeout(Duration.ofSeconds(120))
       memcachedContainer.start()
       memcachedAddress = new InetSocketAddress(
         memcachedContainer.containerIpAddress,
