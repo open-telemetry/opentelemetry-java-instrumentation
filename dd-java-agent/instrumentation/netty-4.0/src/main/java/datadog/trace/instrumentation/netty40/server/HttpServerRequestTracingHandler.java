@@ -1,10 +1,7 @@
 package datadog.trace.instrumentation.netty40.server;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator.DECORATE;
 
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
 import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.netty40.AttributeKeys;
 import io.netty.channel.ChannelHandlerContext;
@@ -14,10 +11,8 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.net.InetSocketAddress;
-import java.util.Collections;
 
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
@@ -34,35 +29,27 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
         GlobalTracer.get()
             .extract(Format.Builtin.HTTP_HEADERS, new NettyRequestExtractAdapter(request));
 
-    String url = request.getUri();
-    if (request.headers().contains(HOST)) {
-      url = "http://" + request.headers().get(HOST) + url;
-    }
     final Scope scope =
         GlobalTracer.get()
             .buildSpan("netty.request")
             .asChildOf(extractedContext)
-            .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
-            .withTag(Tags.PEER_HOSTNAME.getKey(), remoteAddress.getHostName())
-            .withTag(Tags.PEER_PORT.getKey(), remoteAddress.getPort())
-            .withTag(Tags.HTTP_METHOD.getKey(), request.getMethod().name())
-            .withTag(Tags.HTTP_URL.getKey(), url)
-            .withTag(Tags.COMPONENT.getKey(), "netty")
-            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER)
             .startActive(false);
+    final Span span = scope.span();
+    DECORATE.afterStart(span);
+    DECORATE.onRequest(span, request);
+    DECORATE.onPeerConnection(span, remoteAddress);
 
     if (scope instanceof TraceScope) {
       ((TraceScope) scope).setAsyncPropagation(true);
     }
 
-    final Span span = scope.span();
     ctx.channel().attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).set(span);
 
     try {
       ctx.fireChannelRead(msg);
     } catch (final Throwable throwable) {
-      Tags.ERROR.set(span, Boolean.TRUE);
-      span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
       span.finish(); // Finish the span manually since finishSpanOnClose was false
       throw throwable;
     } finally {

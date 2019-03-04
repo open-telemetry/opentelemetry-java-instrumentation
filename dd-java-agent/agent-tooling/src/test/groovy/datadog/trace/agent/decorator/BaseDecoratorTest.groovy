@@ -28,6 +28,28 @@ class BaseDecoratorTest extends Specification {
     0 * _
   }
 
+  def "test onPeerConnection"() {
+    when:
+    decorator.onPeerConnection(span, connection)
+
+    then:
+    1 * span.setTag(Tags.PEER_HOSTNAME.key, connection.hostName)
+    1 * span.setTag(Tags.PEER_PORT.key, connection.port)
+    if (connection.address instanceof Inet4Address) {
+      1 * span.setTag(Tags.PEER_HOST_IPV4.key, connection.address.hostAddress)
+    }
+    if (connection.address instanceof Inet6Address) {
+      1 * span.setTag(Tags.PEER_HOST_IPV6.key, connection.address.hostAddress)
+    }
+    0 * _
+
+    where:
+    connection                                      | _
+    new InetSocketAddress("localhost", 888)         | _
+    new InetSocketAddress("ipv6.google.com", 999)   | _
+    new InetSocketAddress("bad.address.local", 999) | _
+  }
+
   def "test onError"() {
     when:
     decorator.onError(span, error)
@@ -60,6 +82,12 @@ class BaseDecoratorTest extends Specification {
 
     when:
     decorator.onError((Span) null, null)
+
+    then:
+    thrown(AssertionError)
+
+    when:
+    decorator.onPeerConnection((Span) null, null)
 
     then:
     thrown(AssertionError)

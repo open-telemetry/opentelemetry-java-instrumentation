@@ -57,7 +57,8 @@ class Netty40ClientTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" Integer
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" server.address.port
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
