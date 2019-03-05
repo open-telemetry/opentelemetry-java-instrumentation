@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.hibernate5;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.hibernate5.HibernateDecorator.DECORATOR;
+import static datadog.trace.instrumentation.hibernate5.SessionMethodUtils.SCOPE_ONLY_METHODS;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -15,12 +16,9 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import io.opentracing.Span;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -150,9 +148,6 @@ public class SessionInstrumentation extends Instrumenter.Default {
   }
 
   public static class SessionMethodAdvice {
-
-    public static final Set<String> SCOPE_ONLY_METHODS =
-        new HashSet<>(Arrays.asList("immediateLoad", "internalLoad"));
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SessionState startMethod(

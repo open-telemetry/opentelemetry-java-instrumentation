@@ -7,8 +7,14 @@ import datadog.trace.bootstrap.ContextStore;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.util.GlobalTracer;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SessionMethodUtils {
+
+  public static final Set<String> SCOPE_ONLY_METHODS =
+      new HashSet<>(Arrays.asList("immediateLoad", "internalLoad"));
 
   // Starts a scope as a child from a Span, where the Span is attached to the given spanKey using
   // the given contextStore.
