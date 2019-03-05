@@ -34,8 +34,8 @@ public class TransactionInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
-      "datadog.trace.instrumentation.hibernate.SessionState",
+      packageName + ".SessionMethodUtils",
+      packageName + ".SessionState",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.DatabaseClientDecorator",
@@ -65,7 +65,7 @@ public class TransactionInstrumentation extends Instrumenter.Default {
           InstrumentationContext.get(Transaction.class, SessionState.class);
 
       return SessionMethodUtils.startScopeFrom(
-          contextStore, transaction, "hibernate.transaction.commit", null);
+          contextStore, transaction, "hibernate.transaction.commit", null, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

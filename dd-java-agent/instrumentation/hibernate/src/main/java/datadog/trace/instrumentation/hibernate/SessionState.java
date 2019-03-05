@@ -9,4 +9,5 @@ import lombok.NonNull;
 public class SessionState {
   @NonNull public Span sessionSpan;
   public Scope methodScope;
+  public boolean hasChildSpan = true;
 }

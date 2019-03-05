@@ -33,8 +33,8 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
-      "datadog.trace.instrumentation.hibernate.SessionState",
+      packageName + ".SessionMethodUtils",
+      packageName + ".SessionState",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.DatabaseClientDecorator",
@@ -65,7 +65,7 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
 
       final SessionState state =
           SessionMethodUtils.startScopeFrom(
-              contextStore, call, "hibernate.procedure." + name, call.getProcedureName());
+              contextStore, call, "hibernate.procedure." + name, call.getProcedureName(), true);
       return state;
     }
 

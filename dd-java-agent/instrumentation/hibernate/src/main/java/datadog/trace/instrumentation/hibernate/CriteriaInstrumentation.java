@@ -34,8 +34,8 @@ public class CriteriaInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
-      "datadog.trace.instrumentation.hibernate.SessionState",
+      packageName + ".SessionMethodUtils",
+      packageName + ".SessionState",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.DatabaseClientDecorator",
@@ -66,7 +66,7 @@ public class CriteriaInstrumentation extends Instrumenter.Default {
           InstrumentationContext.get(Criteria.class, SessionState.class);
 
       return SessionMethodUtils.startScopeFrom(
-          contextStore, criteria, "hibernate.criteria." + name, null);
+          contextStore, criteria, "hibernate.criteria." + name, null, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

@@ -9,7 +9,7 @@ muzzle {
   pass {
     group = "org.hibernate"
     module = "hibernate-core"
-    versions = "[5.0.0.Final, 5.+]"
+    versions = "[5.0.0.Final,)"
   }
 }
 
@@ -44,6 +44,6 @@ dependencies {
   testCompile "com.sun.xml.bind:jaxb-impl:2.2.11"
   testCompile "javax.activation:activation:1.1.1"
 
-  latestDepTestCompile group: 'org.hibernate', name: 'hibernate-core', version: '5.+'
+  latestDepTestCompile group: 'org.hibernate', name: 'hibernate-core', version: '+'
   latestDepTestCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
 }

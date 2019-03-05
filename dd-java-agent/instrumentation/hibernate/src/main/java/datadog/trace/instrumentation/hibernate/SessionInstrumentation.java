@@ -15,9 +15,12 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import io.opentracing.Span;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -27,7 +30,6 @@ import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
-import org.hibernate.engine.HibernateIterator;
 import org.hibernate.procedure.ProcedureCall;
 
 @AutoService(Instrumenter.class)
@@ -45,15 +47,14 @@ public class SessionInstrumentation extends Instrumenter.Default {
     map.put("org.hibernate.Transaction", SessionState.class.getName());
     map.put("org.hibernate.Criteria", SessionState.class.getName());
     map.put("org.hibernate.procedure.ProcedureCall", SessionState.class.getName());
-    map.put("org.hibernate.engine.HibernateIterator", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
-      "datadog.trace.instrumentation.hibernate.SessionState",
+      packageName + ".SessionMethodUtils",
+      packageName + ".SessionState",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.DatabaseClientDecorator",
@@ -150,15 +151,20 @@ public class SessionInstrumentation extends Instrumenter.Default {
 
   public static class SessionMethodAdvice {
 
+    public static final Set<String> SCOPE_ONLY_METHODS =
+        new HashSet<>(Arrays.asList("immediateLoad", "internalLoad"));
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SessionState startMethod(
         @Advice.This final SharedSessionContract session,
         @Advice.Origin("#m") final String name,
         @Advice.Argument(0) final Object entity) {
 
+      final boolean startSpan = !SCOPE_ONLY_METHODS.contains(name);
       final ContextStore<SharedSessionContract, SessionState> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, SessionState.class);
-      return SessionMethodUtils.startScopeFrom(contextStore, session, "hibernate." + name, entity);
+      return SessionMethodUtils.startScopeFrom(
+          contextStore, session, "hibernate." + name, entity, startSpan);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -169,19 +175,6 @@ public class SessionInstrumentation extends Instrumenter.Default {
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned) {
 
       SessionMethodUtils.closeScope(sessionState, throwable, returned);
-
-      // Attach instrumentation to any returned object (of eligible type).
-      if (returned == null) {
-        return;
-      }
-      final ContextStore<SharedSessionContract, SessionState> sessionContextStore =
-          InstrumentationContext.get(SharedSessionContract.class, SessionState.class);
-      if (returned instanceof HibernateIterator) {
-        final ContextStore<HibernateIterator, SessionState> iteratorContextStore =
-            InstrumentationContext.get(HibernateIterator.class, SessionState.class);
-        SessionMethodUtils.attachSpanFromStore(
-            sessionContextStore, session, iteratorContextStore, (HibernateIterator) returned);
-      }
     }
   }
 

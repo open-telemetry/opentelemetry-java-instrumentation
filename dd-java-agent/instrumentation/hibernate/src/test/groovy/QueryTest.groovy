@@ -147,7 +147,7 @@ class QueryTest extends AbstractHibernateTest {
 
     expect:
     assertTraces(1) {
-      trace(0, 6) {
+      trace(0, 4) {
         span(0) {
           serviceName "hibernate"
           resourceName "hibernate.session"
@@ -176,32 +176,6 @@ class QueryTest extends AbstractHibernateTest {
         }
         span(2) {
           serviceName "hibernate"
-          resourceName "hibernate.iterator.next"
-          operationName "hibernate.iterator.next"
-          spanType DDSpanTypes.HIBERNATE
-          childOf span(0)
-          tags {
-            "$Tags.COMPONENT.key" "java-hibernate"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
-            defaultTags()
-          }
-        }
-        span(3) {
-          serviceName "hibernate"
-          resourceName "hibernate.iterator.next"
-          operationName "hibernate.iterator.next"
-          spanType DDSpanTypes.HIBERNATE
-          childOf span(0)
-          tags {
-            "$Tags.COMPONENT.key" "java-hibernate"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
-            defaultTags()
-          }
-        }
-        span(4) {
-          serviceName "hibernate"
           resourceName "from Value"
           operationName "hibernate.iterate"
           spanType DDSpanTypes.HIBERNATE
@@ -213,9 +187,9 @@ class QueryTest extends AbstractHibernateTest {
             defaultTags()
           }
         }
-        span(5) {
+        span(3) {
           serviceName "h2"
-          childOf span(4)
+          childOf span(2)
         }
       }
     }

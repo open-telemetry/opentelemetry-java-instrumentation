@@ -36,8 +36,8 @@ public class QueryInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
-      "datadog.trace.instrumentation.hibernate.SessionState",
+      packageName + ".SessionMethodUtils",
+      packageName + ".SessionState",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.DatabaseClientDecorator",
@@ -74,7 +74,8 @@ public class QueryInstrumentation extends Instrumenter.Default {
 
       // Note: We don't know what the entity is until the method is returning.
       final SessionState state =
-          SessionMethodUtils.startScopeFrom(contextStore, query, "hibernate.query." + name, null);
+          SessionMethodUtils.startScopeFrom(
+              contextStore, query, "hibernate.query." + name, null, true);
       DECORATOR.onStatement(state.getMethodScope().span(), query.getQueryString());
       return state;
     }

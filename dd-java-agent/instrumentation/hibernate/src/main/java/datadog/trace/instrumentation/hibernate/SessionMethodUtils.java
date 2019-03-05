@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.hibernate;
 
 import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 
+import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.bootstrap.ContextStore;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -15,28 +16,33 @@ public class SessionMethodUtils {
       final ContextStore<TARGET, SessionState> contextStore,
       final TARGET spanKey,
       final String operationName,
-      final ENTITY entity) {
+      final ENTITY entity,
+      final boolean createSpan) {
 
     final SessionState sessionState = contextStore.get(spanKey);
 
     if (sessionState == null) {
-      // No state found. We aren't in a Session.
-      return null;
+      return null; // No state found. We aren't in a Session.
     }
 
-    if (sessionState.getMethodScope() != null) {
-      // This method call was re-entrant. Do nothing, since it is being traced by the parent/first
-      // call.
-      return null;
+    final int depth = CallDepthThreadLocalMap.incrementCallDepth(SessionMethodUtils.class);
+    if (depth > 0) {
+      return null; // This method call is being traced already.
     }
 
-    final Scope scope =
-        GlobalTracer.get()
-            .buildSpan(operationName)
-            .asChildOf(sessionState.getSessionSpan())
-            .startActive(true);
-    DECORATOR.afterStart(scope.span());
-    DECORATOR.onOperation(scope.span(), entity);
+    final Scope scope;
+    if (createSpan) {
+      scope =
+          GlobalTracer.get()
+              .buildSpan(operationName)
+              .asChildOf(sessionState.getSessionSpan())
+              .startActive(true);
+      DECORATOR.afterStart(scope.span());
+      DECORATOR.onOperation(scope.span(), entity);
+    } else {
+      scope = GlobalTracer.get().scopeManager().activate(sessionState.getSessionSpan(), false);
+      sessionState.setHasChildSpan(false);
+    }
 
     sessionState.setMethodScope(scope);
     return sessionState;
@@ -52,9 +58,10 @@ public class SessionMethodUtils {
       return;
     }
 
+    CallDepthThreadLocalMap.reset(SessionMethodUtils.class);
     final Scope scope = sessionState.getMethodScope();
     final Span span = scope.span();
-    if (span != null) {
+    if (span != null && sessionState.hasChildSpan) {
       DECORATOR.onError(span, throwable);
       if (entity != null) {
         DECORATOR.onOperation(span, entity);
