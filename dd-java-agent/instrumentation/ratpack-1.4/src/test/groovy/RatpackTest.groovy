@@ -17,7 +17,9 @@ import ratpack.http.HttpUrlBuilder
 import ratpack.http.client.HttpClient
 import ratpack.path.PathBinding
 import ratpack.test.exec.ExecHarness
+import spock.lang.Retry
 
+@Retry
 class RatpackTest extends AgentTestRunner {
   static {
     System.setProperty("dd.integration.ratpack.enabled", "true")

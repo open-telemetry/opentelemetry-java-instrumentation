@@ -30,7 +30,8 @@ public class MongoClientInstrumentationTest {
         new CommandStartedEvent(1, makeConnection(), "databasename", "query", new BsonDocument());
 
     final DDSpan span = new DDTracer().buildSpan("foo").start();
-    DDTracingCommandListener.decorate(span, cmd);
+    MongoClientDecorator.DECORATE.afterStart(span);
+    MongoClientDecorator.DECORATE.onStatement(span, cmd.getCommand());
 
     assertThat(span.context().getSpanType()).isEqualTo("mongodb");
     assertThat(span.context().getResourceName())
@@ -53,7 +54,8 @@ public class MongoClientInstrumentationTest {
           new CommandStartedEvent(1, makeConnection(), "databasename", "query", query);
 
       final DDSpan span = new DDTracer().buildSpan("foo").start();
-      DDTracingCommandListener.decorate(span, cmd);
+      MongoClientDecorator.DECORATE.afterStart(span);
+      MongoClientDecorator.DECORATE.onStatement(span, cmd.getCommand());
 
       assertThat(span.getSpanType()).isEqualTo(DDSpanTypes.MONGO);
       assertThat(span.getTags().get(Tags.DB_STATEMENT.getKey()))
