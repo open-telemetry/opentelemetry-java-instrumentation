@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.hibernate;
+package datadog.trace.instrumentation.hibernate5;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
@@ -6,6 +6,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -15,20 +16,19 @@ import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.hibernate.Criteria;
+import org.hibernate.Transaction;
 
 @AutoService(Instrumenter.class)
-public class CriteriaInstrumentation extends Instrumenter.Default {
+public class TransactionInstrumentation extends Instrumenter.Default {
 
-  public CriteriaInstrumentation() {
+  public TransactionInstrumentation() {
     super("hibernate-core");
   }
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.Criteria", SessionState.class.getName());
+    return singletonMap("org.hibernate.Transaction", SessionState.class.getName());
   }
 
   @Override
@@ -46,36 +46,35 @@ public class CriteriaInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.Criteria")));
+    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.Transaction")));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod().and(named("list").or(named("uniqueResult")).or(named("scroll"))),
-        CriteriaMethodAdvice.class.getName());
+        isMethod().and(named("commit")).and(takesArguments(0)),
+        TransactionCommitAdvice.class.getName());
   }
 
-  public static class CriteriaMethodAdvice {
+  public static class TransactionCommitAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SessionState startMethod(
-        @Advice.This final Criteria criteria, @Advice.Origin("#m") final String name) {
+    public static SessionState startCommit(@Advice.This final Transaction transaction) {
 
-      final ContextStore<Criteria, SessionState> contextStore =
-          InstrumentationContext.get(Criteria.class, SessionState.class);
+      final ContextStore<Transaction, SessionState> contextStore =
+          InstrumentationContext.get(Transaction.class, SessionState.class);
 
       return SessionMethodUtils.startScopeFrom(
-          contextStore, criteria, "hibernate.criteria." + name, null, true);
+          contextStore, transaction, "hibernate.transaction.commit", null, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void endMethod(
+    public static void endCommit(
+        @Advice.This final Transaction transaction,
         @Advice.Enter final SessionState state,
-        @Advice.Thrown final Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object entity) {
+        @Advice.Thrown final Throwable throwable) {
 
-      SessionMethodUtils.closeScope(state, throwable, entity);
+      SessionMethodUtils.closeScope(state, throwable, null);
     }
   }
 }

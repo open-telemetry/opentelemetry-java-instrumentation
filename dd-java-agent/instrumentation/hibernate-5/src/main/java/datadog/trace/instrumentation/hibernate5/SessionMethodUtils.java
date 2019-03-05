@@ -1,6 +1,6 @@
-package datadog.trace.instrumentation.hibernate;
+package datadog.trace.instrumentation.hibernate5;
 
-import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
+import static datadog.trace.instrumentation.hibernate5.HibernateDecorator.DECORATOR;
 
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.bootstrap.ContextStore;

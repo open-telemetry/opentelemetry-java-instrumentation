@@ -1,7 +1,7 @@
-package datadog.trace.instrumentation.hibernate;
+package datadog.trace.instrumentation.hibernate5;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
+import static datadog.trace.instrumentation.hibernate5.HibernateDecorator.DECORATOR;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
