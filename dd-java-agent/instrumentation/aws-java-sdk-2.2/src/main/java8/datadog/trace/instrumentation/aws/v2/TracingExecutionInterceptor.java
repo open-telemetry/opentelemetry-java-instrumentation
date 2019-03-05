@@ -5,8 +5,6 @@ import static datadog.trace.instrumentation.aws.v2.AwsSdkClientDecorator.DECORAT
 import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import io.opentracing.util.GlobalTracer;
 import java.util.Iterator;
@@ -47,16 +45,6 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
     DECORATE.onRequest(span, httpRequest);
     DECORATE.onAttributes(span, executionAttributes);
-  }
-
-  @Override
-  public SdkHttpRequest modifyHttpRequest(
-      final Context.ModifyHttpRequest context, final ExecutionAttributes executionAttributes) {
-    final Tracer tracer = GlobalTracer.get();
-    final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-    final SdkHttpRequest.Builder builder = context.httpRequest().toBuilder();
-    tracer.inject(span.context(), Format.Builtin.HTTP_HEADERS, new InjectAdapter(builder));
-    return builder.build();
   }
 
   @Override
