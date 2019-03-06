@@ -13,10 +13,11 @@ import static datadog.opentracing.propagation.DatadogHttpCodec.OT_BAGGAGE_PREFIX
 import static datadog.opentracing.propagation.DatadogHttpCodec.SAMPLING_PRIORITY_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.TRACE_ID_KEY
+import static datadog.opentracing.propagation.HttpCodec.UINT64_MAX
 
 class DatadogHttpInjectorTest extends Specification {
 
-  DatadogHttpCodec.Injector injector = new DatadogHttpCodec.Injector()
+  HttpCodec.Injector injector = new DatadogHttpCodec.Injector()
 
   def "inject http headers"() {
     setup:
@@ -24,8 +25,8 @@ class DatadogHttpInjectorTest extends Specification {
     def tracer = new DDTracer(writer)
     final DDSpanContext mockedContext =
       new DDSpanContext(
-        traceID,
-        spanID,
+        traceId,
+        spanId,
         "0",
         "fakeService",
         "fakeOperation",
@@ -50,8 +51,8 @@ class DatadogHttpInjectorTest extends Specification {
     injector.inject(mockedContext, new TextMapInjectAdapter(carrier))
 
     then:
-    1 * carrier.put(TRACE_ID_KEY, traceID)
-    1 * carrier.put(SPAN_ID_KEY, spanID)
+    1 * carrier.put(TRACE_ID_KEY, traceId)
+    1 * carrier.put(SPAN_ID_KEY, spanId)
     1 * carrier.put(OT_BAGGAGE_PREFIX + "k1", "v1")
     1 * carrier.put(OT_BAGGAGE_PREFIX + "k2", "v2")
     if (samplingPriority != PrioritySampling.UNSET) {
@@ -63,11 +64,10 @@ class DatadogHttpInjectorTest extends Specification {
     0 * _
 
     where:
-    traceID                | spanID                 | parentID               | samplingPriority              | origin
-    "1"                    | "2"                    | "0"                    | PrioritySampling.UNSET        | null
-    "1"                    | "2"                    | "0"                    | PrioritySampling.SAMPLER_KEEP | "saipan"
-    // Test with numbers exceeding Long.MAX_VALUE (uint64)
-    "9523372036854775807"  | "15815582334751494918" | "15815582334751494914" | PrioritySampling.UNSET        | "saipan"
-    "18446744073709551615" | "18446744073709551614" | "18446744073709551613" | PrioritySampling.SAMPLER_KEEP | null
+    traceId                        | spanId                         | samplingPriority              | origin
+    "1"                            | "2"                            | PrioritySampling.UNSET        | null
+    "1"                            | "2"                            | PrioritySampling.SAMPLER_KEEP | "saipan"
+    UINT64_MAX.toString()          | UINT64_MAX.minus(1).toString() | PrioritySampling.UNSET        | "saipan"
+    UINT64_MAX.minus(1).toString() | UINT64_MAX.toString()          | PrioritySampling.SAMPLER_KEEP | null
   }
 }

@@ -2,8 +2,8 @@ package datadog.opentracing;
 
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
-import datadog.opentracing.propagation.DatadogHttpCodec;
 import datadog.opentracing.propagation.ExtractedContext;
+import datadog.opentracing.propagation.HttpCodec;
 import datadog.opentracing.propagation.TagContext;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
@@ -85,8 +85,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
             }
           });
 
-  private final DatadogHttpCodec.Injector injector;
-  private final DatadogHttpCodec.Extractor extractor;
+  private final HttpCodec.Injector injector;
+  private final HttpCodec.Extractor extractor;
 
   /** By default, report to local agent and collect all traces. */
   public DDTracer() {
@@ -232,8 +232,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       // The JVM is already shutting down.
     }
 
-    injector = new DatadogHttpCodec.Injector();
-    extractor = new DatadogHttpCodec.Extractor(taggedHeaders);
+    // TODO: we have too many constructors, we should move to some sort of builder approach
+    injector = HttpCodec.createInjector(Config.get());
+    extractor = HttpCodec.createExtractor(Config.get(), taggedHeaders);
 
     if (this.writer instanceof DDAgentWriter) {
       final DDApi api = ((DDAgentWriter) this.writer).getApi();

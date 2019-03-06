@@ -3,9 +3,11 @@ package datadog.trace.api;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -53,6 +55,8 @@ public class Config {
   public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
+  public static final String PROPAGATION_STYLE_EXTRACT = "propagation.style.extract";
+  public static final String PROPAGATION_STYLE_INJECT = "propagation.style.inject";
   public static final String JMX_FETCH_ENABLED = "jmxfetch.enabled";
   public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
   public static final String JMX_FETCH_CHECK_PERIOD = "jmxfetch.check-period";
@@ -83,6 +87,12 @@ public class Config {
   private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 0;
+  private static final String DATADOG_HEADER_STYLE = "Datadog";
+  private static final String B3_HEADER_STYLE = "B3";
+  private static final String DEFAULT_PROPAGATION_STYLE_EXTRACT =
+      DATADOG_HEADER_STYLE + " " + B3_HEADER_STYLE;
+  private static final String DEFAULT_PROPAGATION_STYLE_INJECT =
+      DATADOG_HEADER_STYLE + " " + B3_HEADER_STYLE;
   private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
 
   public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
@@ -110,6 +120,10 @@ public class Config {
   @Getter private final boolean httpClientSplitByDomain;
   @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
+  @Getter private final boolean extractDatadogHeaders;
+  @Getter private final boolean extractB3Headers;
+  @Getter private final boolean injectDatadogHeaders;
+  @Getter private final boolean injectB3Headers;
   @Getter private final boolean jmxFetchEnabled;
   @Getter private final List<String> jmxFetchMetricsConfigs;
   @Getter private final Integer jmxFetchCheckPeriod;
@@ -154,6 +168,18 @@ public class Config {
     runtimeContextFieldInjection =
         getBooleanSettingFromEnvironment(
             RUNTIME_CONTEXT_FIELD_INJECTION, DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION);
+
+    final Set<String> propagationExtractStyles =
+        getSpaceSeparatedStringSettingFromEnvironment(
+            PROPAGATION_STYLE_EXTRACT, DEFAULT_PROPAGATION_STYLE_EXTRACT, true);
+    extractDatadogHeaders = propagationExtractStyles.contains(DATADOG_HEADER_STYLE);
+    extractB3Headers = propagationExtractStyles.contains(B3_HEADER_STYLE);
+
+    final Set<String> propagationInjectStyles =
+        getSpaceSeparatedStringSettingFromEnvironment(
+            PROPAGATION_STYLE_INJECT, DEFAULT_PROPAGATION_STYLE_INJECT, true);
+    injectDatadogHeaders = propagationInjectStyles.contains(DATADOG_HEADER_STYLE);
+    injectB3Headers = propagationInjectStyles.contains(B3_HEADER_STYLE);
 
     jmxFetchEnabled =
         getBooleanSettingFromEnvironment(JMX_FETCH_ENABLED, DEFAULT_JMX_FETCH_ENABLED);
@@ -207,6 +233,26 @@ public class Config {
     runtimeContextFieldInjection =
         getPropertyBooleanValue(
             properties, RUNTIME_CONTEXT_FIELD_INJECTION, parent.runtimeContextFieldInjection);
+
+    final Set<String> propagationExtractStyles =
+        getPropertySpaceSeparatedString(properties, PROPAGATION_STYLE_EXTRACT);
+    if (propagationExtractStyles == null) {
+      extractDatadogHeaders = parent.extractDatadogHeaders;
+      extractB3Headers = parent.extractB3Headers;
+    } else {
+      extractDatadogHeaders = propagationExtractStyles.contains(DATADOG_HEADER_STYLE);
+      extractB3Headers = propagationExtractStyles.contains(B3_HEADER_STYLE);
+    }
+
+    final Set<String> propagationInjectStyles =
+        getPropertySpaceSeparatedString(properties, PROPAGATION_STYLE_INJECT);
+    if (propagationInjectStyles == null) {
+      injectDatadogHeaders = parent.injectDatadogHeaders;
+      injectB3Headers = parent.injectB3Headers;
+    } else {
+      injectDatadogHeaders = propagationInjectStyles.contains(DATADOG_HEADER_STYLE);
+      injectB3Headers = propagationInjectStyles.contains(B3_HEADER_STYLE);
+    }
 
     jmxFetchEnabled =
         getPropertyBooleanValue(properties, JMX_FETCH_ENABLED, parent.jmxFetchEnabled);
@@ -330,10 +376,6 @@ public class Config {
 
   /**
    * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Boolean.
-   *
-   * @param name
-   * @param defaultValue
-   * @return
    */
   public static Boolean getBooleanSettingFromEnvironment(
       final String name, final Boolean defaultValue) {
@@ -343,10 +385,6 @@ public class Config {
 
   /**
    * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Float.
-   *
-   * @param name
-   * @param defaultValue
-   * @return
    */
   public static Float getFloatSettingFromEnvironment(final String name, final Float defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
@@ -358,6 +396,9 @@ public class Config {
     }
   }
 
+  /**
+   * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Integer.
+   */
   private static Integer getIntegerSettingFromEnvironment(
       final String name, final Integer defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
@@ -367,6 +408,36 @@ public class Config {
       log.warn("Invalid configuration for " + name, e);
       return defaultValue;
     }
+  }
+
+  /**
+   * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a set of
+   * strings splitting by space.
+   */
+  private static Set<String> getSpaceSeparatedStringSettingFromEnvironment(
+      final String name, final String defaultValue, final boolean emptyResultMeansUseDefault) {
+    final String value = getSettingFromEnvironment(name, defaultValue);
+    Set<String> result = splitStringIntoSetOfNonEmptyStrings(value, "\\s+");
+
+    if (emptyResultMeansUseDefault && result.isEmpty()) {
+      // Treat empty parsing result as no value and use default instead
+      result = splitStringIntoSetOfNonEmptyStrings(defaultValue, "\\s+");
+    }
+
+    return result;
+  }
+
+  private static Set<String> splitStringIntoSetOfNonEmptyStrings(
+      final String str, final String regex) {
+    final Set<String> result = new HashSet<>();
+    // Java returns single value when splitting an empty string. We do not need that value, so
+    // we need to throw it out.
+    for (final String value : str.split(regex)) {
+      if (!value.isEmpty()) {
+        result.add(value);
+      }
+    }
+    return Collections.unmodifiableSet(result);
   }
 
   private static String propertyToEnvironmentName(final String name) {
@@ -395,6 +466,14 @@ public class Config {
       final Properties properties, final String name, final Integer defaultValue) {
     final String value = properties.getProperty(name);
     return value == null || value.trim().isEmpty() ? defaultValue : Integer.valueOf(value);
+  }
+
+  private static Set<String> getPropertySpaceSeparatedString(
+      final Properties properties, final String name) {
+    final String value = properties.getProperty(name);
+    return value == null
+        ? null
+        : Collections.unmodifiableSet(new HashSet<>(Arrays.asList(value.split("\\s+"))));
   }
 
   private static Map<String, String> parseMap(final String str, final String settingName) {
