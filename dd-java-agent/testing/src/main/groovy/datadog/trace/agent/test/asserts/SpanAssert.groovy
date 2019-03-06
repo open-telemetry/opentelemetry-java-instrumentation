@@ -18,11 +18,17 @@ class SpanAssert {
                          @ClosureParams(value = SimpleType, options = ['datadog.trace.agent.test.asserts.SpanAssert'])
                          @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def asserter = new SpanAssert(span)
+    asserter.assertSpan spec
+  }
+
+  void assertSpan(
+    @ClosureParams(value = SimpleType, options = ['datadog.trace.agent.test.asserts.SpanAssert'])
+    @DelegatesTo(value = SpanAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     def clone = (Closure) spec.clone()
-    clone.delegate = asserter
+    clone.delegate = this
     clone.resolveStrategy = Closure.DELEGATE_FIRST
-    clone(asserter)
-    asserter.assertDefaults()
+    clone(this)
+    assertDefaults()
   }
 
   def assertSpanNameContains(String spanName, String... shouldContainArr) {

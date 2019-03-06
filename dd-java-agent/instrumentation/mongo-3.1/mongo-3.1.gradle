@@ -27,9 +27,11 @@ dependencies {
   annotationProcessor deps.autoservice
   implementation deps.autoservice
 
-  testCompile project(':dd-trace-ot')
+  testCompile project(':dd-java-agent:testing')
+  
   testCompile group: 'org.assertj', name: 'assertj-core', version: '2.9.+'
   testCompile group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
+
   testCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.1.0'
   latestDepTestCompile group: 'org.mongodb', name: 'mongo-java-driver', version: '+'
 }
