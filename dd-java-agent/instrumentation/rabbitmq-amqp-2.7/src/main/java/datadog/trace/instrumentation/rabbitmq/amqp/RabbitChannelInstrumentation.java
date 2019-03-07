@@ -1,7 +1,9 @@
 package datadog.trace.instrumentation.rabbitmq.amqp;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.rabbitmq.amqp.RabbitDecorator.CONSUMER_DECORATE;
+import static datadog.trace.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
+import static datadog.trace.instrumentation.rabbitmq.amqp.RabbitDecorator.PRODUCER_DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -22,7 +24,6 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.MessageProperties;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import io.opentracing.Scope;
@@ -33,7 +34,6 @@ import io.opentracing.propagation.Format;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -58,6 +58,11 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      packageName + ".RabbitDecorator",
+      packageName + ".RabbitDecorator$1",
+      packageName + ".RabbitDecorator$2",
       packageName + ".TextMapInjectAdapter",
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracedDelegatingConsumer",
@@ -111,27 +116,23 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       final Connection connection = channel.getConnection();
 
-      return GlobalTracer.get()
-          .buildSpan("amqp.command")
-          .withTag(DDTags.SERVICE_NAME, "rabbitmq")
-          .withTag(DDTags.RESOURCE_NAME, method)
-          .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_CLIENT)
-          .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-          .withTag(Tags.COMPONENT.getKey(), "rabbitmq-amqp")
-          .withTag(Tags.PEER_HOSTNAME.getKey(), connection.getAddress().getHostName())
-          .withTag(Tags.PEER_PORT.getKey(), connection.getPort())
-          .startActive(true);
+      final Scope scope =
+          GlobalTracer.get()
+              .buildSpan("amqp.command")
+              .withTag(DDTags.RESOURCE_NAME, method)
+              .withTag(Tags.PEER_PORT.getKey(), connection.getPort())
+              .startActive(true);
+      DECORATE.afterStart(scope);
+      DECORATE.onPeerConnection(scope.span(), connection.getAddress());
+      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
       if (scope != null) {
-        if (throwable != null) {
-          final Span span = scope.span();
-          Tags.ERROR.set(span, true);
-          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-        }
+        DECORATE.onError(scope, throwable);
+        DECORATE.beforeFinish(scope);
         scope.close();
         CallDepthThreadLocalMap.reset(Channel.class);
       }
@@ -148,16 +149,8 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       final Span span = GlobalTracer.get().activeSpan();
 
       if (span != null) {
-        final String exchangeName = exchange == null || exchange.isEmpty() ? "<default>" : exchange;
-        final String routing =
-            routingKey == null || routingKey.isEmpty()
-                ? "<all>"
-                : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
-        span.setTag(DDTags.RESOURCE_NAME, "basic.publish " + exchangeName + " -> " + routing);
-        span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_PRODUCER);
-        span.setTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_PRODUCER);
-        span.setTag("amqp.exchange", exchange);
-        span.setTag("amqp.routing_key", routingKey);
+        PRODUCER_DECORATE.afterStart(span); // Overwrite tags set by generic decorator.
+        PRODUCER_DECORATE.onPublish(span, exchange, routingKey);
         span.setTag("message.size", body == null ? 0 : body.length);
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.
@@ -243,30 +236,19 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       final Integer length = response == null ? null : response.getBody().length;
 
-      final String queueName = queue.startsWith("amq.gen-") ? "<generated>" : queue;
-
       final Span span =
           GlobalTracer.get()
               .buildSpan("amqp.command")
               .withStartTimestamp(TimeUnit.MILLISECONDS.toMicros(startTime))
               .asChildOf(parentContext)
-              .withTag(DDTags.SERVICE_NAME, "rabbitmq")
-              .withTag(DDTags.RESOURCE_NAME, "basic.get " + queueName)
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_CONSUMER)
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CONSUMER)
-              .withTag(Tags.COMPONENT.getKey(), "rabbitmq-amqp")
-              .withTag("amqp.command", "basic.get")
-              .withTag("amqp.queue", queue)
               .withTag("message.size", length)
-              .withTag(Tags.PEER_HOSTNAME.getKey(), connection.getAddress().getHostName())
               .withTag(Tags.PEER_PORT.getKey(), connection.getPort())
               .start();
-
-      if (throwable != null) {
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-      }
-
+      CONSUMER_DECORATE.afterStart(span);
+      CONSUMER_DECORATE.onGet(span, queue);
+      CONSUMER_DECORATE.onPeerConnection(span, connection.getAddress());
+      CONSUMER_DECORATE.onError(span, throwable);
+      CONSUMER_DECORATE.beforeFinish(span);
       span.finish();
       CallDepthThreadLocalMap.reset(Channel.class);
     }

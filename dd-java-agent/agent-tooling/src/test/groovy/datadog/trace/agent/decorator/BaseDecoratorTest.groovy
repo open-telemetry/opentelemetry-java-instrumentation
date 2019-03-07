@@ -33,7 +33,11 @@ class BaseDecoratorTest extends Specification {
     decorator.onPeerConnection(span, connection)
 
     then:
-    1 * span.setTag(Tags.PEER_HOSTNAME.key, connection.hostName)
+    if (connection.getAddress()) {
+      2 * span.setTag(Tags.PEER_HOSTNAME.key, connection.hostName)
+    } else {
+      1 * span.setTag(Tags.PEER_HOSTNAME.key, connection.hostName)
+    }
     1 * span.setTag(Tags.PEER_PORT.key, connection.port)
     if (connection.address instanceof Inet4Address) {
       1 * span.setTag(Tags.PEER_HOST_IPV4.key, connection.address.hostAddress)

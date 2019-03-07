@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.rabbitmq.amqp;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -9,9 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import com.rabbitmq.client.Command;
-import com.rabbitmq.client.Method;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
 import io.opentracing.Span;
 import io.opentracing.util.GlobalTracer;
@@ -36,8 +35,14 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      // These are only used by muzzleCheck.
-      packageName + ".TextMapExtractAdapter", packageName + ".TracedDelegatingConsumer",
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      packageName + ".RabbitDecorator",
+      packageName + ".RabbitDecorator$1",
+      packageName + ".RabbitDecorator$2",
+      // These are only used by muzzleCheck:
+      packageName + ".TextMapExtractAdapter",
+      packageName + ".TracedDelegatingConsumer",
     };
   }
 
@@ -51,16 +56,9 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
     public static void setResourceNameAddHeaders(@Advice.This final Command command) {
       final Span span = GlobalTracer.get().activeSpan();
 
-      final Method method = command.getMethod();
-      if (span instanceof MutableSpan && method != null) {
+      if (span instanceof MutableSpan && command.getMethod() != null) {
         if (((MutableSpan) span).getOperationName().equals("amqp.command")) {
-          final String name = method.protocolMethodName();
-
-          if (!name.equals("basic.publish")) {
-            // Don't overwrite the name already set.
-            span.setTag(DDTags.RESOURCE_NAME, name);
-          }
-          span.setTag("amqp.command", name);
+          DECORATE.onCommand(span, command);
         }
       }
     }
