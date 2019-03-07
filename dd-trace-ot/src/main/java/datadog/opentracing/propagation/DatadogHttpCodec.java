@@ -7,9 +7,6 @@ import datadog.opentracing.DDSpanContext;
 import datadog.trace.api.sampling.PrioritySampling;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMap;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,19 +41,9 @@ class DatadogHttpCodec {
       }
 
       for (final Map.Entry<String, String> entry : context.baggageItems()) {
-        carrier.put(OT_BAGGAGE_PREFIX + entry.getKey(), encode(entry.getValue()));
+        carrier.put(OT_BAGGAGE_PREFIX + entry.getKey(), HttpCodec.encode(entry.getValue()));
       }
       log.debug("{} - Datadog parent context injected", context.getTraceId());
-    }
-
-    private String encode(final String value) {
-      String encoded = value;
-      try {
-        encoded = URLEncoder.encode(value, "UTF-8");
-      } catch (final UnsupportedEncodingException e) {
-        log.info("Failed to encode value - {}", value);
-      }
-      return encoded;
     }
   }
 
@@ -100,14 +87,14 @@ class DatadogHttpCodec {
             if (baggage.isEmpty()) {
               baggage = new HashMap<>();
             }
-            baggage.put(key.replace(OT_BAGGAGE_PREFIX, ""), decode(value));
+            baggage.put(key.replace(OT_BAGGAGE_PREFIX, ""), HttpCodec.decode(value));
           }
 
           if (taggedHeaders.containsKey(key)) {
             if (tags.isEmpty()) {
               tags = new HashMap<>();
             }
-            tags.put(taggedHeaders.get(key), decode(value));
+            tags.put(taggedHeaders.get(key), HttpCodec.decode(value));
           }
         }
 
@@ -127,16 +114,6 @@ class DatadogHttpCodec {
       }
 
       return null;
-    }
-
-    private String decode(final String value) {
-      String decoded = value;
-      try {
-        decoded = URLDecoder.decode(value, "UTF-8");
-      } catch (final UnsupportedEncodingException e) {
-        log.info("Failed to decode value - {}", value);
-      }
-      return decoded;
     }
   }
 }

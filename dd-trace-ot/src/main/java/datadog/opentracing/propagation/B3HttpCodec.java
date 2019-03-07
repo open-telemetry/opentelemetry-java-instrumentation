@@ -9,10 +9,17 @@ import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMap;
 import java.math.BigInteger;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
-/** A codec designed for HTTP transport via headers using B3 headers */
+/**
+ * A codec designed for HTTP transport via headers using B3 headers
+ *
+ * <p>TODO: there is fair amount of code duplication between DatadogHttpCodec and this class,
+ * especiall in part where TagContext is handled. We may want to refactor that and avoid special
+ * handling of TagContext in other places (i.e. CompoundExtractor).
+ */
 @Slf4j
 class B3HttpCodec {
 
@@ -31,7 +38,6 @@ class B3HttpCodec {
 
     @Override
     public void inject(final DDSpanContext context, final TextMap carrier) {
-
       try {
         // TODO: should we better store ids as BigInteger in context to avoid parsing it twice.
         final BigInteger traceId = new BigInteger(context.getTraceId());
@@ -58,9 +64,19 @@ class B3HttpCodec {
 
   public static class Extractor implements HttpCodec.Extractor {
 
+    private final Map<String, String> taggedHeaders;
+
+    public Extractor(final Map<String, String> taggedHeaders) {
+      this.taggedHeaders = new HashMap<>();
+      for (final Map.Entry<String, String> mapping : taggedHeaders.entrySet()) {
+        this.taggedHeaders.put(mapping.getKey().trim().toLowerCase(), mapping.getValue());
+      }
+    }
+
     @Override
     public SpanContext extract(final TextMap carrier) {
       try {
+        Map<String, String> tags = Collections.emptyMap();
         String traceId = ZERO;
         String spanId = ZERO;
         int samplingPriority = PrioritySampling.UNSET;
@@ -80,6 +96,13 @@ class B3HttpCodec {
           } else if (SAMPLING_PRIORITY_KEY.equalsIgnoreCase(key)) {
             samplingPriority = convertSamplingPriority(value);
           }
+
+          if (taggedHeaders.containsKey(key)) {
+            if (tags.isEmpty()) {
+              tags = new HashMap<>();
+            }
+            tags.put(taggedHeaders.get(key), HttpCodec.decode(value));
+          }
         }
 
         if (!ZERO.equals(traceId)) {
@@ -90,11 +113,14 @@ class B3HttpCodec {
                   samplingPriority,
                   null,
                   Collections.<String, String>emptyMap(),
-                  Collections.<String, String>emptyMap());
+                  tags);
           context.lockSamplingPriority();
 
           log.debug("{} - Parent context extracted", context.getTraceId());
           return context;
+        } else if (!tags.isEmpty()) {
+          log.debug("Tags context extracted");
+          return new TagContext(null, tags);
         }
       } catch (final RuntimeException e) {
         log.debug("Exception when extracting context", e);

@@ -12,13 +12,14 @@ import static datadog.opentracing.propagation.HttpCodec.UINT64_MAX
 
 class B3HttpExtractorTest extends Specification {
 
-  HttpCodec.Extractor extractor = new B3HttpCodec.Extractor()
+  HttpCodec.Extractor extractor = new B3HttpCodec.Extractor(["SOME_HEADER": "some-tag"])
 
   def "extract http headers"() {
     setup:
     final Map<String, String> actual = [
       (TRACE_ID_KEY.toUpperCase()): traceId.toString(16).toLowerCase(),
       (SPAN_ID_KEY.toUpperCase()) : spanId.toString(16).toLowerCase(),
+      SOME_HEADER                 : "my-interesting-info",
     ]
 
     if (samplingPriority != null) {
@@ -32,7 +33,7 @@ class B3HttpExtractorTest extends Specification {
     context.traceId == traceId.toString()
     context.spanId == spanId.toString()
     context.baggage == [:]
-    context.tags == [:]
+    context.tags == ["some-tag": "my-interesting-info"]
     context.samplingPriority == expectedSamplingPriority
     context.origin == null
 
@@ -43,6 +44,19 @@ class B3HttpExtractorTest extends Specification {
     3G                  | 4G                  | 0                | PrioritySampling.SAMPLER_DROP
     UINT64_MAX          | UINT64_MAX.minus(1) | 0                | PrioritySampling.SAMPLER_DROP
     UINT64_MAX.minus(1) | UINT64_MAX          | 1                | PrioritySampling.SAMPLER_KEEP
+  }
+
+  def "extract header tags with no propagation"() {
+    when:
+    TagContext context = extractor.extract(new TextMapExtractAdapter(headers))
+
+    then:
+    !(context instanceof ExtractedContext)
+    context.getTags() == ["some-tag": "my-interesting-info"]
+
+    where:
+    headers                              | _
+    [SOME_HEADER: "my-interesting-info"] | _
   }
 
   def "extract empty headers returns null"() {

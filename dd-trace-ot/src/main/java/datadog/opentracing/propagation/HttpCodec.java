@@ -4,7 +4,10 @@ import datadog.opentracing.DDSpanContext;
 import datadog.trace.api.Config;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMap;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +55,7 @@ public class HttpCodec {
         continue;
       }
       if (style == Config.PropagationStyle.B3) {
-        extractors.add(new B3HttpCodec.Extractor());
+        extractors.add(new B3HttpCodec.Extractor(taggedHeaders));
         continue;
       }
       log.debug("No implementation found to extract propagation style: {}", style);
@@ -86,13 +89,15 @@ public class HttpCodec {
 
     @Override
     public SpanContext extract(final TextMap carrier) {
+      SpanContext context = null;
       for (final Extractor extractor : extractors) {
-        final SpanContext context = extractor.extract(carrier);
-        if (context != null) {
+        context = extractor.extract(carrier);
+        // Use incomplete TagContext only as last resort
+        if (context != null && (context instanceof ExtractedContext)) {
           return context;
         }
       }
-      return null;
+      return context;
     }
   }
 
@@ -115,5 +120,27 @@ public class HttpCodec {
     }
     // We use decimals
     return parsedValue.toString();
+  }
+
+  /** URL encode value */
+  static String encode(final String value) {
+    String encoded = value;
+    try {
+      encoded = URLEncoder.encode(value, "UTF-8");
+    } catch (final UnsupportedEncodingException e) {
+      log.info("Failed to encode value - {}", value);
+    }
+    return encoded;
+  }
+
+  /** URL decode value */
+  static String decode(final String value) {
+    String decoded = value;
+    try {
+      decoded = URLDecoder.decode(value, "UTF-8");
+    } catch (final UnsupportedEncodingException e) {
+      log.info("Failed to decode value - {}", value);
+    }
+    return decoded;
   }
 }
