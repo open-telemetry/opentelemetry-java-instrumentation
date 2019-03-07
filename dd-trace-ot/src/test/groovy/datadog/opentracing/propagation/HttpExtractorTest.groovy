@@ -7,6 +7,8 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 import static datadog.opentracing.propagation.HttpCodec.UINT64_MAX
+import static datadog.trace.api.Config.PropagationStyle.B3
+import static datadog.trace.api.Config.PropagationStyle.DATADOG
 
 class HttpExtractorTest extends Specification {
 
@@ -16,8 +18,7 @@ class HttpExtractorTest extends Specification {
   def "extract http headers"() {
     setup:
     Config config = Mock(Config) {
-      isExtractDatadogHeaders() >> datadogEnabled
-      isExtractB3Headers() >> b3Enabled
+      getPropagationStylesToExtract() >> styles
     }
     HttpCodec.Extractor extractor = HttpCodec.createExtractor(config, ["SOME_HEADER": "some-tag"])
 
@@ -59,22 +60,23 @@ class HttpExtractorTest extends Specification {
     }
 
     where:
-    datadogEnabled | b3Enabled | datadogTraceId               | datadogSpanId                | b3TraceId                    | b3SpanId                     | expectedTraceId | expectedSpanId | putDatadogFields | expectDatadogFields | tagContext
-    true           | true      | "1"                          | "2"                          | "a"                          | "b"                          | "1"             | "2"            | true             | true                | false
-    true           | true      | null                         | null                         | "a"                          | "b"                          | "a"             | "b"            | false            | false               | true
-    true           | true      | null                         | null                         | "a"                          | "b"                          | null            | null           | true             | true                | true
-    true           | false     | "1"                          | "2"                          | "a"                          | "b"                          | "1"             | "2"            | true             | true                | false
-    false          | true      | "1"                          | "2"                          | "a"                          | "b"                          | "10"            | "11"           | false            | false               | false
-    false          | false     | "1"                          | "2"                          | "a"                          | "b"                          | null            | null           | false            | false               | false
-    true           | true      | "abc"                        | "2"                          | "a"                          | "b"                          | "10"            | "11"           | false            | false               | false
-    true           | false     | "abc"                        | "2"                          | "a"                          | "b"                          | null            | null           | false            | false               | false
+    styles        | datadogTraceId               | datadogSpanId                | b3TraceId                    | b3SpanId                     | expectedTraceId | expectedSpanId | putDatadogFields | expectDatadogFields | tagContext
+    [DATADOG, B3] | "1"                          | "2"                          | "a"                          | "b"                          | "1"             | "2"            | true             | true                | false
+    [DATADOG, B3] | null                         | null                         | "a"                          | "b"                          | "a"             | "b"            | false            | false               | true
+    [DATADOG, B3] | null                         | null                         | "a"                          | "b"                          | null            | null           | true             | true                | true
+    [DATADOG]     | "1"                          | "2"                          | "a"                          | "b"                          | "1"             | "2"            | true             | true                | false
+    [B3]          | "1"                          | "2"                          | "a"                          | "b"                          | "10"            | "11"           | false            | false               | false
+    [B3, DATADOG] | "1"                          | "2"                          | "a"                          | "b"                          | "10"            | "11"           | false            | false               | false
+    []            | "1"                          | "2"                          | "a"                          | "b"                          | null            | null           | false            | false               | false
+    [DATADOG, B3] | "abc"                        | "2"                          | "a"                          | "b"                          | "10"            | "11"           | false            | false               | false
+    [DATADOG]     | "abc"                        | "2"                          | "a"                          | "b"                          | null            | null           | false            | false               | false
 
-    true           | true      | outOfRangeTraceId.toString() | "2"                          | "a"                          | "b"                          | "10"            | "11"           | false            | false               | false
-    true           | true      | "1"                          | outOfRangeTraceId.toString() | "a"                          | "b"                          | "10"            | "11"           | false            | false               | false
-    true           | false     | outOfRangeTraceId.toString() | "2"                          | "a"                          | "b"                          | null            | null           | false            | false               | false
-    true           | false     | "1"                          | outOfRangeTraceId.toString() | "a"                          | "b"                          | null            | null           | false            | false               | false
-    true           | true      | "1"                          | "2"                          | outOfRangeTraceId.toString() | "b"                          | "1"             | "2"            | true             | false               | false
-    true           | true      | "1"                          | "2"                          | "a"                          | outOfRangeTraceId.toString() | "1"             | "2"            | true             | false               | false
+    [DATADOG, B3] | outOfRangeTraceId.toString() | "2"                          | "a"                          | "b"                          | "10"            | "11"           | false            | false               | false
+    [DATADOG, B3] | "1"                          | outOfRangeTraceId.toString() | "a"                          | "b"                          | "10"            | "11"           | false            | false               | false
+    [DATADOG]     | outOfRangeTraceId.toString() | "2"                          | "a"                          | "b"                          | null            | null           | false            | false               | false
+    [DATADOG]     | "1"                          | outOfRangeTraceId.toString() | "a"                          | "b"                          | null            | null           | false            | false               | false
+    [DATADOG, B3] | "1"                          | "2"                          | outOfRangeTraceId.toString() | "b"                          | "1"             | "2"            | true             | false               | false
+    [DATADOG, B3] | "1"                          | "2"                          | "a"                          | outOfRangeTraceId.toString() | "1"             | "2"            | true             | false               | false
   }
 
 }

@@ -29,11 +29,16 @@ public class HttpCodec {
 
   public static Injector createInjector(final Config config) {
     final List<Injector> injectors = new ArrayList<>();
-    if (config.isInjectDatadogHeaders()) {
-      injectors.add(new DatadogHttpCodec.Injector());
-    }
-    if (config.isInjectB3Headers()) {
-      injectors.add(new B3HttpCodec.Injector());
+    for (final Config.PropagationStyle style : config.getPropagationStylesToInject()) {
+      if (style == Config.PropagationStyle.DATADOG) {
+        injectors.add(new DatadogHttpCodec.Injector());
+        continue;
+      }
+      if (style == Config.PropagationStyle.B3) {
+        injectors.add(new B3HttpCodec.Injector());
+        continue;
+      }
+      log.debug("No implementation found to inject propagation style: {}", style);
     }
     return new CompoundInjector(injectors);
   }
@@ -41,11 +46,16 @@ public class HttpCodec {
   public static Extractor createExtractor(
       final Config config, final Map<String, String> taggedHeaders) {
     final List<Extractor> extractors = new ArrayList<>();
-    if (config.isExtractDatadogHeaders()) {
-      extractors.add(new DatadogHttpCodec.Extractor(taggedHeaders));
-    }
-    if (config.isExtractB3Headers()) {
-      extractors.add(new B3HttpCodec.Extractor());
+    for (final Config.PropagationStyle style : config.getPropagationStylesToExtract()) {
+      if (style == Config.PropagationStyle.DATADOG) {
+        extractors.add(new DatadogHttpCodec.Extractor(taggedHeaders));
+        continue;
+      }
+      if (style == Config.PropagationStyle.B3) {
+        extractors.add(new B3HttpCodec.Extractor());
+        continue;
+      }
+      log.debug("No implementation found to extract propagation style: {}", style);
     }
     return new CompoundExtractor(extractors);
   }

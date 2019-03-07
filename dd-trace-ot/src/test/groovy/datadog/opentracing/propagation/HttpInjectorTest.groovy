@@ -9,13 +9,15 @@ import datadog.trace.common.writer.ListWriter
 import io.opentracing.propagation.TextMapInjectAdapter
 import spock.lang.Specification
 
+import static datadog.trace.api.Config.PropagationStyle.B3
+import static datadog.trace.api.Config.PropagationStyle.DATADOG
+
 class HttpInjectorTest extends Specification {
 
   def "inject http headers"() {
     setup:
     Config config = Mock(Config) {
-      isInjectDatadogHeaders() >> datadogEnabled
-      isInjectB3Headers() >> b3Enabled
+      getPropagationStylesToInject() >> styles
     }
     HttpCodec.Injector injector = HttpCodec.createInjector(config)
 
@@ -52,7 +54,7 @@ class HttpInjectorTest extends Specification {
     injector.inject(mockedContext, new TextMapInjectAdapter(carrier))
 
     then:
-    if (datadogEnabled) {
+    if (styles.contains(DATADOG)) {
       1 * carrier.put(DatadogHttpCodec.TRACE_ID_KEY, traceId)
       1 * carrier.put(DatadogHttpCodec.SPAN_ID_KEY, spanId)
       1 * carrier.put(DatadogHttpCodec.OT_BAGGAGE_PREFIX + "k1", "v1")
@@ -64,7 +66,7 @@ class HttpInjectorTest extends Specification {
         1 * carrier.put(DatadogHttpCodec.ORIGIN_KEY, origin)
       }
     }
-    if (b3Enabled) {
+    if (styles.contains(B3)) {
       1 * carrier.put(B3HttpCodec.TRACE_ID_KEY, traceId)
       1 * carrier.put(B3HttpCodec.SPAN_ID_KEY, spanId)
       if (samplingPriority != PrioritySampling.UNSET) {
@@ -74,12 +76,13 @@ class HttpInjectorTest extends Specification {
     0 * _
 
     where:
-    datadogEnabled | b3Enabled | samplingPriority              | origin
-    true           | true      | PrioritySampling.UNSET        | null
-    true           | true      | PrioritySampling.SAMPLER_KEEP | "saipan"
-    true           | false     | PrioritySampling.UNSET        | null
-    true           | false     | PrioritySampling.SAMPLER_KEEP | "saipan"
-    false          | true      | PrioritySampling.UNSET        | null
-    false          | true      | PrioritySampling.SAMPLER_KEEP | "saipan"
+    styles        | samplingPriority              | origin
+    [DATADOG, B3] | PrioritySampling.UNSET        | null
+    [DATADOG, B3] | PrioritySampling.SAMPLER_KEEP | "saipan"
+    [DATADOG]     | PrioritySampling.UNSET        | null
+    [DATADOG]     | PrioritySampling.SAMPLER_KEEP | "saipan"
+    [B3]          | PrioritySampling.UNSET        | null
+    [B3]          | PrioritySampling.SAMPLER_KEEP | "saipan"
+    [B3, DATADOG] | PrioritySampling.SAMPLER_KEEP | "saipan"
   }
 }
