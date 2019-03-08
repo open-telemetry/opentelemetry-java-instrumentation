@@ -7,6 +7,7 @@ import spock.lang.Specification
 
 import static datadog.trace.api.Config.AGENT_HOST
 import static datadog.trace.api.Config.AGENT_PORT_LEGACY
+import static datadog.trace.api.Config.AGENT_UNIX_DOMAIN_SOCKET
 import static datadog.trace.api.Config.DEFAULT_JMX_FETCH_STATSD_PORT
 import static datadog.trace.api.Config.GLOBAL_TAGS
 import static datadog.trace.api.Config.HEADER_TAGS
@@ -57,6 +58,7 @@ class ConfigTest extends Specification {
     config.writerType == "DDAgentWriter"
     config.agentHost == "localhost"
     config.agentPort == 8126
+    config.agentUnixDomainSocket == null
     config.prioritySamplingEnabled == true
     config.traceResolverEnabled == true
     config.serviceMapping == [:]
@@ -81,6 +83,7 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
     System.setProperty(PREFIX + AGENT_HOST, "somehost")
     System.setProperty(PREFIX + TRACE_AGENT_PORT, "123")
+    System.setProperty(PREFIX + AGENT_UNIX_DOMAIN_SOCKET, "somepath")
     System.setProperty(PREFIX + AGENT_PORT_LEGACY, "456")
     System.setProperty(PREFIX + PRIORITY_SAMPLING, "false")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, "false")
@@ -107,6 +110,7 @@ class ConfigTest extends Specification {
     config.writerType == "LoggingWriter"
     config.agentHost == "somehost"
     config.agentPort == 123
+    config.agentUnixDomainSocket == "somepath"
     config.prioritySamplingEnabled == false
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
@@ -239,6 +243,7 @@ class ConfigTest extends Specification {
     properties.setProperty(WRITER_TYPE, "LoggingWriter")
     properties.setProperty(AGENT_HOST, "somehost")
     properties.setProperty(TRACE_AGENT_PORT, "123")
+    properties.setProperty(AGENT_UNIX_DOMAIN_SOCKET, "somepath")
     properties.setProperty(PRIORITY_SAMPLING, "false")
     properties.setProperty(TRACE_RESOLVER_ENABLED, "false")
     properties.setProperty(SERVICE_MAPPING, "a:1")
@@ -262,6 +267,7 @@ class ConfigTest extends Specification {
     config.writerType == "LoggingWriter"
     config.agentHost == "somehost"
     config.agentPort == 123
+    config.agentUnixDomainSocket == "somepath"
     config.prioritySamplingEnabled == false
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]

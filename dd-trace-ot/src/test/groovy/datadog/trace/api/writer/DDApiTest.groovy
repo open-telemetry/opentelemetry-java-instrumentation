@@ -26,10 +26,10 @@ class DDApiTest extends Specification {
         }
       }
     }
-    def client = new DDApi("localhost", agent.address.port)
+    def client = new DDApi("localhost", agent.address.port, null)
 
     expect:
-    client.tracesEndpoint == "http://localhost:${agent.address.port}/v0.4/traces"
+    client.tracesUrl.toString() == "http://localhost:${agent.address.port}/v0.4/traces"
     client.sendTraces([])
 
     cleanup:
@@ -45,10 +45,10 @@ class DDApiTest extends Specification {
         }
       }
     }
-    def client = new DDApi("localhost", agent.address.port)
+    def client = new DDApi("localhost", agent.address.port, null)
 
     expect:
-    client.tracesEndpoint == "http://localhost:${agent.address.port}/v0.3/traces"
+    client.tracesUrl.toString() == "http://localhost:${agent.address.port}/v0.3/traces"
     !client.sendTraces([])
 
     cleanup:
@@ -64,10 +64,10 @@ class DDApiTest extends Specification {
         }
       }
     }
-    def client = new DDApi("localhost", agent.address.port)
+    def client = new DDApi("localhost", agent.address.port, null)
 
     expect:
-    client.tracesEndpoint == "http://localhost:${agent.address.port}/v0.4/traces"
+    client.tracesUrl.toString() == "http://localhost:${agent.address.port}/v0.4/traces"
     client.getTraceCounter().addAndGet(traces.size()) >= 0
     client.sendTraces(traces)
     agent.lastRequest.contentType == "application/msgpack"
@@ -128,7 +128,7 @@ class DDApiTest extends Specification {
         }
       }
     }
-    def client = new DDApi("localhost", agent.address.port)
+    def client = new DDApi("localhost", agent.address.port, null)
     client.addResponseListener(responseListener)
     def traceCounter = client.getTraceCounter()
     traceCounter.set(3)
@@ -157,10 +157,10 @@ class DDApiTest extends Specification {
         }
       }
     }
-    def client = new DDApi("localhost", v3Agent.address.port)
+    def client = new DDApi("localhost", v3Agent.address.port, null)
 
     expect:
-    client.tracesEndpoint == "http://localhost:${v3Agent.address.port}/v0.3/traces"
+    client.tracesUrl.toString() == "http://localhost:${v3Agent.address.port}/v0.3/traces"
     client.sendTraces([])
 
     cleanup:
@@ -184,10 +184,10 @@ class DDApiTest extends Specification {
       }
     }
     def port = badPort ? 999 : agent.address.port
-    def client = new DDApi("localhost", port)
+    def client = new DDApi("localhost", port, null)
 
     expect:
-    client.tracesEndpoint == "http://localhost:${port}/$endpointVersion/traces"
+    client.tracesUrl.toString() == "http://localhost:${port}/$endpointVersion/traces"
 
     cleanup:
     agent.close()

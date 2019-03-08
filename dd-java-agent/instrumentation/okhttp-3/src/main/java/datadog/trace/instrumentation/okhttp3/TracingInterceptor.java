@@ -15,6 +15,10 @@ public class TracingInterceptor implements Interceptor {
 
   @Override
   public Response intercept(final Chain chain) throws IOException {
+    if (chain.request().header("Datadog-Meta-Lang") != null) {
+      return chain.proceed(chain.request());
+    }
+
     Response response = null;
 
     // application interceptor?

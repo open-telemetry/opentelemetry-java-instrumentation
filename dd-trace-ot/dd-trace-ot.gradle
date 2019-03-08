@@ -12,7 +12,10 @@ minimumInstructionCoverage = 0.6
 excludedClassesConverage += [
   'datadog.trace.common.writer.ListWriter',
   'datadog.trace.common.writer.LoggingWriter',
-  'datadog.trace.common.sampling.PrioritySampling'
+  'datadog.trace.common.sampling.PrioritySampling',
+  // This code is copied from okHttp samples and we have integration tests to verify that it works.
+  'datadog.trace.common.writer.unixdomainsockets.TunnelingUnixSocket',
+  'datadog.trace.common.writer.unixdomainsockets.UnixDomainSocketFactory'
 ]
 
 apply plugin: 'org.unbroken-dome.test-sets'
@@ -32,6 +35,8 @@ dependencies {
   compile deps.jackson
   compile deps.slf4j
   compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.16'
+  compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.11.0' // Last version to support Java7
+  compile group: 'com.github.jnr', name: 'jnr-unixsocket', version: '0.22'
 
   // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
   testAnnotationProcessor deps.autoservice
@@ -43,7 +48,9 @@ dependencies {
   testCompile group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6' // Last version to support Java7
   testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
-  testCompile 'com.github.stefanbirkner:system-rules:1.17.1'
+  testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.17.1'
+
+  traceAgentTestCompile deps.testcontainers
 }
 
 jmh {

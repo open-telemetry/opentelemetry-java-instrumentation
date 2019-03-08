@@ -98,7 +98,7 @@ jobs:
   test_ibm8:
     <<: *default_test_job
     environment:
-      - TEST_TASK: testJavaIBM8
+    - TEST_TASK: testJavaIBM8
 
   test_9:
     <<: *default_test_job
@@ -246,7 +246,7 @@ workflows:
             only: /.*/
     - test_ibm8:
         requires:
-          - build
+        - build
         filters:
           tags:
             only: /.*/

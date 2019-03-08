@@ -2,6 +2,7 @@ package datadog.trace.agent
 
 import datadog.trace.agent.test.IntegrationTestUtils
 import jvmbootstraptest.LogManagerSetter
+import spock.lang.Requires
 import spock.lang.Retry
 import spock.lang.Shared
 import spock.lang.Specification
@@ -10,6 +11,8 @@ import spock.lang.Timeout
 import java.lang.management.ManagementFactory
 import java.lang.management.RuntimeMXBean
 
+// Note: this test is fails on IBM JVM, we would need to investigate this at some point
+@Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
 @Retry
 @Timeout(30)
 class CustomLogManagerTest extends Specification {

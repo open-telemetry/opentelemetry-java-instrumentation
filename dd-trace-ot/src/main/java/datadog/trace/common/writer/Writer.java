@@ -57,7 +57,9 @@ public interface Writer {
     }
 
     private static Writer createAgentWriter(final Config config) {
-      return new DDAgentWriter(new DDApi(config.getAgentHost(), config.getAgentPort()));
+      return new DDAgentWriter(
+          new DDApi(
+              config.getAgentHost(), config.getAgentPort(), config.getAgentUnixDomainSocket()));
     }
 
     private Builder() {}

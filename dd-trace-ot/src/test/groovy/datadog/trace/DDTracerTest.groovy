@@ -43,7 +43,7 @@ class DDTracerTest extends Specification {
     then:
     tracer.serviceName == "unnamed-java-app"
     tracer.sampler instanceof RateByServiceSampler
-    tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:8126/v0.3/traces } }"
+    tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces } }"
 
     tracer.spanContextDecorators.size() == 13
   }
@@ -102,11 +102,11 @@ class DDTracerTest extends Specification {
     where:
 
     source   | key                | value           | expected
-    "writer" | "default"          | "default"       | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:8126/v0.3/traces } }"
+    "writer" | "default"          | "default"       | "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces } }"
     "writer" | "writer.type"      | "LoggingWriter" | "LoggingWriter { }"
-    "writer" | "agent.host"       | "somethingelse" | "DDAgentWriter { api=DDApi { tracesEndpoint=http://somethingelse:8126/v0.3/traces } }"
-    "writer" | "agent.port"       | "777"           | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:777/v0.3/traces } }"
-    "writer" | "trace.agent.port" | "9999"          | "DDAgentWriter { api=DDApi { tracesEndpoint=http://localhost:9999/v0.3/traces } }"
+    "writer" | "agent.host"       | "somethingelse" | "DDAgentWriter { api=DDApi { tracesUrl=http://somethingelse:8126/v0.3/traces } }"
+    "writer" | "agent.port"       | "777"           | "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:777/v0.3/traces } }"
+    "writer" | "trace.agent.port" | "9999"          | "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:9999/v0.3/traces } }"
   }
 
   def "verify sampler/writer constructor"() {

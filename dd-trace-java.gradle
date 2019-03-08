@@ -32,7 +32,6 @@ repositories {
 
 description = 'dd-trace-java'
 
-tasks.register("traceAgentTest")
 tasks.register("latestDepTest")
 
 // Applied here to allow publishing of artifactory build info

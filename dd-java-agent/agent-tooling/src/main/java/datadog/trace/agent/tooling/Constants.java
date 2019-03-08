@@ -39,6 +39,12 @@ public final class Constants {
     "org.msgpack",
     "com.fasterxml.jackson",
     "org.yaml.snakeyaml",
+    // okHttp
+    "okhttp3",
+    "okio",
+    "jnr",
+    "org.objectweb.asm",
+    "com.kenai"
   };
 
   private Constants() {}
