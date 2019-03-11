@@ -38,6 +38,6 @@ public final class HandlerAdapterInstrumentation extends AbstractWebfluxInstrume
             .and(takesArgument(1, named("java.lang.Object")))
             .and(takesArguments(2)),
         // Cannot reference class directly here because it would lead to class load failure on Java7
-        PACKAGE + ".HandlerAdapterAdvice");
+        packageName + ".HandlerAdapterAdvice");
   }
 }

@@ -1,12 +1,11 @@
 package datadog.trace.instrumentation.springwebflux;
 
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
+import static datadog.trace.instrumentation.springwebflux.SpringWebfluxHttpServerDecorator.DECORATE;
+
 import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.reactor.core.ReactorCoreAdviceUtils;
 import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.function.Function;
 import net.bytebuddy.asm.Advice;
@@ -29,12 +28,8 @@ public class DispatcherHandlerAdvice {
     if (parentSpan != null) {
       exchange.getAttributes().put(AdviceUtils.PARENT_SPAN_ATTRIBUTE, parentSpan);
     }
-    final Scope scope =
-      GlobalTracer.get()
-        .buildSpan("DispatcherHandler.handle")
-        .withTag(Tags.COMPONENT.getKey(), "spring-webflux-controller")
-        .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER)
-        .startActive(false);
+    final Scope scope = GlobalTracer.get().buildSpan("DispatcherHandler.handle").startActive(false);
+    DECORATE.afterStart(scope);
     ((TraceScope) scope).setAsyncPropagation(true);
     exchange.getAttributes().put(AdviceUtils.SPAN_ATTRIBUTE, scope.span());
     return scope;
@@ -42,13 +37,13 @@ public class DispatcherHandlerAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-    @Advice.Enter final Scope scope,
-    @Advice.Thrown final Throwable throwable,
-    @Advice.Argument(0) final ServerWebExchange exchange,
-    @Advice.Return(readOnly = false) Mono<Object> mono) {
+      @Advice.Enter final Scope scope,
+      @Advice.Thrown final Throwable throwable,
+      @Advice.Argument(0) final ServerWebExchange exchange,
+      @Advice.Return(readOnly = false) Mono<Object> mono) {
     if (throwable == null && mono != null) {
       final Function<? super Mono<Object>, ? extends Publisher<Object>> function =
-        ReactorCoreAdviceUtils.finishSpanNextOrError();
+          ReactorCoreAdviceUtils.finishSpanNextOrError();
       mono = ReactorCoreAdviceUtils.setPublisherSpan(mono, scope.span());
     } else if (throwable != null) {
       AdviceUtils.finishSpanIfPresent(exchange, throwable);
