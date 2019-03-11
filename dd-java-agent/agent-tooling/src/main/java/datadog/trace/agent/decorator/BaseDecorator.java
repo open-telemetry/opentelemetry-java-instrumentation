@@ -96,7 +96,14 @@ public abstract class BaseDecorator {
       span.setTag(Tags.PEER_HOSTNAME.getKey(), remoteConnection.getHostName());
       span.setTag(Tags.PEER_PORT.getKey(), remoteConnection.getPort());
 
-      final InetAddress remoteAddress = remoteConnection.getAddress();
+      onPeerConnection(span, remoteConnection.getAddress());
+    }
+    return span;
+  }
+
+  public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
+    assert span != null;
+    if (remoteAddress != null) {
       if (remoteAddress instanceof Inet4Address) {
         Tags.PEER_HOST_IPV4.set(span, remoteAddress.getHostAddress());
       } else if (remoteAddress instanceof Inet6Address) {
