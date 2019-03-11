@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.hibernate5;
+package datadog.trace.instrumentation.hibernate.v4_3;
 
 import io.opentracing.Scope;
 import io.opentracing.Span;

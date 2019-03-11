@@ -1,43 +1,40 @@
-package datadog.trace.instrumentation.hibernate5;
+package datadog.trace.instrumentation.hibernate.v4_3;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.instrumentation.hibernate5.HibernateDecorator.DECORATOR;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.hibernate.SharedSessionContract;
+import org.hibernate.Transaction;
 
 @AutoService(Instrumenter.class)
-public class SessionFactoryInstrumentation extends Instrumenter.Default {
+public class TransactionInstrumentation extends Instrumenter.Default {
 
-  public SessionFactoryInstrumentation() {
+  public TransactionInstrumentation() {
     super("hibernate", "hibernate-core");
   }
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.SharedSessionContract", SessionState.class.getName());
+    return singletonMap("org.hibernate.Transaction", SessionState.class.getName());
   }
 
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      packageName + ".SessionMethodUtils",
       packageName + ".SessionState",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
@@ -49,33 +46,35 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.SessionFactory")));
+    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.Transaction")));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod()
-            .and(named("openSession").or(named("openStatelessSession")))
-            .and(takesArguments(0))
-            .and(
-                returns(
-                    named("org.hibernate.Session").or(named("org.hibernate.StatelessSession")))),
-        SessionFactoryAdvice.class.getName());
+        isMethod().and(named("commit")).and(takesArguments(0)),
+        TransactionCommitAdvice.class.getName());
   }
 
-  public static class SessionFactoryAdvice {
+  public static class TransactionCommitAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void openSession(@Advice.Return final SharedSessionContract session) {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static SessionState startCommit(@Advice.This final Transaction transaction) {
 
-      final Span span = GlobalTracer.get().buildSpan("hibernate.session").start();
-      DECORATOR.afterStart(span);
-      DECORATOR.onSession(span, session);
+      final ContextStore<Transaction, SessionState> contextStore =
+          InstrumentationContext.get(Transaction.class, SessionState.class);
 
-      final ContextStore<SharedSessionContract, SessionState> contextStore =
-          InstrumentationContext.get(SharedSessionContract.class, SessionState.class);
-      contextStore.putIfAbsent(session, new SessionState(span));
+      return SessionMethodUtils.startScopeFrom(
+          contextStore, transaction, "hibernate.transaction.commit", null, true);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void endCommit(
+        @Advice.This final Transaction transaction,
+        @Advice.Enter final SessionState state,
+        @Advice.Thrown final Throwable throwable) {
+
+      SessionMethodUtils.closeScope(state, throwable, null);
     }
   }
 }

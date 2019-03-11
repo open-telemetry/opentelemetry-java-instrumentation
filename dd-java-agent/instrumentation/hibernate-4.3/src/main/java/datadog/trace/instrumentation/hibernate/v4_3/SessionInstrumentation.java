@@ -1,8 +1,8 @@
-package datadog.trace.instrumentation.hibernate5;
+package datadog.trace.instrumentation.hibernate.v4_3;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.instrumentation.hibernate5.HibernateDecorator.DECORATOR;
-import static datadog.trace.instrumentation.hibernate5.SessionMethodUtils.SCOPE_ONLY_METHODS;
+import static datadog.trace.instrumentation.hibernate.v4_3.HibernateDecorator.DECORATOR;
+import static datadog.trace.instrumentation.hibernate.v4_3.SessionMethodUtils.SCOPE_ONLY_METHODS;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
