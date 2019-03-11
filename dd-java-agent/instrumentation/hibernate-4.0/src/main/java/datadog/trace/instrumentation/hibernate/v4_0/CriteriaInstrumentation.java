@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.hibernate.v4_3;
+package datadog.trace.instrumentation.hibernate.v4_0;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
@@ -15,19 +15,20 @@ import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.Criteria;
 
 @AutoService(Instrumenter.class)
-public class ProcedureCallInstrumentation extends Instrumenter.Default {
+public class CriteriaInstrumentation extends Instrumenter.Default {
 
-  public ProcedureCallInstrumentation() {
+  public CriteriaInstrumentation() {
     super("hibernate", "hibernate-core");
   }
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.procedure.ProcedureCall", SessionState.class.getName());
+    return singletonMap("org.hibernate.Criteria", SessionState.class.getName());
   }
 
   @Override
@@ -45,34 +46,36 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.procedure.ProcedureCall")));
+    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.Criteria")));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod().and(named("getOutputs")), ProcedureCallMethodAdvice.class.getName());
+        isMethod().and(named("list").or(named("uniqueResult")).or(named("scroll"))),
+        CriteriaMethodAdvice.class.getName());
   }
 
-  public static class ProcedureCallMethodAdvice {
+  public static class CriteriaMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SessionState startMethod(
-        @Advice.This final ProcedureCall call, @Advice.Origin("#m") final String name) {
+        @Advice.This final Criteria criteria, @Advice.Origin("#m") final String name) {
 
-      final ContextStore<ProcedureCall, SessionState> contextStore =
-          InstrumentationContext.get(ProcedureCall.class, SessionState.class);
+      final ContextStore<Criteria, SessionState> contextStore =
+          InstrumentationContext.get(Criteria.class, SessionState.class);
 
-      final SessionState state =
-          SessionMethodUtils.startScopeFrom(
-              contextStore, call, "hibernate.procedure." + name, call.getProcedureName(), true);
-      return state;
+      return SessionMethodUtils.startScopeFrom(
+          contextStore, criteria, "hibernate.criteria." + name, null, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Enter final SessionState state, @Advice.Thrown final Throwable throwable) {
-      SessionMethodUtils.closeScope(state, throwable, null);
+        @Advice.Enter final SessionState state,
+        @Advice.Thrown final Throwable throwable,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object entity) {
+
+      SessionMethodUtils.closeScope(state, throwable, entity);
     }
   }
 }

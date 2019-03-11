@@ -9,7 +9,7 @@ muzzle {
   pass {
     group = "org.hibernate"
     module = "hibernate-core"
-    versions = "[4.3.0.Final,)"
+    versions = "[4.0.0.Final,)"
   }
 }
 
@@ -24,7 +24,7 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
+  compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.0.0.Final'
 
   compile project(':dd-java-agent:agent-tooling')
 
@@ -37,7 +37,7 @@ dependencies {
   testCompile project(':dd-java-agent:instrumentation:jdbc')
 
 
-  testCompile group: 'org.hibernate', name: 'hibernate-core', version: '5.0.0.Final'
+  testCompile group: 'org.hibernate', name: 'hibernate-core', version: '4.0.0.Final'
   testCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
   testCompile "javax.xml.bind:jaxb-api:2.2.11"
   testCompile "com.sun.xml.bind:jaxb-core:2.2.11"

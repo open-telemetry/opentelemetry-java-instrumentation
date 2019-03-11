@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.hibernate.v4_3;
+package datadog.trace.instrumentation.hibernate.v4_0;
 
 import datadog.trace.agent.decorator.OrmClientDecorator;
 import datadog.trace.api.DDSpanTypes;

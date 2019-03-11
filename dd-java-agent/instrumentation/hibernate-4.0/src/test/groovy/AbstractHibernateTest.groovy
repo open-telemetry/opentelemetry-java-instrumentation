@@ -1,9 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import org.hibernate.Session
 import org.hibernate.SessionFactory
-import org.hibernate.boot.MetadataSources
-import org.hibernate.boot.registry.StandardServiceRegistry
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder
+import org.hibernate.cfg.Configuration
 import spock.lang.Shared
 
 abstract class AbstractHibernateTest extends AgentTestRunner {
@@ -15,14 +13,9 @@ abstract class AbstractHibernateTest extends AgentTestRunner {
   protected List<Value> prepopulated
 
   def setupSpec() {
-    final StandardServiceRegistry registry =
-      new StandardServiceRegistryBuilder()
-        .configure()
-        .build()
     try {
-      sessionFactory = new MetadataSources(registry).buildMetadata().buildSessionFactory()
+      sessionFactory = new Configuration().configure().buildSessionFactory()
     } catch (Exception e) {
-      StandardServiceRegistryBuilder.destroy(registry)
       return
     }
 
