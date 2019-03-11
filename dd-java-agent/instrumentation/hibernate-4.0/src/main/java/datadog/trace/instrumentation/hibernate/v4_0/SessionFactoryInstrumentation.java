@@ -71,7 +71,7 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
 
       final Span span = GlobalTracer.get().buildSpan("hibernate.session").start();
       DECORATOR.afterStart(span);
-      DECORATOR.onSession(span, session);
+      DECORATOR.onConnection(span, session);
 
       final ContextStore<SharedSessionContract, SessionState> contextStore =
           InstrumentationContext.get(SharedSessionContract.class, SessionState.class);

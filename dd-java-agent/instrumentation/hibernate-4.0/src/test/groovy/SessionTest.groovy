@@ -1,5 +1,4 @@
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.Scope
 import io.opentracing.Tracer
 import io.opentracing.tag.Tags
@@ -46,7 +45,6 @@ class SessionTest extends AbstractHibernateTest {
             tags {
               "$Tags.COMPONENT.key" "java-hibernate"
               "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-              "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
               defaultTags()
             }
           }
@@ -59,7 +57,6 @@ class SessionTest extends AbstractHibernateTest {
             tags {
               "$Tags.COMPONENT.key" "java-hibernate"
               "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-              "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
               defaultTags()
             }
           }
@@ -72,12 +69,12 @@ class SessionTest extends AbstractHibernateTest {
             tags {
               "$Tags.COMPONENT.key" "java-hibernate"
               "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-              "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
               defaultTags()
             }
           }
           span(3) {
             serviceName "h2"
+            spanType "sql"
             childOf span(2)
           }
         }
@@ -139,7 +136,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -152,12 +148,12 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
         span(2) {
           serviceName "h2"
+          spanType "sql"
           childOf span(1)
         }
         span(3) {
@@ -169,12 +165,12 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
         span(4) {
           serviceName "h2"
+          spanType "sql"
           childOf span(3)
         }
       }
@@ -223,7 +219,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -236,7 +231,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -246,12 +240,12 @@ class SessionTest extends AbstractHibernateTest {
           operationName "hibernate.replicate"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
+          errored(true)
           tags {
             errorTags(MappingException, "Unknown entity: java.lang.Long")
 
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -288,7 +282,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -301,12 +294,12 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
         span(2) {
           serviceName "h2"
+          spanType "sql"
           childOf span(1)
         }
         span(3) {
@@ -318,7 +311,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -379,7 +371,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -392,7 +383,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -405,12 +395,12 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
         span(3) {
           serviceName "h2"
+          spanType "sql"
           childOf span(2)
         }
       }
@@ -466,7 +456,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -479,7 +468,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -492,16 +480,17 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
         span(4) {
           serviceName "h2"
+          spanType "sql"
           childOf span(3)
         }
         span(5) {
           serviceName "h2"
+          spanType "sql"
           childOf span(3)
         }
         span(6) {
@@ -513,7 +502,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -526,7 +514,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -539,7 +526,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
@@ -552,12 +538,12 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }
         span(10) {
           serviceName "h2"
+          spanType "sql"
           childOf span(9)
         }
         span(11) {
@@ -569,7 +555,6 @@ class SessionTest extends AbstractHibernateTest {
           tags {
             "$Tags.COMPONENT.key" "java-hibernate"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             defaultTags()
           }
         }

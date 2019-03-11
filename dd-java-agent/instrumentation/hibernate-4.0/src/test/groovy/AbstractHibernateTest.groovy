@@ -16,7 +16,7 @@ abstract class AbstractHibernateTest extends AgentTestRunner {
     try {
       sessionFactory = new Configuration().configure().buildSessionFactory()
     } catch (Exception e) {
-      return
+      throw e
     }
 
     // Pre-populate the DB, so delete/update can be tested.
