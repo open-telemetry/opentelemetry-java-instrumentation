@@ -35,7 +35,7 @@ dependencies {
   testCompile group: 'com.mchange', name: 'c3p0', version: '0.9.5'
   
   latestDepTestCompile group: 'com.h2database', name: 'h2', version: '+'
-  latestDepTestCompile group: 'org.apache.derby', name: 'derby', version: '+'
+  latestDepTestCompile group: 'org.apache.derby', name: 'derby', version: '10.14.+'
   latestDepTestCompile group: 'org.hsqldb', name: 'hsqldb', version: '+'
 
   latestDepTestCompile group: 'org.apache.tomcat', name: 'tomcat-jdbc', version: '+'
