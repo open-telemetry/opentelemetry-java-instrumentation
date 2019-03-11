@@ -2,7 +2,6 @@ package datadog.trace.agent.test.server.http
 
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.ListWriterAssert
-import datadog.trace.agent.test.utils.PortUtils
 import io.opentracing.SpanContext
 import io.opentracing.Tracer
 import io.opentracing.propagation.Format
@@ -41,14 +40,11 @@ class TestHttpServer implements AutoCloseable {
   public Tracer tracer = GlobalTracer.get()
 
 
-  final URI address
+  private URI address
   private final AtomicReference<HandlerApi.RequestApi> last = new AtomicReference<>()
 
   private TestHttpServer() {
-    int port = PortUtils.randomOpenPort()
-    internalServer = new Server(port)
-    internalServer.stopAtShutdown = true
-    address = new URI("http://localhost:$port")
+    internalServer = new Server(0)
   }
 
   def start() {
@@ -60,8 +56,12 @@ class TestHttpServer implements AutoCloseable {
     def handlerList = new HandlerList()
     handlerList.handlers = handlers.configured
     internalServer.handler = handlerList
-    System.out.println("Starting server $this on port $address.port")
     internalServer.start()
+    // set after starting, otherwise two callbacks get added.
+    internalServer.stopAtShutdown = true
+
+    address = new URI("http://localhost:${internalServer.connectors[0].localPort}")
+    System.out.println("Started server $this on port ${address.getPort()}")
     return this
   }
 

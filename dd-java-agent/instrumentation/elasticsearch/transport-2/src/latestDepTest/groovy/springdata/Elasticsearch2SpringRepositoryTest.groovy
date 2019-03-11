@@ -3,7 +3,6 @@ package springdata
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -48,7 +47,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -81,7 +79,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -99,7 +96,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -128,7 +124,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -160,7 +155,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -178,7 +172,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -199,7 +192,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -230,7 +222,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "DeleteAction"
             "elasticsearch.request" "DeleteRequest"
             "elasticsearch.request.indices" indexName
@@ -248,7 +239,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -269,7 +259,6 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName

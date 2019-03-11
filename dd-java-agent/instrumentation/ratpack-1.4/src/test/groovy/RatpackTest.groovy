@@ -17,7 +17,9 @@ import ratpack.http.HttpUrlBuilder
 import ratpack.http.client.HttpClient
 import ratpack.path.PathBinding
 import ratpack.test.exec.ExecHarness
+import spock.lang.Retry
 
+@Retry
 class RatpackTest extends AgentTestRunner {
   static {
     System.setProperty("dd.integration.ratpack.enabled", "true")
@@ -59,7 +61,6 @@ class RatpackTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "ratpack"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "/"
@@ -105,7 +106,6 @@ class RatpackTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "ratpack"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "/a/b/baz"
@@ -148,7 +148,6 @@ class RatpackTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "ratpack"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 500
             "$Tags.HTTP_URL.key" "/"
@@ -219,7 +218,6 @@ class RatpackTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "ratpack"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "/nested"
@@ -239,7 +237,6 @@ class RatpackTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "ratpack"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "/nested2"
@@ -259,7 +256,6 @@ class RatpackTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "ratpack"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "/"
@@ -277,7 +273,6 @@ class RatpackTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "ratpack-httpclient"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "${external.address}nested2"
@@ -295,7 +290,6 @@ class RatpackTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "ratpack-httpclient"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "${external.address}nested"
@@ -326,7 +320,7 @@ class RatpackTest extends AgentTestRunner {
           if (startSpanInHandler) {
             scope.close()
             context.onClose {
-                startedSpan.finish()
+              startedSpan.finish()
             }
           }
 
@@ -358,7 +352,6 @@ class RatpackTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "ratpack"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "/"
@@ -370,11 +363,9 @@ class RatpackTest extends AgentTestRunner {
             resourceName "INSIDE-TEST"
             serviceName "unnamed-java-app"
             operationName "ratpack.exec-test"
-            spanType DDSpanTypes.HTTP_SERVER
             childOf(span(1))
             errored false
             tags {
-              "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
               defaultTags()
             }
           }

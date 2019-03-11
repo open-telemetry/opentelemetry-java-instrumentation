@@ -1,8 +1,5 @@
-import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
-import datadog.trace.instrumentation.jedis.JedisInstrumentation
 import io.opentracing.tag.Tags
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
@@ -38,60 +35,105 @@ class JedisClientTest extends AgentTestRunner {
   }
 
   def "set command"() {
+    when:
     jedis.set("foo", "bar")
 
-    expect:
-    TEST_WRITER.size() == 1
-    def trace = TEST_WRITER.firstTrace()
-    trace.size() == 1
-    final DDSpan setTrace = trace.get(0)
-    setTrace.getServiceName() == JedisInstrumentation.SERVICE_NAME
-    setTrace.getOperationName() == "redis.query"
-    setTrace.getResourceName() == "SET"
-    setTrace.getSpanType() == DDSpanTypes.REDIS
-    setTrace.getTags().get(Tags.COMPONENT.getKey()) == JedisInstrumentation.COMPONENT_NAME
-    setTrace.getTags().get(Tags.DB_TYPE.getKey()) == JedisInstrumentation.SERVICE_NAME
-    setTrace.getTags().get(Tags.SPAN_KIND.getKey()) == Tags.SPAN_KIND_CLIENT
-    setTrace.getTags().get(DDTags.SPAN_TYPE) == JedisInstrumentation.SERVICE_NAME
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          resourceName "SET"
+          spanType DDSpanTypes.REDIS
+          tags {
+            "$Tags.COMPONENT.key" "redis-command"
+            "$Tags.DB_TYPE.key" "redis"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            defaultTags()
+          }
+        }
+      }
+    }
   }
 
   def "get command"() {
+    when:
     jedis.set("foo", "bar")
     def value = jedis.get("foo")
 
-    expect:
+    then:
     value == "bar"
-    TEST_WRITER.size() == 2
-    def trace = TEST_WRITER.get(1)
-    trace.size() == 1
-    final DDSpan getSpan = trace.get(0)
-    getSpan.getServiceName() == JedisInstrumentation.SERVICE_NAME
-    getSpan.getOperationName() == "redis.query"
-    getSpan.getResourceName() == "GET"
-    getSpan.getSpanType() == DDSpanTypes.REDIS
-    getSpan.getTags().get(Tags.COMPONENT.getKey()) == JedisInstrumentation.COMPONENT_NAME
-    getSpan.getTags().get(Tags.DB_TYPE.getKey()) == JedisInstrumentation.SERVICE_NAME
-    getSpan.getTags().get(Tags.SPAN_KIND.getKey()) == Tags.SPAN_KIND_CLIENT
-    getSpan.getTags().get(DDTags.SPAN_TYPE) == JedisInstrumentation.SERVICE_NAME
+
+    assertTraces(2) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          resourceName "SET"
+          spanType DDSpanTypes.REDIS
+          tags {
+            "$Tags.COMPONENT.key" "redis-command"
+            "$Tags.DB_TYPE.key" "redis"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            defaultTags()
+          }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          resourceName "GET"
+          spanType DDSpanTypes.REDIS
+          tags {
+            "$Tags.COMPONENT.key" "redis-command"
+            "$Tags.DB_TYPE.key" "redis"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            defaultTags()
+          }
+        }
+      }
+    }
   }
 
   def "command with no arguments"() {
+    when:
     jedis.set("foo", "bar")
     def value = jedis.randomKey()
 
-    expect:
+    then:
     value == "foo"
-    TEST_WRITER.size() == 2
-    def trace = TEST_WRITER.get(1)
-    trace.size() == 1
-    final DDSpan randomKeySpan = trace.get(0)
-    randomKeySpan.getServiceName() == JedisInstrumentation.SERVICE_NAME
-    randomKeySpan.getOperationName() == "redis.query"
-    randomKeySpan.getResourceName() == "RANDOMKEY"
-    randomKeySpan.getSpanType() == DDSpanTypes.REDIS
-    randomKeySpan.getTags().get(Tags.COMPONENT.getKey()) == JedisInstrumentation.COMPONENT_NAME
-    randomKeySpan.getTags().get(Tags.DB_TYPE.getKey()) == JedisInstrumentation.SERVICE_NAME
-    randomKeySpan.getTags().get(Tags.SPAN_KIND.getKey()) == Tags.SPAN_KIND_CLIENT
-    randomKeySpan.getTags().get(DDTags.SPAN_TYPE) == JedisInstrumentation.SERVICE_NAME
+
+    assertTraces(2) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          resourceName "SET"
+          spanType DDSpanTypes.REDIS
+          tags {
+            "$Tags.COMPONENT.key" "redis-command"
+            "$Tags.DB_TYPE.key" "redis"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            defaultTags()
+          }
+        }
+      }
+      trace(1, 1) {
+        span(0) {
+          serviceName "redis"
+          operationName "redis.query"
+          resourceName "RANDOMKEY"
+          spanType DDSpanTypes.REDIS
+          tags {
+            "$Tags.COMPONENT.key" "redis-command"
+            "$Tags.DB_TYPE.key" "redis"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            defaultTags()
+          }
+        }
+      }
+    }
   }
 }

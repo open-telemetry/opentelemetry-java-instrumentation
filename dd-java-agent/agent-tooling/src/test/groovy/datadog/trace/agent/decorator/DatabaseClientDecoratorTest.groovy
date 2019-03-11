@@ -30,12 +30,12 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     serviceName << ["test-service", "other-service", null]
   }
 
-  def "test onSession"() {
+  def "test onConnection"() {
     setup:
     def decorator = newDecorator()
 
     when:
-    decorator.onSession(span, session)
+    decorator.onConnection(span, session)
 
     then:
     if (session) {
@@ -75,13 +75,13 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    decorator.afterStart(null)
+    decorator.afterStart((Span) null)
 
     then:
     thrown(AssertionError)
 
     when:
-    decorator.onSession(null, null)
+    decorator.onConnection(null, null)
 
     then:
     thrown(AssertionError)

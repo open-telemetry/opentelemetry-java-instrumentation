@@ -212,7 +212,7 @@ public class TracingSession implements Session {
   private Span buildSpan(final String query) {
     final Span span = tracer.buildSpan("cassandra.execute").start();
     DECORATE.afterStart(span);
-    DECORATE.onSession(span, session);
+    DECORATE.onConnection(span, session);
     DECORATE.onStatement(span, query);
     return span;
   }

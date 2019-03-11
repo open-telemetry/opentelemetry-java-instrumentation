@@ -10,7 +10,6 @@ import akka.stream.javadsl.Source
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import scala.util.Try
 import spock.lang.AutoCleanup
@@ -20,13 +19,13 @@ import java.util.concurrent.CompletionStage
 import java.util.concurrent.ExecutionException
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
 
 class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
   private static final String MESSAGE = "an\nmultiline\nhttp\nresponse"
   private static final long TIMEOUT = 10000L
-  private static final int UNUSED_PORT = 61 // this port should always be closed
 
   @AutoCleanup
   @Shared
@@ -89,7 +88,6 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "${server.address}/$route"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.PEER_HOSTNAME.key" server.address.host
             "$Tags.PEER_PORT.key" server.address.port
             "$Tags.COMPONENT.key" "akka-http-client"
@@ -109,7 +107,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
 
   def "error request trace"() {
     setup:
-    def url = new URL("http://localhost:$UNUSED_PORT/test")
+    def url = new URL("http://localhost:$UNUSABLE_PORT/test")
 
     HttpRequest request = HttpRequest.create(url.toString())
     CompletionStage<HttpResponse> responseFuture =
@@ -137,9 +135,8 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" url.toString()
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.PEER_HOSTNAME.key" server.address.host
-            "$Tags.PEER_PORT.key" UNUSED_PORT
+            "$Tags.PEER_PORT.key" UNUSABLE_PORT
             "$Tags.COMPONENT.key" "akka-http-client"
             "$Tags.ERROR.key" true
             errorTags(StreamTcpException, { it.contains("Tcp command") })
@@ -171,7 +168,6 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
           tags {
             defaultTags()
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT.key" "akka-http-client"
             "$Tags.ERROR.key" true
             errorTags(NullPointerException)
@@ -220,7 +216,6 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "${server.address}/$route"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.PEER_HOSTNAME.key" server.address.host
             "$Tags.PEER_PORT.key" server.address.port
             "$Tags.COMPONENT.key" "akka-http-client"
@@ -241,7 +236,7 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
   def "error request pool trace"() {
     setup:
     // Use port number that really should be closed
-    def url = new URL("http://localhost:$UNUSED_PORT/test")
+    def url = new URL("http://localhost:$UNUSABLE_PORT/test")
 
     def response = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
       Source
@@ -270,9 +265,8 @@ class AkkaHttpClientInstrumentationTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" url.toString()
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.PEER_HOSTNAME.key" server.address.host
-            "$Tags.PEER_PORT.key" UNUSED_PORT
+            "$Tags.PEER_PORT.key" UNUSABLE_PORT
             "$Tags.COMPONENT.key" "akka-http-client"
             "$Tags.ERROR.key" true
             errorTags(StreamTcpException, { it.contains("Tcp command") })

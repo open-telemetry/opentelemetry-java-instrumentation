@@ -1,7 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import okhttp3.Request
 import spock.lang.Shared
@@ -59,7 +58,6 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" port
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
           }
         }
@@ -103,7 +101,6 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" port
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
             errorTags RuntimeException, errorMessage
           }
@@ -145,7 +142,6 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" port
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
             "$Tags.ERROR.key" true
           }
@@ -186,7 +182,6 @@ class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" port
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
           }
         }

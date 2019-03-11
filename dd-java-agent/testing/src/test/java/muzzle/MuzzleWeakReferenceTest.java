@@ -14,7 +14,7 @@ public class MuzzleWeakReferenceTest {
    *
    * Even returning a WeakReference<ClassLoader> is enough for spock to create a strong ref.
    */
-  public static boolean classLoaderRefIsGarbageCollected() {
+  public static boolean classLoaderRefIsGarbageCollected() throws InterruptedException {
     ClassLoader loader = new URLClassLoader(new URL[0], null);
     final WeakReference<ClassLoader> clRef = new WeakReference<>(loader);
     final Reference[] refs =

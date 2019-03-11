@@ -11,7 +11,6 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate
@@ -23,6 +22,7 @@ import org.testcontainers.containers.GenericContainer
 import spock.lang.Requires
 import spock.lang.Shared
 
+import java.time.Duration
 import java.util.concurrent.Phaser
 
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
@@ -57,6 +57,7 @@ class RabbitMQTest extends AgentTestRunner {
     if ("true" != System.getenv("CI")) {
       rabbbitMQContainer = new GenericContainer('rabbitmq:latest')
         .withExposedPorts(defaultRabbitMQPort)
+        .withStartupTimeout(Duration.ofSeconds(120))
 //        .withLogConsumer { output ->
 //        print output.utf8String
 //      }
@@ -343,6 +344,17 @@ class RabbitMQTest extends AgentTestRunner {
       serviceName "rabbitmq"
       operationName "amqp.command"
       resourceName resource
+      switch (span.tags["amqp.command"]) {
+        case "basic.publish":
+          spanType DDSpanTypes.MESSAGE_PRODUCER
+          break
+        case "basic.get":
+        case "basic.deliver":
+          spanType DDSpanTypes.MESSAGE_CONSUMER
+          break
+        default:
+          spanType DDSpanTypes.MESSAGE_CLIENT
+      }
 
       if (parentSpan) {
         childOf parentSpan
@@ -363,7 +375,6 @@ class RabbitMQTest extends AgentTestRunner {
         switch (tag("amqp.command")) {
           case "basic.publish":
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_PRODUCER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_PRODUCER
             "amqp.command" "basic.publish"
             "amqp.exchange" { it == null || it == "some-exchange" || it == "some-error-exchange" }
             "amqp.routing_key" {
@@ -374,14 +385,12 @@ class RabbitMQTest extends AgentTestRunner {
             break
           case "basic.get":
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CONSUMER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
             "amqp.command" "basic.get"
             "amqp.queue" { it == "some-queue" || it == "some-routing-queue" || it.startsWith("amq.gen-") }
             "message.size" { it == null || it instanceof Integer }
             break
           case "basic.deliver":
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CONSUMER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
             "amqp.command" "basic.deliver"
             "span.origin.type" { it == "RabbitMQTest\$1" || it == "RabbitMQTest\$2" }
             "amqp.exchange" { it == "some-exchange" || it == "some-error-exchange" }
@@ -389,7 +398,6 @@ class RabbitMQTest extends AgentTestRunner {
             break
           default:
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CLIENT
             "amqp.command" { it == null || it == resource }
         }
         defaultTags(distributedRootSpan)

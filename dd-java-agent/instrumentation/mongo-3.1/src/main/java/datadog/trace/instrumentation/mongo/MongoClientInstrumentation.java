@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import com.mongodb.MongoClientOptions;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Map;
@@ -21,8 +20,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public final class MongoClientInstrumentation extends Instrumenter.Default {
-  public static final String[] HELPERS =
-      new String[] {"datadog.trace.instrumentation.mongo.DDTracingCommandListener"};
 
   public MongoClientInstrumentation() {
     super("mongo");
@@ -46,7 +43,13 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return HELPERS;
+    return new String[] {
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      "datadog.trace.agent.decorator.DatabaseClientDecorator",
+      packageName + ".MongoClientDecorator",
+      packageName + ".DDTracingCommandListener"
+    };
   }
 
   @Override
@@ -63,7 +66,7 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
       // referencing "this" in the method args causes the class to load under a transformer.
       // This bypasses the Builder instrumentation. Casting as a workaround.
       final MongoClientOptions.Builder builder = (MongoClientOptions.Builder) dis;
-      final DDTracingCommandListener listener = new DDTracingCommandListener(GlobalTracer.get());
+      final DDTracingCommandListener listener = new DDTracingCommandListener();
       builder.addCommandListener(listener);
     }
   }

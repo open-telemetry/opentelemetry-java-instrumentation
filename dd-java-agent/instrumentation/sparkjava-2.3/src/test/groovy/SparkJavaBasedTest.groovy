@@ -2,7 +2,6 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import spark.Spark
@@ -56,8 +55,9 @@ class SparkJavaBasedTest extends AgentTestRunner {
             "span.kind" "server"
             "component" "jetty-handler"
             "span.origin.type" spark.embeddedserver.jetty.JettyHandler.name
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "http.status_code" 200
+            "peer.hostname" "localhost"
+            "peer.port" port
             defaultTags()
           }
         }

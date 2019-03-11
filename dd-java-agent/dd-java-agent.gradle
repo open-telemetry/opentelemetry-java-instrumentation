@@ -104,9 +104,6 @@ dependencies {
   testCompile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
   // run embeded mongodb for integration testing
   testCompile group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
-
-  testCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.3'
-  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
 }
 
 tasks.withType(Test).configureEach {

@@ -36,6 +36,9 @@ subprojects { subProj ->
         classPath = project(':dd-java-agent:agent-tooling').configurations.instrumentationMuzzle + subProj.configurations.compile + subProj.sourceSets.main.output
       }
     }
+
+    // Make it so all instrumentation subproject tests can be run with a single command.
+    instr_project.tasks.test.dependsOn(subProj.tasks.test)
   }
 
   instr_project.dependencies {

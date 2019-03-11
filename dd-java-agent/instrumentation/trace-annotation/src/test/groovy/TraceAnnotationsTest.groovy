@@ -61,7 +61,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
           errored false
           tags {
             "$Tags.COMPONENT.key" "trace"
-            "span.type" "DB"
             defaultTags()
           }
         }

@@ -3,7 +3,6 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
@@ -165,7 +164,6 @@ class JMS2Test extends AgentTestRunner {
 
           tags {
             defaultTags()
-            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
             "${Tags.COMPONENT.key}" "jms"
             "${Tags.SPAN_KIND.key}" "consumer"
             "span.origin.type" HornetQMessageConsumer.name
@@ -204,7 +202,6 @@ class JMS2Test extends AgentTestRunner {
 
           tags {
             defaultTags()
-            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
             "${Tags.COMPONENT.key}" "jms"
             "${Tags.SPAN_KIND.key}" "consumer"
             "span.origin.type" HornetQMessageConsumer.name
@@ -234,7 +231,6 @@ class JMS2Test extends AgentTestRunner {
 
         tags {
           defaultTags()
-          "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_PRODUCER
           "${Tags.COMPONENT.key}" "jms"
           "${Tags.SPAN_KIND.key}" "producer"
           "span.origin.type" HornetQMessageProducer.name
@@ -255,12 +251,11 @@ class JMS2Test extends AgentTestRunner {
           operationName "jms.consume"
           resourceName "Consumed from $jmsResourceName"
         }
-        spanType DDSpanTypes.MESSAGE_PRODUCER
+        spanType DDSpanTypes.MESSAGE_CONSUMER
         errored false
 
         tags {
           defaultTags(true)
-          "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
           "${Tags.COMPONENT.key}" "jms"
           "${Tags.SPAN_KIND.key}" "consumer"
           "span.origin.type" origin.name

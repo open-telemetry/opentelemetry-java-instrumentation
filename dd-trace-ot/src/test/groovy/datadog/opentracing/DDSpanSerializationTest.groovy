@@ -1,5 +1,6 @@
 package datadog.opentracing
 
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.collect.Maps
 import datadog.trace.api.DDTags
@@ -50,6 +51,7 @@ class DDSpanSerializationTest extends Specification {
         "operation",
         null,
         samplingPriority,
+        null,
         new HashMap<>(baggage),
         false,
         "type",
@@ -59,7 +61,6 @@ class DDSpanSerializationTest extends Specification {
 
     baggage.put(DDTags.THREAD_NAME, Thread.currentThread().getName())
     baggage.put(DDTags.THREAD_ID, String.valueOf(Thread.currentThread().getId()))
-    baggage.put(DDTags.SPAN_TYPE, context.getSpanType())
 
     DDSpan span = new DDSpan(100L, context)
     if (samplingPriority != PrioritySampling.UNSET) {
@@ -68,8 +69,10 @@ class DDSpanSerializationTest extends Specification {
     span.finish(133L)
     ObjectMapper serializer = new ObjectMapper()
 
+    def actualTree = serializer.readTree(serializer.writeValueAsString(span))
+    def expectedTree = serializer.readTree(serializer.writeValueAsString(expected))
     expect:
-    serializer.readTree(serializer.writeValueAsString(span)) == serializer.readTree(serializer.writeValueAsString(expected))
+    actualTree == expectedTree
 
     where:
     samplingPriority              | _
@@ -90,6 +93,7 @@ class DDSpanSerializationTest extends Specification {
       "fakeOperation",
       "fakeResource",
       PrioritySampling.UNSET,
+      null,
       Collections.emptyMap(),
       false,
       "fakeType",
@@ -117,10 +121,10 @@ class DDSpanSerializationTest extends Specification {
     }
 
     where:
-    value | _
-    BigInteger.ZERO | _
-    BigInteger.ONE | _
+    value                                                       | _
+    BigInteger.ZERO                                             | _
+    BigInteger.ONE                                              | _
     BigInteger.valueOf(Long.MAX_VALUE).subtract(BigInteger.ONE) | _
-    BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE) | _
+    BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE)      | _
   }
 }

@@ -84,9 +84,10 @@ tasks.register("startServer", com.github.psxpaul.task.ExecFork) {
   // these params tells the ExecFork plugin to block on startServer task until the port is opened or the string is seen in the ouput
   waitForPort = playHttpPort
   waitForOutput = "Listening for HTTP on /127.0.0.1:${playHttpPort}"
+  timeout = 240
   environment = [
     'JAVA_OPTS' :  "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
-    + " -Ddd.writer.type=LoggingWriter" + " -Ddd.service.name=java-app"
+      + " -Ddd.writer.type=LoggingWriter" + " -Ddd.service.name=java-app"
       + " -Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug"
       + " -Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
       + " -Dconfig.file=${workingDir}/conf/application.conf -Dhttp.port=${playHttpPort}"

@@ -43,7 +43,9 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {getClass().getName() + "$WrappedFuture"};
+    return new String[] {
+      getClass().getName() + "$WrappedFuture",
+    };
   }
 
   @Override

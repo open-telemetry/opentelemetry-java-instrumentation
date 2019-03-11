@@ -5,6 +5,8 @@ import datadog.trace.api.Config
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 
+import java.util.regex.Pattern
+
 class TagsAssert {
   private final String spanParentId
   private final Map<String, Object> tags
@@ -65,7 +67,9 @@ class TagsAssert {
       return
     }
     assertedTags.add(name)
-    if (value instanceof Class) {
+    if (value instanceof Pattern) {
+      assert tags[name] =~ value
+    } else if (value instanceof Class) {
       assert ((Class) value).isInstance(tags[name])
     } else if (value instanceof Closure) {
       assert ((Closure) value).call(tags[name])

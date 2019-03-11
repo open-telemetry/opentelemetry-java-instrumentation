@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.connection_error.jersey;
 
+import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -42,7 +43,9 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {getClass().getName() + "$WrappedFuture"};
+    return new String[] {
+      getClass().getName() + "$WrappedFuture",
+    };
   }
 
   @Override
@@ -62,12 +65,11 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
         @Advice.FieldValue("requestContext") final ClientRequest context,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-
         final Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
         if (prop instanceof Span) {
           final Span span = (Span) prop;
           Tags.ERROR.set(span, true);
-          span.log(Collections.singletonMap(Fields.ERROR_OBJECT, throwable));
+          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
           span.finish();
         }
       }

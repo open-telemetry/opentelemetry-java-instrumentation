@@ -121,6 +121,13 @@ public class TraceConfigInstrumentation implements Instrumenter {
     }
 
     @Override
+    public String[] helperClassNames() {
+      return new String[] {
+        "datadog.trace.agent.decorator.BaseDecorator", packageName + ".TraceDecorator",
+      };
+    }
+
+    @Override
     public Map<ElementMatcher<? super MethodDescription>, String> transformers() {
       ElementMatcher.Junction<MethodDescription> methodMatchers = null;
       for (final String methodName : methodNames) {

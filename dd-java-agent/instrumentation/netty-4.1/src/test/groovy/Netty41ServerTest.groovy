@@ -2,7 +2,6 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
@@ -14,7 +13,6 @@ import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.http.DefaultFullHttpResponse
 import io.netty.handler.codec.http.FullHttpResponse
-import io.netty.handler.codec.http.HttpHeaderNames
 import io.netty.handler.codec.http.HttpRequestDecoder
 import io.netty.handler.codec.http.HttpResponseEncoder
 import io.netty.handler.codec.http.HttpResponseStatus
@@ -28,6 +26,9 @@ import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import spock.lang.Shared
+
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 
 class Netty41ServerTest extends AgentTestRunner {
 
@@ -69,9 +70,9 @@ class Netty41ServerTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "http://localhost:$port/"
             "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             defaultTags(true)
           }
         }
@@ -115,9 +116,9 @@ class Netty41ServerTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" responseCode.code()
             "$Tags.HTTP_URL.key" "http://localhost:$port/"
             "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             if (error) {
               tag("error", true)
             }
@@ -150,8 +151,8 @@ class Netty41ServerTest extends AgentTestRunner {
             if (msg instanceof LastHttpContent) {
               ByteBuf content = Unpooled.copiedBuffer("Hello World", CharsetUtil.UTF_8)
               FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, responseCode, content)
-              response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain")
-              response.headers().set(HttpHeaderNames.CONTENT_LENGTH, content.readableBytes())
+              response.headers().set(CONTENT_TYPE, "text/plain")
+              response.headers().set(CONTENT_LENGTH, content.readableBytes())
               ctx.write(response)
             }
           },

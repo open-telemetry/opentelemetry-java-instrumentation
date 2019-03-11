@@ -169,9 +169,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
               "db.user" username
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
-            "span.type" DDSpanTypes.SQL
             "component" "java-jdbc-statement"
-            "db.jdbc.url" jdbcUrls.get(driver)
+            "db.instance" jdbcUrls.get(driver)
             "span.origin.type" String
             defaultTags()
           }
@@ -230,9 +229,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
               "db.user" username
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
-            "span.type" DDSpanTypes.SQL
             "component" "java-jdbc-prepared_statement"
-            "db.jdbc.url" jdbcUrls.get(driver)
+            "db.instance" jdbcUrls.get(driver)
             "span.origin.type" String
             defaultTags()
           }
@@ -286,9 +284,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
               "db.user" username
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
-            "span.type" DDSpanTypes.SQL
             "component" "java-jdbc-prepared_statement"
-            "db.jdbc.url" jdbcUrls.get(driver)
+            "db.instance" jdbcUrls.get(driver)
             "span.origin.type" String
             defaultTags()
           }
@@ -342,9 +339,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
               "db.user" username
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
-            "span.type" DDSpanTypes.SQL
             "component" "java-jdbc-prepared_statement"
-            "db.jdbc.url" jdbcUrls.get(driver)
+            "db.instance" jdbcUrls.get(driver)
             "span.origin.type" String
             defaultTags()
           }
@@ -398,9 +394,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
               "db.user" username
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
-            "span.type" DDSpanTypes.SQL
             "component" "java-jdbc-statement"
-            "db.jdbc.url" jdbcUrls.get(driver)
+            "db.instance" jdbcUrls.get(driver)
             "span.origin.type" String
             defaultTags()
           }
@@ -457,9 +452,8 @@ class JDBCInstrumentationTest extends AgentTestRunner {
               "db.user" username
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
-            "span.type" DDSpanTypes.SQL
             "component" "java-jdbc-prepared_statement"
-            "db.jdbc.url" jdbcUrls.get(driver)
+            "db.instance" jdbcUrls.get(driver)
             "span.origin.type" String
             defaultTags()
           }
@@ -534,8 +528,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
               "component" "java-jdbc-statement"
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
-            "span.type" DDSpanTypes.SQL
-            "db.jdbc.url" jdbcUrls.get(driver)
+            "db.instance" jdbcUrls.get(driver)
             "span.origin.type" String
             defaultTags()
           }
@@ -591,27 +584,43 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     for (int i = 0; i < numQueries; ++i) {
       res[i] == 3
     }
-    assertTraces(6) {
-      trace(0, 1) {
+    assertTraces(5) {
+      trace(0, 2) {
         span(0) {
+          operationName "${dbType}.query"
+          serviceName dbType
+          resourceName query
+          spanType DDSpanTypes.SQL
+          errored false
+          tags {
+            "db.type" dbType
+            "db.user" "SA"
+            "component" "java-jdbc-prepared_statement"
+            "span.kind" Tags.SPAN_KIND_CLIENT
+            "db.instance" jdbcUrls.get(dbType)
+            "span.origin.type" String
+            defaultTags()
+          }
+        }
+        span(1) {
           operationName "${dbType}.query"
           serviceName dbType
           resourceName "CALL USER()"
           spanType DDSpanTypes.SQL
           errored false
+          childOf(span(0))
           tags {
             "db.type" "hsqldb"
             "db.user" "SA"
             "component" "java-jdbc-statement"
             "span.kind" Tags.SPAN_KIND_CLIENT
-            "span.type" DDSpanTypes.SQL
-            "db.jdbc.url" jdbcUrls.get(dbType)
+            "db.instance" jdbcUrls.get(dbType)
             "span.origin.type" String
             defaultTags()
           }
         }
       }
-      for (int i = 1; i < numQueries + 1; ++i) {
+      for (int i = 1; i < numQueries; ++i) {
         trace(i, 1) {
           span(0) {
             operationName "${dbType}.query"
@@ -624,8 +633,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
               "db.user" "SA"
               "component" "java-jdbc-prepared_statement"
               "span.kind" Tags.SPAN_KIND_CLIENT
-              "span.type" DDSpanTypes.SQL
-              "db.jdbc.url" jdbcUrls.get(dbType)
+              "db.instance" jdbcUrls.get(dbType)
               "span.origin.type" String
               defaultTags()
             }

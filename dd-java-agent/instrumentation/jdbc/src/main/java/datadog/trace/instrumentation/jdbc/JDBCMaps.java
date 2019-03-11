@@ -1,7 +1,8 @@
-package datadog.trace.bootstrap;
+package datadog.trace.instrumentation.jdbc;
 
 import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 
+import datadog.trace.bootstrap.WeakMap;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import lombok.Data;
@@ -9,7 +10,7 @@ import lombok.Data;
 /**
  * JDBC instrumentation shares a global map of connection info.
  *
- * <p>In the bootstrap project to ensure visibility by all classes.
+ * <p>Should be injected into the bootstrap classpath.
  */
 public class JDBCMaps {
   public static final WeakMap<Connection, DBInfo> connectionInfo = newWeakMap();

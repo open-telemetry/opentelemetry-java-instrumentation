@@ -87,7 +87,6 @@ class KafkaClientTest extends AgentTestRunner {
           tags {
             "component" "java-kafka"
             "span.kind" "producer"
-            "span.type" "queue"
             defaultTags()
           }
         }
@@ -104,7 +103,6 @@ class KafkaClientTest extends AgentTestRunner {
           tags {
             "component" "java-kafka"
             "span.kind" "consumer"
-            "span.type" "queue"
             "partition" { it >= 0 }
             "offset" 0
             defaultTags(true)

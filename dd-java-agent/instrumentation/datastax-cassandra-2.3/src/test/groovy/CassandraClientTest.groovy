@@ -2,7 +2,7 @@ import com.datastax.driver.core.Cluster
 import com.datastax.driver.core.Session
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.api.DDTags
+import datadog.trace.api.DDSpanTypes
 import io.opentracing.tag.Tags
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import spock.lang.Shared
@@ -55,6 +55,7 @@ class CassandraClientTest extends AgentTestRunner {
     selectTrace.getServiceName() == "cassandra"
     selectTrace.getOperationName() == "cassandra.query"
     selectTrace.getResourceName() == query
+    selectTrace.getSpanType() == DDSpanTypes.CASSANDRA
 
     selectTrace.getTags().get(Tags.COMPONENT.getKey()) == "java-cassandra"
     selectTrace.getTags().get(Tags.DB_TYPE.getKey()) == "cassandra"
@@ -63,7 +64,6 @@ class CassandraClientTest extends AgentTestRunner {
     selectTrace.getTags().get(Tags.PEER_HOST_IPV4.getKey()) == 2130706433
     selectTrace.getTags().get(Tags.PEER_PORT.getKey()) == 9142
     selectTrace.getTags().get(Tags.SPAN_KIND.getKey()) == "client"
-    selectTrace.getTags().get(DDTags.SPAN_TYPE) == "cassandra"
   }
 
   def "async traces"() {
@@ -92,6 +92,7 @@ class CassandraClientTest extends AgentTestRunner {
     selectTrace.getServiceName() == "cassandra"
     selectTrace.getOperationName() == "cassandra.query"
     selectTrace.getResourceName() == query
+    selectTrace.getSpanType() == DDSpanTypes.CASSANDRA
 
     selectTrace.getTags().get(Tags.COMPONENT.getKey()) == "java-cassandra"
     selectTrace.getTags().get(Tags.DB_TYPE.getKey()) == "cassandra"
@@ -100,6 +101,5 @@ class CassandraClientTest extends AgentTestRunner {
     selectTrace.getTags().get(Tags.PEER_HOST_IPV4.getKey()) == 2130706433
     selectTrace.getTags().get(Tags.PEER_PORT.getKey()) == 9142
     selectTrace.getTags().get(Tags.SPAN_KIND.getKey()) == "client"
-    selectTrace.getTags().get(DDTags.SPAN_TYPE) == "cassandra"
   }
 }

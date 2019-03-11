@@ -6,11 +6,13 @@ import datadog.trace.agent.test.IntegrationTestUtils
 import datadog.trace.api.Trace
 import datadog.trace.util.gc.GCUtils
 import spock.lang.Specification
+import spock.lang.Timeout
 
 import java.lang.ref.WeakReference
 
 import static datadog.trace.agent.test.IntegrationTestUtils.createJarWithClasses
 
+@Timeout(10)
 class ClassLoadingTest extends Specification {
 
   final URL[] classpath = [createJarWithClasses(ClassToInstrument, ClassToInstrumentChild, Trace)]

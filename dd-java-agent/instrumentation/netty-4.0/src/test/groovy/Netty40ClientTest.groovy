@@ -1,7 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.asynchttpclient.AsyncHttpClient
 import org.asynchttpclient.DefaultAsyncHttpClientConfig
@@ -58,9 +57,9 @@ class Netty40ClientTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" Integer
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" server.address.port
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             defaultTags()
           }
         }

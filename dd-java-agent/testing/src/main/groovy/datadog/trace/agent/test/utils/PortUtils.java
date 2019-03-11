@@ -5,6 +5,8 @@ import java.net.ServerSocket;
 
 public class PortUtils {
 
+  public static int UNUSABLE_PORT = 61;
+
   /** Open up a random, reusable port. */
   public static int randomOpenPort() {
     final ServerSocket socket;

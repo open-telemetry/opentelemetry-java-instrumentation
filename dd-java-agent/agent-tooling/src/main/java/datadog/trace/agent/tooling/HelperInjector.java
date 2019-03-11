@@ -1,14 +1,16 @@
 package datadog.trace.agent.tooling;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
+import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 
+import datadog.trace.bootstrap.WeakMap;
 import java.io.File;
 import java.io.IOException;
+import java.security.SecureClassLoader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -24,9 +26,13 @@ import net.bytebuddy.utility.JavaModule;
 /** Injects instrumentation helper classes into the user's classloader. */
 @Slf4j
 public class HelperInjector implements Transformer {
+  // Need this because we can't put null into the injectedClassLoaders map.
+  private static final ClassLoader BOOTSTRAP_CLASSLOADER_PLACEHOLDER =
+      new SecureClassLoader(null) {};
+
   private final Set<String> helperClassNames;
   private Map<TypeDescription, byte[]> helperMap = null;
-  private final Set<ClassLoader> injectedClassLoaders = new HashSet<>();
+  private final WeakMap<ClassLoader, Boolean> injectedClassLoaders = newWeakMap();
 
   /**
    * Construct HelperInjector.
@@ -80,15 +86,18 @@ public class HelperInjector implements Transformer {
   public DynamicType.Builder<?> transform(
       final DynamicType.Builder<?> builder,
       final TypeDescription typeDescription,
-      final ClassLoader classLoader,
+      ClassLoader classLoader,
       final JavaModule module) {
     if (helperClassNames.size() > 0) {
       synchronized (this) {
-        if (!injectedClassLoaders.contains(classLoader)) {
+        if (classLoader == BOOTSTRAP_CLASSLOADER) {
+          classLoader = BOOTSTRAP_CLASSLOADER_PLACEHOLDER;
+        }
+        if (!injectedClassLoaders.containsKey(classLoader)) {
           try {
             final Map<TypeDescription, byte[]> helperMap = getHelperMap();
             log.debug("Injecting classes onto classloader {} -> {}", classLoader, helperClassNames);
-            if (classLoader == BOOTSTRAP_CLASSLOADER) {
+            if (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER) {
               final Map<TypeDescription, Class<?>> injected =
                   ClassInjector.UsingInstrumentation.of(
                           new File(System.getProperty("java.io.tmpdir")),
@@ -108,13 +117,13 @@ public class HelperInjector implements Transformer {
                     + ". Failed to inject helper classes into instance "
                     + classLoader
                     + " of type "
-                    + (classLoader == BOOTSTRAP_CLASSLOADER
+                    + (classLoader == BOOTSTRAP_CLASSLOADER_PLACEHOLDER
                         ? "<bootstrap>"
                         : classLoader.getClass().getName()),
                 e);
             throw new RuntimeException(e);
           }
-          injectedClassLoaders.add(classLoader);
+          injectedClassLoaders.put(classLoader, true);
         }
       }
     }

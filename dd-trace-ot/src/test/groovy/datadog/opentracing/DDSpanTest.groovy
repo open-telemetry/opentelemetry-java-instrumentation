@@ -1,5 +1,7 @@
 package datadog.opentracing
 
+import datadog.opentracing.propagation.ExtractedContext
+import datadog.opentracing.propagation.TagContext
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.ListWriter
@@ -24,6 +26,7 @@ class DDSpanTest extends Specification {
         "fakeOperation",
         "fakeResource",
         PrioritySampling.UNSET,
+        null,
         Collections.<String, String> emptyMap(),
         false,
         "fakeType",
@@ -181,6 +184,23 @@ class DDSpanTest extends Specification {
     child1.getMetrics().get(DDSpanContext.PRIORITY_SAMPLING_KEY) == null
     child2.getSamplingPriority() == parent.getSamplingPriority()
     child2.getMetrics().get(DDSpanContext.PRIORITY_SAMPLING_KEY) == null
+  }
+
+  def "origin set only on root span"() {
+    setup:
+    def parent = tracer.buildSpan("testParent").asChildOf(extractedContext).start().context()
+    def child = tracer.buildSpan("testChild1").asChildOf(parent).start().context()
+
+    expect:
+    parent.origin == "some-origin"
+    parent.@origin == "some-origin" // Access field directly instead of getter.
+    child.origin == "some-origin"
+    child.@origin == null // Access field directly instead of getter.
+
+    where:
+    extractedContext                                           | _
+    new TagContext("some-origin", [:])                         | _
+    new ExtractedContext("1", "2", 0, "some-origin", [:], [:]) | _
   }
 
   def "getRootSpan returns the root span"() {

@@ -2,7 +2,6 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.ActiveMQMessageConsumer
@@ -123,12 +122,11 @@ class JMS1Test extends AgentTestRunner {
           serviceName "jms"
           operationName "jms.consume"
           resourceName "JMS receiveNoWait"
-          spanType DDSpanTypes.MESSAGE_PRODUCER
+          spanType DDSpanTypes.MESSAGE_CONSUMER
           errored false
 
           tags {
             defaultTags()
-            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
             "${Tags.COMPONENT.key}" "jms"
             "${Tags.SPAN_KIND.key}" "consumer"
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -162,12 +160,11 @@ class JMS1Test extends AgentTestRunner {
           serviceName "jms"
           operationName "jms.consume"
           resourceName "JMS receive"
-          spanType DDSpanTypes.MESSAGE_PRODUCER
+          spanType DDSpanTypes.MESSAGE_CONSUMER
           errored false
 
           tags {
             defaultTags()
-            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
             "${Tags.COMPONENT.key}" "jms"
             "${Tags.SPAN_KIND.key}" "consumer"
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -214,12 +211,11 @@ class JMS1Test extends AgentTestRunner {
           serviceName "jms"
           operationName "jms.consume"
           resourceName "Consumed from $jmsResourceName"
-          spanType DDSpanTypes.MESSAGE_PRODUCER
+          spanType DDSpanTypes.MESSAGE_CONSUMER
           errored false
 
           tags {
             defaultTags()
-            "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
             "${Tags.COMPONENT.key}" "jms"
             "${Tags.SPAN_KIND.key}" "consumer"
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -252,7 +248,6 @@ class JMS1Test extends AgentTestRunner {
 
         tags {
           defaultTags()
-          "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_PRODUCER
           "${Tags.COMPONENT.key}" "jms"
           "${Tags.SPAN_KIND.key}" "producer"
           "span.origin.type" ActiveMQMessageProducer.name
@@ -272,13 +267,12 @@ class JMS1Test extends AgentTestRunner {
           operationName "jms.consume"
           resourceName "Consumed from $jmsResourceName"
         }
-        spanType DDSpanTypes.MESSAGE_PRODUCER
+        spanType DDSpanTypes.MESSAGE_CONSUMER
         errored false
         childOf parentSpan
 
         tags {
           defaultTags(true)
-          "${DDTags.SPAN_TYPE}" DDSpanTypes.MESSAGE_CONSUMER
           "${Tags.COMPONENT.key}" "jms"
           "${Tags.SPAN_KIND.key}" "consumer"
           "span.origin.type" origin.name
