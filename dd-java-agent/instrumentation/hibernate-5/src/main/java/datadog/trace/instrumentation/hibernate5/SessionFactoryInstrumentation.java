@@ -27,7 +27,7 @@ import org.hibernate.SharedSessionContract;
 public class SessionFactoryInstrumentation extends Instrumenter.Default {
 
   public SessionFactoryInstrumentation() {
-    super("hibernate-core");
+    super("hibernate", "hibernate-core");
   }
 
   @Override

@@ -23,7 +23,7 @@ import org.hibernate.Transaction;
 public class TransactionInstrumentation extends Instrumenter.Default {
 
   public TransactionInstrumentation() {
-    super("hibernate-core");
+    super("hibernate", "hibernate-core");
   }
 
   @Override

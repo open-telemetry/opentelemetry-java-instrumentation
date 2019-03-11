@@ -23,7 +23,7 @@ import org.hibernate.Criteria;
 public class CriteriaInstrumentation extends Instrumenter.Default {
 
   public CriteriaInstrumentation() {
-    super("hibernate-core");
+    super("hibernate", "hibernate-core");
   }
 
   @Override

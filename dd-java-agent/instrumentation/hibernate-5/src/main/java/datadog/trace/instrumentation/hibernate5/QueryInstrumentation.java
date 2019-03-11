@@ -25,7 +25,7 @@ import org.hibernate.SQLQuery;
 public class QueryInstrumentation extends Instrumenter.Default {
 
   public QueryInstrumentation() {
-    super("hibernate-core");
+    super("hibernate", "hibernate-core");
   }
 
   @Override

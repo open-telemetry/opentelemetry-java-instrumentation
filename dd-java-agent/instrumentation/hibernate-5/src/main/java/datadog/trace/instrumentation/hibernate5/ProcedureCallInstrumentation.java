@@ -22,7 +22,7 @@ import org.hibernate.procedure.ProcedureCall;
 public class ProcedureCallInstrumentation extends Instrumenter.Default {
 
   public ProcedureCallInstrumentation() {
-    super("hibernate-core");
+    super("hibernate", "hibernate-core");
   }
 
   @Override
