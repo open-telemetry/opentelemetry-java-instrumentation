@@ -8,12 +8,8 @@ import play.test.Helpers
 import spock.lang.Shared
 
 class Play26Test extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.akka-http-server.enabled", "true")
-  }
-
   @Shared
-  int port
+  int port = PortUtils.randomOpenPort()
   @Shared
   TestServer testServer
 
@@ -21,7 +17,6 @@ class Play26Test extends AgentTestRunner {
   def client = OkHttpUtils.client()
 
   def setupSpec() {
-    port = PortUtils.randomOpenPort()
     testServer = Helpers.testServer(port, Play26TestUtils.buildTestApp())
     testServer.start()
   }
@@ -33,7 +28,7 @@ class Play26Test extends AgentTestRunner {
   def "request traces"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$port/helloplay/spock")
+      .url("http://localhost:$port/$path")
       .header("x-datadog-trace-id", "123")
       .header("x-datadog-parent-id", "456")
       .get()
@@ -41,200 +36,82 @@ class Play26Test extends AgentTestRunner {
     def response = client.newCall(request).execute()
 
     expect:
-    response.code() == 200
-    response.body().string() == "hello spock"
+    testServer != null
+    response.code() == status
+    if (body instanceof Class) {
+      body.isInstance(response.body())
+    } else {
+      response.body().string() == body
+    }
+
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, extraSpans ? 3 : 2) {
         span(0) {
           traceId "123"
           parentId "456"
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
-          resourceName "GET /helloplay/:from"
+          resourceName status == 404 ? "404" : "GET $route"
           spanType DDSpanTypes.HTTP_SERVER
-          errored false
+          errored isError
           tags {
+            "http.status_code" status
+            "http.url" "http://localhost:$port/$path"
+            "http.method" "GET"
+            "peer.hostname" "localhost"
+            "peer.port" port
+            "span.kind" "server"
+            "component" "akka-http-server"
+            if (isError) {
+              "error" true
+            }
             defaultTags(true)
-            "http.status_code" 200
-            "http.url" "http://localhost:$port/helloplay/spock"
+          }
+        }
+        span(1) {
+          operationName "play.request"
+          resourceName status == 404 ? "404" : "GET $route"
+          spanType DDSpanTypes.HTTP_SERVER
+          childOf(span(0))
+          errored isError
+          tags {
+            "http.status_code" status
+            "http.url" "http://localhost:$port/$path"
             "http.method" "GET"
             "peer.hostname" "localhost"
             "peer.port" port
             "span.kind" "server"
-            "component" "akka-http-server"
-          }
-        }
-        span(1) {
-          childOf span(0)
-          operationName "play.request"
-          resourceName "GET /helloplay/:from"
-          spanType DDSpanTypes.HTTP_SERVER
-          tags {
-            defaultTags()
-            "http.status_code" 200
-            "http.url" "/helloplay/:from"
-            "http.method" "GET"
-            "span.kind" "server"
             "component" "play-action"
+            if (isError) {
+              if (exception) {
+                errorTags(exception.class, exception.message)
+              } else {
+                "error" true
+              }
+            }
+            defaultTags()
           }
         }
-        span(2) {
-          childOf span(1)
-          operationName 'TracedWork$.doWork'
-        }
-      }
-    }
-  }
-
-  def "5xx errors trace"() {
-    setup:
-    def request = new Request.Builder()
-      .url("http://localhost:$port/make-error")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
-
-    expect:
-    response.code() == 500
-    assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
-          serviceName "unnamed-java-app"
-          operationName "akka-http.request"
-          resourceName "GET /make-error"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored true
-          tags {
-            defaultTags()
-            "http.status_code" 500
-            "http.url" "http://localhost:$port/make-error"
-            "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
-            "span.kind" "server"
-            "component" "akka-http-server"
-            "error" true
-          }
-        }
-        span(1) {
-          childOf span(0)
-          operationName "play.request"
-          resourceName "GET /make-error"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored true
-          tags {
-            defaultTags()
-            "http.status_code" 500
-            "http.url" "/make-error"
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "play-action"
-            "error" true
+        if (extraSpans) {
+          span(2) {
+            operationName "TracedWork\$.doWork"
+            childOf(span(1))
+            tags {
+              "component" "trace"
+              defaultTags()
+            }
           }
         }
       }
     }
-  }
 
-  def "error thrown in request"() {
-    setup:
-    def request = new Request.Builder()
-      .url("http://localhost:$port/exception")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
+    where:
+    path              | route              | body              | status | isError | exception
+    "helloplay/spock" | "/helloplay/:from" | "hello spock"     | 200    | false   | null
+    "make-error"      | "/make-error"      | "Really sorry..." | 500    | true    | null
+    "exception"       | "/exception"       | String            | 500    | true    | new RuntimeException("oh no")
+    "nowhere"         | "/nowhere"         | "Really sorry..." | 404    | false   | null
 
-    expect:
-    testServer != null
-    response.code() == 500
-    assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
-          serviceName "unnamed-java-app"
-          operationName "akka-http.request"
-          resourceName "GET /exception"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored true
-          tags {
-            defaultTags()
-            "http.status_code" 500
-            "http.url" "http://localhost:$port/exception"
-            "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
-            "span.kind" "server"
-            "component" "akka-http-server"
-            "error" true
-          }
-        }
-        span(1) {
-          childOf span(0)
-          operationName "play.request"
-          resourceName "GET /exception"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored true
-          tags {
-            defaultTags()
-            "http.status_code" 500
-            "http.url" "/exception"
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "play-action"
-            "error" true
-            "error.msg" "oh no"
-            "error.type" RuntimeException.getName()
-            "error.stack" String
-          }
-        }
-      }
-    }
-  }
-
-  def "4xx errors trace"() {
-    setup:
-    def request = new Request.Builder()
-      .url("http://localhost:$port/nowhere")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
-
-    expect:
-    response.code() == 404
-
-    assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
-          serviceName "unnamed-java-app"
-          operationName "akka-http.request"
-          resourceName "404"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored false
-          tags {
-            defaultTags()
-            "http.status_code" 404
-            "http.url" "http://localhost:$port/nowhere"
-            "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
-            "span.kind" "server"
-            "component" "akka-http-server"
-          }
-        }
-        span(1) {
-          childOf span(0)
-          operationName "play.request"
-          resourceName "404"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored false
-          tags {
-            defaultTags()
-            "http.status_code" 404
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "play-action"
-          }
-        }
-      }
-    }
+    extraSpans = !isError && status != 404
   }
 }

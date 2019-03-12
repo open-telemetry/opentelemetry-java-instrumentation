@@ -12,17 +12,25 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 object Play24TestUtils {
-  def buildTestApp(): play.Application = {
+  def buildTestApp(port: Int): play.Application = {
     // build play.api.Application with desired setting and pass into play.Application for testing
     val apiApp: play.api.Application = new play.api.inject.guice.GuiceApplicationBuilder()
       .overrides(bind[Router].toInstance(Router.from {
         case GET(p"/helloplay/$from") => Action { req: RequestHeader =>
           HandlerSetter.setHandler(req, "/helloplay/:from")
+          // FIXME: Add WS request for testing.
+          //          implicit val application = Play.current
+          //          val wsRequest = WS.url("http://localhost:" + port).get()
           val f: Future[String] = Future[String] {
             TracedWork.doWork()
             from
           }
+          //          Await.result(wsRequest, 5 seconds)
           Results.Ok(s"hello " + Await.result(f, 5 seconds))
+        }
+        case GET(p"/") => Action { req: RequestHeader =>
+          TracedWork.doWork()
+          Results.Ok(s"hello")
         }
         case GET(p"/make-error") => Action { req: RequestHeader =>
           HandlerSetter.setHandler(req, "/make-error")

@@ -9,7 +9,6 @@ import play.api.routing.{HandlerDef, Router}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-
 object Play26TestUtils {
   def buildTestApp(): play.Application = {
     // build play.api.Application with desired setting and pass into play.Application for testing
@@ -19,6 +18,9 @@ object Play26TestUtils {
         Router.from {
           case GET(p"/helloplay/$from") => Action { req: RequestHeader =>
             HandlerSetter.setHandler(req, "/helloplay/:from")
+            // FIXME: Add WS request for testing.
+            //          implicit val application = Play.current
+            //          val wsRequest = WS.url("http://localhost:" + port).get()
             val f: Future[String] = Future[String] {
               TracedWork.doWork()
               from
