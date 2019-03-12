@@ -9,8 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import io.opentracing.util.GlobalTracer;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -26,8 +24,6 @@ import net.spy.memcached.internal.OperationFuture;
 public final class MemcachedClientInstrumentation extends Instrumenter.Default {
 
   private static final String MEMCACHED_PACKAGE = "net.spy.memcached";
-  private static final String HELPERS_PACKAGE =
-      MemcachedClientInstrumentation.class.getPackage().getName();
 
   public MemcachedClientInstrumentation() {
     super("spymemcached");
@@ -41,11 +37,15 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      HELPERS_PACKAGE + ".CompletionListener",
-      HELPERS_PACKAGE + ".SyncCompletionListener",
-      HELPERS_PACKAGE + ".GetCompletionListener",
-      HELPERS_PACKAGE + ".OperationCompletionListener",
-      HELPERS_PACKAGE + ".BulkGetCompletionListener"
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ClientDecorator",
+      "datadog.trace.agent.decorator.DatabaseClientDecorator",
+      packageName + ".MemcacheClientDecorator",
+      packageName + ".CompletionListener",
+      packageName + ".SyncCompletionListener",
+      packageName + ".GetCompletionListener",
+      packageName + ".OperationCompletionListener",
+      packageName + ".BulkGetCompletionListener"
     };
   }
 
@@ -84,13 +84,14 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void methodExit(
         @Advice.Enter final boolean shouldInjectListener,
-        @Advice.Origin final Method method,
+        @Advice.This final MemcachedClient client,
+        @Advice.Origin("#m") final String methodName,
         @Advice.Return final OperationFuture future) {
       if (shouldInjectListener && future != null) {
-        final OperationCompletionListener listener =
-            new OperationCompletionListener(GlobalTracer.get(), method.getName());
-        future.addListener(listener);
         CallDepthThreadLocalMap.reset(MemcachedClient.class);
+        final OperationCompletionListener listener =
+            new OperationCompletionListener(client.getConnection(), methodName);
+        future.addListener(listener);
       }
     }
   }
@@ -105,13 +106,14 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void methodExit(
         @Advice.Enter final boolean shouldInjectListener,
-        @Advice.Origin final Method method,
+        @Advice.This final MemcachedClient client,
+        @Advice.Origin("#m") final String methodName,
         @Advice.Return final GetFuture future) {
       if (shouldInjectListener && future != null) {
-        final GetCompletionListener listener =
-            new GetCompletionListener(GlobalTracer.get(), method.getName());
-        future.addListener(listener);
         CallDepthThreadLocalMap.reset(MemcachedClient.class);
+        final GetCompletionListener listener =
+            new GetCompletionListener(client.getConnection(), methodName);
+        future.addListener(listener);
       }
     }
   }
@@ -126,13 +128,14 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void methodExit(
         @Advice.Enter final boolean shouldInjectListener,
-        @Advice.Origin final Method method,
+        @Advice.This final MemcachedClient client,
+        @Advice.Origin("#m") final String methodName,
         @Advice.Return final BulkFuture future) {
       if (shouldInjectListener && future != null) {
-        final BulkGetCompletionListener listener =
-            new BulkGetCompletionListener(GlobalTracer.get(), method.getName());
-        future.addListener(listener);
         CallDepthThreadLocalMap.reset(MemcachedClient.class);
+        final BulkGetCompletionListener listener =
+            new BulkGetCompletionListener(client.getConnection(), methodName);
+        future.addListener(listener);
       }
     }
   }
@@ -140,9 +143,10 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
   public static class SyncOperationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SyncCompletionListener methodEnter(@Advice.Origin final Method method) {
+    public static SyncCompletionListener methodEnter(
+        @Advice.This final MemcachedClient client, @Advice.Origin("#m") final String methodName) {
       if (CallDepthThreadLocalMap.incrementCallDepth(MemcachedClient.class) <= 0) {
-        return new SyncCompletionListener(GlobalTracer.get(), method.getName());
+        return new SyncCompletionListener(client.getConnection(), methodName);
       } else {
         return null;
       }
@@ -153,8 +157,8 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
         @Advice.Enter final SyncCompletionListener listener,
         @Advice.Thrown final Throwable thrown) {
       if (listener != null) {
-        listener.done(thrown);
         CallDepthThreadLocalMap.reset(MemcachedClient.class);
+        listener.done(thrown);
       }
     }
   }

@@ -1,10 +1,8 @@
-// building and testing against 2.12 because setListenerExecutorService exists to facilitate easier
-// testing. Instrumentation should work since 2.10
 muzzle {
   pass {
     group = "net.spy"
     module = 'spymemcached'
-    versions = "[2.10.0,)"
+    versions = "[2.12.0,)"
     assertInverse = true
   }
 }

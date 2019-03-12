@@ -1,17 +1,13 @@
 package datadog.trace.instrumentation.spymemcached;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.spymemcached.MemcacheClientDecorator.DECORATE;
 
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
-import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.tag.Tags;
-import java.util.Collections;
+import io.opentracing.util.GlobalTracer;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import lombok.extern.slf4j.Slf4j;
+import net.spy.memcached.MemcachedConnection;
 
 @Slf4j
 public abstract class CompletionListener<T> {
@@ -27,34 +23,18 @@ public abstract class CompletionListener<T> {
   static final String HIT = "hit";
   static final String MISS = "miss";
 
-  private final Tracer tracer;
-  private final Scope scope;
+  private final MemcachedConnection connection;
+  private final Span span;
 
-  public CompletionListener(final Tracer tracer, final String methodName, final boolean async) {
-    this.tracer = tracer;
-    scope = buildSpan(getOperationName(methodName), async);
-  }
-
-  private Scope buildSpan(final String operation, final boolean async) {
-    final Tracer.SpanBuilder spanBuilder =
-        tracer
-            .buildSpan(OPERATION_NAME)
-            .withTag(DDTags.SERVICE_NAME, SERVICE_NAME)
-            .withTag(DDTags.RESOURCE_NAME, operation)
-            .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MEMCACHED)
-            .withTag(Tags.COMPONENT.getKey(), COMPONENT_NAME)
-            .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-            .withTag(Tags.DB_TYPE.getKey(), DB_TYPE);
-
-    final Scope scope = spanBuilder.startActive(false);
-    if (async) {
-      scope.close();
-    }
-    return scope;
+  public CompletionListener(final MemcachedConnection connection, final String methodName) {
+    this.connection = connection;
+    span = GlobalTracer.get().buildSpan(OPERATION_NAME).start();
+    DECORATE.afterStart(span);
+    DECORATE.onConnection(span, connection);
+    DECORATE.onOperation(span, methodName);
   }
 
   protected void closeAsyncSpan(final T future) {
-    final Span span = scope.span();
     try {
       processResult(span, future);
     } catch (final CancellationException e) {
@@ -64,33 +44,25 @@ public abstract class CompletionListener<T> {
         // Looks like underlying OperationFuture wraps CancellationException into ExecutionException
         span.setTag(DB_COMMAND_CANCELLED, true);
       } else {
-        Tags.ERROR.set(span, Boolean.TRUE);
-        span.log(Collections.singletonMap(ERROR_OBJECT, e.getCause()));
+        DECORATE.onError(span, e.getCause());
       }
     } catch (final InterruptedException e) {
       // Avoid swallowing InterruptedException
-      Tags.ERROR.set(span, Boolean.TRUE);
-      span.log(Collections.singletonMap(ERROR_OBJECT, e));
+      DECORATE.onError(span, e);
       Thread.currentThread().interrupt();
     } catch (final Exception e) {
       // This should never happen, just in case to make sure we cover all unexpected exceptions
-      Tags.ERROR.set(span, Boolean.TRUE);
-      span.log(Collections.singletonMap(ERROR_OBJECT, e));
+      DECORATE.onError(span, e);
     } finally {
+      DECORATE.beforeFinish(span);
       span.finish();
     }
   }
 
   protected void closeSyncSpan(final Throwable thrown) {
-    final Span span = scope.span();
-
-    if (thrown != null) {
-      Tags.ERROR.set(span, Boolean.TRUE);
-      span.log(Collections.singletonMap(ERROR_OBJECT, thrown));
-    }
-
+    DECORATE.onError(span, thrown);
+    DECORATE.beforeFinish(span);
     span.finish();
-    scope.close();
   }
 
   protected abstract void processResult(Span span, T future)
@@ -98,18 +70,5 @@ public abstract class CompletionListener<T> {
 
   protected void setResultTag(final Span span, final boolean hit) {
     span.setTag(MEMCACHED_RESULT, hit ? HIT : MISS);
-  }
-
-  private static String getOperationName(final String methodName) {
-    final char[] chars =
-        methodName
-            .replaceFirst("^async", "")
-            // 'CAS' name is special, we have to lowercase whole name
-            .replaceFirst("^CAS", "cas")
-            .toCharArray();
-
-    // Lowercase first letter
-    chars[0] = Character.toLowerCase(chars[0]);
-    return new String(chars);
   }
 }
