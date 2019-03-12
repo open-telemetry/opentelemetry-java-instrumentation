@@ -370,6 +370,7 @@ class RabbitMQTest extends AgentTestRunner {
         }
         "$Tags.COMPONENT.key" "rabbitmq-amqp"
         "$Tags.PEER_HOSTNAME.key" { it == null || it instanceof String }
+        "$Tags.PEER_HOST_IPV4.key" { "127.0.0.1" }
         "$Tags.PEER_PORT.key" { it == null || it instanceof Integer }
 
         switch (tag("amqp.command")) {

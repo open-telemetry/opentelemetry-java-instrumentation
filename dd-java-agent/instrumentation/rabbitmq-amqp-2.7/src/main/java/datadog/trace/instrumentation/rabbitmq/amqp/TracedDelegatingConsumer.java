@@ -1,23 +1,17 @@
 package datadog.trace.instrumentation.rabbitmq.amqp;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.rabbitmq.amqp.RabbitDecorator.CONSUMER_DECORATE;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
-import datadog.trace.api.DDSpanTypes;
-import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
-import io.opentracing.Span;
 import io.opentracing.SpanContext;
-import io.opentracing.Tracer;
 import io.opentracing.noop.NoopScopeManager;
 import io.opentracing.propagation.Format;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,33 +70,15 @@ public class TracedDelegatingConsumer implements Consumer {
               : GlobalTracer.get()
                   .extract(Format.Builtin.TEXT_MAP, new TextMapExtractAdapter(headers));
 
-      String queueName = queue;
-      if (queue == null || queue.isEmpty()) {
-        queueName = "<default>";
-      } else if (queue.startsWith("amq.gen-")) {
-        queueName = "<generated>";
-      }
-
-      final Tracer.SpanBuilder spanBuilder =
+      scope =
           GlobalTracer.get()
               .buildSpan("amqp.command")
               .asChildOf(parentContext)
-              .withTag(DDTags.SERVICE_NAME, "rabbitmq")
-              .withTag(DDTags.RESOURCE_NAME, "basic.deliver " + queueName)
-              .withTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_CONSUMER)
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CONSUMER)
-              .withTag(Tags.COMPONENT.getKey(), "rabbitmq-amqp")
-              .withTag("amqp.command", "basic.deliver")
               .withTag("message.size", body == null ? 0 : body.length)
-              .withTag("span.origin.type", delegate.getClass().getName());
-
-      if (envelope != null) {
-        spanBuilder
-            .withTag("amqp.exchange", envelope.getExchange())
-            .withTag("amqp.routing_key", envelope.getRoutingKey());
-      }
-
-      scope = spanBuilder.startActive(true);
+              .withTag("span.origin.type", delegate.getClass().getName())
+              .startActive(true);
+      CONSUMER_DECORATE.afterStart(scope);
+      CONSUMER_DECORATE.onDeliver(scope, queue, envelope);
 
     } catch (final Exception e) {
       log.debug("Instrumentation error in tracing consumer", e);
@@ -113,11 +89,10 @@ public class TracedDelegatingConsumer implements Consumer {
         delegate.handleDelivery(consumerTag, envelope, properties, body);
 
       } catch (final Throwable throwable) {
-        final Span span = scope.span();
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+        CONSUMER_DECORATE.onError(scope, throwable);
         throw throwable;
       } finally {
+        CONSUMER_DECORATE.beforeFinish(scope);
         scope.close();
       }
     }
