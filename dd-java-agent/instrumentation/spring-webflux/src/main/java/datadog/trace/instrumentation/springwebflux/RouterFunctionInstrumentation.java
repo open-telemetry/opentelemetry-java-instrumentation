@@ -45,6 +45,6 @@ public final class RouterFunctionInstrumentation extends AbstractWebfluxInstrume
                     0, named("org.springframework.web.reactive.function.server.ServerRequest")))
             .and(takesArguments(1)),
         // Cannot reference class directly here because it would lead to class load failure on Java7
-        PACKAGE + ".RouterFunctionAdvice");
+        packageName + ".RouterFunctionAdvice");
   }
 }

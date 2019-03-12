@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.springweb;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE;
+import static datadog.trace.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE_RENDER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -11,10 +12,8 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.Tracer;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -33,6 +32,17 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.web.servlet.DispatcherServlet");
+  }
+
+  @Override
+  public String[] helperClassNames() {
+    return new String[] {
+      "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.decorator.ServerDecorator",
+      "datadog.trace.agent.decorator.HttpServerDecorator",
+      packageName + ".SpringWebHttpServerDecorator",
+      packageName + ".SpringWebHttpServerDecorator$1",
+    };
   }
 
   @Override
@@ -57,29 +67,17 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(@Advice.Argument(0) final ModelAndView mv) {
-
-      final Tracer.SpanBuilder builder =
-          GlobalTracer.get()
-              .buildSpan("response.render")
-              .withTag(Tags.COMPONENT.getKey(), "spring-webmvc");
-      if (mv.getViewName() != null) {
-        builder.withTag("view.name", mv.getViewName());
-      }
-      if (mv.getView() != null) {
-        builder.withTag("view.type", mv.getView().getClass().getName());
-      }
-      return builder.startActive(true);
+      final Scope scope = GlobalTracer.get().buildSpan("response.render").startActive(true);
+      DECORATE_RENDER.afterStart(scope);
+      DECORATE_RENDER.onRender(scope, mv);
+      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
-
-      if (throwable != null) {
-        final Span span = scope.span();
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-      }
+      DECORATE_RENDER.onError(scope, throwable);
+      DECORATE_RENDER.beforeFinish(scope);
       scope.close();
     }
   }
@@ -90,7 +88,7 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
       final Scope scope = GlobalTracer.get().scopeManager().active();
       if (scope != null && exception != null) {
         final Span span = scope.span();
-        span.log(Collections.singletonMap(ERROR_OBJECT, exception));
+        DECORATE.onError(span, exception);
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)
         Tags.ERROR.set(span, false);

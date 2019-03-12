@@ -368,10 +368,12 @@ class SpringBootBasedTest extends AgentTestRunner {
       serviceName "unnamed-java-app"
       operationName name
       resourceName name
+      spanType DDSpanTypes.HTTP_SERVER
       childOf(trace.span(0))
       errored errorType != null
       tags {
         "$Tags.COMPONENT.key" "spring-web-controller"
+        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
         if (errorType) {
           "error.msg" String
           errorTags(errorType)
