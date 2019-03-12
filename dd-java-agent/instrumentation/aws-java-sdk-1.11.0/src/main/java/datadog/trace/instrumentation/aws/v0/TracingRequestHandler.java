@@ -8,8 +8,6 @@ import com.amazonaws.Response;
 import com.amazonaws.handlers.HandlerContextKey;
 import com.amazonaws.handlers.RequestHandler2;
 import io.opentracing.Scope;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMapInjectAdapter;
 import io.opentracing.util.GlobalTracer;
 
 /** Tracing Request Handler */
@@ -31,15 +29,6 @@ public class TracingRequestHandler extends RequestHandler2 {
     final Scope scope = GlobalTracer.get().buildSpan("aws.command").startActive(true);
     DECORATE.afterStart(scope.span());
     DECORATE.onRequest(scope.span(), request);
-
-    // We inject headers at aws-client level because aws requests may be signed and adding headers
-    // on http-client level may break signature.
-    GlobalTracer.get()
-        .inject(
-            scope.span().context(),
-            Format.Builtin.HTTP_HEADERS,
-            new TextMapInjectAdapter(request.getHeaders()));
-
     request.addHandlerContext(SCOPE_CONTEXT_KEY, scope);
   }
 
