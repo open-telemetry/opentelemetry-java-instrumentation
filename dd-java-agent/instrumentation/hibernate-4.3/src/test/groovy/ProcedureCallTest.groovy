@@ -117,7 +117,7 @@ class ProcedureCallTest extends AgentTestRunner {
 
     ProcedureCall call = session.createStoredProcedureCall("TEST_PROC")
     call.registerParameter("nonexistent", Long, ParameterMode.IN)
-    call.getParameterRegistration("nonexistent").bindValue(420)
+    call.getParameterRegistration("nonexistent").bindValue(420L)
     try {
       call.getOutputs()
     } catch (Exception e) {
