@@ -38,8 +38,8 @@ dependencies {
   testCompile project(':dd-java-agent:instrumentation:jdbc')
 
   testCompile group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
-  testCompile group: 'org.hsqldb', name: 'hsqldb', version: '+'
+  testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
 
   latestDepTestCompile group: 'org.hibernate', name: 'hibernate-core', version: '+'
-  latestDepTestCompile group: 'org.hsqldb', name: 'hsqldb', version: '+'
+  latestDepTestCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
 }
