@@ -29,9 +29,7 @@ public abstract class BaseDecorator {
                 new TreeSet<>(Arrays.asList(instrumentationNames)), traceAnalyticsDefault());
     float rate = 1.0f;
     for (final String name : instrumentationNames) {
-      rate =
-          Config.getFloatSettingFromEnvironment(
-              "integration." + name + ".analytics.sample-rate", rate);
+      rate = Config.getFloatSettingFromEnvironment(name + ".analytics.sample-rate", rate);
     }
     traceAnalyticsSampleRate = rate;
   }
