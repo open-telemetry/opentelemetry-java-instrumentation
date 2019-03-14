@@ -164,8 +164,8 @@ class BaseDecoratorTest extends Specification {
 
   def "test analytics rate enabled"() {
     when:
-    BaseDecorator dec = withSystemProperty("dd.integration.${integName}.analytics.enabled", "true") {
-      withSystemProperty("dd.integration.${integName}.analytics.sample-rate", "$sampleRate") {
+    BaseDecorator dec = withSystemProperty("dd.${integName}.analytics.enabled", "true") {
+      withSystemProperty("dd.${integName}.analytics.sample-rate", "$sampleRate") {
         newDecorator(enabled)
       }
     }

@@ -347,13 +347,13 @@ class ConfigTest extends Specification {
 
   def "verify integration trace analytics config"() {
     setup:
-    environmentVariables.set("DD_INTEGRATION_ORDER_ANALYTICS_ENABLED", "false")
-    environmentVariables.set("DD_INTEGRATION_TEST_ENV_ANALYTICS_ENABLED", "true")
-    environmentVariables.set("DD_INTEGRATION_DISABLED_ENV_ANALYTICS_ENABLED", "false")
+    environmentVariables.set("DD_ORDER_ANALYTICS_ENABLED", "false")
+    environmentVariables.set("DD_TEST_ENV_ANALYTICS_ENABLED", "true")
+    environmentVariables.set("DD_DISABLED_ENV_ANALYTICS_ENABLED", "false")
 
-    System.setProperty("dd.integration.order.analytics.enabled", "true")
-    System.setProperty("dd.integration.test-prop.analytics.enabled", "true")
-    System.setProperty("dd.integration.disabled-prop.analytics.enabled", "false")
+    System.setProperty("dd.order.analytics.enabled", "true")
+    System.setProperty("dd.test-prop.analytics.enabled", "true")
+    System.setProperty("dd.disabled-prop.analytics.enabled", "false")
 
     expect:
     Config.traceAnalyticsIntegrationEnabled(integrationNames, defaultEnabled) == expected

@@ -284,8 +284,7 @@ public class Config {
     boolean anyEnabled = defaultEnabled;
     for (final String name : integrationNames) {
       final boolean configEnabled =
-          getBooleanSettingFromEnvironment(
-              "integration." + name + ".analytics.enabled", defaultEnabled);
+          getBooleanSettingFromEnvironment(name + ".analytics.enabled", defaultEnabled);
       if (defaultEnabled) {
         anyEnabled &= configEnabled;
       } else {
