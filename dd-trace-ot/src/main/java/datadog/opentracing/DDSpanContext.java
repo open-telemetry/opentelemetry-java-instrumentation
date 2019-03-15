@@ -295,7 +295,11 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     if (metrics.get() == null) {
       metrics.compareAndSet(null, new ConcurrentHashMap<String, Number>());
     }
-    metrics.get().put(key, value);
+    if (value instanceof Float) {
+      metrics.get().put(key, value.doubleValue());
+    } else {
+      metrics.get().put(key, value);
+    }
   }
   /**
    * Add a tag to the span. Tags are not propagated to the children

@@ -2,12 +2,16 @@ package datadog.trace.agent
 
 import datadog.trace.agent.test.IntegrationTestUtils
 import jvmbootstraptest.LogManagerSetter
+import spock.lang.Retry
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Timeout
 
 import java.lang.management.ManagementFactory
 import java.lang.management.RuntimeMXBean
 
+@Retry
+@Timeout(30)
 class CustomLogManagerTest extends Specification {
   // Run all tests using forked jvm because groovy has already set the global log manager
 

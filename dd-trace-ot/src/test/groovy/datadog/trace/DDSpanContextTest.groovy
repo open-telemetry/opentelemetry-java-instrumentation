@@ -70,4 +70,32 @@ class DDSpanContextTest extends Specification {
     "tag-with-bool"  | false
     "tag_with_float" | 0.321
   }
+
+  def "metrics use the expected types"() {
+    // floats should be converted to doubles.
+    setup:
+    def context = SpanFactory.newSpanOf(0).context
+    context.setMetric("test", value)
+    def metrics = context.getMetrics()
+
+    expect:
+    type.isInstance(metrics["test"])
+
+    where:
+    type    | value
+    Integer | 0
+    Integer | Integer.MAX_VALUE
+    Integer | Integer.MIN_VALUE
+    Short   | Short.MAX_VALUE
+    Short   | Short.MIN_VALUE
+    Double  | Float.MAX_VALUE
+    Double  | Float.MIN_VALUE
+    Double  | Double.MAX_VALUE
+    Double  | Double.MIN_VALUE
+    Double  | 1f
+    Double  | 1d
+    Double  | 0.5f
+    Double  | 0.5d
+    Integer | 0x55
+  }
 }
