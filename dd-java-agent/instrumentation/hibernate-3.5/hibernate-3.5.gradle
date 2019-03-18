@@ -36,10 +36,10 @@ dependencies {
 
   testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:jdbc')
-  testCompile group: 'org.hibernate', name: 'hibernate-annotations', version: '+'
-  testCompile group: 'javassist', name: 'javassist', version: '+'
 
   testCompile group: 'org.hibernate', name: 'hibernate-core', version: '3.5.0-Final'
+  testCompile group: 'org.hibernate', name: 'hibernate-annotations', version: '+'
+  testCompile group: 'javassist', name: 'javassist', version: '+'
   testCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
   testCompile "javax.xml.bind:jaxb-api:2.2.11"
   testCompile "com.sun.xml.bind:jaxb-core:2.2.11"
@@ -47,5 +47,9 @@ dependencies {
   testCompile "javax.activation:activation:1.1.1"
 
   latestDepTestCompile group: 'org.hibernate', name: 'hibernate-core', version: '3.+'
-  latestDepTestCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
+}
+
+configurations {
+  // Needed for test, but for latestDepTest this would otherwise bundle a second incompatible version of hibernate-core.
+  latestDepTestCompile.exclude group: 'org.hibernate', module: 'hibernate-annotations'
 }

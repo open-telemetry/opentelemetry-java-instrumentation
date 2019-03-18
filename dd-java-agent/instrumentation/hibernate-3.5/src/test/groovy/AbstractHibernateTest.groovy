@@ -13,7 +13,6 @@ abstract class AbstractHibernateTest extends AgentTestRunner {
   protected List<Value> prepopulated
 
   def setupSpec() {
-//    sessionFactory = new Configuration().configure().buildSessionFactory()
     sessionFactory = new AnnotationConfiguration().configure().buildSessionFactory()
 
     // Pre-populate the DB, so delete/update can be tested.
