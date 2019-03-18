@@ -9,7 +9,7 @@ muzzle {
   pass {
     group = "org.hibernate"
     module = "hibernate-core"
-    versions = "[4.0.0.Final,)"
+    versions = "[4.3.0.Final,)"
   }
 }
 
@@ -24,9 +24,10 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.0.0.Final'
+  compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
 
   compile project(':dd-java-agent:agent-tooling')
+  compile project(':dd-java-agent:instrumentation:hibernate-4.0')
 
   compile deps.bytebuddy
   compile deps.opentracing
@@ -36,16 +37,9 @@ dependencies {
   testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:jdbc')
 
-
-  testCompile group: 'org.hibernate', name: 'hibernate-core', version: '4.0.0.Final'
-  testCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
-  testCompile "javax.xml.bind:jaxb-api:2.2.11"
-  testCompile "com.sun.xml.bind:jaxb-core:2.2.11"
-  testCompile "com.sun.xml.bind:jaxb-impl:2.2.11"
-  testCompile "javax.activation:activation:1.1.1"
+  testCompile group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
+  testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
 
   latestDepTestCompile group: 'org.hibernate', name: 'hibernate-core', version: '+'
-  latestDepTestCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
-  // Test that the incremental instrumentation for hibernate 4.3 doesn't cause issues.
-  latestDepTestCompile project(':dd-java-agent:instrumentation:hibernate-4.3')
+  latestDepTestCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
 }
