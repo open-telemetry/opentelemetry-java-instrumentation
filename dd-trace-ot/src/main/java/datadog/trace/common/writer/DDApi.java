@@ -31,6 +31,7 @@ public class DDApi {
   private static final String DATADOG_META_TRACER_VERSION = "Datadog-Meta-Tracer-Version";
   private static final String X_DATADOG_TRACE_COUNT = "X-Datadog-Trace-Count";
 
+  private static final int HTTP_TIMEOUT = 1; // 1 second for conenct/read/write operations
   private static final String TRACES_ENDPOINT_V3 = "v0.3/traces";
   private static final String TRACES_ENDPOINT_V4 = "v0.4/traces";
   private static final long MILLISECONDS_BETWEEN_ERROR_LOG = TimeUnit.MINUTES.toMillis(5);
@@ -59,7 +60,7 @@ public class DDApi {
       final int port,
       final boolean v4EndpointsAvailable,
       final String unixDomainSocketPath) {
-    httpClient = buildHttpClient(unixDomainSocketPath, false);
+    httpClient = buildHttpClient(unixDomainSocketPath);
 
     if (v4EndpointsAvailable) {
       tracesUrl = getUrl(host, port, TRACES_ENDPOINT_V4);
@@ -166,8 +167,7 @@ public class DDApi {
       final Object data,
       final boolean retry) {
     try {
-      // This is potentially called in premain, so we want to fail fast.
-      final OkHttpClient client = buildHttpClient(unixDomainSocketPath, true);
+      final OkHttpClient client = buildHttpClient(unixDomainSocketPath);
       final RequestBody body = RequestBody.create(MSGPACK, OBJECT_MAPPER.writeValueAsBytes(data));
       final Request request = prepareRequest(url).put(body).build();
 
@@ -182,20 +182,16 @@ public class DDApi {
     return false;
   }
 
-  private static OkHttpClient buildHttpClient(
-      final String unixDomainSocketPath, final boolean setTimeouts) {
+  private static OkHttpClient buildHttpClient(final String unixDomainSocketPath) {
     OkHttpClient.Builder builder = new OkHttpClient.Builder();
     if (unixDomainSocketPath != null) {
       builder = builder.socketFactory(new UnixDomainSocketFactory(new File(unixDomainSocketPath)));
     }
-    if (setTimeouts) {
-      builder =
-          builder
-              .connectTimeout(1, TimeUnit.SECONDS)
-              .writeTimeout(1, TimeUnit.SECONDS)
-              .readTimeout(1, TimeUnit.SECONDS);
-    }
-    return builder.build();
+    return builder
+        .connectTimeout(HTTP_TIMEOUT, TimeUnit.SECONDS)
+        .writeTimeout(HTTP_TIMEOUT, TimeUnit.SECONDS)
+        .readTimeout(HTTP_TIMEOUT, TimeUnit.SECONDS)
+        .build();
   }
 
   private static HttpUrl getUrl(final String host, final int port, final String endPoint) {
