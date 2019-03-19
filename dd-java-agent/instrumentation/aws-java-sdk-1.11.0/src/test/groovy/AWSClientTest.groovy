@@ -1,14 +1,24 @@
+import com.amazonaws.AmazonClientException
+import com.amazonaws.ClientConfiguration
 import com.amazonaws.SDKGlobalConfiguration
+import com.amazonaws.auth.AWSCredentialsProviderChain
 import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.auth.EnvironmentVariableCredentialsProvider
+import com.amazonaws.auth.InstanceProfileCredentialsProvider
+import com.amazonaws.auth.SystemPropertiesCredentialsProvider
+import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.handlers.RequestHandler2
+import com.amazonaws.retry.PredefinedRetryPolicies
 import com.amazonaws.services.ec2.AmazonEC2Client
 import com.amazonaws.services.rds.AmazonRDSClient
 import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
 import io.opentracing.tag.Tags
+import org.apache.http.conn.HttpHostConnectException
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
@@ -17,6 +27,13 @@ import java.util.concurrent.atomic.AtomicReference
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
 class AWSClientTest extends AgentTestRunner {
+
+  private static final CREDENTIALS_PROVIDER_CHAIN = new AWSCredentialsProviderChain(
+    new EnvironmentVariableCredentialsProvider(),
+    new SystemPropertiesCredentialsProvider(),
+    new ProfileCredentialsProvider(),
+    new InstanceProfileCredentialsProvider());
+
   def setupSpec() {
     System.setProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY, "my-access-key")
     System.setProperty(SDKGlobalConfiguration.SECRET_KEY_SYSTEM_PROPERTY, "my-secret-key")
@@ -63,9 +80,11 @@ class AWSClientTest extends AgentTestRunner {
   def "send #operation request with mocked response"() {
     setup:
     responseBody.set(body)
+
+    when:
     def response = call.call(client)
 
-    expect:
+    then:
     response != null
 
     client.requestHandler2s != null
@@ -134,5 +153,62 @@ class AWSClientTest extends AgentTestRunner {
           </ResponseMetadata>
         </DeleteOptionGroupResponse>
       """       | new AmazonRDSClient().withEndpoint("http://localhost:$server.address.port")
+  }
+
+  def "send #operation request to closed port"() {
+    setup:
+    responseBody.set(body)
+
+    when:
+    call.call(client)
+
+    then:
+    thrown AmazonClientException
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          serviceName "java-aws-sdk"
+          operationName "aws.http"
+          resourceName "$service.$operation"
+          spanType DDSpanTypes.HTTP_CLIENT
+          errored true
+          parent()
+          tags {
+            "$Tags.COMPONENT.key" "java-aws-sdk"
+            "$Tags.HTTP_URL.key" "http://localhost:${PortUtils.UNUSABLE_PORT}"
+            "$Tags.HTTP_METHOD.key" "$method"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "aws.service" { it.contains(service) }
+            "aws.endpoint" "http://localhost:${PortUtils.UNUSABLE_PORT}"
+            "aws.operation" "${operation}Request"
+            "aws.agent" "java-aws-sdk"
+            errorTags AmazonClientException, ~/Unable to execute HTTP request/
+            defaultTags()
+          }
+        }
+        span(1) {
+          operationName "http.request"
+          resourceName "$method /$url"
+          spanType DDSpanTypes.HTTP_CLIENT
+          errored true
+          childOf(span(0))
+          tags {
+            "$Tags.COMPONENT.key" "apache-httpclient"
+            "$Tags.HTTP_URL.key" "http://localhost:${PortUtils.UNUSABLE_PORT}/$url"
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" PortUtils.UNUSABLE_PORT
+            "$Tags.HTTP_METHOD.key" "$method"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            errorTags HttpHostConnectException, ~/Connection refused/
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    where:
+    service | operation   | method | url                  | call                                                    | body | client
+    "S3"    | "GetObject" | "GET"  | "someBucket/someKey" | { client -> client.getObject("someBucket", "someKey") } | ""   | new AmazonS3Client(CREDENTIALS_PROVIDER_CHAIN, new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(0))).withEndpoint("http://localhost:${PortUtils.UNUSABLE_PORT}")
   }
 }
