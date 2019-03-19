@@ -1,9 +1,11 @@
-package datadog.trace.instrumentation.hibernate.v4_0;
+package datadog.trace.instrumentation.hibernate.common;
 
 import datadog.trace.agent.decorator.OrmClientDecorator;
 import datadog.trace.api.DDSpanTypes;
+import java.lang.annotation.Annotation;
+import java.util.HashSet;
 import java.util.List;
-import javax.persistence.Entity;
+import java.util.Set;
 
 public class HibernateDecorator extends OrmClientDecorator {
   public static final HibernateDecorator DECORATOR = new HibernateDecorator();
@@ -46,16 +48,22 @@ public class HibernateDecorator extends OrmClientDecorator {
   @Override
   public String entityName(final Object entity) {
     String name = null;
+    final Set<String> annotations = new HashSet<>();
+    for (final Annotation annotation : entity.getClass().getDeclaredAnnotations()) {
+      annotations.add(annotation.annotationType().getName());
+    }
+
     if (entity instanceof String) {
       // We were given an entity name, not the entity itself.
       name = (String) entity;
-    } else if (entity.getClass().isAnnotationPresent(Entity.class)) {
+    } else if (annotations.contains("javax.persistence.Entity")) {
       // We were given an instance of an entity.
       name = entity.getClass().getName();
     } else if (entity instanceof List && ((List) entity).size() > 0) {
       // We have a list of entities.
       name = entityName(((List) entity).get(0));
     }
+
     return name;
   }
 }

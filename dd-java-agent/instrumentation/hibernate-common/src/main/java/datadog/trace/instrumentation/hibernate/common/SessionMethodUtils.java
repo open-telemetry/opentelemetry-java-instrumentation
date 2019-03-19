@@ -1,6 +1,4 @@
-package datadog.trace.instrumentation.hibernate.v4_0;
-
-import static datadog.trace.instrumentation.hibernate.v4_0.HibernateDecorator.DECORATOR;
+package datadog.trace.instrumentation.hibernate.common;
 
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.bootstrap.ContextStore;
@@ -43,8 +41,8 @@ public class SessionMethodUtils {
               .buildSpan(operationName)
               .asChildOf(sessionState.getSessionSpan())
               .startActive(true);
-      DECORATOR.afterStart(scope.span());
-      DECORATOR.onOperation(scope.span(), entity);
+      HibernateDecorator.DECORATOR.afterStart(scope.span());
+      HibernateDecorator.DECORATOR.onOperation(scope.span(), entity);
     } else {
       scope = GlobalTracer.get().scopeManager().activate(sessionState.getSessionSpan(), false);
       sessionState.setHasChildSpan(false);
@@ -68,11 +66,11 @@ public class SessionMethodUtils {
     final Scope scope = sessionState.getMethodScope();
     final Span span = scope.span();
     if (span != null && sessionState.hasChildSpan) {
-      DECORATOR.onError(span, throwable);
+      HibernateDecorator.DECORATOR.onError(span, throwable);
       if (entity != null) {
-        DECORATOR.onOperation(span, entity);
+        HibernateDecorator.DECORATOR.onOperation(span, entity);
       }
-      DECORATOR.beforeFinish(span);
+      HibernateDecorator.DECORATOR.beforeFinish(span);
       span.finish();
     }
 

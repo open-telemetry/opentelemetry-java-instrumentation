@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.hibernate.v3_5;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.instrumentation.hibernate.v4_0.HibernateDecorator.DECORATOR;
+import static datadog.trace.instrumentation.hibernate.common.HibernateDecorator.DECORATOR;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -14,7 +14,7 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
-import datadog.trace.instrumentation.hibernate.v4_0.SessionState;
+import datadog.trace.instrumentation.hibernate.common.SessionState;
 import io.opentracing.Span;
 import io.opentracing.util.GlobalTracer;
 import java.util.HashMap;
@@ -45,12 +45,12 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.instrumentation.hibernate.v4_0.SessionState",
+      "datadog.trace.instrumentation.hibernate.common.SessionState",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.DatabaseClientDecorator",
       "datadog.trace.agent.decorator.OrmClientDecorator",
-      "datadog.trace.instrumentation.hibernate.v4_0.HibernateDecorator",
+      "datadog.trace.instrumentation.hibernate.common.HibernateDecorator",
     };
   }
 

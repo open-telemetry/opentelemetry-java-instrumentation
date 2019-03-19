@@ -27,6 +27,7 @@ dependencies {
   compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.0.0.Final'
 
   compile project(':dd-java-agent:agent-tooling')
+  compile project(':dd-java-agent:instrumentation:hibernate-common')
 
   compile deps.bytebuddy
   compile deps.opentracing
