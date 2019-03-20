@@ -22,28 +22,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Criteria;
 
 @AutoService(Instrumenter.class)
-public class CriteriaInstrumentation extends Instrumenter.Default {
-
-  public CriteriaInstrumentation() {
-    super("hibernate", "hibernate-core");
-  }
+public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
     return singletonMap("org.hibernate.Criteria", SessionState.class.getName());
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
-      "datadog.trace.instrumentation.hibernate.SessionState",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      "datadog.trace.agent.decorator.OrmClientDecorator",
-      "datadog.trace.instrumentation.hibernate.HibernateDecorator",
-    };
   }
 
   @Override

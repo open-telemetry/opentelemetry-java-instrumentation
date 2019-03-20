@@ -33,11 +33,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 
 @AutoService(Instrumenter.class)
-public class SessionInstrumentation extends Instrumenter.Default {
-
-  public SessionInstrumentation() {
-    super("hibernate", "hibernate-core");
-  }
+public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
@@ -48,19 +44,6 @@ public class SessionInstrumentation extends Instrumenter.Default {
     map.put("org.hibernate.Transaction", SessionState.class.getName());
     map.put("org.hibernate.Criteria", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
-      "datadog.trace.instrumentation.hibernate.SessionState",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      "datadog.trace.agent.decorator.OrmClientDecorator",
-      "datadog.trace.instrumentation.hibernate.HibernateDecorator",
-    };
   }
 
   @Override

@@ -22,28 +22,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Transaction;
 
 @AutoService(Instrumenter.class)
-public class TransactionInstrumentation extends Instrumenter.Default {
-
-  public TransactionInstrumentation() {
-    super("hibernate", "hibernate-core");
-  }
+public class TransactionInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
     return singletonMap("org.hibernate.Transaction", SessionState.class.getName());
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
-      "datadog.trace.instrumentation.hibernate.SessionState",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      "datadog.trace.agent.decorator.OrmClientDecorator",
-      "datadog.trace.instrumentation.hibernate.HibernateDecorator",
-    };
   }
 
   @Override
