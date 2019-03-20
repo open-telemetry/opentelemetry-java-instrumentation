@@ -16,18 +16,18 @@ class B3HttpExtractorTest extends Specification {
 
   def "extract http headers"() {
     setup:
-    final Map<String, String> actual = [
+    def headers = [
       (TRACE_ID_KEY.toUpperCase()): traceId.toString(16).toLowerCase(),
       (SPAN_ID_KEY.toUpperCase()) : spanId.toString(16).toLowerCase(),
       SOME_HEADER                 : "my-interesting-info",
     ]
 
     if (samplingPriority != null) {
-      actual.put(SAMPLING_PRIORITY_KEY, "$samplingPriority".toString())
+      headers.put(SAMPLING_PRIORITY_KEY, "$samplingPriority".toString())
     }
 
     when:
-    final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(actual))
+    final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
     then:
     context.traceId == traceId.toString()
@@ -44,6 +44,41 @@ class B3HttpExtractorTest extends Specification {
     3G                  | 4G                  | 0                | PrioritySampling.SAMPLER_DROP
     UINT64_MAX          | UINT64_MAX.minus(1) | 0                | PrioritySampling.SAMPLER_DROP
     UINT64_MAX.minus(1) | UINT64_MAX          | 1                | PrioritySampling.SAMPLER_KEEP
+  }
+
+  def "extract 128 bit id truncates id to 64 bit"() {
+    setup:
+    def headers = [
+      (TRACE_ID_KEY.toUpperCase()): traceId,
+      (SPAN_ID_KEY.toUpperCase()) : spanId,
+    ]
+
+    when:
+    final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(headers))
+
+    then:
+    if (expectedTraceId) {
+      assert context.traceId == expectedTraceId
+      assert context.spanId == expectedSpanId
+    } else {
+      assert context == null
+    }
+
+    where:
+    traceId                            | spanId                   | expectedTraceId       | expectedSpanId
+    "-1"                               | "1"                      | null                  | "0"
+    "1"                                | "-1"                     | null                  | "0"
+    "0"                                | "1"                      | null                  | "0"
+    "00001"                            | "00001"                  | "1"                   | "1"
+    "463ac35c9f6413ad"                 | "463ac35c9f6413ad"       | "5060571933882717101" | "5060571933882717101"
+    "463ac35c9f6413ad48485a3953bb6124" | "1"                      | "5208512171318403364" | "1"
+    "f".multiply(16)                   | "1"                      | "$UINT64_MAX"         | "1"
+    "f".multiply(32)                   | "1"                      | "$UINT64_MAX"         | "1"
+    "1" + "f".multiply(32)             | "1"                      | null                  | "1"
+    "0" + "f".multiply(32)             | "1"                      | null                  | "1"
+    "1"                                | "f".multiply(16)         | "1"                   | "$UINT64_MAX"
+    "1"                                | "1" + "f".multiply(16)   | null                  | "0"
+    "1"                                | "000" + "f".multiply(16) | "1"                   | "$UINT64_MAX"
   }
 
   def "extract header tags with no propagation"() {
@@ -66,30 +101,14 @@ class B3HttpExtractorTest extends Specification {
 
   def "extract http headers with invalid non-numeric ID"() {
     setup:
-    final Map<String, String> actual = [
+    def headers = [
       (TRACE_ID_KEY.toUpperCase()): "traceId",
       (SPAN_ID_KEY.toUpperCase()) : "spanId",
       SOME_HEADER                 : "my-interesting-info",
     ]
 
     when:
-    SpanContext context = extractor.extract(new TextMapExtractAdapter(actual))
-
-    then:
-    context == null
-  }
-
-  def "extract http headers with out of range trace ID"() {
-    setup:
-    String outOfRangeTraceId = UINT64_MAX.add(BigInteger.ONE).toString()
-    final Map<String, String> actual = [
-      (TRACE_ID_KEY.toUpperCase()): outOfRangeTraceId,
-      (SPAN_ID_KEY.toUpperCase()) : "0",
-      SOME_HEADER                 : "my-interesting-info",
-    ]
-
-    when:
-    SpanContext context = extractor.extract(new TextMapExtractAdapter(actual))
+    SpanContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
     then:
     context == null
@@ -97,7 +116,7 @@ class B3HttpExtractorTest extends Specification {
 
   def "extract http headers with out of range span ID"() {
     setup:
-    final Map<String, String> actual = [
+    def headers = [
       (TRACE_ID_KEY.toUpperCase()): "0",
       (SPAN_ID_KEY.toUpperCase()) : "-1",
       SOME_HEADER                 : "my-interesting-info",
@@ -105,7 +124,7 @@ class B3HttpExtractorTest extends Specification {
 
 
     when:
-    SpanContext context = extractor.extract(new TextMapExtractAdapter(actual))
+    SpanContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
     then:
     context == null

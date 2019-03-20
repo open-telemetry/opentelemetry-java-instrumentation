@@ -18,7 +18,7 @@ class DatadogHttpExtractorTest extends Specification {
 
   def "extract http headers"() {
     setup:
-    final Map<String, String> actual = [
+    def headers = [
       (TRACE_ID_KEY.toUpperCase())            : traceId,
       (SPAN_ID_KEY.toUpperCase())             : spanId,
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
@@ -27,15 +27,15 @@ class DatadogHttpExtractorTest extends Specification {
     ]
 
     if (samplingPriority != PrioritySampling.UNSET) {
-      actual.put(SAMPLING_PRIORITY_KEY, "$samplingPriority".toString())
+      headers.put(SAMPLING_PRIORITY_KEY, "$samplingPriority".toString())
     }
 
     if (origin) {
-      actual.put(ORIGIN_KEY, origin)
+      headers.put(ORIGIN_KEY, origin)
     }
 
     when:
-    final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(actual))
+    final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
     then:
     context.traceId == traceId
@@ -77,7 +77,7 @@ class DatadogHttpExtractorTest extends Specification {
 
   def "extract http headers with invalid non-numeric ID"() {
     setup:
-    final Map<String, String> actual = [
+    def headers = [
       (TRACE_ID_KEY.toUpperCase())            : "traceId",
       (SPAN_ID_KEY.toUpperCase())             : "spanId",
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
@@ -86,7 +86,7 @@ class DatadogHttpExtractorTest extends Specification {
     ]
 
     when:
-    SpanContext context = extractor.extract(new TextMapExtractAdapter(actual))
+    SpanContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
     then:
     context == null
@@ -95,7 +95,7 @@ class DatadogHttpExtractorTest extends Specification {
   def "extract http headers with out of range trace ID"() {
     setup:
     String outOfRangeTraceId = UINT64_MAX.add(BigInteger.ONE).toString()
-    final Map<String, String> actual = [
+    def headers = [
       (TRACE_ID_KEY.toUpperCase())            : outOfRangeTraceId,
       (SPAN_ID_KEY.toUpperCase())             : "0",
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
@@ -104,7 +104,7 @@ class DatadogHttpExtractorTest extends Specification {
     ]
 
     when:
-    SpanContext context = extractor.extract(new TextMapExtractAdapter(actual))
+    SpanContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
     then:
     context == null
@@ -112,7 +112,7 @@ class DatadogHttpExtractorTest extends Specification {
 
   def "extract http headers with out of range span ID"() {
     setup:
-    final Map<String, String> actual = [
+    def headers = [
       (TRACE_ID_KEY.toUpperCase())            : "0",
       (SPAN_ID_KEY.toUpperCase())             : "-1",
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
@@ -121,9 +121,42 @@ class DatadogHttpExtractorTest extends Specification {
     ]
 
     when:
-    SpanContext context = extractor.extract(new TextMapExtractAdapter(actual))
+    SpanContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
     then:
     context == null
+  }
+
+  def "more ID range validation"() {
+    setup:
+    def headers = [
+      (TRACE_ID_KEY.toUpperCase()): traceId,
+      (SPAN_ID_KEY.toUpperCase()) : spanId,
+    ]
+
+    when:
+    final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(headers))
+
+    then:
+    if (expectedTraceId) {
+      assert context.traceId == expectedTraceId
+      assert context.spanId == expectedSpanId
+    } else {
+      assert context == null
+    }
+
+    where:
+    gtTraceId               | gSpanId                 | expectedTraceId | expectedSpanId
+    "-1"                    | "1"                     | null            | "0"
+    "1"                     | "-1"                    | null            | "0"
+    "0"                     | "1"                     | null            | "0"
+    "1"                     | "0"                     | "1"             | "0"
+    "$UINT64_MAX"           | "1"                     | "$UINT64_MAX"   | "1"
+    "${UINT64_MAX.plus(1)}" | "1"                     | null            | "1"
+    "1"                     | "$UINT64_MAX"           | "1"             | "$UINT64_MAX"
+    "1"                     | "${UINT64_MAX.plus(1)}" | null            | "0"
+
+    traceId = gtTraceId.toString()
+    spanId = gSpanId.toString()
   }
 }

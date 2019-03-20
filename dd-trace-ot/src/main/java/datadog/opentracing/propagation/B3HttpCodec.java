@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * A codec designed for HTTP transport via headers using B3 headers
  *
  * <p>TODO: there is fair amount of code duplication between DatadogHttpCodec and this class,
- * especiall in part where TagContext is handled. We may want to refactor that and avoid special
+ * especially in part where TagContext is handled. We may want to refactor that and avoid special
  * handling of TagContext in other places (i.e. CompoundExtractor).
  */
 @Slf4j
@@ -90,7 +90,18 @@ class B3HttpCodec {
           }
 
           if (TRACE_ID_KEY.equalsIgnoreCase(key)) {
-            traceId = validateUInt64BitsID(value, HEX_RADIX);
+            final String trimmedValue;
+            final int length = value.length();
+            if (length > 32) {
+              log.debug("Header {} exceeded max length of 32: {}", TRACE_ID_KEY, value);
+              traceId = "0";
+              continue;
+            } else if (length > 16) {
+              trimmedValue = value.substring(length - 16);
+            } else {
+              trimmedValue = value;
+            }
+            traceId = validateUInt64BitsID(trimmedValue, HEX_RADIX);
           } else if (SPAN_ID_KEY.equalsIgnoreCase(key)) {
             spanId = validateUInt64BitsID(value, HEX_RADIX);
           } else if (SAMPLING_PRIORITY_KEY.equalsIgnoreCase(key)) {
