@@ -1,6 +1,5 @@
 package datadog.opentracing
 
-
 import datadog.trace.api.Config
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.gc.GCUtils
@@ -10,13 +9,19 @@ import spock.lang.Timeout
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
 
 class PendingTraceTest extends Specification {
-  def writer = new ListWriter()
+  def traceCount = new AtomicInteger()
+  def writer = new ListWriter() {
+    @Override
+    void incrementTraceCount() {
+      PendingTraceTest.this.traceCount.incrementAndGet()
+    }
+  }
   def tracer = new DDTracer(writer)
-  def traceCount = tracer.traceCount
 
   def traceId = System.identityHashCode(this)
   String traceIdStr = String.valueOf(traceId)
@@ -207,7 +212,7 @@ class PendingTraceTest extends Specification {
     trace.weakReferences.size() == 2
     trace.asList() == [rootSpan]
     writer == []
-    tracer.traceCount.get() == 0
+    traceCount.get() == 0
 
     when:
     child1.finish()
@@ -217,7 +222,7 @@ class PendingTraceTest extends Specification {
     trace.weakReferences.size() == 1
     trace.asList() == [rootSpan]
     writer == [[child1]]
-    tracer.traceCount.get() == 1
+    traceCount.get() == 1
 
     when:
     child2.finish()
@@ -227,7 +232,7 @@ class PendingTraceTest extends Specification {
     trace.weakReferences.size() == 0
     trace.asList() == [child2, rootSpan]
     writer == [[child1], [child2, rootSpan]]
-    tracer.traceCount.get() == 2
+    traceCount.get() == 2
   }
 
   def "partial flush with root span closed last"() {
@@ -253,7 +258,7 @@ class PendingTraceTest extends Specification {
     trace.weakReferences.size() == 2
     trace.asList() == [child1]
     writer == []
-    tracer.traceCount.get() == 0
+    traceCount.get() == 0
 
     when:
     child2.finish()
@@ -263,7 +268,7 @@ class PendingTraceTest extends Specification {
     trace.weakReferences.size() == 1
     trace.asList() == []
     writer == [[child2, child1]]
-    tracer.traceCount.get() == 1
+    traceCount.get() == 1
 
     when:
     rootSpan.finish()
@@ -273,6 +278,6 @@ class PendingTraceTest extends Specification {
     trace.weakReferences.size() == 0
     trace.asList() == [rootSpan]
     writer == [[child2, child1], [rootSpan]]
-    tracer.traceCount.get() == 2
+    traceCount.get() == 2
   }
 }

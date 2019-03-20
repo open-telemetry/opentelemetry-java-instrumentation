@@ -14,17 +14,32 @@ import spock.lang.Subject
 import spock.lang.Timeout
 
 import java.lang.ref.WeakReference
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 
+import static java.util.concurrent.TimeUnit.SECONDS
+
 class ScopeManagerTest extends Specification {
-  def writer = new ListWriter()
-  def tracer = new DDTracer(writer)
+  def latch
+  def writer
+  def tracer
 
   @Subject
-  def scopeManager = tracer.scopeManager()
+  def scopeManager
+
+  def setup() {
+    latch = new CountDownLatch(1)
+    final currentLatch = latch
+    writer = new ListWriter() {
+      void incrementTraceCount() {
+        currentLatch.countDown()
+      }
+    }
+    tracer = new DDTracer(writer)
+    scopeManager = tracer.scopeManager()
+  }
 
   def cleanup() {
     scopeManager.tlsScope.remove()
@@ -255,13 +270,12 @@ class ScopeManagerTest extends Specification {
     writer == [[scope.span()]]
   }
 
-  @Timeout(value = 60, unit = TimeUnit.SECONDS)
+  @Timeout(value = 60, unit = SECONDS)
   def "hard reference on continuation prevents trace from reporting"() {
     setup:
     def builder = tracer.buildSpan("test")
     def scope = (ContinuableScope) builder.startActive(false)
     def span = scope.span()
-    def traceCount = ((DDSpan) span).context().tracer.traceCount
     scope.setAsyncPropagation(true)
     def continuation = scope.capture()
     scope.close()
@@ -277,9 +291,7 @@ class ScopeManagerTest extends Specification {
       def continuationRef = new WeakReference<>(continuation)
       continuation = null // Continuation references also hold up traces.
       GCUtils.awaitGC(continuationRef)
-      while (traceCount.get() == 0) {
-        // wait until trace count increments or timeout expires
-      }
+      latch.await(60, SECONDS)
     }
     if (autoClose) {
       if (continuation != null) {
@@ -289,7 +301,6 @@ class ScopeManagerTest extends Specification {
 
     then:
     forceGC ? true : writer == [[span]]
-    traceCount.get() == 1
 
     where:
     autoClose | forceGC

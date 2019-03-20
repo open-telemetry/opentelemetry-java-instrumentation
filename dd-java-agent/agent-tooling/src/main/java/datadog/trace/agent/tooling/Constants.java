@@ -39,6 +39,8 @@ public final class Constants {
     "org.msgpack",
     "com.fasterxml.jackson",
     "org.yaml.snakeyaml",
+    // disruptor
+    "com.lmax.disruptor",
     // okHttp
     "okhttp3",
     "okio",
