@@ -45,7 +45,8 @@ public abstract class HttpServerDecorator<REQUEST, RESPONSE> extends ServerDecor
       final Integer status = status(response);
       if (status != null) {
         Tags.HTTP_STATUS.set(span, status);
-        if (status >= 500) {
+
+        if (Config.get().getHttpServerErrorStatuses().contains(status)) {
           Tags.ERROR.set(span, true);
         }
       }
