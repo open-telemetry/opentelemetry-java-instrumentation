@@ -1,0 +1,14 @@
+/*
+ * Classes that are common to all versions of the Hibernate instrumentation.
+ */
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+}
