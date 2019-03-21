@@ -1,6 +1,8 @@
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/publish.gradle"
 
+minimumBranchCoverage = 0.8
+
 // These are tested outside of this module since this module mainly just defines 'API'
 excludedClassesConverage += [
   'datadog.trace.api.DDSpanTypes',

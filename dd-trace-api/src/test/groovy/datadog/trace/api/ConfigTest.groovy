@@ -57,7 +57,7 @@ class ConfigTest extends Specification {
 
   def "verify defaults"() {
     when:
-    def config = Config.get()
+    Config config = provider()
 
     then:
     config.serviceName == "unnamed-java-app"
@@ -85,6 +85,73 @@ class ConfigTest extends Specification {
     config.jmxFetchStatsdHost == null
     config.jmxFetchStatsdPort == DEFAULT_JMX_FETCH_STATSD_PORT
     config.toString().contains("unnamed-java-app")
+
+    where:
+    provider << [{ new Config() }, { Config.get() }, {
+      def props = new Properties()
+      props.setProperty("something", "unused")
+      Config.get(props)
+    }]
+  }
+
+  def "specify overrides via properties"() {
+    setup:
+    def prop = new Properties()
+    prop.setProperty(SERVICE_NAME, "something else")
+    prop.setProperty(WRITER_TYPE, "LoggingWriter")
+    prop.setProperty(AGENT_HOST, "somehost")
+    prop.setProperty(TRACE_AGENT_PORT, "123")
+    prop.setProperty(AGENT_UNIX_DOMAIN_SOCKET, "somepath")
+    prop.setProperty(AGENT_PORT_LEGACY, "456")
+    prop.setProperty(PRIORITY_SAMPLING, "false")
+    prop.setProperty(TRACE_RESOLVER_ENABLED, "false")
+    prop.setProperty(SERVICE_MAPPING, "a:1")
+    prop.setProperty(GLOBAL_TAGS, "b:2")
+    prop.setProperty(SPAN_TAGS, "c:3")
+    prop.setProperty(JMX_TAGS, "d:4")
+    prop.setProperty(HEADER_TAGS, "e:5")
+    prop.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
+    prop.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
+    prop.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
+    prop.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
+    prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
+    prop.setProperty(PROPAGATION_STYLE_EXTRACT, "Datadog, B3")
+    prop.setProperty(PROPAGATION_STYLE_INJECT, "B3, Datadog")
+    prop.setProperty(JMX_FETCH_ENABLED, "true")
+    prop.setProperty(JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
+    prop.setProperty(JMX_FETCH_CHECK_PERIOD, "100")
+    prop.setProperty(JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
+    prop.setProperty(JMX_FETCH_STATSD_HOST, "statsd host")
+    prop.setProperty(JMX_FETCH_STATSD_PORT, "321")
+
+    when:
+    Config config = Config.get(prop)
+
+    then:
+    config.serviceName == "something else"
+    config.writerType == "LoggingWriter"
+    config.agentHost == "somehost"
+    config.agentPort == 123
+    config.agentUnixDomainSocket == "somepath"
+    config.prioritySamplingEnabled == false
+    config.traceResolverEnabled == false
+    config.serviceMapping == [a: "1"]
+    config.mergedSpanTags == [b: "2", c: "3"]
+    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
+    config.headerTags == [e: "5"]
+    config.httpServerErrorStatuses == (122..457).toSet()
+    config.httpClientErrorStatuses == (111..111).toSet()
+    config.httpClientSplitByDomain == true
+    config.partialFlushMinSpans == 15
+    config.runtimeContextFieldInjection == false
+    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
+    config.propagationStylesToInject.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
+    config.jmxFetchEnabled == true
+    config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
+    config.jmxFetchCheckPeriod == 100
+    config.jmxFetchRefreshBeansPeriod == 200
+    config.jmxFetchStatsdHost == "statsd host"
+    config.jmxFetchStatsdPort == 321
   }
 
   def "specify overrides via system properties"() {
@@ -117,7 +184,7 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + JMX_FETCH_STATSD_PORT, "321")
 
     when:
-    def config = new Config()
+    Config config = new Config()
 
     then:
     config.serviceName == "something else"
@@ -457,14 +524,22 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + SERVICE_MAPPING, mapString)
     System.setProperty(PREFIX + SPAN_TAGS, mapString)
     System.setProperty(PREFIX + HEADER_TAGS, mapString)
+    def props = new Properties()
+    props.setProperty(SERVICE_MAPPING, mapString)
+    props.setProperty(SPAN_TAGS, mapString)
+    props.setProperty(HEADER_TAGS, mapString)
 
     when:
     def config = new Config()
+    def propConfig = Config.get(props)
 
     then:
     config.serviceMapping == map
     config.spanTags == map
     config.headerTags == map
+    propConfig.serviceMapping == map
+    propConfig.spanTags == map
+    propConfig.headerTags == map
 
     where:
     mapString                         | map
@@ -492,17 +567,25 @@ class ConfigTest extends Specification {
     setup:
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, value)
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, value)
+    def props = new Properties()
+    props.setProperty(HTTP_CLIENT_ERROR_STATUSES, value)
+    props.setProperty(HTTP_SERVER_ERROR_STATUSES, value)
 
     when:
     def config = new Config()
+    def propConfig = Config.get(props)
 
     then:
     if (expected) {
       assert config.httpServerErrorStatuses == expected.toSet()
       assert config.httpClientErrorStatuses == expected.toSet()
+      assert propConfig.httpServerErrorStatuses == expected.toSet()
+      assert propConfig.httpClientErrorStatuses == expected.toSet()
     } else {
       assert config.httpServerErrorStatuses == Config.DEFAULT_HTTP_SERVER_ERROR_STATUSES
       assert config.httpClientErrorStatuses == Config.DEFAULT_HTTP_CLIENT_ERROR_STATUSES
+      assert propConfig.httpServerErrorStatuses == Config.DEFAULT_HTTP_SERVER_ERROR_STATUSES
+      assert propConfig.httpClientErrorStatuses == Config.DEFAULT_HTTP_CLIENT_ERROR_STATUSES
     }
 
     where:

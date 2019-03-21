@@ -549,9 +549,7 @@ public class Config {
 
   private static Set<Integer> parseIntegerRangeSet(String str, final String settingName)
       throws NumberFormatException {
-    if (str == null) {
-      str = "";
-    }
+    assert str != null;
     str = str.replaceAll("\\s", "");
     if (!str.matches("\\d{3}(?:-\\d{3})?(?:,\\d{3}(?:-\\d{3})?)*")) {
       log.warn(
