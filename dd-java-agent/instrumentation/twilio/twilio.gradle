@@ -1,0 +1,25 @@
+muzzle {
+  pass {
+    group = 'com.twilio.sdk'
+    module = 'twilio'
+    versions = "(,)"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compileOnly group: 'com.twilio.sdk', name: 'twilio', version: '7.36.2'
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile group: 'com.twilio.sdk', name: 'twilio', version: '7.36.2'
+  testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  testCompile group: 'org.objenesis', name: 'objenesis', version: '3.0.1'
+}
