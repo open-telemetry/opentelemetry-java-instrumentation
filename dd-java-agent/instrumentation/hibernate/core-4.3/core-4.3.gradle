@@ -10,6 +10,7 @@ muzzle {
     group = "org.hibernate"
     module = "hibernate-core"
     versions = "[4.3.0.Final,)"
+    assertInverse = true
   }
 }
 
@@ -27,7 +28,7 @@ dependencies {
   compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
 
   compile project(':dd-java-agent:agent-tooling')
-  compile project(':dd-java-agent:instrumentation:hibernate:core-4.0')
+  compile project(':dd-java-agent:instrumentation:hibernate')
 
   compile deps.bytebuddy
   compile deps.opentracing
@@ -36,6 +37,7 @@ dependencies {
 
   testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:jdbc')
+  testCompile project(':dd-java-agent:instrumentation:hibernate:core-4.0')
 
   testCompile group: 'org.hibernate', name: 'hibernate-core', version: '4.3.0.Final'
   testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'

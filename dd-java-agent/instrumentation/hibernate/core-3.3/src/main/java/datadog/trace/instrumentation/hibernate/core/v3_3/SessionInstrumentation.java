@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.hibernate.core.v3_5;
+package datadog.trace.instrumentation.hibernate.core.v3_3;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
@@ -33,11 +33,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 
 @AutoService(Instrumenter.class)
-public class SessionInstrumentation extends Instrumenter.Default {
-
-  public SessionInstrumentation() {
-    super("hibernate", "hibernate-core");
-  }
+public class SessionInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
@@ -48,19 +44,6 @@ public class SessionInstrumentation extends Instrumenter.Default {
     map.put("org.hibernate.Transaction", SessionState.class.getName());
     map.put("org.hibernate.Criteria", SessionState.class.getName());
     return Collections.unmodifiableMap(map);
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
-      "datadog.trace.instrumentation.hibernate.SessionState",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      "datadog.trace.agent.decorator.OrmClientDecorator",
-      "datadog.trace.instrumentation.hibernate.HibernateDecorator",
-    };
   }
 
   @Override
@@ -124,7 +107,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
     return transformers;
   }
 
-  public static class SessionCloseAdvice {
+  public static class SessionCloseAdvice extends V3Advice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void closeSession(
@@ -155,7 +138,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class SessionMethodAdvice {
+  public static class SessionMethodAdvice extends V3Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SessionState startMethod(
@@ -188,7 +171,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class GetQueryAdvice {
+  public static class GetQueryAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getQuery(
@@ -210,7 +193,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class GetTransactionAdvice {
+  public static class GetTransactionAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getTransaction(
@@ -233,7 +216,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class GetCriteriaAdvice {
+  public static class GetCriteriaAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getCriteria(

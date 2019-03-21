@@ -25,27 +25,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.SharedSessionContract;
 
 @AutoService(Instrumenter.class)
-public class SessionFactoryInstrumentation extends Instrumenter.Default {
-
-  public SessionFactoryInstrumentation() {
-    super("hibernate", "hibernate-core");
-  }
+public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
     return singletonMap("org.hibernate.SharedSessionContract", SessionState.class.getName());
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionState",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      "datadog.trace.agent.decorator.OrmClientDecorator",
-      "datadog.trace.instrumentation.hibernate.HibernateDecorator",
-    };
   }
 
   @Override
@@ -65,7 +49,7 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
         SessionFactoryAdvice.class.getName());
   }
 
-  public static class SessionFactoryAdvice {
+  public static class SessionFactoryAdvice extends V4Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return final SharedSessionContract session) {

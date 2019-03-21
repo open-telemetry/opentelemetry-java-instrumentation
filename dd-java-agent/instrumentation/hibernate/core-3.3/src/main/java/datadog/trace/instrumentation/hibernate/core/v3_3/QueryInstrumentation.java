@@ -1,6 +1,7 @@
-package datadog.trace.instrumentation.hibernate.core.v3_5;
+package datadog.trace.instrumentation.hibernate.core.v3_3;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -19,63 +20,64 @@ import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.hibernate.Criteria;
+import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 
 @AutoService(Instrumenter.class)
-public class CriteriaInstrumentation extends Instrumenter.Default {
-
-  public CriteriaInstrumentation() {
-    super("hibernate", "hibernate-core");
-  }
+public class QueryInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
-    return singletonMap("org.hibernate.Criteria", SessionState.class.getName());
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
-      "datadog.trace.instrumentation.hibernate.SessionState",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      "datadog.trace.agent.decorator.OrmClientDecorator",
-      "datadog.trace.instrumentation.hibernate.HibernateDecorator",
-    };
+    return singletonMap("org.hibernate.Query", SessionState.class.getName());
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.Criteria")));
+    return not(isInterface()).and(safeHasSuperType(named("org.hibernate.Query")));
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod().and(named("list").or(named("uniqueResult")).or(named("scroll"))),
-        CriteriaMethodAdvice.class.getName());
+        isMethod()
+            .and(
+                named("list")
+                    .or(named("executeUpdate"))
+                    .or(named("uniqueResult"))
+                    .or(named("scroll"))),
+        QueryMethodAdvice.class.getName());
   }
 
-  public static class CriteriaMethodAdvice {
+  public static class QueryMethodAdvice extends V3Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SessionState startMethod(
-        @Advice.This final Criteria criteria, @Advice.Origin("#m") final String name) {
+        @Advice.This final Query query, @Advice.Origin("#m") final String name) {
 
-      final ContextStore<Criteria, SessionState> contextStore =
-          InstrumentationContext.get(Criteria.class, SessionState.class);
+      final ContextStore<Query, SessionState> contextStore =
+          InstrumentationContext.get(Query.class, SessionState.class);
 
-      return SessionMethodUtils.startScopeFrom(
-          contextStore, criteria, "hibernate.criteria." + name, null, true);
+      // Note: We don't know what the entity is until the method is returning.
+      final SessionState state =
+          SessionMethodUtils.startScopeFrom(
+              contextStore, query, "hibernate.query." + name, null, true);
+      DECORATOR.onStatement(state.getMethodScope().span(), query.getQueryString());
+      return state;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
+        @Advice.This final Query query,
         @Advice.Enter final SessionState state,
         @Advice.Thrown final Throwable throwable,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object entity) {
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) final Object returned) {
+
+      Object entity = returned;
+      if (returned == null || query instanceof SQLQuery) {
+        // Not a method that returns results, or the query returns a table rather than an ORM
+        // object.
+        entity = query.getQueryString();
+      }
 
       SessionMethodUtils.closeScope(state, throwable, entity);
     }

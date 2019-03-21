@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.hibernate.core.v3_5;
+package datadog.trace.instrumentation.hibernate.core.v3_3;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
@@ -27,11 +27,7 @@ import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 
 @AutoService(Instrumenter.class)
-public class SessionFactoryInstrumentation extends Instrumenter.Default {
-
-  public SessionFactoryInstrumentation() {
-    super("hibernate", "hibernate-core");
-  }
+public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
@@ -40,18 +36,6 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
     stores.put("org.hibernate.StatelessSession", SessionState.class.getName());
     stores.put("org.hibernate.SharedSessionContract", SessionState.class.getName());
     return stores;
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionState",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      "datadog.trace.agent.decorator.OrmClientDecorator",
-      "datadog.trace.instrumentation.hibernate.HibernateDecorator",
-    };
   }
 
   @Override
@@ -73,7 +57,7 @@ public class SessionFactoryInstrumentation extends Instrumenter.Default {
         SessionFactoryAdvice.class.getName());
   }
 
-  public static class SessionFactoryAdvice {
+  public static class SessionFactoryAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return final Object session) {

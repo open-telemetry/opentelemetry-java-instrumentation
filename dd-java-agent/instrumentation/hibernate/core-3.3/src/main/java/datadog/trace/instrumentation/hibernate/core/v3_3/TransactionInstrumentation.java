@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.hibernate.core.v3_5;
+package datadog.trace.instrumentation.hibernate.core.v3_3;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
@@ -22,28 +22,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.hibernate.Transaction;
 
 @AutoService(Instrumenter.class)
-public class TransactionInstrumentation extends Instrumenter.Default {
-
-  public TransactionInstrumentation() {
-    super("hibernate", "hibernate-core");
-  }
+public class TransactionInstrumentation extends AbstractHibernateInstrumentation {
 
   @Override
   public Map<String, String> contextStore() {
     return singletonMap("org.hibernate.Transaction", SessionState.class.getName());
-  }
-
-  @Override
-  public String[] helperClassNames() {
-    return new String[] {
-      "datadog.trace.instrumentation.hibernate.SessionMethodUtils",
-      "datadog.trace.instrumentation.hibernate.SessionState",
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      "datadog.trace.agent.decorator.OrmClientDecorator",
-      "datadog.trace.instrumentation.hibernate.HibernateDecorator",
-    };
   }
 
   @Override
@@ -58,7 +41,7 @@ public class TransactionInstrumentation extends Instrumenter.Default {
         TransactionCommitAdvice.class.getName());
   }
 
-  public static class TransactionCommitAdvice {
+  public static class TransactionCommitAdvice extends V3Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SessionState startCommit(@Advice.This final Transaction transaction) {

@@ -16,7 +16,8 @@ muzzle {
   pass {
     group = "org.hibernate"
     module = "hibernate-core"
-    versions = "[3.5.0-Final,4.0.0.Final)"
+    versions = "[3.3.0.GA,4.0.0.Final)"
+    assertInverse = true
   }
 }
 
@@ -31,7 +32,7 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '3.5.0-Final'
+  compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '3.3.0.GA'
 
   compile project(':dd-java-agent:agent-tooling')
   compile project(':dd-java-agent:instrumentation:hibernate')
@@ -44,7 +45,7 @@ dependencies {
   testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:jdbc')
 
-  testCompile group: 'org.hibernate', name: 'hibernate-core', version: '3.5.0-Final'
+  testCompile group: 'org.hibernate', name: 'hibernate-core', version: '3.3.0.GA'
   testCompile group: 'org.hibernate', name: 'hibernate-annotations', version: '+'
   testCompile group: 'javassist', name: 'javassist', version: '+'
   testCompile group: 'com.h2database', name: 'h2', version: '1.4.197'

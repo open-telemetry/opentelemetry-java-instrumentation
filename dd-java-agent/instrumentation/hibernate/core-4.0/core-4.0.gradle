@@ -10,6 +10,7 @@ muzzle {
     group = "org.hibernate"
     module = "hibernate-core"
     versions = "[4.0.0.Final,)"
+    assertInverse = true
   }
 }
 
