@@ -474,11 +474,11 @@ class ConfigTest extends Specification {
 
     then:
     if (expected) {
-      config.httpServerErrorStatuses == expected.toSet()
-      config.httpClientErrorStatuses == expected.toSet()
+      assert config.httpServerErrorStatuses == expected.toSet()
+      assert config.httpClientErrorStatuses == expected.toSet()
     } else {
-      config.httpServerErrorStatuses == Config.DEFAULT_HTTP_SERVER_ERROR_STATUSES
-      config.httpClientErrorStatuses == Config.DEFAULT_HTTP_CLIENT_ERROR_STATUSES
+      assert config.httpServerErrorStatuses == Config.DEFAULT_HTTP_SERVER_ERROR_STATUSES
+      assert config.httpClientErrorStatuses == Config.DEFAULT_HTTP_CLIENT_ERROR_STATUSES
     }
 
     where:
@@ -487,6 +487,7 @@ class ConfigTest extends Specification {
     "a"                 | null
     ""                  | null
     "1000"              | null
+    "100-200-300"       | null
     "500"               | [500]
     "100,999"           | [100, 999]
     "999-888"           | 888..999

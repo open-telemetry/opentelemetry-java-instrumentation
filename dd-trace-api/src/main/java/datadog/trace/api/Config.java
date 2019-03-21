@@ -447,6 +447,7 @@ public class Config {
   }
 
   private static Map<String, String> parseMap(final String str, final String settingName) {
+    // If we ever want to have default values besides an empty map, this will need to change.
     if (str == null || str.trim().isEmpty()) {
       return Collections.emptyMap();
     }
@@ -476,12 +477,11 @@ public class Config {
 
   private static Set<Integer> parseIntegerRangeSet(String str, final String settingName)
       throws NumberFormatException {
-
-    if (str == null || str.trim().isEmpty()) {
-      return Collections.emptySet();
+    if (str == null) {
+      str = "";
     }
     str = str.replaceAll("\\s", "");
-    if (!str.matches("\\d{3}(?:-\\d{3})*(?:,\\d{3}(?:-\\d{3})*)*")) {
+    if (!str.matches("\\d{3}(?:-\\d{3})?(?:,\\d{3}(?:-\\d{3})?)*")) {
       log.warn(
           "Invalid config for {}: '{}'. Must be formatted like '400-403,405,410-499'.",
           settingName,
