@@ -1,5 +1,6 @@
 import com.amazonaws.AmazonClientException
 import com.amazonaws.ClientConfiguration
+import com.amazonaws.Request
 import com.amazonaws.SDKGlobalConfiguration
 import com.amazonaws.auth.AWSCredentialsProviderChain
 import com.amazonaws.auth.BasicAWSCredentials
@@ -15,16 +16,18 @@ import com.amazonaws.services.rds.model.DeleteOptionGroupRequest
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.S3ClientOptions
 import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
+import io.opentracing.Tracer
 import io.opentracing.tag.Tags
 import org.apache.http.conn.HttpHostConnectException
+import org.apache.http.impl.execchain.RequestAbortedException
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
 import java.util.concurrent.atomic.AtomicReference
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 
 class AWSClientTest extends AgentTestRunner {
 
@@ -32,7 +35,7 @@ class AWSClientTest extends AgentTestRunner {
     new EnvironmentVariableCredentialsProvider(),
     new SystemPropertiesCredentialsProvider(),
     new ProfileCredentialsProvider(),
-    new InstanceProfileCredentialsProvider());
+    new InstanceProfileCredentialsProvider())
 
   def setupSpec() {
     System.setProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY, "my-access-key")
@@ -176,11 +179,11 @@ class AWSClientTest extends AgentTestRunner {
           parent()
           tags {
             "$Tags.COMPONENT.key" "java-aws-sdk"
-            "$Tags.HTTP_URL.key" "http://localhost:${PortUtils.UNUSABLE_PORT}"
+            "$Tags.HTTP_URL.key" "http://localhost:${UNUSABLE_PORT}"
             "$Tags.HTTP_METHOD.key" "$method"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "aws.service" { it.contains(service) }
-            "aws.endpoint" "http://localhost:${PortUtils.UNUSABLE_PORT}"
+            "aws.endpoint" "http://localhost:${UNUSABLE_PORT}"
             "aws.operation" "${operation}Request"
             "aws.agent" "java-aws-sdk"
             errorTags AmazonClientException, ~/Unable to execute HTTP request/
@@ -195,9 +198,9 @@ class AWSClientTest extends AgentTestRunner {
           childOf(span(0))
           tags {
             "$Tags.COMPONENT.key" "apache-httpclient"
-            "$Tags.HTTP_URL.key" "http://localhost:${PortUtils.UNUSABLE_PORT}/$url"
+            "$Tags.HTTP_URL.key" "http://localhost:${UNUSABLE_PORT}/$url"
             "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" PortUtils.UNUSABLE_PORT
+            "$Tags.PEER_PORT.key" UNUSABLE_PORT
             "$Tags.HTTP_METHOD.key" "$method"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             errorTags HttpHostConnectException, ~/Connection refused/
@@ -209,6 +212,120 @@ class AWSClientTest extends AgentTestRunner {
 
     where:
     service | operation   | method | url                  | call                                                    | body | client
-    "S3"    | "GetObject" | "GET"  | "someBucket/someKey" | { client -> client.getObject("someBucket", "someKey") } | ""   | new AmazonS3Client(CREDENTIALS_PROVIDER_CHAIN, new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(0))).withEndpoint("http://localhost:${PortUtils.UNUSABLE_PORT}")
+    "S3"    | "GetObject" | "GET"  | "someBucket/someKey" | { client -> client.getObject("someBucket", "someKey") } | ""   | new AmazonS3Client(CREDENTIALS_PROVIDER_CHAIN, new ClientConfiguration().withRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(0))).withEndpoint("http://localhost:${UNUSABLE_PORT}")
+  }
+
+  def "naughty request handler doesn't break the trace"() {
+    setup:
+    def client = new AmazonS3Client(CREDENTIALS_PROVIDER_CHAIN)
+    client.addRequestHandler(new RequestHandler2() {
+      void beforeRequest(Request<?> request) {
+        throw new RuntimeException("bad handler")
+      }
+    })
+
+    when:
+    client.getObject("someBucket", "someKey")
+
+    then:
+    ((Tracer) TEST_TRACER).activeSpan() == null
+    thrown RuntimeException
+
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "java-aws-sdk"
+          operationName "aws.http"
+          resourceName "S3.GetObject"
+          spanType DDSpanTypes.HTTP_CLIENT
+          errored true
+          parent()
+          tags {
+            "$Tags.COMPONENT.key" "java-aws-sdk"
+            "$Tags.HTTP_URL.key" "https://s3.amazonaws.com"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "aws.service" "Amazon S3"
+            "aws.endpoint" "https://s3.amazonaws.com"
+            "aws.operation" "GetObjectRequest"
+            "aws.agent" "java-aws-sdk"
+            errorTags RuntimeException, "bad handler"
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
+
+  def "timeout and retry errors captured"() {
+    setup:
+    def server = httpServer {
+      handlers {
+        all {
+          Thread.sleep(500)
+          response.status(200).send()
+        }
+      }
+    }
+    AmazonS3Client client = new AmazonS3Client(new ClientConfiguration().withRequestTimeout(50 /* ms */))
+      .withEndpoint("http://localhost:$server.address.port")
+
+    when:
+    client.getObject("someBucket", "someKey")
+
+    then:
+    ((Tracer) TEST_TRACER).activeSpan() == null
+    thrown AmazonClientException
+
+    assertTraces(1) {
+      trace(0, 5) {
+        span(0) {
+          serviceName "java-aws-sdk"
+          operationName "aws.http"
+          resourceName "S3.GetObject"
+          spanType DDSpanTypes.HTTP_CLIENT
+          errored true
+          parent()
+          tags {
+            "$Tags.COMPONENT.key" "java-aws-sdk"
+            "$Tags.HTTP_URL.key" "http://localhost:$server.address.port"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "aws.service" "Amazon S3"
+            "aws.endpoint" "http://localhost:$server.address.port"
+            "aws.operation" "GetObjectRequest"
+            "aws.agent" "java-aws-sdk"
+            errorTags AmazonClientException, ~/Unable to execute HTTP request/
+            defaultTags()
+          }
+        }
+        (1..4).each {
+          span(it) {
+            operationName "http.request"
+            resourceName "GET /someBucket/someKey"
+            spanType DDSpanTypes.HTTP_CLIENT
+            errored true
+            childOf(span(0))
+            tags {
+              "$Tags.COMPONENT.key" "apache-httpclient"
+              "$Tags.HTTP_URL.key" "http://localhost:$server.address.port/someBucket/someKey"
+              "$Tags.PEER_HOSTNAME.key" "localhost"
+              "$Tags.PEER_PORT.key" server.address.port
+              "$Tags.HTTP_METHOD.key" "GET"
+              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+              try {
+                errorTags SocketException, "Socket closed"
+              } catch (AssertionError e) {
+                errorTags RequestAbortedException, "Request aborted"
+              }
+              defaultTags()
+            }
+          }
+        }
+      }
+    }
+
+    cleanup:
+    server.close()
   }
 }

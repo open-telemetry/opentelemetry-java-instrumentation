@@ -2,7 +2,6 @@ package datadog.trace.instrumentation.aws.v0;
 
 import static datadog.trace.instrumentation.aws.v0.AwsSdkClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -22,12 +21,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 /**
  * This is additional 'helper' to catch cases when HTTP request throws exception different from
- * {@link AmazonClientException}. In these cases {@link RequestHandler2#afterError} is not called.
- *
- * <p>FIXME: come up with tests for this - maybe some test that mimics timeout?
+ * {@link AmazonClientException} (for example an error thrown by another handler). In these cases
+ * {@link RequestHandler2#afterError} is not called.
  */
 @AutoService(Instrumenter.class)
-public final class AWSHttpClientInstrumentation extends Instrumenter.Default {
+public class AWSHttpClientInstrumentation extends Instrumenter.Default {
 
   public AWSHttpClientInstrumentation() {
     super("aws-sdk");
@@ -35,8 +33,7 @@ public final class AWSHttpClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.amazonaws.http.AmazonHttpClient.RequestExecutor")
-        .and(declaresField(named("request")));
+    return named("com.amazonaws.http.AmazonHttpClient");
   }
 
   @Override
@@ -60,7 +57,7 @@ public final class AWSHttpClientInstrumentation extends Instrumenter.Default {
   public static class HttpClientAdvice {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.FieldValue("request") final Request<?> request,
+        @Advice.Argument(value = 0, optional = true) final Request<?> request,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
         final Scope scope = request.getHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY);
@@ -69,6 +66,43 @@ public final class AWSHttpClientInstrumentation extends Instrumenter.Default {
           DECORATE.onError(scope.span(), throwable);
           DECORATE.beforeFinish(scope.span());
           scope.close();
+        }
+      }
+    }
+  }
+
+  /**
+   * Due to a change in the AmazonHttpClient class, this instrumentation is needed to support newer
+   * versions. The above class should cover older versions.
+   */
+  @AutoService(Instrumenter.class)
+  public static final class RequestExecutorInstrumentation extends AWSHttpClientInstrumentation {
+
+    @Override
+    public ElementMatcher<TypeDescription> typeMatcher() {
+      return named("com.amazonaws.http.AmazonHttpClient$RequestExecutor");
+    }
+
+    @Override
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+      return singletonMap(
+          isMethod().and(not(isAbstract())).and(named("doExecute")),
+          RequestExecutorAdvice.class.getName());
+    }
+
+    public static class RequestExecutorAdvice {
+      @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+      public static void methodExit(
+          @Advice.FieldValue("request") final Request<?> request,
+          @Advice.Thrown final Throwable throwable) {
+        if (throwable != null) {
+          final Scope scope = request.getHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY);
+          if (scope != null) {
+            request.addHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY, null);
+            DECORATE.onError(scope.span(), throwable);
+            DECORATE.beforeFinish(scope.span());
+            scope.close();
+          }
         }
       }
     }
