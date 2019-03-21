@@ -62,7 +62,8 @@ public final class FutureInstrumentation extends Instrumenter.Default {
       "com.google.common.util.concurrent.SettableFuture",
       "com.google.common.util.concurrent.AbstractFuture$TrustedFuture",
       "com.google.common.util.concurrent.AbstractFuture",
-      "io.netty.util.concurrent.ScheduledFutureTask"
+      "io.netty.util.concurrent.ScheduledFutureTask",
+      "com.google.common.util.concurrent.ListenableFutureTask"
     };
     WHITELISTED_FUTURES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(whitelist)));
   }
