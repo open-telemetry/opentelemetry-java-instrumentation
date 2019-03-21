@@ -57,7 +57,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
         SessionFactoryAdvice.class.getName());
   }
 
-  public static class SessionFactoryAdvice {
+  public static class SessionFactoryAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return final Object session) {

@@ -48,7 +48,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
         QueryMethodAdvice.class.getName());
   }
 
-  public static class QueryMethodAdvice {
+  public static class QueryMethodAdvice extends V3Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SessionState startMethod(

@@ -41,7 +41,7 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
         TransactionCommitAdvice.class.getName());
   }
 
-  public static class TransactionCommitAdvice {
+  public static class TransactionCommitAdvice extends V3Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SessionState startCommit(@Advice.This final Transaction transaction) {

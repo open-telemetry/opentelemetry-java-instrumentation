@@ -41,7 +41,7 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
         CriteriaMethodAdvice.class.getName());
   }
 
-  public static class CriteriaMethodAdvice {
+  public static class CriteriaMethodAdvice extends V3Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SessionState startMethod(

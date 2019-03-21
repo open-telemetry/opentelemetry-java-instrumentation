@@ -107,7 +107,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     return transformers;
   }
 
-  public static class SessionCloseAdvice {
+  public static class SessionCloseAdvice extends V3Advice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void closeSession(
@@ -138,7 +138,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     }
   }
 
-  public static class SessionMethodAdvice {
+  public static class SessionMethodAdvice extends V3Advice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static SessionState startMethod(
@@ -171,7 +171,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     }
   }
 
-  public static class GetQueryAdvice {
+  public static class GetQueryAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getQuery(
@@ -193,7 +193,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     }
   }
 
-  public static class GetTransactionAdvice {
+  public static class GetTransactionAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getTransaction(
@@ -216,7 +216,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
     }
   }
 
-  public static class GetCriteriaAdvice {
+  public static class GetCriteriaAdvice extends V3Advice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void getCriteria(
