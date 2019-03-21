@@ -65,20 +65,20 @@ class B3HttpExtractorTest extends Specification {
     }
 
     where:
-    traceId                            | spanId                   | expectedTraceId       | expectedSpanId
-    "-1"                               | "1"                      | null                  | "0"
-    "1"                                | "-1"                     | null                  | "0"
-    "0"                                | "1"                      | null                  | "0"
-    "00001"                            | "00001"                  | "1"                   | "1"
-    "463ac35c9f6413ad"                 | "463ac35c9f6413ad"       | "5060571933882717101" | "5060571933882717101"
-    "463ac35c9f6413ad48485a3953bb6124" | "1"                      | "5208512171318403364" | "1"
-    "f".multiply(16)                   | "1"                      | "$UINT64_MAX"         | "1"
-    "f".multiply(32)                   | "1"                      | "$UINT64_MAX"         | "1"
-    "1" + "f".multiply(32)             | "1"                      | null                  | "1"
-    "0" + "f".multiply(32)             | "1"                      | null                  | "1"
-    "1"                                | "f".multiply(16)         | "1"                   | "$UINT64_MAX"
-    "1"                                | "1" + "f".multiply(16)   | null                  | "0"
-    "1"                                | "000" + "f".multiply(16) | "1"                   | "$UINT64_MAX"
+    traceId                             | spanId                   | expectedTraceId       | expectedSpanId
+    "-1"                                | "1"                      | null                  | "0"
+    "1"                                 | "-1"                     | null                  | "0"
+    "0"                                 | "1"                      | null                  | "0"
+    "00001"                             | "00001"                  | "1"                   | "1"
+    "463ac35c9f6413ad"                  | "463ac35c9f6413ad"       | "5060571933882717101" | "5060571933882717101"
+    "463ac35c9f6413ad48485a3953bb6124"  | "1"                      | "5208512171318403364" | "1"
+    "f".multiply(16)                    | "1"                      | "$UINT64_MAX"         | "1"
+    "a".multiply(16) + "f".multiply(16) | "1"                      | "$UINT64_MAX"         | "1"
+    "1" + "f".multiply(32)              | "1"                      | null                  | "1"
+    "0" + "f".multiply(32)              | "1"                      | null                  | "1"
+    "1"                                 | "f".multiply(16)         | "1"                   | "$UINT64_MAX"
+    "1"                                 | "1" + "f".multiply(16)   | null                  | "0"
+    "1"                                 | "000" + "f".multiply(16) | "1"                   | "$UINT64_MAX"
   }
 
   def "extract header tags with no propagation"() {
