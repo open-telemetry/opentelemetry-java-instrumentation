@@ -11,7 +11,9 @@ import static datadog.trace.api.Config.AGENT_UNIX_DOMAIN_SOCKET
 import static datadog.trace.api.Config.DEFAULT_JMX_FETCH_STATSD_PORT
 import static datadog.trace.api.Config.GLOBAL_TAGS
 import static datadog.trace.api.Config.HEADER_TAGS
+import static datadog.trace.api.Config.HTTP_CLIENT_ERROR_STATUSES
 import static datadog.trace.api.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
+import static datadog.trace.api.Config.HTTP_SERVER_ERROR_STATUSES
 import static datadog.trace.api.Config.JMX_FETCH_CHECK_PERIOD
 import static datadog.trace.api.Config.JMX_FETCH_ENABLED
 import static datadog.trace.api.Config.JMX_FETCH_METRICS_CONFIGS
@@ -65,6 +67,8 @@ class ConfigTest extends Specification {
     config.mergedSpanTags == [:]
     config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.headerTags == [:]
+    config.httpServerErrorStatuses == (500..599).toSet()
+    config.httpClientErrorStatuses == (400..499).toSet()
     config.httpClientSplitByDomain == false
     config.partialFlushMinSpans == 0
     config.runtimeContextFieldInjection == true
@@ -92,6 +96,8 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + SPAN_TAGS, "c:3")
     System.setProperty(PREFIX + JMX_TAGS, "d:4")
     System.setProperty(PREFIX + HEADER_TAGS, "e:5")
+    System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
+    System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "111")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "15")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
@@ -117,6 +123,8 @@ class ConfigTest extends Specification {
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.headerTags == [e: "5"]
+    config.httpServerErrorStatuses == (122..457).toSet()
+    config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
     config.partialFlushMinSpans == 15
     config.runtimeContextFieldInjection == false
@@ -176,6 +184,8 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + SERVICE_MAPPING, " ")
     System.setProperty(PREFIX + HEADER_TAGS, "1")
     System.setProperty(PREFIX + SPAN_TAGS, "invalid")
+    System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "1111")
+    System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "1:1")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "invalid")
 
     when:
@@ -191,6 +201,8 @@ class ConfigTest extends Specification {
     config.serviceMapping == [:]
     config.mergedSpanTags == [:]
     config.headerTags == [:]
+    config.httpServerErrorStatuses == (500..599).toSet()
+    config.httpClientErrorStatuses == (400..499).toSet()
     config.httpClientSplitByDomain == false
   }
 
@@ -251,6 +263,8 @@ class ConfigTest extends Specification {
     properties.setProperty(SPAN_TAGS, "c:3")
     properties.setProperty(JMX_TAGS, "d:4")
     properties.setProperty(HEADER_TAGS, "e:5")
+    properties.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
+    properties.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     properties.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     properties.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
     properties.setProperty(JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
@@ -274,6 +288,8 @@ class ConfigTest extends Specification {
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
     config.headerTags == [e: "5"]
+    config.httpServerErrorStatuses == (122..457).toSet()
+    config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
     config.partialFlushMinSpans == 15
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
@@ -446,6 +462,37 @@ class ConfigTest extends Specification {
     "a:b:c:d"                         | [:]
     "a:b,c,d"                         | [:]
     "!a"                              | [:]
+  }
+
+  def "verify integer range configs on tracer"() {
+    setup:
+    System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, value)
+    System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, value)
+
+    when:
+    def config = new Config()
+
+    then:
+    if (expected) {
+      assert config.httpServerErrorStatuses == expected.toSet()
+      assert config.httpClientErrorStatuses == expected.toSet()
+    } else {
+      assert config.httpServerErrorStatuses == Config.DEFAULT_HTTP_SERVER_ERROR_STATUSES
+      assert config.httpClientErrorStatuses == Config.DEFAULT_HTTP_CLIENT_ERROR_STATUSES
+    }
+
+    where:
+    value               | expected // null means default value
+    "1"                 | null
+    "a"                 | null
+    ""                  | null
+    "1000"              | null
+    "100-200-300"       | null
+    "500"               | [500]
+    "100,999"           | [100, 999]
+    "999-888"           | 888..999
+    "400-403,405-407"   | [400, 401, 402, 403, 405, 406, 407]
+    " 400 - 403 , 405 " | [400, 401, 402, 403, 405]
   }
 
   def "verify null value mapping configs on tracer"() {

@@ -3,9 +3,11 @@ package datadog.trace.api;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -30,8 +32,6 @@ public class Config {
 
   private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
 
-  private static final Config INSTANCE = new Config();
-
   public static final String SERVICE_NAME = "service.name";
   public static final String SERVICE = "service";
   public static final String WRITER_TYPE = "writer.type";
@@ -49,6 +49,8 @@ public class Config {
   public static final String TRACE_ANNOTATIONS = "trace.annotations";
   public static final String TRACE_METHODS = "trace.methods";
   public static final String HEADER_TAGS = "trace.header.tags";
+  public static final String HTTP_SERVER_ERROR_STATUSES = "trace.http.server.error.statuses";
+  public static final String HTTP_CLIENT_ERROR_STATUSES = "trace.http.client.error.statuses";
   public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
   public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
@@ -81,6 +83,10 @@ public class Config {
 
   private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = true;
   private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
+  private static final Set<Integer> DEFAULT_HTTP_SERVER_ERROR_STATUSES =
+      parseIntegerRangeSet("500-599", "default");
+  private static final Set<Integer> DEFAULT_HTTP_CLIENT_ERROR_STATUSES =
+      parseIntegerRangeSet("400-499", "default");
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 0;
   private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
@@ -88,6 +94,9 @@ public class Config {
   public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
 
   private static final boolean DEFAULT_APP_CUSTOM_LOG_MANAGER = false;
+
+  // Must be defined last to allow above defaults to be properly initialized.
+  private static final Config INSTANCE = new Config();
 
   /**
    * this is a random UUID that gets generated on JVM start up and is attached to every root span
@@ -107,6 +116,8 @@ public class Config {
   private final Map<String, String> spanTags;
   private final Map<String, String> jmxTags;
   @Getter private final Map<String, String> headerTags;
+  @Getter private final Set<Integer> httpServerErrorStatuses;
+  @Getter private final Set<Integer> httpClientErrorStatuses;
   @Getter private final boolean httpClientSplitByDomain;
   @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
@@ -143,6 +154,14 @@ public class Config {
     spanTags = getMapSettingFromEnvironment(SPAN_TAGS, null);
     jmxTags = getMapSettingFromEnvironment(JMX_TAGS, null);
     headerTags = getMapSettingFromEnvironment(HEADER_TAGS, null);
+
+    httpServerErrorStatuses =
+        getIntegerRangeSettingFromEnvironment(
+            HTTP_SERVER_ERROR_STATUSES, DEFAULT_HTTP_SERVER_ERROR_STATUSES);
+
+    httpClientErrorStatuses =
+        getIntegerRangeSettingFromEnvironment(
+            HTTP_CLIENT_ERROR_STATUSES, DEFAULT_HTTP_CLIENT_ERROR_STATUSES);
 
     httpClientSplitByDomain =
         getBooleanSettingFromEnvironment(
@@ -196,6 +215,14 @@ public class Config {
     spanTags = getPropertyMapValue(properties, SPAN_TAGS, parent.spanTags);
     jmxTags = getPropertyMapValue(properties, JMX_TAGS, parent.jmxTags);
     headerTags = getPropertyMapValue(properties, HEADER_TAGS, parent.headerTags);
+
+    httpServerErrorStatuses =
+        getPropertyIntegerRangeValue(
+            properties, HTTP_SERVER_ERROR_STATUSES, parent.httpServerErrorStatuses);
+
+    httpClientErrorStatuses =
+        getPropertyIntegerRangeValue(
+            properties, HTTP_CLIENT_ERROR_STATUSES, parent.httpClientErrorStatuses);
 
     httpClientSplitByDomain =
         getPropertyBooleanValue(
@@ -369,6 +396,17 @@ public class Config {
     }
   }
 
+  private Set<Integer> getIntegerRangeSettingFromEnvironment(
+      final String name, final Set<Integer> defaultValue) {
+    final String value = getSettingFromEnvironment(name, null);
+    try {
+      return value == null ? defaultValue : parseIntegerRangeSet(value, name);
+    } catch (final NumberFormatException e) {
+      log.warn("Invalid configuration for " + name, e);
+      return defaultValue;
+    }
+  }
+
   private static String propertyToEnvironmentName(final String name) {
     return ENV_REPLACEMENT.matcher(name.toUpperCase()).replaceAll("_");
   }
@@ -397,7 +435,19 @@ public class Config {
     return value == null || value.trim().isEmpty() ? defaultValue : Integer.valueOf(value);
   }
 
+  private Set<Integer> getPropertyIntegerRangeValue(
+      final Properties properties, final String name, final Set<Integer> defaultValue) {
+    final String value = properties.getProperty(name);
+    try {
+      return value == null ? defaultValue : parseIntegerRangeSet(value, name);
+    } catch (final NumberFormatException e) {
+      log.warn("Invalid configuration for " + name, e);
+      return defaultValue;
+    }
+  }
+
   private static Map<String, String> parseMap(final String str, final String settingName) {
+    // If we ever want to have default values besides an empty map, this will need to change.
     if (str == null || str.trim().isEmpty()) {
       return Collections.emptyMap();
     }
@@ -423,6 +473,40 @@ public class Config {
       }
     }
     return Collections.unmodifiableMap(map);
+  }
+
+  private static Set<Integer> parseIntegerRangeSet(String str, final String settingName)
+      throws NumberFormatException {
+    if (str == null) {
+      str = "";
+    }
+    str = str.replaceAll("\\s", "");
+    if (!str.matches("\\d{3}(?:-\\d{3})?(?:,\\d{3}(?:-\\d{3})?)*")) {
+      log.warn(
+          "Invalid config for {}: '{}'. Must be formatted like '400-403,405,410-499'.",
+          settingName,
+          str);
+      throw new NumberFormatException();
+    }
+
+    final String[] tokens = str.split(",", -1);
+    final Set<Integer> set = new HashSet<>();
+
+    for (final String token : tokens) {
+      final String[] range = token.split("-", -1);
+      if (range.length == 1) {
+        set.add(Integer.parseInt(range[0]));
+      } else if (range.length == 2) {
+        final int left = Integer.parseInt(range[0]);
+        final int right = Integer.parseInt(range[1]);
+        final int min = Math.min(left, right);
+        final int max = Math.max(left, right);
+        for (int i = min; i <= max; i++) {
+          set.add(i);
+        }
+      }
+    }
+    return Collections.unmodifiableSet(set);
   }
 
   private static Map<String, String> newHashMap(final int size) {

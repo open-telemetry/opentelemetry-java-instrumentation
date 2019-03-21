@@ -1,7 +1,10 @@
 package datadog.trace.agent.decorator
 
+import datadog.trace.api.Config
 import io.opentracing.Span
 import io.opentracing.tag.Tags
+
+import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
 
 class HttpServerDecoratorTest extends ServerDecoratorTest {
 
@@ -32,7 +35,9 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    decorator.onResponse(span, resp)
+    withConfigOverride(Config.HTTP_SERVER_ERROR_STATUSES, "$errorRange") {
+      decorator.onResponse(span, resp)
+    }
 
     then:
     if (status) {
@@ -44,15 +49,17 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
     0 * _
 
     where:
-    status | error | resp
-    200    | false | [status: 200]
-    399    | false | [status: 399]
-    400    | false | [status: 400]
-    499    | false | [status: 499]
-    500    | true  | [status: 500]
-    600    | true  | [status: 600]
-    null   | false | [status: null]
-    null   | false | null
+    status | error | errorRange | resp
+    200    | false | null       | [status: 200]
+    399    | false | null       | [status: 399]
+    400    | false | null       | [status: 400]
+    404    | true  | "404"      | [status: 404]
+    404    | true  | "400-500"  | [status: 404]
+    499    | false | null       | [status: 499]
+    500    | true  | null       | [status: 500]
+    600    | false | null       | [status: 600]
+    null   | false | null       | [status: null]
+    null   | false | null       | null
   }
 
   def "test assert null span"() {
