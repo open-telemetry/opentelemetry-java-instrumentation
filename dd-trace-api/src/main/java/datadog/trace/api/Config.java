@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -55,6 +56,8 @@ public class Config {
   public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
+  public static final String PROPAGATION_STYLE_EXTRACT = "propagation.style.extract";
+  public static final String PROPAGATION_STYLE_INJECT = "propagation.style.inject";
   public static final String JMX_FETCH_ENABLED = "jmxfetch.enabled";
   public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
   public static final String JMX_FETCH_CHECK_PERIOD = "jmxfetch.check-period";
@@ -89,14 +92,20 @@ public class Config {
       parseIntegerRangeSet("400-499", "default");
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 0;
+  private static final String DEFAULT_PROPAGATION_STYLE_EXTRACT = PropagationStyle.DATADOG.name();
+  private static final String DEFAULT_PROPAGATION_STYLE_INJECT = PropagationStyle.DATADOG.name();
   private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
 
   public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
 
   private static final boolean DEFAULT_APP_CUSTOM_LOG_MANAGER = false;
 
-  // Must be defined last to allow above defaults to be properly initialized.
-  private static final Config INSTANCE = new Config();
+  private static final String SPLIT_BY_SPACE_OR_COMMA_REGEX = "[,\\s]+";
+
+  public enum PropagationStyle {
+    DATADOG,
+    B3
+  }
 
   /**
    * this is a random UUID that gets generated on JVM start up and is attached to every root span
@@ -121,6 +130,8 @@ public class Config {
   @Getter private final boolean httpClientSplitByDomain;
   @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
+  @Getter private final Set<PropagationStyle> propagationStylesToExtract;
+  @Getter private final Set<PropagationStyle> propagationStylesToInject;
   @Getter private final boolean jmxFetchEnabled;
   @Getter private final List<String> jmxFetchMetricsConfigs;
   @Getter private final Integer jmxFetchCheckPeriod;
@@ -173,6 +184,19 @@ public class Config {
     runtimeContextFieldInjection =
         getBooleanSettingFromEnvironment(
             RUNTIME_CONTEXT_FIELD_INJECTION, DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION);
+
+    propagationStylesToExtract =
+        getEnumSetSettingFromEnvironment(
+            PROPAGATION_STYLE_EXTRACT,
+            DEFAULT_PROPAGATION_STYLE_EXTRACT,
+            PropagationStyle.class,
+            true);
+    propagationStylesToInject =
+        getEnumSetSettingFromEnvironment(
+            PROPAGATION_STYLE_INJECT,
+            DEFAULT_PROPAGATION_STYLE_INJECT,
+            PropagationStyle.class,
+            true);
 
     jmxFetchEnabled =
         getBooleanSettingFromEnvironment(JMX_FETCH_ENABLED, DEFAULT_JMX_FETCH_ENABLED);
@@ -234,6 +258,19 @@ public class Config {
     runtimeContextFieldInjection =
         getPropertyBooleanValue(
             properties, RUNTIME_CONTEXT_FIELD_INJECTION, parent.runtimeContextFieldInjection);
+
+    final Set<PropagationStyle> parsedPropagationStylesToExtract =
+        getPropertySetValue(properties, PROPAGATION_STYLE_EXTRACT, PropagationStyle.class);
+    propagationStylesToExtract =
+        parsedPropagationStylesToExtract == null
+            ? parent.propagationStylesToExtract
+            : parsedPropagationStylesToExtract;
+    final Set<PropagationStyle> parsedPropagationStylesToInject =
+        getPropertySetValue(properties, PROPAGATION_STYLE_INJECT, PropagationStyle.class);
+    propagationStylesToInject =
+        parsedPropagationStylesToInject == null
+            ? parent.propagationStylesToInject
+            : parsedPropagationStylesToInject;
 
     jmxFetchEnabled =
         getPropertyBooleanValue(properties, JMX_FETCH_ENABLED, parent.jmxFetchEnabled);
@@ -357,10 +394,6 @@ public class Config {
 
   /**
    * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Boolean.
-   *
-   * @param name
-   * @param defaultValue
-   * @return
    */
   public static Boolean getBooleanSettingFromEnvironment(
       final String name, final Boolean defaultValue) {
@@ -370,10 +403,6 @@ public class Config {
 
   /**
    * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Float.
-   *
-   * @param name
-   * @param defaultValue
-   * @return
    */
   public static Float getFloatSettingFromEnvironment(final String name, final Float defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
@@ -385,6 +414,9 @@ public class Config {
     }
   }
 
+  /**
+   * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a Integer.
+   */
   private static Integer getIntegerSettingFromEnvironment(
       final String name, final Integer defaultValue) {
     final String value = getSettingFromEnvironment(name, null);
@@ -394,6 +426,31 @@ public class Config {
       log.warn("Invalid configuration for " + name, e);
       return defaultValue;
     }
+  }
+
+  /**
+   * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a set of
+   * strings splitting by space or comma.
+   */
+  private static <T extends Enum<T>> Set<T> getEnumSetSettingFromEnvironment(
+      final String name,
+      final String defaultValue,
+      final Class<T> clazz,
+      final boolean emptyResultMeansUseDefault) {
+    final String value = getSettingFromEnvironment(name, defaultValue);
+    Set<T> result =
+        convertStringSetToEnumSet(
+            parseStringIntoSetOfNonEmptyStrings(value, SPLIT_BY_SPACE_OR_COMMA_REGEX), clazz);
+
+    if (emptyResultMeansUseDefault && result.isEmpty()) {
+      // Treat empty parsing result as no value and use default instead
+      result =
+          convertStringSetToEnumSet(
+              parseStringIntoSetOfNonEmptyStrings(defaultValue, SPLIT_BY_SPACE_OR_COMMA_REGEX),
+              clazz);
+    }
+
+    return result;
   }
 
   private Set<Integer> getIntegerRangeSettingFromEnvironment(
@@ -433,6 +490,21 @@ public class Config {
       final Properties properties, final String name, final Integer defaultValue) {
     final String value = properties.getProperty(name);
     return value == null || value.trim().isEmpty() ? defaultValue : Integer.valueOf(value);
+  }
+
+  private static <T extends Enum<T>> Set<T> getPropertySetValue(
+      final Properties properties, final String name, final Class<T> clazz) {
+    final String value = properties.getProperty(name);
+    if (value != null) {
+      final Set<T> result =
+          convertStringSetToEnumSet(
+              parseStringIntoSetOfNonEmptyStrings(value, SPLIT_BY_SPACE_OR_COMMA_REGEX), clazz);
+      if (!result.isEmpty()) {
+        return result;
+      }
+    }
+    // null means parent value should be used
+    return null;
   }
 
   private Set<Integer> getPropertyIntegerRangeValue(
@@ -477,9 +549,7 @@ public class Config {
 
   private static Set<Integer> parseIntegerRangeSet(String str, final String settingName)
       throws NumberFormatException {
-    if (str == null) {
-      str = "";
-    }
+    assert str != null;
     str = str.replaceAll("\\s", "");
     if (!str.matches("\\d{3}(?:-\\d{3})?(?:,\\d{3}(?:-\\d{3})?)*")) {
       log.warn(
@@ -521,6 +591,37 @@ public class Config {
     final String[] tokens = str.split(",", -1);
     return Collections.unmodifiableList(Arrays.asList(tokens));
   }
+
+  private static Set<String> parseStringIntoSetOfNonEmptyStrings(
+      final String str, final String regex) {
+    // Using LinkedHashSet to preserve original string order
+    final Set<String> result = new LinkedHashSet<>();
+    // Java returns single value when splitting an empty string. We do not need that value, so
+    // we need to throw it out.
+    for (final String value : str.split(regex)) {
+      if (!value.isEmpty()) {
+        result.add(value);
+      }
+    }
+    return Collections.unmodifiableSet(result);
+  }
+
+  private static <V extends Enum<V>> Set<V> convertStringSetToEnumSet(
+      final Set<String> input, final Class<V> clazz) {
+    // Using LinkedHashSet to preserve original string order
+    final Set<V> result = new LinkedHashSet<>();
+    for (final String value : input) {
+      try {
+        result.add(Enum.valueOf(clazz, value.toUpperCase()));
+      } catch (final IllegalArgumentException e) {
+        log.debug("Cannot recognize config string value: {}, {}", value, clazz);
+      }
+    }
+    return Collections.unmodifiableSet(result);
+  }
+
+  // This has to be placed after all other static fields to give them a chance to initialize
+  private static final Config INSTANCE = new Config();
 
   public static Config get() {
     return INSTANCE;

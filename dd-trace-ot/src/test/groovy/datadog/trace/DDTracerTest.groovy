@@ -1,6 +1,7 @@
 package datadog.trace
 
 import datadog.opentracing.DDTracer
+import datadog.opentracing.propagation.HttpCodec
 import datadog.trace.api.Config
 import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.sampling.RateByServiceSampler
@@ -46,6 +47,9 @@ class DDTracerTest extends Specification {
     tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces } }"
 
     tracer.spanContextDecorators.size() == 13
+
+    tracer.injector instanceof HttpCodec.CompoundInjector
+    tracer.extractor instanceof HttpCodec.CompoundExtractor
   }
 
 
@@ -78,7 +82,8 @@ class DDTracerTest extends Specification {
     when:
     def config = new Config()
     def tracer = new DDTracer(config)
-    def taggedHeaders = tracer.extractor.taggedHeaders
+    // Datadog extractor gets placed first
+    def taggedHeaders = tracer.extractor.extractors[0].taggedHeaders
 
     then:
     tracer.defaultSpanTags == map

@@ -26,6 +26,8 @@ import static datadog.trace.api.Config.LANGUAGE_TAG_VALUE
 import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
 import static datadog.trace.api.Config.PREFIX
 import static datadog.trace.api.Config.PRIORITY_SAMPLING
+import static datadog.trace.api.Config.PROPAGATION_STYLE_EXTRACT
+import static datadog.trace.api.Config.PROPAGATION_STYLE_INJECT
 import static datadog.trace.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
 import static datadog.trace.api.Config.RUNTIME_ID_TAG
 import static datadog.trace.api.Config.SERVICE
@@ -47,13 +49,15 @@ class ConfigTest extends Specification {
   private static final DD_SERVICE_MAPPING_ENV = "DD_SERVICE_MAPPING"
   private static final DD_SPAN_TAGS_ENV = "DD_SPAN_TAGS"
   private static final DD_HEADER_TAGS_ENV = "DD_HEADER_TAGS"
+  private static final DD_PROPAGATION_STYLE_EXTRACT = "DD_PROPAGATION_STYLE_EXTRACT"
+  private static final DD_PROPAGATION_STYLE_INJECT = "DD_PROPAGATION_STYLE_INJECT"
   private static final DD_JMXFETCH_METRICS_CONFIGS_ENV = "DD_JMXFETCH_METRICS_CONFIGS"
   private static final DD_TRACE_AGENT_PORT_ENV = "DD_TRACE_AGENT_PORT"
   private static final DD_AGENT_PORT_LEGACY_ENV = "DD_AGENT_PORT"
 
   def "verify defaults"() {
     when:
-    def config = Config.get()
+    Config config = provider()
 
     then:
     config.serviceName == "unnamed-java-app"
@@ -72,6 +76,8 @@ class ConfigTest extends Specification {
     config.httpClientSplitByDomain == false
     config.partialFlushMinSpans == 0
     config.runtimeContextFieldInjection == true
+    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
+    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
     config.jmxFetchEnabled == false
     config.jmxFetchMetricsConfigs == []
     config.jmxFetchCheckPeriod == null
@@ -79,6 +85,73 @@ class ConfigTest extends Specification {
     config.jmxFetchStatsdHost == null
     config.jmxFetchStatsdPort == DEFAULT_JMX_FETCH_STATSD_PORT
     config.toString().contains("unnamed-java-app")
+
+    where:
+    provider << [{ new Config() }, { Config.get() }, {
+      def props = new Properties()
+      props.setProperty("something", "unused")
+      Config.get(props)
+    }]
+  }
+
+  def "specify overrides via properties"() {
+    setup:
+    def prop = new Properties()
+    prop.setProperty(SERVICE_NAME, "something else")
+    prop.setProperty(WRITER_TYPE, "LoggingWriter")
+    prop.setProperty(AGENT_HOST, "somehost")
+    prop.setProperty(TRACE_AGENT_PORT, "123")
+    prop.setProperty(AGENT_UNIX_DOMAIN_SOCKET, "somepath")
+    prop.setProperty(AGENT_PORT_LEGACY, "456")
+    prop.setProperty(PRIORITY_SAMPLING, "false")
+    prop.setProperty(TRACE_RESOLVER_ENABLED, "false")
+    prop.setProperty(SERVICE_MAPPING, "a:1")
+    prop.setProperty(GLOBAL_TAGS, "b:2")
+    prop.setProperty(SPAN_TAGS, "c:3")
+    prop.setProperty(JMX_TAGS, "d:4")
+    prop.setProperty(HEADER_TAGS, "e:5")
+    prop.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
+    prop.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
+    prop.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
+    prop.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
+    prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
+    prop.setProperty(PROPAGATION_STYLE_EXTRACT, "Datadog, B3")
+    prop.setProperty(PROPAGATION_STYLE_INJECT, "B3, Datadog")
+    prop.setProperty(JMX_FETCH_ENABLED, "true")
+    prop.setProperty(JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
+    prop.setProperty(JMX_FETCH_CHECK_PERIOD, "100")
+    prop.setProperty(JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
+    prop.setProperty(JMX_FETCH_STATSD_HOST, "statsd host")
+    prop.setProperty(JMX_FETCH_STATSD_PORT, "321")
+
+    when:
+    Config config = Config.get(prop)
+
+    then:
+    config.serviceName == "something else"
+    config.writerType == "LoggingWriter"
+    config.agentHost == "somehost"
+    config.agentPort == 123
+    config.agentUnixDomainSocket == "somepath"
+    config.prioritySamplingEnabled == false
+    config.traceResolverEnabled == false
+    config.serviceMapping == [a: "1"]
+    config.mergedSpanTags == [b: "2", c: "3"]
+    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
+    config.headerTags == [e: "5"]
+    config.httpServerErrorStatuses == (122..457).toSet()
+    config.httpClientErrorStatuses == (111..111).toSet()
+    config.httpClientSplitByDomain == true
+    config.partialFlushMinSpans == 15
+    config.runtimeContextFieldInjection == false
+    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
+    config.propagationStylesToInject.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
+    config.jmxFetchEnabled == true
+    config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
+    config.jmxFetchCheckPeriod == 100
+    config.jmxFetchRefreshBeansPeriod == 200
+    config.jmxFetchStatsdHost == "statsd host"
+    config.jmxFetchStatsdPort == 321
   }
 
   def "specify overrides via system properties"() {
@@ -101,6 +174,8 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "15")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
+    System.setProperty(PREFIX + PROPAGATION_STYLE_EXTRACT, "Datadog, B3")
+    System.setProperty(PREFIX + PROPAGATION_STYLE_INJECT, "B3, Datadog")
     System.setProperty(PREFIX + JMX_FETCH_ENABLED, "true")
     System.setProperty(PREFIX + JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
     System.setProperty(PREFIX + JMX_FETCH_CHECK_PERIOD, "100")
@@ -109,7 +184,7 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + JMX_FETCH_STATSD_PORT, "321")
 
     when:
-    def config = new Config()
+    Config config = new Config()
 
     then:
     config.serviceName == "something else"
@@ -128,6 +203,8 @@ class ConfigTest extends Specification {
     config.httpClientSplitByDomain == true
     config.partialFlushMinSpans == 15
     config.runtimeContextFieldInjection == false
+    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
+    config.propagationStylesToInject.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
     config.jmxFetchEnabled == true
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100
@@ -140,6 +217,8 @@ class ConfigTest extends Specification {
     setup:
     environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
+    environmentVariables.set(DD_PROPAGATION_STYLE_EXTRACT, "B3 Datadog")
+    environmentVariables.set(DD_PROPAGATION_STYLE_INJECT, "Datadog B3")
     environmentVariables.set(DD_JMXFETCH_METRICS_CONFIGS_ENV, "some/file")
 
     when:
@@ -148,6 +227,8 @@ class ConfigTest extends Specification {
     then:
     config.serviceName == "still something else"
     config.writerType == "LoggingWriter"
+    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
+    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
     config.jmxFetchMetricsConfigs == ["some/file"]
   }
 
@@ -187,6 +268,8 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "1111")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "1:1")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "invalid")
+    System.setProperty(PREFIX + PROPAGATION_STYLE_EXTRACT, "some garbage")
+    System.setProperty(PREFIX + PROPAGATION_STYLE_INJECT, " ")
 
     when:
     def config = new Config()
@@ -204,6 +287,8 @@ class ConfigTest extends Specification {
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..499).toSet()
     config.httpClientSplitByDomain == false
+    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
+    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
   }
 
   def "sys props and env vars overrides for trace_agent_port and agent_port_legacy as expected"() {
@@ -267,6 +352,8 @@ class ConfigTest extends Specification {
     properties.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     properties.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     properties.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
+    properties.setProperty(PROPAGATION_STYLE_EXTRACT, "B3 Datadog")
+    properties.setProperty(PROPAGATION_STYLE_INJECT, "Datadog B3")
     properties.setProperty(JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
     properties.setProperty(JMX_FETCH_CHECK_PERIOD, "100")
     properties.setProperty(JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
@@ -292,6 +379,8 @@ class ConfigTest extends Specification {
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
     config.partialFlushMinSpans == 15
+    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
+    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100
     config.jmxFetchRefreshBeansPeriod == 200
@@ -410,6 +499,7 @@ class ConfigTest extends Specification {
     System.setProperty("dd.prop.zero.test", "0")
     System.setProperty("dd.prop.float.test", "0.3")
     System.setProperty("dd.float.test", "0.4")
+    System.setProperty("dd.garbage.test", "garbage")
     System.setProperty("dd.negative.test", "-1")
 
     expect:
@@ -423,6 +513,7 @@ class ConfigTest extends Specification {
     "prop.float.test" | 0.3
     "float.test"      | 0.4
     "negative.test"   | -1.0
+    "garbage.test"    | 10.0
     "default.test"    | 10.0
 
     defaultValue = 10.0
@@ -433,14 +524,22 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + SERVICE_MAPPING, mapString)
     System.setProperty(PREFIX + SPAN_TAGS, mapString)
     System.setProperty(PREFIX + HEADER_TAGS, mapString)
+    def props = new Properties()
+    props.setProperty(SERVICE_MAPPING, mapString)
+    props.setProperty(SPAN_TAGS, mapString)
+    props.setProperty(HEADER_TAGS, mapString)
 
     when:
     def config = new Config()
+    def propConfig = Config.get(props)
 
     then:
     config.serviceMapping == map
     config.spanTags == map
     config.headerTags == map
+    propConfig.serviceMapping == map
+    propConfig.spanTags == map
+    propConfig.headerTags == map
 
     where:
     mapString                         | map
@@ -468,17 +567,25 @@ class ConfigTest extends Specification {
     setup:
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, value)
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, value)
+    def props = new Properties()
+    props.setProperty(HTTP_CLIENT_ERROR_STATUSES, value)
+    props.setProperty(HTTP_SERVER_ERROR_STATUSES, value)
 
     when:
     def config = new Config()
+    def propConfig = Config.get(props)
 
     then:
     if (expected) {
       assert config.httpServerErrorStatuses == expected.toSet()
       assert config.httpClientErrorStatuses == expected.toSet()
+      assert propConfig.httpServerErrorStatuses == expected.toSet()
+      assert propConfig.httpClientErrorStatuses == expected.toSet()
     } else {
       assert config.httpServerErrorStatuses == Config.DEFAULT_HTTP_SERVER_ERROR_STATUSES
       assert config.httpClientErrorStatuses == Config.DEFAULT_HTTP_CLIENT_ERROR_STATUSES
+      assert propConfig.httpServerErrorStatuses == Config.DEFAULT_HTTP_SERVER_ERROR_STATUSES
+      assert propConfig.httpClientErrorStatuses == Config.DEFAULT_HTTP_CLIENT_ERROR_STATUSES
     }
 
     where:
