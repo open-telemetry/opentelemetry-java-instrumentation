@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.hibernate.core.v3_5;
+package datadog.trace.instrumentation.hibernate.core.v3_3;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
