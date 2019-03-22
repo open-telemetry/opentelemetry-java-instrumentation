@@ -4,6 +4,8 @@ import io.opentracing.tag.Tags
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.async.AsyncResponseTransformer
+import software.amazon.awssdk.core.exception.SdkClientException
+import software.amazon.awssdk.http.apache.ApacheHttpClient
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.ec2.Ec2AsyncClient
 import software.amazon.awssdk.services.ec2.Ec2Client
@@ -17,6 +19,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
+import java.time.Duration
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicReference
 
@@ -39,13 +42,11 @@ class AwsClientTest extends AgentTestRunner {
       }
     }
   }
-  @Shared
-  def serverUrl = new URI("http://localhost:$server.address.port")
 
   def "send #operation request with builder {#builder.class.getName()} mocked response"() {
     setup:
     def client = builder
-      .endpointOverride(serverUrl)
+      .endpointOverride(server.address)
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)
       .build()
@@ -131,7 +132,7 @@ class AwsClientTest extends AgentTestRunner {
   def "send #operation async request with builder {#builder.class.getName()} mocked response"() {
     setup:
     def client = builder
-      .endpointOverride(serverUrl)
+      .endpointOverride(server.address)
       .region(Region.AP_NORTHEAST_1)
       .credentialsProvider(CREDENTIALS_PROVIDER)
       .build()
@@ -225,5 +226,75 @@ class AwsClientTest extends AgentTestRunner {
       """       | RdsAsyncClient.builder()
   }
 
-  // TODO: add timeout tests?
+  def "timeout and retry errors captured"() {
+    setup:
+    def server = httpServer {
+      handlers {
+        all {
+          Thread.sleep(500)
+          response.status(200).send()
+        }
+      }
+    }
+    def client = S3Client.builder()
+      .endpointOverride(server.address)
+      .region(Region.AP_NORTHEAST_1)
+      .credentialsProvider(CREDENTIALS_PROVIDER)
+      .httpClientBuilder(ApacheHttpClient.builder().socketTimeout(Duration.ofMillis(50)))
+      .build()
+
+    when:
+    client.getObject(GetObjectRequest.builder().bucket("someBucket").key("someKey").build())
+
+    then:
+    thrown SdkClientException
+
+    assertTraces(1) {
+      trace(0, 5) {
+        span(0) {
+          serviceName "java-aws-sdk"
+          operationName "aws.http"
+          resourceName "S3.GetObject"
+          spanType DDSpanTypes.HTTP_CLIENT
+          errored true
+          parent()
+          tags {
+            "$Tags.COMPONENT.key" "java-aws-sdk"
+            "$Tags.HTTP_URL.key" "http://localhost:$server.address.port/someBucket/someKey"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "aws.service" "S3"
+            "aws.operation" "GetObject"
+            "aws.agent" "java-aws-sdk"
+            errorTags SdkClientException, "Unable to execute HTTP request: Read timed out"
+            defaultTags()
+          }
+        }
+        (1..4).each {
+          span(it) {
+            operationName "http.request"
+            resourceName "GET /someBucket/someKey"
+            spanType DDSpanTypes.HTTP_CLIENT
+            errored true
+            childOf(span(0))
+            tags {
+              "$Tags.COMPONENT.key" "apache-httpclient"
+              "$Tags.HTTP_URL.key" "http://localhost:$server.address.port/someBucket/someKey"
+              "$Tags.PEER_HOSTNAME.key" "localhost"
+              "$Tags.PEER_PORT.key" server.address.port
+              "$Tags.HTTP_METHOD.key" "GET"
+              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+              errorTags SocketTimeoutException, "Read timed out"
+              defaultTags()
+            }
+          }
+        }
+      }
+    }
+
+    cleanup:
+    server.close()
+  }
 }

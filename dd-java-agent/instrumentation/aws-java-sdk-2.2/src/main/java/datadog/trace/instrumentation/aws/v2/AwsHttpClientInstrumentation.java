@@ -43,6 +43,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
   }
 
   public static class AwsHttpClientAdvice {
+    // scope.close here doesn't actually close the span.
 
     /**
      * FIXME: This is a hack to prevent netty instrumentation from messing things up.

@@ -16,7 +16,7 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   // Note: aws1.x sdk doesn't have any truly async clients so we can store scope in request context
   // safely.
-  private static final HandlerContextKey<Scope> SCOPE_CONTEXT_KEY =
+  public static final HandlerContextKey<Scope> SCOPE_CONTEXT_KEY =
       new HandlerContextKey<>("DatadogScope");
 
   @Override
@@ -35,16 +35,22 @@ public class TracingRequestHandler extends RequestHandler2 {
   @Override
   public void afterResponse(final Request<?> request, final Response<?> response) {
     final Scope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
-    DECORATE.onResponse(scope.span(), response);
-    DECORATE.beforeFinish(scope.span());
-    scope.close();
+    if (scope != null) {
+      request.addHandlerContext(SCOPE_CONTEXT_KEY, null);
+      DECORATE.onResponse(scope.span(), response);
+      DECORATE.beforeFinish(scope.span());
+      scope.close();
+    }
   }
 
   @Override
   public void afterError(final Request<?> request, final Response<?> response, final Exception e) {
     final Scope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
-    DECORATE.onError(scope.span(), e);
-    DECORATE.beforeFinish(scope.span());
-    scope.close();
+    if (scope != null) {
+      request.addHandlerContext(SCOPE_CONTEXT_KEY, null);
+      DECORATE.onError(scope.span(), e);
+      DECORATE.beforeFinish(scope.span());
+      scope.close();
+    }
   }
 }

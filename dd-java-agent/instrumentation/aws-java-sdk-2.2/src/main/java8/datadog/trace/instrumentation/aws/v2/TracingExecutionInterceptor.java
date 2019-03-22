@@ -62,18 +62,26 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterExecution(
       final Context.AfterExecution context, final ExecutionAttributes executionAttributes) {
     final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-    // Call onResponse on both types of responses:
-    DECORATE.onResponse(span, context.response());
-    DECORATE.onResponse(span, context.httpResponse());
-    DECORATE.beforeFinish(span);
-    span.finish();
+    if (span != null) {
+      executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
+      // Call onResponse on both types of responses:
+      DECORATE.onResponse(span, context.response());
+      DECORATE.onResponse(span, context.httpResponse());
+      DECORATE.beforeFinish(span);
+      span.finish();
+    }
   }
 
   @Override
   public void onExecutionFailure(
       final Context.FailedExecution context, final ExecutionAttributes executionAttributes) {
     final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-    DECORATE.onError(span, context.exception());
+    if (span != null) {
+      executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
+      DECORATE.onError(span, context.exception());
+      DECORATE.beforeFinish(span);
+      span.finish();
+    }
   }
 
   public static Consumer<ClientOverrideConfiguration.Builder> getOverrideConfigurationConsumer() {
