@@ -64,9 +64,10 @@ public class TwilioInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
 
     /*
-       We are listing out the main service calls on the Creator, Deleter, Fetcher, Reader, and Updater abstract
-       classes. The isDeclaredBy() matcher did not work in the unit tests and we found that there were certain
-       methods declared on the base class (particularly Reader), which we weren't interested in annotating.
+       We are listing out the main service calls on the Creator, Deleter, Fetcher, Reader, and
+       Updater abstract classes. The isDeclaredBy() matcher did not work in the unit tests and
+       we found that there were certain methods declared on the base class (particularly Reader),
+       which we weren't interested in annotating.
     */
 
     return singletonMap(
@@ -85,7 +86,7 @@ public class TwilioInstrumentation extends Instrumenter.Default {
   /** Advice for instrumenting Twilio service classes. */
   public static class TwilioClientAdvice {
 
-    /** Method entry instrumentation */
+    /** Method entry instrumentation. */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope methodEnter(
         @Advice.This final Object that, @Advice.Origin("#m") final String methodName) {
@@ -121,7 +122,7 @@ public class TwilioInstrumentation extends Instrumenter.Default {
       return scope;
     }
 
-    /** Method exit instrumentation */
+    /** Method exit instrumentation. */
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Enter final Scope scope,
@@ -137,6 +138,7 @@ public class TwilioInstrumentation extends Instrumenter.Default {
           final Span span = scope.span();
 
           DECORATE.onError(span, throwable);
+          DECORATE.beforeFinish(span);
 
           // If we're calling an async operation, we still need to finish the span when it's
           // complete and report the results; set an appropriate callback
@@ -165,7 +167,7 @@ public class TwilioInstrumentation extends Instrumenter.Default {
    */
   public static class SpanFinishingCallback implements FutureCallback {
 
-    /** Span that we should finish and annotate when the future is complete */
+    /** Span that we should finish and annotate when the future is complete. */
     private final Span span;
 
     public SpanFinishingCallback(final Span span) {

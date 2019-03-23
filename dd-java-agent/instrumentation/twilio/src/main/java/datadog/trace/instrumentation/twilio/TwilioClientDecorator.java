@@ -37,7 +37,7 @@ public class TwilioClientDecorator extends ClientDecorator {
     return COMPONENT_NAME;
   }
 
-  /** Decorate trace based on service execution metadata */
+  /** Decorate trace based on service execution metadata. */
   public Span onServiceExecution(
       final Span span, final Object serviceExecutor, final String methodName) {
 
@@ -76,13 +76,17 @@ public class TwilioClientDecorator extends ClientDecorator {
       span.setTag("twilio.type", result.getClass().getCanonicalName());
       span.setTag("twilio.account", message.getAccountSid());
       span.setTag("twilio.sid", message.getSid());
-      span.setTag("twilio.status", message.getStatus().toString());
+      if (message.getStatus() != null) {
+        span.setTag("twilio.status", message.getStatus().toString());
+      }
     } else if (result instanceof Call) {
       final Call call = (Call) result;
       span.setTag("twilio.account", call.getAccountSid());
       span.setTag("twilio.sid", call.getSid());
       span.setTag("twilio.parentSid", call.getParentCallSid());
-      span.setTag("twilio.status", call.getStatus().toString());
+      if (call.getStatus() != null) {
+        span.setTag("twilio.status", call.getStatus().toString());
+      }
     } else {
       // Use reflection to gather insight from other types; note that Twilio requests take close to
       // 1 second, so the added hit from reflection here is relatively minimal in the grand scheme
