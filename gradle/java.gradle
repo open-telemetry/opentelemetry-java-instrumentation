@@ -152,7 +152,7 @@ if (project.parent && project.parent.hasProperty("javaExecutableVersionCache")) 
   project.ext.javaExecutableVersionCache = [:]
 }
 
-def getJavaExecutableVersion(String path) {
+JavaVersion getJavaExecutableVersion(String path) {
   def cache = project.ext.javaExecutableVersionCache
 
   if (cache.containsKey(path)) {
@@ -221,6 +221,17 @@ for (def env : System.getenv().entrySet()) {
   def javaPath = "$javaHome/bin/java"
   def javaVersion = getJavaExecutableVersion(javaPath)
 
+  // This is slightly complicated because we need to dereference symlinks to make sure
+  // we are considering same JVM implementation
+  def currentJavaHome = new File(System.getProperty("java.home")).toPath().toRealPath()
+  if (currentJavaHome.endsWith("jre")) {
+    currentJavaHome = currentJavaHome.parent
+  }
+  if (currentJavaHome == new File(javaHome).toPath().toRealPath()) {
+    // Skip JVM implementation we are running gradle on
+    continue
+  }
+
   def parentTask = task "testJava${javaName}"() {
     group = 'Verification'
     description = "Run tests for Java ${javaName}"
@@ -228,7 +239,7 @@ for (def env : System.getenv().entrySet()) {
   tasks.check.dependsOn parentTask
 
   tasks.withType(Test).configureEach {
-//    if (name.endsWith("Generated")) {
+    //if (name.endsWith("Generated")) {
     if (!name.equals("test")) {
       // The way we're copying the test doesn't currently work with "test-sets" generated tests.
       return
