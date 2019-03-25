@@ -329,7 +329,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   @Override
   public AgentBuilder.Identified.Extendable additionalInstrumentation(
-      AgentBuilder.Identified.Extendable builder) {
+    AgentBuilder.Identified.Extendable builder, final AgentBuilder.RawMatcher muzzleMatcher) {
 
     if (fieldInjectionEnabled) {
       for (final Map.Entry<String, String> entry : instrumenter.contextStore().entrySet()) {
@@ -343,6 +343,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     safeHasSuperType(named(entry.getKey())).and(not(isInterface())),
                     instrumenter.classLoaderMatcher())
                 .and(safeToInjectFieldsMatcher())
+                .and(muzzleMatcher)
                 .transform(
                     getTransformerForASMVisitor(
                         getFieldInjectionVisitor(entry.getKey(), entry.getValue())));
