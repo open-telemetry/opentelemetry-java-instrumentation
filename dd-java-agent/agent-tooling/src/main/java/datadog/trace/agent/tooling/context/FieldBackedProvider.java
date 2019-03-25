@@ -70,14 +70,15 @@ import net.bytebuddy.utility.JavaModule;
 @Slf4j
 public class FieldBackedProvider implements InstrumentationContextProvider {
 
-  /*
-  Note: the value here has to be inside on of the prefixes in
-  datadog.trace.agent.tooling.Utils#BOOTSTRAP_PACKAGE_PREFIXES. This ensures that 'isolating' (or 'module')
-  classloaders like jboss and osgi see injected classes. This works because we instrument those classloaders
-  to load everything inside bootstrap packages.
+  /**
+   * Note: the value here has to be inside on of the prefixes in
+   * datadog.trace.agent.tooling.Utils#BOOTSTRAP_PACKAGE_PREFIXES. This ensures that 'isolating' (or
+   * 'module') classloaders like jboss and osgi see injected classes. This works because we
+   * instrument those classloaders to load everything inside bootstrap packages.
    */
   private static final String DYNAMIC_CLASSES_PACKAGE =
       "datadog.trace.bootstrap.instrumentation.context.";
+
   private static final String INJECTED_FIELDS_MARKER_CLASS_NAME =
       Utils.getInternalName(FieldBackedContextStoreAppliedMarker.class.getName());
 
@@ -118,24 +119,24 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   public AgentBuilder.Identified.Extendable instrumentationTransformer(
       AgentBuilder.Identified.Extendable builder) {
     if (instrumenter.contextStore().size() > 0) {
-      /*
-      Install transformer that rewrites accesses to context store with specialized bytecode that invokes appropriate
-      storage implementation.
+      /**
+       * Install transformer that rewrites accesses to context store with specialized bytecode that
+       * invokes appropriate storage implementation.
        */
       builder =
           builder.transform(getTransformerForASMVisitor(getContextStoreReadsRewritingVisitor()));
 
-      /*
-      We inject into bootstrap classloader because field accessor interfaces are needed by
-      context store implementations. Unfortunately this forces us to remove stored type checking
-      because actual classes may not be available at this point.
+      /**
+       * We inject into bootstrap classloader because field accessor interfaces are needed by
+       * context store implementations. Unfortunately this forces us to remove stored type checking
+       * because actual classes may not be available at this point.
        */
       builder = builder.transform(bootstrapHelperInjector(fieldAccessorInterfaces.values()));
 
-      /*
-       * We inject context store implementation into bootstrap classloader because same implementation
-       * may be used by different instrumentations and it has to use same static map in case of
-       * fallback to map-backed storage.
+      /**
+       * We inject context store implementation into bootstrap classloader because same
+       * implementation may be used by different instrumentations and it has to use same static map
+       * in case of fallback to map-backed storage.
        */
       builder = builder.transform(bootstrapHelperInjector(contextStoreImplementations.values()));
     }
@@ -329,13 +330,13 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
   @Override
   public AgentBuilder.Identified.Extendable additionalInstrumentation(
-      AgentBuilder.Identified.Extendable builder) {
+      AgentBuilder.Identified.Extendable builder, final AgentBuilder.RawMatcher muzzleMatcher) {
 
     if (fieldInjectionEnabled) {
       for (final Map.Entry<String, String> entry : instrumenter.contextStore().entrySet()) {
-        /*
-        For each context store defined in a current instrumentation we create an agent builder
-        that injects necessary fields.
+        /**
+         * For each context store defined in a current instrumentation we create an agent builder
+         * that injects necessary fields.
          */
         builder =
             builder
@@ -343,6 +344,13 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     safeHasSuperType(named(entry.getKey())).and(not(isInterface())),
                     instrumenter.classLoaderMatcher())
                 .and(safeToInjectFieldsMatcher())
+                /**
+                 * By adding the muzzleMatcher here, we are adding risk that the rules for injecting
+                 * the classes into the classloader and the rules for adding the field to the class
+                 * might be different. However the consequences are much greater if the class is not
+                 * injected but the field is added, since that results in a NoClassDef error.
+                 */
+                .and(muzzleMatcher)
                 .transform(
                     getTransformerForASMVisitor(
                         getFieldInjectionVisitor(entry.getKey(), entry.getValue())));
@@ -360,13 +368,14 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           final JavaModule module,
           final Class<?> classBeingRedefined,
           final ProtectionDomain protectionDomain) {
-        /*
-        The idea here is that we can add fields if class is just being loaded (classBeingRedefined == null)
-        and we have to add same fields again if class we added fields before is being transformed again.
-        Note: here we assume that Class#getInterfaces() returns list of interfaces defined immediately on a
-        given class, not inherited from its parents. It looks like current JVM implementation does exactly
-        this but javadoc is not explicit about that.
-        */
+        /**
+         * The idea here is that we can add fields if class is just being loaded
+         * (classBeingRedefined == null) and we have to add same fields again if class we added
+         * fields before is being transformed again. Note: here we assume that Class#getInterfaces()
+         * returns list of interfaces defined immediately on a given class, not inherited from its
+         * parents. It looks like current JVM implementation does exactly this but javadoc is not
+         * explicit about that.
+         */
         return classBeingRedefined == null
             || Arrays.asList(classBeingRedefined.getInterfaces())
                 .contains(FieldBackedContextStoreAppliedMarker.class);
