@@ -102,8 +102,12 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   /** fields-accessor-interface-name -> fields-accessor-interface-dynamic-type */
   private final Map<String, DynamicType.Unloaded<?>> fieldAccessorInterfaces;
 
+  private final AgentBuilder.Transformer fieldAccessorInterfacesInjector;
+
   /** context-store-type-name -> context-store-type-name-dynamic-type */
   private final Map<String, DynamicType.Unloaded<?>> contextStoreImplementations;
+
+  private final AgentBuilder.Transformer contextStoreImplementationsInjector;
 
   private final boolean fieldInjectionEnabled;
 
@@ -111,7 +115,10 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     this.instrumenter = instrumenter;
     byteBuddy = new ByteBuddy();
     fieldAccessorInterfaces = generateFieldAccessorInterfaces();
+    fieldAccessorInterfacesInjector = bootstrapHelperInjector(fieldAccessorInterfaces.values());
     contextStoreImplementations = generateContextStoreImplementationClasses();
+    contextStoreImplementationsInjector =
+        bootstrapHelperInjector(contextStoreImplementations.values());
     fieldInjectionEnabled = Config.get().isRuntimeContextFieldInjection();
   }
 
@@ -125,44 +132,9 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
        */
       builder =
           builder.transform(getTransformerForASMVisitor(getContextStoreReadsRewritingVisitor()));
-
-      /**
-       * We inject into bootstrap classloader because field accessor interfaces are needed by
-       * context store implementations. Unfortunately this forces us to remove stored type checking
-       * because actual classes may not be available at this point.
-       */
-      builder = builder.transform(bootstrapHelperInjector(fieldAccessorInterfaces.values()));
-
-      /**
-       * We inject context store implementation into bootstrap classloader because same
-       * implementation may be used by different instrumentations and it has to use same static map
-       * in case of fallback to map-backed storage.
-       */
-      builder = builder.transform(bootstrapHelperInjector(contextStoreImplementations.values()));
+      builder = injectHelpersIntoBootstrapClassloader(builder);
     }
     return builder;
-  }
-
-  /** Get transformer that forces helper injection onto bootstrap classloader. */
-  private AgentBuilder.Transformer bootstrapHelperInjector(
-      final Collection<DynamicType.Unloaded<?>> helpers) {
-    return new AgentBuilder.Transformer() {
-      final HelperInjector injector = HelperInjector.forDynamicTypes(helpers);
-
-      @Override
-      public DynamicType.Builder<?> transform(
-          final DynamicType.Builder<?> builder,
-          final TypeDescription typeDescription,
-          final ClassLoader classLoader,
-          final JavaModule module) {
-        return injector.transform(
-            builder,
-            typeDescription,
-            // context store implementation classes will always go to the bootstrap
-            BOOTSTRAP_CLASSLOADER,
-            module);
-      }
-    };
   }
 
   private AsmVisitorWrapper getContextStoreReadsRewritingVisitor() {
@@ -328,9 +300,49 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     };
   }
 
+  private AgentBuilder.Identified.Extendable injectHelpersIntoBootstrapClassloader(
+      AgentBuilder.Identified.Extendable builder) {
+    /**
+     * We inject into bootstrap classloader because field accessor interfaces are needed by context
+     * store implementations. Unfortunately this forces us to remove stored type checking because
+     * actual classes may not be available at this point.
+     */
+    builder = builder.transform(fieldAccessorInterfacesInjector);
+
+    /**
+     * We inject context store implementation into bootstrap classloader because same implementation
+     * may be used by different instrumentations and it has to use same static map in case of
+     * fallback to map-backed storage.
+     */
+    builder = builder.transform(contextStoreImplementationsInjector);
+    return builder;
+  }
+
+  /** Get transformer that forces helper injection onto bootstrap classloader. */
+  private AgentBuilder.Transformer bootstrapHelperInjector(
+      final Collection<DynamicType.Unloaded<?>> helpers) {
+    return new AgentBuilder.Transformer() {
+      final HelperInjector injector = HelperInjector.forDynamicTypes(helpers);
+
+      @Override
+      public DynamicType.Builder<?> transform(
+          final DynamicType.Builder<?> builder,
+          final TypeDescription typeDescription,
+          final ClassLoader classLoader,
+          final JavaModule module) {
+        return injector.transform(
+            builder,
+            typeDescription,
+            // context store implementation classes will always go to the bootstrap
+            BOOTSTRAP_CLASSLOADER,
+            module);
+      }
+    };
+  }
+
   @Override
   public AgentBuilder.Identified.Extendable additionalInstrumentation(
-      AgentBuilder.Identified.Extendable builder, final AgentBuilder.RawMatcher muzzleMatcher) {
+      AgentBuilder.Identified.Extendable builder) {
 
     if (fieldInjectionEnabled) {
       for (final Map.Entry<String, String> entry : instrumenter.contextStore().entrySet()) {
@@ -344,16 +356,19 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     safeHasSuperType(named(entry.getKey())).and(not(isInterface())),
                     instrumenter.classLoaderMatcher())
                 .and(safeToInjectFieldsMatcher())
-                /**
-                 * By adding the muzzleMatcher here, we are adding risk that the rules for injecting
-                 * the classes into the classloader and the rules for adding the field to the class
-                 * might be different. However the consequences are much greater if the class is not
-                 * injected but the field is added, since that results in a NoClassDef error.
-                 */
-                .and(muzzleMatcher)
-                .transform(
-                    getTransformerForASMVisitor(
-                        getFieldInjectionVisitor(entry.getKey(), entry.getValue())));
+                .transform(AgentBuilder.Transformer.NoOp.INSTANCE);
+
+        /**
+         * We inject helpers here as well as when instrumentation is applied to ensure that helpers
+         * are present even if instrumented classes are not loaded, but classes with state fields
+         * added are loaded (e.g. sun.net.www.protocol.https.HttpsURLConnectionImpl).
+         */
+        builder = injectHelpersIntoBootstrapClassloader(builder);
+
+        builder =
+            builder.transform(
+                getTransformerForASMVisitor(
+                    getFieldInjectionVisitor(entry.getKey(), entry.getValue())));
       }
     }
     return builder;

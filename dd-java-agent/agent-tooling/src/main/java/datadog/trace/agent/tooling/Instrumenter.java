@@ -63,7 +63,6 @@ public interface Instrumenter {
         return parentAgentBuilder;
       }
 
-      final MuzzleMatcher muzzleMatcher = new MuzzleMatcher();
       AgentBuilder.Identified.Extendable agentBuilder =
           parentAgentBuilder
               .type(
@@ -74,13 +73,13 @@ public interface Instrumenter {
                       classLoaderMatcher(),
                       "Instrumentation class loader matcher unexpected exception: "
                           + getClass().getName()))
-              .and(muzzleMatcher)
+              .and(new MuzzleMatcher())
               .and(new PostMatchHook())
               .transform(DDTransformers.defaultTransformers());
       agentBuilder = injectHelperClasses(agentBuilder);
       agentBuilder = contextProvider.instrumentationTransformer(agentBuilder);
       agentBuilder = applyInstrumentationTransformers(agentBuilder);
-      agentBuilder = contextProvider.additionalInstrumentation(agentBuilder, muzzleMatcher);
+      agentBuilder = contextProvider.additionalInstrumentation(agentBuilder);
       return agentBuilder;
     }
 
