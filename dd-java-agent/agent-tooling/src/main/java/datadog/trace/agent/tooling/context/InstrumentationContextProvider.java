@@ -13,5 +13,5 @@ public interface InstrumentationContextProvider {
 
   /** Hook to define additional instrumentation. Run at instrumentation advice is hooked up. */
   AgentBuilder.Identified.Extendable additionalInstrumentation(
-      AgentBuilder.Identified.Extendable builder, final AgentBuilder.RawMatcher muzzleMatcher);
+      AgentBuilder.Identified.Extendable builder);
 }
