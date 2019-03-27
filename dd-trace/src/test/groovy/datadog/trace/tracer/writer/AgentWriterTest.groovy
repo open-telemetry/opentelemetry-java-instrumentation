@@ -1,6 +1,7 @@
 package datadog.trace.tracer.writer
 
 import datadog.trace.tracer.Trace
+import spock.lang.Retry
 import spock.lang.Specification
 
 import java.util.concurrent.ExecutorService
@@ -138,6 +139,7 @@ class AgentWriterTest extends Specification {
     sampleRateByService == SampleRateByService.EMPTY_INSTANCE
   }
 
+  @Retry
   def "test start/#closeMethod"() {
     setup:
     def writer = new AgentWriter(client)
@@ -178,6 +180,7 @@ class AgentWriterTest extends Specification {
   }
 
   boolean isWriterThreadRunning() {
+    // This is known to fail sometimes.
     return Thread.getAllStackTraces().keySet().any { t -> t.getName() == "dd-agent-writer" }
   }
 }

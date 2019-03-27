@@ -7,6 +7,7 @@ import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.DDApi.ResponseListener
 import spock.lang.Specification
 
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
@@ -197,6 +198,38 @@ class DDApiTest extends Specification {
     "v0.3"          | 0          | true
     "v0.4"          | 500        | false
     "v0.3"          | 30000      | false
+  }
+
+  def "verify content length"() {
+    setup:
+    def receivedContentLength = new AtomicLong()
+    def agent = httpServer {
+      handlers {
+        put("v0.4/traces") {
+          receivedContentLength.set(request.contentLength)
+          response.status(200).send()
+        }
+      }
+    }
+    def client = new DDApi("localhost", agent.address.port, null)
+
+    when:
+    def success = client.sendTraces(traces)
+    then:
+    success
+    receivedContentLength.get() == expectedLength
+
+    cleanup:
+    agent.close()
+
+    where:
+    expectedLength | traces
+    1              | []
+    3              | [[], []]
+    16             | (1..15).collect { [] }
+    19             | (1..16).collect { [] }
+    65538          | (1..((1 << 16) - 1)).collect { [] }
+    65541          | (1..(1 << 16)).collect { [] }
   }
 
   static List<List<TreeMap<String, Object>>> convertList(byte[] bytes) {
