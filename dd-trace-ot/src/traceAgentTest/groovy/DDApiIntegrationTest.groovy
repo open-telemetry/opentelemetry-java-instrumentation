@@ -134,6 +134,11 @@ class DDApiIntegrationTest {
       [[], []]                                                                            | 2
       [[new DDSpan(1, CONTEXT)]]                                                          | 3
       [[new DDSpan(TimeUnit.MILLISECONDS.toMicros(System.currentTimeMillis()), CONTEXT)]] | 4
+      (1..15).collect { [] }                                                              | 5
+      (1..16).collect { [] }                                                              | 6
+      // Larger traces take more than 1 second to send to the agent and get a timeout exception:
+//      (1..((1 << 16) - 1)).collect { [] }                                                 | 7
+//      (1..(1 << 16)).collect { [] }                                                       | 8
     }
 
     def "Sending traces to unix domain socket succeeds (test #test)"() {

@@ -122,9 +122,9 @@ public class DDApi {
               if (traceCount < (1 << 4)) {
                 return sizeInBytes + 1; // byte
               } else if (traceCount < (1 << 16)) {
-                return sizeInBytes + 2; // short
+                return sizeInBytes + 3; // byte + short
               } else {
-                return sizeInBytes + 4; // int
+                return sizeInBytes + 5; // byte + int
               }
             }
 
