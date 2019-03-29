@@ -18,7 +18,7 @@ muzzle {
     // compatible with Java 7, so we declare the dependency on 20 in our top level dependencies.gradle.
     // Ideally our muzzle plugin should take into account those versions declaration, instead it does not so we would
     // end up with testing compatibility with guava 0.16 which lacks the method invocation added to be compatible with
-    // most recent versions of guava (27+). While the long term solution is to make the muzzle plugin of upstream
+    // most recent versions of guava (27+). While the long term solution is to make the muzzle plugin aware of upstream
     // declared dependencies, for now we just make sure that we use the proper ones.
     extraDependency "com.google.guava:guava:20.0"
   }
