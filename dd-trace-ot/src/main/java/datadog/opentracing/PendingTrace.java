@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
-  private static final SpanCleaner SPAN_CLEANER = new SpanCleaner();
+  private static final AtomicReference<SpanCleaner> SPAN_CLEANER = new AtomicReference<>();
 
   private final DDTracer tracer;
   private final String traceId;
@@ -67,7 +67,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     startTimeNano = Clock.currentNanoTime();
     startNanoTicks = Clock.currentNanoTicks();
 
-    SPAN_CLEANER.pendingTraces.add(this);
+    addPendingTrace();
   }
 
   /**
@@ -223,7 +223,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
 
   private synchronized void write() {
     if (isWritten.compareAndSet(false, true)) {
-      SPAN_CLEANER.pendingTraces.remove(this);
+      removePendingTrace();
       if (!isEmpty()) {
         log.debug("Writing {} spans to {}.", size(), tracer.writer);
         tracer.write(this);
@@ -237,7 +237,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     while ((ref = referenceQueue.poll()) != null) {
       weakReferences.remove(ref);
       if (isWritten.compareAndSet(false, true)) {
-        SPAN_CLEANER.pendingTraces.remove(this);
+        removePendingTrace();
         // preserve throughput count.
         // Don't report the trace because the data comes from buggy uses of the api and is suspect.
         tracer.incrementTraceCount();
@@ -254,8 +254,32 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     return count > 0;
   }
 
+  private void addPendingTrace() {
+    final SpanCleaner cleaner = SPAN_CLEANER.get();
+    if (cleaner != null) {
+      cleaner.pendingTraces.add(this);
+    }
+  }
+
+  private void removePendingTrace() {
+    final SpanCleaner cleaner = SPAN_CLEANER.get();
+    if (cleaner != null) {
+      cleaner.pendingTraces.remove(this);
+    }
+  }
+
+  static void initialize() {
+    final SpanCleaner oldCleaner = SPAN_CLEANER.getAndSet(new SpanCleaner());
+    if (oldCleaner != null) {
+      oldCleaner.close();
+    }
+  }
+
   static void close() {
-    SPAN_CLEANER.close();
+    final SpanCleaner cleaner = SPAN_CLEANER.getAndSet(null);
+    if (cleaner != null) {
+      cleaner.close();
+    }
   }
 
   private static class SpanCleaner implements Runnable, Closeable {
