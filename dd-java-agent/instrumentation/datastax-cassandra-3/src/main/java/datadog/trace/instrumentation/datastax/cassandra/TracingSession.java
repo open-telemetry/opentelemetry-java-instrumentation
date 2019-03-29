@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.datastax.cassandra;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static datadog.trace.instrumentation.datastax.cassandra.CassandraClientDecorator.DECORATE;
 
 import com.datastax.driver.core.BoundStatement;
@@ -51,7 +52,8 @@ public class TracingSession implements Session {
           public Session apply(final Session session) {
             return new TracingSession(session, tracer);
           }
-        });
+        },
+        directExecutor());
   }
 
   @Override
