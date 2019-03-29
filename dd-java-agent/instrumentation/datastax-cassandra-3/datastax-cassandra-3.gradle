@@ -14,8 +14,8 @@ muzzle {
     module = "cassandra-driver-core"
     versions = cassandraDriverTestVersions
     assertInverse = true
-    // Older versions of cassandra-driver-core require an older guava dependency (0.16.0). guava <20 is not
-    // compatible with Java 7, so we declare the dependency on 20 in our top level dependencies.gradle.
+    // Older versions of cassandra-driver-core require an older guava dependency (0.16.0). guava >20.0 is not
+    // compatible with Java 7, so we declare the dependency on 20.0 in our top level dependencies.gradle.
     // Ideally our muzzle plugin should take into account those versions declaration, instead it does not so we would
     // end up with testing compatibility with guava 0.16 which lacks the method invocation added to be compatible with
     // most recent versions of guava (27+). While the long term solution is to make the muzzle plugin aware of upstream
