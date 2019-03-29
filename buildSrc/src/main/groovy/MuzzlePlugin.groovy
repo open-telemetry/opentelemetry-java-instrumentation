@@ -371,7 +371,7 @@ class MuzzleDirective {
   /**
    * Slug of directive name.
    *
-   * @return
+   * @return A slug of the name or an empty string if name is empty. E.g. 'My Directive' --> 'My-Directive'
    */
   String getNameSlug() {
     if (null == name) {
