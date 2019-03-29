@@ -369,7 +369,7 @@ class MuzzleDirective {
   }
 
   /**
-   * Slug of a directive name.
+   * Slug of directive name.
    *
    * @return
    */
