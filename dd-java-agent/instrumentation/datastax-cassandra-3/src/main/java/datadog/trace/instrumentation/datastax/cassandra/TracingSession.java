@@ -53,8 +53,7 @@ public class TracingSession implements Session {
             return new TracingSession(session, tracer);
           }
         },
-        directExecutor()
-    );
+        directExecutor());
   }
 
   @Override
