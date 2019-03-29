@@ -81,7 +81,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
      * this instrumentation when TracingExecutionInterceptor would not work.
      */
     public static void muzzleCheck() {
-      TracingExecutionInterceptor.getOverrideConfigurationConsumer();
+      TracingExecutionInterceptor.muzzleCheck();
     }
   }
 }
