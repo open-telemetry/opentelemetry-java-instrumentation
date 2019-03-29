@@ -157,7 +157,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   /**
-   * @Deprecated. Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
+   * @deprecated Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
    */
   @Deprecated
   public DDTracer(
@@ -180,7 +180,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   /**
-   * @Deprecated. Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
+   * @deprecated Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
    */
   @Deprecated
   public DDTracer(
