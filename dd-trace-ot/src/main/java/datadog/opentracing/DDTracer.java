@@ -252,11 +252,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     }
 
     // Ensure that PendingTrace.SPAN_CLEANER is initialized in this thread:
-    try {
-      Class.forName(PendingTrace.class.getName());
-    } catch (final ClassNotFoundException e) {
-    }
-
+    PendingTrace.initialize();
     log.info("New instance: {}", this);
   }
 
