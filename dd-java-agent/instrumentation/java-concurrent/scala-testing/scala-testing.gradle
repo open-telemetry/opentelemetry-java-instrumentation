@@ -8,6 +8,8 @@ apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/test-with-scala.gradle"
 
 dependencies {
+  compileOnly deps.scala
+
   testCompile project(':dd-trace-api')
   testCompile project(':dd-trace-ot')
   testCompile deps.scala
