@@ -14,6 +14,11 @@ if (applyCodeCoverage) {
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
+java {
+  // See https://docs.gradle.org/current/userguide/upgrading_version_5.html, Automatic target JVM version
+  disableAutoTargetJvm()
+}
+
 [JavaCompile, ScalaCompile].each { type ->
   tasks.withType(type) {
     doFirst {
@@ -255,7 +260,7 @@ for (def env : System.getenv().entrySet()) {
   }
   tasks.check.dependsOn parentTask
 
-  tasks.withType(Test).configureEach {
+  tasks.withType(Test).all {
     //if (name.endsWith("Generated")) {
     if (!name.equals("test")) {
       // The way we're copying the test doesn't currently work with "test-sets" generated tests.
