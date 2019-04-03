@@ -17,20 +17,12 @@ model {
     play {
       platform play: playVersion, scala: scalaVersion, java: '1.8'
       injectedRoutesGenerator = true
-      sources {
-        scala {
-          source.srcDir "src/main/scala"
-        }
-        extraRoutes(RoutesSourceSet) {
-          source.srcDir "src/main/conf"
-        }
-      }
     }
   }
   distributions {
     playBinary {
       contents {
-        from("src/main/conf") {
+        from("conf") {
           into "conf"
         }
       }
