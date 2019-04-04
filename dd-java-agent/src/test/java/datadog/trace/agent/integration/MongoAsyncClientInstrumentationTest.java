@@ -49,7 +49,7 @@ public class MongoAsyncClientInstrumentationTest {
   public void asyncClientHasListener() {
     Assert.assertEquals(1, client.getSettings().getCommandListeners().size());
     Assert.assertEquals(
-        "DDTracingCommandListener",
+        "TracingCommandListener",
         client.getSettings().getCommandListeners().get(0).getClass().getSimpleName());
   }
 
