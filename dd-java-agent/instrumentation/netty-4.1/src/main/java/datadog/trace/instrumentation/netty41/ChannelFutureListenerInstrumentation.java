@@ -83,18 +83,19 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       if (continuation == null) {
         return null;
       }
-      final TraceScope scope = continuation.activate();
+      final TraceScope parentScope = continuation.activate();
 
       final Span errorSpan =
           GlobalTracer.get()
               .buildSpan("netty.connect")
               .withTag(Tags.COMPONENT.getKey(), "netty")
               .start();
-      Tags.ERROR.set(errorSpan, true);
-      errorSpan.log(singletonMap(ERROR_OBJECT, cause));
-      errorSpan.finish();
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(errorSpan, true)) {
+        Tags.ERROR.set(errorSpan, true);
+        errorSpan.log(singletonMap(ERROR_OBJECT, cause));
+      }
 
-      return scope;
+      return parentScope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

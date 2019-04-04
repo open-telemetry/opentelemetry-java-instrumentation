@@ -29,31 +29,27 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
         GlobalTracer.get()
             .extract(Format.Builtin.HTTP_HEADERS, new NettyRequestExtractAdapter(request));
 
-    final Scope scope =
-        GlobalTracer.get()
-            .buildSpan("netty.request")
-            .asChildOf(extractedContext)
-            .startActive(false);
-    final Span span = scope.span();
-    DECORATE.afterStart(span);
-    DECORATE.onRequest(span, request);
-    DECORATE.onPeerConnection(span, remoteAddress);
+    final Span span =
+        GlobalTracer.get().buildSpan("netty.request").asChildOf(extractedContext).start();
+    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      DECORATE.afterStart(span);
+      DECORATE.onRequest(span, request);
+      DECORATE.onPeerConnection(span, remoteAddress);
 
-    if (scope instanceof TraceScope) {
-      ((TraceScope) scope).setAsyncPropagation(true);
-    }
+      if (scope instanceof TraceScope) {
+        ((TraceScope) scope).setAsyncPropagation(true);
+      }
 
-    ctx.channel().attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).set(span);
+      ctx.channel().attr(AttributeKeys.SERVER_ATTRIBUTE_KEY).set(span);
 
-    try {
-      ctx.fireChannelRead(msg);
-    } catch (final Throwable throwable) {
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.finish(); // Finish the span manually since finishSpanOnClose was false
-      throw throwable;
-    } finally {
-      scope.close();
+      try {
+        ctx.fireChannelRead(msg);
+      } catch (final Throwable throwable) {
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
+        span.finish(); // Finish the span manually since finishSpanOnClose was false
+        throw throwable;
+      }
     }
   }
 }
