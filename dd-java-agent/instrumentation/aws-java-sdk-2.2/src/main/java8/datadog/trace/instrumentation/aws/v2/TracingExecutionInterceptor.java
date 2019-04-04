@@ -34,8 +34,10 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void beforeExecution(
       final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
     final Span span = GlobalTracer.get().buildSpan("aws.command").start();
-    DECORATE.afterStart(span);
-    executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
+    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      DECORATE.afterStart(span);
+      executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
+    }
   }
 
   @Override
