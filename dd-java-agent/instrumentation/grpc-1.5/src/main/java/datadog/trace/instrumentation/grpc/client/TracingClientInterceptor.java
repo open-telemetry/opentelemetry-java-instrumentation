@@ -16,6 +16,7 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
+import io.opentracing.util.GlobalTracer;
 
 public class TracingClientInterceptor implements ClientInterceptor {
 
@@ -36,20 +37,22 @@ public class TracingClientInterceptor implements ClientInterceptor {
             .buildSpan("grpc.client")
             .withTag(DDTags.RESOURCE_NAME, method.getFullMethodName())
             .start();
-    DECORATE.afterStart(span);
+    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      DECORATE.afterStart(span);
 
-    final ClientCall<ReqT, RespT> result;
-    try (final Scope ignore = tracer.scopeManager().activate(span, false)) {
-      // call other interceptors
-      result = next.newCall(method, callOptions);
-    } catch (final Throwable e) {
-      DECORATE.onError(span, e);
-      DECORATE.beforeFinish(span);
-      span.finish();
-      throw e;
+      final ClientCall<ReqT, RespT> result;
+      try {
+        // call other interceptors
+        result = next.newCall(method, callOptions);
+      } catch (final Throwable e) {
+        DECORATE.onError(span, e);
+        DECORATE.beforeFinish(span);
+        span.finish();
+        throw e;
+      }
+
+      return new TracingClientCall<>(tracer, span, result);
     }
-
-    return new TracingClientCall<>(tracer, span, result);
   }
 
   static final class TracingClientCall<ReqT, RespT>
