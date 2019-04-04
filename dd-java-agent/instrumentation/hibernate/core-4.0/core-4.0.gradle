@@ -48,7 +48,7 @@ dependencies {
   testCompile "com.sun.xml.bind:jaxb-impl:2.2.11"
   testCompile "javax.activation:activation:1.1.1"
 
-  latestDepTestCompile group: 'org.hibernate', name: 'hibernate-core', version: '+'
+  latestDepTestCompile group: 'org.hibernate', name: 'hibernate-core', version: '4.2.+'
   latestDepTestCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
   // Test that the incremental instrumentation for hibernate 4.3 doesn't cause issues.
   latestDepTestCompile project(':dd-java-agent:instrumentation:hibernate:core-4.3')
