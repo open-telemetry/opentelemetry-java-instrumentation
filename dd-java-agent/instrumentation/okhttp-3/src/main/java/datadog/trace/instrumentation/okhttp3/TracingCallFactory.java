@@ -28,7 +28,7 @@ public class TracingCallFactory implements Call.Factory {
     final Span span = GlobalTracer.get().buildSpan("okhttp.http").start();
     try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
       DECORATE.afterStart(scope);
-      DECORATE.onRequest(scope.span(), request);
+      DECORATE.onRequest(span, request);
 
       /** In case of exception network interceptor is not called */
       final OkHttpClient.Builder okBuilder = okHttpClient.newBuilder();
@@ -42,14 +42,13 @@ public class TracingCallFactory implements Call.Factory {
                 @Override
                 public Response intercept(final Chain chain) throws IOException {
                   try (final Scope interceptorScope =
-                      GlobalTracer.get().scopeManager().activate(span, false)) {
+                      GlobalTracer.get().scopeManager().activate(span, true)) {
                     return chain.proceed(chain.request());
                   } catch (final Exception ex) {
                     DECORATE.onError(scope, ex);
                     throw ex;
                   } finally {
                     DECORATE.beforeFinish(span);
-                    span.finish();
                   }
                 }
               });
