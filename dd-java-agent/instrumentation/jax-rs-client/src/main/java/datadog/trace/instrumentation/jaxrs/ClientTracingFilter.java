@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.jaxrs;
 import static datadog.trace.instrumentation.jaxrs.JaxRsClientDecorator.DECORATE;
 
 import datadog.trace.api.DDTags;
+import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.GlobalTracer;
@@ -21,24 +22,25 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
 
   @Override
   public void filter(final ClientRequestContext requestContext) {
-
     final Span span =
         GlobalTracer.get()
             .buildSpan("jax-rs.client.call")
             .withTag(DDTags.RESOURCE_NAME, requestContext.getMethod() + " jax-rs.client.call")
             .start();
-    DECORATE.afterStart(span);
-    DECORATE.onRequest(span, requestContext);
+    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      DECORATE.afterStart(span);
+      DECORATE.onRequest(span, requestContext);
 
-    log.debug("{} - client span started", span);
+      log.debug("{} - client span started", span);
 
-    GlobalTracer.get()
-        .inject(
-            span.context(),
-            Format.Builtin.HTTP_HEADERS,
-            new InjectAdapter(requestContext.getHeaders()));
+      GlobalTracer.get()
+          .inject(
+              span.context(),
+              Format.Builtin.HTTP_HEADERS,
+              new InjectAdapter(requestContext.getHeaders()));
 
-    requestContext.setProperty(SPAN_PROPERTY_NAME, span);
+      requestContext.setProperty(SPAN_PROPERTY_NAME, span);
+    }
   }
 
   @Override
