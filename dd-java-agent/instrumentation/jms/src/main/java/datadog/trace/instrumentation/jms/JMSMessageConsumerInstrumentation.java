@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
@@ -92,15 +93,16 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
       }
 
       final Span span = spanBuilder.start();
-      CONSUMER_DECORATE.afterStart(span);
-      if (message == null) {
-        CONSUMER_DECORATE.onReceive(span, method);
-      } else {
-        CONSUMER_DECORATE.onConsume(span, message);
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+        CONSUMER_DECORATE.afterStart(span);
+        if (message == null) {
+          CONSUMER_DECORATE.onReceive(span, method);
+        } else {
+          CONSUMER_DECORATE.onConsume(span, message);
+        }
+        CONSUMER_DECORATE.onError(span, throwable);
+        CONSUMER_DECORATE.beforeFinish(span);
       }
-      CONSUMER_DECORATE.onError(span, throwable);
-      CONSUMER_DECORATE.beforeFinish(span);
-      span.finish();
     }
   }
 }
