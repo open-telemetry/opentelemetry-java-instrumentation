@@ -273,7 +273,7 @@ for (def env : System.getenv().entrySet()) {
       executable = javaPath
 
       if (javaName == "7") {
-        // Disable JIT for this method. Somtimes Java7 JVM crashes trying to compile it.
+        // Disable JIT for this method. Sometimes Java7 JVM crashes trying to compile it.
         jvmArgs '-XX:CompileCommand=exclude,net.bytebuddy.description.type.TypeDescription$Generic$Visitor$Substitutor::onParameterizedType'
       }
 
