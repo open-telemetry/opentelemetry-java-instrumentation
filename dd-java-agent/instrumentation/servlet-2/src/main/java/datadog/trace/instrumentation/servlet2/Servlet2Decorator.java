@@ -29,12 +29,17 @@ public class Servlet2Decorator extends HttpServerDecorator<HttpServletRequest, S
   }
 
   @Override
-  protected String hostname(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getServerName();
+  protected String peerHostname(final HttpServletRequest httpServletRequest) {
+    return httpServletRequest.getRemoteHost();
   }
 
   @Override
-  protected Integer port(final HttpServletRequest httpServletRequest) {
+  protected String peerHostIP(final HttpServletRequest httpServletRequest) {
+    return httpServletRequest.getRemoteAddr();
+  }
+
+  @Override
+  protected Integer peerPort(final HttpServletRequest httpServletRequest) {
     return httpServletRequest.getServerPort();
   }
 

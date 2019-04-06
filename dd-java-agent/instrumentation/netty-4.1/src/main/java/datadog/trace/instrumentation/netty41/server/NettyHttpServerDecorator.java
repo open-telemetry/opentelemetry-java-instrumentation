@@ -45,12 +45,17 @@ public class NettyHttpServerDecorator extends HttpServerDecorator<HttpRequest, H
   }
 
   @Override
-  protected String hostname(final HttpRequest httpRequest) {
+  protected String peerHostname(final HttpRequest httpRequest) {
     return null;
   }
 
   @Override
-  protected Integer port(final HttpRequest httpRequest) {
+  protected String peerHostIP(final HttpRequest httpRequest) {
+    return null;
+  }
+
+  @Override
+  protected Integer peerPort(final HttpRequest httpRequest) {
     return null;
   }
 

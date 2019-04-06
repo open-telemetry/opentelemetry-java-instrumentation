@@ -11,9 +11,11 @@ public abstract class HttpServerDecorator<REQUEST, RESPONSE> extends ServerDecor
 
   protected abstract String url(REQUEST request);
 
-  protected abstract String hostname(REQUEST request);
+  protected abstract String peerHostname(REQUEST request);
 
-  protected abstract Integer port(REQUEST request);
+  protected abstract String peerHostIP(REQUEST request);
+
+  protected abstract Integer peerPort(REQUEST request);
 
   protected abstract Integer status(RESPONSE response);
 
@@ -32,8 +34,16 @@ public abstract class HttpServerDecorator<REQUEST, RESPONSE> extends ServerDecor
     if (request != null) {
       Tags.HTTP_METHOD.set(span, method(request));
       Tags.HTTP_URL.set(span, url(request));
-      Tags.PEER_HOSTNAME.set(span, hostname(request));
-      Tags.PEER_PORT.set(span, port(request));
+      Tags.PEER_HOSTNAME.set(span, peerHostname(request));
+      final String ip = peerHostIP(request);
+      if (ip != null) {
+        if (ip.contains(":")) {
+          Tags.PEER_HOST_IPV6.set(span, ip);
+        } else {
+          Tags.PEER_HOST_IPV4.set(span, ip);
+        }
+      }
+      Tags.PEER_PORT.set(span, peerPort(request));
       // TODO set resource name from URL.
     }
     return span;

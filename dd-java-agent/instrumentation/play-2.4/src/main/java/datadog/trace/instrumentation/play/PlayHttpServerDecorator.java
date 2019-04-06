@@ -47,18 +47,18 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Result
   }
 
   @Override
-  protected String hostname(final Request httpRequest) {
-    return httpRequest.domain();
+  protected String peerHostname(final Request request) {
+    return null;
   }
 
   @Override
-  protected Integer port(final Request httpRequest) {
-    final String[] split = httpRequest.host().split(":");
-    try {
-      return split.length == 2 ? Integer.valueOf(split[1]) : null;
-    } catch (final Exception e) {
-      return null;
-    }
+  protected String peerHostIP(final Request request) {
+    return null;
+  }
+
+  @Override
+  protected Integer peerPort(final Request request) {
+    return null;
   }
 
   @Override

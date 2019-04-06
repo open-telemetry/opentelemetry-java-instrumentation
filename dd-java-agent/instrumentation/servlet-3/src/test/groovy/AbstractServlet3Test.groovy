@@ -89,8 +89,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
             "servlet.context" "/$context"
             "http.status_code" 200
@@ -156,8 +157,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
               "http.method" "GET"
               "span.kind" "server"
               "component" "java-web-servlet"
-              "peer.hostname" "localhost"
-              "peer.port" port
+              "peer.hostname" "127.0.0.1"
+              "peer.ipv4" "127.0.0.1"
+              "peer.port" Integer
               "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
               "http.status_code" 200
               "servlet.context" "/$context"
@@ -181,8 +183,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.origin.type" {
               it == "TestServlet3\$$origin" || it == "TestServlet3\$DispatchRecursive" || it == ApplicationFilterChain.name
             }
@@ -214,8 +217,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
             "http.status_code" 200
             "servlet.context" "/$context"
@@ -273,8 +277,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.origin.type" { it == "TestServlet3\$Dispatch$origin" || it == ApplicationFilterChain.name }
             "http.status_code" 200
             "servlet.context" "/$context"
@@ -296,8 +301,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.origin.type" {
               it == "TestServlet3\$$origin" || it == "TestServlet3\$DispatchRecursive" || it == ApplicationFilterChain.name
             }
@@ -387,8 +393,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
             "servlet.context" "/$context"
             "http.status_code" 500
@@ -432,8 +439,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends AgentTestRunner {
             "http.method" "GET"
             "span.kind" "server"
             "component" "java-web-servlet"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.origin.type" { it == "TestServlet3\$$origin" || it == ApplicationFilterChain.name }
             "servlet.context" "/$context"
             "http.status_code" 500

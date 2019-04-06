@@ -57,8 +57,6 @@ class Play24Test extends AgentTestRunner {
             "http.status_code" status
             "http.url" "http://localhost:$port/$path"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
             "span.kind" "server"
             "component" "play-action"
             if (isError) {

@@ -23,11 +23,20 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
       1 * span.setTag(Tags.HTTP_URL.key, "test-url")
       1 * span.setTag(Tags.PEER_HOSTNAME.key, "test-host")
       1 * span.setTag(Tags.PEER_PORT.key, 555)
+      if (ipv4) {
+        1 * span.setTag(Tags.PEER_HOST_IPV4.key, "10.0.0.1")
+      } else if (ipv4 != null) {
+        1 * span.setTag(Tags.PEER_HOST_IPV6.key, "3ffe:1900:4545:3:200:f8ff:fe21:67cf")
+      }
     }
     0 * _
 
     where:
-    req << [null, [method: "test-method", url: "test-url", host: "test-host", port: 555]]
+    ipv4  | req
+    null  | null
+    null  | [method: "test-method", url: "test-url", host: "test-host", ip: null, port: 555]
+    true  | [method: "test-method", url: "test-url", host: "test-host", ip: "10.0.0.1", port: 555]
+    false | [method: "test-method", url: "test-url", host: "test-host", ip: "3ffe:1900:4545:3:200:f8ff:fe21:67cf", port: 555]
   }
 
   def "test onResponse"() {
@@ -103,12 +112,17 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
       }
 
       @Override
-      protected String hostname(Map m) {
+      protected String peerHostname(Map m) {
         return m.host
       }
 
       @Override
-      protected Integer port(Map m) {
+      protected String peerHostIP(Map m) {
+        return m.ip
+      }
+
+      @Override
+      protected Integer peerPort(Map m) {
         return m.port
       }
 

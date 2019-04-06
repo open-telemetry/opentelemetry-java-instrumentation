@@ -28,13 +28,18 @@ public class AkkaHttpServerDecorator extends HttpServerDecorator<HttpRequest, Ht
   }
 
   @Override
-  protected String hostname(final HttpRequest httpRequest) {
-    return httpRequest.getUri().host().address();
+  protected String peerHostname(final HttpRequest httpRequest) {
+    return null;
   }
 
   @Override
-  protected Integer port(final HttpRequest httpRequest) {
-    return httpRequest.getUri().port();
+  protected String peerHostIP(final HttpRequest httpRequest) {
+    return null;
+  }
+
+  @Override
+  protected Integer peerPort(final HttpRequest httpRequest) {
+    return null;
   }
 
   @Override

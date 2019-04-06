@@ -30,13 +30,18 @@ public class Servlet3Decorator
   }
 
   @Override
-  protected String hostname(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getServerName();
+  protected String peerHostname(final HttpServletRequest httpServletRequest) {
+    return httpServletRequest.getRemoteHost();
   }
 
   @Override
-  protected Integer port(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getServerPort();
+  protected String peerHostIP(final HttpServletRequest httpServletRequest) {
+    return httpServletRequest.getRemoteAddr();
+  }
+
+  @Override
+  protected Integer peerPort(final HttpServletRequest httpServletRequest) {
+    return httpServletRequest.getRemotePort();
   }
 
   @Override

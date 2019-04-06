@@ -69,8 +69,9 @@ class JettyHandlerTest extends AgentTestRunner {
             "component" "jetty-handler"
             "span.origin.type" handler.class.name
             "http.status_code" 200
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             defaultTags()
           }
         }
@@ -165,14 +166,16 @@ class JettyHandlerTest extends AgentTestRunner {
             "component" "jetty-handler"
             "span.origin.type" handler.class.name
             "http.status_code" 500
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             errorTags RuntimeException
             defaultTags()
           }
         }
       }
       if (errorHandlerCalled.get()) {
+        // FIXME: This doesn't ever seem to be called.
         trace(1, 1) {
           span(0) {
             serviceName "unnamed-java-app"
@@ -188,8 +191,9 @@ class JettyHandlerTest extends AgentTestRunner {
               "component" "jetty-handler"
               "span.origin.type" handler.class.name
               "http.status_code" 500
-              "peer.hostname" "localhost"
-              "peer.port" port
+              "peer.hostname" "127.0.0.1"
+              "peer.ipv4" "127.0.0.1"
+              "peer.port" Integer
               "error" true
               defaultTags()
             }

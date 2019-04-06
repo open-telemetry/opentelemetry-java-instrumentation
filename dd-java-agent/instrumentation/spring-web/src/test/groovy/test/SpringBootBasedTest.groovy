@@ -44,8 +44,9 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
@@ -81,8 +82,9 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/param/$param/"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
@@ -120,8 +122,9 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/param/asdf1234/"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
@@ -140,8 +143,9 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/error"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
@@ -174,8 +178,9 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/invalid"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
@@ -196,8 +201,9 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/error"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
@@ -232,8 +238,9 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/error/qwerty/"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
@@ -255,8 +262,9 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/error"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
@@ -286,8 +294,9 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/validated"
             "http.method" "POST"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
@@ -323,8 +332,9 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/validated"
             "http.method" "POST"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"
@@ -349,8 +359,9 @@ class SpringBootBasedTest extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/error"
             "http.method" "POST"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "component" "java-web-servlet"

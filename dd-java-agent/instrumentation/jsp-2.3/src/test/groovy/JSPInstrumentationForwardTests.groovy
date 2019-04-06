@@ -94,8 +94,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/$forwardFromFileName"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -195,8 +196,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/forwards/forwardToHtml.jsp"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -262,8 +264,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/forwards/forwardToIncludeMulti.jsp"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -416,8 +419,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/forwards/forwardToJspForward.jsp"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -541,8 +545,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/forwards/forwardToCompileError.jsp"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -625,8 +630,9 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/forwards/forwardToNonExistent.jsp"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
