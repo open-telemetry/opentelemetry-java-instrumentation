@@ -47,7 +47,7 @@ public class JMXFetch {
     final String logLocation = getLogLocation();
     final String logLevel = getLogLevel();
 
-    log.error(
+    log.info(
         "JMXFetch config: {} {} {} {} {} {} {} {}",
         internalMetricsConfigs,
         metricsConfigs,
