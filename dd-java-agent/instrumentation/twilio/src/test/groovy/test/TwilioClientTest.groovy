@@ -511,19 +511,21 @@ class TwilioClientTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        // Spans are reported in reverse order of completion,
+        // so the error span is last even though it happened first.
         span(3) {
           serviceName "twilio-sdk"
           operationName "http.request"
           resourceName "POST /?/Accounts/abc/Messages.json"
           spanType DDSpanTypes.HTTP_CLIENT
-          errored true
+          errored false
         }
         span(4) {
           serviceName "twilio-sdk"
           operationName "http.request"
           resourceName "POST /?/Accounts/abc/Messages.json"
           spanType DDSpanTypes.HTTP_CLIENT
-          errored false
+          errored true
         }
       }
     }
@@ -617,7 +619,6 @@ class TwilioClientTest extends AgentTestRunner {
         }
       }
     }
-
   }
 
   def "asynchronous call"(a) {

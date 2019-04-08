@@ -6,21 +6,15 @@ import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.Twilio;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -29,9 +23,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 /** Instrument the Twilio SDK to identify calls as a seperate service. */
 @AutoService(Instrumenter.class)
-public class TwilioInstrumentation extends Instrumenter.Default {
+public class TwilioSyncInstrumentation extends Instrumenter.Default {
 
-  public TwilioInstrumentation() {
+  public TwilioSyncInstrumentation() {
     super("twilio-sdk");
   }
 
@@ -55,7 +49,6 @@ public class TwilioInstrumentation extends Instrumenter.Default {
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       packageName + ".TwilioClientDecorator",
-      packageName + ".TwilioInstrumentation$SpanFinishingCallback"
     };
   }
 
@@ -75,11 +68,11 @@ public class TwilioInstrumentation extends Instrumenter.Default {
             .and(isPublic())
             .and(not(isAbstract()))
             .and(
-                nameStartsWith("create")
-                    .or(nameStartsWith("delete"))
-                    .or(nameStartsWith("read"))
-                    .or(nameStartsWith("fetch"))
-                    .or(nameStartsWith("update"))),
+                named("create")
+                    .or(named("delete"))
+                    .or(named("read"))
+                    .or(named("fetch"))
+                    .or(named("update"))),
         TwilioClientAdvice.class.getName());
   }
 
@@ -100,24 +93,11 @@ public class TwilioInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      // By convention, all Twilio async methods end with Async
-      final boolean isAsync = methodName.endsWith("Async");
-
-      final Tracer tracer = GlobalTracer.get();
-
-      // Don't automatically close the span with the scope if we're executing an async method
-      final Scope scope = tracer.buildSpan("twilio.sdk").startActive(!isAsync);
+      final Scope scope = GlobalTracer.get().buildSpan("twilio.sdk").startActive(true);
       final Span span = scope.span();
 
       DECORATE.afterStart(span);
       DECORATE.onServiceExecution(span, that, methodName);
-
-      // If an async operation was invoked and we have a TraceScope,
-      if (isAsync && scope instanceof TraceScope) {
-        // Enable async propagation, so the newly spawned task will be associated back with this
-        // original trace.
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
 
       return scope;
     }
@@ -127,65 +107,21 @@ public class TwilioInstrumentation extends Instrumenter.Default {
     public static void methodExit(
         @Advice.Enter final Scope scope,
         @Advice.Thrown final Throwable throwable,
-        @Advice.Return final Object response,
-        @Advice.Origin("#m") final String methodName) {
+        @Advice.Return final Object response) {
 
       // If we have a scope (i.e. we were the top-level Twilio SDK invocation),
       if (scope != null) {
         try {
-          final boolean isAsync = methodName.endsWith("Async");
-
           final Span span = scope.span();
 
+          DECORATE.onResult(span, response);
           DECORATE.onError(span, throwable);
           DECORATE.beforeFinish(span);
-
-          // If we're calling an async operation, we still need to finish the span when it's
-          // complete and report the results; set an appropriate callback
-          if (isAsync && response instanceof ListenableFuture) {
-            Futures.addCallback(
-                (ListenableFuture) response,
-                new SpanFinishingCallback(span),
-                Twilio.getExecutorService());
-          } else {
-            DECORATE.beforeFinish(span);
-            DECORATE.onResult(span, response);
-            // span is implicitly closed with the scope
-          }
-
         } finally {
           scope.close();
-          CallDepthThreadLocalMap.reset(Twilio.class); // reset call deptch count
+          CallDepthThreadLocalMap.reset(Twilio.class); // reset call depth count
         }
       }
-    }
-  }
-
-  /**
-   * FutureCallback, which automatically finishes the span and annotates with any appropriate
-   * metadata on a potential failure.
-   */
-  public static class SpanFinishingCallback implements FutureCallback {
-
-    /** Span that we should finish and annotate when the future is complete. */
-    private final Span span;
-
-    public SpanFinishingCallback(final Span span) {
-      this.span = span;
-    }
-
-    @Override
-    public void onSuccess(final Object result) {
-      DECORATE.beforeFinish(span);
-      DECORATE.onResult(span, result);
-      span.finish();
-    }
-
-    @Override
-    public void onFailure(final Throwable t) {
-      DECORATE.onError(span, t);
-      DECORATE.beforeFinish(span);
-      span.finish();
     }
   }
 }

@@ -9,8 +9,10 @@ import datadog.trace.api.DDTags;
 import io.opentracing.Span;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 /** Decorate Twilio span's with relevant contextual information. */
+@Slf4j
 public class TwilioClientDecorator extends ClientDecorator {
 
   public static final TwilioClientDecorator DECORATE = new TwilioClientDecorator();
@@ -58,7 +60,7 @@ public class TwilioClientDecorator extends ClientDecorator {
       try {
         result = ((ListenableFuture) result).get(0, TimeUnit.MICROSECONDS);
       } catch (final Exception e) {
-        e.printStackTrace();
+        log.debug("Error unwrapping result", e);
       }
     }
 
@@ -73,7 +75,6 @@ public class TwilioClientDecorator extends ClientDecorator {
     // Instrument the most popular resource types directly
     if (result instanceof Message) {
       final Message message = (Message) result;
-      span.setTag("twilio.type", result.getClass().getCanonicalName());
       span.setTag("twilio.account", message.getAccountSid());
       span.setTag("twilio.sid", message.getSid());
       if (message.getStatus() != null) {
