@@ -66,7 +66,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
                 .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
                 .withTag(Tags.COMPONENT.getKey(), COMPONENT)
                 .start();
-        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
           Tags.HTTP_URL.set(span, url.toString());
           Tags.PEER_PORT.set(span, url.getPort() == -1 ? 80 : url.getPort());
           Tags.PEER_HOSTNAME.set(span, url.getHost());
@@ -76,6 +76,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
 
           Tags.ERROR.set(span, true);
           span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+          span.finish();
         }
       }
     }

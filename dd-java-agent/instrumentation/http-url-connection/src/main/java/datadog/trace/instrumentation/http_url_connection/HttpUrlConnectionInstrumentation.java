@@ -199,9 +199,10 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     }
 
     public void finishSpan(final Throwable throwable) {
-      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
+        span.finish();
         span = null;
         finished = true;
       }
@@ -214,9 +215,10 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
        * (e.g. breaks getOutputStream).
        */
       if (responseCode > 0) {
-        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
           DECORATE.onResponse(span, responseCode);
           DECORATE.beforeFinish(span);
+          span.finish();
           span = null;
           finished = true;
         }

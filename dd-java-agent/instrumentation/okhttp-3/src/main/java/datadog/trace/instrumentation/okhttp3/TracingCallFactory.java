@@ -42,13 +42,14 @@ public class TracingCallFactory implements Call.Factory {
                 @Override
                 public Response intercept(final Chain chain) throws IOException {
                   try (final Scope interceptorScope =
-                      GlobalTracer.get().scopeManager().activate(span, true)) {
+                      GlobalTracer.get().scopeManager().activate(span, false)) {
                     return chain.proceed(chain.request());
                   } catch (final Exception ex) {
                     DECORATE.onError(scope, ex);
                     throw ex;
                   } finally {
                     DECORATE.beforeFinish(span);
+                    span.finish();
                   }
                 }
               });

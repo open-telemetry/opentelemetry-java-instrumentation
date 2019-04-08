@@ -38,7 +38,7 @@ public abstract class CompletionListener<T> {
   }
 
   protected void closeAsyncSpan(final T future) {
-    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
       try {
         processResult(span, future);
       } catch (final CancellationException e) {
@@ -60,14 +60,16 @@ public abstract class CompletionListener<T> {
         DECORATE.onError(span, e);
       } finally {
         DECORATE.beforeFinish(span);
+        span.finish();
       }
     }
   }
 
   protected void closeSyncSpan(final Throwable thrown) {
-    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
       DECORATE.onError(span, thrown);
       DECORATE.beforeFinish(span);
+      span.finish();
     }
   }
 

@@ -90,9 +90,10 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
               .buildSpan("netty.connect")
               .withTag(Tags.COMPONENT.getKey(), "netty")
               .start();
-      try (final Scope scope = GlobalTracer.get().scopeManager().activate(errorSpan, true)) {
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(errorSpan, false)) {
         NettyHttpServerDecorator.DECORATE.onError(errorSpan, cause);
         NettyHttpServerDecorator.DECORATE.beforeFinish(errorSpan);
+        errorSpan.finish();
       }
 
       return parentScope;

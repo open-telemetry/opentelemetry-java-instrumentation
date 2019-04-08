@@ -139,8 +139,9 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
       final Span span = spanRef.getAndSet(null);
 
       if (span != null) {
-        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
           DECORATE.beforeFinish(span);
+          span.finish();
         }
       }
     }
@@ -157,9 +158,10 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
     public void call(final Throwable throwable) {
       final Span span = spanRef.getAndSet(null);
       if (span != null) {
-        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
           DECORATE.onError(span, throwable);
           DECORATE.beforeFinish(span);
+          span.finish();
         }
       }
     }

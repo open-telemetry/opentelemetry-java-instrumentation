@@ -193,7 +193,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.Local("callDepth") int callDepth) {
       callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
       // Don't want RabbitCommandInstrumentation to mess up our actual parent span.
-      placeholderScope = GlobalTracer.get().scopeManager().activate(NoopSpan.INSTANCE, true);
+      placeholderScope = GlobalTracer.get().scopeManager().activate(NoopSpan.INSTANCE, false);
       return System.currentTimeMillis();
     }
 
@@ -247,13 +247,14 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
               .withTag("message.size", length)
               .withTag(Tags.PEER_PORT.getKey(), connection.getPort())
               .start();
-      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onGet(span, queue);
         CONSUMER_DECORATE.onPeerConnection(span, connection.getAddress());
         CONSUMER_DECORATE.onError(span, throwable);
         CONSUMER_DECORATE.beforeFinish(span);
       } finally {
+        span.finish();
         CallDepthThreadLocalMap.reset(Channel.class);
       }
     }

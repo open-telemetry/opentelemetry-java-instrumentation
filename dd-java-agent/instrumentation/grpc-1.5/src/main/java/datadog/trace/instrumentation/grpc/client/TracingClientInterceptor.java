@@ -131,14 +131,14 @@ public class TracingClientInterceptor implements ClientInterceptor {
     public void onClose(final Status status, final Metadata trailers) {
       DECORATE.onClose(span, status);
       // Finishes span.
-      try (final Scope ignored = tracer.scopeManager().activate(span, true)) {
+      try (final Scope ignored = tracer.scopeManager().activate(span, false)) {
         delegate().onClose(status, trailers);
-        DECORATE.beforeFinish(span);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
+        throw e;
+      } finally {
         DECORATE.beforeFinish(span);
         span.finish();
-        throw e;
       }
     }
 

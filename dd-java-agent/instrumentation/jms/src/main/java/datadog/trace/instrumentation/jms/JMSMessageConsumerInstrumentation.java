@@ -93,7 +93,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
       }
 
       final Span span = spanBuilder.start();
-      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
         CONSUMER_DECORATE.afterStart(span);
         if (message == null) {
           CONSUMER_DECORATE.onReceive(span, method);
@@ -102,6 +102,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
         }
         CONSUMER_DECORATE.onError(span, throwable);
         CONSUMER_DECORATE.beforeFinish(span);
+        span.finish();
       }
     }
   }
