@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.netty40;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -12,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator;
 import io.netty.channel.ChannelFuture;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -91,8 +91,8 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
               .withTag(Tags.COMPONENT.getKey(), "netty")
               .start();
       try (final Scope scope = GlobalTracer.get().scopeManager().activate(errorSpan, true)) {
-        Tags.ERROR.set(errorSpan, true);
-        errorSpan.log(singletonMap(ERROR_OBJECT, cause));
+        NettyHttpServerDecorator.DECORATE.onError(errorSpan, cause);
+        NettyHttpServerDecorator.DECORATE.beforeFinish(errorSpan);
       }
 
       return parentScope;
