@@ -15,8 +15,10 @@ import com.datastax.driver.core.Statement;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
+import io.opentracing.util.GlobalTracer;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -58,88 +60,108 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSet execute(final String query) {
-    final Span span = buildSpan(query);
-    ResultSet resultSet = null;
-    try {
-      resultSet = session.execute(query);
-      return resultSet;
-    } finally {
-      finishSpan(span, resultSet);
+    try (final Scope scope = startSpanWithScope(query)) {
+      try {
+        final ResultSet resultSet = session.execute(query);
+        beforeSpanFinish(scope.span(), resultSet);
+        return resultSet;
+      } catch (final RuntimeException e) {
+        beforeSpanFinish(scope.span(), e);
+        throw e;
+      } finally {
+        scope.span().finish();
+      }
     }
   }
 
   @Override
   public ResultSet execute(final String query, final Object... values) {
-    final Span span = buildSpan(query);
-    ResultSet resultSet = null;
-    try {
-      resultSet = session.execute(query, values);
-      return resultSet;
-    } finally {
-      finishSpan(span, resultSet);
+    try (final Scope scope = startSpanWithScope(query)) {
+      try {
+        final ResultSet resultSet = session.execute(query, values);
+        beforeSpanFinish(scope.span(), resultSet);
+        return resultSet;
+      } catch (final RuntimeException e) {
+        beforeSpanFinish(scope.span(), e);
+        throw e;
+      } finally {
+        scope.span().finish();
+      }
     }
   }
 
   @Override
   public ResultSet execute(final String query, final Map<String, Object> values) {
-    final Span span = buildSpan(query);
-    ResultSet resultSet = null;
-    try {
-      resultSet = session.execute(query, values);
-      return resultSet;
-    } finally {
-      finishSpan(span, resultSet);
+    try (final Scope scope = startSpanWithScope(query)) {
+      try {
+        final ResultSet resultSet = session.execute(query, values);
+        beforeSpanFinish(scope.span(), resultSet);
+        return resultSet;
+      } catch (final RuntimeException e) {
+        beforeSpanFinish(scope.span(), e);
+        throw e;
+      } finally {
+        scope.span().finish();
+      }
     }
   }
 
   @Override
   public ResultSet execute(final Statement statement) {
     final String query = getQuery(statement);
-    final Span span = buildSpan(query);
-    ResultSet resultSet = null;
-    try {
-      resultSet = session.execute(statement);
-      return resultSet;
-    } finally {
-      finishSpan(span, resultSet);
+    try (final Scope scope = startSpanWithScope(query)) {
+      try {
+        final ResultSet resultSet = session.execute(statement);
+        beforeSpanFinish(scope.span(), resultSet);
+        return resultSet;
+      } catch (final RuntimeException e) {
+        beforeSpanFinish(scope.span(), e);
+        throw e;
+      } finally {
+        scope.span().finish();
+      }
     }
   }
 
   @Override
   public ResultSetFuture executeAsync(final String query) {
-    final Span span = buildSpan(query);
-    final ResultSetFuture future = session.executeAsync(query);
-    future.addListener(createListener(span, future), executorService);
+    try (final Scope scope = startSpanWithScope(query)) {
+      final ResultSetFuture future = session.executeAsync(query);
+      future.addListener(createListener(scope.span(), future), executorService);
 
-    return future;
+      return future;
+    }
   }
 
   @Override
   public ResultSetFuture executeAsync(final String query, final Object... values) {
-    final Span span = buildSpan(query);
-    final ResultSetFuture future = session.executeAsync(query, values);
-    future.addListener(createListener(span, future), executorService);
+    try (final Scope scope = startSpanWithScope(query)) {
+      final ResultSetFuture future = session.executeAsync(query, values);
+      future.addListener(createListener(scope.span(), future), executorService);
 
-    return future;
+      return future;
+    }
   }
 
   @Override
   public ResultSetFuture executeAsync(final String query, final Map<String, Object> values) {
-    final Span span = buildSpan(query);
-    final ResultSetFuture future = session.executeAsync(query, values);
-    future.addListener(createListener(span, future), executorService);
+    try (final Scope scope = startSpanWithScope(query)) {
+      final ResultSetFuture future = session.executeAsync(query, values);
+      future.addListener(createListener(scope.span(), future), executorService);
 
-    return future;
+      return future;
+    }
   }
 
   @Override
   public ResultSetFuture executeAsync(final Statement statement) {
     final String query = getQuery(statement);
-    final Span span = buildSpan(query);
-    final ResultSetFuture future = session.executeAsync(statement);
-    future.addListener(createListener(span, future), executorService);
+    try (final Scope scope = startSpanWithScope(query)) {
+      final ResultSetFuture future = session.executeAsync(statement);
+      future.addListener(createListener(scope.span(), future), executorService);
 
-    return future;
+      return future;
+    }
   }
 
   @Override
@@ -202,32 +224,33 @@ public class TracingSession implements Session {
     return new Runnable() {
       @Override
       public void run() {
-        try {
-          finishSpan(span, future.get());
+        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+          beforeSpanFinish(span, future.get());
         } catch (final InterruptedException | ExecutionException e) {
-          finishSpan(span, e);
+          beforeSpanFinish(span, e);
+        } finally {
+          span.finish();
         }
       }
     };
   }
 
-  private Span buildSpan(final String query) {
+  private Scope startSpanWithScope(final String query) {
     final Span span = tracer.buildSpan("cassandra.execute").start();
+    final Scope scope = tracer.scopeManager().activate(span, false);
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, session);
     DECORATE.onStatement(span, query);
-    return span;
+    return scope;
   }
 
-  private static void finishSpan(final Span span, final ResultSet resultSet) {
+  private static void beforeSpanFinish(final Span span, final ResultSet resultSet) {
     DECORATE.onResponse(span, resultSet);
     DECORATE.beforeFinish(span);
-    span.finish();
   }
 
-  private static void finishSpan(final Span span, final Exception e) {
+  private static void beforeSpanFinish(final Span span, final Exception e) {
     DECORATE.onError(span, e);
     DECORATE.beforeFinish(span);
-    span.finish();
   }
 }

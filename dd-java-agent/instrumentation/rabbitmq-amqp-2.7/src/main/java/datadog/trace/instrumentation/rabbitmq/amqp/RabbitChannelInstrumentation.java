@@ -189,10 +189,11 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   public static class ChannelGetAdvice {
     @Advice.OnMethodEnter
     public static long takeTimestamp(
-        @Advice.Local("placeholderScope") Scope scope, @Advice.Local("callDepth") int callDepth) {
+        @Advice.Local("placeholderScope") Scope placeholderScope,
+        @Advice.Local("callDepth") int callDepth) {
       callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
       // Don't want RabbitCommandInstrumentation to mess up our actual parent span.
-      scope = GlobalTracer.get().scopeManager().activate(NoopSpan.INSTANCE, true);
+      placeholderScope = GlobalTracer.get().scopeManager().activate(NoopSpan.INSTANCE, false);
       return System.currentTimeMillis();
     }
 
@@ -201,13 +202,13 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.This final Channel channel,
         @Advice.Argument(0) final String queue,
         @Advice.Enter final long startTime,
-        @Advice.Local("placeholderScope") final Scope scope,
+        @Advice.Local("placeholderScope") final Scope placeholderScope,
         @Advice.Local("callDepth") final int callDepth,
         @Advice.Return final GetResponse response,
         @Advice.Thrown final Throwable throwable) {
 
-      if (scope.span() instanceof NoopSpan) {
-        scope.close();
+      if (placeholderScope.span() instanceof NoopSpan) {
+        placeholderScope.close();
       }
 
       if (callDepth > 0) {
@@ -236,6 +237,8 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       final Integer length = response == null ? null : response.getBody().length;
 
+      // TODO: it would be better if we could actually have span wrapped into the scope started in
+      // OnMethodEnter
       final Span span =
           GlobalTracer.get()
               .buildSpan("amqp.command")
@@ -244,13 +247,16 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
               .withTag("message.size", length)
               .withTag(Tags.PEER_PORT.getKey(), connection.getPort())
               .start();
-      CONSUMER_DECORATE.afterStart(span);
-      CONSUMER_DECORATE.onGet(span, queue);
-      CONSUMER_DECORATE.onPeerConnection(span, connection.getAddress());
-      CONSUMER_DECORATE.onError(span, throwable);
-      CONSUMER_DECORATE.beforeFinish(span);
-      span.finish();
-      CallDepthThreadLocalMap.reset(Channel.class);
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+        CONSUMER_DECORATE.afterStart(span);
+        CONSUMER_DECORATE.onGet(span, queue);
+        CONSUMER_DECORATE.onPeerConnection(span, connection.getAddress());
+        CONSUMER_DECORATE.onError(span, throwable);
+        CONSUMER_DECORATE.beforeFinish(span);
+      } finally {
+        span.finish();
+        CallDepthThreadLocalMap.reset(Channel.class);
+      }
     }
   }
 

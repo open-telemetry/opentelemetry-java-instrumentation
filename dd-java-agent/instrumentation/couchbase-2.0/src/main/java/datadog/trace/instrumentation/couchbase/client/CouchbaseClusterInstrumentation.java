@@ -14,6 +14,7 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
+import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.noop.NoopSpan;
 import io.opentracing.util.GlobalTracer;
@@ -108,13 +109,15 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
           declaringClass.getSimpleName().replace("CouchbaseAsync", "").replace("DefaultAsync", "");
       final String resourceName = className + "." + method.getName();
 
-      // just replace the no-op span.
-      spanRef.set(
-          DECORATE.afterStart(
-              GlobalTracer.get()
-                  .buildSpan("couchbase.call")
-                  .withTag(DDTags.RESOURCE_NAME, resourceName)
-                  .start()));
+      final Span span =
+          GlobalTracer.get()
+              .buildSpan("couchbase.call")
+              .withTag(DDTags.RESOURCE_NAME, resourceName)
+              .start();
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+        // just replace the no-op span.
+        spanRef.set(DECORATE.afterStart(scope.span()));
+      }
     }
   }
 
@@ -130,8 +133,10 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
       final Span span = spanRef.getAndSet(null);
 
       if (span != null) {
-        DECORATE.beforeFinish(span);
-        span.finish();
+        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+          DECORATE.beforeFinish(span);
+          span.finish();
+        }
       }
     }
   }
@@ -147,9 +152,11 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
     public void call(final Throwable throwable) {
       final Span span = spanRef.getAndSet(null);
       if (span != null) {
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        span.finish();
+        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+          DECORATE.onError(span, throwable);
+          DECORATE.beforeFinish(span);
+          span.finish();
+        }
       }
     }
   }
