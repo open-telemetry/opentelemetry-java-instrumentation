@@ -10,6 +10,10 @@ public class AttributeKeys {
       PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY =
           AttributeKey.valueOf("datadog.trace.instrumentation.netty41.parent.connect.continuation");
 
+  /**
+   * This constant is copied over to datadog.trace.instrumentation.ratpack.server.TracingHandler, so
+   * if this changes, that must also change.
+   */
   public static final AttributeKey<Span> SERVER_ATTRIBUTE_KEY =
       AttributeKey.valueOf(HttpServerTracingHandler.class.getName() + ".span");
 

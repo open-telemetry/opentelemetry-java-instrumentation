@@ -293,6 +293,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     spanContextDecorators.put(decorator.getMatchingTag(), list);
   }
 
+  @Deprecated
   public void addScopeContext(final ScopeContext context) {
     scopeManager.addScopeContext(context);
   }

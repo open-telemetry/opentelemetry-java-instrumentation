@@ -52,13 +52,13 @@ class TagsAssert {
     errorTags(errorType, null)
   }
 
-  def errorTags(Class<Throwable> errorType, Object message) {
-    methodMissing("error", [true].toArray())
-    methodMissing("error.type", [errorType.name].toArray())
-    methodMissing("error.stack", [String].toArray())
+  def errorTags(Class<Throwable> errorType, message) {
+    tag("error", true)
+    tag("error.type", errorType.name)
+    tag("error.stack", String)
 
     if (message != null) {
-      methodMissing("error.msg", [message].toArray())
+      tag("error.msg", message)
     }
   }
 

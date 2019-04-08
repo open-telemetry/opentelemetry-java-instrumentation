@@ -3,6 +3,7 @@ import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.context.TraceScope
+import io.netty.channel.AbstractChannel
 import io.opentracing.Scope
 import io.opentracing.Span
 import io.opentracing.tag.Tags
@@ -21,7 +22,6 @@ import ratpack.test.exec.ExecHarness
 import spock.lang.Retry
 
 import java.util.concurrent.CountDownLatch
-import java.util.regex.Pattern
 
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 
@@ -193,7 +193,7 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "$app.address.host"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
-            errorTags(ArithmeticException, Pattern.compile("Division( is)? undefined"))
+            errorTags(ArithmeticException, "Division undefined")
             defaultTags()
           }
         }
@@ -210,7 +210,7 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 500
             "$Tags.HTTP_URL.key" "/"
-            errorTags(HandlerException, Pattern.compile("java.lang.ArithmeticException: Division( is)? undefined"))
+            errorTags(HandlerException, "java.lang.ArithmeticException: Division undefined")
             defaultTags()
           }
         }
@@ -258,7 +258,7 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "$app.address.host"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
-            errorTags(ArithmeticException, Pattern.compile("Division( is)? undefined"))
+            errorTags(ArithmeticException, "Division undefined")
             defaultTags()
           }
         }
@@ -321,7 +321,7 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "$app.address.host"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
-            errorTags(ArithmeticException, Pattern.compile("Division( is)? undefined"))
+            errorTags(ArithmeticException, "Division undefined")
             defaultTags()
           }
         }
@@ -593,7 +593,7 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "$app.address.host"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
-            errorTags(ConnectException, String)
+            "$Tags.ERROR.key" true
             defaultTags()
           }
         }
@@ -624,7 +624,7 @@ class RatpackTest extends AgentTestRunner {
           errored true
           tags {
             "$Tags.COMPONENT.key" "netty"
-            errorTags(ConnectException, String)
+            errorTags(AbstractChannel.AnnotatedConnectException, String)
             defaultTags()
           }
         }

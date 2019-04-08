@@ -102,7 +102,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void deactivateScope(@Advice.Enter final TraceScope scope) {
       if (scope != null) {
-        ((Scope) scope).close();
+        scope.close();
       }
     }
   }
