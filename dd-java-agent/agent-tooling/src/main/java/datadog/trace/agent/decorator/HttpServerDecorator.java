@@ -4,18 +4,21 @@ import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
+import java.net.URI;
+import lombok.extern.slf4j.Slf4j;
 
-public abstract class HttpServerDecorator<REQUEST, RESPONSE> extends ServerDecorator {
+@Slf4j
+public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends ServerDecorator {
 
   protected abstract String method(REQUEST request);
 
-  protected abstract String url(REQUEST request);
+  protected abstract URI url(REQUEST request);
 
-  protected abstract String peerHostname(REQUEST request);
+  protected abstract String peerHostname(CONNECTION connection);
 
-  protected abstract String peerHostIP(REQUEST request);
+  protected abstract String peerHostIP(CONNECTION connection);
 
-  protected abstract Integer peerPort(REQUEST request);
+  protected abstract Integer peerPort(CONNECTION connection);
 
   protected abstract Integer status(RESPONSE response);
 
@@ -33,9 +36,37 @@ public abstract class HttpServerDecorator<REQUEST, RESPONSE> extends ServerDecor
     assert span != null;
     if (request != null) {
       Tags.HTTP_METHOD.set(span, method(request));
-      Tags.HTTP_URL.set(span, url(request));
-      Tags.PEER_HOSTNAME.set(span, peerHostname(request));
-      final String ip = peerHostIP(request);
+
+      try {
+        final URI url = url(request);
+        final StringBuilder urlNoParams = new StringBuilder(url.getScheme());
+        urlNoParams.append("://");
+        urlNoParams.append(url.getHost());
+        if (url.getPort() > 0 && url.getPort() != 80 && url.getPort() != 443) {
+          urlNoParams.append(":");
+          urlNoParams.append(url.getPort());
+        }
+        final String path = url.getPath();
+        if (path.isEmpty()) {
+          urlNoParams.append("/");
+        } else {
+          urlNoParams.append(path);
+        }
+
+        Tags.HTTP_URL.set(span, urlNoParams.toString());
+      } catch (final Exception e) {
+        log.debug("Error tagging url", e);
+      }
+      // TODO set resource name from URL.
+    }
+    return span;
+  }
+
+  public Span onConnection(final Span span, final CONNECTION connection) {
+    assert span != null;
+    if (connection != null) {
+      Tags.PEER_HOSTNAME.set(span, peerHostname(connection));
+      final String ip = peerHostIP(connection);
       if (ip != null) {
         if (ip.contains(":")) {
           Tags.PEER_HOST_IPV6.set(span, ip);
@@ -43,8 +74,7 @@ public abstract class HttpServerDecorator<REQUEST, RESPONSE> extends ServerDecor
           Tags.PEER_HOST_IPV4.set(span, ip);
         }
       }
-      Tags.PEER_PORT.set(span, peerPort(request));
-      // TODO set resource name from URL.
+      Tags.PEER_PORT.set(span, peerPort(connection));
     }
     return span;
   }

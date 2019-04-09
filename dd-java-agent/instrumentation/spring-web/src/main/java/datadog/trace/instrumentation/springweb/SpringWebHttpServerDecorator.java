@@ -5,6 +5,7 @@ import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
+import java.net.URI;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +14,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Slf4j
 public class SpringWebHttpServerDecorator
-    extends HttpServerDecorator<HttpServletRequest, HttpServletResponse> {
+    extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
   public static final SpringWebHttpServerDecorator DECORATE = new SpringWebHttpServerDecorator();
   public static final SpringWebHttpServerDecorator DECORATE_RENDER =
       new SpringWebHttpServerDecorator() {
@@ -39,8 +40,8 @@ public class SpringWebHttpServerDecorator
   }
 
   @Override
-  protected String url(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getRequestURL().toString();
+  protected URI url(final HttpServletRequest httpServletRequest) {
+    return URI.create(httpServletRequest.getRequestURL().toString());
   }
 
   @Override

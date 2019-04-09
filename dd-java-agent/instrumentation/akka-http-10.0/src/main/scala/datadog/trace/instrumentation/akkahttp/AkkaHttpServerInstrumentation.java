@@ -108,6 +108,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
               .startActive(false);
 
       DECORATE.afterStart(scope.span());
+      DECORATE.onConnection(scope.span(), request);
       DECORATE.onRequest(scope.span(), request);
 
       if (scope instanceof TraceScope) {

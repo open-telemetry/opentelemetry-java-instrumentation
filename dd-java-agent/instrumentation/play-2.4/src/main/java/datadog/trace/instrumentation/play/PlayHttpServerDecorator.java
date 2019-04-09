@@ -12,7 +12,7 @@ import play.api.mvc.Result;
 import scala.Option;
 
 @Slf4j
-public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Result> {
+public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Request, Result> {
   public static final PlayHttpServerDecorator DECORATE = new PlayHttpServerDecorator();
 
   @Override
@@ -31,18 +31,18 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Result
   }
 
   @Override
-  protected String url(final Request request) {
+  protected URI url(final Request request) {
     // FIXME: This code is similar to that from the netty integrations.
     try {
       URI uri = new URI(request.uri());
       if ((uri.getHost() == null || uri.getHost().equals("")) && !request.host().isEmpty()) {
         uri = new URI("http://" + request.host() + request.uri());
       }
-      return new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, null)
-          .toString();
+      return new URI(
+          uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, null);
     } catch (final URISyntaxException e) {
       log.debug("Cannot parse uri: {}", request.uri());
-      return request.uri();
+      return null;
     }
   }
 
@@ -53,7 +53,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Result
 
   @Override
   protected String peerHostIP(final Request request) {
-    return null;
+    return request.remoteAddress();
   }
 
   @Override

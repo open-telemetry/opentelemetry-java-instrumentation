@@ -2,10 +2,12 @@ package datadog.trace.instrumentation.jetty8;
 
 import datadog.trace.agent.decorator.HttpServerDecorator;
 import io.opentracing.Span;
+import java.net.URI;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class JettyDecorator extends HttpServerDecorator<HttpServletRequest, HttpServletResponse> {
+public class JettyDecorator
+    extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
   public static final JettyDecorator DECORATE = new JettyDecorator();
 
   @Override
@@ -24,8 +26,8 @@ public class JettyDecorator extends HttpServerDecorator<HttpServletRequest, Http
   }
 
   @Override
-  protected String url(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getRequestURL().toString();
+  protected URI url(final HttpServletRequest httpServletRequest) {
+    return URI.create(httpServletRequest.getRequestURL().toString());
   }
 
   @Override

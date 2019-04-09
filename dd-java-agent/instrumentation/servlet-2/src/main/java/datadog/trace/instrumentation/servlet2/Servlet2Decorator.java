@@ -2,10 +2,12 @@ package datadog.trace.instrumentation.servlet2;
 
 import datadog.trace.agent.decorator.HttpServerDecorator;
 import io.opentracing.Span;
+import java.net.URI;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
-public class Servlet2Decorator extends HttpServerDecorator<HttpServletRequest, ServletResponse> {
+public class Servlet2Decorator
+    extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, ServletResponse> {
   public static final Servlet2Decorator DECORATE = new Servlet2Decorator();
 
   @Override
@@ -24,8 +26,8 @@ public class Servlet2Decorator extends HttpServerDecorator<HttpServletRequest, S
   }
 
   @Override
-  protected String url(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getRequestURL().toString();
+  protected URI url(final HttpServletRequest httpServletRequest) {
+    return URI.create(httpServletRequest.getRequestURL().toString());
   }
 
   @Override
@@ -40,7 +42,7 @@ public class Servlet2Decorator extends HttpServerDecorator<HttpServletRequest, S
 
   @Override
   protected Integer peerPort(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getServerPort();
+    return null;
   }
 
   @Override

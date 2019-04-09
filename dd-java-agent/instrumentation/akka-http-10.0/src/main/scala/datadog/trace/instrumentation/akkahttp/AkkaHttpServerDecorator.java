@@ -3,8 +3,10 @@ package datadog.trace.instrumentation.akkahttp;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import datadog.trace.agent.decorator.HttpServerDecorator;
+import java.net.URI;
 
-public class AkkaHttpServerDecorator extends HttpServerDecorator<HttpRequest, HttpResponse> {
+public class AkkaHttpServerDecorator
+    extends HttpServerDecorator<HttpRequest, HttpRequest, HttpResponse> {
   public static final AkkaHttpServerDecorator DECORATE = new AkkaHttpServerDecorator();
 
   @Override
@@ -23,8 +25,8 @@ public class AkkaHttpServerDecorator extends HttpServerDecorator<HttpRequest, Ht
   }
 
   @Override
-  protected String url(final HttpRequest httpRequest) {
-    return httpRequest.uri().toString();
+  protected URI url(final HttpRequest httpRequest) {
+    return URI.create(httpRequest.uri().toString());
   }
 
   @Override
