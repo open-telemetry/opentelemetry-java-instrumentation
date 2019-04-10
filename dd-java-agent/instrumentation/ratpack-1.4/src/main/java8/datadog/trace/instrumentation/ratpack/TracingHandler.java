@@ -18,6 +18,8 @@ import ratpack.http.Request;
  * that the span is closed when the response is sent
  */
 public final class TracingHandler implements Handler {
+  public static Handler INSTANCE = new TracingHandler();
+
   /**
    * This constant is copied over from datadog.trace.instrumentation.netty41.AttributeKeys. The key
    * string must be kept consistent.
@@ -64,7 +66,8 @@ public final class TracingHandler implements Handler {
     } catch (final Throwable e) {
       DECORATE.onError(ratpackSpan, e);
       DECORATE.beforeFinish(ratpackSpan);
-      ratpackSpan.finish(); // Do we need to finish?
+      // finish since the callback probably didn't get added.
+      ratpackSpan.finish();
       throw e;
     }
   }

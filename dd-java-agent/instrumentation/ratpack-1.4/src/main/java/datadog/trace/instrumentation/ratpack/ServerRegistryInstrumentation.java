@@ -39,6 +39,6 @@ public class ServerRegistryInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isStatic()).and(named("buildBaseRegistry")),
-        packageName + ".RatpackServerRegistryAdvice");
+        packageName + ".ServerRegistryAdvice");
   }
 }

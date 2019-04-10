@@ -19,17 +19,17 @@ import ratpack.http.HttpUrlBuilder
 import ratpack.http.client.HttpClient
 import ratpack.path.PathBinding
 import ratpack.test.exec.ExecHarness
-import spock.lang.Retry
 
 import java.util.concurrent.CountDownLatch
+import java.util.regex.Pattern
 
+import static datadog.trace.agent.test.server.http.TestHttpServer.distributedRequestTrace
+import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 
-@Retry
 class RatpackTest extends AgentTestRunner {
 
   OkHttpClient client = OkHttpUtils.client()
-
 
   def "test path call"() {
     setup:
@@ -193,7 +193,7 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "$app.address.host"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
-            errorTags(ArithmeticException, "Division undefined")
+            errorTags(ArithmeticException, Pattern.compile("Division( is)? undefined"))
             defaultTags()
           }
         }
@@ -210,7 +210,7 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 500
             "$Tags.HTTP_URL.key" "/"
-            errorTags(HandlerException, "java.lang.ArithmeticException: Division undefined")
+            errorTags(HandlerException, Pattern.compile("java.lang.ArithmeticException: Division( is)? undefined"))
             defaultTags()
           }
         }
@@ -258,7 +258,7 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "$app.address.host"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
-            errorTags(ArithmeticException, "Division undefined")
+            errorTags(ArithmeticException, Pattern.compile("Division( is)? undefined"))
             defaultTags()
           }
         }
@@ -321,7 +321,7 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME.key" "$app.address.host"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
-            errorTags(ArithmeticException, "Division undefined")
+            errorTags(ArithmeticException, Pattern.compile("Division( is)? undefined"))
             defaultTags()
           }
         }
@@ -349,13 +349,16 @@ class RatpackTest extends AgentTestRunner {
   def "test path call using ratpack http client"() {
     setup:
 
-    def external = GroovyEmbeddedApp.ratpack {
+    // Use jetty based server to avoid confusion.
+    def external = httpServer {
       handlers {
         get("nested") {
-          context.render("succ")
+          handleDistributedRequest()
+          response.send("succ")
         }
         get("nested2") {
-          context.render("ess")
+          handleDistributedRequest()
+          response.send("ess")
         }
       }
     }
@@ -392,82 +395,9 @@ class RatpackTest extends AgentTestRunner {
     // 2nd is nested2 from the external server (the result of the 2nd internal http client call)
     // 1st is nested from the external server (the result of the 1st internal http client call)
     assertTraces(3) {
-      // simulated external system, first call
-      trace(0, 2) {
-        span(0) {
-          resourceName "GET /nested"
-          serviceName "unnamed-java-app"
-          operationName "netty.request"
-          spanType DDSpanTypes.HTTP_SERVER
-          childOf(trace(2).get(3))
-          errored false
-          tags {
-            "$Tags.COMPONENT.key" "netty"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${external.address}nested"
-            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
-            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-            "$Tags.PEER_PORT.key" Integer
-            defaultTags(true)
-          }
-        }
-        span(1) {
-          resourceName "GET /nested"
-          serviceName "unnamed-java-app"
-          operationName "ratpack.handler"
-          spanType DDSpanTypes.HTTP_SERVER
-          childOf(span(0))
-          errored false
-          tags {
-            "$Tags.COMPONENT.key" "ratpack"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "/nested"
-            defaultTags()
-          }
-        }
-      }
-//      // simulated external system, second call
-      trace(1, 2) {
-        span(0) {
-          resourceName "GET /nested2"
-          serviceName "unnamed-java-app"
-          operationName "netty.request"
-          spanType DDSpanTypes.HTTP_SERVER
-          childOf(trace(2).get(2))
-          errored false
-          tags {
-            "$Tags.COMPONENT.key" "netty"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${external.address}nested2"
-            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
-            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-            "$Tags.PEER_PORT.key" Integer
-            defaultTags(true)
-          }
-        }
-        span(1) {
-          resourceName "GET /nested2"
-          serviceName "unnamed-java-app"
-          operationName "ratpack.handler"
-          spanType DDSpanTypes.HTTP_SERVER
-          childOf(span(0))
-          errored false
-          tags {
-            "$Tags.COMPONENT.key" "ratpack"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "/nested2"
-            defaultTags()
-          }
-        }
-      }
+      distributedRequestTrace(it, 0, trace(2).get(3))
+      distributedRequestTrace(it, 1, trace(2).get(2))
+
       trace(2, 4) {
         // main app span that processed the request from OKHTTP request
         span(0) {
@@ -518,7 +448,7 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${external.address}nested2"
+            "$Tags.HTTP_URL.key" "${external.address}/nested2"
             "$Tags.PEER_HOSTNAME.key" "$app.address.host"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
@@ -531,14 +461,14 @@ class RatpackTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "netty.client.request"
           spanType DDSpanTypes.HTTP_CLIENT
-          childOf(span(0))
+          childOf(span(1))
           errored false
           tags {
             "$Tags.COMPONENT.key" "netty-client"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${external.address}nested"
+            "$Tags.HTTP_URL.key" "${external.address}/nested"
             "$Tags.PEER_HOSTNAME.key" "$app.address.host"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" Integer
@@ -617,10 +547,7 @@ class RatpackTest extends AgentTestRunner {
         span(2) {
           operationName "netty.connect"
           resourceName "netty.connect"
-          // Notice the span is a child of the netty span.
-          // I don't think we can easily get it rooted under the ratpack span
-          // since the "parent" is stored on the channel.
-          childOf(span(0))
+          childOf(span(1))
           errored true
           tags {
             "$Tags.COMPONENT.key" "netty"

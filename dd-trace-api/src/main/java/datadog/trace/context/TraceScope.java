@@ -1,7 +1,9 @@
 package datadog.trace.context;
 
+import java.io.Closeable;
+
 /** An object when can propagate a datadog trace across multiple threads. */
-public interface TraceScope {
+public interface TraceScope extends Closeable {
   /**
    * Prevent the trace attached to this TraceScope from reporting until the returned Continuation
    * finishes.
@@ -11,6 +13,7 @@ public interface TraceScope {
   Continuation capture();
 
   /** Close the activated context and allow any underlying spans to finish. */
+  @Override
   void close();
 
   /** If true, this context will propagate across async boundaries. */

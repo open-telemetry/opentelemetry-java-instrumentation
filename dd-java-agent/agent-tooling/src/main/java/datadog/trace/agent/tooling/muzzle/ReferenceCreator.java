@@ -46,9 +46,11 @@ public class ReferenceCreator extends ClassVisitor {
    * @param loader Classloader used to read class bytes.
    * @param startFromMethodBodies if true only create refs from method bodies.
    * @return Map of [referenceClassName -> Reference]
+   * @throws IllegalStateException if class is not found or unable to be loaded.
    */
   private static Map<String, Reference> createReferencesFrom(
-      final String entryPointClassName, final ClassLoader loader, boolean startFromMethodBodies) {
+      final String entryPointClassName, final ClassLoader loader, boolean startFromMethodBodies)
+      throws IllegalStateException {
     final Set<String> visitedSources = new HashSet<>();
     final Map<String, Reference> references = new HashMap<>();
 
