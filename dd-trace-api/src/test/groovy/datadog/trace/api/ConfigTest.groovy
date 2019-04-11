@@ -74,7 +74,7 @@ class ConfigTest extends Specification {
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..499).toSet()
     config.httpClientSplitByDomain == false
-    config.partialFlushMinSpans == 0
+    config.partialFlushMinSpans == 1000
     config.runtimeContextFieldInjection == true
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
@@ -172,7 +172,7 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "111")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
-    System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "15")
+    System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "25")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
     System.setProperty(PREFIX + PROPAGATION_STYLE_EXTRACT, "Datadog, B3")
     System.setProperty(PREFIX + PROPAGATION_STYLE_INJECT, "B3, Datadog")
@@ -201,7 +201,7 @@ class ConfigTest extends Specification {
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
-    config.partialFlushMinSpans == 15
+    config.partialFlushMinSpans == 25
     config.runtimeContextFieldInjection == false
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
