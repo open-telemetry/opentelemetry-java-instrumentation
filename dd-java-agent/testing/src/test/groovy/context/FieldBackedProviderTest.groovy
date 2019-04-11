@@ -1,16 +1,21 @@
 package context
 
+
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ClasspathUtils
 import datadog.trace.api.Config
 import datadog.trace.util.gc.GCUtils
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.utility.JavaModule
+import net.sf.cglib.proxy.Enhancer
+import net.sf.cglib.proxy.MethodInterceptor
+import net.sf.cglib.proxy.MethodProxy
 import spock.lang.Requires
 
 import java.lang.instrument.ClassDefinition
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
+import java.lang.reflect.Method
 import java.util.concurrent.atomic.AtomicReference
 
 import static context.ContextTestInstrumentation.IncorrectCallUsageKeyClass
@@ -95,6 +100,51 @@ class FieldBackedProviderTest extends AgentTestRunner {
     instance1                     | _
     new KeyClass()                | _
     new UntransformableKeyClass() | _
+  }
+
+  static class ClassWithContextGetter extends KeyClass {
+    def 'get__datadogContext$context$ContextTestInstrumentation$KeyClass'() {
+      return new Object()
+    }
+  }
+
+  static class ClassWithContextSetter extends KeyClass {
+    void 'set__datadogContext$context$ContextTestInstrumentation$KeyClass'(Object value) {}
+  }
+
+  def "works with classes already having a the context getter method defined"() {
+    when:
+    new ClassWithContextGetter()
+
+    then:
+    noExceptionThrown()
+  }
+
+  def "works with classes already having the context setter method defined"() {
+    when:
+    new ClassWithContextSetter()
+
+    then:
+    noExceptionThrown()
+  }
+
+  def "works with cglib enhanced instances which duplicates context getter and setter methods"() {
+    setup:
+    Enhancer enhancer = new Enhancer()
+    enhancer.setSuperclass(KeyClass.class)
+    enhancer.setCallback(new MethodInterceptor() {
+      @Override
+      Object intercept(Object arg0, Method arg1, Object[] arg2,
+                       MethodProxy arg3) throws Throwable {
+        return arg3.invokeSuper(arg0, arg2)
+      }
+    })
+
+    when:
+    (KeyClass) enhancer.create()
+
+    then:
+    noExceptionThrown()
   }
 
   def "backing map should not create strong refs to key class instances #keyValue.get().getClass().getName()"() {
