@@ -482,7 +482,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           public void visitEnd() {
             // Checking only for field existence is not enough as libraries like CGLIB only copy
             // public/protected methods and not fields (neither public nor private ones) when
-            // the enhance a class.
+            // they enhance a class.
             // For this reason we check separately for the field and for the two accessors.
             if (!foundField) {
               cv.visitField(
