@@ -131,7 +131,7 @@ class FieldBackedProviderTest extends AgentTestRunner {
   def "works with cglib enhanced instances which duplicates context getter and setter methods"() {
     setup:
     Enhancer enhancer = new Enhancer()
-    enhancer.setSuperclass(KeyClass.class)
+    enhancer.setSuperclass(KeyClass)
     enhancer.setCallback(new MethodInterceptor() {
       @Override
       Object intercept(Object arg0, Method arg1, Object[] arg2,
