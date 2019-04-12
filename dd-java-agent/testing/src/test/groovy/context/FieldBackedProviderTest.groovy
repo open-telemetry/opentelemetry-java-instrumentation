@@ -1,6 +1,5 @@
 package context
 
-
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ClasspathUtils
 import datadog.trace.api.Config
