@@ -101,32 +101,6 @@ class FieldBackedProviderTest extends AgentTestRunner {
     new UntransformableKeyClass() | _
   }
 
-  static class ClassWithContextGetter extends KeyClass {
-    def 'get__datadogContext$context$ContextTestInstrumentation$KeyClass'() {
-      return new Object()
-    }
-  }
-
-  static class ClassWithContextSetter extends KeyClass {
-    void 'set__datadogContext$context$ContextTestInstrumentation$KeyClass'(Object value) {}
-  }
-
-  def "works with classes already having a the context getter method defined"() {
-    when:
-    new ClassWithContextGetter()
-
-    then:
-    noExceptionThrown()
-  }
-
-  def "works with classes already having the context setter method defined"() {
-    when:
-    new ClassWithContextSetter()
-
-    then:
-    noExceptionThrown()
-  }
-
   def "works with cglib enhanced instances which duplicates context getter and setter methods"() {
     setup:
     Enhancer enhancer = new Enhancer()
