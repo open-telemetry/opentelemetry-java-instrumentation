@@ -62,11 +62,15 @@ public class ByteBuddyElementMatchers {
     return new SafeMatcher<>(matcher, false, description);
   }
 
-  private static TypeDescription safeAsErasure(final TypeDefinition target) {
+  private static TypeDescription safeAsErasure(final TypeDefinition typeDefinition) {
     try {
-      return target.asErasure();
+      return typeDefinition.asErasure();
     } catch (final Exception e) {
-      log.debug("Exception trying to get interfaces:", e);
+      log.debug(
+          "{} trying to get erasure for target {}: {}",
+          e.getClass().getSimpleName(),
+          typeDefinition.getTypeName(),
+          e.getMessage());
       return null;
     }
   }
@@ -125,7 +129,11 @@ public class ByteBuddyElementMatchers {
       try {
         return typeDefinition.getSuperClass();
       } catch (final Exception e) {
-        log.debug("Exception trying to get next type definition:", e);
+        log.debug(
+            "{} trying to get super class for target {}: {}",
+            e.getClass().getSimpleName(),
+            typeDefinition.getTypeName(),
+            e.getMessage());
         return null;
       }
     }
@@ -167,7 +175,11 @@ public class ByteBuddyElementMatchers {
           interfaceTypes.add(interfaceIter.next());
         }
       } catch (final Exception e) {
-        log.debug("Exception trying to get interfaces:", e);
+        log.debug(
+            "{} trying to get interfaces for target {}: {}",
+            e.getClass().getSimpleName(),
+            typeDefinition.getTypeName(),
+            e.getMessage());
       }
       return interfaceTypes;
     }

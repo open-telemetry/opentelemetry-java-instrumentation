@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.osgi;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -26,7 +27,9 @@ public final class OSGIClassloadingInstrumentation extends Instrumenter.Default 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     // OSGi Bundle class loads the system property which defines bootstrap classes
-    return named("org.osgi.framework.Bundle").or(named("org.eclipse.osgi.launch.EquinoxFactory"));
+    return named("org.osgi.framework.Bundle")
+        // OSGi FrameworkFactory can ignore/override the system property
+        .or(safeHasSuperType(named("org.osgi.framework.launch.FrameworkFactory")));
   }
 
   @Override
@@ -52,14 +55,14 @@ public final class OSGIClassloadingInstrumentation extends Instrumenter.Default 
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isPublic()).and(named("newFramework")).and(takesArgument(0, Map.class)),
-        EquinoxFactoryAdvice.class.getName());
+        FrameworkFactoryAdvice.class.getName());
   }
 
   /**
-   * Sometimes OSGi doesn't read configuration from system properties. Handle this case for {@code
-   * EquinoxFactory}.
+   * FrameworkFactory implementations receive the expected config via a map rather than the modified
+   * system property. We must modify that map before being passed along to the framework.
    */
-  public static class EquinoxFactoryAdvice {
+  public static class FrameworkFactoryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(@Advice.Argument(0) final Map<String, String> configuration) {
       if (configuration != null) {
