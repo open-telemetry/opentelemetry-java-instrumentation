@@ -428,9 +428,13 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           private final TypeDescription contextType =
               new TypeDescription.ForLoadedType(Object.class);
           private final String fieldName = getContextFieldName(keyClassName);
+          private final String getterMethodName = getContextGetterName(keyClassName);
+          private final String setterMethodName = getContextSetterName(keyClassName);
           private final TypeDescription interfaceType =
               getFieldAccessorInterface(keyClassName, contextClassName);
           private boolean foundField = false;
+          private boolean foundGetter = false;
+          private boolean foundSetter = false;
 
           @Override
           public void visit(
@@ -463,11 +467,31 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           }
 
           @Override
+          public MethodVisitor visitMethod(
+              int access, String name, String descriptor, String signature, String[] exceptions) {
+            if (name.equals(getterMethodName)) {
+              foundGetter = true;
+            }
+            if (name.equals(setterMethodName)) {
+              foundSetter = true;
+            }
+            return super.visitMethod(access, name, descriptor, signature, exceptions);
+          }
+
+          @Override
           public void visitEnd() {
+            // Checking only for field existence is not enough as libraries like CGLIB only copy
+            // public/protected methods and not fields (neither public nor private ones) when
+            // they enhance a class.
+            // For this reason we check separately for the field and for the two accessors.
             if (!foundField) {
               cv.visitField(
                   Opcodes.ACC_PRIVATE, fieldName, contextType.getDescriptor(), null, null);
+            }
+            if (!foundGetter) {
               addGetter();
+            }
+            if (!foundSetter) {
               addSetter();
             }
             super.visitEnd();
@@ -475,7 +499,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           /** Just 'standard' getter implementation */
           private void addGetter() {
-            final MethodVisitor mv = getAccessorMethodVisitor(getContextGetterName(keyClassName));
+            final MethodVisitor mv = getAccessorMethodVisitor(getterMethodName);
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitFieldInsn(
@@ -490,7 +514,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           /** Just 'standard' setter implementation */
           private void addSetter() {
-            final MethodVisitor mv = getAccessorMethodVisitor(getContextSetterName(keyClassName));
+            final MethodVisitor mv = getAccessorMethodVisitor(setterMethodName);
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitVarInsn(Opcodes.ALOAD, 1);
