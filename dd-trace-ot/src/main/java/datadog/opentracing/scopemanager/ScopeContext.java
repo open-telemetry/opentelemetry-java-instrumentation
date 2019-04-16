@@ -3,6 +3,7 @@ package datadog.opentracing.scopemanager;
 import io.opentracing.ScopeManager;
 
 /** Represents a ScopeManager that is only valid in certain cases such as on a specific thread. */
+@Deprecated
 public interface ScopeContext extends ScopeManager {
 
   /**

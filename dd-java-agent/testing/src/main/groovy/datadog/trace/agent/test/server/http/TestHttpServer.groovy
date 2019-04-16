@@ -298,6 +298,7 @@ class TestHttpServer implements AutoCloseable {
         assert body != null
 
         send()
+        resp.setContentLength(body.bytes.length)
         resp.writer.print(body)
       }
     }

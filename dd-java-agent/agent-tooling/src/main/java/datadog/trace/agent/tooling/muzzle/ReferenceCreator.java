@@ -32,10 +32,10 @@ public class ReferenceCreator extends ClassVisitor {
    * <p>For now we're hardcoding this to the instrumentation package so we only create references
    * from the method advice and helper classes.
    */
-  private static String REFERENCE_CREATION_PACKAGE = "datadog.trace.instrumentation.";
+  private static final String REFERENCE_CREATION_PACKAGE = "datadog.trace.instrumentation.";
 
   public static Map<String, Reference> createReferencesFrom(
-      String entryPointClassName, ClassLoader loader) {
+      final String entryPointClassName, final ClassLoader loader) {
     return ReferenceCreator.createReferencesFrom(entryPointClassName, loader, true);
   }
 
@@ -46,9 +46,11 @@ public class ReferenceCreator extends ClassVisitor {
    * @param loader Classloader used to read class bytes.
    * @param startFromMethodBodies if true only create refs from method bodies.
    * @return Map of [referenceClassName -> Reference]
+   * @throws IllegalStateException if class is not found or unable to be loaded.
    */
   private static Map<String, Reference> createReferencesFrom(
-      String entryPointClassName, ClassLoader loader, boolean startFromMethodBodies) {
+      final String entryPointClassName, final ClassLoader loader, boolean startFromMethodBodies)
+      throws IllegalStateException {
     final Set<String> visitedSources = new HashSet<>();
     final Map<String, Reference> references = new HashMap<>();
 
@@ -58,37 +60,38 @@ public class ReferenceCreator extends ClassVisitor {
     while (!instrumentationQueue.isEmpty()) {
       final String className = instrumentationQueue.remove();
       visitedSources.add(className);
+      final InputStream in = loader.getResourceAsStream(Utils.getResourceName(className));
       try {
-        final InputStream in = loader.getResourceAsStream(Utils.getResourceName(className));
-        try {
-          final ReferenceCreator cv = new ReferenceCreator(null, startFromMethodBodies);
-          // only start from method bodies on the first pass
-          startFromMethodBodies = false;
-          final ClassReader reader = new ClassReader(in);
-          reader.accept(cv, ClassReader.SKIP_FRAMES);
+        final ReferenceCreator cv = new ReferenceCreator(null, startFromMethodBodies);
+        // only start from method bodies on the first pass
+        startFromMethodBodies = false;
+        final ClassReader reader = new ClassReader(in);
+        reader.accept(cv, ClassReader.SKIP_FRAMES);
 
-          Map<String, Reference> instrumentationReferences = cv.getReferences();
-          for (Map.Entry<String, Reference> entry : instrumentationReferences.entrySet()) {
-            // Don't generate references created outside of the datadog instrumentation package.
-            if (!visitedSources.contains(entry.getKey())
-                && entry.getKey().startsWith(REFERENCE_CREATION_PACKAGE)) {
-              instrumentationQueue.add(entry.getKey());
-            }
-            if (references.containsKey(entry.getKey())) {
-              references.put(
-                  entry.getKey(), references.get(entry.getKey()).merge(entry.getValue()));
-            } else {
-              references.put(entry.getKey(), entry.getValue());
-            }
+        final Map<String, Reference> instrumentationReferences = cv.getReferences();
+        for (final Map.Entry<String, Reference> entry : instrumentationReferences.entrySet()) {
+          // Don't generate references created outside of the datadog instrumentation package.
+          if (!visitedSources.contains(entry.getKey())
+              && entry.getKey().startsWith(REFERENCE_CREATION_PACKAGE)) {
+            instrumentationQueue.add(entry.getKey());
           }
-
-        } finally {
-          if (in != null) {
-            in.close();
+          if (references.containsKey(entry.getKey())) {
+            references.put(entry.getKey(), references.get(entry.getKey()).merge(entry.getValue()));
+          } else {
+            references.put(entry.getKey(), entry.getValue());
           }
         }
-      } catch (IOException ioe) {
-        throw new IllegalStateException(ioe);
+
+      } catch (final IOException e) {
+        throw new IllegalStateException("Error reading class " + className, e);
+      } finally {
+        if (in != null) {
+          try {
+            in.close();
+          } catch (final IOException e) {
+            throw new IllegalStateException("Error closing class " + className, e);
+          }
+        }
       }
     }
     return references;
@@ -99,7 +102,7 @@ public class ReferenceCreator extends ClassVisitor {
    *
    * <p>foo/bar/Baz -> foo/bar/
    */
-  private static String internalPackageName(String internalName) {
+  private static String internalPackageName(final String internalName) {
     return internalName.replaceAll("/[^/]+$", "");
   }
 
@@ -108,7 +111,7 @@ public class ReferenceCreator extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static Reference.Flag computeMinimumClassAccess(Type from, Type to) {
+  private static Reference.Flag computeMinimumClassAccess(final Type from, final Type to) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
       return Reference.Flag.PRIVATE_OR_HIGHER;
     } else if (internalPackageName(from.getInternalName())
@@ -124,7 +127,7 @@ public class ReferenceCreator extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static Reference.Flag computeMinimumFieldAccess(Type from, Type to) {
+  private static Reference.Flag computeMinimumFieldAccess(final Type from, final Type to) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
       return Reference.Flag.PRIVATE_OR_HIGHER;
     } else if (internalPackageName(from.getInternalName())
@@ -142,7 +145,8 @@ public class ReferenceCreator extends ClassVisitor {
    *
    * @return A reference flag with the required level of access.
    */
-  private static Reference.Flag computeMinimumMethodAccess(Type from, Type to, Type methodType) {
+  private static Reference.Flag computeMinimumMethodAccess(
+      final Type from, final Type to, final Type methodType) {
     if (from.getInternalName().equalsIgnoreCase(to.getInternalName())) {
       return Reference.Flag.PRIVATE_OR_HIGHER;
     } else {
@@ -163,12 +167,13 @@ public class ReferenceCreator extends ClassVisitor {
     return type;
   }
 
-  private Map<String, Reference> references = new HashMap<>();
+  private final Map<String, Reference> references = new HashMap<>();
   private String refSourceClassName;
   private Type refSourceType;
-  private boolean createFromMethodBodiesOnly;
+  private final boolean createFromMethodBodiesOnly;
 
-  private ReferenceCreator(ClassVisitor classVisitor, boolean createFromMethodBodiesOnly) {
+  private ReferenceCreator(
+      final ClassVisitor classVisitor, final boolean createFromMethodBodiesOnly) {
     super(Opcodes.ASM7, classVisitor);
     this.createFromMethodBodiesOnly = createFromMethodBodiesOnly;
   }
@@ -177,7 +182,7 @@ public class ReferenceCreator extends ClassVisitor {
     return references;
   }
 
-  private void addReference(Reference ref) {
+  private void addReference(final Reference ref) {
     if (references.containsKey(ref.getClassName())) {
       references.put(ref.getClassName(), references.get(ref.getClassName()).merge(ref));
     } else {
@@ -203,7 +208,11 @@ public class ReferenceCreator extends ClassVisitor {
 
   @Override
   public FieldVisitor visitField(
-      int access, String name, String descriptor, String signature, Object value) {
+      final int access,
+      final String name,
+      final String descriptor,
+      final String signature,
+      final Object value) {
     // Additional references we could check
     // - annotations on field
 
@@ -228,7 +237,7 @@ public class ReferenceCreator extends ClassVisitor {
   private class AdviceReferenceMethodVisitor extends MethodVisitor {
     private int currentLineNumber = -1;
 
-    public AdviceReferenceMethodVisitor(MethodVisitor methodVisitor) {
+    public AdviceReferenceMethodVisitor(final MethodVisitor methodVisitor) {
       super(Opcodes.ASM7, methodVisitor);
     }
 
@@ -239,7 +248,8 @@ public class ReferenceCreator extends ClassVisitor {
     }
 
     @Override
-    public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
+    public void visitFieldInsn(
+        final int opcode, final String owner, final String name, final String descriptor) {
       // Additional references we could check
       // * DONE owner class
       //   * DONE owner class has a field (name)
@@ -253,7 +263,7 @@ public class ReferenceCreator extends ClassVisitor {
       final Type ownerType = Type.getType("L" + owner + ";");
       final Type fieldType = Type.getType(descriptor);
 
-      List<Reference.Flag> fieldFlags = new ArrayList<>();
+      final List<Reference.Flag> fieldFlags = new ArrayList<>();
       fieldFlags.add(computeMinimumFieldAccess(refSourceType, ownerType));
       fieldFlags.add(
           opcode == Opcodes.GETSTATIC || opcode == Opcodes.PUTSTATIC
@@ -324,7 +334,7 @@ public class ReferenceCreator extends ClassVisitor {
         }
       }
 
-      Type ownerType = Type.getType("L" + owner + ";");
+      final Type ownerType = Type.getType("L" + owner + ";");
 
       final List<Reference.Flag> methodFlags = new ArrayList<>();
       methodFlags.add(

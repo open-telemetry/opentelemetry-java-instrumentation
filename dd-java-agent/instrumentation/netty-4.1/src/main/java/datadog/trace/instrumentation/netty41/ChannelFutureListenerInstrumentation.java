@@ -43,6 +43,14 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".AttributeKeys",
       "datadog.trace.agent.decorator.BaseDecorator",
+      // client helpers
+      "datadog.trace.agent.decorator.ClientDecorator",
+      "datadog.trace.agent.decorator.HttpClientDecorator",
+      packageName + ".client.NettyHttpClientDecorator",
+      packageName + ".client.NettyResponseInjectAdapter",
+      packageName + ".client.HttpClientRequestTracingHandler",
+      packageName + ".client.HttpClientResponseTracingHandler",
+      packageName + ".client.HttpClientTracingHandler",
       // server helpers
       "datadog.trace.agent.decorator.ServerDecorator",
       "datadog.trace.agent.decorator.HttpServerDecorator",
@@ -102,7 +110,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void deactivateScope(@Advice.Enter final TraceScope scope) {
       if (scope != null) {
-        ((Scope) scope).close();
+        scope.close();
       }
     }
   }
