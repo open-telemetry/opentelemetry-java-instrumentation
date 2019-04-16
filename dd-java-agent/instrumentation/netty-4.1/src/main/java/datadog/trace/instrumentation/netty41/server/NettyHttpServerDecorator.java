@@ -38,7 +38,7 @@ public class NettyHttpServerDecorator
     try {
       URI uri = new URI(request.uri());
       if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
-        uri = new URI("http://" + request.headers().get(HOST) + request.getUri());
+        uri = new URI("http://" + request.headers().get(HOST) + request.uri());
       }
       return new URI(
           uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, null);

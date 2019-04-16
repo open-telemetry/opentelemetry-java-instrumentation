@@ -5,10 +5,15 @@ import datadog.trace.api.DDSpanTypes;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.net.URI;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends ServerDecorator {
+  // Source: https://www.regextester.com/22
+  private static final Pattern VALID_IPV4_ADDRESS =
+      Pattern.compile(
+          "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");
 
   protected abstract String method(REQUEST request);
 
@@ -68,10 +73,10 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
       Tags.PEER_HOSTNAME.set(span, peerHostname(connection));
       final String ip = peerHostIP(connection);
       if (ip != null) {
-        if (ip.contains(":")) {
-          Tags.PEER_HOST_IPV6.set(span, ip);
-        } else {
+        if (VALID_IPV4_ADDRESS.matcher(ip).matches()) {
           Tags.PEER_HOST_IPV4.set(span, ip);
+        } else if (ip.contains(":")) {
+          Tags.PEER_HOST_IPV6.set(span, ip);
         }
       }
       Tags.PEER_PORT.set(span, peerPort(connection));
