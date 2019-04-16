@@ -1,16 +1,14 @@
 package datadog.trace.agent.integration.classloading
 
+import static datadog.trace.agent.test.IntegrationTestUtils.createJarWithClasses
+
 import datadog.test.ClassToInstrument
 import datadog.test.ClassToInstrumentChild
-import datadog.trace.agent.test.IntegrationTestUtils
 import datadog.trace.api.Trace
 import datadog.trace.util.gc.GCUtils
+import java.lang.ref.WeakReference
 import spock.lang.Specification
 import spock.lang.Timeout
-
-import java.lang.ref.WeakReference
-
-import static datadog.trace.agent.test.IntegrationTestUtils.createJarWithClasses
 
 @Timeout(10)
 class ClassLoadingTest extends Specification {
@@ -94,8 +92,23 @@ class ClassLoadingTest extends Specification {
     loader1.count == loader2.count
   }
 
-  def "can find bootstrap resources"() {
+  def "can find classes but not resources loaded onto the bootstrap classpath"() {
     expect:
-    IntegrationTestUtils.getAgentClassLoader().getResources('datadog/trace/api/Trace.class') != null
+    Class.forName(name) != null
+
+    // Resources from bootstrap injected jars can't be loaded.
+    // https://github.com/raphw/byte-buddy/pull/496
+    if (onTestClasspath) {
+      assert ClassLoader.getSystemClassLoader().getResource(resource) != null
+    } else {
+      assert ClassLoader.getSystemClassLoader().getResource(resource) == null
+    }
+
+
+    where:
+    name                                                            | onTestClasspath
+    "datadog.trace.api.Trace"                                       | true
+    "datadog.trace.bootstrap.instrumentation.java.concurrent.State" | false
+    resource = name.replace(".", "/") + ".class"
   }
 }
