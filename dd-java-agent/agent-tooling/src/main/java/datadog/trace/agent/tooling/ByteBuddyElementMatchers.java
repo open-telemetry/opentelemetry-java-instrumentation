@@ -69,7 +69,7 @@ public class ByteBuddyElementMatchers {
       log.debug(
           "{} trying to get erasure for target {}: {}",
           e.getClass().getSimpleName(),
-          typeDefinition.getTypeName(),
+          safeTypeDefinitionName(typeDefinition),
           e.getMessage());
       return null;
     }
@@ -132,7 +132,7 @@ public class ByteBuddyElementMatchers {
         log.debug(
             "{} trying to get super class for target {}: {}",
             e.getClass().getSimpleName(),
-            typeDefinition.getTypeName(),
+            safeTypeDefinitionName(typeDefinition),
             e.getMessage());
         return null;
       }
@@ -178,7 +178,7 @@ public class ByteBuddyElementMatchers {
         log.debug(
             "{} trying to get interfaces for target {}: {}",
             e.getClass().getSimpleName(),
-            typeDefinition.getTypeName(),
+            safeTypeDefinitionName(typeDefinition),
             e.getMessage());
       }
       return interfaceTypes;
@@ -281,6 +281,19 @@ public class ByteBuddyElementMatchers {
     @Override
     public String toString() {
       return "safeMatcher(try(" + matcher + ") or " + fallback + ")";
+    }
+  }
+
+  private static String safeTypeDefinitionName(final TypeDefinition td) {
+    try {
+      return td.getTypeName();
+    } catch (final IllegalStateException ex) {
+      final String message = ex.getMessage();
+      if (message.startsWith("Cannot resolve type description for ")) {
+        return message.replace("Cannot resolve type description for ", "");
+      } else {
+        return "?";
+      }
     }
   }
 }

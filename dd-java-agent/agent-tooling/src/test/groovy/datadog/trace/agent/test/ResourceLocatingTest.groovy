@@ -1,32 +1,41 @@
 package datadog.trace.agent.test
 
 import datadog.trace.agent.tooling.DDLocationStrategy
+import java.util.concurrent.atomic.AtomicReference
 import net.bytebuddy.agent.builder.AgentBuilder
-import net.bytebuddy.dynamic.ClassFileLocator
+import spock.lang.Shared
 import spock.lang.Specification
 
 class ResourceLocatingTest extends Specification {
-  def "finds resources from parent classloader"() {
-    setup:
-    final String[] lastLookup = new String[1]
-    ClassLoader childLoader = new ClassLoader(this.getClass().getClassLoader()) {
-      @Override
-      URL getResource(String name) {
-        lastLookup[0] = name
-        // do not delegate resource lookup
-        return findResource(name)
-      }
+  @Shared
+  def lastLookup = new AtomicReference<String>()
+  @Shared
+  def childLoader = new ClassLoader(this.getClass().getClassLoader()) {
+    @Override
+    URL getResource(String name) {
+      lastLookup.set(name)
+      // do not delegate resource lookup
+      return findResource(name)
     }
-    ClassFileLocator locator = new DDLocationStrategy().classFileLocator(childLoader, null)
-    ClassFileLocator defaultLocator = AgentBuilder.LocationStrategy.ForClassLoader.STRONG.classFileLocator(childLoader, null)
+  }
 
+  def cleanup() {
+    lastLookup.set(null)
+  }
+
+  def "finds resources from parent classloader"() {
     expect:
-    locator.locate("java/lang/Object").isResolved()
-    // lastLookup ensures childLoader was checked before parent for the resource
-    lastLookup[0] == "java/lang/Object.class"
-    (lastLookup[0] = null) == null
+    locator.locate("java/lang/Object").isResolved() == usesProvidedClassloader
+    // lastLookup verifies that the given classloader is only used when expected
+    lastLookup.get() == usesProvidedClassloader ? null : "java/lang/Object.class"
 
-    !defaultLocator.locate("java/lang/Object").isResolved()
-    lastLookup[0] == "java/lang/Object.class"
+    and:
+    !locator.locate("java/lang/InvalidClass").isResolved()
+    lastLookup.get() == "java/lang/InvalidClass.class"
+
+    where:
+    locator                                                                                 | usesProvidedClassloader
+    new DDLocationStrategy().classFileLocator(childLoader, null)                            | true
+    AgentBuilder.LocationStrategy.ForClassLoader.STRONG.classFileLocator(childLoader, null) | false
   }
 }

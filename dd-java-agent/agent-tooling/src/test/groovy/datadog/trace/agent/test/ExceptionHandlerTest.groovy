@@ -28,19 +28,19 @@ class ExceptionHandlerTest extends Specification {
       .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
       .type(named(getClass().getName() + '$SomeClass'))
       .transform(
-      new AgentBuilder.Transformer.ForAdvice()
-        .with(new AgentBuilder.LocationStrategy.Simple(ClassFileLocator.ForClassLoader.of(BadAdvice.getClassLoader())))
-        .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
-        .advice(
-        isMethod().and(named("isInstrumented")),
-        BadAdvice.getName()))
+        new AgentBuilder.Transformer.ForAdvice()
+          .with(new AgentBuilder.LocationStrategy.Simple(ClassFileLocator.ForClassLoader.of(BadAdvice.getClassLoader())))
+          .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
+          .advice(
+            isMethod().and(named("isInstrumented")),
+            BadAdvice.getName()))
       .transform(
-      new AgentBuilder.Transformer.ForAdvice()
-        .with(new AgentBuilder.LocationStrategy.Simple(ClassFileLocator.ForClassLoader.of(BadAdvice.getClassLoader())))
-        .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
-        .advice(
-        isMethod().and(named("smallStack").or(named("largeStack"))),
-        BadAdvice.NoOpAdvice.getName()))
+        new AgentBuilder.Transformer.ForAdvice()
+          .with(new AgentBuilder.LocationStrategy.Simple(ClassFileLocator.ForClassLoader.of(BadAdvice.getClassLoader())))
+          .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
+          .advice(
+            isMethod().and(named("smallStack").or(named("largeStack"))),
+            BadAdvice.NoOpAdvice.getName()))
 
     ByteBuddyAgent.install()
     transformer = builder.installOn(ByteBuddyAgent.getInstrumentation())
@@ -66,7 +66,7 @@ class ExceptionHandlerTest extends Specification {
     // Make sure the log event came from our error handler.
     // If the log message changes in the future, it's fine to just
     // update the test's hardcoded message
-    testAppender.list.get(testAppender.list.size() - 1).getMessage() == "Failed to handle exception in instrumentation"
+    testAppender.list.get(testAppender.list.size() - 1).getMessage().startsWith("Failed to handle exception in instrumentation for")
   }
 
   def "exception on non-delegating classloader"() {
