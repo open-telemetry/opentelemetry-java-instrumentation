@@ -91,7 +91,7 @@ public class Config {
   private static final Set<Integer> DEFAULT_HTTP_CLIENT_ERROR_STATUSES =
       parseIntegerRangeSet("400-499", "default");
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
-  private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 0;
+  private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 1000;
   private static final String DEFAULT_PROPAGATION_STYLE_EXTRACT = PropagationStyle.DATADOG.name();
   private static final String DEFAULT_PROPAGATION_STYLE_INJECT = PropagationStyle.DATADOG.name();
   private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
