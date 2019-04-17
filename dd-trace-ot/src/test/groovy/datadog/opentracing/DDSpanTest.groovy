@@ -225,7 +225,9 @@ class DDSpanTest extends Specification {
 
     setup:
     def span = tracer.buildSpan("root").start()
-    if (tagName) span.setTag(tagName, tagValue)
+    if (tagName) {
+      span.setTag(tagName, tagValue)
+    }
 
     expect:
     // Tag and sampling priority kept in sync
@@ -245,7 +247,9 @@ class DDSpanTest extends Specification {
 
     setup:
     def span = tracer.buildSpan("root").start()
-    if (tagName) span.setTag(tagName, tagValue)
+    if (tagName) {
+      span.setTag(tagName, tagValue)
+    }
 
     expect:
     span.getSamplingPriority() == defaultSamplingPriority
