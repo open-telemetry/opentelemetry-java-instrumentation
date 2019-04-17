@@ -48,7 +48,7 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.DatabaseClientDecorator",
       packageName + ".MongoClientDecorator",
-      packageName + ".DDTracingCommandListener"
+      packageName + ".TracingCommandListener"
     };
   }
 
@@ -66,7 +66,7 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
       // referencing "this" in the method args causes the class to load under a transformer.
       // This bypasses the Builder instrumentation. Casting as a workaround.
       final MongoClientOptions.Builder builder = (MongoClientOptions.Builder) dis;
-      final DDTracingCommandListener listener = new DDTracingCommandListener();
+      final TracingCommandListener listener = new TracingCommandListener();
       builder.addCommandListener(listener);
     }
   }

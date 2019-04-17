@@ -81,7 +81,7 @@ public class MongoClientInstrumentationTest {
   public void syncClientHasListener() {
     Assert.assertEquals(1, client.getMongoClientOptions().getCommandListeners().size());
     Assert.assertEquals(
-        "DDTracingCommandListener",
+        "TracingCommandListener",
         client.getMongoClientOptions().getCommandListeners().get(0).getClass().getSimpleName());
   }
 

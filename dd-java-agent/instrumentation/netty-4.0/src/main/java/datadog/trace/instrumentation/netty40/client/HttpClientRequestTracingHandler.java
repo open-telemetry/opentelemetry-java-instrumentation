@@ -8,6 +8,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
+import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.GlobalTracer;
@@ -24,40 +25,44 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
       return;
     }
 
-    TraceScope scope = null;
+    TraceScope parentScope = null;
     final TraceScope.Continuation continuation =
         ctx.channel().attr(AttributeKeys.PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY).getAndRemove();
     if (continuation != null) {
-      scope = continuation.activate();
+      parentScope = continuation.activate();
     }
 
     final HttpRequest request = (HttpRequest) msg;
 
     final Span span = GlobalTracer.get().buildSpan("netty.client.request").start();
-    DECORATE.afterStart(span);
-    DECORATE.onRequest(span, request);
-    DECORATE.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
+    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      DECORATE.afterStart(span);
+      DECORATE.onRequest(span, request);
+      DECORATE.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
 
-    // AWS calls are often signed, so we can't add headers without breaking the signature.
-    if (!request.headers().contains("amz-sdk-invocation-id")) {
-      GlobalTracer.get()
-          .inject(
-              span.context(), Format.Builtin.HTTP_HEADERS, new NettyResponseInjectAdapter(request));
+      // AWS calls are often signed, so we can't add headers without breaking the signature.
+      if (!request.headers().contains("amz-sdk-invocation-id")) {
+        GlobalTracer.get()
+            .inject(
+                span.context(),
+                Format.Builtin.HTTP_HEADERS,
+                new NettyResponseInjectAdapter(request));
+      }
+
+      ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).set(span);
+
+      try {
+        ctx.write(msg, prm);
+      } catch (final Throwable throwable) {
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
+        span.finish();
+        throw throwable;
+      }
     }
 
-    ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).set(span);
-
-    try {
-      ctx.write(msg, prm);
-    } catch (final Throwable throwable) {
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.finish();
-      throw throwable;
-    }
-
-    if (null != scope) {
-      scope.close();
+    if (null != parentScope) {
+      parentScope.close();
     }
   }
 }

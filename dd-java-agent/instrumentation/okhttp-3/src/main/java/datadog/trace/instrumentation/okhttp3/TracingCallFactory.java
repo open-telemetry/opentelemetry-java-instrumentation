@@ -28,7 +28,7 @@ public class TracingCallFactory implements Call.Factory {
     final Span span = GlobalTracer.get().buildSpan("okhttp.http").start();
     try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
       DECORATE.afterStart(scope);
-      DECORATE.onRequest(scope.span(), request);
+      DECORATE.onRequest(span, request);
 
       /** In case of exception network interceptor is not called */
       final OkHttpClient.Builder okBuilder = okHttpClient.newBuilder();

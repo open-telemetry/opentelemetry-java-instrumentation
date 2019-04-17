@@ -44,6 +44,9 @@ dependencies {
 
   testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:jdbc')
+  // Added to ensure cross compatibility:
+  testCompile project(':dd-java-agent:instrumentation:hibernate:core-4.0')
+  testCompile project(':dd-java-agent:instrumentation:hibernate:core-4.3')
 
   testCompile group: 'org.hibernate', name: 'hibernate-core', version: '3.3.0.GA'
   testCompile group: 'org.hibernate', name: 'hibernate-annotations', version: '+'

@@ -13,20 +13,22 @@ import okhttp3.Request
 import ratpack.exec.Promise
 import ratpack.exec.util.ParallelBatch
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
+import ratpack.handling.internal.HandlerException
 import ratpack.http.HttpUrlBuilder
 import ratpack.http.client.HttpClient
 import ratpack.path.PathBinding
 import ratpack.test.exec.ExecHarness
-import spock.lang.Retry
 
-@Retry
+import java.util.concurrent.CountDownLatch
+import java.util.regex.Pattern
+
+import static datadog.trace.agent.test.server.http.TestHttpServer.distributedRequestTrace
+import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
+
 class RatpackTest extends AgentTestRunner {
-  static {
-    System.setProperty("dd.integration.ratpack.enabled", "true")
-  }
 
   OkHttpClient client = OkHttpUtils.client()
-
 
   def "test path call"() {
     setup:
@@ -50,13 +52,32 @@ class RatpackTest extends AgentTestRunner {
     resp.body.string() == "success"
 
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
+          resourceName "GET /"
+          serviceName "unnamed-java-app"
+          operationName "netty.request"
+          spanType DDSpanTypes.HTTP_SERVER
+          parent()
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "netty"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" Integer
+            defaultTags()
+          }
+        }
+        span(1) {
           resourceName "GET /"
           serviceName "unnamed-java-app"
           operationName "ratpack.handler"
           spanType DDSpanTypes.HTTP_SERVER
-          parent()
+          childOf(span(0))
           errored false
           tags {
             "$Tags.COMPONENT.key" "ratpack"
@@ -95,13 +116,32 @@ class RatpackTest extends AgentTestRunner {
     resp.body.string() == ":foo/:bar?/baz"
 
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
+          resourceName "GET /:foo/:bar?/baz"
+          serviceName "unnamed-java-app"
+          operationName "netty.request"
+          spanType DDSpanTypes.HTTP_SERVER
+          parent()
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "netty"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.HTTP_URL.key" "${app.address}a/b/baz"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" Integer
+            defaultTags()
+          }
+        }
+        span(1) {
           resourceName "GET /:foo/:bar?/baz"
           serviceName "unnamed-java-app"
           operationName "ratpack.handler"
           spanType DDSpanTypes.HTTP_SERVER
-          parent()
+          childOf(span(0))
           errored false
           tags {
             "$Tags.COMPONENT.key" "ratpack"
@@ -116,7 +156,133 @@ class RatpackTest extends AgentTestRunner {
     }
   }
 
-  def "test error response"() {
+  def "test handler error response"() {
+    setup:
+    def app = GroovyEmbeddedApp.ratpack {
+      handlers {
+        get {
+          0 / 0
+        }
+      }
+    }
+    def request = new Request.Builder()
+      .url(app.address.toURL())
+      .get()
+      .build()
+    when:
+    def resp = client.newCall(request).execute()
+    then:
+    resp.code() == 500
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          resourceName "GET /"
+          serviceName "unnamed-java-app"
+          operationName "netty.request"
+          spanType DDSpanTypes.HTTP_SERVER
+          parent()
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" "netty"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 500
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" Integer
+            errorTags(ArithmeticException, Pattern.compile("Division( is)? undefined"))
+            defaultTags()
+          }
+        }
+        span(1) {
+          resourceName "GET /"
+          serviceName "unnamed-java-app"
+          operationName "ratpack.handler"
+          spanType DDSpanTypes.HTTP_SERVER
+          childOf(span(0))
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" "ratpack"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 500
+            "$Tags.HTTP_URL.key" "/"
+            errorTags(HandlerException, Pattern.compile("java.lang.ArithmeticException: Division( is)? undefined"))
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
+
+  def "test promise error response"() {
+    setup:
+    def app = GroovyEmbeddedApp.ratpack {
+      handlers {
+        get {
+          Promise.async {
+            0 / 0
+          }.then {
+            context.render(it)
+          }
+        }
+      }
+    }
+    def request = new Request.Builder()
+      .url(app.address.toURL())
+      .get()
+      .build()
+    when:
+    def resp = client.newCall(request).execute()
+    then:
+    resp.code() == 500
+
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          resourceName "GET /"
+          serviceName "unnamed-java-app"
+          operationName "netty.request"
+          spanType DDSpanTypes.HTTP_SERVER
+          parent()
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" "netty"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 500
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" Integer
+            errorTags(ArithmeticException, Pattern.compile("Division( is)? undefined"))
+            defaultTags()
+          }
+        }
+        span(1) {
+          resourceName "GET /"
+          serviceName "unnamed-java-app"
+          operationName "ratpack.handler"
+          spanType DDSpanTypes.HTTP_SERVER
+          childOf(span(0))
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" "ratpack"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 500
+            "$Tags.HTTP_URL.key" "/"
+            "$Tags.ERROR.key" true
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
+
+  def "test render error response"() {
     setup:
     def app = GroovyEmbeddedApp.ratpack {
       handlers {
@@ -137,13 +303,33 @@ class RatpackTest extends AgentTestRunner {
     resp.code() == 500
 
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
+          resourceName "GET /"
+          serviceName "unnamed-java-app"
+          operationName "netty.request"
+          spanType DDSpanTypes.HTTP_SERVER
+          parent()
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" "netty"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 500
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" Integer
+            errorTags(ArithmeticException, Pattern.compile("Division( is)? undefined"))
+            defaultTags()
+          }
+        }
+        span(1) {
           resourceName "GET /"
           serviceName "unnamed-java-app"
           operationName "ratpack.handler"
           spanType DDSpanTypes.HTTP_SERVER
-          parent()
+          childOf(span(0))
           errored true
           tags {
             "$Tags.COMPONENT.key" "ratpack"
@@ -151,8 +337,7 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 500
             "$Tags.HTTP_URL.key" "/"
-            "error" true
-//            errorTags(Exception, String) // TODO: find out how to get throwable in instrumentation
+            "$Tags.ERROR.key" true
             defaultTags()
           }
         }
@@ -163,13 +348,16 @@ class RatpackTest extends AgentTestRunner {
   def "test path call using ratpack http client"() {
     setup:
 
-    def external = GroovyEmbeddedApp.ratpack {
+    // Use jetty based server to avoid confusion.
+    def external = httpServer {
       handlers {
         get("nested") {
-          context.render("succ")
+          handleDistributedRequest()
+          response.send("succ")
         }
         get("nested2") {
-          context.render("ess")
+          handleDistributedRequest()
+          response.send("ess")
         }
       }
     }
@@ -206,52 +394,36 @@ class RatpackTest extends AgentTestRunner {
     // 2nd is nested2 from the external server (the result of the 2nd internal http client call)
     // 1st is nested from the external server (the result of the 1st internal http client call)
     assertTraces(3) {
-      // simulated external system, first call
-      trace(0, 1) {
-        span(0) {
-          resourceName "GET /nested"
-          serviceName "unnamed-java-app"
-          operationName "ratpack.handler"
-          spanType DDSpanTypes.HTTP_SERVER
-          childOf(trace(2).get(2))
-          errored false
-          tags {
-            "$Tags.COMPONENT.key" "ratpack"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "/nested"
-            defaultTags(true)
-          }
-        }
-      }
-      // simulated external system, second call
-      trace(1, 1) {
-        span(0) {
-          resourceName "GET /nested2"
-          serviceName "unnamed-java-app"
-          operationName "ratpack.handler"
-          spanType DDSpanTypes.HTTP_SERVER
-          childOf(trace(2).get(1))
-          errored false
-          tags {
-            "$Tags.COMPONENT.key" "ratpack"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "/nested2"
-            defaultTags(true)
-          }
-        }
-      }
-      trace(2, 3) {
+      distributedRequestTrace(it, 0, trace(2).get(3))
+      distributedRequestTrace(it, 1, trace(2).get(2))
+
+      trace(2, 4) {
         // main app span that processed the request from OKHTTP request
         span(0) {
           resourceName "GET /"
           serviceName "unnamed-java-app"
-          operationName "ratpack.handler"
+          operationName "netty.request"
           spanType DDSpanTypes.HTTP_SERVER
           parent()
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "netty"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" Integer
+            defaultTags()
+          }
+        }
+        span(1) {
+          resourceName "GET /"
+          serviceName "unnamed-java-app"
+          operationName "ratpack.handler"
+          spanType DDSpanTypes.HTTP_SERVER
+          childOf(span(0))
           errored false
           tags {
             "$Tags.COMPONENT.key" "ratpack"
@@ -263,36 +435,122 @@ class RatpackTest extends AgentTestRunner {
           }
         }
         // Second http client call that receives the 'ess' of Success
-        span(1) {
+        span(2) {
           resourceName "GET /?"
           serviceName "unnamed-java-app"
-          operationName "ratpack.client-request"
+          operationName "netty.client.request"
           spanType DDSpanTypes.HTTP_CLIENT
-          childOf(span(0))
+          childOf(span(3))
           errored false
           tags {
-            "$Tags.COMPONENT.key" "ratpack-httpclient"
+            "$Tags.COMPONENT.key" "netty-client"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${external.address}nested2"
+            "$Tags.HTTP_URL.key" "${external.address}/nested2"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" Integer
             defaultTags()
           }
         }
         // First http client call that receives the 'Succ' of Success
-        span(2) {
+        span(3) {
           resourceName "GET /nested"
           serviceName "unnamed-java-app"
-          operationName "ratpack.client-request"
+          operationName "netty.client.request"
           spanType DDSpanTypes.HTTP_CLIENT
-          childOf(span(0))
+          childOf(span(1))
           errored false
           tags {
-            "$Tags.COMPONENT.key" "ratpack-httpclient"
+            "$Tags.COMPONENT.key" "netty-client"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${external.address}nested"
+            "$Tags.HTTP_URL.key" "${external.address}/nested"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" Integer
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
+
+  def "test ratpack http client error handling"() {
+    setup:
+    def badAddress = new URI("http://localhost:$UNUSABLE_PORT")
+
+    def app = GroovyEmbeddedApp.ratpack {
+      handlers {
+        get { HttpClient httpClient ->
+          httpClient.get(badAddress)
+            .map { it.body.text }
+            .then {
+            context.render(it)
+          }
+        }
+      }
+    }
+    def request = new Request.Builder()
+      .url(app.address.toURL())
+      .get()
+      .build()
+
+    when:
+    def resp = client.newCall(request).execute()
+
+    then:
+    resp.code() == 500
+
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          resourceName "GET /"
+          serviceName "unnamed-java-app"
+          operationName "netty.request"
+          spanType DDSpanTypes.HTTP_SERVER
+          parent()
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" "netty"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 500
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" Integer
+            "$Tags.ERROR.key" true
+            defaultTags()
+          }
+        }
+        span(1) {
+          resourceName "GET /"
+          serviceName "unnamed-java-app"
+          operationName "ratpack.handler"
+          spanType DDSpanTypes.HTTP_SERVER
+          childOf(span(0))
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" "ratpack"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 500
+            "$Tags.HTTP_URL.key" "/"
+            errorTags(ConnectException, String)
+            defaultTags()
+          }
+        }
+        span(2) {
+          operationName "netty.connect"
+          resourceName "netty.connect"
+          childOf(span(1))
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" "netty"
+            errorTags(ConnectException, String)
             defaultTags()
           }
         }
@@ -305,26 +563,24 @@ class RatpackTest extends AgentTestRunner {
     def app = GroovyEmbeddedApp.ratpack {
       handlers {
         get {
-          final Scope scope = !startSpanInHandler ? GlobalTracer.get().scopeManager().active() :
-            GlobalTracer.get()
+          TraceScope scope
+          if (startSpanInHandler) {
+            Span childSpan = GlobalTracer.get()
               .buildSpan("ratpack.exec-test")
               .withTag(DDTags.RESOURCE_NAME, "INSIDE-TEST")
-              .startActive(false)
-
-          if (startSpanInHandler) {
-            ((TraceScope) scope).setAsyncPropagation(true)
+              .start()
+            scope = GlobalTracer.get().scopeManager().activate(childSpan, true)
           }
-          scope.span().setBaggageItem("test-baggage", "foo")
+          def latch = new CountDownLatch(1)
+          try {
+            scope?.setAsyncPropagation(true)
+            GlobalTracer.get().activeSpan().setBaggageItem("test-baggage", "foo")
 
-          final Span startedSpan = startSpanInHandler ? scope.span() : null
-          if (startSpanInHandler) {
-            scope.close()
-            context.onClose {
-              startedSpan.finish()
-            }
+            context.render(testPromise(latch).fork())
+          } finally {
+            scope?.close()
+            latch.countDown()
           }
-
-          context.render(testPromise().fork())
         }
       }
     }
@@ -341,13 +597,44 @@ class RatpackTest extends AgentTestRunner {
     resp.body().string() == "foo"
 
     assertTraces(1) {
-      trace(0, (startSpanInHandler ? 2 : 1)) {
+      trace(0, (startSpanInHandler ? 3 : 2)) {
+        if (startSpanInHandler) {
+          span(0) {
+            resourceName "INSIDE-TEST"
+            serviceName "unnamed-java-app"
+            operationName "ratpack.exec-test"
+            childOf(span(2))
+            errored false
+            tags {
+              defaultTags()
+            }
+          }
+        }
         span(startSpanInHandler ? 1 : 0) {
+          resourceName "GET /"
+          serviceName "unnamed-java-app"
+          operationName "netty.request"
+          spanType DDSpanTypes.HTTP_SERVER
+          parent()
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "netty"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" Integer
+            defaultTags()
+          }
+        }
+        span(startSpanInHandler ? 2 : 1) {
           resourceName "GET /"
           serviceName "unnamed-java-app"
           operationName "ratpack.handler"
           spanType DDSpanTypes.HTTP_SERVER
-          parent()
+          childOf(span(startSpanInHandler ? 1 : 0))
           errored false
           tags {
             "$Tags.COMPONENT.key" "ratpack"
@@ -356,18 +643,6 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" 200
             "$Tags.HTTP_URL.key" "/"
             defaultTags()
-          }
-        }
-        if (startSpanInHandler) {
-          span(0) {
-            resourceName "INSIDE-TEST"
-            serviceName "unnamed-java-app"
-            operationName "ratpack.exec-test"
-            childOf(span(1))
-            errored false
-            tags {
-              defaultTags()
-            }
           }
         }
       }
@@ -416,10 +691,11 @@ class RatpackTest extends AgentTestRunner {
   }
 
   // returns a promise that contains the active scope's "test-baggage" baggage
-  Promise<String> testPromise() {
+  Promise<String> testPromise(CountDownLatch latch = null) {
     Promise.sync {
+      latch?.await()
       Scope tracerScope = GlobalTracer.get().scopeManager().active()
-      return tracerScope.span().getBaggageItem("test-baggage")
+      return tracerScope?.span()?.getBaggageItem("test-baggage")
     }
   }
 }

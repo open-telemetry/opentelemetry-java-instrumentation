@@ -157,7 +157,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   /**
-   * @Deprecated. Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
+   * @deprecated Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
    */
   @Deprecated
   public DDTracer(
@@ -180,7 +180,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   /**
-   * @Deprecated. Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
+   * @deprecated Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
    */
   @Deprecated
   public DDTracer(
@@ -251,6 +251,10 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       addDecorator(decorator);
     }
 
+    // Ensure that PendingTrace.SPAN_CLEANER is initialized in this thread:
+    // FIXME: add test to verify the span cleaner thread is started with this call.
+    PendingTrace.initialize();
+
     log.info("New instance: {}", this);
   }
 
@@ -289,6 +293,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     spanContextDecorators.put(decorator.getMatchingTag(), list);
   }
 
+  @Deprecated
   public void addScopeContext(final ScopeContext context) {
     scopeManager.addScopeContext(context);
   }

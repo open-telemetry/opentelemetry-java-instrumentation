@@ -10,6 +10,7 @@ import io.opentracing.util.GlobalTracer;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Consumer;
+import software.amazon.awssdk.core.client.builder.SdkClientBuilder;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttribute;
@@ -33,8 +34,10 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void beforeExecution(
       final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
     final Span span = GlobalTracer.get().buildSpan("aws.command").start();
-    DECORATE.afterStart(span);
-    executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
+    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      DECORATE.afterStart(span);
+      executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
+    }
   }
 
   @Override
@@ -84,8 +87,16 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
   }
 
-  public static Consumer<ClientOverrideConfiguration.Builder> getOverrideConfigurationConsumer() {
-    return OVERRIDE_CONFIGURATION_CONSUMER;
+  /**
+   * We keep this method here because it references Java8 classes and we would like to avoid
+   * compiling this for instrumentation code that should load into Java7.
+   */
+  public static void overrideConfiguration(final SdkClientBuilder client) {
+    client.overrideConfiguration(OVERRIDE_CONFIGURATION_CONSUMER);
+  }
+
+  public static void muzzleCheck() {
+    // Noop
   }
 
   /**

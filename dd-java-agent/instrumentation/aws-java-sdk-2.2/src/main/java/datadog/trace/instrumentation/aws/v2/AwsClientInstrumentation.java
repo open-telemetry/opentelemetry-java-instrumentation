@@ -37,7 +37,7 @@ public final class AwsClientInstrumentation extends AbstractAwsClientInstrumenta
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(@Advice.This final SdkClientBuilder thiz) {
-      thiz.overrideConfiguration(TracingExecutionInterceptor.getOverrideConfigurationConsumer());
+      TracingExecutionInterceptor.overrideConfiguration(thiz);
     }
   }
 }

@@ -122,9 +122,9 @@ public class DDApi {
               if (traceCount < (1 << 4)) {
                 return sizeInBytes + 1; // byte
               } else if (traceCount < (1 << 16)) {
-                return sizeInBytes + 2; // short
+                return sizeInBytes + 3; // byte + short
               } else {
-                return sizeInBytes + 4; // int
+                return sizeInBytes + 5; // byte + int
               }
             }
 
@@ -159,7 +159,7 @@ public class DDApi {
           } else if (nextAllowedLogTime < System.currentTimeMillis()) {
             nextAllowedLogTime = System.currentTimeMillis() + MILLISECONDS_BETWEEN_ERROR_LOG;
             log.warn(
-                "Error while sending {} of {} traces to the DD agent. Status: {} (going silent for {} seconds)",
+                "Error while sending {} of {} traces to the DD agent. Status: {} (going silent for {} minutes)",
                 traces.size(),
                 representativeCount,
                 response.code(),

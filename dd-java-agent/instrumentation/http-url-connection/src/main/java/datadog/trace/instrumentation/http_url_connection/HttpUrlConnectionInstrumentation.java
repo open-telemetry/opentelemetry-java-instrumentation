@@ -13,6 +13,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
+import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
@@ -178,9 +179,11 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     public Span startSpan(final HttpURLConnection connection) {
       final Tracer.SpanBuilder builder = GlobalTracer.get().buildSpan(OPERATION_NAME);
       span = builder.start();
-      DECORATE.afterStart(span);
-      DECORATE.onRequest(span, connection);
-      return span;
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+        DECORATE.afterStart(span);
+        DECORATE.onRequest(span, connection);
+        return span;
+      }
     }
 
     public boolean hasSpan() {
@@ -196,11 +199,13 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     }
 
     public void finishSpan(final Throwable throwable) {
-      DECORATE.onError(span, throwable);
-      DECORATE.beforeFinish(span);
-      span.finish();
-      span = null;
-      finished = true;
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
+        span.finish();
+        span = null;
+        finished = true;
+      }
     }
 
     public void finishSpan(final int responseCode) {
@@ -210,11 +215,13 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
        * (e.g. breaks getOutputStream).
        */
       if (responseCode > 0) {
-        DECORATE.onResponse(span, responseCode);
-        DECORATE.beforeFinish(span);
-        span.finish();
-        span = null;
-        finished = true;
+        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+          DECORATE.onResponse(span, responseCode);
+          DECORATE.beforeFinish(span);
+          span.finish();
+          span = null;
+          finished = true;
+        }
       }
     }
   }

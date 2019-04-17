@@ -10,7 +10,7 @@ This project includes a `.editorconfig` file for basic editor settings.  This fi
 Java files must be formatted using [google-java-format](https://github.com/google/google-java-format).  Please run the following task to ensure files are formatted before committing:
 
 ```shell 
-./gradlew :googleJavaFormat
+./gradlew googleJavaFormat
 ```
 
 Other source files (Groovy, Scala, etc) should ideally be formatted by Intellij Idea's default formatting, but are not enforced.

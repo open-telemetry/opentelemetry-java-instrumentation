@@ -12,6 +12,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
+import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
@@ -65,17 +66,18 @@ public class UrlInstrumentation extends Instrumenter.Default {
                 .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
                 .withTag(Tags.COMPONENT.getKey(), COMPONENT)
                 .start();
+        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+          Tags.HTTP_URL.set(span, url.toString());
+          Tags.PEER_PORT.set(span, url.getPort() == -1 ? 80 : url.getPort());
+          Tags.PEER_HOSTNAME.set(span, url.getHost());
+          if (Config.get().isHttpClientSplitByDomain()) {
+            span.setTag(DDTags.SERVICE_NAME, url.getHost());
+          }
 
-        Tags.HTTP_URL.set(span, url.toString());
-        Tags.PEER_PORT.set(span, url.getPort() == -1 ? 80 : url.getPort());
-        Tags.PEER_HOSTNAME.set(span, url.getHost());
-        if (Config.get().isHttpClientSplitByDomain()) {
-          span.setTag(DDTags.SERVICE_NAME, url.getHost());
+          Tags.ERROR.set(span, true);
+          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+          span.finish();
         }
-
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
-        span.finish();
       }
     }
   }

@@ -1,4 +1,4 @@
-def groovyVer = "2.5.2"
+def groovyVer = "2.5.3"
 def spockGroovyVer = groovyVer.replaceAll(/\.\d+$/, '')
 
 ext {
@@ -15,7 +15,7 @@ ext {
     logback    : "1.2.3",
     lombok     : "1.18.4",
     bytebuddy  : "1.9.9",
-    scala      : "2.11.12",
+    scala      : "2.11.12",  // Last version to support Java 7 (2.12+ require Java 8+)
     kotlin     : "1.3.11",
     coroutines : "1.1.0"
   ]

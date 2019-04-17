@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.spymemcached;
 
 import static datadog.trace.instrumentation.spymemcached.MemcacheClientDecorator.DECORATE;
 
+import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.util.GlobalTracer;
 import java.util.concurrent.CancellationException;
@@ -29,40 +30,47 @@ public abstract class CompletionListener<T> {
   public CompletionListener(final MemcachedConnection connection, final String methodName) {
     this.connection = connection;
     span = GlobalTracer.get().buildSpan(OPERATION_NAME).start();
-    DECORATE.afterStart(span);
-    DECORATE.onConnection(span, connection);
-    DECORATE.onOperation(span, methodName);
+    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      DECORATE.afterStart(span);
+      DECORATE.onConnection(span, connection);
+      DECORATE.onOperation(span, methodName);
+    }
   }
 
   protected void closeAsyncSpan(final T future) {
-    try {
-      processResult(span, future);
-    } catch (final CancellationException e) {
-      span.setTag(DB_COMMAND_CANCELLED, true);
-    } catch (final ExecutionException e) {
-      if (e.getCause() instanceof CancellationException) {
-        // Looks like underlying OperationFuture wraps CancellationException into ExecutionException
+    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      try {
+        processResult(span, future);
+      } catch (final CancellationException e) {
         span.setTag(DB_COMMAND_CANCELLED, true);
-      } else {
-        DECORATE.onError(span, e.getCause());
+      } catch (final ExecutionException e) {
+        if (e.getCause() instanceof CancellationException) {
+          // Looks like underlying OperationFuture wraps CancellationException into
+          // ExecutionException
+          span.setTag(DB_COMMAND_CANCELLED, true);
+        } else {
+          DECORATE.onError(span, e.getCause());
+        }
+      } catch (final InterruptedException e) {
+        // Avoid swallowing InterruptedException
+        DECORATE.onError(span, e);
+        Thread.currentThread().interrupt();
+      } catch (final Exception e) {
+        // This should never happen, just in case to make sure we cover all unexpected exceptions
+        DECORATE.onError(span, e);
+      } finally {
+        DECORATE.beforeFinish(span);
+        span.finish();
       }
-    } catch (final InterruptedException e) {
-      // Avoid swallowing InterruptedException
-      DECORATE.onError(span, e);
-      Thread.currentThread().interrupt();
-    } catch (final Exception e) {
-      // This should never happen, just in case to make sure we cover all unexpected exceptions
-      DECORATE.onError(span, e);
-    } finally {
-      DECORATE.beforeFinish(span);
-      span.finish();
     }
   }
 
   protected void closeSyncSpan(final Throwable thrown) {
-    DECORATE.onError(span, thrown);
-    DECORATE.beforeFinish(span);
-    span.finish();
+    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      DECORATE.onError(span, thrown);
+      DECORATE.beforeFinish(span);
+      span.finish();
+    }
   }
 
   protected abstract void processResult(Span span, T future)

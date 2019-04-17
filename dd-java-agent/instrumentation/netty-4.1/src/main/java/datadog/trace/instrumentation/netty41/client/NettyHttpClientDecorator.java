@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.netty41.client;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.HOST;
+import static io.netty.handler.codec.http.HttpHeaderNames.HOST;
 
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import io.netty.handler.codec.http.HttpRequest;

@@ -39,12 +39,13 @@ public class ContextualScopeManager implements ScopeManager {
     return tlsScope.get();
   }
 
+  @Deprecated
   public void addScopeContext(final ScopeContext context) {
     scopeContexts.addFirst(context);
   }
 
   /** Attach a listener to scope activation events */
-  public void addScopeListener(ScopeListener listener) {
+  public void addScopeListener(final ScopeListener listener) {
     scopeListeners.add(listener);
   }
 }

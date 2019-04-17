@@ -70,14 +70,15 @@ import net.bytebuddy.utility.JavaModule;
 @Slf4j
 public class FieldBackedProvider implements InstrumentationContextProvider {
 
-  /*
-  Note: the value here has to be inside on of the prefixes in
-  datadog.trace.agent.tooling.Utils#BOOTSTRAP_PACKAGE_PREFIXES. This ensures that 'isolating' (or 'module')
-  classloaders like jboss and osgi see injected classes. This works because we instrument those classloaders
-  to load everything inside bootstrap packages.
+  /**
+   * Note: the value here has to be inside on of the prefixes in
+   * datadog.trace.agent.tooling.Utils#BOOTSTRAP_PACKAGE_PREFIXES. This ensures that 'isolating' (or
+   * 'module') classloaders like jboss and osgi see injected classes. This works because we
+   * instrument those classloaders to load everything inside bootstrap packages.
    */
   private static final String DYNAMIC_CLASSES_PACKAGE =
       "datadog.trace.bootstrap.instrumentation.context.";
+
   private static final String INJECTED_FIELDS_MARKER_CLASS_NAME =
       Utils.getInternalName(FieldBackedContextStoreAppliedMarker.class.getName());
 
@@ -101,8 +102,12 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   /** fields-accessor-interface-name -> fields-accessor-interface-dynamic-type */
   private final Map<String, DynamicType.Unloaded<?>> fieldAccessorInterfaces;
 
+  private final AgentBuilder.Transformer fieldAccessorInterfacesInjector;
+
   /** context-store-type-name -> context-store-type-name-dynamic-type */
   private final Map<String, DynamicType.Unloaded<?>> contextStoreImplementations;
+
+  private final AgentBuilder.Transformer contextStoreImplementationsInjector;
 
   private final boolean fieldInjectionEnabled;
 
@@ -110,7 +115,10 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     this.instrumenter = instrumenter;
     byteBuddy = new ByteBuddy();
     fieldAccessorInterfaces = generateFieldAccessorInterfaces();
+    fieldAccessorInterfacesInjector = bootstrapHelperInjector(fieldAccessorInterfaces.values());
     contextStoreImplementations = generateContextStoreImplementationClasses();
+    contextStoreImplementationsInjector =
+        bootstrapHelperInjector(contextStoreImplementations.values());
     fieldInjectionEnabled = Config.get().isRuntimeContextFieldInjection();
   }
 
@@ -118,50 +126,15 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
   public AgentBuilder.Identified.Extendable instrumentationTransformer(
       AgentBuilder.Identified.Extendable builder) {
     if (instrumenter.contextStore().size() > 0) {
-      /*
-      Install transformer that rewrites accesses to context store with specialized bytecode that invokes appropriate
-      storage implementation.
+      /**
+       * Install transformer that rewrites accesses to context store with specialized bytecode that
+       * invokes appropriate storage implementation.
        */
       builder =
           builder.transform(getTransformerForASMVisitor(getContextStoreReadsRewritingVisitor()));
-
-      /*
-      We inject into bootstrap classloader because field accessor interfaces are needed by
-      context store implementations. Unfortunately this forces us to remove stored type checking
-      because actual classes may not be available at this point.
-       */
-      builder = builder.transform(bootstrapHelperInjector(fieldAccessorInterfaces.values()));
-
-      /*
-       * We inject context store implementation into bootstrap classloader because same implementation
-       * may be used by different instrumentations and it has to use same static map in case of
-       * fallback to map-backed storage.
-       */
-      builder = builder.transform(bootstrapHelperInjector(contextStoreImplementations.values()));
+      builder = injectHelpersIntoBootstrapClassloader(builder);
     }
     return builder;
-  }
-
-  /** Get transformer that forces helper injection onto bootstrap classloader. */
-  private AgentBuilder.Transformer bootstrapHelperInjector(
-      final Collection<DynamicType.Unloaded<?>> helpers) {
-    return new AgentBuilder.Transformer() {
-      final HelperInjector injector = HelperInjector.forDynamicTypes(helpers);
-
-      @Override
-      public DynamicType.Builder<?> transform(
-          final DynamicType.Builder<?> builder,
-          final TypeDescription typeDescription,
-          final ClassLoader classLoader,
-          final JavaModule module) {
-        return injector.transform(
-            builder,
-            typeDescription,
-            // context store implementation classes will always go to the bootstrap
-            BOOTSTRAP_CLASSLOADER,
-            module);
-      }
-    };
   }
 
   private AsmVisitorWrapper getContextStoreReadsRewritingVisitor() {
@@ -327,15 +300,55 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
     };
   }
 
+  private AgentBuilder.Identified.Extendable injectHelpersIntoBootstrapClassloader(
+      AgentBuilder.Identified.Extendable builder) {
+    /**
+     * We inject into bootstrap classloader because field accessor interfaces are needed by context
+     * store implementations. Unfortunately this forces us to remove stored type checking because
+     * actual classes may not be available at this point.
+     */
+    builder = builder.transform(fieldAccessorInterfacesInjector);
+
+    /**
+     * We inject context store implementation into bootstrap classloader because same implementation
+     * may be used by different instrumentations and it has to use same static map in case of
+     * fallback to map-backed storage.
+     */
+    builder = builder.transform(contextStoreImplementationsInjector);
+    return builder;
+  }
+
+  /** Get transformer that forces helper injection onto bootstrap classloader. */
+  private AgentBuilder.Transformer bootstrapHelperInjector(
+      final Collection<DynamicType.Unloaded<?>> helpers) {
+    return new AgentBuilder.Transformer() {
+      final HelperInjector injector = HelperInjector.forDynamicTypes(helpers);
+
+      @Override
+      public DynamicType.Builder<?> transform(
+          final DynamicType.Builder<?> builder,
+          final TypeDescription typeDescription,
+          final ClassLoader classLoader,
+          final JavaModule module) {
+        return injector.transform(
+            builder,
+            typeDescription,
+            // context store implementation classes will always go to the bootstrap
+            BOOTSTRAP_CLASSLOADER,
+            module);
+      }
+    };
+  }
+
   @Override
   public AgentBuilder.Identified.Extendable additionalInstrumentation(
       AgentBuilder.Identified.Extendable builder) {
 
     if (fieldInjectionEnabled) {
       for (final Map.Entry<String, String> entry : instrumenter.contextStore().entrySet()) {
-        /*
-        For each context store defined in a current instrumentation we create an agent builder
-        that injects necessary fields.
+        /**
+         * For each context store defined in a current instrumentation we create an agent builder
+         * that injects necessary fields.
          */
         builder =
             builder
@@ -343,9 +356,19 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                     safeHasSuperType(named(entry.getKey())).and(not(isInterface())),
                     instrumenter.classLoaderMatcher())
                 .and(safeToInjectFieldsMatcher())
-                .transform(
-                    getTransformerForASMVisitor(
-                        getFieldInjectionVisitor(entry.getKey(), entry.getValue())));
+                .transform(AgentBuilder.Transformer.NoOp.INSTANCE);
+
+        /**
+         * We inject helpers here as well as when instrumentation is applied to ensure that helpers
+         * are present even if instrumented classes are not loaded, but classes with state fields
+         * added are loaded (e.g. sun.net.www.protocol.https.HttpsURLConnectionImpl).
+         */
+        builder = injectHelpersIntoBootstrapClassloader(builder);
+
+        builder =
+            builder.transform(
+                getTransformerForASMVisitor(
+                    getFieldInjectionVisitor(entry.getKey(), entry.getValue())));
       }
     }
     return builder;
@@ -360,13 +383,14 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           final JavaModule module,
           final Class<?> classBeingRedefined,
           final ProtectionDomain protectionDomain) {
-        /*
-        The idea here is that we can add fields if class is just being loaded (classBeingRedefined == null)
-        and we have to add same fields again if class we added fields before is being transformed again.
-        Note: here we assume that Class#getInterfaces() returns list of interfaces defined immediately on a
-        given class, not inherited from its parents. It looks like current JVM implementation does exactly
-        this but javadoc is not explicit about that.
-        */
+        /**
+         * The idea here is that we can add fields if class is just being loaded
+         * (classBeingRedefined == null) and we have to add same fields again if class we added
+         * fields before is being transformed again. Note: here we assume that Class#getInterfaces()
+         * returns list of interfaces defined immediately on a given class, not inherited from its
+         * parents. It looks like current JVM implementation does exactly this but javadoc is not
+         * explicit about that.
+         */
         return classBeingRedefined == null
             || Arrays.asList(classBeingRedefined.getInterfaces())
                 .contains(FieldBackedContextStoreAppliedMarker.class);
@@ -404,9 +428,13 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           private final TypeDescription contextType =
               new TypeDescription.ForLoadedType(Object.class);
           private final String fieldName = getContextFieldName(keyClassName);
+          private final String getterMethodName = getContextGetterName(keyClassName);
+          private final String setterMethodName = getContextSetterName(keyClassName);
           private final TypeDescription interfaceType =
               getFieldAccessorInterface(keyClassName, contextClassName);
           private boolean foundField = false;
+          private boolean foundGetter = false;
+          private boolean foundSetter = false;
 
           @Override
           public void visit(
@@ -439,11 +467,31 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
           }
 
           @Override
+          public MethodVisitor visitMethod(
+              int access, String name, String descriptor, String signature, String[] exceptions) {
+            if (name.equals(getterMethodName)) {
+              foundGetter = true;
+            }
+            if (name.equals(setterMethodName)) {
+              foundSetter = true;
+            }
+            return super.visitMethod(access, name, descriptor, signature, exceptions);
+          }
+
+          @Override
           public void visitEnd() {
+            // Checking only for field existence is not enough as libraries like CGLIB only copy
+            // public/protected methods and not fields (neither public nor private ones) when
+            // they enhance a class.
+            // For this reason we check separately for the field and for the two accessors.
             if (!foundField) {
               cv.visitField(
                   Opcodes.ACC_PRIVATE, fieldName, contextType.getDescriptor(), null, null);
+            }
+            if (!foundGetter) {
               addGetter();
+            }
+            if (!foundSetter) {
               addSetter();
             }
             super.visitEnd();
@@ -451,7 +499,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           /** Just 'standard' getter implementation */
           private void addGetter() {
-            final MethodVisitor mv = getAccessorMethodVisitor(getContextGetterName(keyClassName));
+            final MethodVisitor mv = getAccessorMethodVisitor(getterMethodName);
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitFieldInsn(
@@ -466,7 +514,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           /** Just 'standard' setter implementation */
           private void addSetter() {
-            final MethodVisitor mv = getAccessorMethodVisitor(getContextSetterName(keyClassName));
+            final MethodVisitor mv = getAccessorMethodVisitor(setterMethodName);
             mv.visitCode();
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitVarInsn(Opcodes.ALOAD, 1);

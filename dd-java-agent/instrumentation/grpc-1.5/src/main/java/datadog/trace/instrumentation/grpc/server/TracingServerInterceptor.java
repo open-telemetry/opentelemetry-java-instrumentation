@@ -140,7 +140,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void onCancel() {
       // Finishes span.
-      try (final Scope scope = tracer.scopeManager().activate(span, true)) {
+      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
         if (scope instanceof TraceScope) {
           ((TraceScope) scope).setAsyncPropagation(true);
         }
@@ -149,19 +149,19 @@ public class TracingServerInterceptor implements ServerInterceptor {
         if (scope instanceof TraceScope) {
           ((TraceScope) scope).setAsyncPropagation(false);
         }
-        DECORATE.beforeFinish(span);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
+        throw e;
+      } finally {
         DECORATE.beforeFinish(span);
         span.finish();
-        throw e;
       }
     }
 
     @Override
     public void onComplete() {
       // Finishes span.
-      try (final Scope scope = tracer.scopeManager().activate(span, true)) {
+      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
         if (scope instanceof TraceScope) {
           ((TraceScope) scope).setAsyncPropagation(true);
         }
@@ -169,12 +169,12 @@ public class TracingServerInterceptor implements ServerInterceptor {
         if (scope instanceof TraceScope) {
           ((TraceScope) scope).setAsyncPropagation(false);
         }
-        DECORATE.beforeFinish(span);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
+        throw e;
+      } finally {
         DECORATE.beforeFinish(span);
         span.finish();
-        throw e;
       }
     }
 

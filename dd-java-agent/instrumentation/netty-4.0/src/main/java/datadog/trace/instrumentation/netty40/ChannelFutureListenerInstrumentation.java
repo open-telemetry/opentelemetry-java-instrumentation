@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.netty40;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -12,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator;
 import io.netty.channel.ChannelFuture;
 import io.opentracing.Scope;
 import io.opentracing.Span;
@@ -43,6 +43,14 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
     return new String[] {
       packageName + ".AttributeKeys",
       "datadog.trace.agent.decorator.BaseDecorator",
+      // client helpers
+      "datadog.trace.agent.decorator.ClientDecorator",
+      "datadog.trace.agent.decorator.HttpClientDecorator",
+      packageName + ".client.NettyHttpClientDecorator",
+      packageName + ".client.NettyResponseInjectAdapter",
+      packageName + ".client.HttpClientRequestTracingHandler",
+      packageName + ".client.HttpClientResponseTracingHandler",
+      packageName + ".client.HttpClientTracingHandler",
       // server helpers
       "datadog.trace.agent.decorator.ServerDecorator",
       "datadog.trace.agent.decorator.HttpServerDecorator",
@@ -83,18 +91,20 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       if (continuation == null) {
         return null;
       }
-      final TraceScope scope = continuation.activate();
+      final TraceScope parentScope = continuation.activate();
 
       final Span errorSpan =
           GlobalTracer.get()
               .buildSpan("netty.connect")
               .withTag(Tags.COMPONENT.getKey(), "netty")
               .start();
-      Tags.ERROR.set(errorSpan, true);
-      errorSpan.log(singletonMap(ERROR_OBJECT, cause));
-      errorSpan.finish();
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(errorSpan, false)) {
+        NettyHttpServerDecorator.DECORATE.onError(errorSpan, cause);
+        NettyHttpServerDecorator.DECORATE.beforeFinish(errorSpan);
+        errorSpan.finish();
+      }
 
-      return scope;
+      return parentScope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

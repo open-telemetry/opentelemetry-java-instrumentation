@@ -19,20 +19,18 @@ apply from: "${rootDir}/gradle/java.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
-  // features used in test_1_11_106 (builder) is available since 1.11.84, but
+  // Features used in test_1_11_106 (builder) is available since 1.11.84, but
   // using 1.11.106 because of previous concerns with byte code differences
   // in 1.11.106, also, the DeleteOptionGroup request generates more spans
-  // in 1.11.106 than 1.11.84
-  test_1_11_106
+  // in 1.11.106 than 1.11.84.
+  // We test older version in separate test set to test newer version and latest deps in the 'default'
+  // test dir. Otherwise we get strange warnings in Idea.
+  test_before_1_11_106 {
+    dirName = 'test_before_1_11_106'
+  }
 
   latestDepTest {
-    dirName = 'test_1_11_106'
-  }
-}
-
-configurations.test_1_11_106Compile {
-  resolutionStrategy {
-    force group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.106'
+    dirName = 'test'
   }
 }
 
@@ -49,19 +47,23 @@ dependencies {
   testCompile project(':dd-java-agent:testing')
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
-  testCompile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.0'
-  testCompile group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.0'
-  testCompile group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.0'
+  testCompile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.106'
+  testCompile group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.106'
+  testCompile group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.106'
 
-  test_1_11_106Compile project(':dd-java-agent:testing')
-  test_1_11_106Compile project(':dd-java-agent:instrumentation:apache-httpclient-4')
-  test_1_11_106Compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.106'
-  test_1_11_106Compile group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.106'
-  test_1_11_106Compile group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.106'
+  test_before_1_11_106Compile(group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.0') {
+    force = true
+  }
+  test_before_1_11_106Compile(group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '1.11.0') {
+    force = true
+  }
+  test_before_1_11_106Compile(group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '1.11.0') {
+    force = true
+  }
 
-  latestDepTestCompile project(':dd-java-agent:testing')
-  latestDepTestCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
   latestDepTestCompile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '+'
   latestDepTestCompile group: 'com.amazonaws', name: 'aws-java-sdk-rds', version: '+'
   latestDepTestCompile group: 'com.amazonaws', name: 'aws-java-sdk-ec2', version: '+'
 }
+
+test.dependsOn test_before_1_11_106

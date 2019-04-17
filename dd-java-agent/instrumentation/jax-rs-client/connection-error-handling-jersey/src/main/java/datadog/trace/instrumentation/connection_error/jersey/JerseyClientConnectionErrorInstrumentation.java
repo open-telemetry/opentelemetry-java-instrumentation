@@ -81,9 +81,9 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void handleError(
         @Advice.FieldValue("requestContext") final ClientRequest context,
-        @Advice.Return(readOnly = false) Future future) {
+        @Advice.Return(readOnly = false) Future<?> future) {
       if (!(future instanceof WrappedFuture)) {
-        future = new WrappedFuture(future, context);
+        future = new WrappedFuture<>(future, context);
       }
     }
   }
