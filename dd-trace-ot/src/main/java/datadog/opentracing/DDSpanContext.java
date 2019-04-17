@@ -359,13 +359,14 @@ public class DDSpanContext implements io.opentracing.SpanContext {
    * @param value
    */
   private void processForcedTracingTag(final String tag, Object value) {
-    if (!(value instanceof Boolean)) {
+    // The API that we expose is just .setTag(<name>, true);
+    if (!(value instanceof Boolean) || !(boolean)value) {
       return;
     }
 
-    if (tag.equals(ForcedTracing.manual_KEEP) && (boolean)value) {
+    if (tag.equals(ForcedTracing.manual_KEEP)) {
       this.setSamplingPriority(PrioritySampling.USER_KEEP);
-    } else if (tag.equals(ForcedTracing.manual_DROP) && (boolean)value) {
+    } else if (tag.equals(ForcedTracing.manual_DROP)) {
       this.setSamplingPriority(PrioritySampling.USER_DROP);
     }
   }
