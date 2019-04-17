@@ -3,6 +3,7 @@ package datadog.opentracing;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.trace.api.DDTags;
+import datadog.trace.api.sampling.ForcedTracing;
 import datadog.trace.api.sampling.PrioritySampling;
 import java.util.Collections;
 import java.util.List;
@@ -202,6 +203,13 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       } else {
         setMetric(PRIORITY_SAMPLING_KEY, newPriority);
         log.debug("Set sampling priority to {}", getMetrics().get(PRIORITY_SAMPLING_KEY));
+
+        // Keep in sync forced tracing tags with sampling priority
+        if (newPriority == PrioritySampling.USER_KEEP) {
+          tags.put(ForcedTracing.manual_KEEP, true);
+        } else if (newPriority == PrioritySampling.USER_DROP) {
+          tags.put(ForcedTracing.manual_DROP, true);
+        }
       }
     }
   }
@@ -313,6 +321,15 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       return;
     }
 
+    // For priority sampling we use tags ForcedTracing#manual_DROP and ForcedTracing#manual_KEEP as vectors to set the
+    // respective priority sample values. A decorator is not a viable option to achieve this as handles primarily tags
+    // and does not expose an API to perform more complex operations. We may want to revisit this functionality, but for
+    // now we do it manually here.
+    if (tag.equals(ForcedTracing.manual_KEEP) || tag.equals(ForcedTracing.manual_DROP)) {
+      this.processForcedTracingTag(tag, value);
+      return;
+    }
+
     boolean addTag = true;
 
     // Call decorators
@@ -332,6 +349,24 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
     if (addTag) {
       tags.put(tag, value);
+    }
+  }
+
+  /**
+   * Sets priority sampling based on the forced tracing tag provided by the user.
+   *
+   * @param tag
+   * @param value
+   */
+  private void processForcedTracingTag(final String tag, Object value) {
+    if (!(value instanceof Boolean)) {
+      return;
+    }
+
+    if (tag.equals(ForcedTracing.manual_KEEP) && (boolean)value) {
+      this.setSamplingPriority(PrioritySampling.USER_KEEP);
+    } else if (tag.equals(ForcedTracing.manual_DROP) && (boolean)value) {
+      this.setSamplingPriority(PrioritySampling.USER_DROP);
     }
   }
 
