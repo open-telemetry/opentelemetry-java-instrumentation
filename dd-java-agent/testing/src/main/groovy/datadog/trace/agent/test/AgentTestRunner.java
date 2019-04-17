@@ -19,7 +19,6 @@ import groovy.transform.stc.SimpleType;
 import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -85,8 +84,6 @@ public abstract class AgentTestRunner extends Specification {
 
     TEST_WRITER =
         new ListWriter() {
-          private static final long serialVersionUID = 705972961882897201L;
-
           @Override
           public boolean add(final List<DDSpan> trace) {
             final boolean result = super.add(trace);
@@ -197,14 +194,6 @@ public abstract class AgentTestRunner extends Specification {
               options = "datadog.trace.agent.test.asserts.ListWriterAssert")
           @DelegatesTo(value = ListWriterAssert.class, strategy = Closure.DELEGATE_FIRST)
           final Closure spec) {
-    final Iterator<List<DDSpan>> iterator = TEST_WRITER.iterator();
-    while (iterator.hasNext()) {
-      final List<DDSpan> next = iterator.next();
-      final Iterator<DDSpan> iterator1 = next.iterator();
-      while (iterator1.hasNext()) {
-        System.out.println(iterator1.next());
-      }
-    }
     ListWriterAssert.assertTraces(TEST_WRITER, size, spec);
   }
 
@@ -276,8 +265,6 @@ public abstract class AgentTestRunner extends Specification {
 
     /** Used to signal that a transformation was intentionally aborted and is not an error. */
     public static class AbortTransformationException extends RuntimeException {
-      private static final long serialVersionUID = -1849465286193994582L;
-
       public AbortTransformationException() {
         super();
       }
