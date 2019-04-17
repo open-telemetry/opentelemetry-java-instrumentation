@@ -321,10 +321,10 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       return;
     }
 
-    // For priority sampling we use tags ForcedTracing#manual_DROP and ForcedTracing#manual_KEEP as vectors to set the
-    // respective priority sample values. A decorator is not a viable option to achieve this as handles primarily tags
-    // and does not expose an API to perform more complex operations. We may want to revisit this functionality, but for
-    // now we do it manually here.
+    // For priority sampling we use tags ForcedTracing#manual_DROP and ForcedTracing#manual_KEEP as
+    // vectors to set the respective priority sample values. A decorator is not a viable option to
+    // achieve this as handles primarily tags and does not expose an API to perform more complex
+    // operations. We may want to revisit this functionality, but for now we do it manually here.
     if (tag.equals(ForcedTracing.manual_KEEP) || tag.equals(ForcedTracing.manual_DROP)) {
       this.processForcedTracingTag(tag, value);
       return;
@@ -360,7 +360,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
    */
   private void processForcedTracingTag(final String tag, Object value) {
     // The API that we expose is just .setTag(<name>, true);
-    if (!(value instanceof Boolean) || !(boolean)value) {
+    if (!(value instanceof Boolean) || !(boolean) value) {
       return;
     }
 
