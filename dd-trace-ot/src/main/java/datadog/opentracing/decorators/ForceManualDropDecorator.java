@@ -16,7 +16,7 @@ public class ForceManualDropDecorator extends AbstractDecorator {
 
   @Override
   public boolean shouldSetTag(final DDSpanContext context, final String tag, final Object value) {
-    if (value instanceof Boolean && (boolean)value) {
+    if (value instanceof Boolean && (boolean) value) {
       context.setSamplingPriority(PrioritySampling.USER_DROP);
     }
     return false;

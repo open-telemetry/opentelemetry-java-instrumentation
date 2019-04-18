@@ -23,7 +23,6 @@ public class DDDecoratorsFactory {
         new Status404Decorator(),
         new URLAsResourceName(),
         new ForceManualKeepDecorator(),
-        new ForceManualDropDecorator()
-    );
+        new ForceManualDropDecorator());
   }
 }
