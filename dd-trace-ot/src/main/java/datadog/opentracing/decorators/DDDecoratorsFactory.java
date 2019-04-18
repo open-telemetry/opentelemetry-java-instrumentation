@@ -21,6 +21,9 @@ public class DDDecoratorsFactory {
         new SpanTypeDecorator(),
         new Status5XXDecorator(),
         new Status404Decorator(),
-        new URLAsResourceName());
+        new URLAsResourceName(),
+        new ForceManualKeepDecorator(),
+        new ForceManualDropDecorator()
+    );
   }
 }

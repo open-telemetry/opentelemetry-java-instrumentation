@@ -230,9 +230,7 @@ class DDSpanTest extends Specification {
     }
 
     expect:
-    // Tag and sampling priority kept in sync
     span.getSamplingPriority() == expectedPriority
-    span.getTags()[tagName] == true
 
     cleanup:
     span.finish()
@@ -266,20 +264,5 @@ class DDSpanTest extends Specification {
     'manual.keep' | false
     'manual.drop' | 1
     'manual.keep' | 1
-  }
-
-  def "setting sampling priority via deprecated method keep tag in sync"() {
-
-    setup:
-    def span = tracer.buildSpan("root").start()
-    span.samplingPriority = PrioritySampling.USER_KEEP
-
-    expect:
-    // Tag and sampling priority kept in sync
-    span.getSamplingPriority() == PrioritySampling.USER_KEEP
-    span.getTags()['manual.keep'] == true
-
-    cleanup:
-    span.finish()
   }
 }

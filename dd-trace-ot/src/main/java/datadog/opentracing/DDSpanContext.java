@@ -203,13 +203,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       } else {
         setMetric(PRIORITY_SAMPLING_KEY, newPriority);
         log.debug("Set sampling priority to {}", getMetrics().get(PRIORITY_SAMPLING_KEY));
-
-        // Keep in sync forced tracing tags with sampling priority
-        if (newPriority == PrioritySampling.USER_KEEP) {
-          tags.put(ForcedTracing.manual_KEEP, true);
-        } else if (newPriority == PrioritySampling.USER_DROP) {
-          tags.put(ForcedTracing.manual_DROP, true);
-        }
       }
     }
   }
@@ -318,15 +311,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   public synchronized void setTag(final String tag, final Object value) {
     if (value == null || (value instanceof String && ((String) value).isEmpty())) {
       tags.remove(tag);
-      return;
-    }
-
-    // For priority sampling we use tags ForcedTracing#manual_DROP and ForcedTracing#manual_KEEP as
-    // vectors to set the respective priority sample values. A decorator is not a viable option to
-    // achieve this as handles primarily tags and does not expose an API to perform more complex
-    // operations. We may want to revisit this functionality, but for now we do it manually here.
-    if (tag.equals(ForcedTracing.manual_KEEP) || tag.equals(ForcedTracing.manual_DROP)) {
-      this.processForcedTracingTag(tag, value);
       return;
     }
 
