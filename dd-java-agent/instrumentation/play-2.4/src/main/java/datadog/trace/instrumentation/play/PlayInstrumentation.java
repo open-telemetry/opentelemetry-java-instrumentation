@@ -91,6 +91,7 @@ public final class PlayInstrumentation extends Instrumenter.Default {
         scope = GlobalTracer.get().buildSpan("play.request").startActive(false);
       }
       DECORATE.afterStart(scope);
+      DECORATE.onConnection(scope.span(), req);
 
       if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
         ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true);

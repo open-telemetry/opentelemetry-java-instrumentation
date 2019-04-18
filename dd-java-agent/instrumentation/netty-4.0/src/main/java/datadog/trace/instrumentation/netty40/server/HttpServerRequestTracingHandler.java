@@ -12,7 +12,6 @@ import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.GlobalTracer;
-import java.net.InetSocketAddress;
 
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
@@ -23,7 +22,6 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       return;
     }
     final HttpRequest request = (HttpRequest) msg;
-    final InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
 
     final SpanContext extractedContext =
         GlobalTracer.get()
@@ -33,8 +31,8 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
         GlobalTracer.get().buildSpan("netty.request").asChildOf(extractedContext).start();
     try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
       DECORATE.afterStart(span);
+      DECORATE.onConnection(span, ctx.channel());
       DECORATE.onRequest(span, request);
-      DECORATE.onPeerConnection(span, remoteAddress);
 
       if (scope instanceof TraceScope) {
         ((TraceScope) scope).setAsyncPropagation(true);

@@ -1,14 +1,19 @@
 package datadog.trace.instrumentation.ratpack;
 
+import com.google.common.net.HostAndPort;
 import datadog.trace.agent.decorator.HttpServerDecorator;
 import datadog.trace.api.DDTags;
 import io.opentracing.Span;
+import java.net.URI;
+import lombok.extern.slf4j.Slf4j;
 import ratpack.handling.Context;
 import ratpack.http.Request;
 import ratpack.http.Response;
 import ratpack.http.Status;
+import ratpack.server.PublicAddress;
 
-public class RatpackServerDecorator extends HttpServerDecorator<Request, Response> {
+@Slf4j
+public class RatpackServerDecorator extends HttpServerDecorator<Request, Request, Response> {
   public static final RatpackServerDecorator DECORATE = new RatpackServerDecorator();
 
   @Override
@@ -27,18 +32,27 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Respons
   }
 
   @Override
-  protected String url(final Request request) {
-    return request.getUri();
+  protected URI url(final Request request) {
+    final HostAndPort address = request.getLocalAddress();
+    // This call implicitly uses request via a threadlocal provided by ratpack.
+    final PublicAddress publicAddress =
+        PublicAddress.inferred(address.getPort() == 443 ? "https" : "http");
+    return publicAddress.get(request.getPath());
   }
 
   @Override
-  protected String hostname(final Request request) {
-    return null;
+  protected String peerHostname(final Request request) {
+    return request.getRemoteAddress().getHostText();
   }
 
   @Override
-  protected Integer port(final Request request) {
-    return null;
+  protected String peerHostIP(final Request request) {
+    return request.getRemoteAddress().getHostText();
+  }
+
+  @Override
+  protected Integer peerPort(final Request request) {
+    return request.getRemoteAddress().getPort();
   }
 
   @Override

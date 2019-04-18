@@ -56,8 +56,9 @@ class SparkJavaBasedTest extends AgentTestRunner {
             "component" "jetty-handler"
             "span.origin.type" spark.embeddedserver.jetty.JettyHandler.name
             "http.status_code" 200
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             defaultTags()
           }
         }

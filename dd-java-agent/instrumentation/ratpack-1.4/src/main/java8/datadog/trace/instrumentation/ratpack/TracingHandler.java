@@ -40,6 +40,7 @@ public final class TracingHandler implements Handler {
     // Relying on executor instrumentation to assume the netty span is in context as the parent.
     final Span ratpackSpan = tracer.buildSpan("ratpack.handler").start();
     DECORATE.afterStart(ratpackSpan);
+    DECORATE.onConnection(ratpackSpan, request);
     DECORATE.onRequest(ratpackSpan, request);
 
     try (final Scope scope = tracer.scopeManager().activate(ratpackSpan, false)) {

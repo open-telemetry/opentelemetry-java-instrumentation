@@ -36,10 +36,12 @@ public class JettyHandlerAdvice {
             .withTag("span.origin.type", source.getClass().getName())
             .startActive(false);
 
-    DECORATE.afterStart(scope.span());
-    DECORATE.onRequest(scope.span(), req);
+    final Span span = scope.span();
+    DECORATE.afterStart(span);
+    DECORATE.onConnection(span, req);
+    DECORATE.onRequest(span, req);
     final String resourceName = req.getMethod() + " " + source.getClass().getName();
-    scope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
+    span.setTag(DDTags.RESOURCE_NAME, resourceName);
 
     if (scope instanceof TraceScope) {
       ((TraceScope) scope).setAsyncPropagation(true);

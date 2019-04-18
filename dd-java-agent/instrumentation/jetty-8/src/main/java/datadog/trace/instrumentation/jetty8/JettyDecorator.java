@@ -2,10 +2,12 @@ package datadog.trace.instrumentation.jetty8;
 
 import datadog.trace.agent.decorator.HttpServerDecorator;
 import io.opentracing.Span;
+import java.net.URI;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class JettyDecorator extends HttpServerDecorator<HttpServletRequest, HttpServletResponse> {
+public class JettyDecorator
+    extends HttpServerDecorator<HttpServletRequest, HttpServletRequest, HttpServletResponse> {
   public static final JettyDecorator DECORATE = new JettyDecorator();
 
   @Override
@@ -24,18 +26,23 @@ public class JettyDecorator extends HttpServerDecorator<HttpServletRequest, Http
   }
 
   @Override
-  protected String url(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getRequestURL().toString();
+  protected URI url(final HttpServletRequest httpServletRequest) {
+    return URI.create(httpServletRequest.getRequestURL().toString());
   }
 
   @Override
-  protected String hostname(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getServerName();
+  protected String peerHostname(final HttpServletRequest httpServletRequest) {
+    return httpServletRequest.getRemoteHost();
   }
 
   @Override
-  protected Integer port(final HttpServletRequest httpServletRequest) {
-    return httpServletRequest.getServerPort();
+  protected String peerHostIP(final HttpServletRequest httpServletRequest) {
+    return httpServletRequest.getRemoteAddr();
+  }
+
+  @Override
+  protected Integer peerPort(final HttpServletRequest httpServletRequest) {
+    return httpServletRequest.getRemotePort();
   }
 
   @Override

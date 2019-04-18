@@ -69,8 +69,6 @@ class LagomTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" 101
             "$Tags.HTTP_URL.key" "ws://localhost:${server.port()}/echo"
             "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.port()
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
           }
@@ -109,8 +107,6 @@ class LagomTest extends AgentTestRunner {
             "$Tags.HTTP_STATUS.key" 500
             "$Tags.HTTP_URL.key" "ws://localhost:${server.port()}/error"
             "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.port()
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT.key" "akka-http-server"
             "$Tags.ERROR.key" true

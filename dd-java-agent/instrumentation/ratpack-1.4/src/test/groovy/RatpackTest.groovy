@@ -1,3 +1,7 @@
+import static datadog.trace.agent.test.server.http.TestHttpServer.distributedRequestTrace
+import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
+
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
@@ -7,6 +11,8 @@ import io.opentracing.Scope
 import io.opentracing.Span
 import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
+import java.util.concurrent.CountDownLatch
+import java.util.regex.Pattern
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -18,13 +24,6 @@ import ratpack.http.HttpUrlBuilder
 import ratpack.http.client.HttpClient
 import ratpack.path.PathBinding
 import ratpack.test.exec.ExecHarness
-
-import java.util.concurrent.CountDownLatch
-import java.util.regex.Pattern
-
-import static datadog.trace.agent.test.server.http.TestHttpServer.distributedRequestTrace
-import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
-import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 
 class RatpackTest extends AgentTestRunner {
 
@@ -84,7 +83,9 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "/"
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_PORT.key" Integer
             defaultTags()
           }
         }
@@ -97,7 +98,7 @@ class RatpackTest extends AgentTestRunner {
     def app = GroovyEmbeddedApp.ratpack {
       handlers {
         prefix(":foo/:bar?") {
-          get("baz") { ctx ->
+          get("baz") {ctx ->
             context.render(ctx.get(PathBinding).description)
           }
         }
@@ -148,7 +149,9 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "/a/b/baz"
+            "$Tags.HTTP_URL.key" "${app.address}a/b/baz"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_PORT.key" Integer
             defaultTags()
           }
         }
@@ -208,7 +211,9 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 500
-            "$Tags.HTTP_URL.key" "/"
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_PORT.key" Integer
             errorTags(HandlerException, Pattern.compile("java.lang.ArithmeticException: Division( is)? undefined"))
             defaultTags()
           }
@@ -273,7 +278,9 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 500
-            "$Tags.HTTP_URL.key" "/"
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_PORT.key" Integer
             "$Tags.ERROR.key" true
             defaultTags()
           }
@@ -336,7 +343,9 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 500
-            "$Tags.HTTP_URL.key" "/"
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_PORT.key" Integer
             "$Tags.ERROR.key" true
             defaultTags()
           }
@@ -364,17 +373,17 @@ class RatpackTest extends AgentTestRunner {
 
     def app = GroovyEmbeddedApp.ratpack {
       handlers {
-        get { HttpClient httpClient ->
+        get {HttpClient httpClient ->
           // 1st internal http client call to nested
           httpClient.get(HttpUrlBuilder.base(external.address).path("nested").build())
-            .map { it.body.text }
-            .flatMap { t ->
-            // make a 2nd http request and concatenate the two bodies together
-            httpClient.get(HttpUrlBuilder.base(external.address).path("nested2").build()) map { t + it.body.text }
-          }
-          .then {
-            context.render(it)
-          }
+            .map {it.body.text}
+            .flatMap {t ->
+              // make a 2nd http request and concatenate the two bodies together
+              httpClient.get(HttpUrlBuilder.base(external.address).path("nested2").build()) map {t + it.body.text}
+            }
+            .then {
+              context.render(it)
+            }
         }
       }
     }
@@ -430,7 +439,9 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "/"
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_PORT.key" Integer
             defaultTags()
           }
         }
@@ -484,12 +495,12 @@ class RatpackTest extends AgentTestRunner {
 
     def app = GroovyEmbeddedApp.ratpack {
       handlers {
-        get { HttpClient httpClient ->
+        get {HttpClient httpClient ->
           httpClient.get(badAddress)
-            .map { it.body.text }
+            .map {it.body.text}
             .then {
-            context.render(it)
-          }
+              context.render(it)
+            }
         }
       }
     }
@@ -538,7 +549,9 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 500
-            "$Tags.HTTP_URL.key" "/"
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_PORT.key" Integer
             errorTags(ConnectException, String)
             defaultTags()
           }
@@ -641,7 +654,9 @@ class RatpackTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "/"
+            "$Tags.HTTP_URL.key" "$app.address"
+            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
+            "$Tags.PEER_PORT.key" Integer
             defaultTags()
           }
         }
@@ -665,11 +680,11 @@ class RatpackTest extends AgentTestRunner {
       scope.span().setBaggageItem("test-baggage", "foo")
       ParallelBatch.of(testPromise(), testPromise())
         .yield()
-        .map({ now ->
-        // close the scope now that we got the baggage inside the promises
-        scope.close()
-        return now
-      })
+        .map({now ->
+          // close the scope now that we got the baggage inside the promises
+          scope.close()
+          return now
+        })
     })
 
     then:
