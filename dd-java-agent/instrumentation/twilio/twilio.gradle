@@ -1,0 +1,35 @@
+muzzle {
+  pass {
+    group = 'com.twilio.sdk'
+    module = 'twilio'
+    versions = "(,)"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest
+}
+
+dependencies {
+  compileOnly group: 'com.twilio.sdk', name: 'twilio', version: '0.0.1'
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile group: 'com.twilio.sdk', name: 'twilio', version: '0.0.1'
+  testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6' // Last version to support Java7
+  testCompile group: 'nl.jqno.equalsverifier', name: 'equalsverifier', version: '2.5.2' // Last version to support Java7
+
+  latestDepTestCompile group: 'com.twilio.sdk', name: 'twilio', version: '+'
+}

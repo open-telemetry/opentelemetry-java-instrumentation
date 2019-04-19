@@ -69,6 +69,9 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
       "io.netty.util.concurrent.SingleThreadEventExecutor",
       "io.netty.channel.nio.NioEventLoop",
       "io.netty.channel.SingleThreadEventLoop",
+      "com.google.common.util.concurrent.AbstractListeningExecutorService",
+      "com.google.common.util.concurrent.MoreExecutors$ListeningDecorator",
+      "com.google.common.util.concurrent.MoreExecutors$ScheduledListeningDecorator",
     };
     WHITELISTED_EXECUTORS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(whitelist)));
 
