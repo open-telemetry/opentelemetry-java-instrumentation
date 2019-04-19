@@ -335,6 +335,10 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     }
   }
 
+  public synchronized Map<String, Object> getTags() {
+    return Collections.unmodifiableMap(tags);
+  }
+
   @Override
   public String toString() {
     final StringBuilder s =
