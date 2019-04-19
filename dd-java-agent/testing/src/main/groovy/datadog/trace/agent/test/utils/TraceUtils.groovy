@@ -62,6 +62,13 @@ class TraceUtils {
     }
   }
 
+  /**
+   * Calling will reset the runtimeId too, so it might cause problems around runtimeId verification.
+   */
+  static void resetConfig() {
+    setFinalStatic(Config.getDeclaredField("INSTANCE"), new Config())
+  }
+
   private static void setFinalStatic(final Field field, final Object newValue) throws Exception {
     setFinal(field, null, newValue)
   }

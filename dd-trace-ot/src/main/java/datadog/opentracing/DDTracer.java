@@ -243,19 +243,18 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       }
     }
 
-    registerClassLoader(ClassLoader.getSystemClassLoader());
+    log.info("New instance: {}", this);
 
     final List<AbstractDecorator> decorators = DDDecoratorsFactory.createBuiltinDecorators();
     for (final AbstractDecorator decorator : decorators) {
-      log.debug("Loading decorator: {}", decorator.getClass().getSimpleName());
       addDecorator(decorator);
     }
+
+    registerClassLoader(ClassLoader.getSystemClassLoader());
 
     // Ensure that PendingTrace.SPAN_CLEANER is initialized in this thread:
     // FIXME: add test to verify the span cleaner thread is started with this call.
     PendingTrace.initialize();
-
-    log.info("New instance: {}", this);
   }
 
   @Override
@@ -291,6 +290,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     list.add(decorator);
 
     spanContextDecorators.put(decorator.getMatchingTag(), list);
+    log.debug(
+        "Decorator added: '{}' -> {}", decorator.getMatchingTag(), decorator.getClass().getName());
   }
 
   @Deprecated
