@@ -1,7 +1,7 @@
 package datadog.opentracing.decorators;
 
 import datadog.opentracing.DDSpanContext;
-import datadog.trace.api.sampling.ForcedTracing;
+import datadog.trace.api.DDTags;
 import datadog.trace.api.sampling.PrioritySampling;
 
 /**
@@ -11,7 +11,7 @@ public class ForceManualKeepDecorator extends AbstractDecorator {
 
   public ForceManualKeepDecorator() {
     super();
-    setMatchingTag(ForcedTracing.manual_KEEP);
+    setMatchingTag(DDTags.MANUAL_KEEP);
   }
 
   @Override
