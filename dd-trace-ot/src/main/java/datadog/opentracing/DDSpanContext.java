@@ -3,7 +3,6 @@ package datadog.opentracing;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.trace.api.DDTags;
-import datadog.trace.api.sampling.ForcedTracing;
 import datadog.trace.api.sampling.PrioritySampling;
 import java.util.Collections;
 import java.util.List;
@@ -334,29 +333,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     if (addTag) {
       tags.put(tag, value);
     }
-  }
-
-  /**
-   * Sets priority sampling based on the forced tracing tag provided by the user.
-   *
-   * @param tag
-   * @param value
-   */
-  private void processForcedTracingTag(final String tag, Object value) {
-    // The API that we expose is just .setTag(<name>, true);
-    if (!(value instanceof Boolean) || !(boolean) value) {
-      return;
-    }
-
-    if (tag.equals(ForcedTracing.manual_KEEP)) {
-      this.setSamplingPriority(PrioritySampling.USER_KEEP);
-    } else if (tag.equals(ForcedTracing.manual_DROP)) {
-      this.setSamplingPriority(PrioritySampling.USER_DROP);
-    }
-  }
-
-  public synchronized Map<String, Object> getTags() {
-    return Collections.unmodifiableMap(tags);
   }
 
   @Override
