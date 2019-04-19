@@ -39,7 +39,7 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
   File baseDir
   @Shared
   String baseUrl
-  
+
   OkHttpClient client = OkHttpUtils.client()
 
   def setupSpec() {
@@ -95,8 +95,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -169,8 +170,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/getQuery.jsp"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -240,8 +242,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/post.jsp"
             "http.method" "POST"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -308,8 +311,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -390,8 +394,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/includes/includeHtml.jsp"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -457,8 +462,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/includes/includeMulti.jsp"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
@@ -580,8 +586,9 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
           tags {
             "http.url" "http://localhost:$port/$jspWebappContext/$jspFileName"
             "http.method" "GET"
-            "peer.hostname" "localhost"
-            "peer.port" port
+            "peer.hostname" "127.0.0.1"
+            "peer.ipv4" "127.0.0.1"
+            "peer.port" Integer
             "span.kind" "server"
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"

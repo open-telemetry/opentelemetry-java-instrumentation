@@ -39,8 +39,10 @@ public class Servlet2Advice {
             .withTag("span.origin.type", servlet.getClass().getName())
             .startActive(true);
 
-    DECORATE.afterStart(scope.span());
-    DECORATE.onRequest(scope.span(), httpServletRequest);
+    final Span span = scope.span();
+    DECORATE.afterStart(span);
+    DECORATE.onConnection(span, httpServletRequest);
+    DECORATE.onRequest(span, httpServletRequest);
 
     if (scope instanceof TraceScope) {
       ((TraceScope) scope).setAsyncPropagation(true);

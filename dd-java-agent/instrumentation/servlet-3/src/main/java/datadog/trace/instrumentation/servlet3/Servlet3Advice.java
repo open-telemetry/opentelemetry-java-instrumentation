@@ -44,14 +44,16 @@ public class Servlet3Advice {
             .withTag("span.origin.type", servlet.getClass().getName())
             .startActive(false);
 
-    DECORATE.afterStart(scope.span());
-    DECORATE.onRequest(scope.span(), httpServletRequest);
+    final Span span = scope.span();
+    DECORATE.afterStart(span);
+    DECORATE.onConnection(span, httpServletRequest);
+    DECORATE.onRequest(span, httpServletRequest);
 
     if (scope instanceof TraceScope) {
       ((TraceScope) scope).setAsyncPropagation(true);
     }
 
-    req.setAttribute(SERVLET_SPAN, scope.span());
+    req.setAttribute(SERVLET_SPAN, span);
     return scope;
   }
 
