@@ -20,8 +20,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
 
-  public static final String PACKAGE = FluxAndMonoInstrumentation.class.getPackage().getName();
-
   public FluxAndMonoInstrumentation() {
     super("reactor-core");
   }
@@ -29,7 +27,8 @@ public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      PACKAGE + ".ReactorCoreAdviceUtils", PACKAGE + ".ReactorCoreAdviceUtils$TracingSubscriber"
+      packageName + ".ReactorCoreAdviceUtils",
+      packageName + ".ReactorCoreAdviceUtils$TracingSubscriber",
     };
   }
 
@@ -50,6 +49,6 @@ public final class FluxAndMonoInstrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("reactor.core.CoreSubscriber")))
             .and(takesArguments(1)),
         // Cannot reference class directly here because it would lead to class load failure on Java7
-        PACKAGE + ".FluxAndMonoSubscribeAdvice");
+        packageName + ".FluxAndMonoSubscribeAdvice");
   }
 }
