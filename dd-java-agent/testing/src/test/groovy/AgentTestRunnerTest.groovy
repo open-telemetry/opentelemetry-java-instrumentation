@@ -10,6 +10,10 @@ import spock.lang.Shared
 
 import java.lang.reflect.Field
 
+import static datadog.trace.agent.test.utils.TraceUtils.resetConfig
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static datadog.trace.api.Config.TRACE_CLASSES_EXCLUDE
+
 class AgentTestRunnerTest extends AgentTestRunner {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
   private static final ClassLoader OT_LOADER
@@ -19,6 +23,9 @@ class AgentTestRunnerTest extends AgentTestRunner {
   private Class sharedSpanClass
 
   static {
+    System.setProperty("dd." + TRACE_CLASSES_EXCLUDE, "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
+    resetConfig()
+
     // when test class initializes, opentracing should be set up, but not the agent.
     OT_LOADER = io.opentracing.Tracer.getClassLoader()
     AGENT_INSTALLED_IN_CLINIT = getAgentTransformer() != null
@@ -64,6 +71,30 @@ class AgentTestRunnerTest extends AgentTestRunner {
     org.slf4j.LoggerFactory.getLogger(AgentTestRunnerTest).debug("hello")
     then:
     noExceptionThrown()
+  }
+
+  def "excluded classes are not instrumented"() {
+    when:
+    runUnderTrace("parent") {
+      subject.run()
+    }
+
+    then:
+    !TRANSFORMED_CLASSES.contains(subject.class.name)
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "parent"
+        }
+      }
+    }
+
+    where:
+    subject                                                | _
+    new config.exclude.SomeClass()                         | _
+    new config.exclude.SomeClass.NestedClass()             | _
+    new config.exclude.packagename.SomeClass()             | _
+    new config.exclude.packagename.SomeClass.NestedClass() | _
   }
 
   private static getAgentTransformer() {

@@ -6,10 +6,13 @@ import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import datadog.trace.api.Config;
 import datadog.trace.bootstrap.WeakMap;
 import java.lang.instrument.Instrumentation;
+import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +21,7 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.utility.JavaModule;
 
@@ -112,7 +116,9 @@ public class AgentInstaller {
             .or(nameStartsWith("com.newrelic."))
             .or(nameContains("javassist"))
             .or(nameContains(".asm."))
-            .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"));
+            .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"))
+            .or(matchesConfiguredExcludes());
+
     for (final AgentBuilder.Listener listener : listeners) {
       agentBuilder = agentBuilder.with(listener);
     }
@@ -125,6 +131,22 @@ public class AgentInstaller {
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
 
     return agentBuilder.installOn(inst);
+  }
+
+  private static ElementMatcher.Junction<Object> matchesConfiguredExcludes() {
+    final List<String> excludedClasses = Config.get().getExcludedClasses();
+    ElementMatcher.Junction matcher = none();
+    for (String excludedClass : excludedClasses) {
+      excludedClass = excludedClass.trim();
+      if (excludedClass.endsWith("*")) {
+        // remove the trailing *
+        final String prefix = excludedClass.substring(0, excludedClass.length() - 1);
+        matcher = matcher.or(nameStartsWith(prefix));
+      } else {
+        matcher = matcher.or(named(excludedClass));
+      }
+    }
+    return matcher;
   }
 
   private static void registerWeakMapProvider() {

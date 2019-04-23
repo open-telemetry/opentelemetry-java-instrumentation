@@ -32,6 +32,7 @@ dependencies {
   compile deps.groovy
 
   testCompile project(':utils:gc-utils')
+  testCompile project(':dd-java-agent:instrumentation:trace-annotation')
 
   testCompile group: 'cglib', name: 'cglib', version: '3.2.5'
   // test instrumenting java 1.1 bytecode

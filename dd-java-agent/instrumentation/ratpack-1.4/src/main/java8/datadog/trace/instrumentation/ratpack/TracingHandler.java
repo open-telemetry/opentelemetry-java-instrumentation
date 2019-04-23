@@ -13,10 +13,6 @@ import ratpack.handling.Context;
 import ratpack.handling.Handler;
 import ratpack.http.Request;
 
-/**
- * This Ratpack handler reads tracing headers from the incoming request, starts a span and ensures
- * that the span is closed when the response is sent
- */
 public final class TracingHandler implements Handler {
   public static Handler INSTANCE = new TracingHandler();
 
@@ -42,6 +38,7 @@ public final class TracingHandler implements Handler {
     DECORATE.afterStart(ratpackSpan);
     DECORATE.onConnection(ratpackSpan, request);
     DECORATE.onRequest(ratpackSpan, request);
+    ctx.getExecution().add(ratpackSpan);
 
     try (final Scope scope = tracer.scopeManager().activate(ratpackSpan, false)) {
       if (scope instanceof TraceScope) {
