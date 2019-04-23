@@ -5,6 +5,7 @@ import datadog.opentracing.propagation.TagContext
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.ListWriter
+import spock.lang.Shared
 import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit
@@ -14,6 +15,9 @@ import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 class DDSpanTest extends Specification {
   def writer = new ListWriter()
   def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer, new RateByServiceSampler(), [:])
+
+  @Shared
+  def defaultSamplingPriority = PrioritySampling.SAMPLER_KEEP
 
   def "getters and setters"() {
     setup:
@@ -215,5 +219,50 @@ class DDSpanTest extends Specification {
     cleanup:
     child.finish()
     root.finish()
+  }
+
+  def "setting forced tracing via tag"() {
+
+    setup:
+    def span = tracer.buildSpan("root").start()
+    if (tagName) {
+      span.setTag(tagName, tagValue)
+    }
+
+    expect:
+    span.getSamplingPriority() == expectedPriority
+
+    cleanup:
+    span.finish()
+
+    where:
+    tagName | tagValue | expectedPriority
+    'manual.drop' | true | PrioritySampling.USER_DROP
+    'manual.keep' | true | PrioritySampling.USER_KEEP
+  }
+
+  def "not setting forced tracing via tag or setting it wrong value not causing exception"() {
+
+    setup:
+    def span = tracer.buildSpan("root").start()
+    if (tagName) {
+      span.setTag(tagName, tagValue)
+    }
+
+    expect:
+    span.getSamplingPriority() == defaultSamplingPriority
+
+    cleanup:
+    span.finish()
+
+    where:
+    tagName | tagValue
+    // When no tag is set default to
+    null | null
+    // Setting to not known value
+    'manual.drop' | false
+    'manual.keep' | false
+    'manual.drop' | 1
+    'manual.keep' | 1
   }
 }

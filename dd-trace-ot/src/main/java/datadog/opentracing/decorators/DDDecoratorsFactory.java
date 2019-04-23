@@ -8,10 +8,12 @@ public class DDDecoratorsFactory {
   public static List<AbstractDecorator> createBuiltinDecorators() {
 
     return Arrays.asList(
+        new AnalyticsSampleRateDecorator(),
         new DBStatementAsResourceName(),
         new DBTypeDecorator(),
         new ErrorFlag(),
-        new AnalyticsSampleRateDecorator(),
+        new ForceManualDropDecorator(),
+        new ForceManualKeepDecorator(),
         new OperationDecorator(),
         new PeerServiceDecorator(),
         new ResourceNameDecorator(),
@@ -19,8 +21,8 @@ public class DDDecoratorsFactory {
         new ServiceNameDecorator(),
         new ServletContextDecorator(),
         new SpanTypeDecorator(),
-        new Status5XXDecorator(),
         new Status404Decorator(),
+        new Status5XXDecorator(),
         new URLAsResourceName());
   }
 }
