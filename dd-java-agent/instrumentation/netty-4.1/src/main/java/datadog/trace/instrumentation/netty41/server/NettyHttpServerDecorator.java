@@ -33,18 +33,12 @@ public class NettyHttpServerDecorator
   }
 
   @Override
-  protected URI url(final HttpRequest request) {
-    // FIXME: This code is duplicated across netty integrations.
-    try {
-      URI uri = new URI(request.uri());
-      if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
-        uri = new URI("http://" + request.headers().get(HOST) + request.uri());
-      }
-      return new URI(
-          uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, null);
-    } catch (final URISyntaxException e) {
-      log.debug("Cannot parse netty uri: {}", request.uri());
-      return null;
+  protected URI url(final HttpRequest request) throws URISyntaxException {
+    final URI uri = new URI(request.uri());
+    if ((uri.getHost() == null || uri.getHost().equals("")) && request.headers().contains(HOST)) {
+      return new URI("http://" + request.headers().get(HOST) + request.uri());
+    } else {
+      return uri;
     }
   }
 

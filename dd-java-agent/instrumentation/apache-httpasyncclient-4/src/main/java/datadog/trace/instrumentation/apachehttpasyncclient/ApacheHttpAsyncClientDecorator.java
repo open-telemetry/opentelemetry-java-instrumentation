@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.apachehttpasyncclient;
 
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import java.net.URI;
+import java.net.URISyntaxException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.RequestLine;
@@ -30,18 +31,19 @@ public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequ
   }
 
   @Override
-  protected String url(final HttpRequest request) {
+  protected URI url(final HttpRequest request) throws URISyntaxException {
     final RequestLine requestLine = request.getRequestLine();
-    return requestLine == null ? null : requestLine.getUri();
+    return requestLine == null ? null : new URI(requestLine.getUri());
   }
 
   @Override
   protected String hostname(final HttpRequest request) {
     final RequestLine requestLine = request.getRequestLine();
     if (requestLine != null) {
-      final URI uri = URI.create(requestLine.getUri());
-      if (uri != null) {
-        return uri.getHost();
+      try {
+        return new URI(requestLine.getUri()).getHost();
+      } catch (final URISyntaxException e) {
+        return null;
       }
     }
     return null;
@@ -51,9 +53,10 @@ public class ApacheHttpAsyncClientDecorator extends HttpClientDecorator<HttpRequ
   protected Integer port(final HttpRequest request) {
     final RequestLine requestLine = request.getRequestLine();
     if (requestLine != null) {
-      final URI uri = URI.create(requestLine.getUri());
-      if (uri != null) {
-        return uri.getPort();
+      try {
+        return new URI(requestLine.getUri()).getPort();
+      } catch (final URISyntaxException e) {
+        return null;
       }
     }
     return null;

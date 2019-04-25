@@ -65,7 +65,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
 
   def "basic #method request"() {
     when:
-    def status = doRequest(method, server.address.resolve("/success"))
+    def status = doRequest(method, server.address.resolve(url))
 
     then:
     status == 200
@@ -78,6 +78,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
 
     where:
     method = "GET"
+    url << ["/success", "/success?with=params"]
   }
 
   def "basic #method request with parent"() {

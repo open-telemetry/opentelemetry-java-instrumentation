@@ -2,6 +2,8 @@ package datadog.trace.instrumentation.http_url_connection;
 
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import javax.net.ssl.HttpsURLConnection;
 
 public class HttpUrlConnectionDecorator extends HttpClientDecorator<HttpURLConnection, Integer> {
@@ -23,8 +25,8 @@ public class HttpUrlConnectionDecorator extends HttpClientDecorator<HttpURLConne
   }
 
   @Override
-  protected String url(final HttpURLConnection connection) {
-    return connection.getURL().toString();
+  protected URI url(final HttpURLConnection connection) throws URISyntaxException {
+    return connection.getURL().toURI();
   }
 
   @Override

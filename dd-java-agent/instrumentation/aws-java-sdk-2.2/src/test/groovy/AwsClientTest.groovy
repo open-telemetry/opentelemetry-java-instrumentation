@@ -60,9 +60,6 @@ class AwsClientTest extends AgentTestRunner {
     expect:
     response != null
 
-    // It looks like url doesn't contain trailing slash on empty path for some reason
-    def expectedUrl = path == "/" ? "${server.address}" : "${server.address}${path}"
-
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
@@ -75,7 +72,7 @@ class AwsClientTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "java-aws-sdk"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" expectedUrl
+            "$Tags.HTTP_URL.key" "${server.address}${path}"
             "$Tags.HTTP_METHOD.key" "$method"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
@@ -96,7 +93,7 @@ class AwsClientTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "apache-httpclient"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" expectedUrl
+            "$Tags.HTTP_URL.key" "${server.address}${path}"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
             "$Tags.HTTP_METHOD.key" "$method"
@@ -146,9 +143,6 @@ class AwsClientTest extends AgentTestRunner {
     expect:
     response != null
 
-    // It looks like url doesn't contain trailing slash on empty path for some reason
-    def expectedUrl = path == "/" ? "${server.address}" : "${server.address}${path}"
-
     // Order is not guaranteed in these traces, so reorder them if needed to put aws trace first
     if (TEST_WRITER[0][0].serviceName != "java-aws-sdk") {
       def tmp = TEST_WRITER[0]
@@ -168,7 +162,7 @@ class AwsClientTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "java-aws-sdk"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" expectedUrl
+            "$Tags.HTTP_URL.key" "${server.address}${path}"
             "$Tags.HTTP_METHOD.key" "$method"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
@@ -192,7 +186,7 @@ class AwsClientTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "netty-client"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" expectedUrl
+            "$Tags.HTTP_URL.key" "${server.address}${path}"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
             "$Tags.PEER_PORT.key" server.address.port
@@ -260,7 +254,7 @@ class AwsClientTest extends AgentTestRunner {
           parent()
           tags {
             "$Tags.COMPONENT.key" "java-aws-sdk"
-            "$Tags.HTTP_URL.key" "http://localhost:$server.address.port/someBucket/someKey"
+            "$Tags.HTTP_URL.key" "$server.address/someBucket/someKey"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" server.address.port
@@ -281,7 +275,7 @@ class AwsClientTest extends AgentTestRunner {
             childOf(span(0))
             tags {
               "$Tags.COMPONENT.key" "apache-httpclient"
-              "$Tags.HTTP_URL.key" "http://localhost:$server.address.port/someBucket/someKey"
+              "$Tags.HTTP_URL.key" "$server.address/someBucket/someKey"
               "$Tags.PEER_HOSTNAME.key" "localhost"
               "$Tags.PEER_PORT.key" server.address.port
               "$Tags.HTTP_METHOD.key" "GET"

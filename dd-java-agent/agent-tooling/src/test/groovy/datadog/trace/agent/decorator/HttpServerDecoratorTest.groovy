@@ -1,10 +1,10 @@
 package datadog.trace.agent.decorator
 
-import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
-
 import datadog.trace.api.Config
 import io.opentracing.Span
 import io.opentracing.tag.Tags
+
+import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
 
 class HttpServerDecoratorTest extends ServerDecoratorTest {
 
@@ -32,6 +32,32 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
     [method: "test-method", url: URI.create("https://10.0.0.1:443")]       | "https://10.0.0.1/"
     [method: "test-method", url: URI.create("https://localhost:0/1/")]     | "https://localhost/1/"
     [method: "test-method", url: URI.create("http://123:8080/some/path")]  | "http://123:8080/some/path"
+  }
+
+  def "test url handling"() {
+    setup:
+    def decorator = newDecorator()
+
+    when:
+    decorator.onRequest(span, req)
+
+    then:
+    if (expected) {
+      1 * span.setTag(Tags.HTTP_URL.key, expected)
+    }
+    1 * span.setTag(Tags.HTTP_METHOD.key, null)
+    0 * _
+
+    where:
+    url                                  | expected
+    null                                 | null
+    ""                                   | "/"
+    "/path?query"                        | "/path"
+    "https://host:0"                     | "https://host/"
+    "https://host/path"                  | "https://host/path"
+    "http://host:99/path?query#fragment" | "http://host:99/path"
+
+    req = [url: url == null ? null : new URI(url)]
   }
 
   def "test onConnection"() {

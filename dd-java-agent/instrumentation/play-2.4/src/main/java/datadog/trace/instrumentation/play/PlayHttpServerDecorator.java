@@ -31,19 +31,8 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
   }
 
   @Override
-  protected URI url(final Request request) {
-    // FIXME: This code is similar to that from the netty integrations.
-    try {
-      URI uri = new URI(request.uri());
-      if ((uri.getHost() == null || uri.getHost().equals("")) && !request.host().isEmpty()) {
-        uri = new URI("http://" + request.host() + request.uri());
-      }
-      return new URI(
-          uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, null);
-    } catch (final URISyntaxException e) {
-      log.debug("Cannot parse uri: {}", request.uri());
-      return null;
-    }
+  protected URI url(final Request request) throws URISyntaxException {
+    return new URI(request.secure() ? "https://" : "http://" + request.host() + request.uri());
   }
 
   @Override
