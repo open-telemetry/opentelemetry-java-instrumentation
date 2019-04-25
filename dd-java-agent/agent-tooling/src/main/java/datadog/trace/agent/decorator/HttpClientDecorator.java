@@ -34,7 +34,8 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
       Tags.HTTP_METHOD.set(span, method(request));
       Tags.HTTP_URL.set(span, url(request));
       Tags.PEER_HOSTNAME.set(span, hostname(request));
-      Tags.PEER_PORT.set(span, port(request));
+      final Integer port = port(request);
+      Tags.PEER_PORT.set(span, port != null && port > 0 ? port : null);
 
       if (Config.get().isHttpClientSplitByDomain()) {
         span.setTag(DDTags.SERVICE_NAME, hostname(request));
