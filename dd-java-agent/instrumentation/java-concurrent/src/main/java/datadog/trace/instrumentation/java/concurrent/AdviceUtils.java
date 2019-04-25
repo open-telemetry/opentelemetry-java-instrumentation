@@ -3,8 +3,10 @@ package datadog.trace.instrumentation.java.concurrent;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
 import datadog.trace.context.TraceScope;
+import lombok.extern.slf4j.Slf4j;
 
 /** Helper utils for Runnable/Callable instrumentation */
+@Slf4j
 public class AdviceUtils {
 
   /**

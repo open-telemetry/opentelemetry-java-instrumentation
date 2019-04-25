@@ -112,6 +112,7 @@ public class AgentInstaller {
             .or(nameStartsWith("org.aspectj."))
             .or(nameStartsWith("org.groovy."))
             .or(nameStartsWith("org.codehaus.groovy.macro."))
+            .or(nameStartsWith("com.intellij.rt.debugger."))
             .or(nameStartsWith("com.p6spy."))
             .or(nameStartsWith("com.newrelic."))
             .or(nameContains("javassist"))
@@ -181,7 +182,7 @@ public class AgentInstaller {
         final JavaModule module,
         final boolean loaded,
         final DynamicType dynamicType) {
-      log.debug("Transformed {} -- {}", typeDescription, classLoader);
+      log.debug("Transformed {} -- {}", typeDescription.getName(), classLoader);
     }
 
     @Override
@@ -189,21 +190,27 @@ public class AgentInstaller {
         final TypeDescription typeDescription,
         final ClassLoader classLoader,
         final JavaModule module,
-        final boolean loaded) {}
+        final boolean loaded) {
+      //      log.debug("onIgnored {}", typeDescription.getName());
+    }
 
     @Override
     public void onComplete(
         final String typeName,
         final ClassLoader classLoader,
         final JavaModule module,
-        final boolean loaded) {}
+        final boolean loaded) {
+      //      log.debug("onComplete {}", typeName);
+    }
 
     @Override
     public void onDiscovery(
         final String typeName,
         final ClassLoader classLoader,
         final JavaModule module,
-        final boolean loaded) {}
+        final boolean loaded) {
+      //      log.debug("onDiscovery {}", typeName);
+    }
   }
 
   /**
