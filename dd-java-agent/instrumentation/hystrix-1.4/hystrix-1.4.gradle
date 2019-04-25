@@ -18,6 +18,7 @@ testSets {
 
 dependencies {
   compileOnly group: 'com.netflix.hystrix', name: 'hystrix-core', version: '1.4.0'
+  compileOnly group: 'io.reactivex', name: 'rxjava', version: '1.0.7'
 
   compile project(':dd-trace-ot')
   compile project(':dd-java-agent:agent-tooling')
