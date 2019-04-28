@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
@@ -620,6 +621,7 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
               getFieldAccessorInterface(keyClassName, contextClassName);
           private final String accessorInterfaceInternalName = accessorInterface.getInternalName();
           private final String instrumentedTypeInternalName = instrumentedType.getInternalName();
+          private final boolean frames = implementationContext.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6);
 
           @Override
           public MethodVisitor visitMethod(
@@ -679,7 +681,9 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                 true);
             mv.visitInsn(Opcodes.ARETURN);
             mv.visitLabel(elseLabel);
-            mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+            if (frames) {
+              mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+            }
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitVarInsn(Opcodes.ALOAD, 1);
             mv.visitMethodInsn(
@@ -732,7 +736,9 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                 true);
             mv.visitJumpInsn(Opcodes.GOTO, endLabel);
             mv.visitLabel(elseLabel);
-            mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+            if (frames) {
+              mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+            }
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitVarInsn(Opcodes.ALOAD, 1);
             mv.visitVarInsn(Opcodes.ALOAD, 2);
@@ -743,7 +749,9 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
                 Utils.getMethodDefinition(instrumentedType, "mapPut").getDescriptor(),
                 false);
             mv.visitLabel(endLabel);
-            mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+            if (frames) {
+              mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+            }
             mv.visitInsn(Opcodes.RETURN);
             mv.visitMaxs(0, 0);
             mv.visitEnd();
@@ -778,7 +786,9 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
             mv.visitVarInsn(Opcodes.ALOAD, 1);
             mv.visitInsn(Opcodes.ARETURN);
             mv.visitLabel(elseLabel);
-            mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+            if (frames) {
+              mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+            }
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitVarInsn(Opcodes.ALOAD, 1);
             mv.visitMethodInsn(

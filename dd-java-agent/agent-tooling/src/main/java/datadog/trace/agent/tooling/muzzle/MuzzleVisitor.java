@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
@@ -46,15 +47,19 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
       MethodList<?> methods,
       int writerFlags,
       int readerFlags) {
-    return new InsertSafetyMatcher(classVisitor);
+    return new InsertSafetyMatcher(classVisitor, implementationContext.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6));
   }
 
   public static class InsertSafetyMatcher extends ClassVisitor {
+    
+    private final boolean frames;
+    
     private String instrumentationClassName;
     private Instrumenter.Default instrumenter;
 
-    public InsertSafetyMatcher(ClassVisitor classVisitor) {
+    public InsertSafetyMatcher(ClassVisitor classVisitor, boolean frames) {
       super(Opcodes.ASM7, classVisitor);
+      this.frames = frames;
     }
 
     @Override
@@ -430,7 +435,9 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
               "Ldatadog/trace/agent/tooling/muzzle/ReferenceMatcher;");
 
           mv.visitLabel(ret);
-          mv.visitFrame(Opcodes.F_SAME, 1, null, 0, null);
+          if (frames) {
+            mv.visitFrame(Opcodes.F_SAME, 1, null, 0, null);
+          }
           mv.visitVarInsn(Opcodes.ALOAD, 0);
           mv.visitFieldInsn(
               Opcodes.GETFIELD,
