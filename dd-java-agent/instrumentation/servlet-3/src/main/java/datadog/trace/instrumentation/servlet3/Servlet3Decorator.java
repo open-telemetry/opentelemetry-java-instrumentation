@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.servlet3;
 import datadog.trace.agent.decorator.HttpServerDecorator;
 import io.opentracing.Span;
 import java.net.URI;
+import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -26,8 +27,8 @@ public class Servlet3Decorator
   }
 
   @Override
-  protected URI url(final HttpServletRequest httpServletRequest) {
-    return URI.create(httpServletRequest.getRequestURL().toString());
+  protected URI url(final HttpServletRequest httpServletRequest) throws URISyntaxException {
+    return new URI(httpServletRequest.getRequestURL().toString());
   }
 
   @Override

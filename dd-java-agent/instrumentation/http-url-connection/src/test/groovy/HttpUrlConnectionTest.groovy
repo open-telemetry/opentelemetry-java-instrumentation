@@ -80,7 +80,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
@@ -98,7 +98,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
@@ -163,7 +163,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
@@ -181,7 +181,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
@@ -230,7 +230,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.HTTP_METHOD.key" "HEAD"
             "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
@@ -279,7 +279,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
@@ -345,7 +345,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.HTTP_METHOD.key" "POST"
             "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
@@ -413,7 +413,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"
@@ -460,7 +460,7 @@ class HttpUrlConnectionTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.HTTP_METHOD.key" "POST"
             "$Tags.HTTP_STATUS.key" STATUS
             "$Tags.PEER_HOSTNAME.key" "localhost"

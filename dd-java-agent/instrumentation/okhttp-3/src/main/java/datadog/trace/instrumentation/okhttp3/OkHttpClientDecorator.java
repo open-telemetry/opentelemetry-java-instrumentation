@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.okhttp3;
 
 import datadog.trace.agent.decorator.HttpClientDecorator;
+import java.net.URI;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -35,8 +36,8 @@ public class OkHttpClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  protected String url(final Request httpRequest) {
-    return httpRequest.url().toString();
+  protected URI url(final Request httpRequest) {
+    return httpRequest.url().uri();
   }
 
   @Override

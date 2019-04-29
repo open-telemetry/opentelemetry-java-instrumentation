@@ -6,6 +6,8 @@ import com.amazonaws.Response;
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import datadog.trace.api.DDTags;
 import io.opentracing.Span;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -81,8 +83,8 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  protected String url(final Request request) {
-    return request.getEndpoint().toString();
+  protected URI url(final Request request) throws URISyntaxException {
+    return new URI(request.getEndpoint().toString());
   }
 
   @Override

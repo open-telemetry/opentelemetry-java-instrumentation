@@ -1,5 +1,3 @@
-apply from: "${rootDir}/gradle/java.gradle"
-
 muzzle {
   fail {
     group = "commons-httpclient"
@@ -21,10 +19,13 @@ muzzle {
   }
 }
 
+apply from: "${rootDir}/gradle/java.gradle"
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
-  latestDepTest
+  latestDepTest {
+    dirName = 'test'
+  }
 }
 
 dependencies {

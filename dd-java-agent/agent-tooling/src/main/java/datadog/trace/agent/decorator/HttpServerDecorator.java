@@ -5,6 +5,7 @@ import datadog.trace.api.DDSpanTypes;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +18,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
 
   protected abstract String method(REQUEST request);
 
-  protected abstract URI url(REQUEST request);
+  protected abstract URI url(REQUEST request) throws URISyntaxException;
 
   protected abstract String peerHostname(CONNECTION connection);
 
@@ -42,23 +43,31 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     if (request != null) {
       Tags.HTTP_METHOD.set(span, method(request));
 
+      // Copy of HttpClientDecorator url handling
       try {
         final URI url = url(request);
-        final StringBuilder urlNoParams = new StringBuilder(url.getScheme());
-        urlNoParams.append("://");
-        urlNoParams.append(url.getHost());
-        if (url.getPort() > 0 && url.getPort() != 80 && url.getPort() != 443) {
-          urlNoParams.append(":");
-          urlNoParams.append(url.getPort());
-        }
-        final String path = url.getPath();
-        if (path.isEmpty()) {
-          urlNoParams.append("/");
-        } else {
-          urlNoParams.append(path);
-        }
+        if (url != null) {
+          final StringBuilder urlNoParams = new StringBuilder();
+          if (url.getScheme() != null) {
+            urlNoParams.append(url.getScheme());
+            urlNoParams.append("://");
+          }
+          if (url.getHost() != null) {
+            urlNoParams.append(url.getHost());
+            if (url.getPort() > 0 && url.getPort() != 80 && url.getPort() != 443) {
+              urlNoParams.append(":");
+              urlNoParams.append(url.getPort());
+            }
+          }
+          final String path = url.getPath();
+          if (path.isEmpty()) {
+            urlNoParams.append("/");
+          } else {
+            urlNoParams.append(path);
+          }
 
-        Tags.HTTP_URL.set(span, urlNoParams.toString());
+          Tags.HTTP_URL.set(span, urlNoParams.toString());
+        }
       } catch (final Exception e) {
         log.debug("Error tagging url", e);
       }

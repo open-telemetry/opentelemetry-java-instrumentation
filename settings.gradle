@@ -25,6 +25,7 @@ include ':dd-smoke-tests:wildfly'
 
 // instrumentation:
 include ':dd-java-agent:instrumentation:akka-http-10.0'
+include ':dd-java-agent:instrumentation:apache-httpasyncclient-4'
 include ':dd-java-agent:instrumentation:apache-httpclient-4'
 include ':dd-java-agent:instrumentation:aws-java-sdk-1.11.0'
 include ':dd-java-agent:instrumentation:aws-java-sdk-2.2'

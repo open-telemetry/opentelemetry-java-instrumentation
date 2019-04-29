@@ -36,6 +36,7 @@ dependencies {
   // Ensure no cross interference
   testCompile project(':dd-java-agent:instrumentation:elasticsearch:rest-5')
   testCompile project(':dd-java-agent:instrumentation:elasticsearch:transport-5')
+  testCompile project(':dd-java-agent:instrumentation:apache-httpasyncclient-4')
 
   testCompile group: 'org.elasticsearch', name: 'elasticsearch', version: '2.0.0'
 

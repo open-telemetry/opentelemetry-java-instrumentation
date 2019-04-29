@@ -4,6 +4,7 @@ minimumBranchCoverage = 0.5
 minimumInstructionCoverage = 0.5
 excludedClassesConverage += [
   'datadog.trace.agent.test.asserts.*Assert',
+  'datadog.trace.agent.test.base.*',
   'datadog.trace.agent.test.AgentTestRunner.ErrorCountingListener',
   'datadog.trace.agent.test.utils.*',
   // Avoid applying jacoco instrumentation to classes instrumented by tested agent

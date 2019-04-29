@@ -49,7 +49,7 @@ class UrlConnectionTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "http-url-connection"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
+            "$Tags.HTTP_URL.key" "$url/"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" UNUSABLE_PORT

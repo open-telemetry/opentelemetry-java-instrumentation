@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.aws.v2;
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import datadog.trace.api.DDTags;
 import io.opentracing.Span;
+import java.net.URI;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -59,13 +60,8 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
   }
 
   @Override
-  protected String url(final SdkHttpRequest request) {
-    return request.protocol()
-        + "://"
-        + request.host()
-        + ":"
-        + request.port()
-        + request.encodedPath();
+  protected URI url(final SdkHttpRequest request) {
+    return request.getUri();
   }
 
   @Override

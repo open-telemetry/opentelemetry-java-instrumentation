@@ -73,7 +73,7 @@ class AWSClientTest extends AgentTestRunner {
     client.requestHandler2s != null
     client.requestHandler2s.size() == size
     client.requestHandler2s.get(0).getClass().getSimpleName() == "TracingRequestHandler"
-    
+
     where:
     addHandler | size
     true       | 2
@@ -106,7 +106,7 @@ class AWSClientTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT.key" "java-aws-sdk"
             "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "$server.address"
+            "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.HTTP_METHOD.key" "$method"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "aws.service" { it.contains(service) }
@@ -179,7 +179,7 @@ class AWSClientTest extends AgentTestRunner {
           parent()
           tags {
             "$Tags.COMPONENT.key" "java-aws-sdk"
-            "$Tags.HTTP_URL.key" "http://localhost:${UNUSABLE_PORT}"
+            "$Tags.HTTP_URL.key" "http://localhost:${UNUSABLE_PORT}/"
             "$Tags.HTTP_METHOD.key" "$method"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "aws.service" { it.contains(service) }
@@ -242,7 +242,7 @@ class AWSClientTest extends AgentTestRunner {
           parent()
           tags {
             "$Tags.COMPONENT.key" "java-aws-sdk"
-            "$Tags.HTTP_URL.key" "https://s3.amazonaws.com"
+            "$Tags.HTTP_URL.key" "https://s3.amazonaws.com/"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "aws.service" "Amazon S3"
@@ -288,7 +288,7 @@ class AWSClientTest extends AgentTestRunner {
           parent()
           tags {
             "$Tags.COMPONENT.key" "java-aws-sdk"
-            "$Tags.HTTP_URL.key" "http://localhost:$server.address.port"
+            "$Tags.HTTP_URL.key" "$server.address/"
             "$Tags.HTTP_METHOD.key" "GET"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
             "aws.service" "Amazon S3"
@@ -308,7 +308,7 @@ class AWSClientTest extends AgentTestRunner {
             childOf(span(0))
             tags {
               "$Tags.COMPONENT.key" "apache-httpclient"
-              "$Tags.HTTP_URL.key" "http://localhost:$server.address.port/someBucket/someKey"
+              "$Tags.HTTP_URL.key" "$server.address/someBucket/someKey"
               "$Tags.PEER_HOSTNAME.key" "localhost"
               "$Tags.PEER_PORT.key" server.address.port
               "$Tags.HTTP_METHOD.key" "GET"

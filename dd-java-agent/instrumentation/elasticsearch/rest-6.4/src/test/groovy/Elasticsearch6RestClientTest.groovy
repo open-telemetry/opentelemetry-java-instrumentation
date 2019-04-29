@@ -78,7 +78,7 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
     result.status == "green"
 
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
           serviceName "elasticsearch"
           resourceName "GET _cluster/health"
@@ -93,6 +93,21 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
             "$Tags.HTTP_URL.key" "_cluster/health"
             "$Tags.PEER_HOSTNAME.key" "localhost"
             "$Tags.PEER_PORT.key" httpPort
+            defaultTags()
+          }
+        }
+        span(1) {
+          serviceName "elasticsearch"
+          resourceName "GET _cluster/health"
+          operationName "http.request"
+          spanType DDSpanTypes.HTTP_CLIENT
+          childOf span(0)
+          tags {
+            "$Tags.COMPONENT.key" "apache-httpasyncclient"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_URL.key" "_cluster/health"
+            "$Tags.HTTP_STATUS.key" 200
             defaultTags()
           }
         }

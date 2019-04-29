@@ -6,6 +6,7 @@ import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import java.net.URI;
+import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -40,8 +41,8 @@ public class SpringWebHttpServerDecorator
   }
 
   @Override
-  protected URI url(final HttpServletRequest httpServletRequest) {
-    return URI.create(httpServletRequest.getRequestURL().toString());
+  protected URI url(final HttpServletRequest httpServletRequest) throws URISyntaxException {
+    return new URI(httpServletRequest.getRequestURL().toString());
   }
 
   @Override

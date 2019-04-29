@@ -2,7 +2,9 @@ package datadog.trace.instrumentation.apachehttpclient;
 
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import java.net.URI;
+import java.net.URISyntaxException;
 import org.apache.http.HttpResponse;
+import org.apache.http.RequestLine;
 import org.apache.http.client.methods.HttpUriRequest;
 
 public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriRequest, HttpResponse> {
@@ -24,8 +26,9 @@ public class ApacheHttpClientDecorator extends HttpClientDecorator<HttpUriReques
   }
 
   @Override
-  protected String url(final HttpUriRequest httpRequest) {
-    return httpRequest.getRequestLine().getUri();
+  protected URI url(final HttpUriRequest request) throws URISyntaxException {
+    final RequestLine requestLine = request.getRequestLine();
+    return requestLine == null ? null : new URI(requestLine.getUri());
   }
 
   @Override
