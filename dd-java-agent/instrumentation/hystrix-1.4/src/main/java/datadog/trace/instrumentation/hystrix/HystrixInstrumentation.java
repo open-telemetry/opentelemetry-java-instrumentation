@@ -16,6 +16,7 @@ import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -23,6 +24,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 import rx.DDTracingUtil;
 import rx.Observable;
 import rx.Subscriber;
+import rx.Subscription;
 
 @AutoService(Instrumenter.class)
 public class HystrixInstrumentation extends Instrumenter.Default {
@@ -46,6 +48,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
       "rx.DDTracingUtil",
       "datadog.trace.agent.decorator.BaseDecorator",
       packageName + ".HystrixDecorator",
+      packageName + ".HystrixInstrumentation$SpanFinishingSubscription",
       packageName + ".HystrixInstrumentation$TracedSubscriber",
       packageName + ".HystrixInstrumentation$TracedOnSubscribe",
     };
@@ -127,6 +130,9 @@ public class HystrixInstrumentation extends Instrumenter.Default {
       DECORATE.onCommand(span, command, methodName);
 
       try (final Scope scope = tracer.scopeManager().activate(span, false)) {
+        if (!((TraceScope) scope).isAsyncPropagating()) {
+          ((TraceScope) scope).setAsyncPropagation(true);
+        }
         delegate.call(new TracedSubscriber(span, subscriber));
       }
     }
@@ -135,72 +141,119 @@ public class HystrixInstrumentation extends Instrumenter.Default {
   public static class TracedSubscriber<T> extends Subscriber<T> {
 
     private final ScopeManager scopeManager = GlobalTracer.get().scopeManager();
-    private final Span span;
+    private final AtomicReference<Span> spanRef;
     private final Subscriber<T> delegate;
 
     public TracedSubscriber(final Span span, final Subscriber<T> delegate) {
-      this.span = span;
+      spanRef = new AtomicReference<>(span);
       this.delegate = delegate;
+      final SpanFinishingSubscription subscription = new SpanFinishingSubscription(spanRef);
+      delegate.add(subscription);
     }
 
     @Override
     public void onStart() {
-      try (final Scope scope = scopeManager.activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
+      final Span span = spanRef.get();
+      if (span != null) {
+        try (final Scope scope = scopeManager.activate(span, false)) {
+          if (scope instanceof TraceScope) {
+            ((TraceScope) scope).setAsyncPropagation(true);
+          }
+          delegate.onStart();
         }
+      } else {
         delegate.onStart();
       }
     }
 
     @Override
     public void onNext(final T value) {
-      try (final Scope scope = scopeManager.activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
+      final Span span = spanRef.get();
+      if (span != null) {
+        try (final Scope scope = scopeManager.activate(span, false)) {
+          if (scope instanceof TraceScope) {
+            ((TraceScope) scope).setAsyncPropagation(true);
+          }
+          delegate.onNext(value);
+        } catch (final Throwable e) {
+          onError(e);
         }
+      } else {
         delegate.onNext(value);
-      } catch (final Throwable e) {
-        onError(e);
       }
     }
 
     @Override
     public void onCompleted() {
-      boolean errored = false;
-      try (final Scope scope = scopeManager.activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
+      final Span span = spanRef.getAndSet(null);
+      if (span != null) {
+        boolean errored = false;
+        try (final Scope scope = scopeManager.activate(span, false)) {
+          if (scope instanceof TraceScope) {
+            ((TraceScope) scope).setAsyncPropagation(true);
+          }
+          delegate.onCompleted();
+        } catch (final Throwable e) {
+          // Repopulate the spanRef for onError
+          spanRef.compareAndSet(null, span);
+          onError(e);
+          errored = true;
+        } finally {
+          // finish called by onError, so don't finish again.
+          if (!errored) {
+            DECORATE.beforeFinish(span);
+            span.finish();
+          }
         }
+      } else {
         delegate.onCompleted();
-      } catch (final Throwable e) {
-        onError(e);
-        errored = true;
-      } finally {
-        // finish called by onError, so don't finish again.
-        if (!errored) {
-          DECORATE.beforeFinish(span);
-          span.finish();
-        }
       }
     }
 
     @Override
     public void onError(final Throwable e) {
-      try (final Scope scope = scopeManager.activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
+      final Span span = spanRef.getAndSet(null);
+      if (span != null) {
+        try (final Scope scope = scopeManager.activate(span, false)) {
+          if (scope instanceof TraceScope) {
+            ((TraceScope) scope).setAsyncPropagation(true);
+          }
+          DECORATE.onError(span, e);
+          delegate.onError(e);
+        } catch (final Throwable e2) {
+          DECORATE.onError(span, e2);
+          // This recursive call might be dangerous... not sure what the best response is.
+          onError(e2);
+        } finally {
+          DECORATE.beforeFinish(span);
+          span.finish();
         }
-        DECORATE.onError(span, e);
+      } else {
         delegate.onError(e);
-      } catch (final Throwable e2) {
-        DECORATE.onError(span, e2);
-        // This recursive call might be dangerous... not sure what the best response is.
-        onError(e2);
-      } finally {
+      }
+    }
+  }
+
+  public static class SpanFinishingSubscription implements Subscription {
+
+    private final AtomicReference<Span> spanRef;
+
+    public SpanFinishingSubscription(final AtomicReference<Span> spanRef) {
+      this.spanRef = spanRef;
+    }
+
+    @Override
+    public void unsubscribe() {
+      final Span span = spanRef.getAndSet(null);
+      if (span != null) {
         DECORATE.beforeFinish(span);
         span.finish();
       }
+    }
+
+    @Override
+    public boolean isUnsubscribed() {
+      return spanRef.get() == null;
     }
   }
 }

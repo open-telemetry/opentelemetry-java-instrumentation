@@ -5,6 +5,7 @@ import ch.qos.logback.classic.Logger;
 import com.google.common.collect.Sets;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
+import datadog.opentracing.PendingTrace;
 import datadog.trace.agent.test.asserts.ListWriterAssert;
 import datadog.trace.agent.test.utils.GlobalTracerUtils;
 import datadog.trace.agent.tooling.AgentInstaller;
@@ -195,6 +196,15 @@ public abstract class AgentTestRunner extends Specification {
           @DelegatesTo(value = ListWriterAssert.class, strategy = Closure.DELEGATE_FIRST)
           final Closure spec) {
     ListWriterAssert.assertTraces(TEST_WRITER, size, spec);
+  }
+
+  public void blockUntilChildSpansFinished(final int numberOfSpans) throws InterruptedException {
+    final DDSpan span = (DDSpan) io.opentracing.util.GlobalTracer.get().activeSpan();
+    final PendingTrace pendingTrace = span.context().getTrace();
+
+    while (pendingTrace.size() < numberOfSpans) {
+      Thread.sleep(10);
+    }
   }
 
   public static class TestRunnerListener implements AgentBuilder.Listener {

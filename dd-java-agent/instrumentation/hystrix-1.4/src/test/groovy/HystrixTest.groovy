@@ -2,6 +2,7 @@ import com.netflix.hystrix.HystrixCommand
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
 import io.opentracing.tag.Tags
+import spock.lang.Timeout
 
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -9,11 +10,15 @@ import java.util.concurrent.LinkedBlockingQueue
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
+@Timeout(10)
 class HystrixTest extends AgentTestRunner {
-  // Uncomment for debugging:
-  // static {
-  //  System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
-  // }
+  static {
+    // Disable so failure testing below doesn't inadvertently change the behavior.
+    System.setProperty("hystrix.command.default.circuitBreaker.enabled", "false")
+
+    // Uncomment for debugging:
+    // System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
+  }
 
   def "test command #action"() {
     setup:

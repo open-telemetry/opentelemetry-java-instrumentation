@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import datadog.trace.api.Config;
 import datadog.trace.bootstrap.WeakMap;
 import java.lang.instrument.Instrumentation;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -60,9 +61,10 @@ public class AgentInstaller {
         new AgentBuilder.Default()
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+            .with(new RedefinitionLoggingListener())
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(POOL_STRATEGY)
-            .with(new LoggingListener())
+            .with(new TransformLoggingListener())
             .with(new ClassLoadListener())
             .with(LOCATION_STRATEGY)
             // FIXME: we cannot enable it yet due to BB/JVM bug, see
@@ -159,7 +161,33 @@ public class AgentInstaller {
   }
 
   @Slf4j
-  static class LoggingListener implements AgentBuilder.Listener {
+  static class RedefinitionLoggingListener implements AgentBuilder.RedefinitionStrategy.Listener {
+
+    @Override
+    public void onBatch(final int index, final List<Class<?>> batch, final List<Class<?>> types) {}
+
+    @Override
+    public Iterable<? extends List<Class<?>>> onError(
+        final int index,
+        final List<Class<?>> batch,
+        final Throwable throwable,
+        final List<Class<?>> types) {
+      if (log.isDebugEnabled()) {
+        log.debug(
+            "Exception while retransforming " + batch.size() + " classes: " + batch, throwable);
+      }
+      return Collections.emptyList();
+    }
+
+    @Override
+    public void onComplete(
+        final int amount,
+        final List<Class<?>> types,
+        final Map<List<Class<?>>, Throwable> failures) {}
+  }
+
+  @Slf4j
+  static class TransformLoggingListener implements AgentBuilder.Listener {
 
     @Override
     public void onError(

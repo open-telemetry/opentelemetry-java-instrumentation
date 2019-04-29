@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.java.concurrent;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
@@ -31,17 +31,19 @@ import net.bytebuddy.matcher.ElementMatchers;
 public final class AsyncPropagatingDisableInstrumentation implements Instrumenter {
 
   private static final Map<
-          ElementMatcher<? super TypeDescription>, ElementMatcher<MethodDescription>>
+          ElementMatcher<? super TypeDescription>, ElementMatcher<? super MethodDescription>>
       CLASS_AND_METHODS =
           new ImmutableMap.Builder<
-                  ElementMatcher<? super TypeDescription>, ElementMatcher<MethodDescription>>()
-              .put(named("rx.internal.util.ObjectPool"), isConstructor())
+                  ElementMatcher<? super TypeDescription>,
+                  ElementMatcher<? super MethodDescription>>()
+              .put(safeHasSuperType(named("rx.Scheduler$Worker")), named("schedulePeriodically"))
               .build();
 
   @Override
   public AgentBuilder instrument(AgentBuilder agentBuilder) {
 
-    for (final Map.Entry<ElementMatcher<? super TypeDescription>, ElementMatcher<MethodDescription>>
+    for (final Map.Entry<
+            ElementMatcher<? super TypeDescription>, ElementMatcher<? super MethodDescription>>
         entry : CLASS_AND_METHODS.entrySet()) {
       agentBuilder =
           new DisableAsyncInstrumentation(entry.getKey(), entry.getValue())
@@ -54,7 +56,7 @@ public final class AsyncPropagatingDisableInstrumentation implements Instrumente
   public static class DisableAsyncInstrumentation extends Default {
 
     private final ElementMatcher<? super TypeDescription> typeMatcher;
-    private final ElementMatcher<MethodDescription> methodMatcher;
+    private final ElementMatcher<? super MethodDescription> methodMatcher;
 
     /** No-arg constructor only used by muzzle and tests. */
     public DisableAsyncInstrumentation() {
@@ -63,7 +65,7 @@ public final class AsyncPropagatingDisableInstrumentation implements Instrumente
 
     public DisableAsyncInstrumentation(
         final ElementMatcher<? super TypeDescription> typeMatcher,
-        final ElementMatcher<MethodDescription> methodMatcher) {
+        final ElementMatcher<? super MethodDescription> methodMatcher) {
       super(AbstractExecutorInstrumentation.EXEC_NAME);
       this.typeMatcher = typeMatcher;
       this.methodMatcher = methodMatcher;
@@ -75,7 +77,7 @@ public final class AsyncPropagatingDisableInstrumentation implements Instrumente
     }
 
     @Override
-    public Map<ElementMatcher<MethodDescription>, String> transformers() {
+    public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       return singletonMap(methodMatcher, DisableAsyncAdvice.class.getName());
     }
   }
