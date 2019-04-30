@@ -621,7 +621,8 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
               getFieldAccessorInterface(keyClassName, contextClassName);
           private final String accessorInterfaceInternalName = accessorInterface.getInternalName();
           private final String instrumentedTypeInternalName = instrumentedType.getInternalName();
-          private final boolean frames = implementationContext.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6);
+          private final boolean frames =
+              implementationContext.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6);
 
           @Override
           public MethodVisitor visitMethod(

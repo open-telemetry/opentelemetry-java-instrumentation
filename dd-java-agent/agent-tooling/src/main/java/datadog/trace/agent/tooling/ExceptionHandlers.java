@@ -41,9 +41,10 @@ public class ExceptionHandlers {
               final Label logEnd = new Label();
               final Label eatException = new Label();
               final Label handlerExit = new Label();
-              
+
               // Frames are only meaningful for class files in version 6 or later.
-              final boolean frames = context.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6);
+              final boolean frames =
+                  context.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6);
 
               mv.visitTryCatchBlock(logStart, logEnd, eatException, "java/lang/Throwable");
 

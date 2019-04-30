@@ -47,13 +47,15 @@ public class MuzzleVisitor implements AsmVisitorWrapper {
       MethodList<?> methods,
       int writerFlags,
       int readerFlags) {
-    return new InsertSafetyMatcher(classVisitor, implementationContext.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6));
+    return new InsertSafetyMatcher(
+        classVisitor,
+        implementationContext.getClassFileVersion().isAtLeast(ClassFileVersion.JAVA_V6));
   }
 
   public static class InsertSafetyMatcher extends ClassVisitor {
-    
+
     private final boolean frames;
-    
+
     private String instrumentationClassName;
     private Instrumenter.Default instrumenter;
 
