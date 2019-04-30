@@ -222,8 +222,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
           delegate.onError(e);
         } catch (final Throwable e2) {
           DECORATE.onError(span, e2);
-          // This recursive call might be dangerous... not sure what the best response is.
-          onError(e2);
+          throw e2;
         } finally {
           DECORATE.beforeFinish(span);
           span.finish();
