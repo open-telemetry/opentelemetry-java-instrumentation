@@ -15,11 +15,14 @@ import org.elasticsearch.node.internal.InternalSettingsPreparer
 import org.elasticsearch.transport.Netty3Plugin
 import org.elasticsearch.transport.RemoteTransportException
 import org.elasticsearch.transport.client.PreBuiltTransportClient
+import spock.lang.Requires
 import spock.lang.Shared
 
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING
 
+// Currently broken in CI:
+@Requires({ "false" == System.getenv("CI") })
 @RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch5TransportClientTest extends AgentTestRunner {
   public static final long TIMEOUT = 10000; // 10 seconds
