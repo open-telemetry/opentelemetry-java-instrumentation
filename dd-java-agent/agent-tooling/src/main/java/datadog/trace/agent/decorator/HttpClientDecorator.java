@@ -68,6 +68,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
 
       Tags.PEER_HOSTNAME.set(span, hostname(request));
       final Integer port = port(request);
+      // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       Tags.PEER_PORT.set(span, port != null && port > 0 ? port : null);
 
       if (Config.get().isHttpClientSplitByDomain()) {

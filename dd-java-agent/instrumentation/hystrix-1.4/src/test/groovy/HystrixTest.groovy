@@ -2,6 +2,7 @@ import com.netflix.hystrix.HystrixCommand
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
 import io.opentracing.tag.Tags
+import spock.lang.Timeout
 
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
@@ -9,17 +10,21 @@ import java.util.concurrent.LinkedBlockingQueue
 import static com.netflix.hystrix.HystrixCommandGroupKey.Factory.asKey
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
+@Timeout(10)
 class HystrixTest extends AgentTestRunner {
-  // Uncomment for debugging:
-  // static {
-  //  System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
-  // }
+  static {
+    // Disable so failure testing below doesn't inadvertently change the behavior.
+    System.setProperty("hystrix.command.default.circuitBreaker.enabled", "false")
+
+    // Uncomment for debugging:
+    // System.setProperty("hystrix.command.default.execution.timeout.enabled", "false")
+  }
 
   def "test command #action"() {
     setup:
-    def command = new HystrixCommand(asKey("ExampleGroup")) {
+    def command = new HystrixCommand<String>(asKey("ExampleGroup")) {
       @Override
-      protected Object run() throws Exception {
+      protected String run() throws Exception {
         return tracedMethod()
       }
 
@@ -52,7 +57,7 @@ class HystrixTest extends AgentTestRunner {
         span(1) {
           serviceName "unnamed-java-app"
           operationName "hystrix.cmd"
-          resourceName "ExampleGroup.HystrixTest\$1.run"
+          resourceName "ExampleGroup.HystrixTest\$1.execute"
           spanType null
           childOf span(0)
           errored false
@@ -83,6 +88,7 @@ class HystrixTest extends AgentTestRunner {
     action          | operation
     "execute"       | { HystrixCommand cmd -> cmd.execute() }
     "queue"         | { HystrixCommand cmd -> cmd.queue().get() }
+    "toObservable"  | { HystrixCommand cmd -> cmd.toObservable().toBlocking().first() }
     "observe"       | { HystrixCommand cmd -> cmd.observe().toBlocking().first() }
     "observe block" | { HystrixCommand cmd ->
       BlockingQueue queue = new LinkedBlockingQueue()
@@ -95,9 +101,9 @@ class HystrixTest extends AgentTestRunner {
 
   def "test command #action fallback"() {
     setup:
-    def command = new HystrixCommand(asKey("ExampleGroup")) {
+    def command = new HystrixCommand<String>(asKey("ExampleGroup")) {
       @Override
-      protected Object run() throws Exception {
+      protected String run() throws Exception {
         throw new IllegalArgumentException()
       }
 
@@ -129,22 +135,7 @@ class HystrixTest extends AgentTestRunner {
         span(1) {
           serviceName "unnamed-java-app"
           operationName "hystrix.cmd"
-          resourceName "ExampleGroup.HystrixTest\$2.getFallback"
-          spanType null
-          childOf span(0)
-          errored false
-          tags {
-            "hystrix.command" "HystrixTest\$2"
-            "hystrix.group" "ExampleGroup"
-            "hystrix.circuit-open" false
-            "$Tags.COMPONENT.key" "hystrix"
-            defaultTags()
-          }
-        }
-        span(2) {
-          serviceName "unnamed-java-app"
-          operationName "hystrix.cmd"
-          resourceName "ExampleGroup.HystrixTest\$2.run"
+          resourceName "ExampleGroup.HystrixTest\$2.execute"
           spanType null
           childOf span(0)
           errored true
@@ -157,6 +148,21 @@ class HystrixTest extends AgentTestRunner {
             defaultTags()
           }
         }
+        span(2) {
+          serviceName "unnamed-java-app"
+          operationName "hystrix.cmd"
+          resourceName "ExampleGroup.HystrixTest\$2.fallback"
+          spanType null
+          childOf span(1)
+          errored false
+          tags {
+            "hystrix.command" "HystrixTest\$2"
+            "hystrix.group" "ExampleGroup"
+            "hystrix.circuit-open" false
+            "$Tags.COMPONENT.key" "hystrix"
+            defaultTags()
+          }
+        }
       }
     }
 
@@ -164,6 +170,7 @@ class HystrixTest extends AgentTestRunner {
     action          | operation
     "execute"       | { HystrixCommand cmd -> cmd.execute() }
     "queue"         | { HystrixCommand cmd -> cmd.queue().get() }
+    "toObservable"  | { HystrixCommand cmd -> cmd.toObservable().toBlocking().first() }
     "observe"       | { HystrixCommand cmd -> cmd.observe().toBlocking().first() }
     "observe block" | { HystrixCommand cmd ->
       BlockingQueue queue = new LinkedBlockingQueue()

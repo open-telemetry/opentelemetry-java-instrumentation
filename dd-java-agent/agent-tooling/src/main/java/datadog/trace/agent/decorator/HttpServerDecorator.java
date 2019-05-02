@@ -88,7 +88,9 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
           Tags.PEER_HOST_IPV6.set(span, ip);
         }
       }
-      Tags.PEER_PORT.set(span, peerPort(connection));
+      final Integer port = peerPort(connection);
+      // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
+      Tags.PEER_PORT.set(span, port != null && port > 0 ? port : null);
     }
     return span;
   }

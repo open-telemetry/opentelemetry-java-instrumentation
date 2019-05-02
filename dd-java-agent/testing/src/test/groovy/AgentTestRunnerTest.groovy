@@ -97,6 +97,28 @@ class AgentTestRunnerTest extends AgentTestRunner {
     new config.exclude.packagename.SomeClass.NestedClass() | _
   }
 
+  def "test unblocked by completed span"() {
+    setup:
+    runUnderTrace("parent") {
+      runUnderTrace("child") {}
+      blockUntilChildSpansFinished(1)
+    }
+
+    expect:
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          operationName "parent"
+          parent()
+        }
+        span(1) {
+          operationName "child"
+          childOf(span(0))
+        }
+      }
+    }
+  }
+
   private static getAgentTransformer() {
     Field f
     try {

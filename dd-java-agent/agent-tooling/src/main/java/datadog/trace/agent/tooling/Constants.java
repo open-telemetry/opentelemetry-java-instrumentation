@@ -13,11 +13,11 @@ public final class Constants {
    * <p>Updates should be mirrored in TestUtils#BOOTSTRAP_PACKAGE_PREFIXES_COPY
    */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
-    "io.opentracing",
     "datadog.slf4j",
-    "datadog.trace.bootstrap",
     "datadog.trace.api",
-    "datadog.trace.context"
+    "datadog.trace.bootstrap",
+    "datadog.trace.context",
+    "io.opentracing",
   };
 
   // This is used in IntegrationTestUtils.java
@@ -46,7 +46,9 @@ public final class Constants {
     "okio",
     "jnr",
     "org.objectweb.asm",
-    "com.kenai"
+    "com.kenai",
+    // Custom RxJava Utility
+    "rx.DDTracingUtil",
   };
 
   private Constants() {}
