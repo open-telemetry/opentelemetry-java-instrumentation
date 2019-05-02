@@ -469,7 +469,11 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
 
           @Override
           public MethodVisitor visitMethod(
-              int access, String name, String descriptor, String signature, String[] exceptions) {
+              final int access,
+              final String name,
+              final String descriptor,
+              final String signature,
+              final String[] exceptions) {
             if (name.equals(getterMethodName)) {
               foundGetter = true;
             }
@@ -487,7 +491,12 @@ public class FieldBackedProvider implements InstrumentationContextProvider {
             // For this reason we check separately for the field and for the two accessors.
             if (!foundField) {
               cv.visitField(
-                  Opcodes.ACC_PRIVATE, fieldName, contextType.getDescriptor(), null, null);
+                  // Field should be transient to avoid being serialized with the object.
+                  Opcodes.ACC_PRIVATE | Opcodes.ACC_TRANSIENT,
+                  fieldName,
+                  contextType.getDescriptor(),
+                  null,
+                  null);
             }
             if (!foundGetter) {
               addGetter();
