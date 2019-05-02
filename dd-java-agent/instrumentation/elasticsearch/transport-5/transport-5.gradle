@@ -20,14 +20,6 @@ muzzle {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
-apply plugin: 'org.unbroken-dome.test-sets'
-
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
-
 dependencies {
   compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '5.0.0'
 
@@ -50,7 +42,4 @@ dependencies {
 
   testCompile group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.0.0'
   testCompile group: 'org.elasticsearch.client', name: 'transport', version: '5.0.0'
-
-  latestDepTestCompile group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.1.+'
-  latestDepTestCompile group: 'org.elasticsearch.client', name: 'transport', version: '5.1.+'
 }
