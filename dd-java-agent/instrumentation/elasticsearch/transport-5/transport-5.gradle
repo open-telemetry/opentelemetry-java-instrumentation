@@ -51,6 +51,6 @@ dependencies {
   testCompile group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.0.0'
   testCompile group: 'org.elasticsearch.client', name: 'transport', version: '5.0.0'
 
-  latestDepTestCompile group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.2.+'
-  latestDepTestCompile group: 'org.elasticsearch.client', name: 'transport', version: '5.2.+'
+  latestDepTestCompile group: 'org.elasticsearch.plugin', name: 'transport-netty3-client', version: '5.1.+'
+  latestDepTestCompile group: 'org.elasticsearch.client', name: 'transport', version: '5.1.+'
 }
