@@ -98,7 +98,7 @@ public interface Instrumenter {
         agentBuilder =
             agentBuilder.transform(
                 new AgentBuilder.Transformer.ForAdvice()
-                    .include(Utils.getAgentClassLoader())
+                    .include(Utils.getBootstrapProxy(), Utils.getAgentClassLoader())
                     .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
                     .advice(entry.getKey(), entry.getValue()));
       }

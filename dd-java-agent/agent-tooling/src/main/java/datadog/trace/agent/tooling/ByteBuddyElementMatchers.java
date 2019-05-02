@@ -62,11 +62,15 @@ public class ByteBuddyElementMatchers {
     return new SafeMatcher<>(matcher, false, description);
   }
 
-  private static TypeDescription safeAsErasure(final TypeDefinition target) {
+  private static TypeDescription safeAsErasure(final TypeDefinition typeDefinition) {
     try {
-      return target.asErasure();
+      return typeDefinition.asErasure();
     } catch (final Exception e) {
-      log.debug("Exception trying to get interfaces:", e);
+      log.debug(
+          "{} trying to get erasure for target {}: {}",
+          e.getClass().getSimpleName(),
+          safeTypeDefinitionName(typeDefinition),
+          e.getMessage());
       return null;
     }
   }
@@ -125,7 +129,11 @@ public class ByteBuddyElementMatchers {
       try {
         return typeDefinition.getSuperClass();
       } catch (final Exception e) {
-        log.debug("Exception trying to get next type definition:", e);
+        log.debug(
+            "{} trying to get super class for target {}: {}",
+            e.getClass().getSimpleName(),
+            safeTypeDefinitionName(typeDefinition),
+            e.getMessage());
         return null;
       }
     }
@@ -167,7 +175,11 @@ public class ByteBuddyElementMatchers {
           interfaceTypes.add(interfaceIter.next());
         }
       } catch (final Exception e) {
-        log.debug("Exception trying to get interfaces:", e);
+        log.debug(
+            "{} trying to get interfaces for target {}: {}",
+            e.getClass().getSimpleName(),
+            safeTypeDefinitionName(typeDefinition),
+            e.getMessage());
       }
       return interfaceTypes;
     }
@@ -269,6 +281,19 @@ public class ByteBuddyElementMatchers {
     @Override
     public String toString() {
       return "safeMatcher(try(" + matcher + ") or " + fallback + ")";
+    }
+  }
+
+  private static String safeTypeDefinitionName(final TypeDefinition td) {
+    try {
+      return td.getTypeName();
+    } catch (final IllegalStateException ex) {
+      final String message = ex.getMessage();
+      if (message.startsWith("Cannot resolve type description for ")) {
+        return message.replace("Cannot resolve type description for ", "");
+      } else {
+        return "?";
+      }
     }
   }
 }
