@@ -15,6 +15,7 @@ import java.lang.instrument.ClassDefinition
 import java.lang.ref.WeakReference
 import java.lang.reflect.Field
 import java.lang.reflect.Method
+import java.lang.reflect.Modifier
 import java.util.concurrent.atomic.AtomicReference
 
 import static context.ContextTestInstrumentation.IncorrectCallUsageKeyClass
@@ -44,8 +45,12 @@ class FieldBackedProviderTest extends AgentTestRunner {
   def "#keyClassName structure modified = #shouldModifyStructure"() {
     setup:
     boolean hasField = false
+    boolean isPrivate = false
+    boolean isTransient = false
     for (Field field : keyClass.getDeclaredFields()) {
       if (field.getName().startsWith("__datadog")) {
+        isPrivate = Modifier.isPrivate(field.getModifiers())
+        isTransient = Modifier.isTransient(field.getModifiers())
         hasField = true
         break
       }
@@ -64,6 +69,8 @@ class FieldBackedProviderTest extends AgentTestRunner {
 
     expect:
     hasField == shouldModifyStructure
+    isPrivate == shouldModifyStructure
+    isTransient == shouldModifyStructure
     hasMarkerInterface == shouldModifyStructure
     hasAccessorInterface == shouldModifyStructure
     keyClass.newInstance().isInstrumented() == shouldModifyStructure
