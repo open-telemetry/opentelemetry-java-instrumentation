@@ -1,6 +1,6 @@
-package datadog.trace.instrumentation.springwebflux;
+package datadog.trace.instrumentation.springwebflux.server;
 
-import static datadog.trace.instrumentation.springwebflux.SpringWebfluxHttpServerDecorator.DECORATE;
+import static datadog.trace.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 
 import datadog.trace.api.DDTags;
 import datadog.trace.context.TraceScope;

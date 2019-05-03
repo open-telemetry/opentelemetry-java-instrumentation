@@ -1,10 +1,10 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
-import dd.trace.instrumentation.springwebflux.EchoHandlerFunction
-import dd.trace.instrumentation.springwebflux.FooModel
-import dd.trace.instrumentation.springwebflux.SpringWebFluxTestApplication
-import dd.trace.instrumentation.springwebflux.TestController
+import dd.trace.instrumentation.springwebflux.server.EchoHandlerFunction
+import dd.trace.instrumentation.springwebflux.server.FooModel
+import dd.trace.instrumentation.springwebflux.server.SpringWebFluxTestApplication
+import dd.trace.instrumentation.springwebflux.server.TestController
 import io.opentracing.tag.Tags
 import okhttp3.OkHttpClient
 import okhttp3.Request

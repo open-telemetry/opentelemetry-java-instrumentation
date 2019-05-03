@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.springwebflux;
+package datadog.trace.instrumentation.springwebflux.server;
 
 import datadog.trace.agent.decorator.ServerDecorator;
 import datadog.trace.api.DDSpanTypes;
