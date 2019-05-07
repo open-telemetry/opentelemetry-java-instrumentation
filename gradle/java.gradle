@@ -92,6 +92,17 @@ dependencies {
   testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
 }
 
+jar {
+  manifest {
+    attributes(
+      "Implementation-Title": project.name,
+      "Implementation-Version": project.version,
+      "Implementation-Vendor": "Datadog",
+      "Implementation-URL" :"https://github.com/datadog/dd-trace-java",
+    )
+  }
+}
+
 tasks.withType(Javadoc).configureEach {
   options.encoding = "utf-8"
   options.docEncoding = "utf-8"
