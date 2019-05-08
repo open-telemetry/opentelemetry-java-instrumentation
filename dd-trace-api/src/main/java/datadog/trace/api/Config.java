@@ -96,7 +96,7 @@ public class Config {
   private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 1000;
   private static final String DEFAULT_PROPAGATION_STYLE_EXTRACT = PropagationStyle.DATADOG.name();
   private static final String DEFAULT_PROPAGATION_STYLE_INJECT = PropagationStyle.DATADOG.name();
-  private static final boolean DEFAULT_JMX_FETCH_ENABLED = false;
+  private static final boolean DEFAULT_JMX_FETCH_ENABLED = true;
 
   public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
 
