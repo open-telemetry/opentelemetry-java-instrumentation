@@ -50,6 +50,7 @@ public class Config {
   public static final String TRACE_ANNOTATIONS = "trace.annotations";
   public static final String TRACE_METHODS = "trace.methods";
   public static final String TRACE_CLASSES_EXCLUDE = "trace.classes.exclude";
+  public static final String TRACE_REPORT_HOSTNAME = "trace.report-hostname";
   public static final String HEADER_TAGS = "trace.header.tags";
   public static final String HTTP_SERVER_ERROR_STATUSES = "http.server.error.statuses";
   public static final String HTTP_CLIENT_ERROR_STATUSES = "http.client.error.statuses";
@@ -103,6 +104,8 @@ public class Config {
 
   private static final String SPLIT_BY_SPACE_OR_COMMA_REGEX = "[,\\s]+";
 
+  private static final boolean DEFAULT_TRACE_REPORT_HOSTNAME = false;
+
   public enum PropagationStyle {
     DATADOG,
     B3
@@ -142,6 +145,8 @@ public class Config {
   @Getter private final Integer jmxFetchStatsdPort;
   @Getter private final boolean logsInjectionEnabled;
   @Getter private final boolean appCustomLogManager;
+  // If `true` the hostname will be detected and added to the root span's metadata
+  @Getter private final boolean reportHostName;
 
   // Read order: System Properties -> Env Variables, [-> default value]
   // Visible for testing
@@ -216,6 +221,9 @@ public class Config {
 
     appCustomLogManager =
         getBooleanSettingFromEnvironment(APP_CUSTOM_LOG_MANAGER, DEFAULT_APP_CUSTOM_LOG_MANAGER);
+
+    reportHostName =
+        getBooleanSettingFromEnvironment(TRACE_REPORT_HOSTNAME, DEFAULT_TRACE_REPORT_HOSTNAME);
 
     log.debug("New instance: {}", this);
   }
@@ -297,6 +305,9 @@ public class Config {
 
     appCustomLogManager =
         getBooleanSettingFromEnvironment(APP_CUSTOM_LOG_MANAGER, DEFAULT_APP_CUSTOM_LOG_MANAGER);
+
+    reportHostName =
+        getPropertyBooleanValue(properties, TRACE_REPORT_HOSTNAME, parent.reportHostName);
 
     log.debug("New instance: {}", this);
   }
