@@ -30,7 +30,7 @@ public class TracingAgent {
       throws Exception {
     startDatadogAgent(agentArgs, inst);
     if (isAppUsingCustomLogManager()) {
-      System.out.println("Custom logger detected.  Delaying JMXFetch initialization.");
+      System.out.println("Custom logger detected. Delaying JMXFetch initialization.");
       /*
        * java.util.logging.LogManager maintains a final static LogManager, which is created during class initialization.
        *
