@@ -81,7 +81,7 @@ class ConfigTest extends Specification {
     config.runtimeContextFieldInjection == true
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
-    config.jmxFetchEnabled == false
+    config.jmxFetchEnabled == true
     config.jmxFetchMetricsConfigs == []
     config.jmxFetchCheckPeriod == null
     config.jmxFetchRefreshBeansPeriod == null
