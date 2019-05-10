@@ -7,6 +7,7 @@ public class DDTags {
   public static final String THREAD_NAME = "thread.name";
   public static final String THREAD_ID = "thread.id";
   public static final String DB_STATEMENT = "sql.query";
+  public static final String INTERNAL_HOST_NAME = "_dd.hostname";
 
   public static final String USER_NAME = "user.principal";
 

@@ -8,6 +8,7 @@ import datadog.opentracing.propagation.TagContext;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
 import datadog.trace.api.Config;
+import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.interceptor.TraceInterceptor;
 import datadog.trace.api.sampling.PrioritySampling;
@@ -26,17 +27,9 @@ import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import java.io.Closeable;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.ServiceConfigurationError;
-import java.util.ServiceLoader;
-import java.util.SortedSet;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ThreadLocalRandom;
@@ -380,6 +373,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     // TODO: current trace implementation doesn't guarantee that first span is the root span
     // We may want to reconsider way this check is done.
     if (!writtenTrace.isEmpty() && sampler.sample(writtenTrace.get(0))) {
+      applyHostNameDetection(writtenTrace);
       writer.write(writtenTrace);
     }
   }
@@ -738,6 +732,51 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       if (tracer != null) {
         tracer.close();
       }
+    }
+  }
+
+  /**
+   * Sets the internal hostname tag on a root span if appropriate.
+   * The following acceptance criteria apply:
+   *  - Users should not be able to overwrite this value
+   *  - It has to be done only on the root span
+   *  - It is not guaranteed that the first span in the list is the root span
+   *
+   * @param spans
+   */
+  private void applyHostNameDetection(List<DDSpan> spans) {
+
+    // Host name detection can be disabled via configuration
+    if (!Config.get().isReportHostName()) {
+      return;
+    }
+
+    String hostname;
+    try {
+      hostname = InetAddress.getLocalHost().getHostName();
+    } catch (UnknownHostException e) {
+      // If we are not able to detect the hostname we do not throw an exception.
+      return;
+    }
+
+    // Every time we set a tag all the decorators have to be executed so if we already set the hostname on the
+    // root of a specific span, using this registry we can avoid setting the tag again, hence executing all
+    // decorators again to obtain the same result.
+    Set<MutableSpan> alreadyTrackedRootSpans = new HashSet<>();
+    for (DDSpan span : spans) {
+      MutableSpan rootSpan = span.getRootSpan();
+
+      // Only root spans get the hostname applied
+      if (null == rootSpan) {
+        continue;
+      }
+
+      if (alreadyTrackedRootSpans.contains(rootSpan)) {
+        continue;
+      }
+      alreadyTrackedRootSpans.add(rootSpan);
+
+      rootSpan.setTag(DDTags.INTERNAL_HOST_NAME, hostname);
     }
   }
 }
