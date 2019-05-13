@@ -736,11 +736,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   /**
-   * Sets the internal hostname tag on a root span if appropriate.
-   * The following acceptance criteria apply:
-   *  - Users should not be able to overwrite this value
-   *  - It has to be done only on the root span
-   *  - It is not guaranteed that the first span in the list is the root span
+   * Sets the internal hostname tag on a root span if appropriate. The following acceptance criteria
+   * apply: 1) Users should not be able to overwrite this value, 2) It has to be done only on the
+   * root span, 3) It is not guaranteed that the first span in the list is the root span.
    *
    * @param spans
    */
@@ -759,9 +757,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       return;
     }
 
-    // Every time we set a tag all the decorators have to be executed so if we already set the hostname on the
-    // root of a specific span, using this registry we can avoid setting the tag again, hence executing all
-    // decorators again to obtain the same result.
+    // Every time we set a tag all the decorators have to be executed so if we already set the
+    // hostname on the root of a specific span, using this registry we can avoid setting the tag
+    // again, hence executing all decorators again to obtain the same result.
     Set<MutableSpan> alreadyTrackedRootSpans = new HashSet<>();
     for (DDSpan span : spans) {
       MutableSpan rootSpan = span.getRootSpan();
