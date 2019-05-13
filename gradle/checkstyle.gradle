@@ -1,13 +1,13 @@
 apply plugin: 'checkstyle'
 
 dependencies {
-  checkstyle 'com.puppycrawl.tools:checkstyle:8.0'
+  checkstyle 'com.puppycrawl.tools:checkstyle:8.20'
 }
 
-def checkstyleConfigDir = new File(buildscript.sourceFile.parentFile, 'enforcement')
+def checkstyleConfigDir = file("${buildscript.sourceFile.parentFile}/enforcement/checkstyle")
 
 checkstyle {
-  configFile = new File(checkstyleConfigDir, "checkstyle.xml")
+  configDir = checkstyleConfigDir
   configProperties.checkstyleConfigDir = checkstyleConfigDir
   maxWarnings = 500
 }
@@ -16,9 +16,9 @@ plugins.withType(GroovyBasePlugin) {
   sourceSets.all { sourceSet ->
     tasks.register("${sourceSet.getTaskName('checkstyle', 'groovy')}", Checkstyle) {
       configFile = new File(checkstyleConfigDir, "checkstyle-groovy.xml")
-      source sourceSet.allGroovy
+      source(allGroovy)
       classpath = sourceSet.compileClasspath
-      reports.xml.destination new File(checkstyle.reportsDir, "${sourceSet.name}-groovy.xml")
+      reports.xml.destination = new File(reportsDir, "${sourceSet.name}-groovy.xml")
     }
   }
 }
