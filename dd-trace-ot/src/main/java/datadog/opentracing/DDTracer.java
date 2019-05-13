@@ -81,6 +81,12 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   private final HttpCodec.Injector injector;
   private final HttpCodec.Extractor extractor;
 
+  /**
+   * hostname is expensive to calculate so we detect it only when creating the tracer and we cache
+   * it for future reuse.
+   */
+  private String hostname;
+
   /** By default, report to local agent and collect all traces. */
   public DDTracer() {
     this(Config.get());
@@ -248,6 +254,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     // Ensure that PendingTrace.SPAN_CLEANER is initialized in this thread:
     // FIXME: add test to verify the span cleaner thread is started with this call.
     PendingTrace.initialize();
+
+    cacheHostName();
   }
 
   @Override
@@ -736,6 +744,24 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   /**
+   * Hostname is expensive to retrieve so we provide a way to calculate it and cache it in the
+   * tracer itself for further reuse.
+   */
+  private void cacheHostName() {
+
+    // Host name detection can be disabled via configuration
+    if (!Config.get().isReportHostName()) {
+      return;
+    }
+
+    try {
+      this.hostname = InetAddress.getLocalHost().getHostName();
+    } catch (UnknownHostException e) {
+      // If we are not able to detect the hostname we do not throw an exception.
+    }
+  }
+
+  /**
    * Sets the internal hostname tag on a root span if appropriate. The following acceptance criteria
    * apply: 1) Users should not be able to overwrite this value, 2) It has to be done only on the
    * root span, 3) It is not guaranteed that the first span in the list is the root span.
@@ -746,14 +772,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
     // Host name detection can be disabled via configuration
     if (!Config.get().isReportHostName()) {
-      return;
-    }
-
-    String hostname;
-    try {
-      hostname = InetAddress.getLocalHost().getHostName();
-    } catch (UnknownHostException e) {
-      // If we are not able to detect the hostname we do not throw an exception.
       return;
     }
 

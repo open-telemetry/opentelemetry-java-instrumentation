@@ -1,8 +1,10 @@
 package datadog.trace
 
+import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
 import datadog.opentracing.propagation.HttpCodec
 import datadog.trace.api.Config
+import datadog.trace.api.DDTags
 import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.DDAgentWriter
@@ -31,7 +33,7 @@ class DDTracerTest extends Specification {
     // assert that a trace agent isn't running locally as that messes up the test.
     try {
       (new Socket("localhost", 8126)).close()
-      throw new IllegalStateException("Trace Agent unexpectedly running locally.")
+      throw new IllegalStateException("An agent is already running locally on port 8126. Please stop it if you want to run tests locally.")
     } catch (final ConnectException ioe) {
       // trace agent is not running locally.
     }
@@ -143,5 +145,36 @@ class DDTracerTest extends Specification {
     key               | value
     PRIORITY_SAMPLING | "true"
     PRIORITY_SAMPLING | "false"
+  }
+
+  def "tracer does not set the host name by default"() {
+    setup:
+    def tracer = new DDTracer('my_service', new ListWriter(), new AllSampler())
+
+    when:
+    DDSpan root = tracer.buildSpan('my_root').start()
+    DDSpan child = tracer.buildSpan('my_child').asChildOf(root).start()
+    child.finish()
+    root.finish()
+
+    then:
+    !root.context().tags.containsKey(DDTags.INTERNAL_HOST_NAME)
+    !child.context().tags.containsKey(DDTags.INTERNAL_HOST_NAME)
+  }
+
+  def "tracer sets the host name if activated only on root span"() {
+    setup:
+    System.setProperty('dd.trace.report-hostname', 'true')
+    def tracer = new DDTracer('my_service', new ListWriter(), new AllSampler())
+
+    when:
+    DDSpan root = tracer.buildSpan('my_root').start()
+    DDSpan child = tracer.buildSpan('my_child').asChildOf(root).start()
+    child.finish()
+    root.finish()
+
+    then:
+    root.context().tags.get(DDTags.INTERNAL_HOST_NAME) == InetAddress.localHost.hostName
+    !child.context().tags.containsKey(DDTags.INTERNAL_HOST_NAME)
   }
 }
