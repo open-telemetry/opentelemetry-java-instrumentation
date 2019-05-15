@@ -36,6 +36,7 @@ import static datadog.trace.api.Config.SERVICE_NAME
 import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.TRACE_AGENT_PORT
 import static datadog.trace.api.Config.TRACE_REPORT_HOSTNAME
+import static datadog.trace.api.Config.TRACE_ENABLED
 import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
 import static datadog.trace.api.Config.WRITER_TYPE
 
@@ -46,6 +47,7 @@ class ConfigTest extends Specification {
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
   private static final DD_SERVICE_NAME_ENV = "DD_SERVICE_NAME"
+  private static final DD_TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
   private static final DD_WRITER_TYPE_ENV = "DD_WRITER_TYPE"
   private static final DD_SERVICE_MAPPING_ENV = "DD_SERVICE_MAPPING"
   private static final DD_SPAN_TAGS_ENV = "DD_SPAN_TAGS"
@@ -63,6 +65,7 @@ class ConfigTest extends Specification {
 
     then:
     config.serviceName == "unnamed-java-app"
+    config.traceEnabled == true
     config.writerType == "DDAgentWriter"
     config.agentHost == "localhost"
     config.agentPort == 8126
@@ -101,6 +104,7 @@ class ConfigTest extends Specification {
     setup:
     def prop = new Properties()
     prop.setProperty(SERVICE_NAME, "something else")
+    prop.setProperty(TRACE_ENABLED, "false")
     prop.setProperty(WRITER_TYPE, "LoggingWriter")
     prop.setProperty(AGENT_HOST, "somehost")
     prop.setProperty(TRACE_AGENT_PORT, "123")
@@ -133,6 +137,7 @@ class ConfigTest extends Specification {
 
     then:
     config.serviceName == "something else"
+    config.traceEnabled == false
     config.writerType == "LoggingWriter"
     config.agentHost == "somehost"
     config.agentPort == 123
@@ -162,6 +167,7 @@ class ConfigTest extends Specification {
   def "specify overrides via system properties"() {
     setup:
     System.setProperty(PREFIX + SERVICE_NAME, "something else")
+    System.setProperty(PREFIX + TRACE_ENABLED, "false")
     System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
     System.setProperty(PREFIX + AGENT_HOST, "somehost")
     System.setProperty(PREFIX + TRACE_AGENT_PORT, "123")
@@ -194,6 +200,7 @@ class ConfigTest extends Specification {
 
     then:
     config.serviceName == "something else"
+    config.traceEnabled == false
     config.writerType == "LoggingWriter"
     config.agentHost == "somehost"
     config.agentPort == 123
@@ -223,6 +230,7 @@ class ConfigTest extends Specification {
   def "specify overrides via env vars"() {
     setup:
     environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
+    environmentVariables.set(DD_TRACE_ENABLED_ENV, "false")
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
     environmentVariables.set(DD_PROPAGATION_STYLE_EXTRACT, "B3 Datadog")
     environmentVariables.set(DD_PROPAGATION_STYLE_INJECT, "Datadog B3")
@@ -234,6 +242,7 @@ class ConfigTest extends Specification {
 
     then:
     config.serviceName == "still something else"
+    config.traceEnabled == false
     config.writerType == "LoggingWriter"
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
@@ -265,6 +274,7 @@ class ConfigTest extends Specification {
   def "default when configured incorrectly"() {
     setup:
     System.setProperty(PREFIX + SERVICE_NAME, " ")
+    System.setProperty(PREFIX + TRACE_ENABLED, " ")
     System.setProperty(PREFIX + WRITER_TYPE, " ")
     System.setProperty(PREFIX + AGENT_HOST, " ")
     System.setProperty(PREFIX + TRACE_AGENT_PORT, " ")
@@ -285,6 +295,7 @@ class ConfigTest extends Specification {
 
     then:
     config.serviceName == " "
+    config.traceEnabled == true
     config.writerType == " "
     config.agentHost == " "
     config.agentPort == 8126
@@ -346,6 +357,7 @@ class ConfigTest extends Specification {
     setup:
     Properties properties = new Properties()
     properties.setProperty(SERVICE_NAME, "something else")
+    properties.setProperty(TRACE_ENABLED, "false")
     properties.setProperty(WRITER_TYPE, "LoggingWriter")
     properties.setProperty(AGENT_HOST, "somehost")
     properties.setProperty(TRACE_AGENT_PORT, "123")
@@ -368,12 +380,13 @@ class ConfigTest extends Specification {
     properties.setProperty(JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
     properties.setProperty(JMX_FETCH_STATSD_HOST, "statsd host")
     properties.setProperty(JMX_FETCH_STATSD_PORT, "321")
-
+    
     when:
     def config = Config.get(properties)
 
     then:
     config.serviceName == "something else"
+    config.traceEnabled == false
     config.writerType == "LoggingWriter"
     config.agentHost == "somehost"
     config.agentPort == 123

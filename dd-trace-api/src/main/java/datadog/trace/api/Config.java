@@ -35,6 +35,7 @@ public class Config {
 
   public static final String SERVICE_NAME = "service.name";
   public static final String SERVICE = "service";
+  public static final String TRACE_ENABLED = "trace.enabled";
   public static final String WRITER_TYPE = "writer.type";
   public static final String AGENT_HOST = "agent.host";
   public static final String TRACE_AGENT_PORT = "trace.agent.port";
@@ -60,29 +61,30 @@ public class Config {
       "trace.runtime.context.field.injection";
   public static final String PROPAGATION_STYLE_EXTRACT = "propagation.style.extract";
   public static final String PROPAGATION_STYLE_INJECT = "propagation.style.inject";
+
   public static final String JMX_FETCH_ENABLED = "jmxfetch.enabled";
   public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
   public static final String JMX_FETCH_CHECK_PERIOD = "jmxfetch.check-period";
   public static final String JMX_FETCH_REFRESH_BEANS_PERIOD = "jmxfetch.refresh-beans-period";
   public static final String JMX_FETCH_STATSD_HOST = "jmxfetch.statsd.host";
   public static final String JMX_FETCH_STATSD_PORT = "jmxfetch.statsd.port";
-  public static final String APP_CUSTOM_LOG_MANAGER = "app.customlogmanager";
+
+  public static final String LOGS_INJECTION_ENABLED = "logs.injection";
 
   public static final String RUNTIME_ID_TAG = "runtime-id";
   public static final String LANGUAGE_TAG_KEY = "language";
   public static final String LANGUAGE_TAG_VALUE = "jvm";
+
   public static final String DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
+  private static final boolean DEFAULT_TRACE_ENABLED = true;
   public static final String DD_AGENT_WRITER_TYPE = "DDAgentWriter";
   public static final String LOGGING_WRITER_TYPE = "LoggingWriter";
-  public static final String DEFAULT_AGENT_WRITER_TYPE = DD_AGENT_WRITER_TYPE;
+  private static final String DEFAULT_AGENT_WRITER_TYPE = DD_AGENT_WRITER_TYPE;
 
   public static final String DEFAULT_AGENT_HOST = "localhost";
   public static final int DEFAULT_TRACE_AGENT_PORT = 8126;
   public static final String DEFAULT_AGENT_UNIX_DOMAIN_SOCKET = null;
-
-  public static final String LOGS_INJECTION_ENABLED = "logs.injection";
-  public static final boolean DEFAULT_LOGS_INJECTION_ENABLED = false;
 
   private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
 
@@ -100,7 +102,7 @@ public class Config {
 
   public static final int DEFAULT_JMX_FETCH_STATSD_PORT = 8125;
 
-  private static final boolean DEFAULT_APP_CUSTOM_LOG_MANAGER = false;
+  public static final boolean DEFAULT_LOGS_INJECTION_ENABLED = false;
 
   private static final String SPLIT_BY_SPACE_OR_COMMA_REGEX = "[,\\s]+";
 
@@ -118,6 +120,7 @@ public class Config {
   @Getter private final String runtimeId;
 
   @Getter private final String serviceName;
+  @Getter private final boolean traceEnabled;
   @Getter private final String writerType;
   @Getter private final String agentHost;
   @Getter private final int agentPort;
@@ -137,14 +140,16 @@ public class Config {
   @Getter private final boolean runtimeContextFieldInjection;
   @Getter private final Set<PropagationStyle> propagationStylesToExtract;
   @Getter private final Set<PropagationStyle> propagationStylesToInject;
+
   @Getter private final boolean jmxFetchEnabled;
   @Getter private final List<String> jmxFetchMetricsConfigs;
   @Getter private final Integer jmxFetchCheckPeriod;
   @Getter private final Integer jmxFetchRefreshBeansPeriod;
   @Getter private final String jmxFetchStatsdHost;
   @Getter private final Integer jmxFetchStatsdPort;
+
   @Getter private final boolean logsInjectionEnabled;
-  @Getter private final boolean appCustomLogManager;
+
   // If `true` the hostname will be detected and added to the root span's metadata
   @Getter private final boolean reportHostName;
 
@@ -154,6 +159,8 @@ public class Config {
     runtimeId = UUID.randomUUID().toString();
 
     serviceName = getSettingFromEnvironment(SERVICE_NAME, DEFAULT_SERVICE_NAME);
+
+    traceEnabled = getBooleanSettingFromEnvironment(TRACE_ENABLED, DEFAULT_TRACE_ENABLED);
     writerType = getSettingFromEnvironment(WRITER_TYPE, DEFAULT_AGENT_WRITER_TYPE);
     agentHost = getSettingFromEnvironment(AGENT_HOST, DEFAULT_AGENT_HOST);
     agentPort =
@@ -171,6 +178,7 @@ public class Config {
     globalTags = getMapSettingFromEnvironment(GLOBAL_TAGS, null);
     spanTags = getMapSettingFromEnvironment(SPAN_TAGS, null);
     jmxTags = getMapSettingFromEnvironment(JMX_TAGS, null);
+
     excludedClasses = getListSettingFromEnvironment(TRACE_CLASSES_EXCLUDE, null);
     headerTags = getMapSettingFromEnvironment(HEADER_TAGS, null);
 
@@ -219,9 +227,6 @@ public class Config {
     logsInjectionEnabled =
         getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
 
-    appCustomLogManager =
-        getBooleanSettingFromEnvironment(APP_CUSTOM_LOG_MANAGER, DEFAULT_APP_CUSTOM_LOG_MANAGER);
-
     reportHostName =
         getBooleanSettingFromEnvironment(TRACE_REPORT_HOSTNAME, DEFAULT_TRACE_REPORT_HOSTNAME);
 
@@ -233,6 +238,8 @@ public class Config {
     runtimeId = parent.runtimeId;
 
     serviceName = properties.getProperty(SERVICE_NAME, parent.serviceName);
+
+    traceEnabled = getPropertyBooleanValue(properties, TRACE_ENABLED, parent.traceEnabled);
     writerType = properties.getProperty(WRITER_TYPE, parent.writerType);
     agentHost = properties.getProperty(AGENT_HOST, parent.agentHost);
     agentPort =
@@ -302,9 +309,6 @@ public class Config {
 
     logsInjectionEnabled =
         getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
-
-    appCustomLogManager =
-        getBooleanSettingFromEnvironment(APP_CUSTOM_LOG_MANAGER, DEFAULT_APP_CUSTOM_LOG_MANAGER);
 
     reportHostName =
         getPropertyBooleanValue(properties, TRACE_REPORT_HOSTNAME, parent.reportHostName);
