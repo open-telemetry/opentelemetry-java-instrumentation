@@ -34,7 +34,7 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
 
     final Span span =
         tracer
-            .buildSpan(clientRequest.method().toString())
+            .buildSpan("webflux.request")
             .asChildOf(parentSpan)
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
             .start();
