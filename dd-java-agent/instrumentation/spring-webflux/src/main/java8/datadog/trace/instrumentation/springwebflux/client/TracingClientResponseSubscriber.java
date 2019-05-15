@@ -44,6 +44,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
           @Override
           public void cancel() {
             DECORATE.onCancel(span);
+            DECORATE.beforeFinish(span);
             subscription.cancel();
             span.finish();
           }
@@ -73,6 +74,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
       subscriber.onError(throwable);
     } finally {
       DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
       span.finish();
     }
   }
@@ -82,6 +84,7 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
     try {
       subscriber.onComplete();
     } finally {
+      DECORATE.beforeFinish(span);
       span.finish();
     }
   }

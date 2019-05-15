@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.springwebflux.client;
 
+import static datadog.trace.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
+
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -38,6 +40,7 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
             .asChildOf(parentSpan)
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
             .start();
+    DECORATE.afterStart(span);
 
     try (final Scope scope = tracer.scopeManager().activate(span, false)) {
       final ClientRequest mutatedRequest =
