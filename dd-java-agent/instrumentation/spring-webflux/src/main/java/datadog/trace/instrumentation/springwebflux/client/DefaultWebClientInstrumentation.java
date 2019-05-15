@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.springwebflux.client;
 
 import static java.util.Collections.singletonMap;
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -37,8 +38,7 @@ public class DefaultWebClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named(
-        "org.springframework.web.reactive.function.client.ExchangeFunctions$DefaultExchangeFunction");
+    return hasSuperType(named("org.springframework.web.reactive.function.client.ExchangeFunction"));
   }
 
   @Override
