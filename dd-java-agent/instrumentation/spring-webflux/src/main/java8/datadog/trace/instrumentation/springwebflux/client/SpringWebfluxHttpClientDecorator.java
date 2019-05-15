@@ -3,8 +3,6 @@ package datadog.trace.instrumentation.springwebflux.client;
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import io.opentracing.Span;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -16,10 +14,8 @@ public class SpringWebfluxHttpClientDecorator
       new SpringWebfluxHttpClientDecorator();
 
   public void onCancel(final Span span) {
-    final Map<String, Object> logs = new HashMap<>(2);
-    logs.put("event", "cancelled");
-    logs.put("message", "The subscription was cancelled");
-    span.log(logs);
+    span.setTag("event", "cancelled");
+    span.setTag("message", "The subscription was cancelled");
   }
 
   @Override
