@@ -8,7 +8,6 @@ import datadog.opentracing.propagation.TagContext;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
 import datadog.trace.api.Config;
-import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.interceptor.TraceInterceptor;
 import datadog.trace.api.sampling.PrioritySampling;
@@ -80,6 +79,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   private final HttpCodec.Injector injector;
   private final HttpCodec.Extractor extractor;
+
+  /** A tag intended for internal use only, hence not added to the public api DDTags class. */
+  private static final String INTERNAL_HOST_NAME = "_dd.hostname";
 
   /**
    * hostname is expensive to calculate so we detect it only when creating the tracer and we cache
@@ -792,7 +794,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       }
       alreadyTrackedRootSpans.add(rootSpan);
 
-      rootSpan.setTag(DDTags.INTERNAL_HOST_NAME, hostname);
+      rootSpan.setTag(INTERNAL_HOST_NAME, hostname);
     }
   }
 }

@@ -29,6 +29,8 @@ class DDTracerTest extends Specification {
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
+  private final String INTERNAL_HOST_NAME = "_dd.hostname"
+
   def setupSpec() {
     // assert that a trace agent isn't running locally as that messes up the test.
     try {
@@ -158,8 +160,8 @@ class DDTracerTest extends Specification {
     root.finish()
 
     then:
-    !root.context().tags.containsKey(DDTags.INTERNAL_HOST_NAME)
-    !child.context().tags.containsKey(DDTags.INTERNAL_HOST_NAME)
+    !root.context().tags.containsKey(INTERNAL_HOST_NAME)
+    !child.context().tags.containsKey(INTERNAL_HOST_NAME)
   }
 
   def "tracer sets the host name if activated only on root span"() {
@@ -174,7 +176,7 @@ class DDTracerTest extends Specification {
     root.finish()
 
     then:
-    root.context().tags.get(DDTags.INTERNAL_HOST_NAME) == InetAddress.localHost.hostName
-    !child.context().tags.containsKey(DDTags.INTERNAL_HOST_NAME)
+    root.context().tags.get(INTERNAL_HOST_NAME) == InetAddress.localHost.hostName
+    !child.context().tags.containsKey(INTERNAL_HOST_NAME)
   }
 }
