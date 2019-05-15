@@ -151,7 +151,9 @@ public class Config {
   @Getter private final boolean logsInjectionEnabled;
 
   // If `true` the hostname will be detected and added to the root span's metadata
-  @Getter private final boolean reportHostName;
+  // Note: this temporarily non final as a conversation is in place related to how to improve
+  // testability under different configuration scenarios.
+  @Getter private boolean reportHostName;
 
   // Read order: System Properties -> Env Variables, [-> default value]
   // Visible for testing
@@ -657,5 +659,14 @@ public class Config {
     } else {
       return new Config(properties, INSTANCE);
     }
+  }
+
+  /**
+   * Note: this is a workaround as a conversation related to improve testability of services under
+   * different configuration scenarios is in progress.
+   */
+  public void refreshDetectHostnameProperty() {
+    this.reportHostName =
+        getBooleanSettingFromEnvironment(TRACE_REPORT_HOSTNAME, DEFAULT_TRACE_REPORT_HOSTNAME);
   }
 }

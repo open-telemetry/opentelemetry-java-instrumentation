@@ -167,6 +167,7 @@ class DDTracerTest extends Specification {
   def "tracer sets the host name if activated only on root span"() {
     setup:
     System.setProperty('dd.trace.report-hostname', 'true')
+    Config.get().refreshDetectHostnameProperty()
     def tracer = new DDTracer('my_service', new ListWriter(), new AllSampler())
 
     when:
