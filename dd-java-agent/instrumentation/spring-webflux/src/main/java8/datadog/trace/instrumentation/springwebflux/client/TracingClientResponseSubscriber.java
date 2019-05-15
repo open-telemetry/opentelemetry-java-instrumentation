@@ -32,7 +32,6 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
   @Override
   public void onSubscribe(final Subscription subscription) {
     DECORATE.onRequest(span, clientRequest);
-    DECORATE.onPeerConnection(span, remoteAddress());
 
     subscriber.onSubscribe(
         new Subscription() {
