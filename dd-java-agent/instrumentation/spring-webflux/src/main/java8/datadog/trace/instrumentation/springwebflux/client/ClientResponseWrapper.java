@@ -13,6 +13,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
+/** Wrapper class for ClientResponse that adds Context to the body Publisher */
 public class ClientResponseWrapper implements ClientResponse {
 
   private final ClientResponse clientResponse;
