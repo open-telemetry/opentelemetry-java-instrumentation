@@ -69,9 +69,8 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
 
     String description = ctx.getPathBinding().getDescription();
     if (description == null || description.isEmpty()) {
-      description = ctx.getRequest().getUri();
-    }
-    if (!description.startsWith("/")) {
+      description = "/";
+    } else if (!description.startsWith("/")) {
       description = "/" + description;
     }
 
