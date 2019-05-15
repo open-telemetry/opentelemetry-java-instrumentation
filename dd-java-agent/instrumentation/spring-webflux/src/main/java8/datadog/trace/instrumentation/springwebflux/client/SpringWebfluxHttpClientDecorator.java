@@ -24,7 +24,7 @@ public class SpringWebfluxHttpClientDecorator
 
   @Override
   protected String[] instrumentationNames() {
-    return new String[] {"spring-webflux-client"};
+    return new String[] {"spring-webflux", "spring-webflux-client"};
   }
 
   @Override
