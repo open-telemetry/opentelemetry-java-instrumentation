@@ -13,7 +13,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
-/** Wrapper class for ClientResponse that adds Context to the body Publisher */
+/**
+ * Wrapper class for ClientResponse that adds Context to the body Publisher
+ */
 public class ClientResponseWrapper implements ClientResponse {
 
   private final ClientResponse clientResponse;
@@ -81,10 +83,19 @@ public class ClientResponseWrapper implements ClientResponse {
 
   @Override
   public <T> Mono<ResponseEntity<List<T>>> toEntityList(
-      final ParameterizedTypeReference<T> typeReference) {
+    final ParameterizedTypeReference<T> typeReference) {
     return clientResponse.toEntityList(typeReference);
   }
 
+  /**
+   * ClientResponseWrapper is based on the ClientResponse from
+   * spring-webflux-5.0.0.RELEASE. Since spring-webflux 5.1 ClientResponse
+   * contains extra methods like rewStatusCode and gives methodNotFound
+   * exceptions at runtime if used in a project with the latest spring-webflux
+   * 5.1 or higher.
+   * <p>
+   * See https://docs.spring.io/spring/docs/5.1.x/javadoc-api/org/springframework/web/reactive/function/client/ClientResponse.html#rawStatusCode--
+   */
   public int rawStatusCode() {
     return clientResponse.statusCode().value();
   }
