@@ -26,8 +26,6 @@ import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import java.io.Closeable;
 import java.lang.ref.WeakReference;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -50,6 +48,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   /** Tags required to link apm traces to runtime metrics */
   final Map<String, String> runtimeTags;
+  /** A set of tags that are added only to the application's root span */
+  private final Map<String, String> applicationRootSpanTags;
   /** A set of tags that are added to every span */
   private final Map<String, String> defaultSpanTags;
   /** A configured mapping of service names to update with new values */
@@ -80,15 +80,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   private final HttpCodec.Injector injector;
   private final HttpCodec.Extractor extractor;
 
-  /** A tag intended for internal use only, hence not added to the public api DDTags class. */
-  private static final String INTERNAL_HOST_NAME = "_dd.hostname";
-
-  /**
-   * hostname is expensive to calculate so we detect it only when creating the tracer and we cache
-   * it for future reuse.
-   */
-  private String hostname;
-
   /** By default, report to local agent and collect all traces. */
   public DDTracer() {
     this(Config.get());
@@ -117,6 +108,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         Writer.Builder.forConfig(config),
         Sampler.Builder.forConfig(config),
         config.getRuntimeTags(),
+        config.getApplicationRootSpanTags(),
         config.getMergedSpanTags(),
         config.getServiceMapping(),
         config.getHeaderTags(),
@@ -138,6 +130,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap(),
+        Collections.<String, String>emptyMap(),
         0);
   }
 
@@ -151,6 +144,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         writer,
         Sampler.Builder.forConfig(config),
         config.getRuntimeTags(),
+        config.getApplicationRootSpanTags(),
         config.getMergedSpanTags(),
         config.getServiceMapping(),
         config.getHeaderTags(),
@@ -166,6 +160,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Writer writer,
       final Sampler sampler,
       final String runtimeId,
+      final Map<String, String> applicationRootSpanTags,
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders) {
@@ -174,6 +169,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         writer,
         sampler,
         customRuntimeTags(runtimeId),
+        applicationRootSpanTags,
         defaultSpanTags,
         serviceNameMappings,
         taggedHeaders,
@@ -189,6 +185,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Writer writer,
       final Sampler sampler,
       final Map<String, String> runtimeTags,
+      final Map<String, String> applicationRootSpanTags,
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders) {
@@ -197,6 +194,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         writer,
         sampler,
         runtimeTags,
+        applicationRootSpanTags,
         defaultSpanTags,
         serviceNameMappings,
         taggedHeaders,
@@ -208,6 +206,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Writer writer,
       final Sampler sampler,
       final Map<String, String> runtimeTags,
+      final Map<String, String> applicationRootSpanTags,
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders,
@@ -221,6 +220,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this.writer = writer;
     this.writer.start();
     this.sampler = sampler;
+    this.applicationRootSpanTags = applicationRootSpanTags;
     this.defaultSpanTags = defaultSpanTags;
     this.runtimeTags = runtimeTags;
     this.serviceNameMappings = serviceNameMappings;
@@ -256,8 +256,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     // Ensure that PendingTrace.SPAN_CLEANER is initialized in this thread:
     // FIXME: add test to verify the span cleaner thread is started with this call.
     PendingTrace.initialize();
-
-    cacheHostName();
   }
 
   @Override
@@ -383,7 +381,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     // TODO: current trace implementation doesn't guarantee that first span is the root span
     // We may want to reconsider way this check is done.
     if (!writtenTrace.isEmpty() && sampler.sample(writtenTrace.get(0))) {
-      applyHostNameDetection(writtenTrace);
       writer.write(writtenTrace);
     }
   }
@@ -616,6 +613,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final PendingTrace parentTrace;
       final int samplingPriority;
       final String origin;
+      final boolean isApplicationRootSpan = parent == null || !(parent instanceof DDSpanContext);
 
       final DDSpanContext context;
       SpanContext parentContext = parent;
@@ -678,6 +676,10 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
       final String operationName = this.operationName != null ? this.operationName : resourceName;
 
+      if (isApplicationRootSpan) {
+        applyTagsIfNotDefined(tags, applicationRootSpanTags);
+      }
+
       // some attributes are inherited from the parent
       context =
           new DDSpanContext(
@@ -727,6 +729,28 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
       return context;
     }
+
+    /**
+     * Merge a map of tag 'candidates' into a 'destination' map of tags never overwriting original
+     * values.
+     *
+     * @param destination The map of tags where candidate tags will be merged in
+     * @param candidates The potential tags that will be added if not already defined
+     */
+    private void applyTagsIfNotDefined(
+        Map<String, Object> destination, Map<String, String> candidates) {
+      if (null == destination || null == candidates) {
+        return;
+      }
+
+      for (Map.Entry<String, String> entry : candidates.entrySet()) {
+        if (destination.containsKey(entry.getKey())) {
+          continue;
+        }
+
+        destination.put(entry.getKey(), entry.getValue());
+      }
+    }
   }
 
   private static class ShutdownHook extends Thread {
@@ -742,59 +766,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       if (tracer != null) {
         tracer.close();
       }
-    }
-  }
-
-  /**
-   * Hostname is expensive to retrieve so we provide a way to calculate it and cache it in the
-   * tracer itself for further reuse.
-   */
-  private void cacheHostName() {
-
-    // Host name detection can be disabled via configuration
-    if (!Config.get().isReportHostName()) {
-      return;
-    }
-
-    try {
-      this.hostname = InetAddress.getLocalHost().getHostName();
-    } catch (UnknownHostException e) {
-      // If we are not able to detect the hostname we do not throw an exception.
-    }
-  }
-
-  /**
-   * Sets the internal hostname tag on a root span if appropriate. The following acceptance criteria
-   * apply: 1) Users should not be able to overwrite this value, 2) It has to be done only on the
-   * root span, 3) It is not guaranteed that the first span in the list is the root span.
-   *
-   * @param spans
-   */
-  private void applyHostNameDetection(List<DDSpan> spans) {
-
-    // Host name detection can be disabled via configuration
-    if (!Config.get().isReportHostName()) {
-      return;
-    }
-
-    // Every time we set a tag all the decorators have to be executed so if we already set the
-    // hostname on the root of a specific span, using this registry we can avoid setting the tag
-    // again, hence executing all decorators again to obtain the same result.
-    Set<MutableSpan> alreadyTrackedRootSpans = new HashSet<>();
-    for (DDSpan span : spans) {
-      MutableSpan rootSpan = span.getRootSpan();
-
-      // Only root spans get the hostname applied
-      if (null == rootSpan) {
-        continue;
-      }
-
-      if (alreadyTrackedRootSpans.contains(rootSpan)) {
-        continue;
-      }
-      alreadyTrackedRootSpans.add(rootSpan);
-
-      rootSpan.setTag(INTERNAL_HOST_NAME, hostname);
     }
   }
 }

@@ -1,5 +1,7 @@
 package datadog.trace.api;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -113,6 +115,9 @@ public class Config {
     B3
   }
 
+  /** A tag intended for internal use only, hence not added to the public api DDTags class. */
+  private static final String INTERNAL_HOST_NAME = "_dd.hostname";
+
   /**
    * this is a random UUID that gets generated on JVM start up and is attached to every root span
    * and every JMX metric that is sent out.
@@ -150,10 +155,7 @@ public class Config {
 
   @Getter private final boolean logsInjectionEnabled;
 
-  // If `true` the hostname will be detected and added to the root span's metadata
-  // Note: this temporarily non final as a conversation is in place related to how to improve
-  // testability under different configuration scenarios.
-  @Getter private boolean reportHostName;
+  @Getter private final boolean reportHostName;
 
   // Read order: System Properties -> Env Variables, [-> default value]
   // Visible for testing
@@ -316,6 +318,15 @@ public class Config {
         getPropertyBooleanValue(properties, TRACE_REPORT_HOSTNAME, parent.reportHostName);
 
     log.debug("New instance: {}", this);
+  }
+
+  /** @return A map of tags to be applied only to the currently tracing application root span. */
+  public Map<String, String> getApplicationRootSpanTags() {
+    final Map<String, String> result = newHashMap(reportHostName ? 1 : 0);
+    if (reportHostName) {
+      result.put(INTERNAL_HOST_NAME, getHostname());
+    }
+    return Collections.unmodifiableMap(result);
   }
 
   public Map<String, String> getMergedSpanTags() {
@@ -646,6 +657,28 @@ public class Config {
     return Collections.unmodifiableSet(result);
   }
 
+  // Fields used to cache detected hostName which is a time consuming operation.
+  private String hostName = null;
+  private boolean hostNameDetected = false;
+
+  /**
+   * Returns the detected hostname. This operation is time consuming and the first time this method
+   * is called will take some time. Hostname is cached for subsequent calls.
+   */
+  public String getHostname() {
+    if (!this.hostNameDetected) {
+      try {
+        this.hostName = InetAddress.getLocalHost().getHostName();
+      } catch (UnknownHostException e) {
+        // If we are not able to detect the hostname we do not throw an exception.
+      } finally {
+        this.hostNameDetected = true;
+      }
+    }
+
+    return this.hostName;
+  }
+
   // This has to be placed after all other static fields to give them a chance to initialize
   private static final Config INSTANCE = new Config();
 
@@ -659,14 +692,5 @@ public class Config {
     } else {
       return new Config(properties, INSTANCE);
     }
-  }
-
-  /**
-   * Note: this is a workaround as a conversation related to improve testability of services under
-   * different configuration scenarios is in progress.
-   */
-  public void refreshDetectHostnameProperty() {
-    this.reportHostName =
-        getBooleanSettingFromEnvironment(TRACE_REPORT_HOSTNAME, DEFAULT_TRACE_REPORT_HOSTNAME);
   }
 }

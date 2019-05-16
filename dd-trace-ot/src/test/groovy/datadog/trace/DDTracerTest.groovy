@@ -149,35 +149,18 @@ class DDTracerTest extends Specification {
     PRIORITY_SAMPLING | "false"
   }
 
-  def "tracer does not set the host name by default"() {
+  def "root tags are applied only to root spans"() {
     setup:
-    def tracer = new DDTracer('my_service', new ListWriter(), new AllSampler())
+    def tracer = new DDTracer('my_service', new ListWriter(), new AllSampler(), '', ['only_root': 'value'], [:], [:], [:])
+    def root = tracer.buildSpan('my_root').start()
+    def child = tracer.buildSpan('my_child').asChildOf(root).start()
 
-    when:
-    DDSpan root = tracer.buildSpan('my_root').start()
-    DDSpan child = tracer.buildSpan('my_child').asChildOf(root).start()
+    expect:
+    root.context().tags.containsKey('only_root')
+    !child.context().tags.containsKey('only_root')
+
+    cleanup:
     child.finish()
     root.finish()
-
-    then:
-    !root.context().tags.containsKey(INTERNAL_HOST_NAME)
-    !child.context().tags.containsKey(INTERNAL_HOST_NAME)
-  }
-
-  def "tracer sets the host name if activated only on root span"() {
-    setup:
-    System.setProperty('dd.trace.report-hostname', 'true')
-    Config.get().refreshDetectHostnameProperty()
-    def tracer = new DDTracer('my_service', new ListWriter(), new AllSampler())
-
-    when:
-    DDSpan root = tracer.buildSpan('my_root').start()
-    DDSpan child = tracer.buildSpan('my_child').asChildOf(root).start()
-    child.finish()
-    root.finish()
-
-    then:
-    root.context().tags.get(INTERNAL_HOST_NAME) == InetAddress.localHost.hostName
-    !child.context().tags.containsKey(INTERNAL_HOST_NAME)
   }
 }

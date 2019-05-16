@@ -658,4 +658,27 @@ class ConfigTest extends Specification {
     listString | list
     ""         | []
   }
+
+  def "verify hostname not added to root span tags by default"() {
+    setup:
+    Properties properties = new Properties()
+
+    when:
+    def config = Config.get(properties)
+
+    then:
+    !config.applicationRootSpanTags.containsKey('_dd.hostname')
+  }
+
+  def "verify configuration to add hostname to root span tags"() {
+    setup:
+    Properties properties = new Properties()
+    properties.setProperty(TRACE_REPORT_HOSTNAME, 'true')
+
+    when:
+    def config = Config.get(properties)
+
+    then:
+    config.applicationRootSpanTags.get('_dd.hostname') == InetAddress.localHost.hostName
+  }
 }
