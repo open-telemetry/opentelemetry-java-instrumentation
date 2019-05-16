@@ -323,6 +323,7 @@ public class Config {
   /** @return A map of tags to be applied only to the currently tracing application root span. */
   public Map<String, String> getApplicationRootSpanTags() {
     final Map<String, String> result = newHashMap(reportHostName ? 1 : 0);
+    result.putAll(getRuntimeTags());
     if (reportHostName) {
       result.put(INTERNAL_HOST_NAME, getHostname());
     }
@@ -361,7 +362,7 @@ public class Config {
    *
    * @return A map of tag-name -> tag-value
    */
-  public Map<String, String> getRuntimeTags() {
+  private Map<String, String> getRuntimeTags() {
     final Map<String, String> result = newHashMap(2);
     result.put(RUNTIME_ID_TAG, runtimeId);
     result.put(LANGUAGE_TAG_KEY, LANGUAGE_TAG_VALUE);
