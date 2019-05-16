@@ -78,7 +78,7 @@ tasks.register("startServer", com.github.psxpaul.task.ExecFork) {
   waitForOutput = "Listening for HTTP on /127.0.0.1:${playHttpPort}"
   timeout = 240
   environment = [
-    'JAVA_OPTS' :  "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
+    'JAVA_OPTS': "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
       + " -Ddd.writer.type=LoggingWriter" + " -Ddd.service.name=java-app"
       + " -Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug"
       + " -Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
@@ -87,6 +87,9 @@ tasks.register("startServer", com.github.psxpaul.task.ExecFork) {
   ]
 
   dependsOn 'stage'
+
+  // When tests are disabled this would still be run, so disable this manually
+  onlyIf { !project.rootProject.hasProperty("skipTests") }
 }
 
 tasks.register("deletePIDFile") {

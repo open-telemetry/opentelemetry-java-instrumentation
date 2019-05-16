@@ -50,6 +50,9 @@ tasks.register("startServer", com.github.psxpaul.task.ExecFork) {
   waitForOutput = "datadog.smoketest.springboot.SpringbootApplication - Started SpringbootApplication"
   timeout = 240
   stopAfter = test
+
+  // When tests are disabled this would still be run, so disable this manually
+  onlyIf { !project.rootProject.hasProperty("skipTests") }
 }
 
 tasks.withType(Test).configureEach {
