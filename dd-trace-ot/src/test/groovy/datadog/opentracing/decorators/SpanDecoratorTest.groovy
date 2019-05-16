@@ -49,6 +49,7 @@ class SpanDecoratorTest extends Specification {
       new AllSampler(),
       "some-runtime-id",
       emptyMap(),
+      emptyMap(),
       mapping,
       emptyMap()
     )
@@ -79,6 +80,7 @@ class SpanDecoratorTest extends Specification {
       new LoggingWriter(),
       new AllSampler(),
       "some-runtime-id",
+      emptyMap(),
       emptyMap(),
       mapping,
       emptyMap()
@@ -125,6 +127,7 @@ class SpanDecoratorTest extends Specification {
       new LoggingWriter(),
       new AllSampler(),
       "some-runtime-id",
+      emptyMap(),
       emptyMap(),
       mapping,
       emptyMap()

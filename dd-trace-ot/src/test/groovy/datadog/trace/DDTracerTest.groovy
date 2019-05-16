@@ -29,8 +29,6 @@ class DDTracerTest extends Specification {
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
-  private final String INTERNAL_HOST_NAME = "_dd.hostname"
-
   def setupSpec() {
     // assert that a trace agent isn't running locally as that messes up the test.
     try {

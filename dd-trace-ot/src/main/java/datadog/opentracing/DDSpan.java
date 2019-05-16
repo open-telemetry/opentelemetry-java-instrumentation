@@ -142,11 +142,13 @@ public class DDSpan implements Span, MutableSpan {
 
   @Override
   @Deprecated
+  @JsonIgnore
   public MutableSpan getRootSpan() {
     return getApplicationRootSpan();
   }
 
   @Override
+  @JsonIgnore
   public MutableSpan getApplicationRootSpan() {
     return context().getTrace().getRootSpan();
   }
