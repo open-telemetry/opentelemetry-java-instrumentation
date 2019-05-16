@@ -32,7 +32,7 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
 
   /** If span is a root span, set the span context samplingPriority to keep or drop */
   public void initializeSamplingPriority(DDSpan span) {
-    if (span.isRootSpan()) {
+    if (span.isTraceRootSpan()) {
       // Run the priority sampler on the new span
       setSamplingPriorityOnSpanContext(span);
     } else if (span.getSamplingPriority() == null) {

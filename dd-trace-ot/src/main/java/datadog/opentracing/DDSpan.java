@@ -110,24 +110,44 @@ public class DDSpan implements Span, MutableSpan {
     finishAndAddToTrace(TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - startTimeMicro));
   }
 
-  /**
-   * Check if the span is the root parent. It means that the traceId is the same as the spanId
-   *
-   * @return true if root, false otherwise
-   */
-  @JsonIgnore
-  public final boolean isRootSpan() {
-    return "0".equals(context.getParentId());
-  }
-
   @Override
   public DDSpan setError(final boolean error) {
     context.setErrorFlag(true);
     return this;
   }
 
+  /**
+   * Check if the span is the root parent. It means that the traceId is the same as the spanId. In
+   * the context of distributed tracing this will return true if an only if this is the application
+   * initializing the trace.
+   *
+   * @deprecated Use {@link #isTraceRootSpan()} instead.
+   * @return true if root, false otherwise
+   */
+  @JsonIgnore
+  @Deprecated
+  public final boolean isRootSpan() {
+    return isTraceRootSpan();
+  }
+
+  /**
+   * Returns whether or not this is the root span of the entire trace. In the context of distributed
+   * tracing, when the currently traced application did not initialize the trace then this will
+   * always be false.
+   */
+  @JsonIgnore
+  public final boolean isTraceRootSpan() {
+    return "0".equals(context.getParentId());
+  }
+
   @Override
+  @Deprecated
   public MutableSpan getRootSpan() {
+    return getApplicationRootSpan();
+  }
+
+  @Override
+  public MutableSpan getApplicationRootSpan() {
     return context().getTrace().getRootSpan();
   }
 
