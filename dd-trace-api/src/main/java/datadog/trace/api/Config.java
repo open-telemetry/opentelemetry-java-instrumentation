@@ -64,7 +64,9 @@ public class Config {
   public static final String PROPAGATION_STYLE_EXTRACT = "propagation.style.extract";
   public static final String PROPAGATION_STYLE_INJECT = "propagation.style.inject";
 
+  public static final String AGENT_CONF_D = "agent.conf.d";
   public static final String JMX_FETCH_ENABLED = "jmxfetch.enabled";
+  public static final String JMX_FETCH_CONFIGS = "jmxfetch.configs";
   public static final String JMX_FETCH_METRICS_CONFIGS = "jmxfetch.metrics-configs";
   public static final String JMX_FETCH_CHECK_PERIOD = "jmxfetch.check-period";
   public static final String JMX_FETCH_REFRESH_BEANS_PERIOD = "jmxfetch.refresh-beans-period";
@@ -146,8 +148,10 @@ public class Config {
   @Getter private final Set<PropagationStyle> propagationStylesToExtract;
   @Getter private final Set<PropagationStyle> propagationStylesToInject;
 
+  @Getter private final String agentConfDPath;
   @Getter private final boolean jmxFetchEnabled;
-  @Getter private final List<String> jmxFetchMetricsConfigs;
+  @Getter private final List<String> jmxFetchConfigs;
+  @Deprecated @Getter private final List<String> jmxFetchMetricsConfigs;
   @Getter private final Integer jmxFetchCheckPeriod;
   @Getter private final Integer jmxFetchRefreshBeansPeriod;
   @Getter private final String jmxFetchStatsdHost;
@@ -218,8 +222,10 @@ public class Config {
             PropagationStyle.class,
             true);
 
+    agentConfDPath = getSettingFromEnvironment(AGENT_CONF_D, null);
     jmxFetchEnabled =
         getBooleanSettingFromEnvironment(JMX_FETCH_ENABLED, DEFAULT_JMX_FETCH_ENABLED);
+    jmxFetchConfigs = getListSettingFromEnvironment(JMX_FETCH_CONFIGS, null);
     jmxFetchMetricsConfigs = getListSettingFromEnvironment(JMX_FETCH_METRICS_CONFIGS, null);
     jmxFetchCheckPeriod = getIntegerSettingFromEnvironment(JMX_FETCH_CHECK_PERIOD, null);
     jmxFetchRefreshBeansPeriod =
@@ -298,8 +304,10 @@ public class Config {
             ? parent.propagationStylesToInject
             : parsedPropagationStylesToInject;
 
+    agentConfDPath = properties.getProperty(AGENT_CONF_D, parent.agentConfDPath);
     jmxFetchEnabled =
         getPropertyBooleanValue(properties, JMX_FETCH_ENABLED, parent.jmxFetchEnabled);
+    jmxFetchConfigs = getPropertyListValue(properties, JMX_FETCH_CONFIGS, parent.jmxFetchConfigs);
     jmxFetchMetricsConfigs =
         getPropertyListValue(properties, JMX_FETCH_METRICS_CONFIGS, parent.jmxFetchMetricsConfigs);
     jmxFetchCheckPeriod =

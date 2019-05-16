@@ -3,6 +3,6 @@ init_config:
   new_gc_metrics: true
 
 instances:
-- jmx_url: service:jmx:local:///
-  conf:
-    # Intentionally left empty for now
+  - jvm_direct: true
+    name: dd-java-agent default
+    conf: [] # Intentionally left empty for now
