@@ -1,10 +1,8 @@
 package datadog.trace
 
-import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
 import datadog.opentracing.propagation.HttpCodec
 import datadog.trace.api.Config
-import datadog.trace.api.DDTags
 import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.DDAgentWriter
