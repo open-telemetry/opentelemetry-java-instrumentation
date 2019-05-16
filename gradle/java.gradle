@@ -98,7 +98,7 @@ jar {
       "Implementation-Title": project.name,
       "Implementation-Version": project.version,
       "Implementation-Vendor": "Datadog",
-      "Implementation-URL" :"https://github.com/datadog/dd-trace-java",
+      "Implementation-URL": "https://github.com/datadog/dd-trace-java",
     )
   }
 }
@@ -302,10 +302,8 @@ for (def env : System.getenv().entrySet()) {
 }
 
 // Disable all tests if skipTests property was specified
-if (project.hasProperty("skipTests")) {
-  tasks.withType(Test).configureEach {
-    onlyIf { false }
-  }
+tasks.withType(Test).configureEach {
+  onlyIf { !project.rootProject.hasProperty("skipTests") }
 }
 
 plugins.withType(BasePlugin) {
