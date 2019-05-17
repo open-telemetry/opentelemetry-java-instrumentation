@@ -180,6 +180,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       }
       this.clientSpan = clientSpan;
       this.context = context;
+      // Note: this can be null in real life, so we have to handle this carefully
       this.delegate = delegate;
     }
 
@@ -190,11 +191,11 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       clientSpan.finish(); // Finish span before calling delegate
 
       if (parentContinuation == null) {
-        delegate.completed(result);
+        completeDelegate(result);
       } else {
         try (final TraceScope scope = parentContinuation.activate()) {
           scope.setAsyncPropagation(true);
-          delegate.completed(result);
+          completeDelegate(result);
         }
       }
     }
@@ -207,11 +208,11 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       clientSpan.finish(); // Finish span before calling delegate
 
       if (parentContinuation == null) {
-        delegate.failed(ex);
+        failDelegate(ex);
       } else {
         try (final TraceScope scope = parentContinuation.activate()) {
           scope.setAsyncPropagation(true);
-          delegate.failed(ex);
+          failDelegate(ex);
         }
       }
     }
@@ -223,12 +224,30 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       clientSpan.finish(); // Finish span before calling delegate
 
       if (parentContinuation == null) {
-        delegate.cancelled();
+        cancelDelegate();
       } else {
         try (final TraceScope scope = parentContinuation.activate()) {
           scope.setAsyncPropagation(true);
-          delegate.cancelled();
+          cancelDelegate();
         }
+      }
+    }
+
+    private void completeDelegate(final T result) {
+      if (delegate != null) {
+        delegate.completed(result);
+      }
+    }
+
+    private void failDelegate(final Exception ex) {
+      if (delegate != null) {
+        delegate.failed(ex);
+      }
+    }
+
+    private void cancelDelegate() {
+      if (delegate != null) {
+        delegate.cancelled();
       }
     }
   }

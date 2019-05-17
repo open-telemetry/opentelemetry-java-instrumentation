@@ -50,6 +50,9 @@ tasks.register("unzip", Copy) {
   } else {
     throw new GradleException("Can't find server zip file that starts with: " + zipFileNamePrefix)
   }
+
+  // When tests are disabled this would still be run, so disable this manually
+  onlyIf { !project.rootProject.hasProperty("skipTests") }
 }
 
 tasks.register("startServer", com.github.psxpaul.task.ExecFork) {
@@ -83,6 +86,9 @@ tasks.register("startServer", com.github.psxpaul.task.ExecFork) {
   ]
 
   dependsOn unzip
+
+  // When tests are disabled this would still be run, so disable this manually
+  onlyIf { !project.rootProject.hasProperty("skipTests") }
 }
 
 tasks.register("stopWildfly", Exec) {
@@ -92,6 +98,9 @@ tasks.register("stopWildfly", Exec) {
   args = ["--connect", "--controller=localhost:${wildflyManagementPort}", "command=:shutdown"]
 
   dependsOn startServer
+
+  // When tests are disabled this would still be run, so disable this manually
+  onlyIf { !project.rootProject.hasProperty("skipTests") }
 }
 
 tasks.withType(Test).configureEach {

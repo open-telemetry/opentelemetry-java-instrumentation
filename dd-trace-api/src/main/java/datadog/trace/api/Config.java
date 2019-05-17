@@ -425,7 +425,11 @@ public class Config {
     return parseMap(getSettingFromEnvironment(name, defaultValue), PREFIX + name);
   }
 
-  private static List<String> getListSettingFromEnvironment(
+  /**
+   * Calls {@link #getSettingFromEnvironment(String, String)} and converts the result to a list by
+   * splitting on `,`.
+   */
+  public static List<String> getListSettingFromEnvironment(
       final String name, final String defaultValue) {
     return parseList(getSettingFromEnvironment(name, defaultValue));
   }
