@@ -17,8 +17,15 @@ muzzle {
   pass {
     group = 'com.couchbase.client'
     module = 'java-client'
-    versions = "[2.0.0,)"
-    assertInverse = true
+    // Looks like 2.7.5 was just released and didn't sync up with mirrors properly causing build failures
+    // TODO: remove this on a few days.
+    versions = "[2.0.0,2.7.5)"
+//    assertInverse = true
+  }
+  fail {
+    group = 'com.couchbase.client'
+    module = 'java-client'
+    versions = "(,2.0.0)"
   }
   fail {
     group = 'com.couchbase.client'
