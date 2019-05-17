@@ -328,13 +328,13 @@ public class Config {
     if (reportHostName) {
       hostname = getHostname();
     }
-    boolean shouldReportHostName = null != hostname && !hostname.isEmpty();
+    boolean hostnameIsValid = null != hostname && !hostname.isEmpty();
 
     final Map<String, String> result =
-        newHashMap(shouldReportHostName ? (runtimeTags.size() + 1) : runtimeTags.size());
+        newHashMap(hostnameIsValid ? (runtimeTags.size() + 1) : runtimeTags.size());
     result.putAll(runtimeTags);
 
-    if (shouldReportHostName) {
+    if (hostnameIsValid) {
       result.put(INTERNAL_HOST_NAME, getHostname());
     }
 
