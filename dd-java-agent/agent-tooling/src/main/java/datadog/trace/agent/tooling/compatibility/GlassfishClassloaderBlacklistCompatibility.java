@@ -11,6 +11,14 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatchers;
 
+/**
+ * This instrumenter prevents a mechanism from GlassFish classloader to produces a class not found
+ * exception in our tracer. Link to the GH issue:
+ * https://github.com/eclipse-ee4j/glassfish/issues/22566 If a class loading is attempted, as an
+ * example, as a resource and is it not found, then it is blacklisted. Successive attempts to load a
+ * class as a class (not a resource) will fail because the class is not even tried. We hook into the
+ * blacklisting method to avoid specific namespaces to be blacklisted.
+ */
 @Slf4j
 @AutoService(Instrumenter.class)
 public final class GlassfishClassloaderBlacklistCompatibility implements Instrumenter {
