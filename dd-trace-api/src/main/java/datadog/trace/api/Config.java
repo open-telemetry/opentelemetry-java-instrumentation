@@ -323,12 +323,15 @@ public class Config {
   /** @return A map of tags to be applied only to the local application root span. */
   public Map<String, String> getLocalRootSpanTags() {
     final Map<String, String> runtimeTags = getRuntimeTags();
-    final Map<String, String> result =
-        newHashMap(reportHostName ? (runtimeTags.size() + 1) : runtimeTags.size());
-    result.putAll(runtimeTags);
+    final Map<String, String> result = new HashMap<>(runtimeTags);
+
     if (reportHostName) {
-      result.put(INTERNAL_HOST_NAME, getHostname());
+      String hostName = getHostName();
+      if (null != hostName && !hostName.isEmpty()) {
+        result.put(INTERNAL_HOST_NAME, hostName);
+      }
     }
+
     return Collections.unmodifiableMap(result);
   }
 
@@ -668,7 +671,7 @@ public class Config {
    * Returns the detected hostname. This operation is time consuming so if the usage changes and
    * this method will be called several times then we should implement some sort of caching.
    */
-  private String getHostname() {
+  private String getHostName() {
     try {
       return InetAddress.getLocalHost().getHostName();
     } catch (UnknownHostException e) {
