@@ -200,6 +200,10 @@ public abstract class AgentTestRunner extends Specification {
 
   public void blockUntilChildSpansFinished(final int numberOfSpans) throws InterruptedException {
     final DDSpan span = (DDSpan) io.opentracing.util.GlobalTracer.get().activeSpan();
+    if (span == null) {
+      // If there is no active span avoid getting an NPE
+      return;
+    }
     final PendingTrace pendingTrace = span.context().getTrace();
 
     while (pendingTrace.size() < numberOfSpans) {
