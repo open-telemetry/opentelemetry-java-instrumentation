@@ -3,11 +3,19 @@ import datadog.trace.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClient
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.message.BasicHeader
+import org.junit.Ignore
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 
 import java.util.concurrent.Future
 
+/**
+ * TODO: we would like not to ugnore this test, but currently this test is flaky
+ * The problem is that http-request span is closed asynchronously and when we provide no callback (like 39)
+ * we cannot synchronise on when it is closed. Possible soltion here would be to rewrite this to not run
+ * tests will callbacks somehow because they make no sense in 'fire-and-forget' scenarios.
+ */
+@Ignore
 class ApacheHttpAsyncClientNullCallbackTest extends HttpClientTest<ApacheHttpAsyncClientDecorator> {
 
   @AutoCleanup
