@@ -322,8 +322,10 @@ public class Config {
 
   /** @return A map of tags to be applied only to the local application root span. */
   public Map<String, String> getLocalRootSpanTags() {
-    final Map<String, String> result = newHashMap(reportHostName ? 1 : 0);
-    result.putAll(getRuntimeTags());
+    final Map<String, String> runtimeTags = getRuntimeTags();
+    final Map<String, String> result =
+        newHashMap(reportHostName ? (runtimeTags.size() + 1) : runtimeTags.size());
+    result.putAll(runtimeTags);
     if (reportHostName) {
       result.put(INTERNAL_HOST_NAME, getHostname());
     }
@@ -662,26 +664,18 @@ public class Config {
     return Collections.unmodifiableSet(result);
   }
 
-  // Fields used to cache detected hostName which is a time consuming operation.
-  private String hostName = null;
-  private boolean hostNameDetected = false;
-
   /**
-   * Returns the detected hostname. This operation is time consuming and the first time this method
-   * is called will take some time. Hostname is cached for subsequent calls.
+   * Returns the detected hostname. This operation is time consuming so if the usage changes and
+   * this method will be called several times then we should implement some sort of caching.
    */
-  public String getHostname() {
-    if (!this.hostNameDetected) {
-      try {
-        this.hostName = InetAddress.getLocalHost().getHostName();
-      } catch (UnknownHostException e) {
-        // If we are not able to detect the hostname we do not throw an exception.
-      } finally {
-        this.hostNameDetected = true;
-      }
+  private String getHostname() {
+    try {
+      return InetAddress.getLocalHost().getHostName();
+    } catch (UnknownHostException e) {
+      // If we are not able to detect the hostname we do not throw an exception.
     }
 
-    return this.hostName;
+    return null;
   }
 
   // This has to be placed after all other static fields to give them a chance to initialize
