@@ -323,12 +323,21 @@ public class Config {
   /** @return A map of tags to be applied only to the local application root span. */
   public Map<String, String> getLocalRootSpanTags() {
     final Map<String, String> runtimeTags = getRuntimeTags();
-    final Map<String, String> result =
-        newHashMap(reportHostName ? (runtimeTags.size() + 1) : runtimeTags.size());
-    result.putAll(runtimeTags);
+
+    String hostname = "";
     if (reportHostName) {
+      hostname = getHostname();
+    }
+    boolean shouldReportHostName = null != hostname && !hostname.isEmpty();
+
+    final Map<String, String> result =
+        newHashMap(shouldReportHostName ? (runtimeTags.size() + 1) : runtimeTags.size());
+    result.putAll(runtimeTags);
+
+    if (shouldReportHostName) {
       result.put(INTERNAL_HOST_NAME, getHostname());
     }
+
     return Collections.unmodifiableMap(result);
   }
 
