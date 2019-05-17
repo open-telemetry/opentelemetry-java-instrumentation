@@ -5,6 +5,7 @@ import datadog.opentracing.propagation.TagContext
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.ListWriter
+import io.opentracing.SpanContext
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -207,18 +208,45 @@ class DDSpanTest extends Specification {
     new ExtractedContext("1", "2", 0, "some-origin", [:], [:]) | _
   }
 
-  def "getRootSpan returns the root span"() {
+  def "isRootSpan() in and not in the context of distributed tracing"() {
     setup:
-    def root = tracer.buildSpan("root").start()
+    def root = tracer.buildSpan("root").asChildOf((SpanContext)extractedContext).start()
     def child = tracer.buildSpan("child").asChildOf(root).start()
 
     expect:
-    root.getRootSpan() == root
-    child.getRootSpan() == root
+    root.isRootSpan() == isTraceRootSpan
+    !child.isRootSpan()
 
     cleanup:
     child.finish()
     root.finish()
+
+    where:
+    extractedContext | isTraceRootSpan
+    null | true
+    new ExtractedContext("123", "456", 1, "789", [:], [:]) | false
+  }
+
+  def "getApplicationRootSpan() in and not in the context of distributed tracing"() {
+    setup:
+    def root = tracer.buildSpan("root").asChildOf((SpanContext)extractedContext).start()
+    def child = tracer.buildSpan("child").asChildOf(root).start()
+
+    expect:
+    root.localRootSpan == root
+    child.localRootSpan == root
+    // Checking for backward compatibility method names
+    root.rootSpan == root
+    child.rootSpan == root
+
+    cleanup:
+    child.finish()
+    root.finish()
+
+    where:
+    extractedContext | isTraceRootSpan
+    null | true
+    new ExtractedContext("123", "456", 1, "789", [:], [:]) | false
   }
 
   def "setting forced tracing via tag"() {

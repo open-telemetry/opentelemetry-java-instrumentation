@@ -31,7 +31,7 @@ class DDTracerTest extends Specification {
     // assert that a trace agent isn't running locally as that messes up the test.
     try {
       (new Socket("localhost", 8126)).close()
-      throw new IllegalStateException("Trace Agent unexpectedly running locally.")
+      throw new IllegalStateException("An agent is already running locally on port 8126. Please stop it if you want to run tests locally.")
     } catch (final ConnectException ioe) {
       // trace agent is not running locally.
     }
@@ -126,8 +126,8 @@ class DDTracerTest extends Specification {
     tracer.serviceName == DEFAULT_SERVICE_NAME
     tracer.sampler == sampler
     tracer.writer == writer
-    tracer.runtimeTags[Config.RUNTIME_ID_TAG].size() > 0 // not null or empty
-    tracer.runtimeTags[Config.LANGUAGE_TAG_KEY] == Config.LANGUAGE_TAG_VALUE
+    tracer.localRootSpanTags[Config.RUNTIME_ID_TAG].size() > 0 // not null or empty
+    tracer.localRootSpanTags[Config.LANGUAGE_TAG_KEY] == Config.LANGUAGE_TAG_VALUE
   }
 
   def "Shares TraceCount with DDApi with #key = #value"() {
@@ -143,5 +143,20 @@ class DDTracerTest extends Specification {
     key               | value
     PRIORITY_SAMPLING | "true"
     PRIORITY_SAMPLING | "false"
+  }
+
+  def "root tags are applied only to root spans"() {
+    setup:
+    def tracer = new DDTracer('my_service', new ListWriter(), new AllSampler(), '', ['only_root': 'value'], [:], [:], [:])
+    def root = tracer.buildSpan('my_root').start()
+    def child = tracer.buildSpan('my_child').asChildOf(root).start()
+
+    expect:
+    root.context().tags.containsKey('only_root')
+    !child.context().tags.containsKey('only_root')
+
+    cleanup:
+    child.finish()
+    root.finish()
   }
 }

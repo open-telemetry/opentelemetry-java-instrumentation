@@ -1,5 +1,7 @@
 package datadog.trace.api;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,6 +53,7 @@ public class Config {
   public static final String TRACE_ANNOTATIONS = "trace.annotations";
   public static final String TRACE_METHODS = "trace.methods";
   public static final String TRACE_CLASSES_EXCLUDE = "trace.classes.exclude";
+  public static final String TRACE_REPORT_HOSTNAME = "trace.report-hostname";
   public static final String HEADER_TAGS = "trace.header.tags";
   public static final String HTTP_SERVER_ERROR_STATUSES = "http.server.error.statuses";
   public static final String HTTP_CLIENT_ERROR_STATUSES = "http.client.error.statuses";
@@ -105,10 +108,15 @@ public class Config {
 
   private static final String SPLIT_BY_SPACE_OR_COMMA_REGEX = "[,\\s]+";
 
+  private static final boolean DEFAULT_TRACE_REPORT_HOSTNAME = false;
+
   public enum PropagationStyle {
     DATADOG,
     B3
   }
+
+  /** A tag intended for internal use only, hence not added to the public api DDTags class. */
+  private static final String INTERNAL_HOST_NAME = "_dd.hostname";
 
   /**
    * this is a random UUID that gets generated on JVM start up and is attached to every root span
@@ -146,6 +154,8 @@ public class Config {
   @Getter private final Integer jmxFetchStatsdPort;
 
   @Getter private final boolean logsInjectionEnabled;
+
+  @Getter private final boolean reportHostName;
 
   // Read order: System Properties -> Env Variables, [-> default value]
   // Visible for testing
@@ -220,6 +230,9 @@ public class Config {
 
     logsInjectionEnabled =
         getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
+
+    reportHostName =
+        getBooleanSettingFromEnvironment(TRACE_REPORT_HOSTNAME, DEFAULT_TRACE_REPORT_HOSTNAME);
 
     log.debug("New instance: {}", this);
   }
@@ -301,7 +314,22 @@ public class Config {
     logsInjectionEnabled =
         getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
 
+    reportHostName =
+        getPropertyBooleanValue(properties, TRACE_REPORT_HOSTNAME, parent.reportHostName);
+
     log.debug("New instance: {}", this);
+  }
+
+  /** @return A map of tags to be applied only to the local application root span. */
+  public Map<String, String> getLocalRootSpanTags() {
+    final Map<String, String> runtimeTags = getRuntimeTags();
+    final Map<String, String> result =
+        newHashMap(reportHostName ? (runtimeTags.size() + 1) : runtimeTags.size());
+    result.putAll(runtimeTags);
+    if (reportHostName) {
+      result.put(INTERNAL_HOST_NAME, getHostname());
+    }
+    return Collections.unmodifiableMap(result);
   }
 
   public Map<String, String> getMergedSpanTags() {
@@ -336,7 +364,7 @@ public class Config {
    *
    * @return A map of tag-name -> tag-value
    */
-  public Map<String, String> getRuntimeTags() {
+  private Map<String, String> getRuntimeTags() {
     final Map<String, String> result = newHashMap(2);
     result.put(RUNTIME_ID_TAG, runtimeId);
     result.put(LANGUAGE_TAG_KEY, LANGUAGE_TAG_VALUE);
@@ -634,6 +662,20 @@ public class Config {
       }
     }
     return Collections.unmodifiableSet(result);
+  }
+
+  /**
+   * Returns the detected hostname. This operation is time consuming so if the usage changes and
+   * this method will be called several times then we should implement some sort of caching.
+   */
+  private String getHostname() {
+    try {
+      return InetAddress.getLocalHost().getHostName();
+    } catch (UnknownHostException e) {
+      // If we are not able to detect the hostname we do not throw an exception.
+    }
+
+    return null;
   }
 
   // This has to be placed after all other static fields to give them a chance to initialize

@@ -110,8 +110,16 @@ public class DDSpan implements Span, MutableSpan {
     finishAndAddToTrace(TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - startTimeMicro));
   }
 
+  @Override
+  public DDSpan setError(final boolean error) {
+    context.setErrorFlag(true);
+    return this;
+  }
+
   /**
-   * Check if the span is the root parent. It means that the traceId is the same as the spanId
+   * Check if the span is the root parent. It means that the traceId is the same as the spanId. In
+   * the context of distributed tracing this will return true if an only if this is the application
+   * initializing the trace.
    *
    * @return true if root, false otherwise
    */
@@ -121,13 +129,15 @@ public class DDSpan implements Span, MutableSpan {
   }
 
   @Override
-  public DDSpan setError(final boolean error) {
-    context.setErrorFlag(true);
-    return this;
+  @Deprecated
+  @JsonIgnore
+  public MutableSpan getRootSpan() {
+    return getLocalRootSpan();
   }
 
   @Override
-  public MutableSpan getRootSpan() {
+  @JsonIgnore
+  public MutableSpan getLocalRootSpan() {
     return context().getTrace().getRootSpan();
   }
 
