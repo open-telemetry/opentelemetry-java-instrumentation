@@ -1,5 +1,6 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator
+import io.opentracing.util.GlobalTracer
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.message.BasicHeader
@@ -33,6 +34,10 @@ class ApacheHttpAsyncClientNullCallbackTest extends HttpClientTest<ApacheHttpAsy
     Future future = client.execute(request, null)
     future.get()
     if (callback != null) {
+      // Request span is closed asynchronously even in regards to returned future so we have to wait here.
+      if (GlobalTracer.get().activeSpan() != null) {
+        blockUntilChildSpansFinished(1)
+      }
       callback()
     }
     return 200
