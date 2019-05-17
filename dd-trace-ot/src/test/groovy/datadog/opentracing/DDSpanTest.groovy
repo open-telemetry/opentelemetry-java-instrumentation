@@ -208,15 +208,12 @@ class DDSpanTest extends Specification {
     new ExtractedContext("1", "2", 0, "some-origin", [:], [:]) | _
   }
 
-  def "isTraceRootSpan() in and not in the context of distributed tracing"() {
+  def "isRootSpan() in and not in the context of distributed tracing"() {
     setup:
     def root = tracer.buildSpan("root").asChildOf((SpanContext)extractedContext).start()
     def child = tracer.buildSpan("child").asChildOf(root).start()
 
     expect:
-    root.isTraceRootSpan() == isTraceRootSpan
-    !child.isTraceRootSpan()
-    // Checking for backward compatibility method names
     root.isRootSpan() == isTraceRootSpan
     !child.isRootSpan()
 
@@ -236,8 +233,8 @@ class DDSpanTest extends Specification {
     def child = tracer.buildSpan("child").asChildOf(root).start()
 
     expect:
-    root.applicationRootSpan == root
-    child.applicationRootSpan == root
+    root.localRootSpan == root
+    child.localRootSpan == root
     // Checking for backward compatibility method names
     root.rootSpan == root
     child.rootSpan == root

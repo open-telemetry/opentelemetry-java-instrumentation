@@ -667,7 +667,7 @@ class ConfigTest extends Specification {
     def config = Config.get(properties)
 
     then:
-    !config.applicationRootSpanTags.containsKey('_dd.hostname')
+    !config.localRootSpanTags.containsKey('_dd.hostname')
   }
 
   def "verify configuration to add hostname to root span tags"() {
@@ -679,6 +679,6 @@ class ConfigTest extends Specification {
     def config = Config.get(properties)
 
     then:
-    config.applicationRootSpanTags.get('_dd.hostname') == InetAddress.localHost.hostName
+    config.localRootSpanTags.get('_dd.hostname') == InetAddress.localHost.hostName
   }
 }

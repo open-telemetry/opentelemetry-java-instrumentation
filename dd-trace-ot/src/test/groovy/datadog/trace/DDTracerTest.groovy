@@ -126,8 +126,8 @@ class DDTracerTest extends Specification {
     tracer.serviceName == DEFAULT_SERVICE_NAME
     tracer.sampler == sampler
     tracer.writer == writer
-    tracer.applicationRootSpanTags[Config.RUNTIME_ID_TAG].size() > 0 // not null or empty
-    tracer.applicationRootSpanTags[Config.LANGUAGE_TAG_KEY] == Config.LANGUAGE_TAG_VALUE
+    tracer.localRootSpanTags[Config.RUNTIME_ID_TAG].size() > 0 // not null or empty
+    tracer.localRootSpanTags[Config.LANGUAGE_TAG_KEY] == Config.LANGUAGE_TAG_VALUE
   }
 
   def "Shares TraceCount with DDApi with #key = #value"() {

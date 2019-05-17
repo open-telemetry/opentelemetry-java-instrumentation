@@ -121,22 +121,10 @@ public class DDSpan implements Span, MutableSpan {
    * the context of distributed tracing this will return true if an only if this is the application
    * initializing the trace.
    *
-   * @deprecated Use {@link #isTraceRootSpan()} instead.
    * @return true if root, false otherwise
    */
   @JsonIgnore
-  @Deprecated
   public final boolean isRootSpan() {
-    return isTraceRootSpan();
-  }
-
-  /**
-   * Returns whether or not this is the root span of the entire trace. In the context of distributed
-   * tracing, when the currently traced application did not initialize the trace then this will
-   * always be false.
-   */
-  @JsonIgnore
-  public final boolean isTraceRootSpan() {
     return "0".equals(context.getParentId());
   }
 
@@ -144,12 +132,12 @@ public class DDSpan implements Span, MutableSpan {
   @Deprecated
   @JsonIgnore
   public MutableSpan getRootSpan() {
-    return getApplicationRootSpan();
+    return getLocalRootSpan();
   }
 
   @Override
   @JsonIgnore
-  public MutableSpan getApplicationRootSpan() {
+  public MutableSpan getLocalRootSpan() {
     return context().getTrace().getRootSpan();
   }
 

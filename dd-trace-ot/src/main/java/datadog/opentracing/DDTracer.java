@@ -26,7 +26,17 @@ import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import java.io.Closeable;
 import java.lang.ref.WeakReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
+import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ThreadLocalRandom;
@@ -47,7 +57,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   final ContextualScopeManager scopeManager = new ContextualScopeManager();
 
   /** A set of tags that are added only to the application's root span */
-  private final Map<String, String> applicationRootSpanTags;
+  private final Map<String, String> localRootSpanTags;
   /** A set of tags that are added to every span */
   private final Map<String, String> defaultSpanTags;
   /** A configured mapping of service names to update with new values */
@@ -97,7 +107,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   // This constructor is already used in the wild, so we have to keep it inside this API for now.
   public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
-    this(serviceName, writer, sampler, Config.get().getApplicationRootSpanTags());
+    this(serviceName, writer, sampler, Config.get().getLocalRootSpanTags());
   }
 
   private DDTracer(final String serviceName, final Config config) {
@@ -105,7 +115,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         serviceName,
         Writer.Builder.forConfig(config),
         Sampler.Builder.forConfig(config),
-        config.getApplicationRootSpanTags(),
+        config.getLocalRootSpanTags(),
         config.getMergedSpanTags(),
         config.getServiceMapping(),
         config.getHeaderTags(),
@@ -139,7 +149,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         config.getServiceName(),
         writer,
         Sampler.Builder.forConfig(config),
-        config.getApplicationRootSpanTags(),
+        config.getLocalRootSpanTags(),
         config.getMergedSpanTags(),
         config.getServiceMapping(),
         config.getHeaderTags(),
@@ -155,7 +165,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Writer writer,
       final Sampler sampler,
       final String runtimeId,
-      final Map<String, String> applicationRootSpanTags,
+      final Map<String, String> localRootSpanTags,
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders) {
@@ -163,7 +173,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         serviceName,
         writer,
         sampler,
-        customRuntimeTags(runtimeId, applicationRootSpanTags),
+        customRuntimeTags(runtimeId, localRootSpanTags),
         defaultSpanTags,
         serviceNameMappings,
         taggedHeaders,
@@ -178,7 +188,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final String serviceName,
       final Writer writer,
       final Sampler sampler,
-      final Map<String, String> applicationRootSpanTags,
+      final Map<String, String> localRootSpanTags,
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders) {
@@ -186,7 +196,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         serviceName,
         writer,
         sampler,
-        applicationRootSpanTags,
+        localRootSpanTags,
         defaultSpanTags,
         serviceNameMappings,
         taggedHeaders,
@@ -197,12 +207,12 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final String serviceName,
       final Writer writer,
       final Sampler sampler,
-      final Map<String, String> applicationRootSpanTags,
+      final Map<String, String> localRootSpanTags,
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders,
       final int partialFlushMinSpans) {
-    assert applicationRootSpanTags != null;
+    assert localRootSpanTags != null;
     assert defaultSpanTags != null;
     assert serviceNameMappings != null;
     assert taggedHeaders != null;
@@ -211,7 +221,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this.writer = writer;
     this.writer.start();
     this.sampler = sampler;
-    this.applicationRootSpanTags = applicationRootSpanTags;
+    this.localRootSpanTags = localRootSpanTags;
     this.defaultSpanTags = defaultSpanTags;
     this.serviceNameMappings = serviceNameMappings;
     this.partialFlushMinSpans = partialFlushMinSpans;
@@ -653,7 +663,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           origin = null;
         }
 
-        tags.putAll(applicationRootSpanTags);
+        tags.putAll(localRootSpanTags);
 
         parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
       }

@@ -320,8 +320,8 @@ public class Config {
     log.debug("New instance: {}", this);
   }
 
-  /** @return A map of tags to be applied only to the currently tracing application root span. */
-  public Map<String, String> getApplicationRootSpanTags() {
+  /** @return A map of tags to be applied only to the local application root span. */
+  public Map<String, String> getLocalRootSpanTags() {
     final Map<String, String> result = newHashMap(reportHostName ? 1 : 0);
     result.putAll(getRuntimeTags());
     if (reportHostName) {
