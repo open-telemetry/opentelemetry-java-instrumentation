@@ -35,8 +35,15 @@ tasks.register("submodulesUpdate", Exec) {
   group 'Build Setup'
   description 'Initializes and updates integrations-core git submodule'
   commandLine 'git', 'submodule', 'update', '--init', 'integrations-core'
-  inputs.file file("${project.rootDir}/.git/modules/dd-java-agent/agent-jmxfetch/integrations-core/HEAD")
-  outputs.dir file("$projectDir/integrations-core")
+  def submoduleHead = file("${project.rootDir}/.git/modules/dd-java-agent/agent-jmxfetch/integrations-core/HEAD")
+  if (submoduleHead.exists()) {
+    inputs.file "${project.rootDir}/.git/modules/dd-java-agent/agent-jmxfetch/integrations-core/HEAD"
+  }
+  def integrationsCore = file("$projectDir/integrations-core")
+  outputs.dir integrationsCore
+  if (integrationsCore.list().length == 0) {
+    outputs.upToDateWhen { false }
+  }
 }
 
 tasks.register("copyMetricConfigs", Exec) {
