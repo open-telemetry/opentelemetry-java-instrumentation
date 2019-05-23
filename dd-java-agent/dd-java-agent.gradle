@@ -107,7 +107,8 @@ dependencies {
 }
 
 tasks.withType(Test).configureEach {
-  jvmArgs "-Ddd.writer.type=LogWriter", "-Ddd.service.name=java-app"
+  jvmArgs "-Ddd.service.name=java-agent-tests"
+  jvmArgs "-Ddd.writer.type=LoggingWriter"
   jvmArgs "-Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug"
   jvmArgs "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
 

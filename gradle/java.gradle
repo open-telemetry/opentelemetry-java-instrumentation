@@ -1,3 +1,5 @@
+import java.time.Duration
+
 apply plugin: 'java'
 apply plugin: 'groovy'
 
@@ -301,8 +303,11 @@ for (def env : System.getenv().entrySet()) {
   }
 }
 
-// Disable all tests if skipTests property was specified
 tasks.withType(Test).configureEach {
+  // All tests must complete within 2 minutes.
+  timeout = Duration.ofMinutes(2)
+  
+  // Disable all tests if skipTests property was specified
   onlyIf { !project.rootProject.hasProperty("skipTests") }
 }
 
