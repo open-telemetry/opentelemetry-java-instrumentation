@@ -47,7 +47,7 @@ public class JMXFetch {
       System.setProperty("org.slf4j.simpleLogger.log.org.datadog.jmxfetch", "warn");
     }
 
-    final String agentConfDPath = config.getAgentConfDPath();
+    final String jmxFetchConfigDir = config.getJmxFetchConfigDir();
     final List<String> jmxFetchConfigs = config.getJmxFetchConfigs();
     final List<String> internalMetricsConfigs = getInternalMetricFiles();
     final List<String> metricsConfigs = config.getJmxFetchMetricsConfigs();
@@ -60,7 +60,7 @@ public class JMXFetch {
 
     log.info(
         "JMXFetch config: {} {} {} {} {} {} {} {} {} {}",
-        agentConfDPath,
+        jmxFetchConfigDir,
         jmxFetchConfigs,
         internalMetricsConfigs,
         metricsConfigs,
@@ -74,7 +74,7 @@ public class JMXFetch {
     final AppConfig.AppConfigBuilder configBuilder =
         AppConfig.builder()
             .action(ImmutableList.of(ACTION_COLLECT))
-            .confdDirectory(agentConfDPath)
+            .confdDirectory(jmxFetchConfigDir)
             .yamlFileList(jmxFetchConfigs)
             .targetDirectInstances(true)
             .instanceConfigResources(DEFAULT_CONFIGS)
@@ -151,7 +151,7 @@ public class JMXFetch {
         for (final String config : split) {
           integrationName.clear();
           integrationName.add(config.replace(".yaml", ""));
-          if (Config.integrationEnabled(integrationName, false)) {
+          if (Config.jmxFetchIntegrationEnabled(integrationName, false)) {
             final URL resource = JMXFetch.class.getResource("metricconfigs/" + config);
             result.add(resource.getPath().split("\\.jar!/")[1]);
           }

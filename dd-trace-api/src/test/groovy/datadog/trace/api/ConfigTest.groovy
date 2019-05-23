@@ -35,8 +35,8 @@ import static datadog.trace.api.Config.SERVICE_MAPPING
 import static datadog.trace.api.Config.SERVICE_NAME
 import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.TRACE_AGENT_PORT
-import static datadog.trace.api.Config.TRACE_REPORT_HOSTNAME
 import static datadog.trace.api.Config.TRACE_ENABLED
+import static datadog.trace.api.Config.TRACE_REPORT_HOSTNAME
 import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
 import static datadog.trace.api.Config.WRITER_TYPE
 
@@ -380,7 +380,7 @@ class ConfigTest extends Specification {
     properties.setProperty(JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
     properties.setProperty(JMX_FETCH_STATSD_HOST, "statsd host")
     properties.setProperty(JMX_FETCH_STATSD_PORT, "321")
-    
+
     when:
     def config = Config.get(properties)
 
@@ -456,6 +456,40 @@ class ConfigTest extends Specification {
 
     expect:
     Config.integrationEnabled(integrationNames, defaultEnabled) == expected
+
+    where:
+    names                          | defaultEnabled | expected
+    []                             | true           | true
+    []                             | false          | false
+    ["invalid"]                    | true           | true
+    ["invalid"]                    | false          | false
+    ["test-prop"]                  | false          | true
+    ["test-env"]                   | false          | true
+    ["disabled-prop"]              | true           | false
+    ["disabled-env"]               | true           | false
+    ["other", "test-prop"]         | false          | true
+    ["other", "test-env"]          | false          | true
+    ["order"]                      | false          | true
+    ["test-prop", "disabled-prop"] | false          | true
+    ["disabled-env", "test-env"]   | false          | true
+    ["test-prop", "disabled-prop"] | true           | false
+    ["disabled-env", "test-env"]   | true           | false
+
+    integrationNames = new TreeSet<>(names)
+  }
+
+  def "verify integration jmxfetch config"() {
+    setup:
+    environmentVariables.set("DD_JMXFETCH_ORDER_ENABLED", "false")
+    environmentVariables.set("DD_JMXFETCH_TEST_ENV_ENABLED", "true")
+    environmentVariables.set("DD_JMXFETCH_DISABLED_ENV_ENABLED", "false")
+
+    System.setProperty("dd.jmxfetch.order.enabled", "true")
+    System.setProperty("dd.jmxfetch.test-prop.enabled", "true")
+    System.setProperty("dd.jmxfetch.disabled-prop.enabled", "false")
+
+    expect:
+    Config.jmxFetchIntegrationEnabled(integrationNames, defaultEnabled) == expected
 
     where:
     names                          | defaultEnabled | expected
