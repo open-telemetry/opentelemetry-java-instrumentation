@@ -53,6 +53,7 @@ public class ClassLoaderMatcher {
       classesToSkip.add("sun.reflect.DelegatingClassLoader");
       classesToSkip.add("jdk.internal.reflect.DelegatingClassLoader");
       classesToSkip.add("clojure.lang.DynamicClassLoader");
+      classesToSkip.add("org.apache.cxf.common.util.ASMHelper$TypeHelperClassLoader");
       classesToSkip.add(DatadogClassLoader.class.getName());
       CLASSLOADER_CLASSES_TO_SKIP = Collections.unmodifiableSet(classesToSkip);
     }
