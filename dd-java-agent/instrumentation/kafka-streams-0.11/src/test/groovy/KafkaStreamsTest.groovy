@@ -80,13 +80,13 @@ class KafkaStreamsTest extends AgentTestRunner {
     KStream<String, String> textLines = builder.stream(STREAM_PENDING)
     def values = textLines
       .mapValues(new ValueMapper<String, String>() {
-      @Override
-      String apply(String textLine) {
-        TEST_WRITER.waitForTraces(1) // ensure consistent ordering of traces
-        getTestTracer().activeSpan().setTag("asdf", "testing")
-        return textLine.toLowerCase()
-      }
-    })
+        @Override
+        String apply(String textLine) {
+          TEST_WRITER.waitForTraces(1) // ensure consistent ordering of traces
+          getTestTracer().activeSpan().setTag("asdf", "testing")
+          return textLine.toLowerCase()
+        }
+      })
 
     KafkaStreams streams
     try {
@@ -172,7 +172,7 @@ class KafkaStreamsTest extends AgentTestRunner {
       trace(2, 1) {
         // CONSUMER span 0
         span(0) {
-          serviceName "kafka"
+          serviceName "unnamed-java-app"
           operationName "kafka.consume"
           resourceName "Consume Topic $STREAM_PROCESSED"
           spanType "queue"

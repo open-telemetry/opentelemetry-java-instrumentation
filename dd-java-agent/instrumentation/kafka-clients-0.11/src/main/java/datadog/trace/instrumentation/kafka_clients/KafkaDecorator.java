@@ -13,6 +13,11 @@ public abstract class KafkaDecorator extends ClientDecorator {
   public static final KafkaDecorator PRODUCER_DECORATE =
       new KafkaDecorator() {
         @Override
+        protected String service() {
+          return "kafka";
+        }
+
+        @Override
         protected String spanKind() {
           return Tags.SPAN_KIND_PRODUCER;
         }
@@ -25,6 +30,16 @@ public abstract class KafkaDecorator extends ClientDecorator {
 
   public static final KafkaDecorator CONSUMER_DECORATE =
       new KafkaDecorator() {
+        @Override
+        protected String service() {
+          /*
+            Use default service name. Common use-case here is to have consumer span parent
+            children spans in instrumented application. Since service name is inherited it makes
+            sense to default that to application service name rather than 'kafka'.
+          */
+          return null;
+        }
+
         @Override
         protected String spanKind() {
           return Tags.SPAN_KIND_CONSUMER;
@@ -39,11 +54,6 @@ public abstract class KafkaDecorator extends ClientDecorator {
   @Override
   protected String[] instrumentationNames() {
     return new String[] {"kafka"};
-  }
-
-  @Override
-  protected String service() {
-    return "kafka";
   }
 
   @Override
