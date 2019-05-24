@@ -341,7 +341,14 @@ class RabbitMQTest extends AgentTestRunner {
     String errorMsg = null
   ) {
     trace.span(index) {
-      serviceName "rabbitmq"
+      switch (span.tags["amqp.command"]) {
+        case "basic.get":
+        case "basic.deliver":
+          serviceName "unnamed-java-app"
+          break
+        default:
+          serviceName "rabbitmq"
+      }
       operationName "amqp.command"
       resourceName resource
       switch (span.tags["amqp.command"]) {
