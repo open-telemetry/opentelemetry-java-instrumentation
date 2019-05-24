@@ -28,6 +28,16 @@ public class RabbitDecorator extends ClientDecorator {
   public static final RabbitDecorator CONSUMER_DECORATE =
       new RabbitDecorator() {
         @Override
+        protected String service() {
+          /*
+            Use default service name. Common use-case here is to have consumer span parent
+            children spans in instrumented application. Since service name is inherited it makes
+            sense to default that to application service name rather than 'rabbitmq'.
+          */
+          return null;
+        }
+
+        @Override
         protected String spanKind() {
           return Tags.SPAN_KIND_CONSUMER;
         }
