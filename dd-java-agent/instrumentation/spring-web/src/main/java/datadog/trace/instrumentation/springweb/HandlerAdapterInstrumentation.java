@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Method;
@@ -107,6 +108,9 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
       final String operationName = DECORATE.spanNameForClass(clazz) + "." + methodName;
 
       final Scope scope = GlobalTracer.get().buildSpan(operationName).startActive(true);
+      if (scope instanceof TraceScope) {
+        ((TraceScope) scope).setAsyncPropagation(true);
+      }
       DECORATE.afterStart(scope);
       return scope;
     }
