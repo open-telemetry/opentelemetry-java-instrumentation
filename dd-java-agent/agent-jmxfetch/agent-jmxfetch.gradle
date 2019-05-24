@@ -4,7 +4,10 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile 'com.datadoghq:jmxfetch:0.27.0'
+  compile('com.datadoghq:jmxfetch:0.29.0'){
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    exclude group: 'log4j', module: 'log4j'
+  }
   compile deps.slf4j
   compile project(':dd-trace-api')
 }
@@ -32,12 +35,23 @@ tasks.register("submodulesUpdate", Exec) {
   group 'Build Setup'
   description 'Initializes and updates integrations-core git submodule'
   commandLine 'git', 'submodule', 'update', '--init', 'integrations-core'
+  def submoduleHead = file("${project.rootDir}/.git/modules/dd-java-agent/agent-jmxfetch/integrations-core/HEAD")
+  if (submoduleHead.exists()) {
+    inputs.file "${project.rootDir}/.git/modules/dd-java-agent/agent-jmxfetch/integrations-core/HEAD"
+  }
+  def integrationsCore = file("$projectDir/integrations-core")
+  outputs.dir integrationsCore
+  if (integrationsCore.list().length == 0) {
+    outputs.upToDateWhen { false }
+  }
 }
 
 tasks.register("copyMetricConfigs", Exec) {
   group 'Build Setup'
   description 'Copy metrics.yaml files from integrations-core into resources'
   commandLine './copy-metric-configs.sh', 'integrations-core', sourceSets.main.output.resourcesDir
+  inputs.dir file("$projectDir/integrations-core")
+  outputs.dir sourceSets.main.output.resourcesDir
   doFirst {
     // Ensure the resources directory is available.
     file(sourceSets.main.output.resourcesDir).mkdirs()
