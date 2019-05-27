@@ -35,8 +35,8 @@ import static datadog.trace.api.Config.SERVICE_MAPPING
 import static datadog.trace.api.Config.SERVICE_NAME
 import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.TRACE_AGENT_PORT
-import static datadog.trace.api.Config.TRACE_REPORT_HOSTNAME
 import static datadog.trace.api.Config.TRACE_ENABLED
+import static datadog.trace.api.Config.TRACE_REPORT_HOSTNAME
 import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
 import static datadog.trace.api.Config.WRITER_TYPE
 
@@ -84,7 +84,7 @@ class ConfigTest extends Specification {
     config.runtimeContextFieldInjection == true
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
-    config.jmxFetchEnabled == false
+    config.jmxFetchEnabled == true
     config.jmxFetchMetricsConfigs == []
     config.jmxFetchCheckPeriod == null
     config.jmxFetchRefreshBeansPeriod == null
@@ -125,7 +125,7 @@ class ConfigTest extends Specification {
     prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
     prop.setProperty(PROPAGATION_STYLE_EXTRACT, "Datadog, B3")
     prop.setProperty(PROPAGATION_STYLE_INJECT, "B3, Datadog")
-    prop.setProperty(JMX_FETCH_ENABLED, "true")
+    prop.setProperty(JMX_FETCH_ENABLED, "false")
     prop.setProperty(JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
     prop.setProperty(JMX_FETCH_CHECK_PERIOD, "100")
     prop.setProperty(JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
@@ -156,7 +156,7 @@ class ConfigTest extends Specification {
     config.runtimeContextFieldInjection == false
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
-    config.jmxFetchEnabled == true
+    config.jmxFetchEnabled == false
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100
     config.jmxFetchRefreshBeansPeriod == 200
@@ -188,7 +188,7 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
     System.setProperty(PREFIX + PROPAGATION_STYLE_EXTRACT, "Datadog, B3")
     System.setProperty(PREFIX + PROPAGATION_STYLE_INJECT, "B3, Datadog")
-    System.setProperty(PREFIX + JMX_FETCH_ENABLED, "true")
+    System.setProperty(PREFIX + JMX_FETCH_ENABLED, "false")
     System.setProperty(PREFIX + JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
     System.setProperty(PREFIX + JMX_FETCH_CHECK_PERIOD, "100")
     System.setProperty(PREFIX + JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
@@ -219,7 +219,7 @@ class ConfigTest extends Specification {
     config.runtimeContextFieldInjection == false
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
-    config.jmxFetchEnabled == true
+    config.jmxFetchEnabled == false
     config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
     config.jmxFetchCheckPeriod == 100
     config.jmxFetchRefreshBeansPeriod == 200
@@ -380,7 +380,7 @@ class ConfigTest extends Specification {
     properties.setProperty(JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
     properties.setProperty(JMX_FETCH_STATSD_HOST, "statsd host")
     properties.setProperty(JMX_FETCH_STATSD_PORT, "321")
-    
+
     when:
     def config = Config.get(properties)
 
@@ -456,6 +456,40 @@ class ConfigTest extends Specification {
 
     expect:
     Config.integrationEnabled(integrationNames, defaultEnabled) == expected
+
+    where:
+    names                          | defaultEnabled | expected
+    []                             | true           | true
+    []                             | false          | false
+    ["invalid"]                    | true           | true
+    ["invalid"]                    | false          | false
+    ["test-prop"]                  | false          | true
+    ["test-env"]                   | false          | true
+    ["disabled-prop"]              | true           | false
+    ["disabled-env"]               | true           | false
+    ["other", "test-prop"]         | false          | true
+    ["other", "test-env"]          | false          | true
+    ["order"]                      | false          | true
+    ["test-prop", "disabled-prop"] | false          | true
+    ["disabled-env", "test-env"]   | false          | true
+    ["test-prop", "disabled-prop"] | true           | false
+    ["disabled-env", "test-env"]   | true           | false
+
+    integrationNames = new TreeSet<>(names)
+  }
+
+  def "verify integration jmxfetch config"() {
+    setup:
+    environmentVariables.set("DD_JMXFETCH_ORDER_ENABLED", "false")
+    environmentVariables.set("DD_JMXFETCH_TEST_ENV_ENABLED", "true")
+    environmentVariables.set("DD_JMXFETCH_DISABLED_ENV_ENABLED", "false")
+
+    System.setProperty("dd.jmxfetch.order.enabled", "true")
+    System.setProperty("dd.jmxfetch.test-prop.enabled", "true")
+    System.setProperty("dd.jmxfetch.disabled-prop.enabled", "false")
+
+    expect:
+    Config.jmxFetchIntegrationEnabled(integrationNames, defaultEnabled) == expected
 
     where:
     names                          | defaultEnabled | expected

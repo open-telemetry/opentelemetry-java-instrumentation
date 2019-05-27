@@ -159,7 +159,7 @@ public class DDApi {
           } else if (nextAllowedLogTime < System.currentTimeMillis()) {
             nextAllowedLogTime = System.currentTimeMillis() + MILLISECONDS_BETWEEN_ERROR_LOG;
             log.warn(
-                "Error while sending {} of {} traces to the DD agent. Status: {} (going silent for {} minutes)",
+                "Error while sending {} of {} traces to the DD agent. Status: {} {} (going silent for {} minutes)",
                 traces.size(),
                 representativeCount,
                 response.code(),

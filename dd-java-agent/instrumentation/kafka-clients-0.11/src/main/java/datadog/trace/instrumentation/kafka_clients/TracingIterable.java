@@ -33,6 +33,10 @@ public class TracingIterable implements Iterable<ConsumerRecord> {
     private final String operationName;
     private final KafkaDecorator decorator;
 
+    /**
+     * Note: this may potentially create problems if this iterator is used from different threads.
+     * But at the moment we cannot do much about this.
+     */
     private Scope currentScope;
 
     public TracingIterator(

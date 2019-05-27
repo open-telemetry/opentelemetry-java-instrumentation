@@ -52,7 +52,7 @@ class JMXFetchTest extends Specification {
   def "test jmxfetch config"() {
     setup:
     names.each {
-      System.setProperty("dd.integration.${it}.enabled", "$enable")
+      System.setProperty("dd.jmxfetch.${it}.enabled", "$enable")
     }
     def classLoader = IntegrationTestUtils.getJmxFetchClassLoader()
     // Have to set this so JMXFetch knows where to find resources
