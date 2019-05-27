@@ -2,25 +2,20 @@ package datadog.trace.instrumentation.glassfish4;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
-import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Constants;
-import datadog.trace.agent.tooling.ExceptionHandlers;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.agent.tooling.Utils;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
-
-import java.util.Map;
 
 /**
  * This instrumenter prevents a mechanism from GlassFish classloader to produces a class not found
@@ -45,14 +40,15 @@ public final class GlassfishInstrumentation extends Instrumenter.Default {
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return ElementMatchers.named("com.sun.enterprise.v3.server.APIClassLoaderServiceImpl$APIClassLoader");
+    return ElementMatchers.named(
+        "com.sun.enterprise.v3.server.APIClassLoaderServiceImpl$APIClassLoader");
   }
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-      isMethod().and(named("addToBlackList")).and(takesArguments(0)),
-      AvoidGlassFishBlacklistAdvice.class.getName());
+        isMethod().and(named("addToBlackList")).and(takesArguments(0)),
+        AvoidGlassFishBlacklistAdvice.class.getName());
   }
 
   public static class AvoidGlassFishBlacklistAdvice {
@@ -65,7 +61,7 @@ public final class GlassfishInstrumentation extends Instrumenter.Default {
           if (log.isDebugEnabled()) {
             log.debug(
                 "Prevented blacklisting of class {}. Stack trace is: \n{}",
-              name,
+                name,
                 Utils.getStackTraceAsString());
           }
           name = "__datadog_no_blacklist." + name;
