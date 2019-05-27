@@ -58,12 +58,6 @@ public final class GlassfishInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 0, readOnly = false) String name) {
       for (String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
         if (name.startsWith(prefix)) {
-          if (log.isDebugEnabled()) {
-            log.debug(
-                "Prevented blacklisting of class {}. Stack trace is: \n{}",
-                name,
-                Utils.getStackTraceAsString());
-          }
           name = "__datadog_no_blacklist." + name;
           break;
         }
