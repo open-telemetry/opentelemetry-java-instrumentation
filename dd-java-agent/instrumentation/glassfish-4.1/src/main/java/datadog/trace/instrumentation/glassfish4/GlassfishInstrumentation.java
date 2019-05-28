@@ -46,7 +46,7 @@ public final class GlassfishInstrumentation extends Instrumenter.Default {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod().and(named("addToBlackList")).and(takesArguments(0)),
+        isMethod().and(named("addToBlackList")).and(takesArguments(1)),
         AvoidGlassFishBlacklistAdvice.class.getName());
   }
 
