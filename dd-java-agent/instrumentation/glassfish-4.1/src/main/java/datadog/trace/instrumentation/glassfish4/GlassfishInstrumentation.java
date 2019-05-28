@@ -8,7 +8,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Constants;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.agent.tooling.Utils;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
