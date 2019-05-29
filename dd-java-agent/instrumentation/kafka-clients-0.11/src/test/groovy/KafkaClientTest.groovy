@@ -94,7 +94,7 @@ class KafkaClientTest extends AgentTestRunner {
       trace(1, 1) {
         // CONSUMER span 0
         span(0) {
-          serviceName "unnamed-java-app"
+          serviceName "kafka"
           operationName "kafka.consume"
           resourceName "Consume Topic $SHARED_TOPIC"
           spanType "queue"
