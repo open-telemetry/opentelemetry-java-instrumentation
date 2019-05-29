@@ -2,7 +2,6 @@ import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator
 import io.opentracing.util.GlobalTracer
 import org.apache.http.HttpResponse
-import org.apache.http.client.methods.HttpGet
 import org.apache.http.concurrent.FutureCallback
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.message.BasicHeader
@@ -23,11 +22,9 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest<ApacheHttpAsyncCl
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    assert method == "GET"
-
     def hasParent = GlobalTracer.get().activeSpan() != null
 
-    HttpGet request = new HttpGet(uri)
+    def request = new HttpUriRequest(method, uri)
     headers.entrySet().each {
       request.addHeader(new BasicHeader(it.key, it.value))
     }

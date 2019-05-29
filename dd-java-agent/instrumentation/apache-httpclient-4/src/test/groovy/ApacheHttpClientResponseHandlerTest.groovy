@@ -2,7 +2,6 @@ import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.apachehttpclient.ApacheHttpClientDecorator
 import org.apache.http.HttpResponse
 import org.apache.http.client.ResponseHandler
-import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.DefaultHttpClient
 import org.apache.http.message.BasicHeader
 import spock.lang.Shared
@@ -22,8 +21,7 @@ class ApacheHttpClientResponseHandlerTest extends HttpClientTest<ApacheHttpClien
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    assert method == "GET"
-    HttpGet request = new HttpGet(uri)
+    def request = new HttpUriRequest(method, uri)
     headers.entrySet().each {
       request.addHeader(new BasicHeader(it.key, it.value))
     }

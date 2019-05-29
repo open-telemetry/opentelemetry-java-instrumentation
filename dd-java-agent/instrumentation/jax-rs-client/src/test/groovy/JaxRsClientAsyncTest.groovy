@@ -1,8 +1,8 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.jaxrs.JaxRsClientDecorator
+import javax.ws.rs.client.AsyncInvoker
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
-import javax.ws.rs.client.Invocation
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -10,16 +10,17 @@ import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
 import org.glassfish.jersey.client.JerseyClientBuilder
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 
-abstract class JaxRsClientTest extends HttpClientTest<JaxRsClientDecorator> {
+abstract class JaxRsClientAsyncTest extends HttpClientTest<JaxRsClientDecorator> {
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-
     Client client = builder().build()
     WebTarget service = client.target(uri)
-    Invocation.Builder request = service.request(MediaType.TEXT_PLAIN)
-    headers.each { request.header(it.key, it.value) }
-    Response response = request.method(method)
+    def builder = service.request(MediaType.TEXT_PLAIN)
+    headers.each { builder.header(it.key, it.value) }
+    AsyncInvoker request = builder.async()
+    
+    Response response = request.method(method).get()
     callback?.call()
 
     return response.status
@@ -42,7 +43,7 @@ abstract class JaxRsClientTest extends HttpClientTest<JaxRsClientDecorator> {
   abstract ClientBuilder builder()
 }
 
-class JerseyClientTest extends JaxRsClientTest {
+class JerseyClientAsyncTest extends JaxRsClientAsyncTest {
 
   @Override
   ClientBuilder builder() {
@@ -50,7 +51,7 @@ class JerseyClientTest extends JaxRsClientTest {
   }
 }
 
-class ResteasyClientTest extends JaxRsClientTest {
+class ResteasyClientAsyncTest extends JaxRsClientAsyncTest {
 
   @Override
   ClientBuilder builder() {
@@ -58,7 +59,7 @@ class ResteasyClientTest extends JaxRsClientTest {
   }
 }
 
-class CxfClientTest extends JaxRsClientTest {
+class CxfClientAsyncTest extends JaxRsClientAsyncTest {
 
   @Override
   ClientBuilder builder() {
