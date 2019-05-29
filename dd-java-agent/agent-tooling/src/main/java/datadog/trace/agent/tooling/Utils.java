@@ -84,5 +84,17 @@ public class Utils {
     return type.getDeclaredMethods().filter(named(methodName)).getOnly();
   }
 
+  /** @return The current stack trace with multiple entries on new lines. */
+  public static String getStackTraceAsString() {
+    StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+    StringBuilder stringBuilder = new StringBuilder();
+    String lineSeparator = System.getProperty("line.separator");
+    for (StackTraceElement element : stackTrace) {
+      stringBuilder.append(element.toString());
+      stringBuilder.append(lineSeparator);
+    }
+    return stringBuilder.toString();
+  }
+
   private Utils() {}
 }

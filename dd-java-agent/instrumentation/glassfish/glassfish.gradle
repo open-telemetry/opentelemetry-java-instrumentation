@@ -1,0 +1,35 @@
+apply from: "${rootDir}/gradle/java.gradle"
+apply plugin: 'idea'
+apply plugin: 'org.unbroken-dome.test-sets'
+
+muzzle {
+  pass {
+    group = 'org.glassfish.main.extras'
+    module = 'glassfish-embedded-all'
+    versions = "[3.0,)"
+    assertInverse = true
+  }
+}
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+
+  compile project(':dd-trace-ot')
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  compile deps.autoservice
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+  testCompile group: 'org.glassfish.main.extras', name: 'glassfish-embedded-all', version: '4.1.2'
+
+  latestDepTestCompile sourceSets.test.output
+}
