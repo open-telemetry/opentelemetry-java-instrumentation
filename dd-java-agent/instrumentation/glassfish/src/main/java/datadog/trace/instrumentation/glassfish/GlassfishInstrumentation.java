@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.glassfish4;
+package datadog.trace.instrumentation.glassfish;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
