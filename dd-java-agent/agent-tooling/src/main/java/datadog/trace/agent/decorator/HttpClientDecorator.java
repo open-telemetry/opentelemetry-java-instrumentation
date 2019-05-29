@@ -61,6 +61,11 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
           }
 
           Tags.HTTP_URL.set(span, urlNoParams.toString());
+
+          if (Config.get().isHttpClientTagQueryString()) {
+            span.setTag("http.query.string", url.getQuery());
+            span.setTag("http.fragment.string", url.getFragment());
+          }
         }
       } catch (final Exception e) {
         log.debug("Error tagging url", e);

@@ -57,6 +57,8 @@ public class Config {
   public static final String HEADER_TAGS = "trace.header.tags";
   public static final String HTTP_SERVER_ERROR_STATUSES = "http.server.error.statuses";
   public static final String HTTP_CLIENT_ERROR_STATUSES = "http.client.error.statuses";
+  public static final String HTTP_SERVER_TAG_QUERY_STRING = "http.server.tag.query-string";
+  public static final String HTTP_CLIENT_TAG_QUERY_STRING = "http.client.tag.query-string";
   public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
   public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
@@ -98,6 +100,8 @@ public class Config {
       parseIntegerRangeSet("500-599", "default");
   private static final Set<Integer> DEFAULT_HTTP_CLIENT_ERROR_STATUSES =
       parseIntegerRangeSet("400-499", "default");
+  private static final boolean DEFAULT_HTTP_SERVER_TAG_QUERY_STRING = true;
+  private static final boolean DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING = true;
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 1000;
   private static final String DEFAULT_PROPAGATION_STYLE_EXTRACT = PropagationStyle.DATADOG.name();
@@ -142,6 +146,8 @@ public class Config {
   @Getter private final Map<String, String> headerTags;
   @Getter private final Set<Integer> httpServerErrorStatuses;
   @Getter private final Set<Integer> httpClientErrorStatuses;
+  @Getter private final boolean httpServerTagQueryString;
+  @Getter private final boolean httpClientTagQueryString;
   @Getter private final boolean httpClientSplitByDomain;
   @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
@@ -197,6 +203,14 @@ public class Config {
     httpClientErrorStatuses =
         getIntegerRangeSettingFromEnvironment(
             HTTP_CLIENT_ERROR_STATUSES, DEFAULT_HTTP_CLIENT_ERROR_STATUSES);
+
+    httpServerTagQueryString =
+        getBooleanSettingFromEnvironment(
+            HTTP_SERVER_TAG_QUERY_STRING, DEFAULT_HTTP_SERVER_TAG_QUERY_STRING);
+
+    httpClientTagQueryString =
+        getBooleanSettingFromEnvironment(
+            HTTP_CLIENT_TAG_QUERY_STRING, DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING);
 
     httpClientSplitByDomain =
         getBooleanSettingFromEnvironment(
@@ -279,6 +293,14 @@ public class Config {
     httpClientErrorStatuses =
         getPropertyIntegerRangeValue(
             properties, HTTP_CLIENT_ERROR_STATUSES, parent.httpClientErrorStatuses);
+
+    httpServerTagQueryString =
+        getPropertyBooleanValue(
+            properties, HTTP_SERVER_TAG_QUERY_STRING, parent.httpServerTagQueryString);
+
+    httpClientTagQueryString =
+        getPropertyBooleanValue(
+            properties, HTTP_CLIENT_TAG_QUERY_STRING, parent.httpClientTagQueryString);
 
     httpClientSplitByDomain =
         getPropertyBooleanValue(

@@ -70,7 +70,9 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
   @Unroll
   def "basic #method request #url"() {
     when:
-    def status = doRequest(method, server.address.resolve(url))
+    def status = withConfigOverride(Config.HTTP_CLIENT_TAG_QUERY_STRING, "$tagQueryString") {
+      doRequest(method, url)
+    }
 
     then:
     status == 200
@@ -350,6 +352,10 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
           "$Tags.HTTP_STATUS.key" status
         }
         "$Tags.HTTP_URL.key" "${uri.resolve(uri.path)}"
+        if (tagQueryString) {
+          "http.query.string" uri.query
+          "http.fragment.string" { it == null || it == uri.fragment } // Optional
+        }
         "$Tags.PEER_HOSTNAME.key" "localhost"
         "$Tags.PEER_PORT.key" uri.port
         "$Tags.PEER_HOST_IPV4.key" { it == null || it == "127.0.0.1" } // Optional
