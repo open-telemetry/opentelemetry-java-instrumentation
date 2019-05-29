@@ -29,7 +29,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 public final class GlassfishInstrumentation extends Instrumenter.Default {
 
   public GlassfishInstrumentation() {
-    super("cassandra");
+    super("glassfish");
   }
 
   @Override
