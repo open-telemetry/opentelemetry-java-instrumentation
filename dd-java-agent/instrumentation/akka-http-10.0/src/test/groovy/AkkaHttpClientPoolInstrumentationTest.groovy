@@ -14,7 +14,6 @@ import scala.util.Try
 import spock.lang.Shared
 
 class AkkaHttpClientPoolInstrumentationTest extends HttpClientTest<AkkaHttpClientDecorator> {
-  private static final long TIMEOUT = 10000L
 
   @Shared
   ActorSystem system = ActorSystem.create()

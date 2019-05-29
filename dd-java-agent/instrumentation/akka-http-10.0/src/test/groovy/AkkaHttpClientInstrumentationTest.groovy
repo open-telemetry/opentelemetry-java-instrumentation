@@ -11,7 +11,6 @@ import io.opentracing.tag.Tags
 import spock.lang.Shared
 
 class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDecorator> {
-  private static final long TIMEOUT = 10000L
 
   @Shared
   ActorSystem system = ActorSystem.create()

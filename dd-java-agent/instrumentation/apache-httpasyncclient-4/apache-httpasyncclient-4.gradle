@@ -32,6 +32,8 @@ dependencies {
   implementation deps.autoservice
 
   testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  
   testCompile group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '4.0'
 
   latestDepTestCompile group: 'org.apache.httpcomponents', name: 'httpasyncclient', version: '+'

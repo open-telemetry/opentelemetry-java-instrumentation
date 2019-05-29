@@ -60,7 +60,7 @@ class TraceUtils {
   }
 
   @SneakyThrows
-  static <T extends Object> Object withConfigOverride(final String name, final String value, final Callable<T> r) {
+  synchronized static <T extends Object> Object withConfigOverride(final String name, final String value, final Callable<T> r) {
     def existingConfig = Config.get()  // We can't reference INSTANCE directly or the reflection below will fail.
     Properties properties = new Properties()
     properties.put(name, value)

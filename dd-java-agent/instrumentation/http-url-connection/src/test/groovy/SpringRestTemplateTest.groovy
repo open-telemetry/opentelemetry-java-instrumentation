@@ -16,7 +16,7 @@ class SpringRestTemplateTest extends HttpClientTest<HttpUrlConnectionDecorator> 
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
     def httpHeaders = new HttpHeaders()
     headers.each { httpHeaders.put(it.key, [it.value]) }
-    def request = new HttpEntity<String>(httpHeaders);
+    def request = new HttpEntity<String>(httpHeaders)
     ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.resolve(method), request, String)
     callback?.call()
     return response.statusCode.value()
