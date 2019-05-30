@@ -14,9 +14,9 @@ import spock.lang.Unroll
 import java.util.concurrent.ExecutionException
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
+import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
-import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
 import static org.junit.Assume.assumeTrue
 
 abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRunner {

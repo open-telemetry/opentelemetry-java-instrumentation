@@ -4,7 +4,7 @@ import datadog.trace.api.Config
 import io.opentracing.Span
 import io.opentracing.tag.Tags
 
-import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
+import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 
 class HttpServerDecoratorTest extends ServerDecoratorTest {
 

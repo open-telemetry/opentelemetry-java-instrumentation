@@ -4,7 +4,7 @@ import dd.test.trace.annotation.SayTracedHello
 
 import java.util.concurrent.Callable
 
-import static datadog.trace.agent.test.utils.TraceUtils.withSystemProperty
+import static datadog.trace.agent.test.utils.ConfigUtils.withSystemProperty
 import static datadog.trace.instrumentation.trace_annotation.TraceAnnotationsInstrumentation.DEFAULT_ANNOTATIONS
 
 class ConfiguredTraceAnnotationsTest extends AgentTestRunner {

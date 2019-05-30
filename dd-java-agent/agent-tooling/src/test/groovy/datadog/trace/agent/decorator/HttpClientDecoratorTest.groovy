@@ -6,7 +6,7 @@ import io.opentracing.Span
 import io.opentracing.tag.Tags
 import spock.lang.Shared
 
-import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
+import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 
 class HttpClientDecoratorTest extends ClientDecoratorTest {
 
