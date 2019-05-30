@@ -3,6 +3,7 @@ import datadog.trace.instrumentation.jaxrs.JaxRsClientDecorator
 import javax.ws.rs.client.AsyncInvoker
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
+import javax.ws.rs.client.Entity
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -19,8 +20,9 @@ abstract class JaxRsClientAsyncTest extends HttpClientTest<JaxRsClientDecorator>
     def builder = service.request(MediaType.TEXT_PLAIN)
     headers.each { builder.header(it.key, it.value) }
     AsyncInvoker request = builder.async()
-    
-    Response response = request.method(method).get()
+
+    def body = BODY_METHODS.contains(method) ? Entity.text("") : null
+    Response response = request.method(method, (Entity) body).get()
     callback?.call()
 
     return response.status

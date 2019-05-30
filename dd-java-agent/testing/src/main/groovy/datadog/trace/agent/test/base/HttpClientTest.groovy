@@ -68,7 +68,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
   }
 
   @Unroll
-  def "basic #method request #url"() {
+  def "basic #method request #url - tagQueryString=#tagQueryString"() {
     when:
     def status = withConfigOverride(Config.HTTP_CLIENT_TAG_QUERY_STRING, "$tagQueryString") {
       doRequest(method, url)

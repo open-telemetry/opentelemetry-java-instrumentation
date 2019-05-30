@@ -2,6 +2,7 @@ import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.jaxrs.JaxRsClientDecorator
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
+import javax.ws.rs.client.Entity
 import javax.ws.rs.client.Invocation
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
@@ -19,7 +20,8 @@ abstract class JaxRsClientTest extends HttpClientTest<JaxRsClientDecorator> {
     WebTarget service = client.target(uri)
     Invocation.Builder request = service.request(MediaType.TEXT_PLAIN)
     headers.each { request.header(it.key, it.value) }
-    Response response = request.method(method)
+    def body = BODY_METHODS.contains(method) ? Entity.text("") : null
+    Response response = request.method(method, (Entity) body)
     callback?.call()
 
     return response.status

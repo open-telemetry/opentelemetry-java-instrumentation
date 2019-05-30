@@ -7,11 +7,12 @@ import io.opentracing.Scope
 import io.opentracing.util.GlobalTracer
 import lombok.SneakyThrows
 
-import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.concurrent.Callable
 
 class TraceUtils {
+  static final def CONFIG_INSTANCE_FIELD = Config.getDeclaredField("INSTANCE")
+
   private static final BaseDecorator DECORATOR = new BaseDecorator() {
     protected String[] instrumentationNames() {
       return new String[0]
@@ -61,14 +62,21 @@ class TraceUtils {
 
   @SneakyThrows
   synchronized static <T extends Object> Object withConfigOverride(final String name, final String value, final Callable<T> r) {
-    def existingConfig = Config.get()  // We can't reference INSTANCE directly or the reflection below will fail.
+    // Ensure the class was retransformed properly in AgentTestRunner.makeConfigInstanceModifiable()
+    assert Modifier.isPublic(CONFIG_INSTANCE_FIELD.getModifiers())
+    assert Modifier.isStatic(CONFIG_INSTANCE_FIELD.getModifiers())
+    assert Modifier.isVolatile(CONFIG_INSTANCE_FIELD.getModifiers())
+    assert !Modifier.isFinal(CONFIG_INSTANCE_FIELD.getModifiers())
+
+    def existingConfig = Config.get()
     Properties properties = new Properties()
     properties.put(name, value)
-    setFinalStatic(Config.getDeclaredField("INSTANCE"), new Config(properties, existingConfig))
+    CONFIG_INSTANCE_FIELD.set(null, new Config(properties, existingConfig))
+    assert Config.get() != existingConfig
     try {
       return r.call()
     } finally {
-      setFinalStatic(Config.getDeclaredField("INSTANCE"), existingConfig)
+      CONFIG_INSTANCE_FIELD.set(null, existingConfig)
     }
   }
 
@@ -76,20 +84,12 @@ class TraceUtils {
    * Calling will reset the runtimeId too, so it might cause problems around runtimeId verification.
    */
   static void resetConfig() {
-    setFinalStatic(Config.getDeclaredField("INSTANCE"), new Config())
-  }
+    // Ensure the class was retransformed properly in AgentTestRunner.makeConfigInstanceModifiable()
+    assert Modifier.isPublic(CONFIG_INSTANCE_FIELD.getModifiers())
+    assert Modifier.isStatic(CONFIG_INSTANCE_FIELD.getModifiers())
+    assert Modifier.isVolatile(CONFIG_INSTANCE_FIELD.getModifiers())
+    assert !Modifier.isFinal(CONFIG_INSTANCE_FIELD.getModifiers())
 
-  private static void setFinalStatic(final Field field, final Object newValue) throws Exception {
-    setFinal(field, null, newValue)
-  }
-
-  private static void setFinal(final Field field, final Object instance, final Object newValue) throws Exception {
-    field.setAccessible(true)
-
-    final Field modifiersField = Field.getDeclaredField("modifiers")
-    modifiersField.setAccessible(true)
-    modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL)
-
-    field.set(instance, newValue)
+    CONFIG_INSTANCE_FIELD.set(null, new Config())
   }
 }

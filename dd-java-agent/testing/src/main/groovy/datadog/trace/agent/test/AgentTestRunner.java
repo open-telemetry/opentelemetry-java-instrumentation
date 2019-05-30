@@ -1,5 +1,8 @@
 package datadog.trace.agent.test;
 
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.none;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.common.collect.Sets;
@@ -10,6 +13,7 @@ import datadog.trace.agent.test.asserts.ListWriterAssert;
 import datadog.trace.agent.test.utils.GlobalTracerUtils;
 import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.Config;
 import datadog.trace.api.GlobalTracer;
 import datadog.trace.common.writer.ListWriter;
 import datadog.trace.common.writer.Writer;
@@ -20,6 +24,8 @@ import groovy.transform.stc.SimpleType;
 import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -28,8 +34,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
+import net.bytebuddy.description.modifier.FieldManifestation;
+import net.bytebuddy.description.modifier.Ownership;
+import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.Transformer;
 import net.bytebuddy.utility.JavaModule;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -82,6 +94,12 @@ public abstract class AgentTestRunner extends Specification {
 
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG);
+
+    try {
+      makeConfigInstanceModifiable();
+    } catch (final Exception e) {
+      throw new RuntimeException(e);
+    }
 
     TEST_WRITER =
         new ListWriter() {
@@ -186,6 +204,44 @@ public abstract class AgentTestRunner extends Specification {
     // Cleanup before assertion.
     assert INSTRUMENTATION_ERROR_COUNT.get() == 0
         : INSTRUMENTATION_ERROR_COUNT.get() + " Instrumentation errors during test";
+  }
+
+  private static void makeConfigInstanceModifiable()
+      throws ClassNotFoundException, NoSuchFieldException {
+    final ResettableClassFileTransformer transformer =
+        new AgentBuilder.Default()
+            // Config is injected into the bootstrap, so we need to provide a locator.
+            .with(
+                new AgentBuilder.LocationStrategy.Simple(
+                    ClassFileLocator.ForClassLoader.ofSystemLoader()))
+            .ignore(none()) // Allow transforming boostrap classes
+            .type(named("datadog.trace.api.Config"))
+            .transform(
+                new AgentBuilder.Transformer() {
+                  @Override
+                  public DynamicType.Builder<?> transform(
+                      final DynamicType.Builder<?> builder,
+                      final TypeDescription typeDescription,
+                      final ClassLoader classLoader,
+                      final JavaModule module) {
+                    // Add transformer to modify INSTANCE field access.
+                    return builder
+                        .field(named("INSTANCE"))
+                        .transform(
+                            Transformer.ForField.withModifiers(
+                                Visibility.PUBLIC, Ownership.STATIC, FieldManifestation.VOLATILE));
+                  }
+                })
+            .installOn(INSTRUMENTATION);
+
+    final Field field = Config.class.getDeclaredField("INSTANCE");
+    assert Modifier.isPublic(field.getModifiers());
+    assert Modifier.isStatic(field.getModifiers());
+    assert Modifier.isVolatile(field.getModifiers());
+    assert !Modifier.isFinal(field.getModifiers());
+
+    // No longer needed (Unless class gets retransformed somehow).
+    INSTRUMENTATION.removeTransformer(transformer);
   }
 
   public static void assertTraces(
