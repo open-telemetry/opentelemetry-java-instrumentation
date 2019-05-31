@@ -22,11 +22,6 @@ class AkkaHttpClientPoolInstrumentationTest extends HttpClientTest<AkkaHttpClien
 
   def pool = Http.get(system).superPool(materializer)
 
-
-//  String readMessage(HttpResponse response) {
-//    response.entity().toStrict(TIMEOUT, materializer).toCompletableFuture().get().getData().utf8String()
-//  }
-
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
     def request = HttpRequest.create(uri.toString())

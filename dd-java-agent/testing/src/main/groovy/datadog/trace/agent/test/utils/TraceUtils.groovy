@@ -20,7 +20,6 @@ class TraceUtils {
     }
 
     protected String component() {
-//      return "runUnderTrace"
       return null
     }
   }

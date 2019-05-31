@@ -17,10 +17,6 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
   @Shared
   ActorMaterializer materializer = ActorMaterializer.create(system)
 
-//  String readMessage(HttpResponse response) {
-//    response.entity().toStrict(TIMEOUT, materializer).toCompletableFuture().get().getData().utf8String()
-//  }
-
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
     def request = HttpRequest.create(uri.toString())
