@@ -4,7 +4,7 @@ import datadog.trace.api.Config
 import io.opentracing.Span
 import io.opentracing.tag.Tags
 
-import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
+import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 
 class HttpServerDecoratorTest extends ServerDecoratorTest {
 
@@ -34,28 +34,41 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
     [method: "test-method", url: URI.create("http://123:8080/some/path")]  | "http://123:8080/some/path"
   }
 
-  def "test url handling"() {
+  def "test url handling for #url"() {
     setup:
     def decorator = newDecorator()
 
     when:
-    decorator.onRequest(span, req)
+    withConfigOverride(Config.HTTP_SERVER_TAG_QUERY_STRING, "$tagQueryString") {
+      decorator.onRequest(span, req)
+    }
 
     then:
-    if (expected) {
-      1 * span.setTag(Tags.HTTP_URL.key, expected)
+    if (expectedUrl) {
+      1 * span.setTag(Tags.HTTP_URL.key, expectedUrl)
+    }
+    if (expectedUrl && tagQueryString) {
+      1 * span.setTag("http.query.string", expectedQuery)
+      1 * span.setTag("http.fragment.string", expectedFragment)
     }
     1 * span.setTag(Tags.HTTP_METHOD.key, null)
     0 * _
 
     where:
-    url                                  | expected
-    null                                 | null
-    ""                                   | "/"
-    "/path?query"                        | "/path"
-    "https://host:0"                     | "https://host/"
-    "https://host/path"                  | "https://host/path"
-    "http://host:99/path?query#fragment" | "http://host:99/path"
+    tagQueryString | url                                                    | expectedUrl           | expectedQuery       | expectedFragment
+    false          | null                                                   | null                  | null                | null
+    false          | ""                                                     | "/"                   | ""                  | null
+    false          | "/path?query"                                          | "/path"               | ""                  | null
+    false          | "https://host:0"                                       | "https://host/"       | ""                  | null
+    false          | "https://host/path"                                    | "https://host/path"   | ""                  | null
+    false          | "http://host:99/path?query#fragment"                   | "http://host:99/path" | ""                  | null
+    true           | null                                                   | null                  | null                | null
+    true           | ""                                                     | "/"                   | null                | null
+    true           | "/path?encoded+%28query%29%3F?"                        | "/path"               | "encoded+(query)??" | null
+    true           | "https://host:0"                                       | "https://host/"       | null                | null
+    true           | "https://host/path"                                    | "https://host/path"   | null                | null
+    true           | "http://host:99/path?query#enc+%28fragment%29%3F"      | "http://host:99/path" | "query"             | "enc+(fragment)?"
+    true           | "http://host:99/path?query#enc+%28fragment%29%3F?tail" | "http://host:99/path" | "query"             | "enc+(fragment)??tail"
 
     req = [url: url == null ? null : new URI(url)]
   }

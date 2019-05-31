@@ -1,6 +1,6 @@
 package datadog.trace.agent.test
 
-
+import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.agent.tooling.AgentInstaller
 import datadog.trace.agent.tooling.HelperInjector
 import datadog.trace.agent.tooling.Utils
@@ -19,6 +19,9 @@ import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOAD
 import static datadog.trace.util.gc.GCUtils.awaitGC
 
 class HelperInjectionTest extends Specification {
+  static {
+    ConfigUtils.makeConfigInstanceModifiable()
+  }
 
   @Timeout(10)
   def "helpers injected to non-delegating classloader"() {

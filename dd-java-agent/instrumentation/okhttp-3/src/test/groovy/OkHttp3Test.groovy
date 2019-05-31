@@ -1,160 +1,124 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.PortUtils
-import datadog.trace.api.Config
+import datadog.opentracing.DDSpan
+import datadog.trace.agent.test.asserts.TraceAssert
+import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.okhttp3.OkHttpClientDecorator
 import io.opentracing.tag.Tags
-import okhttp3.Call
-import okhttp3.Callback
+import okhttp3.Headers
+import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
-import spock.lang.AutoCleanup
-import spock.lang.Shared
+import okhttp3.RequestBody
+import okhttp3.internal.http.HttpMethod
 
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.atomic.AtomicReference
+import static datadog.trace.instrumentation.okhttp3.OkHttpClientDecorator.NETWORK_DECORATE
 
-import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
-import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
-import static java.util.concurrent.TimeUnit.SECONDS
-
-class OkHttp3Test extends AgentTestRunner {
-  @AutoCleanup
-  @Shared
-  def server = httpServer {
-    handlers {
-      all {
-        response.status(200).send("pong")
-      }
-    }
-  }
+class OkHttp3Test extends HttpClientTest<OkHttpClientDecorator> {
 
   def client = new OkHttpClient()
 
-  def "sending a request creates spans and sends headers"() {
-    setup:
-    def requestBulder = new Request.Builder()
-      .url("http://localhost:$server.address.port/ping")
-    if (agentRequest) {
-      requestBulder.addHeader("Datadog-Meta-Lang", "java")
-    }
-    def request = requestBulder.build()
-
-    Response response = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
-      if (!async) {
-        return client.newCall(request).execute()
-      }
-
-      AtomicReference<Response> responseRef = new AtomicReference()
-      def latch = new CountDownLatch(1)
-
-      client.newCall(request).enqueue(new Callback() {
-        void onResponse(Call call, Response response) {
-          responseRef.set(response)
-          latch.countDown()
-        }
-
-        void onFailure(Call call, IOException e) {
-          latch.countDown()
-        }
-      })
-      latch.await(10, SECONDS)
-      return responseRef.get()
-    }
-
-    expect:
-    response.body.string() == "pong"
-    if (agentRequest) {
-      assert TEST_WRITER.size() == 0
-      assert server.lastRequest.headers.get("x-datadog-trace-id") == null
-      assert server.lastRequest.headers.get("x-datadog-parent-id") == null
-    } else {
-      assertTraces(1) {
-        trace(0, 2) {
-          span(0) {
-            operationName "okhttp.http"
-            serviceName "okhttp"
-            resourceName "okhttp.http"
-            spanType DDSpanTypes.HTTP_CLIENT
-            errored false
-            parent()
-            tags {
-              "$Tags.COMPONENT.key" "okhttp"
-              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-              defaultTags()
-            }
-          }
-          span(1) {
-            operationName "okhttp.http"
-            serviceName renameService ? "localhost" : "okhttp"
-            resourceName "GET /ping"
-            spanType DDSpanTypes.HTTP_CLIENT
-            errored false
-            childOf(span(0))
-            tags {
-              defaultTags()
-              "$Tags.COMPONENT.key" "okhttp-network"
-              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-              "$Tags.HTTP_METHOD.key" "GET"
-              "$Tags.HTTP_STATUS.key" 200
-              "$Tags.HTTP_URL.key" "http://localhost:$server.address.port/ping"
-              "$Tags.PEER_HOSTNAME.key" "localhost"
-              "$Tags.PEER_PORT.key" server.address.port
-              "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-            }
-          }
-        }
-      }
-
-      assert server.lastRequest.headers.get("x-datadog-trace-id") == TEST_WRITER[0][1].traceId
-      assert server.lastRequest.headers.get("x-datadog-parent-id") == TEST_WRITER[0][1].spanId
-    }
-
-    where:
-    renameService | async | agentRequest
-    false         | false | false
-    true          | false | false
-    false         | true  | false
-    true          | true  | false
-    false         | false | true
-    false         | false | true
+  @Override
+  int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
+    def body = HttpMethod.requiresRequestBody(method) ? RequestBody.create(MediaType.parse("text/plain"), "") : null
+    def request = new Request.Builder()
+      .url(uri.toURL())
+      .method(method, body)
+      .headers(Headers.of(headers)).build()
+    def response = client.newCall(request).execute()
+    callback?.call()
+    return response.code()
   }
 
-  def "sending an invalid request creates an error span"() {
-    setup:
-    def unusablePort = PortUtils.UNUSABLE_PORT
-    def request = new Request.Builder()
-      .url("http://localhost:$unusablePort/ping")
-      .build()
+  @Override
+  OkHttpClientDecorator decorator() {
+    return OkHttpClientDecorator.DECORATE
+  }
 
-    when:
-    withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "$renameService") {
-      client.newCall(request).execute()
+  @Override
+  // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
+  void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", boolean renameService = false, boolean tagQueryString = false, URI uri = server.address.resolve("/success"), Integer status = 200, Throwable exception = null) {
+    trace.span(index) {
+      if (parentSpan == null) {
+        parent()
+      } else {
+        childOf((DDSpan) parentSpan)
+      }
+      serviceName decorator().service()
+      operationName "okhttp.http"
+      resourceName "okhttp.http"
+//      resourceName "GET $uri.path"
+      spanType DDSpanTypes.HTTP_CLIENT
+      errored exception != null
+      tags {
+        defaultTags()
+        if (exception) {
+          errorTags(exception.class, exception.message)
+        }
+        "$Tags.COMPONENT.key" decorator.component()
+        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+      }
     }
-
-    then:
-    thrown(ConnectException)
-
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          operationName "okhttp.http"
-          serviceName "okhttp"
-          resourceName "okhttp.http"
-          spanType DDSpanTypes.HTTP_CLIENT
-          errored true
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "okhttp"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            errorTags(ConnectException, ~/Failed to connect to localhost\/[\d:\.]+:61/)
-            defaultTags()
+    if (!exception) {
+      trace.span(index + 1) {
+        serviceName renameService ? "localhost" : decorator().service()
+        operationName "okhttp.http"
+        resourceName "$method $uri.path"
+        childOf trace.span(index)
+        spanType DDSpanTypes.HTTP_CLIENT
+        errored exception != null
+        tags {
+          defaultTags()
+          if (exception) {
+            errorTags(exception.class, exception.message)
           }
+          "$Tags.COMPONENT.key" NETWORK_DECORATE.component()
+          if (status) {
+            "$Tags.HTTP_STATUS.key" status
+          }
+          "$Tags.HTTP_URL.key" "${uri.resolve(uri.path)}"
+          if (tagQueryString) {
+            "http.query.string" uri.query
+            "http.fragment.string" uri.fragment
+          }
+          "$Tags.PEER_HOSTNAME.key" "localhost"
+          "$Tags.PEER_PORT.key" server.address.port
+          "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+          "$Tags.HTTP_METHOD.key" method
+          "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
         }
       }
     }
+  }
+
+  @Override
+  int size(int size) {
+    return size + 1
+  }
+
+  boolean testRedirects() {
+    false
+  }
+
+  def "request to agent not traced"() {
+    when:
+    def status = doRequest(method, url, ["Datadog-Meta-Lang": "java"])
+
+    then:
+    status == 200
+    assertTraces(1) {
+      server.distributedRequestTrace(it, 0)
+    }
 
     where:
-    renameService << [false, true]
+    path                                | tagQueryString
+    "/success"                          | false
+    "/success"                          | true
+    "/success?with=params"              | false
+    "/success?with=params"              | true
+    "/success#with+fragment"            | true
+    "/success?with=params#and=fragment" | true
+
+    method = "GET"
+    url = server.address.resolve(path)
   }
 }

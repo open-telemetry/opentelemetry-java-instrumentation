@@ -67,6 +67,11 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
           }
 
           Tags.HTTP_URL.set(span, urlNoParams.toString());
+
+          if (Config.get().isHttpServerTagQueryString()) {
+            span.setTag("http.query.string", url.getQuery());
+            span.setTag("http.fragment.string", url.getFragment());
+          }
         }
       } catch (final Exception e) {
         log.debug("Error tagging url", e);

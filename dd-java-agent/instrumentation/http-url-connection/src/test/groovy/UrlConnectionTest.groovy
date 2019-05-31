@@ -5,9 +5,9 @@ import datadog.trace.instrumentation.http_url_connection.UrlInstrumentation
 import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
 
+import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
-import static datadog.trace.agent.test.utils.TraceUtils.withConfigOverride
 import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
 class UrlConnectionTest extends AgentTestRunner {

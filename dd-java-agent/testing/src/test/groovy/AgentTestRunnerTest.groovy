@@ -10,7 +10,7 @@ import spock.lang.Shared
 
 import java.lang.reflect.Field
 
-import static datadog.trace.agent.test.utils.TraceUtils.resetConfig
+import static datadog.trace.agent.test.utils.ConfigUtils.resetConfig
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static datadog.trace.api.Config.TRACE_CLASSES_EXCLUDE
 

@@ -35,6 +35,7 @@ dependencies {
   compile project(':dd-java-agent:agent-tooling')
 
   testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
 
   testCompile project(':dd-java-agent:instrumentation:jax-rs-client:connection-error-handling-jersey')
   testCompile project(':dd-java-agent:instrumentation:jax-rs-client:connection-error-handling-resteasy')

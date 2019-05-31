@@ -1,6 +1,7 @@
 package datadog.trace.agent.decorator;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static java.util.Collections.singletonMap;
 
 import datadog.trace.api.Config;
 import datadog.trace.api.DDTags;
@@ -13,8 +14,8 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutionException;
 
 public abstract class BaseDecorator {
 
@@ -83,7 +84,10 @@ public abstract class BaseDecorator {
     assert span != null;
     if (throwable != null) {
       Tags.ERROR.set(span, true);
-      span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+      span.log(
+          singletonMap(
+              ERROR_OBJECT,
+              throwable instanceof ExecutionException ? throwable.getCause() : throwable));
     }
     return span;
   }

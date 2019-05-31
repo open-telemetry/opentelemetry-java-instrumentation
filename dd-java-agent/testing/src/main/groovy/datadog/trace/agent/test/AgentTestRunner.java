@@ -7,6 +7,7 @@ import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
 import datadog.opentracing.PendingTrace;
 import datadog.trace.agent.test.asserts.ListWriterAssert;
+import datadog.trace.agent.test.utils.ConfigUtils;
 import datadog.trace.agent.test.utils.GlobalTracerUtils;
 import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -82,6 +83,8 @@ public abstract class AgentTestRunner extends Specification {
 
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG);
+
+    ConfigUtils.makeConfigInstanceModifiable();
 
     TEST_WRITER =
         new ListWriter() {
