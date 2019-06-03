@@ -8,7 +8,9 @@ import spock.lang.Specification
 import static datadog.trace.api.Config.AGENT_HOST
 import static datadog.trace.api.Config.AGENT_PORT_LEGACY
 import static datadog.trace.api.Config.AGENT_UNIX_DOMAIN_SOCKET
+import static datadog.trace.api.Config.CONFIGURATION_FILE
 import static datadog.trace.api.Config.DEFAULT_JMX_FETCH_STATSD_PORT
+import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 import static datadog.trace.api.Config.GLOBAL_TAGS
 import static datadog.trace.api.Config.HEADER_TAGS
 import static datadog.trace.api.Config.HTTP_CLIENT_ERROR_STATUSES
@@ -714,5 +716,51 @@ class ConfigTest extends Specification {
 
     then:
     config.localRootSpanTags.get('_dd.hostname') == InetAddress.localHost.hostName
+  }
+
+  def "verify fallback to properties file"() {
+    setup:
+    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.serviceName == "set-in-properties"
+  }
+
+  def "verify fallback to properties file has lower priority then system property"() {
+    setup:
+    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
+    System.setProperty(PREFIX + SERVICE_NAME, "set-in-system")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.serviceName == "set-in-system"
+  }
+
+  def "verify fallback to properties file has lower priority then env var"() {
+    setup:
+    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
+    environmentVariables.set("DD_SERVICE_NAME", "set-in-env")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.serviceName == "set-in-env"
+  }
+
+  def "verify fallback to properties file that does not exist does not crash app"() {
+    setup:
+    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/do-not-exist.properties")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.serviceName == 'unnamed-java-app'
   }
 }

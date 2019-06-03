@@ -191,11 +191,15 @@ public class Config {
   @Getter private final List<String> traceExecutors;
 
   @Getter private final boolean traceAnalyticsEnabled;
-  private static final Properties propertiesFromConfigFile = loadConfigurationFile();
+
+  // Values from an optionally provided properties file
+  private static Properties propertiesFromConfigFile;
 
   // Read order: System Properties -> Env Variables, [-> default value]
   // Visible for testing
   Config() {
+    propertiesFromConfigFile = loadConfigurationFile();
+
     runtimeId = UUID.randomUUID().toString();
 
     serviceName = getSettingFromEnvironment(SERVICE_NAME, DEFAULT_SERVICE_NAME);
@@ -868,7 +872,7 @@ public class Config {
    * @return The {@link Properties} object. the returned instance might be empty of file does not
    *     exist or if it is in a wrong format.
    */
-  private static Properties loadConfigurationFile() {
+  private static synchronized Properties loadConfigurationFile() {
     Properties properties = new Properties();
 
     String configurationFilePath =
@@ -892,7 +896,7 @@ public class Config {
       properties.load(fileReader);
     } catch (FileNotFoundException fnf) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
-    } catch (IOException e) {
+    } catch (IOException ioe) {
       log.error(
           "Configuration file '{}' cannot be accessed or correctly parsed.", configurationFilePath);
     }
