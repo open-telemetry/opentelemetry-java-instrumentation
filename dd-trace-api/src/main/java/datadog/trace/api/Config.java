@@ -195,7 +195,7 @@ public class Config {
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
 
-  // Read order: System Properties -> Env Variables, [-> default value]
+  // Read order: System Properties -> Env Variables, [-> properties file], [-> default value]
   // Visible for testing
   Config() {
     propertiesFromConfigFile = loadConfigurationFile();
