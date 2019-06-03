@@ -1,5 +1,9 @@
 package datadog.trace.api;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -35,6 +39,7 @@ public class Config {
 
   private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
 
+  public static final String CONFIGURATION_FILE = "trace.config";
   public static final String SERVICE_NAME = "service.name";
   public static final String SERVICE = "service";
   public static final String TRACE_ENABLED = "trace.enabled";
@@ -186,6 +191,7 @@ public class Config {
   @Getter private final List<String> traceExecutors;
 
   @Getter private final boolean traceAnalyticsEnabled;
+  private static final Properties propertiesFromConfigFile = loadConfigurationFile();
 
   // Read order: System Properties -> Env Variables, [-> default value]
   // Visible for testing
@@ -555,7 +561,8 @@ public class Config {
   /**
    * Helper method that takes the name, adds a "dd." prefix then checks for System Properties of
    * that name. If none found, the name is converted to an Environment Variable and used to check
-   * the env. If setting not configured in either location, defaultValue is returned.
+   * the env. If none of the above returns a value, then an optional properties file if checked. If
+   * setting is not configured in either location, <code>defaultValue</code> is returned.
    *
    * @param name
    * @param defaultValue
@@ -563,11 +570,27 @@ public class Config {
    * @deprecated This method should only be used internally. Use the explicit getter instead.
    */
   public static String getSettingFromEnvironment(final String name, final String defaultValue) {
-    final String completeName = PREFIX + name;
-    final String value =
-        System.getProperties()
-            .getProperty(completeName, System.getenv(propertyToEnvironmentName(completeName)));
-    return value == null ? defaultValue : value;
+    String value;
+
+    // System properties and properties provided from command line have the highest precedence
+    value = System.getProperties().getProperty(propertyNameToSystemPropertyName(name));
+    if (null != value) {
+      return value;
+    }
+
+    // If value not provided from system properties, looking at env variables
+    value = System.getenv(propertyNameToEnvironmentVariableName(name));
+    if (null != value) {
+      return value;
+    }
+
+    // If value is not defined yet, we look at properties optionally defined in a properties file
+    value = propertiesFromConfigFile.getProperty(propertyNameToSystemPropertyName(name));
+    if (null != value) {
+      return value;
+    }
+
+    return defaultValue;
   }
 
   /** @deprecated This method should only be used internally. Use the explicit getter instead. */
@@ -663,8 +686,28 @@ public class Config {
     }
   }
 
-  private static String propertyToEnvironmentName(final String name) {
-    return ENV_REPLACEMENT.matcher(name.toUpperCase()).replaceAll("_");
+  /**
+   * Converts the property name, e.g. 'service.name' into a public environment variable name, e.g.
+   * `DD_SERVICE_NAME`.
+   *
+   * @param setting The setting name, e.g. `service.name`
+   * @return The public facing environment variable name
+   */
+  private static String propertyNameToEnvironmentVariableName(final String setting) {
+    return ENV_REPLACEMENT
+        .matcher(propertyNameToSystemPropertyName(setting).toUpperCase())
+        .replaceAll("_");
+  }
+
+  /**
+   * Converts the property name, e.g. 'service.name' into a public system property name, e.g.
+   * `dd.service.name`.
+   *
+   * @param setting The setting name, e.g. `service.name`
+   * @return The public facing system property name
+   */
+  private static String propertyNameToSystemPropertyName(String setting) {
+    return PREFIX + setting;
   }
 
   private static Map<String, String> getPropertyMapValue(
@@ -817,6 +860,44 @@ public class Config {
       }
     }
     return Collections.unmodifiableSet(result);
+  }
+
+  /**
+   * Loads the optional configuration properties file into the global {@link Properties} object.
+   *
+   * @return The {@link Properties} object. the returned instance might be empty of file does not
+   *     exist or if it is in a wrong format.
+   */
+  private static Properties loadConfigurationFile() {
+    Properties properties = new Properties();
+
+    String configurationFilePath =
+        System.getProperty(propertyNameToSystemPropertyName(CONFIGURATION_FILE));
+    if (null == configurationFilePath) {
+      configurationFilePath =
+          System.getenv(propertyNameToEnvironmentVariableName(CONFIGURATION_FILE));
+    }
+    if (null == configurationFilePath) {
+      return properties;
+    }
+
+    // Configuration properties file is optional
+    File configurationFile = new File(configurationFilePath);
+    if (!configurationFile.exists()) {
+      return properties;
+    }
+
+    try {
+      FileReader fileReader = new FileReader(configurationFile);
+      properties.load(fileReader);
+    } catch (FileNotFoundException fnf) {
+      log.error("Configuration file '{}' not found.", configurationFilePath);
+    } catch (IOException e) {
+      log.error(
+          "Configuration file '{}' cannot be accessed or correctly parsed.", configurationFilePath);
+    }
+
+    return properties;
   }
 
   /**
