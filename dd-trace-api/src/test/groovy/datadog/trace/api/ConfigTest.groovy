@@ -729,7 +729,7 @@ class ConfigTest extends Specification {
     config.serviceName == "set-in-properties"
   }
 
-  def "verify fallback to properties file has lower priority then system property"() {
+  def "verify fallback to properties file has lower priority than system property"() {
     setup:
     System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
     System.setProperty(PREFIX + SERVICE_NAME, "set-in-system")
@@ -741,7 +741,7 @@ class ConfigTest extends Specification {
     config.serviceName == "set-in-system"
   }
 
-  def "verify fallback to properties file has lower priority then env var"() {
+  def "verify fallback to properties file has lower priority than env var"() {
     setup:
     System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
     environmentVariables.set("DD_SERVICE_NAME", "set-in-env")
