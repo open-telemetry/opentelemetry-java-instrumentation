@@ -872,7 +872,7 @@ public class Config {
    * @return The {@link Properties} object. the returned instance might be empty of file does not
    *     exist or if it is in a wrong format.
    */
-  private static synchronized Properties loadConfigurationFile() {
+  private static Properties loadConfigurationFile() {
     Properties properties = new Properties();
 
     String configurationFilePath =
