@@ -23,8 +23,8 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Config gives priority to system properties and falls back to environment variables. It also
- * includes default values to ensure a valid config.
+ * Config reads values with the following priority: 1) system properties, 2) environment variables,
+ * 3) optional configuration file. It also includes default values to ensure a valid config.
  *
  * <p>
  *
