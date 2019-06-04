@@ -47,7 +47,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
   private final Map<String, Set<String>> classMethodsToTrace;
 
   public TraceConfigInstrumentation() {
-    final String configString = Config.getSettingFromEnvironment(Config.TRACE_METHODS, null);
+    final String configString = Config.get().getTraceMethods();
     if (configString == null || configString.trim().isEmpty()) {
       classMethodsToTrace = Collections.emptyMap();
 

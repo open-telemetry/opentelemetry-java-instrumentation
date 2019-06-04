@@ -22,8 +22,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
 
   public static final String EXEC_NAME = "java_concurrent";
 
-  private static final boolean TRACE_ALL_EXECUTORS =
-      Config.getBooleanSettingFromEnvironment("trace.executors.all", false);
+  private static final boolean TRACE_ALL_EXECUTORS = Config.get().isTraceExecutorsAll();
 
   /**
    * Only apply executor instrumentation to whitelisted executors. To apply to all executors, use
@@ -85,8 +84,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
         "com.google.common.util.concurrent.MoreExecutors$ScheduledListeningDecorator",
       };
 
-      final Set<String> executors =
-          new HashSet<>(Config.getListSettingFromEnvironment("trace.executors", ""));
+      final Set<String> executors = new HashSet<>(Config.get().getTraceExecutors());
       executors.addAll(Arrays.asList(whitelist));
 
       WHITELISTED_EXECUTORS = Collections.unmodifiableSet(executors);

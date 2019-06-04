@@ -26,11 +26,12 @@ public abstract class BaseDecorator {
     final String[] instrumentationNames = instrumentationNames();
     traceAnalyticsEnabled =
         instrumentationNames.length > 0
-            && Config.traceAnalyticsIntegrationEnabled(
-                new TreeSet<>(Arrays.asList(instrumentationNames)), traceAnalyticsDefault());
+            && Config.get()
+                .isTraceAnalyticsIntegrationEnabled(
+                    new TreeSet<>(Arrays.asList(instrumentationNames)), traceAnalyticsDefault());
     float rate = 1.0f;
     for (final String name : instrumentationNames) {
-      rate = Config.getFloatSettingFromEnvironment(name + ".analytics.sample-rate", rate);
+      rate = Config.get().getInstrumentationAnalyticsSampleRate(name);
     }
     traceAnalyticsSampleRate = rate;
   }

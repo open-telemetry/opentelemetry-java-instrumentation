@@ -47,7 +47,7 @@ public final class TraceAnnotationsInstrumentation extends Instrumenter.Default 
   public TraceAnnotationsInstrumentation() {
     super("trace", "trace-annotation");
 
-    final String configString = Config.getSettingFromEnvironment(Config.TRACE_ANNOTATIONS, null);
+    final String configString = Config.get().getTraceAnnotations();
     if (configString == null) {
       additionalTraceAnnotations =
           Collections.unmodifiableSet(Sets.<String>newHashSet(DEFAULT_ANNOTATIONS));
