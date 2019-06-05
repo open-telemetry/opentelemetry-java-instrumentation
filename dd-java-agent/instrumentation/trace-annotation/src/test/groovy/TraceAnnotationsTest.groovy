@@ -13,12 +13,12 @@ class TraceAnnotationsTest extends AgentTestRunner {
     ConfigUtils.makeConfigInstanceModifiable()
     System.clearProperty("dd.trace.annotations")
     ConfigUtils.resetConfig(true)
+    refreshTestTracer()
   }
 
   def "test simple case annotations"() {
     setup:
     // Test single span in new trace
-    ConfigUtils.resetConfig(true)
     SayTracedHello.sayHello()
 
     expect:
