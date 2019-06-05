@@ -20,6 +20,7 @@ class ConfigUtils {
   private static class ConfigInstance {
     // Wrapped in a static class to lazy load.
     static final FIELD = Config.getDeclaredField("INSTANCE")
+    static final RUNTIME_ID_FIELD = Config.getDeclaredField("runtimeId")
   }
 
   // TODO: ideally all users of this should switch to using Config object (and withConfigOverride) instead.
@@ -60,15 +61,27 @@ class ConfigUtils {
 
   /**
    * Calling will reset the runtimeId too, so it might cause problems around runtimeId verification.
+   * If you are testing runtimeId provide <code>preserveRuntimeId = false</code> to copy the previous runtimeId
+   * tot he new config instance.
    */
-  static void resetConfig() {
+  static void resetConfig(preserveRuntimeId = false) {
     // Ensure the class was retransformed properly in AgentTestRunner.makeConfigInstanceModifiable()
     assert Modifier.isPublic(ConfigInstance.FIELD.getModifiers())
     assert Modifier.isStatic(ConfigInstance.FIELD.getModifiers())
     assert Modifier.isVolatile(ConfigInstance.FIELD.getModifiers())
     assert !Modifier.isFinal(ConfigInstance.FIELD.getModifiers())
 
-    ConfigInstance.FIELD.set(null, new Config())
+    assert Modifier.isPublic(ConfigInstance.RUNTIME_ID_FIELD.getModifiers())
+    assert !Modifier.isStatic(ConfigInstance.RUNTIME_ID_FIELD.getModifiers())
+    assert Modifier.isVolatile(ConfigInstance.RUNTIME_ID_FIELD.getModifiers())
+    assert !Modifier.isFinal(ConfigInstance.RUNTIME_ID_FIELD.getModifiers())
+
+    def previousConfig = ConfigInstance.FIELD.get(null)
+    def newConfig = new Config()
+    ConfigInstance.FIELD.set(null, newConfig)
+    if (previousConfig != null && preserveRuntimeId) {
+      ConfigInstance.RUNTIME_ID_FIELD.set(newConfig, ConfigInstance.RUNTIME_ID_FIELD.get(previousConfig))
+    }
   }
 
   static void makeConfigInstanceModifiable() {
@@ -88,6 +101,12 @@ class ConfigUtils {
             .field(named("INSTANCE"))
             .transform(Transformer.ForField.withModifiers(PUBLIC, STATIC, VOLATILE))
         }
+        // Making runtimeId modifiable so that it can be preserved when resetting config in tests
+        .transform { builder, typeDescription, classLoader, module ->
+          builder
+            .field(named("runtimeId"))
+            .transform(Transformer.ForField.withModifiers(PUBLIC, VOLATILE))
+        }
         .installOn(instrumentation)
 
     final field = ConfigInstance.FIELD
@@ -95,6 +114,12 @@ class ConfigUtils {
     assert Modifier.isStatic(field.getModifiers())
     assert Modifier.isVolatile(field.getModifiers())
     assert !Modifier.isFinal(field.getModifiers())
+
+    final runtimeIdField = ConfigInstance.RUNTIME_ID_FIELD
+    assert Modifier.isPublic(runtimeIdField.getModifiers())
+    assert !Modifier.isStatic(ConfigInstance.RUNTIME_ID_FIELD.getModifiers())
+    assert Modifier.isVolatile(runtimeIdField.getModifiers())
+    assert !Modifier.isFinal(runtimeIdField.getModifiers())
 
     // No longer needed (Unless class gets retransformed somehow).
     instrumentation.removeTransformer(transformer)
