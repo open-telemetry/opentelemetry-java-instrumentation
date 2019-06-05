@@ -439,9 +439,14 @@ public class Config {
    * Returns the sample rate for the specified instrumentation or {@link
    * #DEFAULT_ANALYTICS_SAMPLE_RATE} if none specified.
    */
-  public float getInstrumentationAnalyticsSampleRate(String instrumentationName) {
-    return getFloatSettingFromEnvironment(
-        instrumentationName + ".analytics.sample-rate", DEFAULT_ANALYTICS_SAMPLE_RATE);
+  public float getInstrumentationAnalyticsSampleRate(String... aliases) {
+    for (final String alias : aliases) {
+      Float rate = getFloatSettingFromEnvironment(alias + ".analytics.sample-rate", null);
+      if (null != rate) {
+        return rate;
+      }
+    }
+    return DEFAULT_ANALYTICS_SAMPLE_RATE;
   }
 
   /**

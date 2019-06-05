@@ -172,6 +172,7 @@ class BaseDecoratorTest extends Specification {
     when:
     BaseDecorator dec = withSystemProperty("dd.${integName}.analytics.enabled", "true") {
       withSystemProperty("dd.${integName}.analytics.sample-rate", "$sampleRate") {
+        ConfigUtils.resetConfig()
         newDecorator(enabled)
       }
     }

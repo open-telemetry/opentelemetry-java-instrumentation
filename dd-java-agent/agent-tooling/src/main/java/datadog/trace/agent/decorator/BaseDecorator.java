@@ -23,17 +23,13 @@ public abstract class BaseDecorator {
   protected final float traceAnalyticsSampleRate;
 
   protected BaseDecorator() {
+    Config config = Config.get();
     final String[] instrumentationNames = instrumentationNames();
     traceAnalyticsEnabled =
         instrumentationNames.length > 0
-            && Config.get()
-                .isTraceAnalyticsIntegrationEnabled(
-                    new TreeSet<>(Arrays.asList(instrumentationNames)), traceAnalyticsDefault());
-    float rate = 1.0f;
-    for (final String name : instrumentationNames) {
-      rate = Config.get().getInstrumentationAnalyticsSampleRate(name);
-    }
-    traceAnalyticsSampleRate = rate;
+            && config.isTraceAnalyticsIntegrationEnabled(
+                new TreeSet<>(Arrays.asList(instrumentationNames)), traceAnalyticsDefault());
+    traceAnalyticsSampleRate = config.getInstrumentationAnalyticsSampleRate(instrumentationNames);
   }
 
   protected abstract String[] instrumentationNames();
