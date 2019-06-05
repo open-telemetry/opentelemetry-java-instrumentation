@@ -385,7 +385,7 @@ public class Config {
 
     traceAnnotations = properties.getProperty(TRACE_ANNOTATIONS, parent.traceAnnotations);
 
-    traceMethods = properties.getProperty(TRACE_METHODS, parent.traceAnnotations);
+    traceMethods = properties.getProperty(TRACE_METHODS, parent.traceMethods);
 
     traceExecutorsAll =
         getPropertyBooleanValue(properties, TRACE_EXECUTORS_ALL, parent.traceExecutorsAll);

@@ -64,12 +64,12 @@ public abstract class AgentTestRunner extends Specification {
    *
    * <p>Before the start of each test the reported traces will be reset.
    */
-  public static final ListWriter TEST_WRITER;
+  public static ListWriter TEST_WRITER;
 
   // having a reference to io.opentracing.Tracer in test field
   // loads opentracing before bootstrap classpath is setup
   // so we declare tracer as an object and cast when needed.
-  protected static final Object TEST_TRACER;
+  protected static Object TEST_TRACER;
 
   protected static final Set<String> TRANSFORMED_CLASSES = Sets.newConcurrentHashSet();
   private static final AtomicInteger INSTRUMENTATION_ERROR_COUNT = new AtomicInteger();
@@ -85,7 +85,10 @@ public abstract class AgentTestRunner extends Specification {
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG);
 
     ConfigUtils.makeConfigInstanceModifiable();
+    refreshTestTracer();
+  }
 
+  public static void refreshTestTracer() {
     TEST_WRITER =
         new ListWriter() {
           @Override
