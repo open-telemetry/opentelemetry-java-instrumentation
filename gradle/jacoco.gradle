@@ -13,21 +13,15 @@ jacocoTestReport {
   }
 }
 
-if (project.parent.hasProperty("excludedClassesConverage")) {
-  project.ext.excludedClassesConverage = parent.excludedClassesConverage
-} else {
+if (!project.hasProperty("excludedClassesConverage")) {
   project.ext.excludedClassesConverage = []
 }
 
-if (project.parent.hasProperty("excludedClassesBranchConverage")) {
-  project.ext.excludedClassesBranchConverage = parent.excludedClassesBranchConverage
-} else {
+if (!project.hasProperty("excludedClassesBranchConverage")) {
   project.ext.excludedClassesBranchConverage = []
 }
 
-if (project.parent.hasProperty("excludedClassesInstructionConverage")) {
-  project.ext.excludedClassesInstructionConverage = parent.excludedClassesInstructionConverage
-} else {
+if (!project.hasProperty("excludedClassesInstructionConverage")) {
   project.ext.excludedClassesInstructionConverage = []
 }
 
