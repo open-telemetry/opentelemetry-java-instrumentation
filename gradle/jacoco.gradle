@@ -13,16 +13,16 @@ jacocoTestReport {
   }
 }
 
-if (!project.hasProperty("excludedClassesConverage")) {
-  project.ext.excludedClassesConverage = []
+if (!project.hasProperty("excludedClassesCoverage")) {
+  project.ext.excludedClassesCoverage = []
 }
 
-if (!project.hasProperty("excludedClassesBranchConverage")) {
-  project.ext.excludedClassesBranchConverage = []
+if (!project.hasProperty("excludedClassesBranchCoverage")) {
+  project.ext.excludedClassesBranchCoverage = []
 }
 
-if (!project.hasProperty("excludedClassesInstructionConverage")) {
-  project.ext.excludedClassesInstructionConverage = []
+if (!project.hasProperty("excludedClassesInstructionCoverage")) {
+  project.ext.excludedClassesInstructionCoverage = []
 }
 
 // defaults can be overridden per project:
@@ -33,7 +33,7 @@ afterEvaluate {
   test {
     jacoco {
       // Make sure that excluded classes do not get jacoc instrumentation applied since it may confuse apm agent in some cases
-      excludes = project.excludedClassesConverage
+      excludes = project.excludedClassesCoverage
     }
   }
 
@@ -41,7 +41,7 @@ afterEvaluate {
     violationRules {
       rule {
         element = 'CLASS'
-        excludes = project.excludedClassesBranchConverage + project.excludedClassesConverage
+        excludes = project.excludedClassesBranchCoverage + project.excludedClassesCoverage
         limit {
           counter = 'BRANCH'
           minimum = project.minimumBranchCoverage
@@ -50,7 +50,7 @@ afterEvaluate {
 
       rule {
         element = 'CLASS'
-        excludes = project.excludedClassesInstructionConverage + project.excludedClassesConverage
+        excludes = project.excludedClassesInstructionCoverage + project.excludedClassesCoverage
         limit {
           counter = 'INSTRUCTION'
           minimum = project.minimumInstructionCoverage
