@@ -3,7 +3,7 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 minimumBranchCoverage = 0.9
 minimumInstructionCoverage = 0.9
-excludedClassesConverage += [
+excludedClassesCoverage += [
   'datadog.trace.tracer.Tracer.TracerBuilder',
   'datadog.trace.decorator.*', // TODO: remove when ready to write tests.
 ]
@@ -19,7 +19,7 @@ dependencies {
   compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.16'
 
   compile project(':utils:gc-utils')
-  
+
   // Spock uses that for mocking
   testCompile deps.bytebuddy
   testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6' // Last version to support Java7
