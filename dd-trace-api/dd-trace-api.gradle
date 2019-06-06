@@ -4,7 +4,7 @@ apply from: "${rootDir}/gradle/publish.gradle"
 minimumBranchCoverage = 0.8
 
 // These are tested outside of this module since this module mainly just defines 'API'
-excludedClassesConverage += [
+excludedClassesCoverage += [
   'datadog.trace.api.DDSpanTypes',
   'datadog.trace.api.DDTraceApiInfo',
   'datadog.trace.api.GlobalTracer*',

@@ -90,9 +90,7 @@ dependencies {
   version101TestCompile project(':dd-java-agent:instrumentation:java-concurrent')
   version101TestCompile project(':dd-java-agent:instrumentation:trace-annotation')
 
-  // Lock latest dep on '10.1.6' because '10.1.6+21-f063bff5' was released that breaks things
-  // Once 10.1.7 is released we should be able to go back to '+'
-  latestDepTestCompile group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '10.1.6'
+  latestDepTestCompile group: 'com.typesafe.akka', name: 'akka-http_2.11', version: '+'
   latestDepTestCompile group: 'com.typesafe.akka', name: 'akka-stream_2.11', version: '+'
   latestDepTestCompile project(':dd-java-agent:testing')
   latestDepTestCompile project(':dd-java-agent:instrumentation:java-concurrent')

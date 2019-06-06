@@ -1,7 +1,7 @@
 apply plugin: "jacoco"
 
 jacoco {
-  toolVersion = "0.8.2"
+  toolVersion = "0.8.4"
 }
 
 jacocoTestReport {
@@ -13,22 +13,16 @@ jacocoTestReport {
   }
 }
 
-if (project.parent.hasProperty("excludedClassesConverage")) {
-  project.ext.excludedClassesConverage = parent.excludedClassesConverage
-} else {
-  project.ext.excludedClassesConverage = []
+if (!project.hasProperty("excludedClassesCoverage")) {
+  project.ext.excludedClassesCoverage = []
 }
 
-if (project.parent.hasProperty("excludedClassesBranchConverage")) {
-  project.ext.excludedClassesBranchConverage = parent.excludedClassesBranchConverage
-} else {
-  project.ext.excludedClassesBranchConverage = []
+if (!project.hasProperty("excludedClassesBranchCoverage")) {
+  project.ext.excludedClassesBranchCoverage = []
 }
 
-if (project.parent.hasProperty("excludedClassesInstructionConverage")) {
-  project.ext.excludedClassesInstructionConverage = parent.excludedClassesInstructionConverage
-} else {
-  project.ext.excludedClassesInstructionConverage = []
+if (!project.hasProperty("excludedClassesInstructionCoverage")) {
+  project.ext.excludedClassesInstructionCoverage = []
 }
 
 // defaults can be overridden per project:
@@ -39,7 +33,7 @@ afterEvaluate {
   test {
     jacoco {
       // Make sure that excluded classes do not get jacoc instrumentation applied since it may confuse apm agent in some cases
-      excludes = project.excludedClassesConverage
+      excludes = project.excludedClassesCoverage
     }
   }
 
@@ -47,7 +41,7 @@ afterEvaluate {
     violationRules {
       rule {
         element = 'CLASS'
-        excludes = project.excludedClassesBranchConverage + project.excludedClassesConverage
+        excludes = project.excludedClassesBranchCoverage + project.excludedClassesCoverage
         limit {
           counter = 'BRANCH'
           minimum = project.minimumBranchCoverage
@@ -56,7 +50,7 @@ afterEvaluate {
 
       rule {
         element = 'CLASS'
-        excludes = project.excludedClassesInstructionConverage + project.excludedClassesConverage
+        excludes = project.excludedClassesInstructionCoverage + project.excludedClassesCoverage
         limit {
           counter = 'INSTRUCTION'
           minimum = project.minimumInstructionCoverage
