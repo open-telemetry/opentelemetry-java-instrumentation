@@ -45,16 +45,17 @@ public class JDBCDecorator extends DatabaseClientDecorator<JDBCMaps.DBInfo> {
 
   @Override
   protected String dbInstance(final JDBCMaps.DBInfo info) {
-    return info.getUrl();
+    return info.getInstance();
   }
 
   public Span onConnection(final Span span, final Connection connection) {
     JDBCMaps.DBInfo dbInfo = JDBCMaps.connectionInfo.get(connection);
     /**
-     * Logic to get the DBInfo from a JDBC Connection, if the connection was never seen before, the
-     * connectionInfo map will return null and will attempt to extract DBInfo from the connection.
-     * If the DBInfo can't be extracted, then the connection will be stored with the DEFAULT DBInfo
-     * as the value in the connectionInfo map to avoid retry overhead.
+     * Logic to get the DBInfo from a JDBC Connection, if the connection was not created via
+     * Driver.connect, or it has never seen before, the connectionInfo map will return null and will
+     * attempt to extract DBInfo from the connection. If the DBInfo can't be extracted, then the
+     * connection will be stored with the DEFAULT DBInfo as the value in the connectionInfo map to
+     * avoid retry overhead.
      */
     {
       if (dbInfo == null) {
@@ -62,14 +63,7 @@ public class JDBCDecorator extends DatabaseClientDecorator<JDBCMaps.DBInfo> {
           final DatabaseMetaData metaData = connection.getMetaData();
           final String url = metaData.getURL();
           if (url != null) {
-            // Remove end of url to prevent passwords from leaking:
-            final String sanitizedURL = url.replaceAll("[?;].*", "");
-            final String type = url.split(":", -1)[1];
-            String user = metaData.getUserName();
-            if (user != null && user.trim().equals("")) {
-              user = null;
-            }
-            dbInfo = new JDBCMaps.DBInfo(sanitizedURL, type, user);
+            dbInfo = JDBCConnectionUrlParser.parse(url, connection.getClientInfo());
           } else {
             dbInfo = JDBCMaps.DBInfo.DEFAULT;
           }

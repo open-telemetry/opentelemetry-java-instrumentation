@@ -20,9 +20,13 @@ public class JDBCMaps {
 
   @Data
   public static class DBInfo {
-    public static DBInfo DEFAULT = new DBInfo("null", "database", null);
-    private final String url;
+    public static DBInfo DEFAULT = new DBInfo("database", null, null, null, null, null, null);
     private final String type;
+    private final String url;
     private final String user;
+    private final String instance;
+    private final String db;
+    private final String host;
+    private final Integer port;
   }
 }
