@@ -14,11 +14,22 @@ testSets {
 }
 
 muzzle {
+  // Version 2.7.5 was not released properly and muzzle cannot test against it causing failure.
+  // So we have to skip it resulting in this verbose setup.
+  fail {
+    group = 'com.couchbase.client'
+    module = 'java-client'
+    versions = "[,2.0.0)"
+  }
   pass {
     group = 'com.couchbase.client'
     module = 'java-client'
-    versions = "[2.0.0,)"
-    assertInverse = true
+    versions = "[2.0.0,2.7.5)"
+  }
+  pass {
+    group = 'com.couchbase.client'
+    module = 'java-client'
+    versions = "[2.7.6,)"
   }
   fail {
     group = 'com.couchbase.client'
