@@ -10,9 +10,9 @@ public class DDJavaAgentInfo {
   static {
     String v;
     try {
-      Class<?> tracingAgentClass =
+      final Class<?> tracingAgentClass =
           ClassLoader.getSystemClassLoader().loadClass("datadog.trace.agent.TracingAgent");
-      Method getAgentVersionMethod = tracingAgentClass.getMethod("getAgentVersion");
+      final Method getAgentVersionMethod = tracingAgentClass.getMethod("getAgentVersion");
       v = (String) getAgentVersionMethod.invoke(null);
     } catch (final Exception e) {
       log.error("failed to read agent version", e);
