@@ -3,8 +3,6 @@ package datadog.trace.instrumentation.springwebflux.client;
 import static datadog.trace.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
 
 import io.opentracing.Span;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import org.reactivestreams.Subscription;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -19,10 +17,10 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
   private final Span span;
 
   public TracingClientResponseSubscriber(
-      final CoreSubscriber<? super ClientResponse> subscriber,
-      final ClientRequest clientRequest,
-      final Context context,
-      final Span span) {
+    final CoreSubscriber<? super ClientResponse> subscriber,
+    final ClientRequest clientRequest,
+    final Context context,
+    final Span span) {
     this.subscriber = subscriber;
     this.clientRequest = clientRequest;
     this.context = context.put(Span.class, span);
@@ -34,28 +32,20 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
     DECORATE.onRequest(span, clientRequest);
 
     subscriber.onSubscribe(
-        new Subscription() {
-          @Override
-          public void request(final long n) {
-            subscription.request(n);
-          }
+      new Subscription() {
+        @Override
+        public void request(final long n) {
+          subscription.request(n);
+        }
 
-          @Override
-          public void cancel() {
-            DECORATE.onCancel(span);
-            DECORATE.beforeFinish(span);
-            subscription.cancel();
-            span.finish();
-          }
-        });
-  }
-
-  private InetAddress remoteAddress() {
-    try {
-      return InetAddress.getByName(clientRequest.url().getHost());
-    } catch (final UnknownHostException e) {
-      return null;
-    }
+        @Override
+        public void cancel() {
+          DECORATE.onCancel(span);
+          DECORATE.beforeFinish(span);
+          subscription.cancel();
+          span.finish();
+        }
+      });
   }
 
   @Override
