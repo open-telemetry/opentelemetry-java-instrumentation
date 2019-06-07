@@ -12,6 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import net.bytebuddy.asm.Advice;
@@ -33,9 +35,17 @@ public final class DriverInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".JDBCConnectionUrlParser",
-    };
+    final JDBCConnectionUrlParser[] parsers = JDBCConnectionUrlParser.values();
+    final List<String> parserClasses = new ArrayList<>(parsers.length + 3);
+
+    parserClasses.add(packageName + ".JDBCMaps");
+    parserClasses.add(packageName + ".JDBCMaps$DBInfo");
+    parserClasses.add(packageName + ".JDBCConnectionUrlParser");
+
+    for (final JDBCConnectionUrlParser parser : parsers) {
+      parserClasses.add(parser.getClass().getName());
+    }
+    return parserClasses.toArray(new String[0]);
   }
 
   @Override

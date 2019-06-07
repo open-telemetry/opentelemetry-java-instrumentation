@@ -20,6 +20,8 @@ import io.opentracing.noop.NoopScopeManager;
 import io.opentracing.util.GlobalTracer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -40,15 +42,23 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator",
-      "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      packageName + ".JDBCDecorator",
-      packageName + ".JDBCMaps",
-      packageName + ".JDBCMaps$DBInfo",
-      packageName + ".JDBCUtils",
-    };
+    final JDBCConnectionUrlParser[] parsers = JDBCConnectionUrlParser.values();
+    final List<String> parserClasses = new ArrayList<>(parsers.length + 8);
+
+    parserClasses.add(packageName + ".JDBCUtils");
+    parserClasses.add(packageName + ".JDBCMaps");
+    parserClasses.add(packageName + ".JDBCMaps$DBInfo");
+    parserClasses.add(packageName + ".JDBCConnectionUrlParser");
+
+    parserClasses.add("datadog.trace.agent.decorator.BaseDecorator");
+    parserClasses.add("datadog.trace.agent.decorator.ClientDecorator");
+    parserClasses.add("datadog.trace.agent.decorator.DatabaseClientDecorator");
+    parserClasses.add(packageName + ".JDBCDecorator");
+
+    for (final JDBCConnectionUrlParser parser : parsers) {
+      parserClasses.add(parser.getClass().getName());
+    }
+    return parserClasses.toArray(new String[0]);
   }
 
   @Override

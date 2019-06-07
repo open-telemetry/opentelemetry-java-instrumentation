@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.jdbc;
 
 import static datadog.trace.instrumentation.jdbc.JDBCMaps.DBInfo.DEFAULT;
 
+import datadog.trace.bootstrap.ExceptionLogger;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -9,6 +10,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Structured as an enum instead of a class hierarchy to allow iterating through the parsers, plus
@@ -22,13 +25,13 @@ public enum JDBCConnectionUrlParser {
         // Attempt generic parsing
         final URI uri = new URI(jdbcUrl);
 
-        String username = uri.getUserInfo();
+        String user = uri.getUserInfo();
         String databaseName = null;
         if (uri.getQuery() != null) {
           final Map<String, String> queryParams = splitQuery(uri.getQuery(), "&");
 
-          if (username == null) {
-            username = queryParams.get("user");
+          if (user == null) {
+            user = queryParams.get("user");
           }
           databaseName = queryParams.get("databasename");
         }
@@ -39,7 +42,7 @@ public enum JDBCConnectionUrlParser {
         }
 
         return new JDBCMaps.DBInfo(
-            uri.getScheme(), null, username, path, databaseName, uri.getHost(), uri.getPort());
+            uri.getScheme(), null, user, path, databaseName, uri.getHost(), uri.getPort());
       } catch (final Exception e) {
         return DEFAULT;
       }
@@ -58,7 +61,7 @@ public enum JDBCConnectionUrlParser {
         Integer port = null;
         String databaseName = null;
         String instanceName = null;
-        String username = null;
+        String user = null;
 
         final int hostIndex = jdbcUrl.indexOf("://");
 
@@ -92,7 +95,7 @@ public enum JDBCConnectionUrlParser {
             databaseName = urlProps.get("databasename");
           }
           if (urlProps.containsKey("user")) {
-            username = urlProps.get("user");
+            user = urlProps.get("user");
           }
         }
 
@@ -125,7 +128,7 @@ public enum JDBCConnectionUrlParser {
         }
 
         return new JDBCMaps.DBInfo(
-            type, null, username, instanceName, null /* databaseName */, serverName, port);
+            type, null, user, instanceName, null /* databaseName */, serverName, port);
       } catch (final UnsupportedEncodingException e) {
         return DEFAULT;
       }
@@ -232,6 +235,172 @@ public enum JDBCConnectionUrlParser {
               dbInfo.getDb(),
               dbInfo.getHost(),
               DEFAULT_PORT);
+    }
+  },
+
+  ORACLE("oracle") {
+    private static final int DEFAULT_PORT = 1521;
+
+    @Override
+    JDBCMaps.DBInfo doParse(String jdbcUrl, final Properties props) {
+      final int typeEndIndex = jdbcUrl.indexOf(":", "oracle:".length());
+      final String type = jdbcUrl.substring(0, typeEndIndex);
+      jdbcUrl = jdbcUrl.substring(typeEndIndex + 1);
+
+      final JDBCMaps.DBInfo dbInfo;
+      if (jdbcUrl.contains("@")) {
+        dbInfo = ORACLE_AT.doParse(jdbcUrl, props);
+      } else {
+        dbInfo = ORACLE_CONNECT_INFO.doParse(jdbcUrl, props);
+      }
+      return new JDBCMaps.DBInfo(
+          type,
+          dbInfo.getUrl(),
+          dbInfo.getUser(),
+          dbInfo.getInstance(),
+          dbInfo.getDb(),
+          dbInfo.getHost(),
+          dbInfo.getPort() == null ? DEFAULT_PORT : dbInfo.getPort());
+    }
+  },
+
+  ORACLE_CONNECT_INFO() {
+    @Override
+    JDBCMaps.DBInfo doParse(final String jdbcUrl, final Properties props) {
+
+      final String host;
+      final Integer port;
+      final String instance;
+
+      final int hostEnd = jdbcUrl.indexOf(":");
+      final int instanceLoc = jdbcUrl.indexOf("/");
+      if (hostEnd > 0) {
+        host = jdbcUrl.substring(0, hostEnd);
+        final int afterHostEnd = jdbcUrl.indexOf(":", hostEnd + 1);
+        if (afterHostEnd > 0) {
+          port = Integer.parseInt(jdbcUrl.substring(hostEnd + 1, afterHostEnd));
+          instance = jdbcUrl.substring(afterHostEnd + 1);
+        } else {
+          if (instanceLoc > 0) {
+            instance = jdbcUrl.substring(instanceLoc + 1);
+            port = Integer.parseInt(jdbcUrl.substring(hostEnd + 1, instanceLoc));
+          } else {
+            final String portOrInstance = jdbcUrl.substring(hostEnd + 1);
+            Integer parsedPort = null;
+            try {
+              parsedPort = Integer.parseInt(portOrInstance);
+            } catch (final NumberFormatException e) {
+            }
+            if (parsedPort == null) {
+              port = null;
+              instance = portOrInstance;
+            } else {
+              port = parsedPort;
+              instance = null;
+            }
+          }
+        }
+      } else {
+        if (instanceLoc > 0) {
+          host = jdbcUrl.substring(0, instanceLoc);
+          port = null;
+          instance = jdbcUrl.substring(instanceLoc + 1);
+        } else {
+          if (jdbcUrl.isEmpty()) {
+            return DEFAULT;
+          } else {
+            host = null;
+            port = null;
+            instance = jdbcUrl;
+          }
+        }
+      }
+      return new JDBCMaps.DBInfo(null, null, null, instance, null, host, port);
+    }
+  },
+
+  ORACLE_AT() {
+    @Override
+    JDBCMaps.DBInfo doParse(final String jdbcUrl, final Properties props) {
+      if (jdbcUrl.contains("@(description")) {
+        return ORACLE_AT_DESCRIPTION.doParse(jdbcUrl, props);
+      }
+      final String user;
+
+      final String[] atSplit = jdbcUrl.split("@", 2);
+
+      final int userInfoLoc = atSplit[0].indexOf("/");
+      if (userInfoLoc > 0) {
+        user = atSplit[0].substring(0, userInfoLoc);
+      } else {
+        user = null;
+      }
+
+      final String connectInfo = atSplit[1];
+      final int hostStart;
+      if (connectInfo.startsWith("//")) {
+        hostStart = "//".length();
+      } else if (connectInfo.startsWith("ldap://")) {
+        hostStart = "ldap://".length();
+      } else {
+        hostStart = 0;
+      }
+      final JDBCMaps.DBInfo dbInfo =
+          ORACLE_CONNECT_INFO.doParse(connectInfo.substring(hostStart), props);
+
+      return new JDBCMaps.DBInfo(
+          null,
+          dbInfo.getUrl(),
+          user,
+          dbInfo.getInstance(),
+          dbInfo.getDb(),
+          dbInfo.getHost(),
+          dbInfo.getPort());
+    }
+  },
+
+  ORACLE_AT_DESCRIPTION() {
+    private final Pattern HOST_REGEX = Pattern.compile("\\(\\s*host\\s*=\\s*([^ )]+)\\s*\\)");
+    private final Pattern PORT_REGEX = Pattern.compile("\\(\\s*port\\s*=\\s*([\\d]+)\\s*\\)");
+    private final Pattern INSTANCE_REGEX =
+        Pattern.compile("\\(\\s*service_name\\s*=\\s*([^ )]+)\\s*\\)");
+
+    @Override
+    JDBCMaps.DBInfo doParse(final String jdbcUrl, final Properties props) {
+      final String user;
+      final String host;
+      final Integer port;
+      final String instance;
+
+      final String[] atSplit = jdbcUrl.split("@", 2);
+
+      final int userInfoLoc = atSplit[0].indexOf("/");
+      if (userInfoLoc > 0) {
+        user = atSplit[0].substring(0, userInfoLoc);
+      } else {
+        user = null;
+      }
+
+      final String description = atSplit[1];
+      final Matcher hostMatcher = HOST_REGEX.matcher(description);
+      final Matcher portMatcher = PORT_REGEX.matcher(description);
+      final Matcher instanceMatcher = INSTANCE_REGEX.matcher(description);
+      if (hostMatcher.find()) {
+        host = hostMatcher.group(1);
+      } else {
+        host = null;
+      }
+      if (portMatcher.find()) {
+        port = Integer.parseInt(portMatcher.group(1));
+      } else {
+        port = null;
+      }
+      if (instanceMatcher.find()) {
+        instance = instanceMatcher.group(1);
+      } else {
+        instance = null;
+      }
+      return new JDBCMaps.DBInfo(null, null, user, instance, null, host, port);
     }
   },
 
@@ -390,8 +559,8 @@ public enum JDBCConnectionUrlParser {
       String user = DEFAULT_USER;
 
       if (props != null) {
-        instance = props.getProperty("databasename");
-        user = props.getProperty("user");
+        instance = props.getProperty("databasename", instance);
+        user = props.getProperty("user", user);
       }
       final String derbyUrl = jdbcUrl.substring("derby:".length());
       final String[] split = derbyUrl.split(";", 2);
@@ -510,11 +679,16 @@ public enum JDBCConnectionUrlParser {
 
     final String baseType = jdbcUrl.substring(0, typeLoc);
 
-    if (typeParsers.containsKey(baseType)) {
-      // Delegate to specific parser
-      return typeParsers.get(baseType).doParse(jdbcUrl, props);
+    try {
+      if (typeParsers.containsKey(baseType)) {
+        // Delegate to specific parser
+        return typeParsers.get(baseType).doParse(jdbcUrl, props);
+      }
+      return GENERIC_URL_LIKE.doParse(connectionUrl, props);
+    } catch (final Exception e) {
+      ExceptionLogger.LOGGER.debug("Error parsing URL", e);
+      return DEFAULT;
     }
-    return GENERIC_URL_LIKE.doParse(connectionUrl, props);
   }
 
   // Source: https://stackoverflow.com/a/13592567
