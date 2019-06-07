@@ -14,18 +14,22 @@ testSets {
 }
 
 muzzle {
-  pass {
-    group = 'com.couchbase.client'
-    module = 'java-client'
-    // Looks like 2.7.5 was just released and didn't sync up with mirrors properly causing build failures
-    // TODO: remove this on a few days.
-    versions = "[2.0.0,2.7.5)"
-//    assertInverse = true
-  }
+  // Version 2.7.5 was not released properly and muzzle cannot test against it causing failure.
+  // So we have to skip it resulting in this verbose setup.
   fail {
     group = 'com.couchbase.client'
     module = 'java-client'
-    versions = "(,2.0.0)"
+    versions = "[,2.0.0)"
+  }
+  pass {
+    group = 'com.couchbase.client'
+    module = 'java-client'
+    versions = "[2.0.0,2.7.5)"
+  }
+  pass {
+    group = 'com.couchbase.client'
+    module = 'java-client'
+    versions = "[2.7.6,)"
   }
   fail {
     group = 'com.couchbase.client'
@@ -53,8 +57,6 @@ dependencies {
   testCompile group: 'com.couchbase.client', name: 'java-client', version: '2.5.0'
 
   latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.+'
-  // Looks like 2.7.5 was just released and didn't sync up with mirrors properly causing build failures
-  // TODO: remove this on a few days.
-  latestDepTestCompile group: 'com.couchbase.client', name: 'java-client', version: '2.7.4'
-  latestDepTestCompile group: 'com.couchbase.client', name: 'encryption', version: '1.0.0'
+  latestDepTestCompile group: 'com.couchbase.client', name: 'java-client', version: '2.6+'
+  latestDepTestCompile group: 'com.couchbase.client', name: 'encryption', version: '+'
 }
