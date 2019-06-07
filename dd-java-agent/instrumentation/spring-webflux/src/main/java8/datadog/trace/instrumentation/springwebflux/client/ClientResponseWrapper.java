@@ -90,7 +90,7 @@ public class ClientResponseWrapper implements ClientResponse {
   /**
    * ClientResponseWrapper is based on the ClientResponse from
    * spring-webflux-5.0.0.RELEASE. Since spring-webflux 5.1 ClientResponse
-   * contains extra methods like rewStatusCode and gives methodNotFound
+   * contains extra methods like rawStatusCode and gives methodNotFound
    * exceptions at runtime if used in a project with the latest spring-webflux
    * 5.1 or higher.
    * <p>
