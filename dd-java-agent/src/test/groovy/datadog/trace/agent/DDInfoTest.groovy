@@ -16,17 +16,4 @@ class DDInfoTest extends Specification {
     DDTraceOTInfo.VERSION != ""
     DDTraceOTInfo.VERSION != "unknown"
   }
-
-  def "info accessible from agent"() {
-    setup:
-    def clazz = Class.forName("datadog.trace.agent.tooling.DDJavaAgentInfo")
-    def versionField = clazz.getDeclaredField("VERSION")
-    def version = versionField.get(null)
-
-    expect:
-    version != null
-    version != ""
-    version != "unknown"
-    version == DDTraceApiInfo.VERSION
-  }
 }
