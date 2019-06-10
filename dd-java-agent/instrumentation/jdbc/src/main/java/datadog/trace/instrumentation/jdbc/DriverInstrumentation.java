@@ -38,8 +38,9 @@ public final class DriverInstrumentation extends Instrumenter.Default {
     final JDBCConnectionUrlParser[] parsers = JDBCConnectionUrlParser.values();
     final List<String> parserClasses = new ArrayList<>(parsers.length + 3);
 
+    parserClasses.add(packageName + ".DBInfo");
+    parserClasses.add(packageName + ".DBInfo$Builder");
     parserClasses.add(packageName + ".JDBCMaps");
-    parserClasses.add(packageName + ".JDBCMaps$DBInfo");
     parserClasses.add(packageName + ".JDBCConnectionUrlParser");
 
     for (final JDBCConnectionUrlParser parser : parsers) {
@@ -64,7 +65,7 @@ public final class DriverInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final String url,
         @Advice.Argument(1) final Properties props,
         @Advice.Return final Connection connection) {
-      final JDBCMaps.DBInfo dbInfo = JDBCConnectionUrlParser.parse(url, props);
+      final DBInfo dbInfo = JDBCConnectionUrlParser.parse(url, props);
       JDBCMaps.connectionInfo.put(connection, dbInfo);
     }
   }
