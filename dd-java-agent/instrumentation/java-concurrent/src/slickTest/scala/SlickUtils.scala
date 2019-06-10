@@ -34,9 +34,10 @@ class SlickUtils {
 
 object SlickUtils {
 
-  val Driver = "h2"
+  val Driver = "h2:mem"
+  val Db = "test"
   val Username = "TESTUSER"
-  val Url = s"jdbc:${Driver}:mem:test"
+  val Url = s"jdbc:${Driver}:${Db}"
   val TestValue = 3
   val TestQuery = "SELECT 3"
 
