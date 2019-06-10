@@ -172,7 +172,7 @@ public enum JDBCConnectionUrlParser {
       if (protoLoc > typeEndLoc) {
         return MARIA_SUBPROTO
             .doParse(jdbcUrl.substring(protoLoc + 3), builder)
-            .type(jdbcUrl.substring(0, protoLoc));
+            .subtype(jdbcUrl.substring(typeEndLoc + 1, protoLoc));
       }
       if (protoLoc > 0) {
         return GENERIC_URL_LIKE.doParse(jdbcUrl, builder);
@@ -339,10 +339,10 @@ public enum JDBCConnectionUrlParser {
     @Override
     DBInfo.Builder doParse(String jdbcUrl, final DBInfo.Builder builder) {
       final int typeEndIndex = jdbcUrl.indexOf(":", "oracle:".length());
-      final String type = jdbcUrl.substring(0, typeEndIndex);
+      final String subtype = jdbcUrl.substring("oracle:".length(), typeEndIndex);
       jdbcUrl = jdbcUrl.substring(typeEndIndex + 1);
 
-      builder.type(type);
+      builder.subtype(subtype);
       final DBInfo dbInfo = builder.build();
       if (dbInfo.getPort() == null) {
         builder.port(DEFAULT_PORT);
@@ -493,12 +493,11 @@ public enum JDBCConnectionUrlParser {
 
     @Override
     DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
-      String type = "h2";
       final String instance;
 
       final String h2Url = jdbcUrl.substring("h2:".length());
       if (h2Url.startsWith("mem:")) {
-        type = "h2:mem";
+        builder.subtype("mem");
         final int propLoc = h2Url.indexOf(";");
         if (propLoc >= 0) {
           instance = h2Url.substring("mem:".length(), propLoc);
@@ -506,7 +505,7 @@ public enum JDBCConnectionUrlParser {
           instance = h2Url.substring("mem:".length());
         }
       } else if (h2Url.startsWith("file:")) {
-        type = "h2:file";
+        builder.subtype("file");
         final int propLoc = h2Url.indexOf(";");
         if (propLoc >= 0) {
           instance = h2Url.substring("file:".length(), propLoc);
@@ -514,7 +513,7 @@ public enum JDBCConnectionUrlParser {
           instance = h2Url.substring("file:".length());
         }
       } else if (h2Url.startsWith("zip:")) {
-        type = "h2:zip";
+        builder.subtype("zip");
         final int propLoc = h2Url.indexOf(";");
         if (propLoc >= 0) {
           instance = h2Url.substring("zip:".length(), propLoc);
@@ -526,15 +525,15 @@ public enum JDBCConnectionUrlParser {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("h2:tcp");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("h2").subtype("tcp");
       } else if (h2Url.startsWith("ssl:")) {
         final DBInfo dbInfo = builder.build();
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("h2:ssl");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("h2").subtype("ssl");
       } else {
-        type = "h2:file";
+        builder.subtype("file");
         final int propLoc = h2Url.indexOf(";");
         if (propLoc >= 0) {
           instance = h2Url.substring(0, propLoc);
@@ -545,7 +544,7 @@ public enum JDBCConnectionUrlParser {
       if (!instance.isEmpty()) {
         builder.instance(instance);
       }
-      return builder.type(type);
+      return builder;
     }
   },
 
@@ -555,7 +554,6 @@ public enum JDBCConnectionUrlParser {
 
     @Override
     DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
-      String type = "hsqldb";
       String instance = null;
       final DBInfo dbInfo = builder.build();
       if (dbInfo.getUser() == null) {
@@ -563,39 +561,39 @@ public enum JDBCConnectionUrlParser {
       }
       final String hsqlUrl = jdbcUrl.substring("hsqldb:".length());
       if (hsqlUrl.startsWith("mem:")) {
-        type = "hsqldb:mem";
+        builder.subtype("mem");
         instance = hsqlUrl.substring("mem:".length());
       } else if (hsqlUrl.startsWith("file:")) {
-        type = "hsqldb:file";
+        builder.subtype("file");
         instance = hsqlUrl.substring("file:".length());
       } else if (hsqlUrl.startsWith("res:")) {
-        type = "hsqldb:res";
+        builder.subtype("res");
         instance = hsqlUrl.substring("res:".length());
       } else if (hsqlUrl.startsWith("hsql:")) {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb:hsql");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb").subtype("hsql");
       } else if (hsqlUrl.startsWith("hsqls:")) {
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb:hsqls");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb").subtype("hsqls");
       } else if (hsqlUrl.startsWith("http:")) {
         if (dbInfo.getPort() == null) {
           builder.port(80);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb:http");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb").subtype("http");
       } else if (hsqlUrl.startsWith("https:")) {
         if (dbInfo.getPort() == null) {
           builder.port(443);
         }
-        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb:https");
+        return MODIFIED_URL_LIKE.doParse(jdbcUrl, builder).type("hsqldb").subtype("https");
       } else {
-        type = "hsqldb:mem";
+        builder.subtype("mem");
         instance = hsqlUrl;
       }
-      return builder.type(type).instance(instance);
+      return builder.instance(instance);
     }
   },
 
@@ -605,7 +603,6 @@ public enum JDBCConnectionUrlParser {
 
     @Override
     DBInfo.Builder doParse(final String jdbcUrl, final DBInfo.Builder builder) {
-      final String type;
       String instance = null;
       String host = null;
 
@@ -622,31 +619,31 @@ public enum JDBCConnectionUrlParser {
       }
 
       if (split[0].startsWith("memory:")) {
-        type = "derby:memory";
+        builder.subtype("memory");
         final String urlInstance = split[0].substring("memory:".length());
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
         }
       } else if (split[0].startsWith("directory:")) {
-        type = "derby:directory";
+        builder.subtype("directory");
         final String urlInstance = split[0].substring("directory:".length());
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
         }
       } else if (split[0].startsWith("classpath:")) {
-        type = "derby:classpath";
+        builder.subtype("classpath");
         final String urlInstance = split[0].substring("classpath:".length());
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
         }
       } else if (split[0].startsWith("jar:")) {
-        type = "derby:jar";
+        builder.subtype("jar");
         final String urlInstance = split[0].substring("jar:".length());
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
         }
       } else if (split[0].startsWith("//")) {
-        type = "derby:network";
+        builder.subtype("network");
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
@@ -668,7 +665,7 @@ public enum JDBCConnectionUrlParser {
           host = url;
         }
       } else {
-        type = "derby:directory";
+        builder.subtype("directory");
         final String urlInstance = split[0];
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
@@ -678,7 +675,7 @@ public enum JDBCConnectionUrlParser {
       if (host != null) {
         builder.host(host);
       }
-      return builder.type(type).instance(instance);
+      return builder.instance(instance);
     }
   };
 

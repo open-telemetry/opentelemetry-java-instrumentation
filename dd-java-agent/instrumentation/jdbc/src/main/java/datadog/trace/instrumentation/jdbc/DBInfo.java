@@ -8,6 +8,7 @@ import lombok.Data;
 public class DBInfo {
   public static DBInfo DEFAULT = new Builder().type("database").build();
   private final String type;
+  private final String subtype;
   private final String url;
   private final String user;
   private final String instance;

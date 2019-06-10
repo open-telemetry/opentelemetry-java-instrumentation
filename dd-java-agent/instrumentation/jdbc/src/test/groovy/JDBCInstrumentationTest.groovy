@@ -26,23 +26,23 @@ class JDBCInstrumentationTest extends AgentTestRunner {
 
   @Shared
   private Map<String, String> jdbcUrls = [
-    "h2:mem"      : "jdbc:h2:mem:$dbName",
-    "derby:memory": "jdbc:derby:memory:$dbName",
-    "hsqldb:mem"  : "jdbc:hsqldb:mem:$dbName",
+    "h2"    : "jdbc:h2:mem:$dbName",
+    "derby" : "jdbc:derby:memory:$dbName",
+    "hsqldb": "jdbc:hsqldb:mem:$dbName",
   ]
 
   @Shared
   private Map<String, String> jdbcDriverClassNames = [
-    "h2:mem"      : "org.h2.Driver",
-    "derby:memory": "org.apache.derby.jdbc.EmbeddedDriver",
-    "hsqldb:mem"  : "org.hsqldb.jdbc.JDBCDriver",
+    "h2"    : "org.h2.Driver",
+    "derby" : "org.apache.derby.jdbc.EmbeddedDriver",
+    "hsqldb": "org.hsqldb.jdbc.JDBCDriver",
   ]
 
   @Shared
   private Map<String, String> jdbcUserNames = [
-    "h2:mem"      : null,
-    "derby:memory": "APP",
-    "hsqldb:mem"  : "SA",
+    "h2"    : null,
+    "derby" : "APP",
+    "hsqldb": "SA",
   ]
 
   @Shared
@@ -76,7 +76,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
 
   def createTomcatDS(String dbType, String jdbcUrl) {
     DataSource ds = new org.apache.tomcat.jdbc.pool.DataSource()
-    def jdbcUrlToSet = dbType == "derby:memory" ? jdbcUrl + ";create=true" : jdbcUrl
+    def jdbcUrlToSet = dbType == "derby" ? jdbcUrl + ";create=true" : jdbcUrl
     ds.setUrl(jdbcUrlToSet)
     ds.setDriverClassName(jdbcDriverClassNames.get(dbType))
     String username = jdbcUserNames.get(dbType)
@@ -91,7 +91,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
 
   def createHikariDS(String dbType, String jdbcUrl) {
     HikariConfig config = new HikariConfig()
-    def jdbcUrlToSet = dbType == "derby:memory" ? jdbcUrl + ";create=true" : jdbcUrl
+    def jdbcUrlToSet = dbType == "derby" ? jdbcUrl + ";create=true" : jdbcUrl
     config.setJdbcUrl(jdbcUrlToSet)
     String username = jdbcUserNames.get(dbType)
     if (username != null) {
@@ -109,7 +109,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
   def createC3P0DS(String dbType, String jdbcUrl) {
     DataSource ds = new ComboPooledDataSource()
     ds.setDriverClass(jdbcDriverClassNames.get(dbType))
-    def jdbcUrlToSet = dbType == "derby:memory" ? jdbcUrl + ";create=true" : jdbcUrl
+    def jdbcUrlToSet = dbType == "derby" ? jdbcUrl + ";create=true" : jdbcUrl
     ds.setJdbcUrl(jdbcUrlToSet)
     String username = jdbcUserNames.get(dbType)
     if (username != null) {
@@ -193,22 +193,22 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     connection.close()
 
     where:
-    driver         | connection                                                                  | username | query
-    "h2:mem"       | new Driver().connect(jdbcUrls.get("h2:mem"), null)                          | null     | "SELECT 3"
-    "derby:memory" | new EmbeddedDriver().connect(jdbcUrls.get("derby:memory"), null)            | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "hsqldb:mem"   | new JDBCDriver().connect(jdbcUrls.get("hsqldb:mem"), null)                  | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
-    "h2:mem"       | new Driver().connect(jdbcUrls.get("h2:mem"), connectionProps)               | null     | "SELECT 3"
-    "derby:memory" | new EmbeddedDriver().connect(jdbcUrls.get("derby:memory"), connectionProps) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "hsqldb:mem"   | new JDBCDriver().connect(jdbcUrls.get("hsqldb:mem"), connectionProps)       | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
-    "h2:mem"       | cpDatasources.get("tomcat").get("h2:mem").getConnection()                   | null     | "SELECT 3"
-    "derby:memory" | cpDatasources.get("tomcat").get("derby:memory").getConnection()             | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "hsqldb:mem"   | cpDatasources.get("tomcat").get("hsqldb:mem").getConnection()               | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
-    "h2:mem"       | cpDatasources.get("hikari").get("h2:mem").getConnection()                   | null     | "SELECT 3"
-    "derby:memory" | cpDatasources.get("hikari").get("derby:memory").getConnection()             | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "hsqldb:mem"   | cpDatasources.get("hikari").get("hsqldb:mem").getConnection()               | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
-    "h2:mem"       | cpDatasources.get("c3p0").get("h2:mem").getConnection()                     | null     | "SELECT 3"
-    "derby:memory" | cpDatasources.get("c3p0").get("derby:memory").getConnection()               | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "hsqldb:mem"   | cpDatasources.get("c3p0").get("hsqldb:mem").getConnection()                 | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    driver   | connection                                                           | username | query
+    "h2"     | new Driver().connect(jdbcUrls.get("h2"), null)                       | null     | "SELECT 3"
+    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null)            | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null)               | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    "h2"     | new Driver().connect(jdbcUrls.get("h2"), connectionProps)            | null     | "SELECT 3"
+    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), connectionProps) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), connectionProps)    | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    "h2"     | cpDatasources.get("tomcat").get("h2").getConnection()                | null     | "SELECT 3"
+    "derby"  | cpDatasources.get("tomcat").get("derby").getConnection()             | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | cpDatasources.get("tomcat").get("hsqldb").getConnection()            | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    "h2"     | cpDatasources.get("hikari").get("h2").getConnection()                | null     | "SELECT 3"
+    "derby"  | cpDatasources.get("hikari").get("derby").getConnection()             | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | cpDatasources.get("hikari").get("hsqldb").getConnection()            | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    "h2"     | cpDatasources.get("c3p0").get("h2").getConnection()                  | null     | "SELECT 3"
+    "derby"  | cpDatasources.get("c3p0").get("derby").getConnection()               | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()              | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
   }
 
   @Unroll
@@ -256,15 +256,15 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     connection.close()
 
     where:
-    driver         | connection                                                       | username | query
-    "h2:mem"       | new Driver().connect(jdbcUrls.get("h2:mem"), null)               | null     | "SELECT 3"
-    "derby:memory" | new EmbeddedDriver().connect(jdbcUrls.get("derby:memory"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "h2:mem"       | cpDatasources.get("tomcat").get("h2:mem").getConnection()        | null     | "SELECT 3"
-    "derby:memory" | cpDatasources.get("tomcat").get("derby:memory").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "h2:mem"       | cpDatasources.get("hikari").get("h2:mem").getConnection()        | null     | "SELECT 3"
-    "derby:memory" | cpDatasources.get("hikari").get("derby:memory").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "h2:mem"       | cpDatasources.get("c3p0").get("h2:mem").getConnection()          | null     | "SELECT 3"
-    "derby:memory" | cpDatasources.get("c3p0").get("derby:memory").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    driver  | connection                                                | username | query
+    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "SELECT 3"
+    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "SELECT 3"
+    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "SELECT 3"
+    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "SELECT 3"
+    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
   }
 
   @Unroll
@@ -311,15 +311,15 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     connection.close()
 
     where:
-    driver         | connection                                                       | username | query
-    "h2:mem"       | new Driver().connect(jdbcUrls.get("h2:mem"), null)               | null     | "SELECT 3"
-    "derby:memory" | new EmbeddedDriver().connect(jdbcUrls.get("derby:memory"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "h2:mem"       | cpDatasources.get("tomcat").get("h2:mem").getConnection()        | null     | "SELECT 3"
-    "derby:memory" | cpDatasources.get("tomcat").get("derby:memory").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "h2:mem"       | cpDatasources.get("hikari").get("h2:mem").getConnection()        | null     | "SELECT 3"
-    "derby:memory" | cpDatasources.get("hikari").get("derby:memory").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "h2:mem"       | cpDatasources.get("c3p0").get("h2:mem").getConnection()          | null     | "SELECT 3"
-    "derby:memory" | cpDatasources.get("c3p0").get("derby:memory").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    driver  | connection                                                | username | query
+    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "SELECT 3"
+    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "SELECT 3"
+    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "SELECT 3"
+    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "SELECT 3"
+    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
   }
 
   @Unroll
@@ -366,15 +366,15 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     connection.close()
 
     where:
-    driver         | connection                                                       | username | query
-    "h2:mem"       | new Driver().connect(jdbcUrls.get("h2:mem"), null)               | null     | "SELECT 3"
-    "derby:memory" | new EmbeddedDriver().connect(jdbcUrls.get("derby:memory"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "h2:mem"       | cpDatasources.get("tomcat").get("h2:mem").getConnection()        | null     | "SELECT 3"
-    "derby:memory" | cpDatasources.get("tomcat").get("derby:memory").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "h2:mem"       | cpDatasources.get("hikari").get("h2:mem").getConnection()        | null     | "SELECT 3"
-    "derby:memory" | cpDatasources.get("hikari").get("derby:memory").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "h2:mem"       | cpDatasources.get("c3p0").get("h2:mem").getConnection()          | null     | "SELECT 3"
-    "derby:memory" | cpDatasources.get("c3p0").get("derby:memory").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    driver  | connection                                                | username | query
+    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "SELECT 3"
+    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "SELECT 3"
+    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "SELECT 3"
+    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "SELECT 3"
+    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
   }
 
   @Unroll
@@ -421,19 +421,19 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     connection.close()
 
     where:
-    driver         | connection                                                       | username | query
-    "h2:mem"       | new Driver().connect(jdbcUrls.get("h2:mem"), null)               | null     | "CREATE TABLE S_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "derby:memory" | new EmbeddedDriver().connect(jdbcUrls.get("derby:memory"), null) | "APP"    | "CREATE TABLE S_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "hsqldb:mem"   | new JDBCDriver().connect(jdbcUrls.get("hsqldb:mem"), null)       | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "h2:mem"       | cpDatasources.get("tomcat").get("h2:mem").getConnection()        | null     | "CREATE TABLE S_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "derby:memory" | cpDatasources.get("tomcat").get("derby:memory").getConnection()  | "APP"    | "CREATE TABLE S_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "hsqldb:mem"   | cpDatasources.get("tomcat").get("hsqldb:mem").getConnection()    | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "h2:mem"       | cpDatasources.get("hikari").get("h2:mem").getConnection()        | null     | "CREATE TABLE S_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "derby:memory" | cpDatasources.get("hikari").get("derby:memory").getConnection()  | "APP"    | "CREATE TABLE S_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "hsqldb:mem"   | cpDatasources.get("hikari").get("hsqldb:mem").getConnection()    | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "h2:mem"       | cpDatasources.get("c3p0").get("h2:mem").getConnection()          | null     | "CREATE TABLE S_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "derby:memory" | cpDatasources.get("c3p0").get("derby:memory").getConnection()    | "APP"    | "CREATE TABLE S_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "hsqldb:mem"   | cpDatasources.get("c3p0").get("hsqldb:mem").getConnection()      | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    driver   | connection                                                | username | query
+    "h2"     | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "CREATE TABLE S_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "CREATE TABLE S_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null)    | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "h2"     | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "CREATE TABLE S_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "derby"  | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "CREATE TABLE S_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "hsqldb" | cpDatasources.get("tomcat").get("hsqldb").getConnection() | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "h2"     | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "CREATE TABLE S_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "derby"  | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "CREATE TABLE S_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "hsqldb" | cpDatasources.get("hikari").get("hsqldb").getConnection() | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "h2"     | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "CREATE TABLE S_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "derby"  | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "CREATE TABLE S_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()   | "SA"     | "CREATE TABLE PUBLIC.S_HSQLDB_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"
   }
 
   @Unroll
@@ -479,15 +479,15 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     connection.close()
 
     where:
-    driver         | connection                                                       | username | query
-    "h2:mem"       | new Driver().connect(jdbcUrls.get("h2:mem"), null)               | null     | "CREATE TABLE PS_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "derby:memory" | new EmbeddedDriver().connect(jdbcUrls.get("derby:memory"), null) | "APP"    | "CREATE TABLE PS_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "h2:mem"       | cpDatasources.get("tomcat").get("h2:mem").getConnection()        | null     | "CREATE TABLE PS_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "derby:memory" | cpDatasources.get("tomcat").get("derby:memory").getConnection()  | "APP"    | "CREATE TABLE PS_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "h2:mem"       | cpDatasources.get("hikari").get("h2:mem").getConnection()        | null     | "CREATE TABLE PS_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "derby:memory" | cpDatasources.get("hikari").get("derby:memory").getConnection()  | "APP"    | "CREATE TABLE PS_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "h2:mem"       | cpDatasources.get("c3p0").get("h2:mem").getConnection()          | null     | "CREATE TABLE PS_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"
-    "derby:memory" | cpDatasources.get("c3p0").get("derby:memory").getConnection()    | "APP"    | "CREATE TABLE PS_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    driver  | connection                                                | username | query
+    "h2"    | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "CREATE TABLE PS_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "derby" | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "CREATE TABLE PS_DERBY (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "h2"    | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "CREATE TABLE PS_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "derby" | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "CREATE TABLE PS_DERBY_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "h2"    | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "CREATE TABLE PS_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "derby" | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "CREATE TABLE PS_DERBY_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "h2"    | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "CREATE TABLE PS_H2_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"
+    "derby" | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "CREATE TABLE PS_DERBY_C3P0 (id INTEGER not NULL, PRIMARY KEY ( id ))"
 
   }
 
@@ -558,17 +558,17 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     }
 
     where:
-    prepareStatement | driver         | driverClass          | url                                            | username | query
-    true             | "h2:mem"       | new Driver()         | "jdbc:h2:mem:" + dbName                        | null     | "SELECT 3;"
-    true             | "derby:memory" | new EmbeddedDriver() | "jdbc:derby:memory:" + dbName + ";create=true" | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    false            | "h2:mem"       | new Driver()         | "jdbc:h2:mem:" + dbName                        | null     | "SELECT 3;"
-    false            | "derby:memory" | new EmbeddedDriver() | "jdbc:derby:memory:" + dbName + ";create=true" | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    prepareStatement | driver  | driverClass          | url                                            | username | query
+    true             | "h2"    | new Driver()         | "jdbc:h2:mem:" + dbName                        | null     | "SELECT 3;"
+    true             | "derby" | new EmbeddedDriver() | "jdbc:derby:memory:" + dbName + ";create=true" | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    false            | "h2"    | new Driver()         | "jdbc:h2:mem:" + dbName                        | null     | "SELECT 3;"
+    false            | "derby" | new EmbeddedDriver() | "jdbc:derby:memory:" + dbName + ";create=true" | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
   }
 
   @Unroll
   def "#connectionPoolName connections should be cached in case of wrapped connections"() {
     setup:
-    String dbType = "hsqldb:mem"
+    String dbType = "hsqldb"
     DataSource ds = createDS(connectionPoolName, dbType, jdbcUrls.get(dbType))
     String query = "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
     int numQueries = 5
