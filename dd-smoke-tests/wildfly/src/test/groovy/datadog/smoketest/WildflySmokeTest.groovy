@@ -7,7 +7,7 @@ import spock.lang.Shared
 class WildflySmokeTest extends AbstractServerSmokeTest {
 
   @Shared
-  File whildflyDirectory = new File(System.getProperty("datadog.smoketest.wildflyDir"))
+  File wildflyDirectory = new File(System.getProperty("datadog.smoketest.wildflyDir"))
   @Shared
   int httpsPort = PortUtils.randomOpenPort()
   @Shared
@@ -16,8 +16,8 @@ class WildflySmokeTest extends AbstractServerSmokeTest {
   @Override
   ProcessBuilder createProcessBuilder() {
     ProcessBuilder processBuilder =
-      new ProcessBuilder("${whildflyDirectory}/bin/standalone.sh")
-    processBuilder.directory(whildflyDirectory)
+      new ProcessBuilder("${wildflyDirectory}/bin/standalone.sh")
+    processBuilder.directory(wildflyDirectory)
     processBuilder.environment().put("JAVA_OPTS",
       defaultJavaProperties.join(" ")
         + " -Djboss.http.port=${httpPort} -Djboss.https.port=${httpsPort}"
@@ -27,11 +27,11 @@ class WildflySmokeTest extends AbstractServerSmokeTest {
 
   def cleanupSpec() {
     ProcessBuilder processBuilder = new ProcessBuilder(
-      "${whildflyDirectory}/bin/jboss-cli.sh",
+      "${wildflyDirectory}/bin/jboss-cli.sh",
       "--connect",
       "--controller=localhost:${managementPort}",
       "command=:shutdown")
-    processBuilder.directory(whildflyDirectory)
+    processBuilder.directory(wildflyDirectory)
     Process process = processBuilder.start()
     process.waitFor()
   }
