@@ -1,10 +1,10 @@
 // this project will run in isolation under the agent's classloader
 buildscript {
-  
+
   repositories {
     mavenCentral()
   }
-  
+
   dependencies {
     classpath "net.bytebuddy:byte-buddy-gradle-plugin:${versions.bytebuddy}"
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${versions.kotlin}"

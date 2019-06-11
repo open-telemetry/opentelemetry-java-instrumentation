@@ -20,7 +20,6 @@ testSets {
 dependencies {
   compileOnly group: 'com.rabbitmq', name: 'amqp-client', version: '2.7.0'
 
-  compile project(':dd-trace-ot')
   compile project(':dd-java-agent:agent-tooling')
 
   compile deps.bytebuddy

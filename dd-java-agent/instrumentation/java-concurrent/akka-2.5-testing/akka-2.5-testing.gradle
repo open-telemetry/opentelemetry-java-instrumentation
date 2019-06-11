@@ -12,7 +12,6 @@ dependencies {
   compileOnly deps.scala
 
   testCompile project(':dd-trace-api')
-  testCompile project(':dd-trace-ot')
   testCompile deps.scala
   testCompile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.5.0'
 

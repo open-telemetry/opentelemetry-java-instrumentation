@@ -3,7 +3,8 @@ apply from: "${rootDir}/gradle/test-with-kotlin.gradle"
 
 dependencies {
   testCompile project(':dd-trace-api')
-  testCompile project(':dd-trace-ot')
+  
+  
   testCompile deps.kotlin
   testCompile deps.coroutines
 
