@@ -618,36 +618,37 @@ public enum JDBCConnectionUrlParser {
         populateStandardProperties(builder, splitQuery(split[1], ";"));
       }
 
-      if (split[0].startsWith("memory:")) {
+      final String details = split[0];
+      if (details.startsWith("memory:")) {
         builder.subtype("memory");
-        final String urlInstance = split[0].substring("memory:".length());
+        final String urlInstance = details.substring("memory:".length());
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
         }
-      } else if (split[0].startsWith("directory:")) {
+      } else if (details.startsWith("directory:")) {
         builder.subtype("directory");
-        final String urlInstance = split[0].substring("directory:".length());
+        final String urlInstance = details.substring("directory:".length());
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
         }
-      } else if (split[0].startsWith("classpath:")) {
+      } else if (details.startsWith("classpath:")) {
         builder.subtype("classpath");
-        final String urlInstance = split[0].substring("classpath:".length());
+        final String urlInstance = details.substring("classpath:".length());
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
         }
-      } else if (split[0].startsWith("jar:")) {
+      } else if (details.startsWith("jar:")) {
         builder.subtype("jar");
-        final String urlInstance = split[0].substring("jar:".length());
+        final String urlInstance = details.substring("jar:".length());
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
         }
-      } else if (split[0].startsWith("//")) {
+      } else if (details.startsWith("//")) {
         builder.subtype("network");
         if (dbInfo.getPort() == null) {
           builder.port(DEFAULT_PORT);
         }
-        String url = split[0].substring("//".length());
+        String url = details.substring("//".length());
         final int instanceLoc = url.indexOf("/");
         if (instanceLoc >= 0) {
           instance = url.substring(instanceLoc + 1);
@@ -666,7 +667,7 @@ public enum JDBCConnectionUrlParser {
         }
       } else {
         builder.subtype("directory");
-        final String urlInstance = split[0];
+        final String urlInstance = details;
         if (!urlInstance.isEmpty()) {
           instance = urlInstance;
         }
@@ -701,7 +702,7 @@ public enum JDBCConnectionUrlParser {
     if (connectionUrl == null) {
       return DEFAULT;
     }
-    // Make this easer and ignore case.
+    // Make this easier and ignore case.
     connectionUrl = connectionUrl.toLowerCase();
 
     if (!connectionUrl.startsWith("jdbc:")) {

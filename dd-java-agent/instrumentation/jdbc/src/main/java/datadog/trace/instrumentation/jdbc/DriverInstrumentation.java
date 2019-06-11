@@ -35,18 +35,17 @@ public final class DriverInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    final JDBCConnectionUrlParser[] parsers = JDBCConnectionUrlParser.values();
-    final List<String> parserClasses = new ArrayList<>(parsers.length + 3);
+    final List<String> helpers = new ArrayList<>(JDBCConnectionUrlParser.values().length + 4);
 
-    parserClasses.add(packageName + ".DBInfo");
-    parserClasses.add(packageName + ".DBInfo$Builder");
-    parserClasses.add(packageName + ".JDBCMaps");
-    parserClasses.add(packageName + ".JDBCConnectionUrlParser");
+    helpers.add(packageName + ".DBInfo");
+    helpers.add(packageName + ".DBInfo$Builder");
+    helpers.add(packageName + ".JDBCMaps");
+    helpers.add(packageName + ".JDBCConnectionUrlParser");
 
-    for (final JDBCConnectionUrlParser parser : parsers) {
-      parserClasses.add(parser.getClass().getName());
+    for (final JDBCConnectionUrlParser parser : JDBCConnectionUrlParser.values()) {
+      helpers.add(parser.getClass().getName());
     }
-    return parserClasses.toArray(new String[0]);
+    return helpers.toArray(new String[0]);
   }
 
   @Override

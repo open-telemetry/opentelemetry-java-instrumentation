@@ -42,24 +42,23 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
 
   @Override
   public String[] helperClassNames() {
-    final JDBCConnectionUrlParser[] parsers = JDBCConnectionUrlParser.values();
-    final List<String> parserClasses = new ArrayList<>(parsers.length + 8);
+    final List<String> helpers = new ArrayList<>(JDBCConnectionUrlParser.values().length + 9);
 
-    parserClasses.add(packageName + ".DBInfo");
-    parserClasses.add(packageName + ".DBInfo$Builder");
-    parserClasses.add(packageName + ".JDBCUtils");
-    parserClasses.add(packageName + ".JDBCMaps");
-    parserClasses.add(packageName + ".JDBCConnectionUrlParser");
+    helpers.add(packageName + ".DBInfo");
+    helpers.add(packageName + ".DBInfo$Builder");
+    helpers.add(packageName + ".JDBCUtils");
+    helpers.add(packageName + ".JDBCMaps");
+    helpers.add(packageName + ".JDBCConnectionUrlParser");
 
-    parserClasses.add("datadog.trace.agent.decorator.BaseDecorator");
-    parserClasses.add("datadog.trace.agent.decorator.ClientDecorator");
-    parserClasses.add("datadog.trace.agent.decorator.DatabaseClientDecorator");
-    parserClasses.add(packageName + ".JDBCDecorator");
+    helpers.add("datadog.trace.agent.decorator.BaseDecorator");
+    helpers.add("datadog.trace.agent.decorator.ClientDecorator");
+    helpers.add("datadog.trace.agent.decorator.DatabaseClientDecorator");
+    helpers.add(packageName + ".JDBCDecorator");
 
-    for (final JDBCConnectionUrlParser parser : parsers) {
-      parserClasses.add(parser.getClass().getName());
+    for (final JDBCConnectionUrlParser parser : JDBCConnectionUrlParser.values()) {
+      helpers.add(parser.getClass().getName());
     }
-    return parserClasses.toArray(new String[0]);
+    return helpers.toArray(new String[0]);
   }
 
   @Override

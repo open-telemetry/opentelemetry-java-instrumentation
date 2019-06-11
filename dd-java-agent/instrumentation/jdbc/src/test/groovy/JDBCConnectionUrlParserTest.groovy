@@ -30,6 +30,8 @@ class JDBCConnectionUrlParserTest extends Specification {
     url            | _
     null           | _
     ""             | _
+    "jdbc:"        | _
+    "jdbc::"       | _
     "bogus:string" | _
   }
 
