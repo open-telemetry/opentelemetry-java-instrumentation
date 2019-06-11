@@ -19,7 +19,6 @@ testSets {
 
 dependencies {
 
-  compile project(':dd-trace-ot')
   compile project(':dd-java-agent:agent-tooling')
 
   compile deps.bytebuddy
