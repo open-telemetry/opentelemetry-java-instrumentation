@@ -5,18 +5,8 @@ import com.mongodb.ServerAddress
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import datadog.opentracing.DDSpan
-import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
-import de.flapdoodle.embed.mongo.MongodExecutable
-import de.flapdoodle.embed.mongo.MongodProcess
-import de.flapdoodle.embed.mongo.MongodStarter
-import de.flapdoodle.embed.mongo.config.IMongodConfig
-import de.flapdoodle.embed.mongo.config.MongodConfigBuilder
-import de.flapdoodle.embed.mongo.config.Net
-import de.flapdoodle.embed.mongo.distribution.Version
-import de.flapdoodle.embed.process.runtime.Network
 import io.opentracing.tag.Tags
 import org.bson.BsonDocument
 import org.bson.BsonString
@@ -26,38 +16,18 @@ import spock.lang.Shared
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
-class MongoClientTest extends AgentTestRunner {
+abstract class MongoClientTest extends MongoBaseTest {
 
   @Shared
   MongoClient client
-  @Shared
-  int port = PortUtils.randomOpenPort()
-  @Shared
-  MongodExecutable mongodExe
-  @Shared
-  MongodProcess mongod
 
   def setup() throws Exception {
-    final MongodStarter starter = MongodStarter.getDefaultInstance()
-    final IMongodConfig mongodConfig =
-      new MongodConfigBuilder()
-        .version(Version.Main.PRODUCTION)
-        .net(new Net("localhost", port, Network.localhostIsIPv6()))
-        .build()
-
-    mongodExe = starter.prepare(mongodConfig)
-    mongod = mongodExe.start()
-
     client = new MongoClient("localhost", port)
   }
 
   def cleanup() throws Exception {
     client?.close()
     client = null
-    mongod?.stop()
-    mongod = null
-    mongodExe?.stop()
-    mongodExe = null
   }
 
   def "test create collection"() {

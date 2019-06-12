@@ -6,18 +6,8 @@ import com.mongodb.async.client.MongoDatabase
 import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.UpdateResult
 import datadog.opentracing.DDSpan
-import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
-import de.flapdoodle.embed.mongo.MongodExecutable
-import de.flapdoodle.embed.mongo.MongodProcess
-import de.flapdoodle.embed.mongo.MongodStarter
-import de.flapdoodle.embed.mongo.config.IMongodConfig
-import de.flapdoodle.embed.mongo.config.MongodConfigBuilder
-import de.flapdoodle.embed.mongo.config.Net
-import de.flapdoodle.embed.mongo.distribution.Version
-import de.flapdoodle.embed.process.runtime.Network
 import io.opentracing.tag.Tags
 import org.bson.BsonDocument
 import org.bson.BsonString
@@ -31,38 +21,18 @@ import java.util.concurrent.CountDownLatch
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 @Timeout(10)
-class MongoAsyncClientTest extends AgentTestRunner {
+class MongoAsyncClientTest extends MongoBaseTest {
 
   @Shared
   MongoClient client
-  @Shared
-  int port = PortUtils.randomOpenPort()
-  @Shared
-  MongodExecutable mongodExe
-  @Shared
-  MongodProcess mongod
 
   def setup() throws Exception {
-    final MongodStarter starter = MongodStarter.getDefaultInstance()
-    final IMongodConfig mongodConfig =
-      new MongodConfigBuilder()
-        .version(Version.Main.PRODUCTION)
-        .net(new Net("localhost", port, Network.localhostIsIPv6()))
-        .build()
-
-    mongodExe = starter.prepare(mongodConfig)
-    mongod = mongodExe.start()
-
     client = MongoClients.create("mongodb://localhost:$port")
   }
 
   def cleanup() throws Exception {
     client?.close()
     client = null
-    mongod?.stop()
-    mongod = null
-    mongodExe?.stop()
-    mongodExe = null
   }
 
   def "test create collection"() {
@@ -75,7 +45,11 @@ class MongoAsyncClientTest extends AgentTestRunner {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{ \"create\" : \"$collectionName\", \"capped\" : \"?\" }")
+        mongoSpan(it, 0) {
+          assert it == "{ \"create\" : \"$collectionName\", \"capped\" : \"?\" }" ||
+            it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          true
+        }
       }
     }
 
@@ -96,7 +70,11 @@ class MongoAsyncClientTest extends AgentTestRunner {
     count.get() == 0
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{ \"count\" : \"$collectionName\", \"query\" : { } }")
+        mongoSpan(it, 0) {
+          assert it == "{ \"count\" : \"$collectionName\", \"query\" : { } }" ||
+            it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          true
+        }
       }
     }
 
@@ -127,10 +105,18 @@ class MongoAsyncClientTest extends AgentTestRunner {
     count.get() == 1
     assertTraces(2) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{ \"insert\" : \"$collectionName\", \"ordered\" : \"?\", \"documents\" : [{ \"_id\" : \"?\", \"password\" : \"?\" }] }")
+        mongoSpan(it, 0) {
+          assert it == "{ \"insert\" : \"$collectionName\", \"ordered\" : \"?\", \"documents\" : [{ \"_id\" : \"?\", \"password\" : \"?\" }] }" ||
+            it == "{\"insert\": \"$collectionName\", \"ordered\": \"?\", \"\$db\": \"?\", \"documents\": [{\"_id\": \"?\", \"password\": \"?\"}]}"
+          true
+        }
       }
       trace(1, 1) {
-        mongoSpan(it, 0, "{ \"count\" : \"$collectionName\", \"query\" : { } }")
+        mongoSpan(it, 0) {
+          assert it == "{ \"count\" : \"$collectionName\", \"query\" : { } }" ||
+            it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          true
+        }
       }
     }
 
@@ -170,10 +156,18 @@ class MongoAsyncClientTest extends AgentTestRunner {
     count.get() == 1
     assertTraces(2) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{ \"update\" : \"?\", \"ordered\" : \"?\", \"updates\" : [{ \"q\" : { \"password\" : \"?\" }, \"u\" : { \"\$set\" : { \"password\" : \"?\" } } }] }")
+        mongoSpan(it, 0) {
+          assert it == "{ \"update\" : \"?\", \"ordered\" : \"?\", \"updates\" : [{ \"q\" : { \"password\" : \"?\" }, \"u\" : { \"\$set\" : { \"password\" : \"?\" } } }] }" ||
+            it == "{\"update\": \"?\", \"ordered\": \"?\", \"\$db\": \"?\", \"updates\": [{\"q\": {\"password\": \"?\"}, \"u\": {\"\$set\": {\"password\": \"?\"}}}]}"
+          true
+        }
       }
       trace(1, 1) {
-        mongoSpan(it, 0, "{ \"count\" : \"$collectionName\", \"query\" : { } }")
+        mongoSpan(it, 0) {
+          assert it == "{ \"count\" : \"$collectionName\", \"query\" : { } }" ||
+            it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          true
+        }
       }
     }
 
@@ -211,10 +205,18 @@ class MongoAsyncClientTest extends AgentTestRunner {
     count.get() == 0
     assertTraces(2) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{ \"delete\" : \"?\", \"ordered\" : \"?\", \"deletes\" : [{ \"q\" : { \"password\" : \"?\" }, \"limit\" : \"?\" }] }")
+        mongoSpan(it, 0) {
+          assert it == "{ \"delete\" : \"?\", \"ordered\" : \"?\", \"deletes\" : [{ \"q\" : { \"password\" : \"?\" }, \"limit\" : \"?\" }] }" ||
+            it == "{\"delete\": \"?\", \"ordered\": \"?\", \"\$db\": \"?\", \"deletes\": [{\"q\": {\"password\": \"?\"}, \"limit\": \"?\"}]}"
+          true
+        }
       }
       trace(1, 1) {
-        mongoSpan(it, 0, "{ \"count\" : \"$collectionName\", \"query\" : { } }")
+        mongoSpan(it, 0) {
+          assert it == "{ \"count\" : \"$collectionName\", \"query\" : { } }" ||
+            it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          true
+        }
       }
     }
 
@@ -236,11 +238,11 @@ class MongoAsyncClientTest extends AgentTestRunner {
     }
   }
 
-  def mongoSpan(TraceAssert trace, int index, String statement, Object parentSpan = null, Throwable exception = null) {
+  def mongoSpan(TraceAssert trace, int index, Closure<Boolean> statementEval, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       serviceName "mongo"
       operationName "mongo.query"
-      resourceName statement
+      resourceName statementEval
       spanType DDSpanTypes.MONGO
       if (parentSpan == null) {
         parent()
@@ -251,7 +253,7 @@ class MongoAsyncClientTest extends AgentTestRunner {
         "$Tags.COMPONENT.key" "java-mongo"
         "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
         "$Tags.DB_INSTANCE.key" "test_db"
-        "$Tags.DB_STATEMENT.key" statement
+        "$Tags.DB_STATEMENT.key" statementEval
         "$Tags.DB_TYPE.key" "mongo"
         "$Tags.PEER_HOSTNAME.key" "localhost"
         "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
