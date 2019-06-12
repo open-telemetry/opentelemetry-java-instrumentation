@@ -471,7 +471,8 @@ public class Config {
   }
 
   /**
-   * @deprecated This method should only be used internally. Use the instance getter instead {@link #isIntegrationEnabled(SortedSet, boolean)}.
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link
+   *     #isIntegrationEnabled(SortedSet, boolean)}.
    * @param integrationNames
    * @param defaultEnabled
    * @return
@@ -495,11 +496,12 @@ public class Config {
 
   public boolean isJmxFetchIntegrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
-    return  jmxFetchIntegrationEnabled(integrationNames, defaultEnabled);
+    return jmxFetchIntegrationEnabled(integrationNames, defaultEnabled);
   }
 
   /**
-   * @deprecated This method should only be used internally. Use the instance getter instead {@link #isJmxFetchIntegrationEnabled(SortedSet, boolean)}.
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link
+   *     #isJmxFetchIntegrationEnabled(SortedSet, boolean)}.
    * @param integrationNames
    * @param defaultEnabled
    * @return
@@ -527,7 +529,8 @@ public class Config {
   }
 
   /**
-   * @deprecated This method should only be used internally. Use the instance getter instead {@link #isTraceAnalyticsIntegrationEnabled(SortedSet, boolean)}.
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link
+   *     #isTraceAnalyticsIntegrationEnabled(SortedSet, boolean)}.
    * @param integrationNames
    * @param defaultEnabled
    * @return
