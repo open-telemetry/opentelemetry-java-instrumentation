@@ -1,9 +1,10 @@
-
 ext {
   serverName = 'wildfly'
   serverModule = 'servlet'
   serverVersion = '15.0.0.Final'
   serverExtension = 'zip'
+
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 repositories {
@@ -48,6 +49,6 @@ tasks.register("unzip", Copy) {
 
 tasks.withType(Test).configureEach {
   dependsOn unzip
-  
+
   jvmArgs "-Ddatadog.smoketest.wildflyDir=${buildDir}/${serverName}-${serverModule}-${serverVersion}"
 }
