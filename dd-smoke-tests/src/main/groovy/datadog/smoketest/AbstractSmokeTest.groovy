@@ -33,11 +33,18 @@ abstract class AbstractSmokeTest extends Specification {
 
     ProcessBuilder processBuilder = createProcessBuilder()
 
+    processBuilder.environment().put("JAVA_HOME", System.getProperty("java.home"))
+
     processBuilder.redirectErrorStream(true)
     File log = new File("${buildDirectory}/reports/serverProcess.log")
     processBuilder.redirectOutput(ProcessBuilder.Redirect.to(log))
 
     serverProcess = processBuilder.start()
+  }
+
+  String javaPath() {
+    final String separator = System.getProperty("file.separator")
+    return System.getProperty("java.home") + separator + "bin" + separator + "java"
   }
 
   def cleanupSpec() {
