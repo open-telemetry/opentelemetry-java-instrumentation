@@ -1,15 +1,10 @@
-// using this plugin will launch the server in the background and won't block the tests
-plugins {
-  id 'com.github.psxpaul.execfork' version '0.1.8'
-}
-
 ext {
   serverName = 'wildfly'
   serverModule = 'servlet'
   serverVersion = '15.0.0.Final'
   serverExtension = 'zip'
-  wildflyHttpPort = 8080
-  wildflyManagementPort = 9990
+
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 repositories {
@@ -30,10 +25,7 @@ dependencies {
   // organisation = serverName, revision = serverVersion, module = serverModule, ext = serverExtension
   compile "${serverName}:${serverModule}:${serverVersion}@${serverExtension}"
 
-  testCompile project(':dd-trace-api')
-  testCompile project(':dd-trace-ot')
-  testCompile project(':dd-java-agent:testing')
-  testCompile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
+  testCompile project(':dd-smoke-tests')
 }
 
 tasks.register("unzip", Copy) {
@@ -55,64 +47,8 @@ tasks.register("unzip", Copy) {
   onlyIf { !project.rootProject.hasProperty("skipTests") }
 }
 
-tasks.register("startServer", com.github.psxpaul.task.ExecFork) {
-  dependsOn project(':dd-java-agent').shadowJar
-
-  wildflyHttpPort = randomOpenPort()
-  // not used, but to ensure https default port 8443 won't clash
-  int httpsPort = randomOpenPort()
-  wildflyManagementPort = randomOpenPort()
-
-  if (wildflyHttpPort == -1 || httpsPort == -1 || wildflyManagementPort == -1) {
-    throw new GradleException("Failed to get random ports to start Wildfly")
-  }
-
-  workingDir = "${buildDir}/wildfly-servlet-15.0.0.Final"
-  commandLine = "${workingDir}/bin/standalone.sh"
-  // ideally this should be good enough to use to stop wildfly, but wildfly needs to gracefully shutdown from jboss-cli.sh
-  // stopAfter = test
-  standardOutput "${buildDir}/reports/server.log"
-  // these params tells the ExecFork plugin to block on startServer task until the port is opened or the string is seen in the ouput
-  waitForPort = wildflyHttpPort
-  waitForOutput = "Undertow HTTP listener default listening on 127.0.0.1:${wildflyHttpPort}"
-  timeout = 240
-  environment = [
-    'JAVA_OPTS': "-javaagent:${project(':dd-java-agent').tasks.shadowJar.archivePath}"
-      + " -Ddd.writer.type=LoggingWriter" + " -Ddd.service.name=java-app"
-      + " -Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug"
-      + " -Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
-      + " -Djboss.http.port=${wildflyHttpPort} -Djboss.https.port=${httpsPort}"
-      + " -Djboss.management.http.port=${wildflyManagementPort}"
-  ]
-
+tasks.withType(Test).configureEach {
   dependsOn unzip
 
-  // When tests are disabled this would still be run, so disable this manually
-  onlyIf { !project.rootProject.hasProperty("skipTests") }
-}
-
-tasks.register("stopWildfly", Exec) {
-  project.getLogger().info("Shutting down Wildfly")
-  workingDir = "${buildDir}/wildfly-servlet-15.0.0.Final"
-  commandLine = "${workingDir}/bin/jboss-cli.sh"
-  args = ["--connect", "--controller=localhost:${wildflyManagementPort}", "command=:shutdown"]
-
-  dependsOn startServer
-
-  // When tests are disabled this would still be run, so disable this manually
-  onlyIf { !project.rootProject.hasProperty("skipTests") }
-}
-
-tasks.withType(Test).configureEach {
-  // so the test can get this property
-  jvmArgs "-Ddatadog.smoketest.server.port=${wildflyHttpPort}"
-
-  testLogging {
-    events "started"
-  }
-
-  dependsOn startServer
-
-  // ensure that the wildfly server gets shutdown
-  finalizedBy stopWildfly
+  jvmArgs "-Ddatadog.smoketest.wildflyDir=${buildDir}/${serverName}-${serverModule}-${serverVersion}"
 }

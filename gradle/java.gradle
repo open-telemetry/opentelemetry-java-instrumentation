@@ -26,7 +26,7 @@ java {
     doFirst {
       // We do this specifically for Java7 bytecode generation because we would like to be able to compile
       // with Java8+ compiler. This likely would require some modifications when we switch to java11 compiler.
-      // Using proper Java7 bootstrap and extentions allows to be sure our code will run on real Java7.
+      // Using proper Java7 bootstrap and extensions allows to be sure our code will run on real Java7.
       if (JavaVersion.toVersion(sourceCompatibility) == JavaVersion.VERSION_1_7
         && JavaVersion.current() != JavaVersion.VERSION_1_7
         && System.env.JAVA_7_HOME != null) {
