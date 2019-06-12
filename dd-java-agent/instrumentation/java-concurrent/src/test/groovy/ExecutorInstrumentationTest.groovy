@@ -26,9 +26,9 @@ import java.util.concurrent.TimeoutException
 class ExecutorInstrumentationTest extends AgentTestRunner {
 
   static {
-    ConfigUtils.makeConfigInstanceModifiable()
-    System.setProperty("dd.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
-    ConfigUtils.resetConfig()
+    ConfigUtils.updateConfig {
+      System.setProperty("dd.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
+    }
   }
 
   @Shared

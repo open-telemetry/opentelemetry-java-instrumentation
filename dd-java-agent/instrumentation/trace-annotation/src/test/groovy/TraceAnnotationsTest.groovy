@@ -10,9 +10,9 @@ import java.util.concurrent.Callable
 class TraceAnnotationsTest extends AgentTestRunner {
 
   static {
-    ConfigUtils.makeConfigInstanceModifiable()
-    System.clearProperty("dd.trace.annotations")
-    ConfigUtils.resetConfig(true)
+    ConfigUtils.updateConfig {
+      System.clearProperty("dd.trace.annotations")
+    }
     refreshTestTracer()
   }
 

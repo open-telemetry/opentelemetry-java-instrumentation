@@ -2,6 +2,7 @@ import com.google.common.reflect.ClassPath
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.SpockRunner
 import datadog.trace.agent.test.utils.ClasspathUtils
+import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.agent.test.utils.GlobalTracerUtils
 import datadog.trace.agent.tooling.Constants
 import io.opentracing.Span
@@ -10,7 +11,6 @@ import spock.lang.Shared
 
 import java.lang.reflect.Field
 
-import static datadog.trace.agent.test.utils.ConfigUtils.resetConfig
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static datadog.trace.api.Config.TRACE_CLASSES_EXCLUDE
 
@@ -23,8 +23,9 @@ class AgentTestRunnerTest extends AgentTestRunner {
   private Class sharedSpanClass
 
   static {
-    System.setProperty("dd." + TRACE_CLASSES_EXCLUDE, "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
-    resetConfig()
+    ConfigUtils.updateConfig {
+      System.setProperty("dd." + TRACE_CLASSES_EXCLUDE, "config.exclude.packagename.*, config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
+    }
 
     // when test class initializes, opentracing should be set up, but not the agent.
     OT_LOADER = io.opentracing.Tracer.getClassLoader()

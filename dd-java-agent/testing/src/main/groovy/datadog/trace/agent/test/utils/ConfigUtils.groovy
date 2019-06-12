@@ -23,22 +23,6 @@ class ConfigUtils {
     static final RUNTIME_ID_FIELD = Config.getDeclaredField("runtimeId")
   }
 
-  // TODO: ideally all users of this should switch to using Config object (and withConfigOverride) instead.
-  @Deprecated
-  @SneakyThrows
-  static <T extends Object> Object withSystemProperty(final String name, final String value, final Callable<T> r) {
-    if (value == null) {
-      System.clearProperty(name)
-    } else {
-      System.setProperty(name, value)
-    }
-    try {
-      return r.call()
-    } finally {
-      System.clearProperty(name)
-    }
-  }
-
   @SneakyThrows
   synchronized static <T extends Object> Object withConfigOverride(final String name, final String value, final Callable<T> r) {
     // Ensure the class was retransformed properly in AgentTestRunner.makeConfigInstanceModifiable()
@@ -60,12 +44,24 @@ class ConfigUtils {
   }
 
   /**
+   * Provides an callback to set up the testing environment and reset the global configuration after system properties and envs are set.
+   *
+   * @param r
+   * @return
+   */
+  static updateConfig(final Callable r) {
+    makeConfigInstanceModifiable()
+    r.call()
+    resetConfig()
+  }
+
+  /**
    * Calling will reset the runtimeId too, so it might cause problems around runtimeId verification.
    * If you are testing runtimeId provide <code>preserveRuntimeId = false</code> to copy the previous runtimeId
-   * tot he new config instance.
+   * to the new config instance.
    */
-  static void resetConfig(preserveRuntimeId = false) {
-    // Ensure the class was retransformed properly in AgentTestRunner.makeConfigInstanceModifiable()
+  static void resetConfig(preserveRuntimeId = true) {
+    // Ensure the class was re-transformed properly in AgentTestRunner.makeConfigInstanceModifiable()
     assert Modifier.isPublic(ConfigInstance.FIELD.getModifiers())
     assert Modifier.isStatic(ConfigInstance.FIELD.getModifiers())
     assert Modifier.isVolatile(ConfigInstance.FIELD.getModifiers())

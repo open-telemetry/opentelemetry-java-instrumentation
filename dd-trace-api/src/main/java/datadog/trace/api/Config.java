@@ -467,6 +467,17 @@ public class Config {
 
   public boolean isIntegrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
+    return integrationEnabled(integrationNames, defaultEnabled);
+  }
+
+  /**
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link #isIntegrationEnabled(SortedSet, boolean)}.
+   * @param integrationNames
+   * @param defaultEnabled
+   * @return
+   */
+  public static boolean integrationEnabled(
+      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
     // If default is enabled, we want to enable individually,
     // if default is disabled, we want to disable individually.
     boolean anyEnabled = defaultEnabled;
@@ -484,6 +495,17 @@ public class Config {
 
   public boolean isJmxFetchIntegrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
+    return  jmxFetchIntegrationEnabled(integrationNames, defaultEnabled);
+  }
+
+  /**
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link #isJmxFetchIntegrationEnabled(SortedSet, boolean)}.
+   * @param integrationNames
+   * @param defaultEnabled
+   * @return
+   */
+  public static boolean jmxFetchIntegrationEnabled(
+      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
     // If default is enabled, we want to enable individually,
     // if default is disabled, we want to disable individually.
     boolean anyEnabled = defaultEnabled;
@@ -500,6 +522,17 @@ public class Config {
   }
 
   public boolean isTraceAnalyticsIntegrationEnabled(
+      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
+    return traceAnalyticsIntegrationEnabled(integrationNames, defaultEnabled);
+  }
+
+  /**
+   * @deprecated This method should only be used internally. Use the instance getter instead {@link #isTraceAnalyticsIntegrationEnabled(SortedSet, boolean)}.
+   * @param integrationNames
+   * @param defaultEnabled
+   * @return
+   */
+  public static boolean traceAnalyticsIntegrationEnabled(
       final SortedSet<String> integrationNames, final boolean defaultEnabled) {
     // If default is enabled, we want to enable individually,
     // if default is disabled, we want to disable individually.

@@ -9,9 +9,9 @@ import java.util.concurrent.atomic.AtomicReference
 
 class Slf4jMDCTest extends AgentTestRunner {
   static {
-    ConfigUtils.makeConfigInstanceModifiable()
-    System.setProperty("dd.logs.injection", "true")
-    ConfigUtils.resetConfig()
+    ConfigUtils.updateConfig {
+      System.setProperty("dd.logs.injection", "true")
+    }
   }
 
   def "mdc shows trace and span ids for active scope"() {
