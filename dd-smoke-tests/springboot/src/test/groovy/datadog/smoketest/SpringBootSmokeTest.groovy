@@ -9,7 +9,7 @@ class SpringBootSmokeTest extends AbstractServerSmokeTest {
     String springBootShadowJar = System.getProperty("datadog.smoketest.springboot.shadowJar.path")
 
     List<String> command = new ArrayList<>()
-    command.add("java")
+    command.add(javaPath())
     command.addAll(defaultJavaProperties)
     command.addAll((String[]) ["-jar", springBootShadowJar, "--server.port=${httpPort}"])
     ProcessBuilder processBuilder = new ProcessBuilder(command)
