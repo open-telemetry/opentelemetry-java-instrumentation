@@ -85,6 +85,7 @@ public abstract class AgentTestRunner extends Specification {
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG);
 
     ConfigUtils.makeConfigInstanceModifiable();
+
     TEST_WRITER =
         new ListWriter() {
           @Override
