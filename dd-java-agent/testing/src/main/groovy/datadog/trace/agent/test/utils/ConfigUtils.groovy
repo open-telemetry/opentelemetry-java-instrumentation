@@ -56,11 +56,9 @@ class ConfigUtils {
   }
 
   /**
-   * Calling will reset the runtimeId too, so it might cause problems around runtimeId verification.
-   * If you are testing runtimeId provide <code>preserveRuntimeId = false</code> to copy the previous runtimeId
-   * to the new config instance.
+   * Reset the global configuration. Please note that Runtime ID is preserved to the pre-existing value.
    */
-  static void resetConfig(preserveRuntimeId = true) {
+  static void resetConfig() {
     // Ensure the class was re-transformed properly in AgentTestRunner.makeConfigInstanceModifiable()
     assert Modifier.isPublic(ConfigInstance.FIELD.getModifiers())
     assert Modifier.isStatic(ConfigInstance.FIELD.getModifiers())
@@ -75,22 +73,29 @@ class ConfigUtils {
     def previousConfig = ConfigInstance.FIELD.get(null)
     def newConfig = new Config()
     ConfigInstance.FIELD.set(null, newConfig)
-    if (previousConfig != null && preserveRuntimeId) {
+    if (previousConfig != null) {
       ConfigInstance.RUNTIME_ID_FIELD.set(newConfig, ConfigInstance.RUNTIME_ID_FIELD.get(previousConfig))
     }
   }
 
+  // Keep track of config instance already made modifiable
+  private static isConfigInstanceModifiable = false
+
   static void makeConfigInstanceModifiable() {
+    if (isConfigInstanceModifiable) {
+      return
+    }
+
     def instrumentation = ByteBuddyAgent.install()
     final transformer =
       new AgentBuilder.Default()
         .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
         .with(AgentBuilder.RedefinitionStrategy.Listener.ErrorEscalating.FAIL_FAST)
-      // Config is injected into the bootstrap, so we need to provide a locator.
+        // Config is injected into the bootstrap, so we need to provide a locator.
         .with(
           new AgentBuilder.LocationStrategy.Simple(
             ClassFileLocator.ForClassLoader.ofSystemLoader()))
-        .ignore(none()) // Allow transforming boostrap classes
+        .ignore(none()) // Allow transforming bootstrap classes
         .type(named("datadog.trace.api.Config"))
         .transform { builder, typeDescription, classLoader, module ->
           builder
@@ -104,6 +109,7 @@ class ConfigUtils {
             .transform(Transformer.ForField.withModifiers(PUBLIC, VOLATILE))
         }
         .installOn(instrumentation)
+    isConfigInstanceModifiable = true
 
     final field = ConfigInstance.FIELD
     assert Modifier.isPublic(field.getModifiers())

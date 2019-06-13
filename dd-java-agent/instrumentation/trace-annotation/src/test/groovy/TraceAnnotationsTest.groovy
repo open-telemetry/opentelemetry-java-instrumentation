@@ -13,7 +13,6 @@ class TraceAnnotationsTest extends AgentTestRunner {
     ConfigUtils.updateConfig {
       System.clearProperty("dd.trace.annotations")
     }
-    refreshTestTracer()
   }
 
   def "test simple case annotations"() {
