@@ -43,7 +43,7 @@ class MongoClientTest extends MongoBaseTest {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{ \"create\" : \"$collectionName\", \"capped\" : \"?\" }")
+        mongoSpan(it, 0, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
       }
     }
 
@@ -62,7 +62,7 @@ class MongoClientTest extends MongoBaseTest {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{ \"create\" : \"$collectionName\", \"capped\" : \"?\" }", dbName)
+        mongoSpan(it, 0, "{\"create\":\"$collectionName\",\"capped\":\"?\"}", dbName)
       }
     }
 
@@ -82,7 +82,7 @@ class MongoClientTest extends MongoBaseTest {
     count == 0
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{ \"count\" : \"$collectionName\", \"query\" : { } }")
+        mongoSpan(it, 0, "{\"count\":\"$collectionName\",\"query\":{}}")
       }
     }
 
@@ -108,10 +108,10 @@ class MongoClientTest extends MongoBaseTest {
     collection.count() == 1
     assertTraces(2) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{ \"insert\" : \"$collectionName\", \"ordered\" : \"?\", \"documents\" : [{ \"_id\" : \"?\", \"password\" : \"?\" }] }")
+        mongoSpan(it, 0, "{\"insert\":\"$collectionName\",\"ordered\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}")
       }
       trace(1, 1) {
-        mongoSpan(it, 0, "{ \"count\" : \"$collectionName\", \"query\" : { } }")
+        mongoSpan(it, 0, "{\"count\":\"$collectionName\",\"query\":{}}")
       }
     }
 
@@ -142,10 +142,10 @@ class MongoClientTest extends MongoBaseTest {
     collection.count() == 1
     assertTraces(2) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{ \"update\" : \"?\", \"ordered\" : \"?\", \"updates\" : [{ \"q\" : { \"password\" : \"?\" }, \"u\" : { \"\$set\" : { \"password\" : \"?\" } } }] }")
+        mongoSpan(it, 0, "{\"update\":\"?\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"\$set\":{\"password\":\"?\"}}}]}")
       }
       trace(1, 1) {
-        mongoSpan(it, 0, "{ \"count\" : \"$collectionName\", \"query\" : { } }")
+        mongoSpan(it, 0, "{\"count\":\"$collectionName\",\"query\":{}}")
       }
     }
 
@@ -174,10 +174,10 @@ class MongoClientTest extends MongoBaseTest {
     collection.count() == 0
     assertTraces(2) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{ \"delete\" : \"?\", \"ordered\" : \"?\", \"deletes\" : [{ \"q\" : { \"password\" : \"?\" }, \"limit\" : \"?\" }] }")
+        mongoSpan(it, 0, "{\"delete\":\"?\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}")
       }
       trace(1, 1) {
-        mongoSpan(it, 0, "{ \"count\" : \"$collectionName\", \"query\" : { } }")
+        mongoSpan(it, 0, "{\"count\":\"$collectionName\",\"query\":{}}")
       }
     }
 
@@ -232,7 +232,10 @@ class MongoClientTest extends MongoBaseTest {
     trace.span(index) {
       serviceName "mongo"
       operationName "mongo.query"
-      resourceName statement
+      resourceName {
+        assert it.replace(" ", "") == statement
+        return true
+      }
       spanType DDSpanTypes.MONGO
       if (parentSpan == null) {
         parent()
@@ -243,7 +246,9 @@ class MongoClientTest extends MongoBaseTest {
         "$Tags.COMPONENT.key" "java-mongo"
         "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
         "$Tags.DB_INSTANCE.key" instance
-        "$Tags.DB_STATEMENT.key" statement
+        "$Tags.DB_STATEMENT.key" {
+          it.replace(" ", "") == statement
+        }
         "$Tags.DB_TYPE.key" "mongo"
         "$Tags.PEER_HOSTNAME.key" "localhost"
         "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
