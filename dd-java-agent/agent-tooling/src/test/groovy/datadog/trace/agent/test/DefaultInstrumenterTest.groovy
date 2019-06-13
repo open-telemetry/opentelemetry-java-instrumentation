@@ -80,7 +80,9 @@ class DefaultInstrumenterTest extends Specification {
 
   def "configure default sys prop as #value"() {
     setup:
-    System.setProperty("dd.integrations.enabled", value)
+    ConfigUtils.updateConfig {
+      System.setProperty("dd.integrations.enabled", value)
+    }
     def target = new TestDefaultInstrumenter("test")
     target.instrument(new AgentBuilder.Default())
 
@@ -98,6 +100,7 @@ class DefaultInstrumenterTest extends Specification {
   def "configure default env var as #value"() {
     setup:
     environmentVariables.set("DD_INTEGRATIONS_ENABLED", value)
+    ConfigUtils.resetConfig()
     def target = new TestDefaultInstrumenter("test")
     target.instrument(new AgentBuilder.Default())
 

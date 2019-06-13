@@ -52,7 +52,7 @@ public interface Instrumenter {
       instrumentationNames.add(instrumentationName);
       instrumentationPrimaryName = instrumentationName;
 
-      enabled = Config.integrationEnabled(instrumentationNames, defaultEnabled());
+      enabled = Config.get().isIntegrationEnabled(instrumentationNames, defaultEnabled());
       contextProvider = new FieldBackedProvider(this);
     }
 
@@ -212,7 +212,7 @@ public interface Instrumenter {
     }
 
     protected boolean defaultEnabled() {
-      return Config.getBooleanSettingFromEnvironment("integrations.enabled", true);
+      return Config.get().isIntegrationsEnabled();
     }
   }
 }

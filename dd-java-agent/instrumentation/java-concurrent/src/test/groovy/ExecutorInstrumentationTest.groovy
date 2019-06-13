@@ -1,6 +1,7 @@
 import datadog.opentracing.DDSpan
 import datadog.opentracing.scopemanager.ContinuableScope
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.Trace
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper
@@ -25,7 +26,9 @@ import java.util.concurrent.TimeoutException
 class ExecutorInstrumentationTest extends AgentTestRunner {
 
   static {
-    System.setProperty("dd.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
+    ConfigUtils.updateConfig {
+      System.setProperty("dd.trace.executors", "ExecutorInstrumentationTest\$CustomThreadPoolExecutor")
+    }
   }
 
   @Shared

@@ -35,7 +35,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
 
   @Override
   protected boolean traceAnalyticsDefault() {
-    return Config.getBooleanSettingFromEnvironment(Config.TRACE_ANALYTICS_ENABLED, false);
+    return Config.get().isTraceAnalyticsEnabled();
   }
 
   public Span onRequest(final Span span, final REQUEST request) {

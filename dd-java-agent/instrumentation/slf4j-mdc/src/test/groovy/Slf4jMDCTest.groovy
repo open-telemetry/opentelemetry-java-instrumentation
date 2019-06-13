@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.CorrelationIdentifier
 import io.opentracing.Scope
 import io.opentracing.util.GlobalTracer
@@ -8,7 +9,9 @@ import java.util.concurrent.atomic.AtomicReference
 
 class Slf4jMDCTest extends AgentTestRunner {
   static {
-    System.setProperty("dd.logs.injection", "true")
+    ConfigUtils.updateConfig {
+      System.setProperty("dd.logs.injection", "true")
+    }
   }
 
   def "mdc shows trace and span ids for active scope"() {

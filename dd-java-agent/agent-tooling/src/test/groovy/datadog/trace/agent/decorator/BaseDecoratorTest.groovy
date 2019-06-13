@@ -9,7 +9,6 @@ import io.opentracing.tag.Tags
 import spock.lang.Shared
 import spock.lang.Specification
 
-import static datadog.trace.agent.test.utils.ConfigUtils.withSystemProperty
 import static io.opentracing.log.Fields.ERROR_OBJECT
 
 class BaseDecoratorTest extends Specification {
@@ -168,17 +167,23 @@ class BaseDecoratorTest extends Specification {
     false          | true           | 1.0
   }
 
-  def "test analytics rate enabled"() {
-    when:
-    BaseDecorator dec = withSystemProperty("dd.${integName}.analytics.enabled", "true") {
-      withSystemProperty("dd.${integName}.analytics.sample-rate", "$sampleRate") {
-        newDecorator(enabled)
-      }
+  def "test analytics rate enabled:#enabled, integration:#integName, sampleRate:#sampleRate"() {
+    setup:
+    ConfigUtils.updateConfig {
+      System.properties.setProperty("dd.${integName}.analytics.enabled", "true")
+      System.properties.setProperty("dd.${integName}.analytics.sample-rate", "$sampleRate")
     }
+
+    when:
+    BaseDecorator dec = newDecorator(enabled)
 
     then:
     dec.traceAnalyticsEnabled == expectedEnabled
     dec.traceAnalyticsSampleRate == (Float) expectedRate
+
+    cleanup:
+    System.clearProperty("dd.${integName}.analytics.enabled")
+    System.clearProperty("dd.${integName}.analytics.sample-rate")
 
     where:
     enabled | integName | sampleRate | expectedEnabled | expectedRate

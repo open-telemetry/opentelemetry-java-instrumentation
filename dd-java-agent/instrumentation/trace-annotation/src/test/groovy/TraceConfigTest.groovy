@@ -1,18 +1,21 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.instrumentation.trace_annotation.TraceConfigInstrumentation
 
 import java.util.concurrent.Callable
 
-import static datadog.trace.agent.test.utils.ConfigUtils.withSystemProperty
-
 class TraceConfigTest extends AgentTestRunner {
 
   static {
-    System.setProperty("dd.trace.methods", "package.ClassName[method1,method2];${ConfigTracedCallable.name}[call]")
+    ConfigUtils.updateConfig {
+      System.setProperty("dd.trace.methods", "package.ClassName[method1,method2];${ConfigTracedCallable.name}[call]")
+    }
   }
 
   def specCleanup() {
-    System.clearProperty("dd.trace.methods")
+    ConfigUtils.updateConfig {
+      System.clearProperty("dd.trace.methods")
+    }
   }
 
   class ConfigTracedCallable implements Callable<String> {
@@ -42,14 +45,19 @@ class TraceConfigTest extends AgentTestRunner {
 
   def "test configuration #value"() {
     setup:
-    def config = null
-    withSystemProperty("dd.trace.methods", value) {
-      def instrumentation = new TraceConfigInstrumentation()
-      config = instrumentation.classMethodsToTrace
+    ConfigUtils.updateConfig {
+      if (value) {
+        System.properties.setProperty("dd.trace.methods", value)
+      } else {
+        System.clearProperty("dd.trace.methods")
+      }
     }
-    expect:
 
-    config == expected
+    expect:
+    new TraceConfigInstrumentation().classMethodsToTrace == expected
+
+    cleanup:
+    System.clearProperty("dd.trace.methods")
 
     where:
     value                                                           | expected
