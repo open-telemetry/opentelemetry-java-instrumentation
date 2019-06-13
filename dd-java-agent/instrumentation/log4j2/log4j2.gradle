@@ -4,13 +4,19 @@ ext {
   log4jVersion = '2.11.2'
 }
 
-//muzzle {
-//  pass {
-//    group = 'org.slf4j'
-//    module = 'slf4j-api'
-//    versions = '(,)'
-//  }
-//}
+muzzle {
+  pass {
+    group = 'org.apache.logging.log4j'
+    module = 'log4j-core'
+    versions = '(,)'
+  }
+
+  pass {
+    group = 'org.apache.logging.log4j'
+    module = 'log4j-api'
+    versions = '(,)'
+  }
+}
 
 dependencies {
   compile project(':dd-trace-api')
