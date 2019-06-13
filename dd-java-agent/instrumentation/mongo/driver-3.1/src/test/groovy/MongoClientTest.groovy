@@ -16,13 +16,16 @@ import spock.lang.Shared
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
-abstract class MongoClientTest extends MongoBaseTest {
+class MongoClientTest extends MongoBaseTest {
 
   @Shared
   MongoClient client
 
   def setup() throws Exception {
-    client = new MongoClient("localhost", port)
+    client = new MongoClient(new ServerAddress("localhost", port),
+      MongoClientOptions.builder()
+      .description("some-description")
+        .build())
   }
 
   def cleanup() throws Exception {
@@ -41,6 +44,25 @@ abstract class MongoClientTest extends MongoBaseTest {
     assertTraces(1) {
       trace(0, 1) {
         mongoSpan(it, 0, "{ \"create\" : \"$collectionName\", \"capped\" : \"?\" }")
+      }
+    }
+
+    where:
+    dbName = "test_db"
+    collectionName = "testCollection"
+  }
+
+  def "test create collection no description"() {
+    setup:
+    MongoDatabase db = new MongoClient("localhost", port).getDatabase(dbName)
+
+    when:
+    db.createCollection(collectionName)
+
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        mongoSpan(it, 0, "{ \"create\" : \"$collectionName\", \"capped\" : \"?\" }", dbName)
       }
     }
 
@@ -206,7 +228,7 @@ abstract class MongoClientTest extends MongoBaseTest {
     collectionName = "testCollection"
   }
 
-  def mongoSpan(TraceAssert trace, int index, String statement, Object parentSpan = null, Throwable exception = null) {
+  def mongoSpan(TraceAssert trace, int index, String statement, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       serviceName "mongo"
       operationName "mongo.query"
@@ -220,7 +242,7 @@ abstract class MongoClientTest extends MongoBaseTest {
       tags {
         "$Tags.COMPONENT.key" "java-mongo"
         "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-        "$Tags.DB_INSTANCE.key" "test_db"
+        "$Tags.DB_INSTANCE.key" instance
         "$Tags.DB_STATEMENT.key" statement
         "$Tags.DB_TYPE.key" "mongo"
         "$Tags.PEER_HOSTNAME.key" "localhost"
