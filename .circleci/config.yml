@@ -38,6 +38,7 @@ jobs:
     - persist_to_workspace:
         root: .
         paths:
+        - .gradle
         - workspace
 
     - save_cache:
