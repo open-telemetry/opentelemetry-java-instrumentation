@@ -1,0 +1,28 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  testAnnotationProcessor deps.autoservice
+  testImplementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+  testCompile group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
+}
+
+// Forcing strict test execution order (no parallel execution) to ensure proper mongo executable initialization.
+List<Test> testTasks = []
+tasks.withType(Test) { Test testTask ->
+  testTasks.each {
+    testTask.shouldRunAfter(it)
+  }
+  testTasks.add(testTask)
+}
+subprojects {
+  afterEvaluate {
+    tasks.withType(Test) { Test testTask ->
+      testTasks.each {
+        testTask.shouldRunAfter(it)
+      }
+      testTasks.add(testTask)
+    }
+  }
+}
