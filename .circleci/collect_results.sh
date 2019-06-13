@@ -4,6 +4,8 @@
 # This folder will be saved by circleci and available after test runs.
 
 set -e
+#Enable '**' support
+shopt -s globstar
 
 TEST_RESULTS_DIR=./results
 mkdir -p $TEST_RESULTS_DIR >/dev/null 2>&1
