@@ -5,7 +5,7 @@ dependencies {
   testImplementation deps.autoservice
 
   testCompile project(':dd-java-agent:testing')
-  testCompile group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '2.2.0'
+  testCompile group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
 }
 
 // Forcing strict test execution order (no parallel execution) to ensure proper mongo executable initialization.

@@ -17,7 +17,7 @@ import spock.lang.Shared
  */
 class MongoBaseTest extends AgentTestRunner {
   // https://github.com/flapdoodle-oss/de.flapdoodle.embed.mongo#executable-collision
-  private static final MongodStarter starter = MongodStarter.getDefaultInstance()
+  private static final MongodStarter STARTER = MongodStarter.getDefaultInstance()
 
   @Shared
   int port = PortUtils.randomOpenPort()
@@ -33,7 +33,7 @@ class MongoBaseTest extends AgentTestRunner {
         .net(new Net("localhost", port, Network.localhostIsIPv6()))
         .build()
 
-    mongodExe = starter.prepare(mongodConfig)
+    mongodExe = STARTER.prepare(mongodConfig)
     mongod = mongodExe.start()
   }
 
