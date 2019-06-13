@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.slf4j.mdc;
+package datadog.trace.instrumentation.log4j;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
@@ -69,9 +69,11 @@ public class ThreadContextInstrumentation extends Instrumenter.Default {
       try {
         final Method putMethod = threadClass.getMethod("put", String.class, String.class);
         final Method removeMethod = threadClass.getMethod("remove", String.class);
-        GlobalTracer.get().addScopeListener(new ThreadContextScopeListener(putMethod, removeMethod));
+        GlobalTracer.get()
+            .addScopeListener(new ThreadContextScopeListener(putMethod, removeMethod));
       } catch (final NoSuchMethodException e) {
-        org.slf4j.LoggerFactory.getLogger(threadClass).debug("Failed to add log4j ThreadContext span listener", e);
+        org.slf4j.LoggerFactory.getLogger(threadClass)
+            .debug("Failed to add log4j ThreadContext span listener", e);
       }
     }
 
