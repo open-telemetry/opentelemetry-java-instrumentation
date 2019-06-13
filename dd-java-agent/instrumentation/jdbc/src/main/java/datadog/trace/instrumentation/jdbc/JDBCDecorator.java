@@ -47,7 +47,11 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
 
   @Override
   protected String dbInstance(final DBInfo info) {
-    return info.getInstance();
+    if (info.getInstance() != null) {
+      return info.getInstance();
+    } else {
+      return info.getDb();
+    }
   }
 
   public Span onConnection(final Span span, final Connection connection) {

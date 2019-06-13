@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutionException
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
+import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
@@ -108,7 +109,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
     assertTraces(2) {
       server.distributedRequestTrace(it, 0, trace(1).last())
       trace(1, size(2)) {
-        parentSpan(it, 0)
+        basicSpan(it, 0, "parent")
         clientSpan(it, 1, span(0), method, false)
       }
     }
@@ -150,7 +151,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
     // only one trace (client).
     assertTraces(1) {
       trace(0, size(2)) {
-        parentSpan(it, 0)
+        basicSpan(it, 0, "parent")
         clientSpan(it, 1, span(0), method, renameService)
       }
     }
@@ -173,7 +174,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
     // only one trace (client).
     assertTraces(1) {
       trace(0, size(3)) {
-        parentSpan(it, 0)
+        basicSpan(it, 0, "parent")
         span(1) {
           operationName "child"
           childOf span(0)
@@ -304,29 +305,13 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
     and:
     assertTraces(1) {
       trace(0, 2) {
-        parentSpan(it, 0, thrownException)
+        basicSpan(it, 0, "parent", thrownException)
         clientSpan(it, 1, span(0), method, false, false, uri, null, thrownException)
       }
     }
 
     where:
     method = "GET"
-  }
-
-  void parentSpan(TraceAssert trace, int index, Throwable exception = null) {
-    trace.span(index) {
-      parent()
-      serviceName "unnamed-java-app"
-      operationName "parent"
-      resourceName "parent"
-      errored exception != null
-      tags {
-        defaultTags()
-        if (exception) {
-          errorTags(exception.class, exception.message)
-        }
-      }
-    }
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
