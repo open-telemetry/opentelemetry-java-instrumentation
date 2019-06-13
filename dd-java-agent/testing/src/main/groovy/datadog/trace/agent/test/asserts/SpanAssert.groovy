@@ -4,6 +4,8 @@ import datadog.opentracing.DDSpan
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 
+import java.util.regex.Pattern
+
 import static TagsAssert.assertTags
 
 class SpanAssert {
@@ -50,6 +52,11 @@ class SpanAssert {
   def operationNameContains(String... operationNameParts) {
     assertSpanNameContains(span.operationName, operationNameParts)
     checked.operationName = true
+  }
+
+  def resourceName(Pattern pattern) {
+    assert span.resourceName.matches(pattern)
+    checked.resourceName = true
   }
 
   def resourceName(String name) {

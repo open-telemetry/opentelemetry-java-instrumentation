@@ -4,13 +4,13 @@ import com.zaxxer.hikari.HikariDataSource
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import io.opentracing.tag.Tags
+import javax.sql.DataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
 import org.hsqldb.jdbc.JDBCDriver
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import javax.sql.DataSource
 import java.sql.CallableStatement
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -26,24 +26,34 @@ class JDBCInstrumentationTest extends AgentTestRunner {
 
   @Shared
   private Map<String, String> jdbcUrls = [
-    h2    : "jdbc:h2:mem:" + dbName,
-    derby : "jdbc:derby:memory:" + dbName,
-    hsqldb: "jdbc:hsqldb:mem:" + dbName
+    "h2"    : "jdbc:h2:mem:$dbName",
+    "derby" : "jdbc:derby:memory:$dbName",
+    "hsqldb": "jdbc:hsqldb:mem:$dbName",
   ]
 
   @Shared
   private Map<String, String> jdbcDriverClassNames = [
-    h2    : "org.h2.Driver",
-    derby : "org.apache.derby.jdbc.EmbeddedDriver",
-    hsqldb: "org.hsqldb.jdbc.JDBCDriver"
+    "h2"    : "org.h2.Driver",
+    "derby" : "org.apache.derby.jdbc.EmbeddedDriver",
+    "hsqldb": "org.hsqldb.jdbc.JDBCDriver",
   ]
 
   @Shared
   private Map<String, String> jdbcUserNames = [
-    h2    : null,
-    derby : "APP",
-    hsqldb: "SA"
+    "h2"    : null,
+    "derby" : "APP",
+    "hsqldb": "SA",
   ]
+
+  @Shared
+  private Properties connectionProps = {
+    def props = new Properties()
+//    props.put("user", "someUser")
+//    props.put("password", "somePassword")
+    props.put("databaseName", "someDb")
+    props.put("OPEN_NEW", "true") // So H2 doesn't complain about username/password.
+    return props
+  }()
 
   // JDBC Connection pool name (i.e. HikariCP) -> Map<dbName, Datasource>
   @Shared
@@ -51,7 +61,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
 
   def prepareConnectionPoolDatasources() {
     String[] connectionPoolNames = [
-      "tomcat", "hikari", "c3p0"
+      "tomcat", "hikari", "c3p0",
     ]
     connectionPoolNames.each {
       cpName ->
@@ -170,7 +180,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
             "component" "java-jdbc-statement"
-            "db.instance" jdbcUrls.get(driver)
+            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -183,19 +193,22 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     connection.close()
 
     where:
-    driver   | connection                                                | username | query
-    "h2"     | new Driver().connect(jdbcUrls.get("h2"), null)            | null     | "SELECT 3"
-    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null)    | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
-    "h2"     | cpDatasources.get("tomcat").get("h2").getConnection()     | null     | "SELECT 3"
-    "derby"  | cpDatasources.get("tomcat").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "hsqldb" | cpDatasources.get("tomcat").get("hsqldb").getConnection() | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
-    "h2"     | cpDatasources.get("hikari").get("h2").getConnection()     | null     | "SELECT 3"
-    "derby"  | cpDatasources.get("hikari").get("derby").getConnection()  | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "hsqldb" | cpDatasources.get("hikari").get("hsqldb").getConnection() | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
-    "h2"     | cpDatasources.get("c3p0").get("h2").getConnection()       | null     | "SELECT 3"
-    "derby"  | cpDatasources.get("c3p0").get("derby").getConnection()    | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
-    "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()   | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    driver   | connection                                                           | username | query
+    "h2"     | new Driver().connect(jdbcUrls.get("h2"), null)                       | null     | "SELECT 3"
+    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), null)            | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null)               | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    "h2"     | new Driver().connect(jdbcUrls.get("h2"), connectionProps)            | null     | "SELECT 3"
+    "derby"  | new EmbeddedDriver().connect(jdbcUrls.get("derby"), connectionProps) | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | new JDBCDriver().connect(jdbcUrls.get("hsqldb"), connectionProps)    | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    "h2"     | cpDatasources.get("tomcat").get("h2").getConnection()                | null     | "SELECT 3"
+    "derby"  | cpDatasources.get("tomcat").get("derby").getConnection()             | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | cpDatasources.get("tomcat").get("hsqldb").getConnection()            | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    "h2"     | cpDatasources.get("hikari").get("h2").getConnection()                | null     | "SELECT 3"
+    "derby"  | cpDatasources.get("hikari").get("derby").getConnection()             | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | cpDatasources.get("hikari").get("hsqldb").getConnection()            | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
+    "h2"     | cpDatasources.get("c3p0").get("h2").getConnection()                  | null     | "SELECT 3"
+    "derby"  | cpDatasources.get("c3p0").get("derby").getConnection()               | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+    "hsqldb" | cpDatasources.get("c3p0").get("hsqldb").getConnection()              | "SA"     | "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"
   }
 
   @Unroll
@@ -230,7 +243,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
             "component" "java-jdbc-prepared_statement"
-            "db.instance" jdbcUrls.get(driver)
+            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -285,7 +298,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
             "component" "java-jdbc-prepared_statement"
-            "db.instance" jdbcUrls.get(driver)
+            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -340,7 +353,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
             "component" "java-jdbc-prepared_statement"
-            "db.instance" jdbcUrls.get(driver)
+            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -395,7 +408,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
             "component" "java-jdbc-statement"
-            "db.instance" jdbcUrls.get(driver)
+            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -453,7 +466,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
             "component" "java-jdbc-prepared_statement"
-            "db.instance" jdbcUrls.get(driver)
+            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -528,7 +541,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
               "component" "java-jdbc-statement"
             }
             "span.kind" Tags.SPAN_KIND_CLIENT
-            "db.instance" jdbcUrls.get(driver)
+            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -585,7 +598,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       res[i] == 3
     }
     assertTraces(5) {
-      trace(0, 2) {
+      trace(0, 1) {
         span(0) {
           operationName "${dbType}.query"
           serviceName dbType
@@ -597,24 +610,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             "db.user" "SA"
             "component" "java-jdbc-prepared_statement"
             "span.kind" Tags.SPAN_KIND_CLIENT
-            "db.instance" jdbcUrls.get(dbType)
-            "span.origin.type" String
-            defaultTags()
-          }
-        }
-        span(1) {
-          operationName "${dbType}.query"
-          serviceName dbType
-          resourceName "CALL USER()"
-          spanType DDSpanTypes.SQL
-          errored false
-          childOf(span(0))
-          tags {
-            "db.type" "hsqldb"
-            "db.user" "SA"
-            "component" "java-jdbc-statement"
-            "span.kind" Tags.SPAN_KIND_CLIENT
-            "db.instance" jdbcUrls.get(dbType)
+            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -633,7 +629,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
               "db.user" "SA"
               "component" "java-jdbc-prepared_statement"
               "span.kind" Tags.SPAN_KIND_CLIENT
-              "db.instance" jdbcUrls.get(dbType)
+              "db.instance" dbName.toLowerCase()
               "span.origin.type" String
               defaultTags()
             }
