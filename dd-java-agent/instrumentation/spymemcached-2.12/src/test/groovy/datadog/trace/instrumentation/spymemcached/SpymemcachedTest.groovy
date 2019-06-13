@@ -635,7 +635,6 @@ class SpymemcachedTest extends AgentTestRunner {
         "${Tags.COMPONENT.key}" COMPONENT_NAME
         "${Tags.SPAN_KIND.key}" Tags.SPAN_KIND_CLIENT
         "${Tags.DB_TYPE.key}" CompletionListener.DB_TYPE
-        "$Tags.DB_INSTANCE.key" ~/Connection Status \{ \w*\/127.0.0.1:\d+ active: true, authed: true, last read: \d+ ms ago }/
 
         if (error == "canceled") {
           "${CompletionListener.DB_COMMAND_CANCELLED}" true

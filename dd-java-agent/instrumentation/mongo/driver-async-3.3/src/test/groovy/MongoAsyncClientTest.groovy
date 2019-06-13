@@ -1,10 +1,13 @@
+import com.mongodb.ConnectionString
 import com.mongodb.async.SingleResultCallback
 import com.mongodb.async.client.MongoClient
+import com.mongodb.async.client.MongoClientSettings
 import com.mongodb.async.client.MongoClients
 import com.mongodb.async.client.MongoCollection
 import com.mongodb.async.client.MongoDatabase
 import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.UpdateResult
+import com.mongodb.connection.ClusterSettings
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
@@ -27,7 +30,14 @@ class MongoAsyncClientTest extends MongoBaseTest {
   MongoClient client
 
   def setup() throws Exception {
-    client = MongoClients.create("mongodb://localhost:$port")
+    client = MongoClients.create(
+      MongoClientSettings.builder()
+        .clusterSettings(
+          ClusterSettings.builder()
+            .description("some-description")
+            .applyConnectionString(new ConnectionString("mongodb://localhost:$port"))
+            .build())
+        .build())
   }
 
   def cleanup() throws Exception {
@@ -50,6 +60,29 @@ class MongoAsyncClientTest extends MongoBaseTest {
             it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
         }
+      }
+    }
+
+    where:
+    dbName = "test_db"
+    collectionName = "testCollection"
+  }
+
+  def "test create collection no description"() {
+    setup:
+    MongoDatabase db = MongoClients.create("mongodb://localhost:$port").getDatabase(dbName)
+
+    when:
+    db.createCollection(collectionName, toCallback {})
+
+    then:
+    assertTraces(1) {
+      trace(0, 1) {
+        mongoSpan(it, 0, {
+          assert it.replaceAll(" ", "") == "{\"create\":\"$collectionName\",\"capped\":\"?\"}" ||
+            it == "{\"create\": \"$collectionName\", \"capped\": \"?\", \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
+          true
+        }, dbName)
       }
     }
 
@@ -238,7 +271,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
     }
   }
 
-  def mongoSpan(TraceAssert trace, int index, Closure<Boolean> statementEval, Object parentSpan = null, Throwable exception = null) {
+  def mongoSpan(TraceAssert trace, int index, Closure<Boolean> statementEval, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       serviceName "mongo"
       operationName "mongo.query"
@@ -252,7 +285,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
       tags {
         "$Tags.COMPONENT.key" "java-mongo"
         "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-        "$Tags.DB_INSTANCE.key" "test_db"
+        "$Tags.DB_INSTANCE.key" instance
         "$Tags.DB_STATEMENT.key" statementEval
         "$Tags.DB_TYPE.key" "mongo"
         "$Tags.PEER_HOSTNAME.key" "localhost"
