@@ -219,6 +219,10 @@ def isJavaVersionAllowed(JavaVersion version) {
   return true
 }
 
+def isJdkForced(String javaName) {
+  return (project.hasProperty('forceJdk') && project.getProperty('forceJdk').contains(javaName))
+}
+
 // JVM names we would like to run complete test suite on
 // Note: complete test suite is always run on JVM used for compilation
 // Note2: apparently there is no way to have a 'global' variable, so instead we have per project
@@ -290,7 +294,7 @@ for (def env : System.getenv().entrySet()) {
         jvmArgs '-XX:CompileCommand=exclude,net.bytebuddy.description.type.TypeDescription$Generic$Visitor$Substitutor::onParameterizedType'
       }
 
-      onlyIf { isJavaVersionAllowed(javaVersion) && isTestingEnabled(javaName) }
+      onlyIf { (isJavaVersionAllowed(javaVersion) && isTestingEnabled(javaName)) || isJdkForced(javaName) }
       if (applyCodeCoverage) {
         jacoco {
           // Disable jacoco for additional JVM tests to speed things up a bit
