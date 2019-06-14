@@ -6,6 +6,7 @@ import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
+import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import io.opentracing.tag.Tags
 import org.bson.BsonDocument
@@ -13,6 +14,7 @@ import org.bson.BsonString
 import org.bson.Document
 import spock.lang.Shared
 
+import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
@@ -38,18 +40,21 @@ class MongoClientTest extends MongoBaseTest {
     MongoDatabase db = client.getDatabase(dbName)
 
     when:
-    db.createCollection(collectionName)
+    withConfigOverride(Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "$renameService") {
+      db.createCollection(collectionName)
+    }
 
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{\"create\":\"$collectionName\",\"capped\":\"?\"}")
+        mongoSpan(it, 0, "{\"create\":\"$collectionName\",\"capped\":\"?\"}", renameService)
       }
     }
 
     where:
     dbName = "test_db"
     collectionName = "testCollection"
+    renameService << [false, true]
   }
 
   def "test create collection no description"() {
@@ -62,7 +67,7 @@ class MongoClientTest extends MongoBaseTest {
     then:
     assertTraces(1) {
       trace(0, 1) {
-        mongoSpan(it, 0, "{\"create\":\"$collectionName\",\"capped\":\"?\"}", dbName)
+        mongoSpan(it, 0, "{\"create\":\"$collectionName\",\"capped\":\"?\"}", false, dbName)
       }
     }
 
@@ -228,9 +233,9 @@ class MongoClientTest extends MongoBaseTest {
     collectionName = "testCollection"
   }
 
-  def mongoSpan(TraceAssert trace, int index, String statement, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
+  def mongoSpan(TraceAssert trace, int index, String statement, boolean renameService = false, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      serviceName "mongo"
+      serviceName renameService ? instance : "mongo"
       operationName "mongo.query"
       resourceName {
         assert it.replace(" ", "") == statement

@@ -16,6 +16,7 @@ import com.couchbase.mock.CouchbaseMock
 import com.couchbase.mock.http.query.QueryServer
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
+import datadog.trace.api.Config
 import spock.lang.Shared
 
 import java.util.concurrent.RejectedExecutionException
@@ -87,6 +88,9 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
     // Cache buckets:
     couchbaseCluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password())
     memcacheCluster.openBucket(bucketMemcache.name(), bucketMemcache.password())
+
+    // This setting should have no effect since decorator returns null for the instance.
+    System.setProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
   }
 
   private static BucketConfiguration convert(BucketSettings bucketSettings) {
@@ -112,6 +116,8 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
     }
 
     mock?.stop()
+
+    System.clearProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE)
   }
 
   private DefaultCouchbaseEnvironment.Builder envBuilder(BucketSettings bucketSettings) {
