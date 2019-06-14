@@ -1,11 +1,8 @@
 package datadog.trace.agent.decorator
 
 import datadog.trace.api.DDTags
-import io.opentracing.Span
 
 class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
-
-  def span = Mock(Span)
 
   def "test onOperation #testName"() {
     setup:

@@ -1,8 +1,11 @@
 package datadog.trace.agent.decorator
 
+import datadog.trace.api.Config
 import datadog.trace.api.DDTags
 import io.opentracing.Span
 import io.opentracing.tag.Tags
+
+import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 
 class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
@@ -35,21 +38,26 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    decorator.onConnection(span, session)
+    withConfigOverride(Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "$renameService") {
+      decorator.onConnection(span, session)
+    }
 
     then:
     if (session) {
       1 * span.setTag(Tags.DB_USER.key, session.user)
       1 * span.setTag(Tags.DB_INSTANCE.key, session.instance)
+      if (renameService && session.instance) {
+        1 * span.setTag(DDTags.SERVICE_NAME, session.instance)
+      }
     }
     0 * _
 
     where:
-    session                                        | _
-    null                                           | _
-    [user: "test-user"]                            | _
-    [instance: "test-instance"]                    | _
-    [user: "test-user", instance: "test-instance"] | _
+    renameService | session
+    false         | null
+    true          | [user: "test-user"]
+    false         | [instance: "test-instance"]
+    true          | [user: "test-user", instance: "test-instance"]
   }
 
   def "test onStatement"() {
