@@ -7,9 +7,6 @@ import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.nio.ByteBuffer;
 
 public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
   public static final CassandraClientDecorator DECORATE = new CassandraClientDecorator();
@@ -53,15 +50,7 @@ public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
     if (result != null) {
       final Host host = result.getExecutionInfo().getQueriedHost();
       Tags.PEER_PORT.set(span, host.getSocketAddress().getPort());
-      Tags.PEER_HOSTNAME.set(span, host.getAddress().getHostName());
-
-      final InetAddress inetAddress = host.getSocketAddress().getAddress();
-      if (inetAddress instanceof Inet4Address) {
-        final byte[] address = inetAddress.getAddress();
-        Tags.PEER_HOST_IPV4.set(span, ByteBuffer.wrap(address).getInt());
-      } else {
-        Tags.PEER_HOST_IPV6.set(span, inetAddress.getHostAddress());
-      }
+      onPeerConnection(span, host.getSocketAddress().getAddress());
     }
     return span;
   }

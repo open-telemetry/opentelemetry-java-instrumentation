@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
+import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static org.asynchttpclient.Dsl.asyncHttpClient
 
@@ -67,7 +68,7 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        parentSpan(it, 0, thrownException)
+        basicSpan(it, 0, "parent", thrownException)
 
         span(1) {
           operationName "netty.connect"

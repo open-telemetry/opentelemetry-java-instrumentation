@@ -1,6 +1,7 @@
 package datadog.trace.agent.test.utils
 
 import datadog.trace.agent.decorator.BaseDecorator
+import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.context.TraceScope
 import io.opentracing.Scope
 import io.opentracing.util.GlobalTracer
@@ -38,6 +39,22 @@ class TraceUtils {
     } finally {
       DECORATOR.beforeFinish(scope)
       scope.close()
+    }
+  }
+
+  static basicSpan(TraceAssert trace, int index, String spanName, Throwable exception = null) {
+    trace.span(index) {
+      parent()
+      serviceName "unnamed-java-app"
+      operationName spanName
+      resourceName spanName
+      errored exception != null
+      tags {
+        defaultTags()
+        if (exception) {
+          errorTags(exception.class, exception.message)
+        }
+      }
     }
   }
 }
