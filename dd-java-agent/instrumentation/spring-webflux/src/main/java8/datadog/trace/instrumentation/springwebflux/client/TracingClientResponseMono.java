@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.springwebflux.client;
 
 import static datadog.trace.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
 
+import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -36,13 +37,18 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
 
     final Span span =
         tracer
-            .buildSpan("webflux.request")
+            .buildSpan("http.request")
             .asChildOf(parentSpan)
             .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
             .start();
     DECORATE.afterStart(span);
 
     try (final Scope scope = tracer.scopeManager().activate(span, false)) {
+
+      if (scope instanceof TraceScope) {
+        ((TraceScope) scope).setAsyncPropagation(true);
+      }
+
       final ClientRequest mutatedRequest =
           ClientRequest.from(clientRequest)
               .headers(
@@ -55,7 +61,7 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
       exchangeFunction
           .exchange(mutatedRequest)
           .subscribe(
-              new TracingClientResponseSubscriber(subscriber, mutatedRequest, context, span));
+              new TracingClientResponseSubscriber(subscriber, mutatedRequest, context, span, parentSpan));
     }
   }
 }

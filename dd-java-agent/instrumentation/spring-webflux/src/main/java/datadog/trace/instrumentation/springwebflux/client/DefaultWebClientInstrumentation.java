@@ -32,7 +32,6 @@ public class DefaultWebClientInstrumentation extends Instrumenter.Default {
       packageName + ".TracingClientResponseSubscriber",
       packageName + ".TracingClientResponseSubscriber$1",
       packageName + ".TracingClientResponseMono",
-      packageName + ".ClientResponseWrapper"
     };
   }
 

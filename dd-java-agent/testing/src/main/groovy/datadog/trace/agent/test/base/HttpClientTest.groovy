@@ -188,7 +188,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
   def "trace request with callback and no parent"() {
     when:
     def status = doRequest(method, server.address.resolve("/success"), ["is-dd-server": "false"]) {
-      runUnderTrace("child") {
+      runUnderTrace("callback") {
         // Ensure consistent ordering of traces for assertion.
         TEST_WRITER.waitForTraces(1)
       }
@@ -202,7 +202,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
         clientSpan(it, 0, null, method, false)
       }
       trace(1, 1) {
-        basicSpan(it, 0, "child")
+        basicSpan(it, 0, "callback")
       }
     }
 
