@@ -600,7 +600,8 @@ public class Config {
   /** @deprecated This method should only be used internally. Use the explicit getter instead. */
   private static Map<String, String> getMapSettingFromEnvironment(
       final String name, final String defaultValue) {
-    return parseMap(getSettingFromEnvironment(name, defaultValue), PREFIX + name);
+    return parseMap(
+        getSettingFromEnvironment(name, defaultValue), propertyNameToSystemPropertyName(name));
   }
 
   /**

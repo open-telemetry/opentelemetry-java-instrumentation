@@ -726,6 +726,9 @@ class ConfigTest extends Specification {
 
     then:
     config.serviceName == "set-in-properties"
+
+    cleanup:
+    System.clearProperty(PREFIX + CONFIGURATION_FILE)
   }
 
   def "verify fallback to properties file has lower priority than system property"() {
@@ -738,6 +741,10 @@ class ConfigTest extends Specification {
 
     then:
     config.serviceName == "set-in-system"
+
+    cleanup:
+    System.clearProperty(PREFIX + CONFIGURATION_FILE)
+    System.clearProperty(PREFIX + SERVICE_NAME)
   }
 
   def "verify fallback to properties file has lower priority than env var"() {
@@ -750,6 +757,11 @@ class ConfigTest extends Specification {
 
     then:
     config.serviceName == "set-in-env"
+
+    cleanup:
+    System.clearProperty(PREFIX + CONFIGURATION_FILE)
+    System.clearProperty(PREFIX + SERVICE_NAME)
+    environmentVariables.clear("DD_SERVICE_NAME")
   }
 
   def "verify fallback to properties file that does not exist does not crash app"() {
@@ -761,5 +773,8 @@ class ConfigTest extends Specification {
 
     then:
     config.serviceName == 'unnamed-java-app'
+
+    cleanup:
+    System.clearProperty(PREFIX + CONFIGURATION_FILE)
   }
 }
