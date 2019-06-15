@@ -9,42 +9,34 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 
 public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapter {
 
   @Override
   public void channelRead(final ChannelHandlerContext ctx, final Object msg) {
+    final Span parent = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_ATTRIBUTE_KEY).get();
     final Span span = ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).get();
-    if (span == null) {
-      ctx.fireChannelRead(msg);
-      return;
-    }
 
-    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
-      final boolean finishSpan = msg instanceof HttpResponse;
+    final boolean finishSpan = msg instanceof HttpResponse;
 
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
-      try {
-        ctx.fireChannelRead(msg);
-      } catch (final Throwable throwable) {
-        if (finishSpan) {
-          DECORATE.onError(span, throwable);
-          DECORATE.beforeFinish(span);
-          Tags.HTTP_STATUS.set(span, 500);
-          span.finish(); // Finish the span manually since finishSpanOnClose was false
-          throw throwable;
-        }
-      }
-
-      if (finishSpan) {
+    if (span != null && finishSpan) {
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, true)) {
         DECORATE.onResponse(span, (HttpResponse) msg);
         DECORATE.beforeFinish(span);
-        span.finish(); // Finish the span manually since finishSpanOnClose was false
       }
+    }
+
+    // We want the callback in the scope of the parent, not the client span
+    if (parent != null) {
+      try (final Scope scope = GlobalTracer.get().scopeManager().activate(parent, false)) {
+        if (scope instanceof TraceScope) {
+          ((TraceScope) scope).setAsyncPropagation(true);
+        }
+        ctx.fireChannelRead(msg);
+      }
+    } else {
+      ctx.fireChannelRead(msg);
     }
   }
 }

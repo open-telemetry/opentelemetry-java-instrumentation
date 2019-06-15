@@ -1,5 +1,6 @@
 package datadog.trace.agent.test.utils
 
+import datadog.opentracing.DDSpan
 import datadog.trace.agent.decorator.BaseDecorator
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.context.TraceScope
@@ -42,9 +43,13 @@ class TraceUtils {
     }
   }
 
-  static basicSpan(TraceAssert trace, int index, String spanName, Throwable exception = null) {
+  static basicSpan(TraceAssert trace, int index, String spanName, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      parent()
+      if (parentSpan == null) {
+        parent()
+      } else {
+        childOf((DDSpan) parentSpan)
+      }
       serviceName "unnamed-java-app"
       operationName spanName
       resourceName spanName

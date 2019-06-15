@@ -10,6 +10,7 @@ import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequest;
 import io.opentracing.Scope;
 import io.opentracing.Span;
+import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.GlobalTracer;
 import java.net.InetSocketAddress;
@@ -34,19 +35,19 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     final HttpRequest request = (HttpRequest) msg;
 
-    final Span span = GlobalTracer.get().buildSpan("netty.client.request").start();
-    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+    final Tracer tracer = GlobalTracer.get();
+    ctx.channel().attr(AttributeKeys.CLIENT_PARENT_ATTRIBUTE_KEY).set(tracer.activeSpan());
+
+    final Span span = tracer.buildSpan("netty.client.request").start();
+    try (final Scope scope = tracer.scopeManager().activate(span, false)) {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
       DECORATE.onPeerConnection(span, (InetSocketAddress) ctx.channel().remoteAddress());
 
       // AWS calls are often signed, so we can't add headers without breaking the signature.
       if (!request.headers().contains("amz-sdk-invocation-id")) {
-        GlobalTracer.get()
-            .inject(
-                span.context(),
-                Format.Builtin.HTTP_HEADERS,
-                new NettyResponseInjectAdapter(request));
+        tracer.inject(
+            span.context(), Format.Builtin.HTTP_HEADERS, new NettyResponseInjectAdapter(request));
       }
 
       ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).set(span);

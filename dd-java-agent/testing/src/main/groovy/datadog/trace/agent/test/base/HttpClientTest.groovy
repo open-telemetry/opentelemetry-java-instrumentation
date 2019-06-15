@@ -176,10 +176,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
     assertTraces(1) {
       trace(0, size(3)) {
         basicSpan(it, 0, "parent")
-        span(1) {
-          operationName "child"
-          childOf span(0)
-        }
+        basicSpan(it, 1, "child", span(0))
         clientSpan(it, 2, span(0), method, false)
       }
     }
@@ -205,10 +202,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
         clientSpan(it, 0, null, method, false)
       }
       trace(1, 1) {
-        span(0) {
-          operationName "child"
-          parent()
-        }
+        basicSpan(it, 0, "child")
       }
     }
 
@@ -306,7 +300,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent", thrownException)
+        basicSpan(it, 0, "parent", null, thrownException)
         clientSpan(it, 1, span(0), method, false, false, uri, null, thrownException)
       }
     }
