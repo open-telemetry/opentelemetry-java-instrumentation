@@ -15,6 +15,16 @@ import java.util.jar.JarFile;
 
 /** Entry point for initializing the agent. */
 public class TracingAgent {
+
+  private static final String SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY =
+      "datadog.slf4j.simpleLogger.showDateTime";
+  private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY =
+      "datadog.slf4j.simpleLogger.dateTimeFormat";
+  private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_DEFAULT =
+      "'[dd.tracing.agent - 'yyyy-MM-dd HH:mm:ss:SSS Z']'";
+  private static final String SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY =
+      "datadog.slf4j.simpleLogger.defaultLogLevel";
+
   // fields must be managed under class lock
   private static ClassLoader AGENT_CLASSLOADER = null;
   private static ClassLoader JMXFETCH_CLASSLOADER = null;
@@ -28,6 +38,7 @@ public class TracingAgent {
 
   public static void agentmain(final String agentArgs, final Instrumentation inst)
       throws Exception {
+    configureLogger();
     startDatadogAgent(agentArgs, inst);
     if (isAppUsingCustomLogManager()) {
       System.out.println("Custom logger detected. Delaying JMXFetch initialization.");
@@ -110,6 +121,18 @@ public class TracingAgent {
       } finally {
         Thread.currentThread().setContextClassLoader(contextLoader);
       }
+    }
+  }
+
+  private static void configureLogger() {
+    setSystemPropertyDefault(SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY, "true");
+    setSystemPropertyDefault(
+        SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY, SIMPLE_LOGGER_DATE_TIME_FORMAT_DEFAULT);
+  }
+
+  private static void setSystemPropertyDefault(final String property, final String value) {
+    if (System.getProperty(property) == null) {
+      System.setProperty(property, value);
     }
   }
 
@@ -228,7 +251,7 @@ public class TracingAgent {
    */
   private static boolean isAppUsingCustomLogManager() {
     final boolean debugEnabled =
-        "debug".equalsIgnoreCase(System.getProperty("datadog.slf4j.simpleLogger.defaultLogLevel"));
+        "debug".equalsIgnoreCase(System.getProperty(SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY));
 
     final String tracerCustomLogManSysprop = "dd.app.customlogmanager";
     final String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
