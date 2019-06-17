@@ -876,6 +876,7 @@ public class Config {
   private static Properties loadConfigurationFile() {
     Properties properties = new Properties();
 
+    // Reading from system property first and from env after
     String configurationFilePath =
         System.getProperty(propertyNameToSystemPropertyName(CONFIGURATION_FILE));
     if (null == configurationFilePath) {
@@ -886,9 +887,13 @@ public class Config {
       return properties;
     }
 
+    // Normalizing tilde (~) paths for unix systems
+    configurationFilePath = configurationFilePath.replaceFirst("^~", System.getProperty("user.home"));
+
     // Configuration properties file is optional
     File configurationFile = new File(configurationFilePath);
     if (!configurationFile.exists()) {
+      log.error("Configuration file '{}' not found.", configurationFilePath);
       return properties;
     }
 
