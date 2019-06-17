@@ -48,6 +48,12 @@ dependencies {
 
   // Tests seem to fail before 3.5... maybe a problem with some of the tests?
   testCompile group: 'io.vertx', name: 'vertx-web', version: '3.5.0'
+  testCompile group: 'io.vertx', name: 'vertx-web-client', version: '3.5.0'
+  testCompile group: 'io.vertx', name: 'vertx-circuit-breaker', version: '3.5.0'
+  testCompile group: 'io.vertx', name: 'vertx-rx-java2', version: '3.5.0'
 
   latestDepTestCompile group: 'io.vertx', name: 'vertx-web', version: '+'
+  latestDepTestCompile group: 'io.vertx', name: 'vertx-web-client', version: '+'
+  latestDepTestCompile group: 'io.vertx', name: 'vertx-circuit-breaker', version: '+'
+  latestDepTestCompile group: 'io.vertx', name: 'vertx-rx-java2', version: '+'
 }
