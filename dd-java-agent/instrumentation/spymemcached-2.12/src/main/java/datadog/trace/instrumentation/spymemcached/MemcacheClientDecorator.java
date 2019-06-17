@@ -41,7 +41,7 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
 
   @Override
   protected String dbInstance(final MemcachedConnection connection) {
-    return connection.connectionsStatus();
+    return null;
   }
 
   public Span onOperation(final Span span, final String methodName) {

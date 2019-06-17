@@ -1,0 +1,47 @@
+// Set properties before any plugins get loaded
+ext {
+  // Since we're using CompletableFutures in the test...
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+muzzle {
+  pass {
+    group = "org.mongodb"
+    module = "mongodb-driver-async"
+    versions = "[3.3,)"
+    extraDependency 'org.mongodb:mongo-java-driver:3.3.0'
+    assertInverse = true
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  // use mongo listener
+  compile(project(':dd-java-agent:instrumentation:mongo:driver-3.1')) {
+    transitive = false
+  }
+  compileOnly group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.3.0'
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+  testCompile project(':dd-java-agent:instrumentation:mongo').sourceSets.test.output
+  testCompile group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
+
+  testCompile group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.3.0'
+  latestDepTestCompile group: 'org.mongodb', name: 'mongodb-driver-async', version: '+'
+}

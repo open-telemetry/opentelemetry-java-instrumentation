@@ -26,12 +26,12 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
 
     then:
     if (req) {
-      1 * span.setTag(Tags.HTTP_METHOD.key, "test-method")
-      1 * span.setTag(Tags.HTTP_URL.key, "$testUrl")
-      1 * span.setTag(Tags.PEER_HOSTNAME.key, "test-host")
-      1 * span.setTag(Tags.PEER_PORT.key, 555)
+      1 * span.setTag(Tags.HTTP_METHOD.key, req.method)
+      1 * span.setTag(Tags.HTTP_URL.key, "$req.url")
+      1 * span.setTag(Tags.PEER_HOSTNAME.key, req.host)
+      1 * span.setTag(Tags.PEER_PORT.key, req.port)
       if (renameService) {
-        1 * span.setTag(DDTags.SERVICE_NAME, "test-host")
+        1 * span.setTag(DDTags.SERVICE_NAME, req.host)
       }
     }
     0 * _

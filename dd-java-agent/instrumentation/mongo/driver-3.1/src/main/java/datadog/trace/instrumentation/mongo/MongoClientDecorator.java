@@ -1,5 +1,9 @@
 package datadog.trace.instrumentation.mongo;
 
+import com.mongodb.connection.ClusterId;
+import com.mongodb.connection.ConnectionDescription;
+import com.mongodb.connection.ConnectionId;
+import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
@@ -48,19 +52,25 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
 
   @Override
   protected String dbInstance(final CommandStartedEvent event) {
+    // Use description if set.
+    final ConnectionDescription connectionDescription = event.getConnectionDescription();
+    if (connectionDescription != null) {
+      final ConnectionId connectionId = connectionDescription.getConnectionId();
+      if (connectionId != null) {
+        final ServerId serverId = connectionId.getServerId();
+        if (serverId != null) {
+          ClusterId clusterId = serverId.getClusterId();
+          if (clusterId != null) {
+            String description = clusterId.getDescription();
+            if (description != null) {
+              return description;
+            }
+          }
+        }
+      }
+    }
+    // Fallback to db name.
     return event.getDatabaseName();
-    // This would be the "proper" db.instance:
-    //    final ConnectionDescription connectionDescription = event.getConnectionDescription();
-    //    if (connectionDescription != null) {
-    //      final ConnectionId connectionId = connectionDescription.getConnectionId();
-    //      if (connectionId != null) {
-    //        final ServerId serverId = connectionId.getServerId();
-    //        if (serverId != null) {
-    //          return serverId.toString();
-    //        }
-    //      }
-    //    }
-    //    return null;
   }
 
   public Span onStatement(final Span span, final BsonDocument statement) {

@@ -38,6 +38,7 @@ jobs:
     - persist_to_workspace:
         root: .
         paths:
+        - .gradle
         - workspace
 
     - save_cache:
@@ -93,7 +94,13 @@ jobs:
     <<: *default_test_job
     environment:
     # We are building on Java8, this is our default JVM so no need to set more homes
-    - TEST_TASK: test latestDepTest jacocoTestReport jacocoTestCoverageVerification
+    - TEST_TASK: test jacocoTestReport jacocoTestCoverageVerification
+
+  test_latest8:
+    <<: *default_test_job
+    environment:
+    # We are building on Java8, this is our default JVM so no need to set more homes
+    - TEST_TASK: latestDepTest
 
   test_ibm8:
     <<: *default_test_job
@@ -249,6 +256,12 @@ workflows:
         filters:
           tags:
             only: /.*/
+    - test_latest8:
+        requires:
+        - build
+        filters:
+          tags:
+            only: /.*/
     - test_ibm8:
         requires:
         - build
@@ -305,6 +318,7 @@ workflows:
         requires:
         - test_7
         - test_8
+        - test_latest8
         - test_ibm8
         - test_9
         - test_10
@@ -322,6 +336,7 @@ workflows:
         requires:
         - test_7
         - test_8
+        - test_latest8
         - test_ibm8
         - test_9
         - test_10

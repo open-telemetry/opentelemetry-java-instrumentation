@@ -260,7 +260,10 @@ public class ReferenceCreator extends ClassVisitor {
       // * DONE field-source class (descriptor)
       //   * DONE field-source visibility from this point (PRIVATE?)
 
-      final Type ownerType = Type.getType("L" + owner + ";");
+      final Type ownerType =
+          owner.startsWith("[")
+              ? underlyingType(Type.getType(owner))
+              : Type.getType("L" + owner + ";");
       final Type fieldType = Type.getType(descriptor);
 
       final List<Reference.Flag> fieldFlags = new ArrayList<>();
@@ -334,7 +337,10 @@ public class ReferenceCreator extends ClassVisitor {
         }
       }
 
-      final Type ownerType = Type.getType("L" + owner + ";");
+      final Type ownerType =
+          owner.startsWith("[")
+              ? underlyingType(Type.getType(owner))
+              : Type.getType("L" + owner + ";");
 
       final List<Reference.Flag> methodFlags = new ArrayList<>();
       methodFlags.add(

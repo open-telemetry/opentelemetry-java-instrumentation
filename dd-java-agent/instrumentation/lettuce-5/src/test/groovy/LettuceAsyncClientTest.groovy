@@ -123,7 +123,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             defaultTags()
             "component" "redis-client"
-            "db.instance" dbAddr
             "db.redis.dbIndex" 0
             "db.type" "redis"
             "peer.hostname" HOST
@@ -163,7 +162,6 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           tags {
             defaultTags()
             "component" "redis-client"
-            "db.instance" dbAddrNonExistent
             "db.redis.dbIndex" 0
             "db.type" "redis"
             errorTags CompletionException, String
