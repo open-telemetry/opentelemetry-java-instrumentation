@@ -899,7 +899,8 @@ public class Config {
     }
 
     // Normalizing tilde (~) paths for unix systems
-    configurationFilePath = configurationFilePath.replaceFirst("^~", System.getProperty("user.home"));
+    configurationFilePath =
+        configurationFilePath.replaceFirst("^~", System.getProperty("user.home"));
 
     // Configuration properties file is optional
     File configurationFile = new File(configurationFilePath);
