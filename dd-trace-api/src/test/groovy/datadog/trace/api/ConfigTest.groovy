@@ -8,6 +8,7 @@ import spock.lang.Specification
 import static datadog.trace.api.Config.AGENT_HOST
 import static datadog.trace.api.Config.AGENT_PORT_LEGACY
 import static datadog.trace.api.Config.AGENT_UNIX_DOMAIN_SOCKET
+import static datadog.trace.api.Config.CONFIGURATION_FILE
 import static datadog.trace.api.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
 import static datadog.trace.api.Config.DEFAULT_JMX_FETCH_STATSD_PORT
 import static datadog.trace.api.Config.GLOBAL_TAGS
@@ -724,5 +725,66 @@ class ConfigTest extends Specification {
 
     then:
     config.localRootSpanTags.get('_dd.hostname') == InetAddress.localHost.hostName
+  }
+
+  def "verify fallback to properties file"() {
+    setup:
+    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.serviceName == "set-in-properties"
+
+    cleanup:
+    System.clearProperty(PREFIX + CONFIGURATION_FILE)
+  }
+
+  def "verify fallback to properties file has lower priority than system property"() {
+    setup:
+    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
+    System.setProperty(PREFIX + SERVICE_NAME, "set-in-system")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.serviceName == "set-in-system"
+
+    cleanup:
+    System.clearProperty(PREFIX + CONFIGURATION_FILE)
+    System.clearProperty(PREFIX + SERVICE_NAME)
+  }
+
+  def "verify fallback to properties file has lower priority than env var"() {
+    setup:
+    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
+    environmentVariables.set("DD_SERVICE_NAME", "set-in-env")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.serviceName == "set-in-env"
+
+    cleanup:
+    System.clearProperty(PREFIX + CONFIGURATION_FILE)
+    System.clearProperty(PREFIX + SERVICE_NAME)
+    environmentVariables.clear("DD_SERVICE_NAME")
+  }
+
+  def "verify fallback to properties file that does not exist does not crash app"() {
+    setup:
+    System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/do-not-exist.properties")
+
+    when:
+    def config = new Config()
+
+    then:
+    config.serviceName == 'unnamed-java-app'
+
+    cleanup:
+    System.clearProperty(PREFIX + CONFIGURATION_FILE)
   }
 }
