@@ -10,13 +10,11 @@ import datadog.trace.agent.tooling.log.LogContextScopeListener;
 import datadog.trace.api.Config;
 import datadog.trace.api.GlobalTracer;
 import java.lang.reflect.Method;
-import java.security.ProtectionDomain;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.utility.JavaModule;
 
 @AutoService(Instrumenter.class)
 public class ThreadContextInstrumentation extends Instrumenter.Default {
