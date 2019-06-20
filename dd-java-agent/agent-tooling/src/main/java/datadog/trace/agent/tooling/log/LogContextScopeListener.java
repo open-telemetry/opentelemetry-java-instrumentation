@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * A scope listener that receives the MDC/ThreadContext put and receive methods and update the trace
- * and span reference anytime a new scope is activated.
+ * and span reference anytime a new scope is activated or closed.
  */
 @Slf4j
 public class LogContextScopeListener implements ScopeListener {

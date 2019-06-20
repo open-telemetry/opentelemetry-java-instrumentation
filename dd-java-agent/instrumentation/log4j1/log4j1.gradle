@@ -15,7 +15,7 @@ muzzle {
 configurations {
   // In order to test the real log4j library we need to remove the log4j transitive dependency
   // dependency brought in by :dd-java-agent:testing over 'log4j-over-slf4j' which would shadow
-  // the log4j module under test.
+  // the log4j module under test using a proxy to slf4j instead.
   testCompile.exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
 }
 

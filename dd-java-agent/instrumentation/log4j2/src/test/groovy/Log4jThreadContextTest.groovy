@@ -10,7 +10,9 @@ import java.util.concurrent.atomic.AtomicReference
 class Log4jThreadContextTest extends AgentTestRunner {
 
   static {
+    ConfigUtils.updateConfig {
       System.setProperty("dd.logs.injection", "true")
+    }
   }
 
   def "ThreadContext shows trace and span ids for active scope"() {

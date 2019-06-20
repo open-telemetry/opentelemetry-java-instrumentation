@@ -20,21 +20,18 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Log4j1MDCInstrumentation extends Instrumenter.Default {
   public static final String MDC_INSTRUMENTATION_NAME = "log4j-mdc";
 
-  private static final String mdcClassName = "org.apache.log4j.MDC";
-
   public Log4j1MDCInstrumentation() {
     super(MDC_INSTRUMENTATION_NAME);
   }
 
   @Override
   protected boolean defaultEnabled() {
-    return Config.getBooleanSettingFromEnvironment(
-        Config.LOGS_INJECTION_ENABLED, Config.DEFAULT_LOGS_INJECTION_ENABLED);
+    return Config.get().isLogsInjectionEnabled();
   }
 
   @Override
   public ElementMatcher<? super TypeDescription> typeMatcher() {
-    return named(mdcClassName);
+    return named("org.apache.log4j.MDC");
   }
 
   @Override
