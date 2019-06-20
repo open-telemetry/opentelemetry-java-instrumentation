@@ -17,6 +17,9 @@ configurations {
   // dependency brought in by :dd-java-agent:testing over 'log4j-over-slf4j' which would shadow
   // the log4j module under test using a proxy to slf4j instead.
   testCompile.exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
+
+  // See: https://stackoverflow.com/a/9047963/2749853
+  testCompile.exclude group: 'javax.jms', module: 'jms'
 }
 
 dependencies {
