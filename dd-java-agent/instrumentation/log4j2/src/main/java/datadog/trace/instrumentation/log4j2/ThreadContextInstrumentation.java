@@ -37,18 +37,6 @@ public class ThreadContextInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public void postMatch(
-      final TypeDescription typeDescription,
-      final ClassLoader classLoader,
-      final JavaModule module,
-      final Class<?> classBeingRedefined,
-      final ProtectionDomain protectionDomain) {
-    if (classBeingRedefined != null) {
-      ThreadContextAdvice.mdcClassInitialized(classBeingRedefined);
-    }
-  }
-
-  @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(isTypeInitializer(), ThreadContextAdvice.class.getName());
   }
