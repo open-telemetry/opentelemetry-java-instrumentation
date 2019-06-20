@@ -9,9 +9,10 @@ import io.opentracing.util.GlobalTracer
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * This class represents the standard test cases that new logging library integration MUST satisfy in order to support log injection.
+ * This class represents the standard test cases that new logging library integrations MUST
+ * satisfy in order to support log injection.
  */
-abstract class LogContextContextInjectionTest extends AgentTestRunner {
+abstract class LogContextInjectionTest extends AgentTestRunner {
 
   /**
    * Set in the framework-specific context the given value at the given key
@@ -19,7 +20,7 @@ abstract class LogContextContextInjectionTest extends AgentTestRunner {
   abstract put(String key, Object value)
 
   /**
-   * Get from the framework-specific context the given value at the given key
+   * Get from the framework-specific context the value at the given key
    */
   abstract get(String key)
 

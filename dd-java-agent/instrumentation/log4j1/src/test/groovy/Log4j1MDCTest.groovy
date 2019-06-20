@@ -1,7 +1,7 @@
-import datadog.trace.agent.test.log.injection.LogContextContextInjectionTest
+import datadog.trace.agent.test.log.injection.LogContextInjectionTest
 import org.apache.log4j.MDC
 
-class Log4j1MDCTest extends LogContextContextInjectionTest {
+class Log4j1MDCTest extends LogContextInjectionTest {
 
   @Override
   def put(String key, Object value) {
