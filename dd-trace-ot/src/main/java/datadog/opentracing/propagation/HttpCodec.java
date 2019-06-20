@@ -41,6 +41,10 @@ public class HttpCodec {
         injectors.add(new B3HttpCodec.Injector());
         continue;
       }
+      if (style == Config.PropagationStyle.HAYSTACK) {
+        injectors.add(new HaystackHttpCodec.Injector());
+        continue;
+      }
       log.debug("No implementation found to inject propagation style: {}", style);
     }
     return new CompoundInjector(injectors);
@@ -56,6 +60,10 @@ public class HttpCodec {
       }
       if (style == Config.PropagationStyle.B3) {
         extractors.add(new B3HttpCodec.Extractor(taggedHeaders));
+        continue;
+      }
+      if (style == Config.PropagationStyle.HAYSTACK) {
+        extractors.add(new HaystackHttpCodec.Extractor(taggedHeaders));
         continue;
       }
       log.debug("No implementation found to extract propagation style: {}", style);
