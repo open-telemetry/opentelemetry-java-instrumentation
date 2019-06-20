@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.log4j;
+package datadog.trace.instrumentation.log4j2;
 
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;

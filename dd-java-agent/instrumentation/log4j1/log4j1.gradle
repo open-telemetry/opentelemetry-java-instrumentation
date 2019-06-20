@@ -1,0 +1,34 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+ext {
+  log4jVersion = '1.2.17'
+}
+
+muzzle {
+  pass {
+    group = 'log4j'
+    module = 'log4j'
+    versions = '(,)'
+  }
+}
+
+configurations {
+  // In order to test the real log4j library we need to remove the log4j transitive dependency
+  // dependency brought in by :dd-java-agent:testing over 'log4j-over-slf4j' which would shadow
+  // the log4j module under test.
+  testCompile.exclude group: 'org.slf4j', module: 'log4j-over-slf4j'
+}
+
+dependencies {
+  compile project(':dd-trace-api')
+  compile project(':dd-java-agent:agent-tooling')
+
+  testCompile group: 'log4j', name: 'log4j', version: log4jVersion
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  testCompile project(':dd-java-agent:testing')
+}
