@@ -5,7 +5,11 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.okhttp3.OkHttpClientDecorator
 import io.opentracing.tag.Tags
-import okhttp3.*
+import okhttp3.Headers
+import okhttp3.MediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.internal.http.HttpMethod
 
 import static datadog.trace.instrumentation.okhttp3.OkHttpClientDecorator.NETWORK_DECORATE
