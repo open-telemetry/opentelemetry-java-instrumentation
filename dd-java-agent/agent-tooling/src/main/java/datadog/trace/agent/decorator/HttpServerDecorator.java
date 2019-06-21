@@ -5,7 +5,6 @@ import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.regex.Pattern;
