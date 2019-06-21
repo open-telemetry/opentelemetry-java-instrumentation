@@ -5,9 +5,10 @@ import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
+import lombok.extern.slf4j.Slf4j;
+
 import java.net.URI;
 import java.net.URISyntaxException;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecorator {
@@ -63,8 +64,8 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
           Tags.HTTP_URL.set(span, urlNoParams.toString());
 
           if (Config.get().isHttpClientTagQueryString()) {
-            span.setTag("http.query.string", url.getQuery());
-            span.setTag("http.fragment.string", url.getFragment());
+            span.setTag(DDTags.HTTP_QUERY, url.getQuery());
+            span.setTag(DDTags.HTTP_FRAGMENT, url.getFragment());
           }
         }
       } catch (final Exception e) {

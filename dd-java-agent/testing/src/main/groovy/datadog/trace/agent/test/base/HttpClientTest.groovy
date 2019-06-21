@@ -6,6 +6,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import io.opentracing.tag.Tags
 import spock.lang.AutoCleanup
 import spock.lang.Shared
@@ -338,8 +339,8 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
         }
         "$Tags.HTTP_URL.key" "${uri.resolve(uri.path)}"
         if (tagQueryString) {
-          "http.query.string" uri.query
-          "http.fragment.string" { it == null || it == uri.fragment } // Optional
+          "$DDTags.HTTP_QUERY" uri.query
+          "$DDTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
         }
         "$Tags.PEER_HOSTNAME.key" "localhost"
         "$Tags.PEER_PORT.key" uri.port

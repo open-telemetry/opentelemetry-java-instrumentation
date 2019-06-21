@@ -8,6 +8,9 @@ public class DDTags {
   public static final String THREAD_ID = "thread.id";
   public static final String DB_STATEMENT = "sql.query";
 
+  public static final String HTTP_QUERY = "http.query.string";
+  public static final String HTTP_FRAGMENT = "http.fragment.string";
+
   public static final String USER_NAME = "user.principal";
 
   public static final String ERROR_MSG = "error.msg"; // string representing the error message

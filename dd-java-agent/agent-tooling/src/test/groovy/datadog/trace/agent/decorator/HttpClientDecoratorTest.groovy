@@ -58,8 +58,8 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setTag(Tags.HTTP_URL.key, expectedUrl)
     }
     if (expectedUrl && tagQueryString) {
-      1 * span.setTag("http.query.string", expectedQuery)
-      1 * span.setTag("http.fragment.string", expectedFragment)
+      1 * span.setTag(DDTags.HTTP_QUERY, expectedQuery)
+      1 * span.setTag(DDTags.HTTP_FRAGMENT, expectedFragment)
     }
     1 * span.setTag(Tags.HTTP_METHOD.key, null)
     1 * span.setTag(Tags.PEER_HOSTNAME.key, null)
