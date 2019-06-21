@@ -1,4 +1,4 @@
-package datadog.trace.agent.test.log.injection;
+package datadog.trace.agent.test.log.injection
 
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ConfigUtils
