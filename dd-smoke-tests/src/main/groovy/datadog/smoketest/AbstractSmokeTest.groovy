@@ -36,7 +36,7 @@ abstract class AbstractSmokeTest extends Specification {
     processBuilder.environment().put("JAVA_HOME", System.getProperty("java.home"))
 
     processBuilder.redirectErrorStream(true)
-    File log = new File("${buildDirectory}/reports/serverProcess.log")
+    File log = new File("${buildDirectory}/reports/testProcess.${this.getClass().getName()}.log")
     processBuilder.redirectOutput(ProcessBuilder.Redirect.to(log))
 
     serverProcess = processBuilder.start()
