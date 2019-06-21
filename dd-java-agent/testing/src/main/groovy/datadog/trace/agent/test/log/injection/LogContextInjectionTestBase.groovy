@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference
  * This class represents the standard test cases that new logging library integrations MUST
  * satisfy in order to support log injection.
  */
-abstract class LogContextInjectionTest extends AgentTestRunner {
+abstract class LogContextInjectionTestBase extends AgentTestRunner {
 
   /**
    * Set in the framework-specific context the given value at the given key
