@@ -1,6 +1,7 @@
 package datadog.trace.agent.decorator
 
 import datadog.trace.api.Config
+import datadog.trace.api.DDTags
 import io.opentracing.Span
 import io.opentracing.tag.Tags
 
@@ -48,8 +49,8 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
       1 * span.setTag(Tags.HTTP_URL.key, expectedUrl)
     }
     if (expectedUrl && tagQueryString) {
-      1 * span.setTag("http.query.string", expectedQuery)
-      1 * span.setTag("http.fragment.string", expectedFragment)
+      1 * span.setTag(DDTags.HTTP_QUERY, expectedQuery)
+      1 * span.setTag(DDTags.HTTP_FRAGMENT, expectedFragment)
     }
     1 * span.setTag(Tags.HTTP_METHOD.key, null)
     0 * _

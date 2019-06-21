@@ -2,6 +2,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.okhttp3.OkHttpClientDecorator
 import io.opentracing.tag.Tags
 import okhttp3.Headers
@@ -77,8 +78,8 @@ class OkHttp3Test extends HttpClientTest<OkHttpClientDecorator> {
           }
           "$Tags.HTTP_URL.key" "${uri.resolve(uri.path)}"
           if (tagQueryString) {
-            "http.query.string" uri.query
-            "http.fragment.string" uri.fragment
+            "$DDTags.HTTP_QUERY" uri.query
+            "$DDTags.HTTP_FRAGMENT" uri.fragment
           }
           "$Tags.PEER_HOSTNAME.key" "localhost"
           "$Tags.PEER_PORT.key" server.address.port

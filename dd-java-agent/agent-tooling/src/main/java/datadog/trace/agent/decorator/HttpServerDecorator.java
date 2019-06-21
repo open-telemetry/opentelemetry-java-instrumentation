@@ -2,6 +2,7 @@ package datadog.trace.agent.decorator;
 
 import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
+import datadog.trace.api.DDTags;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.net.URI;
@@ -69,8 +70,8 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
           Tags.HTTP_URL.set(span, urlNoParams.toString());
 
           if (Config.get().isHttpServerTagQueryString()) {
-            span.setTag("http.query.string", url.getQuery());
-            span.setTag("http.fragment.string", url.getFragment());
+            span.setTag(DDTags.HTTP_QUERY, url.getQuery());
+            span.setTag(DDTags.HTTP_FRAGMENT, url.getFragment());
           }
         }
       } catch (final Exception e) {

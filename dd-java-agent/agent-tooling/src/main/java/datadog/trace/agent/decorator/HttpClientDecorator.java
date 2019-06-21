@@ -63,8 +63,8 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
           Tags.HTTP_URL.set(span, urlNoParams.toString());
 
           if (Config.get().isHttpClientTagQueryString()) {
-            span.setTag("http.query.string", url.getQuery());
-            span.setTag("http.fragment.string", url.getFragment());
+            span.setTag(DDTags.HTTP_QUERY, url.getQuery());
+            span.setTag(DDTags.HTTP_FRAGMENT, url.getFragment());
           }
         }
       } catch (final Exception e) {
