@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public class ThreadContextInstrumentation extends Instrumenter.Default {
-  public static final String MDC_INSTRUMENTATION_NAME = "log4j-thread-context";
+  public static final String MDC_INSTRUMENTATION_NAME = "log4j";
 
   public ThreadContextInstrumentation() {
     super(MDC_INSTRUMENTATION_NAME);

@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public class Log4j1MDCInstrumentation extends Instrumenter.Default {
-  public static final String MDC_INSTRUMENTATION_NAME = "log4j-mdc";
+  public static final String MDC_INSTRUMENTATION_NAME = "log4j1";
 
   public Log4j1MDCInstrumentation() {
     super(MDC_INSTRUMENTATION_NAME);
