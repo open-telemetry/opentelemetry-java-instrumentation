@@ -9,10 +9,8 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.agent.tooling.log.LogContextScopeListener;
 import datadog.trace.api.Config;
 import datadog.trace.api.GlobalTracer;
-
 import java.lang.reflect.Method;
 import java.util.Map;
-
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -43,7 +41,7 @@ public class Log4j1MDCInstrumentation extends Instrumenter.Default {
 
   @Override
   public String[] helperClassNames() {
-    return new String[]{LogContextScopeListener.class.getName()};
+    return new String[] {LogContextScopeListener.class.getName()};
   }
 
   public static class MDCContextAdvice {
@@ -60,7 +58,7 @@ public class Log4j1MDCInstrumentation extends Instrumenter.Default {
         GlobalTracer.get().addScopeListener(new LogContextScopeListener(putMethod, removeMethod));
       } catch (final NoSuchMethodException e) {
         org.slf4j.LoggerFactory.getLogger(instance.getClass())
-          .debug("Failed to add log4j ThreadContext span listener", e);
+            .debug("Failed to add log4j ThreadContext span listener", e);
       }
     }
   }
