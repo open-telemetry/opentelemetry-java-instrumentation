@@ -1,11 +1,11 @@
 import datadog.trace.agent.test.log.injection.LogContextInjectionTestBase
-import org.slf4j.MDC
+import org.apache.log4j.MDC
 
-class Slf4jMDCTest extends LogContextInjectionTestBase {
+class Log4j1MDCTest extends LogContextInjectionTestBase {
 
   @Override
   def put(String key, Object value) {
-    return MDC.put(key, value as String)
+    return MDC.put(key, value)
   }
 
   @Override

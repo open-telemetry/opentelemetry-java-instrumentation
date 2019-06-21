@@ -127,7 +127,7 @@ public class AgentInstaller {
             .or(nameStartsWith("com.singularity."))
             .or(nameStartsWith("com.jinspired."))
             .or(nameStartsWith("org.jinspired."))
-            .or(nameStartsWith("org.apache.log4j."))
+            .or(nameStartsWith("org.apache.log4j.").and(not(named("org.apache.log4j.MDC"))))
             .or(nameStartsWith("org.slf4j.").and(not(named("org.slf4j.MDC"))))
             .or(nameContains("$JaxbAccessor"))
             .or(nameContains("CGLIB$$"))

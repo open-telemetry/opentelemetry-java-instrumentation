@@ -263,9 +263,15 @@ class MuzzlePlugin implements Plugin<Project> {
   private static Task addMuzzleTask(MuzzleDirective muzzleDirective, Artifact versionArtifact, Project instrumentationProject, Task runAfter, Project bootstrapProject, Project toolingProject) {
     def taskName = "muzzle-Assert${muzzleDirective.assertPass ? "Pass" : "Fail"}-$versionArtifact.groupId-$versionArtifact.artifactId-$versionArtifact.version${muzzleDirective.name ? "-${muzzleDirective.getNameSlug()}" : ""}"
     def config = instrumentationProject.configurations.create(taskName)
-    config.dependencies.add(instrumentationProject.dependencies.create("$versionArtifact.groupId:$versionArtifact.artifactId:$versionArtifact.version") {
+    def dep =  instrumentationProject.dependencies.create("$versionArtifact.groupId:$versionArtifact.artifactId:$versionArtifact.version") {
       transitive = true
-    })
+    }
+    // The following optional transitive dependencies are brought in by some legacy module such as log4j 1.x but are no
+    // longer bundled with the JVM and have to be excluded for the muzzle tests to be able to run.
+    dep.exclude group: 'com.sun.jdmk', module: 'jmxtools'
+    dep.exclude group: 'com.sun.jmx', module: 'jmxri'
+
+    config.dependencies.add(dep)
     for (String additionalDependency : muzzleDirective.additionalDependencies) {
       config.dependencies.add(instrumentationProject.dependencies.create(additionalDependency) {
         transitive = true
