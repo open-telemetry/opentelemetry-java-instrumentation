@@ -105,7 +105,7 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
 
     then:
     // The first one returns the removed tracing handler
-    pipeline.remove(HttpClientTracingHandler.class.getName()) != null
+    pipeline.remove(HttpClientTracingHandler.getName()) != null
   }
 
   def "when a handler is added to the netty pipeline we add ONLY ONE tracing handler"() {
@@ -116,9 +116,9 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
     when:
     pipeline.addLast("name", new HttpClientCodec())
     // The first one returns the removed tracing handler
-    pipeline.remove(HttpClientTracingHandler.class.getName())
+    pipeline.remove(HttpClientTracingHandler.getName())
     // There is only one
-    pipeline.remove(HttpClientTracingHandler.class.getName()) == null
+    pipeline.remove(HttpClientTracingHandler.getName()) == null
 
     then:
     thrown NoSuchElementException
@@ -135,7 +135,7 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
 
     then:
     // The first one returns the removed tracing handler
-    null != pipeline.remove(HttpClientTracingHandler.class.getName())
+    null != pipeline.remove(HttpClientTracingHandler.getName())
     null != pipeline.remove("some_handler")
     null != pipeline.remove("a_traced_handler")
   }
@@ -164,7 +164,7 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
 
     then:
     null != channel.pipeline().remove("added_in_initializer")
-    null != channel.pipeline().remove(HttpClientTracingHandler.class.getName())
+    null != channel.pipeline().remove(HttpClientTracingHandler.getName())
   }
 
   class SimpleHandler implements ChannelHandler {
