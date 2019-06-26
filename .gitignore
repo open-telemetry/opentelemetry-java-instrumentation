@@ -52,5 +52,7 @@ out/
 dd-java-agent/benchmark-integration/perf-test-settings.rc
 derby.log
 .java-version
+hs_err_pid*
+replay_pid*
 
 !dd-java-agent/benchmark/releases/*.jar
