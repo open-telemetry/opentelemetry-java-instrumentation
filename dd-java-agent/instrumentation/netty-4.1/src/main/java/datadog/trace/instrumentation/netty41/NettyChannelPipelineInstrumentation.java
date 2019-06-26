@@ -97,8 +97,17 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
    */
   public static class ChannelPipelineAddAdvice {
     @Advice.OnMethodEnter
-    public static int checkDepth() {
-      return CallDepthThreadLocalMap.incrementCallDepth(ChannelPipeline.class);
+    public static int checkDepth(@Advice.Argument(2) final ChannelHandler handler) {
+      // Previously we used one unique call depth tracker for all handlers, using
+      // ChannelPipeline.class as a key.
+      // The problem with this approach is that it does not work with netty's
+      // io.netty.channel.ChannelInitializer which provides an `initChannel` that can be used to
+      // `addLast` other handlers. In that case the depth would exceed 0 and handlers added from
+      // initializers would not be considered.
+      // Using the specific handler key instead of the generic ChannelPipeline.class will help us
+      // both to handle such cases and avoid adding our additional handlers in case of internal
+      // calls of `addLast` to other method overloads with a compatible signature.
+      return CallDepthThreadLocalMap.incrementCallDepth(handler.getClass());
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
@@ -140,7 +149,7 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
       } catch (final IllegalArgumentException e) {
         // Prevented adding duplicate handlers.
       } finally {
-        CallDepthThreadLocalMap.reset(ChannelPipeline.class);
+        CallDepthThreadLocalMap.reset(handler.getClass());
       }
     }
   }
