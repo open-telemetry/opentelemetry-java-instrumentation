@@ -48,8 +48,8 @@ dependencies {
   testCompile project(':dd-java-agent:instrumentation:hibernate:core-4.0')
   testCompile project(':dd-java-agent:instrumentation:hibernate:core-4.3')
 
-  testCompile group: 'org.hibernate', name: 'hibernate-core', version: '3.3.0.GA'
-  testCompile group: 'org.hibernate', name: 'hibernate-annotations', version: '+'
+  testCompile group: 'org.hibernate', name: 'hibernate-core', version: '3.3.0.SP1'
+  testCompile group: 'org.hibernate', name: 'hibernate-annotations', version: '3.4.0.GA'
   testCompile group: 'javassist', name: 'javassist', version: '+'
   testCompile group: 'com.h2database', name: 'h2', version: '1.4.197'
   testCompile "javax.xml.bind:jaxb-api:2.2.11"
