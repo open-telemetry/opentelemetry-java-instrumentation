@@ -52,7 +52,7 @@ buildScan {
 
 wrapper {
   distributionType = Wrapper.DistributionType.ALL
-  version = '5.4.1'
+  version = '5.5'
 }
 
 allprojects {
