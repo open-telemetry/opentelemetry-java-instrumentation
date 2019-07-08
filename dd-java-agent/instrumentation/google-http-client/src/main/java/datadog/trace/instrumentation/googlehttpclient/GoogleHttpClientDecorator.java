@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.apachehttpclient;
+package datadog.trace.instrumentation.googlehttpclient;
 
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;

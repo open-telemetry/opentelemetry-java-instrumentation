@@ -1,6 +1,6 @@
-package datadog.trace.instrumentation.apachehttpclient;
+package datadog.trace.instrumentation.googlehttpclient;
 
-import static datadog.trace.instrumentation.apachehttpclient.GoogleHttpClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.googlehttpclient.GoogleHttpClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
