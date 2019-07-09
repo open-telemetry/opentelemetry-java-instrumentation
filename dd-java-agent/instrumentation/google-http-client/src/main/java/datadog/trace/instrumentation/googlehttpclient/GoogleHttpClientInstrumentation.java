@@ -19,12 +19,12 @@ import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMap;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
+import java.util.Iterator;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import java.util.Iterator;
-import java.util.Map;
 
 @AutoService(Instrumenter.class)
 public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
@@ -44,7 +44,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.HttpClientDecorator",
-      packageName + ".GoogleHttpClientClientDecorator",
+      packageName + ".GoogleHttpClientDecorator",
       getClass().getName() + "$GoogleHttpClientAdvice",
       getClass().getName() + "$HeadersInjectAdapter"
     };
@@ -87,13 +87,14 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
           // If HttpRequest.setThrowExceptionOnExecuteError is set to false, there are no exceptions
           // for a failed request.  Thus, check the response code
-          if (!response.isSuccessStatusCode()) {
+          if (response != null && !response.isSuccessStatusCode()) {
             Tags.ERROR.set(span, true);
             span.log(singletonMap(Fields.MESSAGE, response.getStatusMessage()));
           }
           DECORATE.onError(span, throwable);
 
           DECORATE.beforeFinish(span);
+          span.finish();
         } finally {
           scope.close();
           CallDepthThreadLocalMap.reset(HttpRequest.class);
