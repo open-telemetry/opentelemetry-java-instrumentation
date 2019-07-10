@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.kafka_clients;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.kafka_clients.KafkaDecorator.CONSUMER_DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -55,7 +56,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
             .and(
                 takesArgument(0, String.class)
                     .or(takesArgument(0, named("org.apache.kafka.common.TopicPartition"))))
-            .and(returns(Iterable.class)),
+            .and(returns(safeHasSuperType(named(Iterable.class.getName())))),
         IterableAdvice.class.getName());
     transformers.put(
         isMethod()
