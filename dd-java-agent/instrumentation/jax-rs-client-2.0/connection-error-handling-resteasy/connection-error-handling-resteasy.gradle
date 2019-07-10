@@ -1,7 +1,7 @@
 muzzle {
   pass {
-    group = "org.glassfish.jersey.core"
-    module = "jersey-client"
+    group = "org.jboss.resteasy"
+    module = "resteasy-client"
     versions = "[2.0,)"
   }
 }
@@ -9,7 +9,7 @@ muzzle {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compileOnly group: 'org.glassfish.jersey.core', name: 'jersey-client', version: '2.0'
+  compileOnly group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.0.Final'
 
   compile deps.bytebuddy
   compile deps.opentracing
@@ -18,5 +18,5 @@ dependencies {
 
   compile project(':dd-java-agent:agent-tooling')
 
-  compileOnly project(':dd-java-agent:instrumentation:jax-rs-client')
+  compileOnly project(':dd-java-agent:instrumentation:jax-rs-client-2.0')
 }

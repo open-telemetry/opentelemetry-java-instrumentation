@@ -1,0 +1,40 @@
+muzzle {
+  pass {
+    group = "com.sun.jersey"
+    module = "jersey-client"
+    versions = "[1.9,)"
+    // We can't assert inverse because 1.1.5.2 was a weird release that also works.
+  }
+  fail {
+    group = "com.sun.jersey"
+    module = "jersey-client"
+    versions = "[1.2,1.9)"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'com.sun.jersey', name: 'jersey-client', version: '1.9'
+
+  compile deps.bytebuddy
+  compile deps.opentracing
+  annotationProcessor deps.autoservice
+  implementation deps.autoservice
+
+  compile project(':dd-java-agent:agent-tooling')
+
+  testCompile project(':dd-java-agent:testing')
+
+  testCompile group: 'com.sun.jersey', name: 'jersey-client', version: '1.9'
+
+  latestDepTestCompile group: 'com.sun.jersey', name: 'jersey-client', version: '+'
+}
