@@ -26,16 +26,16 @@ public class VertxRxWebTestServer extends AbstractVerticle {
     final Vertx vertx = Vertx.vertx(new VertxOptions().setClusterPort(port));
 
     vertx.deployVerticle(
-      VertxRxWebTestServer.class.getName(),
-      new DeploymentOptions()
-        .setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port))
-        .setInstances(3),
-      res -> {
-        if (!res.succeeded()) {
-          throw new RuntimeException("Cannot deploy server Verticle", res.cause());
-        }
-        future.complete(null);
-      });
+        VertxRxWebTestServer.class.getName(),
+        new DeploymentOptions()
+            .setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port))
+            .setInstances(3),
+        res -> {
+          if (!res.succeeded()) {
+            throw new RuntimeException("Cannot deploy server Verticle", res.cause());
+          }
+          future.complete(null);
+        });
 
     future.get();
 
@@ -44,69 +44,73 @@ public class VertxRxWebTestServer extends AbstractVerticle {
 
   @Override
   public void start(final Future<Void> startFuture) {
-//    final io.vertx.reactivex.core.Vertx vertx = new io.vertx.reactivex.core.Vertx(this.vertx);
+    //    final io.vertx.reactivex.core.Vertx vertx = new io.vertx.reactivex.core.Vertx(this.vertx);
     final WebClient client = WebClient.create(vertx);
 
     final int port = config().getInteger(CONFIG_HTTP_SERVER_PORT);
 
     final Router router = Router.router(vertx);
-    final CircuitBreaker breaker = CircuitBreaker.create("my-circuit-breaker", vertx,
-      new CircuitBreakerOptions()
-        .setMaxFailures(5) // number of failure before opening the circuit
-        .setTimeout(2000) // consider a failure if the operation does not succeed in time
-//        .setFallbackOnFailure(true) // do we call the fallback on failure
-        .setResetTimeout(10000) // time spent in open state before attempting to re-try
-    );
+    final CircuitBreaker breaker =
+        CircuitBreaker.create(
+            "my-circuit-breaker",
+            vertx,
+            new CircuitBreakerOptions()
+                .setMaxFailures(5) // number of failure before opening the circuit
+                .setTimeout(2000) // consider a failure if the operation does not succeed in time
+                //        .setFallbackOnFailure(true) // do we call the fallback on failure
+                .setResetTimeout(10000) // time spent in open state before attempting to re-try
+            );
 
     router
-      .route("/")
-      .handler(
-        routingContext -> {
-          routingContext.response().putHeader("content-type", "text/html").end("Hello World");
-        });
+        .route("/")
+        .handler(
+            routingContext -> {
+              routingContext.response().putHeader("content-type", "text/html").end("Hello World");
+            });
     router
-      .route("/error")
-      .handler(
-        routingContext -> {
-          routingContext.response().setStatusCode(500).end();
-        });
+        .route("/error")
+        .handler(
+            routingContext -> {
+              routingContext.response().setStatusCode(500).end();
+            });
     router
-      .route("/proxy")
-      .handler(
-        routingContext -> {
-          breaker.execute(
-            ctx -> {
-              client.get(port, "localhost", "/test")
-                .rxSendBuffer(Optional.ofNullable(routingContext.getBody()).orElse(Buffer.buffer()))
-                .subscribe(
-                  response -> {
-                    routingContext
-                      .response()
-                      .setStatusCode(response.statusCode())
-                      .end(response.body());
+        .route("/proxy")
+        .handler(
+            routingContext -> {
+              breaker.execute(
+                  ctx -> {
+                    client
+                        .get(port, "localhost", "/test")
+                        .rxSendBuffer(
+                            Optional.ofNullable(routingContext.getBody()).orElse(Buffer.buffer()))
+                        .subscribe(
+                            response -> {
+                              routingContext
+                                  .response()
+                                  .setStatusCode(response.statusCode())
+                                  .end(response.body());
+                            });
                   });
             });
-        });
     router
-      .route("/test")
-      .handler(
-        routingContext -> {
-          tracedMethod();
-          routingContext.next();
-        })
-      .blockingHandler(RoutingContext::next)
-      .handler(
-        routingContext -> {
-          routingContext.response().putHeader("content-type", "text/html").end("Hello World");
-        });
+        .route("/test")
+        .handler(
+            routingContext -> {
+              tracedMethod();
+              routingContext.next();
+            })
+        .blockingHandler(RoutingContext::next)
+        .handler(
+            routingContext -> {
+              routingContext.response().putHeader("content-type", "text/html").end("Hello World");
+            });
 
     vertx
-      .createHttpServer()
-      .requestHandler(router::accept)
-      .listen(port, h -> startFuture.complete());
+        .createHttpServer()
+        .requestHandler(router::accept)
+        .listen(port, h -> startFuture.complete());
   }
 
   @Trace
-  private void tracedMethod() {
-  }
+  private void tracedMethod() {}
 }

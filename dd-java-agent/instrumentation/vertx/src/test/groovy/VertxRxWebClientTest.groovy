@@ -13,7 +13,7 @@ class VertxRxWebClientTest extends HttpClientTest<NettyHttpClientDecorator> {
   @Shared
   Vertx vertx = Vertx.vertx(new VertxOptions())
   @Shared
-  WebClient client = WebClient.create(vertx);
+  WebClient client = WebClient.create(vertx)
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
