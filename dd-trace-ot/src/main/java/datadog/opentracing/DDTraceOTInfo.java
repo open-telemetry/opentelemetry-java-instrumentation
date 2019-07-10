@@ -9,6 +9,7 @@ public class DDTraceOTInfo {
 
   public static final String JAVA_VERSION = System.getProperty("java.version", "unknown");
   public static final String JAVA_VM_NAME = System.getProperty("java.vm.name", "unknown");
+  public static final String JAVA_VM_VENDOR = System.getProperty("java.vm.vendor", "unknown");
 
   public static final String VERSION;
 
