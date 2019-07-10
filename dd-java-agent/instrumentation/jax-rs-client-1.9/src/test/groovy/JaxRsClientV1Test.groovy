@@ -24,7 +24,7 @@ class JaxRsClientV1Test extends HttpClientTest<JaxRsClientV1Decorator> {
     def resource = client.resource(uri).requestBuilder
     headers.each { resource.header(it.key, it.value) }
     def body = BODY_METHODS.contains(method) ? "" : null
-    ClientResponse response = resource.method(method, ClientResponse.class, body)
+    ClientResponse response = resource.method(method, ClientResponse, body)
     callback?.call()
 
     return response.status
