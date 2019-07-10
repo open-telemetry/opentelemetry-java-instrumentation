@@ -1,17 +1,29 @@
 import com.sun.jersey.api.client.Client
 import com.sun.jersey.api.client.ClientResponse
-import com.sun.jersey.client.impl.ClientRequestImpl
+import com.sun.jersey.api.client.filter.CsrfProtectionFilter
+import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter
+import com.sun.jersey.api.client.filter.LoggingFilter
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.jaxrs.v1.JaxRsClientV1Decorator
+import spock.lang.Shared
 
 class JaxRsClientV1Test extends HttpClientTest<JaxRsClientV1Decorator> {
 
+  @Shared
+  Client client = Client.create()
+
+  def setupSpec() {
+    // Add filters to ensure spans aren't duplicated.
+    client.addFilter(new LoggingFilter())
+    client.addFilter(new GZIPContentEncodingFilter())
+    client.addFilter(new CsrfProtectionFilter())
+  }
+
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    Client client = Client.create()
-    def resource = client.resource(uri)
+    def resource = client.resource(uri).requestBuilder
     headers.each { resource.header(it.key, it.value) }
-    def body = BODY_METHODS.contains(method) ? new ClientRequestImpl(uri, method) : null
+    def body = BODY_METHODS.contains(method) ? "" : null
     ClientResponse response = resource.method(method, ClientResponse.class, body)
     callback?.call()
 

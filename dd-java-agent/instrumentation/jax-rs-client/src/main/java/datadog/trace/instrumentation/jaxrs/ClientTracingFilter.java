@@ -31,8 +31,6 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, requestContext);
 
-      log.debug("{} - client span started", span);
-
       GlobalTracer.get()
           .inject(
               span.context(),
@@ -52,7 +50,6 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
       DECORATE.onResponse(span, responseContext);
       DECORATE.beforeFinish(span);
       span.finish();
-      log.debug("{} - client spanObj finished", spanObj);
     }
   }
 }

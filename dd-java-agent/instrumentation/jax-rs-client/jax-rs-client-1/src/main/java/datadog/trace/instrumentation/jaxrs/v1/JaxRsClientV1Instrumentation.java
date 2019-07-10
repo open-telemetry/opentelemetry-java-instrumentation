@@ -15,6 +15,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import io.opentracing.Scope;
 import io.opentracing.Span;
+import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.GlobalTracer;
 import java.util.Map;
@@ -48,7 +49,6 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    System.out.println("######### REGISTERING");
     return singletonMap(
         named("handle")
             .and(
@@ -61,54 +61,41 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter
-    public static void onEnter(
+    public static Scope onEnter(
         @Advice.Argument(value = 0) final ClientRequest request,
         @Advice.This final ClientHandler thisObj) {
 
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
-      boolean isRootClientHandler = null == request.getProperties().get("dd.span");
+      final boolean isRootClientHandler = null == request.getProperties().get("dd.span");
       if (isRootClientHandler) {
+        final Tracer tracer = GlobalTracer.get();
         final Span span =
-            GlobalTracer.get()
+            tracer
                 .buildSpan("jax-rs.client.call")
                 .withTag(DDTags.RESOURCE_NAME, request.getMethod() + " jax-rs.client.call")
                 .start();
-        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
-          DECORATE.afterStart(span);
-          DECORATE.onRequest(span, request);
+        DECORATE.afterStart(span);
+        DECORATE.onRequest(span, request);
+        request.getProperties().put("dd.span", span);
 
-          GlobalTracer.get()
-              .inject(
-                  span.context(),
-                  Format.Builtin.HTTP_HEADERS,
-                  new InjectAdapter(request.getHeaders()));
-
-          request.getProperties().put("dd.span", span);
-          request.getProperties().put("dd.root.handler.hash", thisObj.hashCode());
-        }
+        tracer.inject(
+            span.context(), Format.Builtin.HTTP_HEADERS, new InjectAdapter(request.getHeaders()));
+        return tracer.scopeManager().activate(span, true);
       }
+      return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Argument(value = 0) final ClientRequest request,
+        @Advice.Enter final Scope scope,
         @Advice.Return final ClientResponse response,
-        @Advice.This final ClientHandler thisObj,
-        @Advice.Thrown final Throwable throwable
-    ) {
-
-      Span span = (Span) request.getProperties().get("dd.span");
-      if (null == span) {
-        return;
-      }
-
-      request.getProperties().get("dd.root.handler.hash");
-
-      if (thisObj.hashCode() == (Integer) request.getProperties().get("dd.root.handler.hash")) {
-        // this is the root span, closing all the things
+        @Advice.Thrown final Throwable throwable) {
+      if (null != scope) {
+        final Span span = scope.span();
         DECORATE.onResponse(span, response);
+        DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
-        span.finish();
+        scope.close();
       }
     }
   }
