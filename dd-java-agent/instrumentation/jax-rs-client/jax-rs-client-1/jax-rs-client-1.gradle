@@ -51,7 +51,7 @@ dependencies {
 //  testCompile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.3'
 
 //  latestDepTestCompile group: 'org.glassfish.jersey.inject', name: 'jersey-hk2', version: '2.27'
-  latestDepTestCompile group: 'com.sun.jersey', name: 'jersey-client', version: jerseyClientVersion
+  latestDepTestCompile group: 'com.sun.jersey', name: 'jersey-client', version: '1.19.4'
 //  latestDepTestCompile group: 'org.apache.cxf', name: 'cxf-rt-rs-client', version: '3.2.6'
 //  latestDepTestCompile group: 'org.jboss.resteasy', name: 'resteasy-client', version: '3.0.26.Final'
 }

@@ -1,10 +1,9 @@
 package datadog.trace.instrumentation.jaxrs.v1;
 
 import io.opentracing.propagation.TextMap;
-
-import javax.ws.rs.core.MultivaluedMap;
 import java.util.Iterator;
 import java.util.Map;
+import javax.ws.rs.core.MultivaluedMap;
 
 public final class InjectAdapter implements TextMap {
   private final MultivaluedMap<String, Object> map;

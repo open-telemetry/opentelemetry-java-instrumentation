@@ -1,10 +1,12 @@
 package datadog.trace.instrumentation.jaxrs.v1;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.DECORATE;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static datadog.trace.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.DECORATE;
+
 import com.google.auto.service.AutoService;
 import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.ClientRequest;
@@ -15,13 +17,11 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.propagation.Format;
 import io.opentracing.util.GlobalTracer;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import static java.util.Collections.singletonMap;
-
-import java.util.Map;
 
 @AutoService(Instrumenter.class)
 public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
@@ -50,36 +50,40 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
+    System.out.println("######### REGISTERING");
     return singletonMap(
         named("handle")
-          .and(takesArgument(2, named("com.sun.jersey.api.client.ClientRequest")))
-          .and(returns(named("com.sun.jersey.api.client.ClientResponse"))),
-        HandleAdvice.class.getName()
-    );
+            .and(takesArgument(0, safeHasSuperType(named("com.sun.jersey.api.client.ClientRequest"))))
+            .and(returns(safeHasSuperType(named("com.sun.jersey.api.client.ClientResponse")))),
+        HandleAdvice.class.getName());
   }
 
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter
-    public static void onEnter(@Advice.Argument(value = 1) final ClientRequest request, ClientHandler thisObj) {
+    public static void onEnter(
+        @Advice.Argument(value = 0) final ClientRequest request,
+        @Advice.This final ClientHandler thisObj) {
+
+      System.out.println("############ ON HANDLE ENTER");
 
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
       boolean isRootClientHandler = null == request.getProperties().get("dd.span");
       if (isRootClientHandler) {
         final Span span =
-          GlobalTracer.get()
-            .buildSpan("jax-rs.client.call")
-            .withTag(DDTags.RESOURCE_NAME, request.getMethod() + " jax-rs.client.call")
-            .start();
+            GlobalTracer.get()
+                .buildSpan("jax-rs.client.call")
+                .withTag(DDTags.RESOURCE_NAME, request.getMethod() + " jax-rs.client.call")
+                .start();
         try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
           DECORATE.afterStart(span);
           DECORATE.onRequest(span, request);
 
           GlobalTracer.get()
-            .inject(
-              span.context(),
-              Format.Builtin.HTTP_HEADERS,
-              new InjectAdapter(request.getHeaders()));
+              .inject(
+                  span.context(),
+                  Format.Builtin.HTTP_HEADERS,
+                  new InjectAdapter(request.getHeaders()));
 
           request.getProperties().put("dd.span", span);
           request.getProperties().put("dd.root.handler.hash", thisObj.hashCode());
@@ -88,7 +92,13 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
     }
 
     @Advice.OnMethodExit
-    public static void onExit(@Advice.Argument(value = 1) final ClientRequest request, ClientResponse response,  ClientHandler thisObj) {
+    public static void onExit(
+        @Advice.Argument(value = 0) final ClientRequest request,
+        @Advice.Return final ClientResponse response,
+        @Advice.This final ClientHandler thisObj) {
+
+      System.out.println("############ ON HANDLE ENTER");
+
       Span span = (Span) request.getProperties().get("dd.span");
       if (null == span) {
         return;
