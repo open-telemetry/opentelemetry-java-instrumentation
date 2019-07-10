@@ -41,9 +41,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.HttpClientDecorator",
-      packageName + ".JaxRsClientDecorator",
-      packageName + ".ClientTracingFeature",
-      packageName + ".ClientTracingFilter",
+      packageName + ".JaxRsClientV1Decorator",
       packageName + ".InjectAdapter",
     };
   }
@@ -53,7 +51,9 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
     System.out.println("######### REGISTERING");
     return singletonMap(
         named("handle")
-            .and(takesArgument(0, safeHasSuperType(named("com.sun.jersey.api.client.ClientRequest"))))
+            .and(
+                takesArgument(
+                    0, safeHasSuperType(named("com.sun.jersey.api.client.ClientRequest"))))
             .and(returns(safeHasSuperType(named("com.sun.jersey.api.client.ClientResponse")))),
         HandleAdvice.class.getName());
   }
@@ -64,8 +64,6 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
     public static void onEnter(
         @Advice.Argument(value = 0) final ClientRequest request,
         @Advice.This final ClientHandler thisObj) {
-
-      System.out.println("############ ON HANDLE ENTER");
 
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
       boolean isRootClientHandler = null == request.getProperties().get("dd.span");
@@ -91,13 +89,13 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
       }
     }
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Argument(value = 0) final ClientRequest request,
         @Advice.Return final ClientResponse response,
-        @Advice.This final ClientHandler thisObj) {
-
-      System.out.println("############ ON HANDLE ENTER");
+        @Advice.This final ClientHandler thisObj,
+        @Advice.Thrown final Throwable throwable
+    ) {
 
       Span span = (Span) request.getProperties().get("dd.span");
       if (null == span) {
