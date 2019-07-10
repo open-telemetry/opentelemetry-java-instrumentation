@@ -2,15 +2,12 @@ package datadog.trace.instrumentation.akkahttp;
 
 import static datadog.trace.instrumentation.akkahttp.AkkaHttpClientDecorator.DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import akka.NotUsed;
 import akka.http.javadsl.model.headers.RawHeader;
 import akka.http.scaladsl.HttpExt;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
-import akka.stream.scaladsl.Flow;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
@@ -27,7 +24,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import scala.Tuple2;
 import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
 import scala.util.Try;
@@ -49,10 +45,6 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     return new String[] {
       AkkaHttpClientInstrumentation.class.getName() + "$OnCompleteHandler",
       AkkaHttpClientInstrumentation.class.getName() + "$AkkaHttpHeaders",
-      packageName + ".AkkaHttpClientTransformFlow",
-      packageName + ".AkkaHttpClientTransformFlow$",
-      packageName + ".AkkaHttpClientTransformFlow$$anonfun$transform$1",
-      packageName + ".AkkaHttpClientTransformFlow$$anonfun$transform$2",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.HttpClientDecorator",
@@ -72,14 +64,6 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         named("singleRequestImpl")
             .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
         SingleRequestAdvice.class.getName());
-    // This is mainly for compatibility with 10.0
-    transformers.put(
-        named("superPool").and(returns(named("akka.stream.scaladsl.Flow"))),
-        SuperPoolAdvice.class.getName());
-    // This is for 10.1+
-    transformers.put(
-        named("superPoolImpl").and(returns(named("akka.stream.scaladsl.Flow"))),
-        SuperPoolAdvice.class.getName());
     return transformers;
   }
 
@@ -108,7 +92,6 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         // Request is immutable, so we have to assign new value once we update headers
         request = headers.getRequest();
       }
-
       return scope;
     }
 
@@ -134,34 +117,6 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         span.finish();
       }
       scope.close();
-    }
-  }
-
-  public static class SuperPoolAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static boolean methodEnter() {
-      /*
-      Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
-      we cast 'wider net' and avoid instrumenting twice.
-      In the future we may want to separate these, but since lots of code is reused we would need to come up
-      with way of continuing to reusing it.
-       */
-      final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpExt.class);
-      return callDepth <= 0;
-    }
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <T> void methodExit(
-        @Advice.Return(readOnly = false)
-            Flow<Tuple2<HttpRequest, T>, Tuple2<Try<HttpResponse>, T>, NotUsed> flow,
-        @Advice.Enter final boolean isApplied) {
-      if (!isApplied) {
-        return;
-      }
-      CallDepthThreadLocalMap.reset(HttpExt.class);
-
-      flow = AkkaHttpClientTransformFlow.transform(flow);
     }
   }
 

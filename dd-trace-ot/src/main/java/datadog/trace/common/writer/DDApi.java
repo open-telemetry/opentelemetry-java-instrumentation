@@ -32,6 +32,8 @@ public class DDApi {
   private static final String DATADOG_META_LANG = "Datadog-Meta-Lang";
   private static final String DATADOG_META_LANG_VERSION = "Datadog-Meta-Lang-Version";
   private static final String DATADOG_META_LANG_INTERPRETER = "Datadog-Meta-Lang-Interpreter";
+  private static final String DATADOG_META_LANG_INTERPRETER_VENDOR =
+      "Datadog-Meta-Lang-Interpreter-Vendor";
   private static final String DATADOG_META_TRACER_VERSION = "Datadog-Meta-Tracer-Version";
   private static final String X_DATADOG_TRACE_COUNT = "X-Datadog-Trace-Count";
 
@@ -264,6 +266,7 @@ public class DDApi {
         .addHeader(DATADOG_META_LANG, "java")
         .addHeader(DATADOG_META_LANG_VERSION, DDTraceOTInfo.JAVA_VERSION)
         .addHeader(DATADOG_META_LANG_INTERPRETER, DDTraceOTInfo.JAVA_VM_NAME)
+        .addHeader(DATADOG_META_LANG_INTERPRETER_VENDOR, DDTraceOTInfo.JAVA_VM_VENDOR)
         .addHeader(DATADOG_META_TRACER_VERSION, DDTraceOTInfo.VERSION);
   }
 

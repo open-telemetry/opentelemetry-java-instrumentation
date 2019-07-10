@@ -107,7 +107,12 @@ public class AgentInstaller {
                                         // Working around until a long-term fix for modules can be
                                         // put in place.
                                         .and(not(named("java.util.logging.LogManager$Cleaner")))))))
-            .or(nameStartsWith("com.sun.").and(not(nameStartsWith("com.sun.messaging."))))
+            .or(
+                nameStartsWith("com.sun.")
+                    .and(
+                        not(
+                            nameStartsWith("com.sun.messaging.")
+                                .or(nameStartsWith("com.sun.jersey.api.client")))))
             .or(
                 nameStartsWith("sun.")
                     .and(
