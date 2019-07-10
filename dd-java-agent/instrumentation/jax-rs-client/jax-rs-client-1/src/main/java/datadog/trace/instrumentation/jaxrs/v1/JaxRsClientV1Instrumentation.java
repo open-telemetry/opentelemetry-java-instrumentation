@@ -6,6 +6,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static datadog.trace.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.DECORATE;
 import com.google.auto.service.AutoService;
+import com.sun.jersey.api.client.ClientHandler;
 import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -60,37 +61,47 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter
-    public static Span onEnter(@Advice.Argument(value = 1) final ClientRequest request) {
+    public static void onEnter(@Advice.Argument(value = 1) final ClientRequest request, ClientHandler thisObj) {
 
-      // WARNING: this might be a chain...so we only have to trace the first int he chain.
+      // WARNING: this might be a chain...so we only have to trace the first in the chain.
+      boolean isRootClientHandler = null == request.getProperties().get("dd.span");
+      if (isRootClientHandler) {
+        final Span span =
+          GlobalTracer.get()
+            .buildSpan("jax-rs.client.call")
+            .withTag(DDTags.RESOURCE_NAME, request.getMethod() + " jax-rs.client.call")
+            .start();
+        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+          DECORATE.afterStart(span);
+          DECORATE.onRequest(span, request);
 
-      final Span span =
-        GlobalTracer.get()
-          .buildSpan("jax-rs.client.call")
-          .withTag(DDTags.RESOURCE_NAME, request.getMethod() + " jax-rs.client.call")
-          .start();
-      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
-        DECORATE.afterStart(span);
-        DECORATE.onRequest(span, request);
+          GlobalTracer.get()
+            .inject(
+              span.context(),
+              Format.Builtin.HTTP_HEADERS,
+              new InjectAdapter(request.getHeaders()));
 
-        GlobalTracer.get()
-          .inject(
-            span.context(),
-            Format.Builtin.HTTP_HEADERS,
-            new InjectAdapter(request.getHeaders()));
-
-        request.getProperties().put("dd.span", span);
+          request.getProperties().put("dd.span", span);
+          request.getProperties().put("dd.root.handler.hash", thisObj.hashCode());
+        }
       }
-
-      return span;
     }
 
     @Advice.OnMethodExit
-    public static void onExit(@Advice.Argument(value = 1) final ClientRequest request, ClientResponse response) {
+    public static void onExit(@Advice.Argument(value = 1) final ClientRequest request, ClientResponse response,  ClientHandler thisObj) {
       Span span = (Span) request.getProperties().get("dd.span");
-      DECORATE.onResponse(span, response);
-      DECORATE.beforeFinish(span);
-      span.finish();
+      if (null == span) {
+        return;
+      }
+
+      request.getProperties().get("dd.root.handler.hash");
+
+      if (thisObj.hashCode() == (Integer) request.getProperties().get("dd.root.handler.hash")) {
+        // this is the root span, closing all the things
+        DECORATE.onResponse(span, response);
+        DECORATE.beforeFinish(span);
+        span.finish();
+      }
     }
   }
 }
