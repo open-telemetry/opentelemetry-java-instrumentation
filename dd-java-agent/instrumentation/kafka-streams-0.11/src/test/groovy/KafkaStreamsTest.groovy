@@ -80,13 +80,13 @@ class KafkaStreamsTest extends AgentTestRunner {
     KStream<String, String> textLines = builder.stream(STREAM_PENDING)
     def values = textLines
       .mapValues(new ValueMapper<String, String>() {
-      @Override
-      String apply(String textLine) {
-        TEST_WRITER.waitForTraces(1) // ensure consistent ordering of traces
-        getTestTracer().activeSpan().setTag("asdf", "testing")
-        return textLine.toLowerCase()
-      }
-    })
+        @Override
+        String apply(String textLine) {
+          TEST_WRITER.waitForTraces(1) // ensure consistent ordering of traces
+          getTestTracer().activeSpan().setTag("asdf", "testing")
+          return textLine.toLowerCase()
+        }
+      })
 
     KafkaStreams streams
     try {
@@ -115,7 +115,7 @@ class KafkaStreamsTest extends AgentTestRunner {
     received.value() == greeting.toLowerCase()
     received.key() == null
 
-    assertTraces(3) {
+    assertTraces(4) {
       trace(0, 1) {
         // PRODUCER span 0
         span(0) {
@@ -132,7 +132,25 @@ class KafkaStreamsTest extends AgentTestRunner {
           }
         }
       }
-      trace(1, 2) {
+      trace(1, 1) {
+        // CONSUMER span 0
+        span(0) {
+          serviceName "kafka"
+          operationName "kafka.consume"
+          resourceName "Consume Topic $STREAM_PENDING"
+          spanType "queue"
+          errored false
+          childOf TEST_WRITER[0][0]
+          tags {
+            "component" "java-kafka"
+            "span.kind" "consumer"
+            "partition" { it >= 0 }
+            "offset" 0
+            defaultTags(true)
+          }
+        }
+      }
+      trace(2, 2) {
 
         // STREAMING span 0
         span(0) {
@@ -169,7 +187,7 @@ class KafkaStreamsTest extends AgentTestRunner {
           }
         }
       }
-      trace(2, 1) {
+      trace(3, 1) {
         // CONSUMER span 0
         span(0) {
           serviceName "kafka"
@@ -177,7 +195,7 @@ class KafkaStreamsTest extends AgentTestRunner {
           resourceName "Consume Topic $STREAM_PROCESSED"
           spanType "queue"
           errored false
-          childOf TEST_WRITER[1][0]
+          childOf TEST_WRITER[2][0]
           tags {
             "component" "java-kafka"
             "span.kind" "consumer"
@@ -192,8 +210,8 @@ class KafkaStreamsTest extends AgentTestRunner {
 
     def headers = received.headers()
     headers.iterator().hasNext()
-    new String(headers.headers("x-datadog-trace-id").iterator().next().value()) == "${TEST_WRITER[1][0].traceId}"
-    new String(headers.headers("x-datadog-parent-id").iterator().next().value()) == "${TEST_WRITER[1][0].spanId}"
+    new String(headers.headers("x-datadog-trace-id").iterator().next().value()) == "${TEST_WRITER[2][0].traceId}"
+    new String(headers.headers("x-datadog-parent-id").iterator().next().value()) == "${TEST_WRITER[2][0].spanId}"
 
 
     cleanup:
