@@ -115,6 +115,13 @@ class KafkaStreamsTest extends AgentTestRunner {
     received.value() == greeting.toLowerCase()
     received.key() == null
 
+    if (TEST_WRITER[1][0].operationName == "kafka.produce") {
+      // Make sure that order of first two traces is predetermined.
+      // Unfortunately it looks like we cannot really control it in a better way through the code
+      def tmp = TEST_WRITER[1][0]
+      TEST_WRITER[1][0] = TEST_WRITER[0][0]
+      TEST_WRITER[0][0] = tmp
+    }
     assertTraces(4) {
       trace(0, 1) {
         // PRODUCER span 0
