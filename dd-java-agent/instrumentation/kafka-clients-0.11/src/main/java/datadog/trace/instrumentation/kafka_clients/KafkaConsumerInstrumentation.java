@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.kafka_clients;
 
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.kafka_clients.KafkaDecorator.CONSUMER_DECORATE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -13,6 +12,7 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -42,7 +42,8 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
       packageName + ".KafkaDecorator$2",
       packageName + ".TextMapExtractAdapter",
       packageName + ".TracingIterable",
-      packageName + ".TracingIterable$TracingIterator",
+      packageName + ".TracingIterator",
+      packageName + ".TracingList",
     };
   }
 
@@ -53,11 +54,16 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
         isMethod()
             .and(isPublic())
             .and(named("records"))
-            .and(
-                takesArgument(0, String.class)
-                    .or(takesArgument(0, named("org.apache.kafka.common.TopicPartition"))))
-            .and(returns(safeHasSuperType(named(Iterable.class.getName())))),
+            .and(takesArgument(0, String.class))
+            .and(returns(Iterable.class)),
         IterableAdvice.class.getName());
+    transformers.put(
+        isMethod()
+            .and(isPublic())
+            .and(named("records"))
+            .and(takesArgument(0, named("org.apache.kafka.common.TopicPartition")))
+            .and(returns(List.class)),
+        ListAdvice.class.getName());
     transformers.put(
         isMethod()
             .and(isPublic())
@@ -78,13 +84,22 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
     }
   }
 
+  public static class ListAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void wrap(@Advice.Return(readOnly = false) List<ConsumerRecord> iterable) {
+      if (iterable != null) {
+        iterable = new TracingList(iterable, "kafka.consume", CONSUMER_DECORATE);
+      }
+    }
+  }
+
   public static class IteratorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrap(@Advice.Return(readOnly = false) Iterator<ConsumerRecord> iterator) {
       if (iterator != null) {
-        iterator =
-            new TracingIterable.TracingIterator(iterator, "kafka.consume", CONSUMER_DECORATE);
+        iterator = new TracingIterator(iterator, "kafka.consume", CONSUMER_DECORATE);
       }
     }
   }
