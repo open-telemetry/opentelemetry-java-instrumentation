@@ -2,7 +2,9 @@ muzzle {
   pass {
     group = "com.google.http-client"
     module = "google-http-client"
-    versions = "[1.2.0,)"
+    
+    // 1.19.0 is the first release.  The versions before are betas and RCs
+    versions = "[1.19.0,)"
   }
 }
 
@@ -16,7 +18,7 @@ testSets {
 }
 
 dependencies {
-  compileOnly group: 'com.google.http-client', name: 'google-http-client', version: '1.20.0'
+  compileOnly group: 'com.google.http-client', name: 'google-http-client', version: '1.19.0'
 
   compile project(':dd-java-agent:agent-tooling')
 
@@ -26,7 +28,7 @@ dependencies {
   implementation deps.autoservice
 
   testCompile project(':dd-java-agent:testing')
-  testCompile group: 'com.google.http-client', name: 'google-http-client', version: '1.20.0'
+  testCompile group: 'com.google.http-client', name: 'google-http-client', version: '1.19.0'
 
-  latestDepTestCompile  group: 'com.google.http-client', name: 'google-http-client', version: '+'
+  latestDepTestCompile group: 'com.google.http-client', name: 'google-http-client', version: '+'
 }
