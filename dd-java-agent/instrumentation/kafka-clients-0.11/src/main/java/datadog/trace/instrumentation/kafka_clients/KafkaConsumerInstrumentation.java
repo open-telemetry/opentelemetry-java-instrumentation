@@ -52,9 +52,7 @@ public final class KafkaConsumerInstrumentation extends Instrumenter.Default {
         isMethod()
             .and(isPublic())
             .and(named("records"))
-            .and(
-                takesArgument(0, String.class)
-                    .or(takesArgument(0, named("org.apache.kafka.common.TopicPartition"))))
+            .and(takesArgument(0, String.class))
             .and(returns(Iterable.class)),
         IterableAdvice.class.getName());
     transformers.put(
