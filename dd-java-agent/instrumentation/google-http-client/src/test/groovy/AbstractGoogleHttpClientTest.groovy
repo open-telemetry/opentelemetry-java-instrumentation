@@ -10,11 +10,11 @@ import spock.lang.Shared
 abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpClientDecorator> {
 
   @Shared
-  def requestFactory = new NetHttpTransport().createRequestFactory();
+  def requestFactory = new NetHttpTransport().createRequestFactory()
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    doRequest(method, uri, headers, callback, false);
+    doRequest(method, uri, headers, callback, false)
   }
 
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback, boolean throwExceptionOnError) {
@@ -24,13 +24,13 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
     request.getHeaders().putAll(headers)
     request.setThrowExceptionOnExecuteError(throwExceptionOnError)
 
-    HttpResponse response = executeRequest(request);
+    HttpResponse response = executeRequest(request)
     callback?.call()
 
     return response.getStatusCode()
   }
 
-  abstract HttpResponse executeRequest(HttpRequest request);
+  abstract HttpResponse executeRequest(HttpRequest request)
 
   @Override
   GoogleHttpClientDecorator decorator() {
