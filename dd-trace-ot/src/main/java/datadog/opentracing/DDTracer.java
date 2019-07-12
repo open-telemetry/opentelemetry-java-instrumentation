@@ -441,7 +441,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Deprecated
   private static Map<String, String> customRuntimeTags(
-      final String runtimeId, Map<String, String> applicationRootSpanTags) {
+      final String runtimeId, final Map<String, String> applicationRootSpanTags) {
     final Map<String, String> runtimeTags = new HashMap<>(applicationRootSpanTags);
     runtimeTags.put(Config.RUNTIME_ID_TAG, runtimeId);
     return Collections.unmodifiableMap(runtimeTags);

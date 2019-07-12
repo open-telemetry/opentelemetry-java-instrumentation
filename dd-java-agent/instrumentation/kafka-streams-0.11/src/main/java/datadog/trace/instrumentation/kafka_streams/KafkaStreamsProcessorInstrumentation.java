@@ -24,7 +24,11 @@ import org.apache.kafka.streams.processor.internals.StampedRecord;
 
 public class KafkaStreamsProcessorInstrumentation {
   // These two instrumentations work together to apply StreamTask.process.
-  // The combination of these are needed because there's not a good instrumentation point.
+  // The combination of these is needed because there's no good instrumentation point.
+  // FIXME: this instrumentation takes somewhat strange approach. It looks like Kafka Streams
+  // defines notions of 'processor', 'source' and 'sink'. There is no 'consumer' as such.
+  // Also this instrumentation doesn't define 'producer' making it 'asymmetric' - resulting
+  // in awkward tests and traces. We may want to revisit this in the future.
 
   @AutoService(Instrumenter.class)
   public static class StartInstrumentation extends Instrumenter.Default {
