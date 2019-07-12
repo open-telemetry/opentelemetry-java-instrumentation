@@ -123,13 +123,15 @@ public class TracingList implements List<ConsumerRecord> {
 
   @Override
   public ListIterator<ConsumerRecord> listIterator() {
-    // TODO: should this be instrumented as well?
+    // TODO: the API for ListIterator is not really good to instrument it in context of Kafka
+    // Consumer so we will not do that for now
     return delegate.listIterator();
   }
 
   @Override
   public ListIterator<ConsumerRecord> listIterator(final int index) {
-    // TODO: should this be instrumented as well?
+    // TODO: the API for ListIterator is not really good to instrument it in context of Kafka
+    // Consumer so we will not do that for now
     return delegate.listIterator(index);
   }
 
