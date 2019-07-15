@@ -34,7 +34,9 @@ dependencies {
   testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '8.0.0.v20110901'
   testCompile group: 'org.eclipse.jetty', name: 'jetty-continuation', version: '8.0.0.v20110901'
 
-  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '+'
-  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '+'
-  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-continuation', version: '+'
+  // Jetty 10 seems to refuse to run on java8.
+  // TODO: we need to setup separate test for Jetty 10 when that is released.
+  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.+'
+  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.+'
+  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-continuation', version: '9.+'
 }
