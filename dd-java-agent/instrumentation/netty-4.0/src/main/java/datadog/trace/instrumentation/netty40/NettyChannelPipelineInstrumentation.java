@@ -55,6 +55,8 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
+      "datadog.trace.agent.tooling.ClassLoaderScopedWeakMapSupplier",
+      "datadog.trace.agent.tooling.ClassLoaderScopedWeakMap",
       packageName + ".AttributeKeys",
       "datadog.trace.agent.decorator.BaseDecorator",
       // client helpers
