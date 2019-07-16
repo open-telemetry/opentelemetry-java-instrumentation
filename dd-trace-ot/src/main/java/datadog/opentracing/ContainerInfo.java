@@ -1,6 +1,5 @@
 package datadog.opentracing;
 
-import lombok.Data;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.Data;
 
 /**
  * Parses container information from /proc/self/cgroup. Implementation based largely on
@@ -23,9 +23,10 @@ public class ContainerInfo {
       "[0-9a-f]{8}[-_][0-9a-f]{4}[-_][0-9a-f]{4}[-_][0-9a-f]{4}[-_][0-9a-f]{12}";
   private static final String CONTAINER_REGEX = "[0-9a-f]{64}";
   private static final Pattern LINE_PATTERN = Pattern.compile("(\\d+):([^:]*):(.+)$");
-  private static final Pattern POD_PATTERN = Pattern.compile("pod(" + UUID_REGEX + ")(?:.slice)?$");
+  private static final Pattern POD_PATTERN =
+      Pattern.compile("(?:.+)?pod(" + UUID_REGEX + ")(?:.slice)?$");
   private static final Pattern CONTAINER_PATTERN =
-      Pattern.compile("(" + UUID_REGEX + "|" + CONTAINER_REGEX + ")(?:.scope)?$");
+      Pattern.compile("(?:.+)?(" + UUID_REGEX + "|" + CONTAINER_REGEX + ")(?:.scope)?$");
 
   public String containerId;
   public String podId;
