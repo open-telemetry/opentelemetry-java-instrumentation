@@ -96,19 +96,19 @@ class ScopeManagerTest extends Specification {
   def "sets parent as current upon close"() {
     setup:
     def parentScope = tracer.buildSpan("parent").startActive(finishSpan)
-    def childScope = tracer.buildSpan("parent").startActive(finishSpan)
+    def childScope = nullChild ? tracer.scopeManager().activate(null, finishSpan) : tracer.buildSpan("parent").startActive(finishSpan)
 
     expect:
     scopeManager.active() == childScope
-    childScope.span().context().parentId == parentScope.span().context().spanId
-    childScope.span().context().trace == parentScope.span().context().trace
+    nullChild || childScope.span().context().parentId == parentScope.span().context().spanId
+    nullChild || childScope.span().context().trace == parentScope.span().context().trace
 
     when:
     childScope.close()
 
     then:
     scopeManager.active() == parentScope
-    spanFinished(childScope.span()) == finishSpan
+    spanFinished(childScope.span()) == (nullChild ? null : finishSpan)
     !spanFinished(parentScope.span())
     writer == []
 
@@ -116,13 +116,17 @@ class ScopeManagerTest extends Specification {
     parentScope.close()
 
     then:
-    spanFinished(childScope.span()) == finishSpan
+    spanFinished(childScope.span()) == (nullChild ? null : finishSpan)
     spanFinished(parentScope.span()) == finishSpan
-    writer == [[parentScope.span(), childScope.span()]] || !finishSpan
+    writer == [[parentScope.span(), childScope.span()]] || !finishSpan || nullChild
     scopeManager.active() == null
 
     where:
-    finishSpan << [true, false]
+    finishSpan | nullChild
+    true       | false
+    false      | false
+    true       | true
+    false      | true
   }
 
   def "ContinuableScope only creates continuations when propagation is set"() {
@@ -567,8 +571,8 @@ class ScopeManagerTest extends Specification {
     closedCount.get() == 4
   }
 
-  boolean spanFinished(Span span) {
-    return ((DDSpan) span).isFinished()
+  Boolean spanFinished(Span span) {
+    return ((DDSpan) span)?.isFinished()
   }
 
   class AtomicReferenceScope extends AtomicReference<Span> implements ScopeContext, Scope {

@@ -17,8 +17,8 @@ public class SimpleScope implements Scope {
       final boolean finishOnClose) {
     this.scopeManager = scopeManager;
     this.spanUnderScope = spanUnderScope;
-    this.finishOnClose = finishOnClose;
-    this.toRestore = scopeManager.tlsScope.get();
+    this.finishOnClose = finishOnClose && spanUnderScope != null;
+    toRestore = scopeManager.tlsScope.get();
     scopeManager.tlsScope.set(this);
     for (final ScopeListener listener : scopeManager.scopeListeners) {
       listener.afterScopeActivated();

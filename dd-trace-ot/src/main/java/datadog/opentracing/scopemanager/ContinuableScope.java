@@ -48,7 +48,7 @@ public class ContinuableScope implements Scope, TraceScope {
     this.openCount = openCount;
     this.continuation = continuation;
     this.spanUnderScope = spanUnderScope;
-    this.finishOnClose = finishOnClose;
+    this.finishOnClose = finishOnClose && spanUnderScope != null;
     toRestore = scopeManager.tlsScope.get();
     scopeManager.tlsScope.set(this);
     for (final ScopeListener listener : scopeManager.scopeListeners) {
