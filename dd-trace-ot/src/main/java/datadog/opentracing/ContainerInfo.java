@@ -10,13 +10,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Parses container information from /proc/self/cgroup. Implementation based largely on
  * Qard/container-info
  */
-@Data
+@Getter
+@Setter
 public class ContainerInfo {
   private static final Path CGROUP_DEFAULT_PROCFILE = Paths.get("/proc/self/cgroup");
   private static final String UUID_REGEX =
@@ -32,7 +34,8 @@ public class ContainerInfo {
   public String podId;
   public List<CGroupInfo> cGroups;
 
-  @Data
+  @Getter
+  @Setter
   public static class CGroupInfo {
     public int id;
     public String path;
