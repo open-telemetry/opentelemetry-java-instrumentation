@@ -12,6 +12,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Parses container information from /proc/self/cgroup. Implementation based largely on
+ * Qard/container-info
+ */
 @Data
 public class ContainerInfo {
   private static final Path CGROUP_DEFAULT_PROCFILE = Paths.get("/proc/self/cgroup");
@@ -86,13 +90,13 @@ public class ContainerInfo {
     cGroupInfo.setPath(path);
 
     if (pathParts.length >= 1) {
-      final Matcher containerIdMatcher = CONTAINER_PATTERN.matcher(pathParts[0]);
+      final Matcher containerIdMatcher = CONTAINER_PATTERN.matcher(pathParts[pathParts.length - 1]);
       final String containerId = containerIdMatcher.matches() ? containerIdMatcher.group(1) : null;
       cGroupInfo.setContainerId(containerId);
     }
 
     if (pathParts.length >= 2) {
-      final Matcher podIdMatcher = POD_PATTERN.matcher(pathParts[1]);
+      final Matcher podIdMatcher = POD_PATTERN.matcher(pathParts[pathParts.length - 2]);
       final String podId = podIdMatcher.matches() ? podIdMatcher.group(1) : null;
       cGroupInfo.setPodId(podId);
     }
