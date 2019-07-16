@@ -295,7 +295,6 @@ public enum JDBCConnectionUrlParser {
   MSSQLSERVER("microsoft", "sqlserver") {
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 1433;
-    private static final String DEFAULT_INSTANCE = "MSSQLSERVER";
 
     @Override
     DBInfo.Builder doParse(String jdbcUrl, final DBInfo.Builder builder) {
@@ -307,9 +306,6 @@ public enum JDBCConnectionUrlParser {
       }
       builder.type("sqlserver");
       final DBInfo dbInfo = builder.build();
-      if (dbInfo.getInstance() == null) {
-        builder.instance(DEFAULT_INSTANCE);
-      }
       if (dbInfo.getHost() == null) {
         builder.host(DEFAULT_HOST);
       }

@@ -88,12 +88,12 @@ class JDBCConnectionUrlParserTest extends Specification {
       "address=(host=anotherhost)(port=3306)(user=wrong)(password=PW)/mdbdb?user=mdbuser&password=PW" | null     | "mysql"      | "replication" | "mdbuser"     | "mdb.host"                                | 3306  | null                               | "mdbdb"
 
     //https://docs.microsoft.com/en-us/sql/connect/jdbc/building-the-connection-url
-    "jdbc:microsoft:sqlserver://;"                                                                    | null     | "sqlserver"  | null          | null          | "localhost"                               | 1433  | "MSSQLSERVER"                      | null
-    "jdbc:microsoft:sqlserver://;"                                                                    | stdProps | "sqlserver"  | null          | "stdUserName" | "stdServerName"                           | 9999  | "MSSQLSERVER"                      | "stdDatabaseName"
+    "jdbc:microsoft:sqlserver://;"                                                                    | null     | "sqlserver"  | null          | null          | "localhost"                               | 1433  | null                               | null
+    "jdbc:microsoft:sqlserver://;"                                                                    | stdProps | "sqlserver"  | null          | "stdUserName" | "stdServerName"                           | 9999  | null                               | "stdDatabaseName"
     "jdbc:sqlserver://ss.host\\ssinstance:44;databaseName=ssdb;user=ssuser;password=pw"               | null     | "sqlserver"  | null          | "ssuser"      | "ss.host"                                 | 44    | "ssinstance"                       | "ssdb"
     "jdbc:sqlserver://;serverName=ss.host\\ssinstance:44;DatabaseName=;"                              | null     | "sqlserver"  | null          | null          | "ss.host"                                 | 44    | "ssinstance"                       | null
-    "jdbc:sqlserver://ss.host;serverName=althost;DatabaseName=ssdb;"                                  | null     | "sqlserver"  | null          | null          | "ss.host"                                 | 1433  | "MSSQLSERVER"                      | "ssdb"
-    "jdbc:microsoft:sqlserver://ss.host:44;DatabaseName=ssdb;user=ssuser;password=pw;user=ssuser2;"   | null     | "sqlserver"  | null          | "ssuser"      | "ss.host"                                 | 44    | "MSSQLSERVER"                      | "ssdb"
+    "jdbc:sqlserver://ss.host;serverName=althost;DatabaseName=ssdb;"                                  | null     | "sqlserver"  | null          | null          | "ss.host"                                 | 1433  | null                               | "ssdb"
+    "jdbc:microsoft:sqlserver://ss.host:44;DatabaseName=ssdb;user=ssuser;password=pw;user=ssuser2;"   | null     | "sqlserver"  | null          | "ssuser"      | "ss.host"                                 | 44    | null                               | "ssdb"
 
     // https://docs.oracle.com/cd/B28359_01/java.111/b31224/urls.htm
     // https://docs.oracle.com/cd/B28359_01/java.111/b31224/jdbcthin.htm
