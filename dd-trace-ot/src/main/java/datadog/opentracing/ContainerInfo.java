@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Parses container information from /proc/self/cgroup. Implementation based largely on
@@ -19,6 +20,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@Slf4j
 public class ContainerInfo {
   private static final Path CGROUP_DEFAULT_PROCFILE = Paths.get("/proc/self/cgroup");
   private static final String UUID_REGEX =
@@ -30,9 +32,24 @@ public class ContainerInfo {
   private static final Pattern CONTAINER_PATTERN =
       Pattern.compile("(?:.+)?(" + UUID_REGEX + "|" + CONTAINER_REGEX + ")(?:.scope)?$");
 
+  private static final ContainerInfo INSTANCE;
+
   public String containerId;
   public String podId;
-  public List<CGroupInfo> cGroups;
+  public List<CGroupInfo> cGroups = new ArrayList<>();
+
+  static {
+    ContainerInfo containerInfo = new ContainerInfo();
+    if (ContainerInfo.isRunningInContainer()) {
+      try {
+        containerInfo = ContainerInfo.fromDefaultProcFile();
+      } catch (final IOException | ParseException e) {
+        log.error("Unable to parse proc file");
+      }
+    }
+
+    INSTANCE = containerInfo;
+  }
 
   @Getter
   @Setter
@@ -42,6 +59,10 @@ public class ContainerInfo {
     public List<String> controllers;
     public String containerId;
     public String podId;
+  }
+
+  public static ContainerInfo get() {
+    return INSTANCE;
   }
 
   public static boolean isRunningInContainer() {
@@ -57,11 +78,10 @@ public class ContainerInfo {
     final ContainerInfo containerInfo = new ContainerInfo();
 
     final String[] lines = cgroupsContent.split("\n");
-    final List<CGroupInfo> parsedCGroups = new ArrayList<>();
     for (final String line : lines) {
       final CGroupInfo cGroupInfo = parseLine(line);
 
-      parsedCGroups.add(cGroupInfo);
+      containerInfo.getCGroups().add(cGroupInfo);
 
       if (cGroupInfo.getPodId() != null) {
         containerInfo.setPodId(cGroupInfo.getPodId());
@@ -71,8 +91,6 @@ public class ContainerInfo {
         containerInfo.setContainerId(cGroupInfo.getContainerId());
       }
     }
-
-    containerInfo.setCGroups(parsedCGroups);
 
     return containerInfo;
   }

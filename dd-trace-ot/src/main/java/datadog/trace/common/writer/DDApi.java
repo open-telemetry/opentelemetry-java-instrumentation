@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import datadog.opentracing.ContainerInfo;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTraceOTInfo;
 import datadog.trace.common.writer.unixdomainsockets.UnixDomainSocketFactory;
@@ -271,10 +272,11 @@ public class DDApi {
             .addHeader(DATADOG_META_LANG_INTERPRETER_VENDOR, DDTraceOTInfo.JAVA_VM_VENDOR)
             .addHeader(DATADOG_META_TRACER_VERSION, DDTraceOTInfo.VERSION);
 
-    if (DDTraceOTInfo.CONTAINER_ID == null) {
+    final String containerId = ContainerInfo.get().getContainerId();
+    if (containerId == null) {
       return builder;
     } else {
-      return builder.addHeader(DATADOG_CONTAINER_ID, DDTraceOTInfo.CONTAINER_ID);
+      return builder.addHeader(DATADOG_CONTAINER_ID, containerId);
     }
   }
 
