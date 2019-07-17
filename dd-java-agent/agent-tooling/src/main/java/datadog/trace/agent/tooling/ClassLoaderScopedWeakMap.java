@@ -1,8 +1,8 @@
 package datadog.trace.agent.tooling;
 
 import datadog.trace.bootstrap.WeakMap;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** A registry which is scoped per-classloader able to hold key-value pairs with weak keys. */
 public class ClassLoaderScopedWeakMap {
@@ -15,11 +15,10 @@ public class ClassLoaderScopedWeakMap {
    * Gets the element registered at the specified key or register as new one retrieved by the
    * provided supplier.
    */
-  public synchronized Object getOrCreate(
-      ClassLoader classLoader, Object key, Supplier valueSupplier) {
+  public Object getOrCreate(ClassLoader classLoader, Object key, Supplier valueSupplier) {
     Map<Object, Object> classLoaderMap = map.get(classLoader);
     if (classLoaderMap == null) {
-      classLoaderMap = new HashMap<>();
+      classLoaderMap = new ConcurrentHashMap<>();
       map.put(classLoader, classLoaderMap);
     }
 
