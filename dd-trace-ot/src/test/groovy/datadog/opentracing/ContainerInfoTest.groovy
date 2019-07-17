@@ -18,7 +18,7 @@ class ContainerInfoTest extends Specification {
     cGroupInfo.getContainerId() == containerId
     cGroupInfo.podId == podId
 
-    // Examples from DataDog/architecture/rfcs/apm/agent/containers-tagging/rfc.md and Qard/container-info
+    // Examples from container tagging rfc and Qard/container-info
     where:
     id | controllers             | path                                                                                                                                                                                    | containerId                                                        | podId                                  | line
 
