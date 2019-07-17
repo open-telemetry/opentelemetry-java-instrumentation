@@ -50,45 +50,45 @@ class Netty40ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
     false
   }
 
-//  def "connection error (unopened port)"() {
-//    given:
-//    def uri = new URI("http://localhost:$UNUSABLE_PORT/")
-//
-//    when:
-//    runUnderTrace("parent") {
-//      doRequest(method, uri)
-//    }
-//
-//    then:
-//    def ex = thrown(Exception)
-//    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
-//
-//    and:
-//    assertTraces(1) {
-//      trace(0, 2) {
-//        basicSpan(it, 0, "parent", thrownException)
-//
-//        span(1) {
-//          operationName "netty.connect"
-//          resourceName "netty.connect"
-//          childOf span(0)
-//          errored true
-//          tags {
-//            "$Tags.COMPONENT.key" "netty"
-//            Class errorClass = ConnectException
-//            try {
-//              errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')
-//            } catch (ClassNotFoundException e) {
-//              // Older versions use 'java.net.ConnectException' and do not have 'io.netty.channel.AbstractChannel$AnnotatedConnectException'
-//            }
-//            errorTags errorClass, "Connection refused: localhost/127.0.0.1:$UNUSABLE_PORT"
-//            defaultTags()
-//          }
-//        }
-//      }
-//    }
-//
-//    where:
-//    method = "GET"
-//  }
+  def "connection error (unopened port)"() {
+    given:
+    def uri = new URI("http://localhost:$UNUSABLE_PORT/")
+
+    when:
+    runUnderTrace("parent") {
+      doRequest(method, uri)
+    }
+
+    then:
+    def ex = thrown(Exception)
+    def thrownException = ex instanceof ExecutionException ? ex.cause : ex
+
+    and:
+    assertTraces(1) {
+      trace(0, 2) {
+        basicSpan(it, 0, "parent", thrownException)
+
+        span(1) {
+          operationName "netty.connect"
+          resourceName "netty.connect"
+          childOf span(0)
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" "netty"
+            Class errorClass = ConnectException
+            try {
+              errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')
+            } catch (ClassNotFoundException e) {
+              // Older versions use 'java.net.ConnectException' and do not have 'io.netty.channel.AbstractChannel$AnnotatedConnectException'
+            }
+            errorTags errorClass, "Connection refused: localhost/127.0.0.1:$UNUSABLE_PORT"
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    where:
+    method = "GET"
+  }
 }
