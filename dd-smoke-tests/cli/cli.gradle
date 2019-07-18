@@ -13,6 +13,8 @@ jar {
 }
 
 dependencies {
+  compile project(':dd-trace-api')
+
   testCompile project(':dd-smoke-tests')
 }
 

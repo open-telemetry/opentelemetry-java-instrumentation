@@ -1,16 +1,33 @@
 package datadog.smoketest.cli;
 
-/** Simple application that sleeps for a bit than quits. */
+import datadog.trace.api.Trace;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLConnection;
+
+/** Simple application that makes a request to example.com then quits. */
 public class CliApplication {
 
-  /** @param args Only argument is the sleep delay (in seconds) */
   public static void main(final String[] args) throws InterruptedException {
-    final int delay = Integer.parseInt(args[0]);
+    final CliApplication app = new CliApplication();
 
-    System.out.println("Going to shut down after " + delay + "seconds");
+    System.out.println("Making request");
 
-    Thread.sleep(delay * 1000);
+    app.makeRequest();
 
-    System.out.println("Shutting down");
+    System.out.println("Finished making request");
+  }
+
+  @Trace(operationName = "example")
+  public void makeRequest() {
+    try {
+      final URL url = new URL("http://www.example.com/");
+      final URLConnection connection = url.openConnection();
+      connection.setConnectTimeout(1000);
+      connection.connect();
+      connection.getInputStream();
+    } catch (final IOException e) {
+      // Ignore.  The goal of this app is to attempt the connection not necessarily to succeed
+    }
   }
 }
