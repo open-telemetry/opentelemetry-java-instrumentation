@@ -15,10 +15,11 @@ public class SimpleScope implements Scope {
       final ContextualScopeManager scopeManager,
       final Span spanUnderScope,
       final boolean finishOnClose) {
+    assert spanUnderScope != null : "span must not be null";
     this.scopeManager = scopeManager;
     this.spanUnderScope = spanUnderScope;
     this.finishOnClose = finishOnClose;
-    this.toRestore = scopeManager.tlsScope.get();
+    toRestore = scopeManager.tlsScope.get();
     scopeManager.tlsScope.set(this);
     for (final ScopeListener listener : scopeManager.scopeListeners) {
       listener.afterScopeActivated();
