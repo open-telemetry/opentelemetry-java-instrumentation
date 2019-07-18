@@ -15,18 +15,22 @@ public class ClassLoaderScopedWeakMap {
    * Gets the element registered at the specified key or register as new one retrieved by the
    * provided supplier.
    */
-  public Object getOrCreate(ClassLoader classLoader, Object key, Supplier valueSupplier) {
-    Map<Object, Object> classLoaderMap = map.get(classLoader);
-    if (classLoaderMap == null) {
+  public synchronized Object getOrCreate(
+      ClassLoader classLoader, Object key, Supplier valueSupplier) {
+    Map<Object, Object> classLoaderMap;
+
+    if (!map.containsKey(classLoader)) {
       classLoaderMap = new ConcurrentHashMap<>();
       map.put(classLoader, classLoaderMap);
+    } else {
+      classLoaderMap = map.get(classLoader);
     }
 
     if (classLoaderMap.containsKey(key)) {
       return classLoaderMap.get(key);
     }
 
-    Object value = valueSupplier.get();
+    final Object value = valueSupplier.get();
     classLoaderMap.put(key, value);
     return value;
   }
