@@ -22,6 +22,7 @@ include ':utils:gc-utils'
 include ':dd-smoke-tests:play'
 include ':dd-smoke-tests:springboot'
 include ':dd-smoke-tests:wildfly'
+include ':dd-smoke-tests:cli'
 
 // instrumentation:
 include ':dd-java-agent:instrumentation:akka-http-10.0'
