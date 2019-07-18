@@ -95,7 +95,7 @@ public class ClassLoaderMatcher {
 
     /**
      * TODO: this turns out to be useless with OSGi: {@code
-     * }org.eclipse.osgi.internal.loader.BundleLoader#isRequestFromVM} returns {@code true} when
+     * org.eclipse.osgi.internal.loader.BundleLoader#isRequestFromVM} returns {@code true} when
      * class loading is issued from this check and {@code false} for 'real' class loads. We should
      * come up with some sort of hack to avoid this problem.
      */

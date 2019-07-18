@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import io.opentracing.tag.Tags
 import redis.clients.jedis.Jedis
@@ -22,11 +23,16 @@ class JedisClientTest extends AgentTestRunner {
   def setupSpec() {
     println "Using redis: $redisServer.args"
     redisServer.start()
+
+    // This setting should have no effect since decorator returns null for the instance.
+    System.setProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
   }
 
   def cleanupSpec() {
     redisServer.stop()
 //    jedis.close()  // not available in the early version we're using.
+
+    System.clearProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE)
   }
 
   def setup() {

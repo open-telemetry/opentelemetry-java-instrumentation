@@ -3,11 +3,13 @@ import com.datastax.driver.core.Session
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
+import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import io.opentracing.tag.Tags
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import spock.lang.Shared
 
+import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
@@ -44,17 +46,19 @@ class CassandraClientTest extends AgentTestRunner {
     setup:
     Session session = cluster.connect(keyspace)
 
-    session.execute(statement)
+    withConfigOverride(Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "$renameService") {
+      session.execute(statement)
+    }
 
     expect:
     assertTraces(keyspace ? 2 : 1) {
       if (keyspace) {
         trace(0, 1) {
-          cassandraSpan(it, 0, "USE $keyspace", null)
+          cassandraSpan(it, 0, "USE $keyspace", null, false)
         }
       }
       trace(keyspace ? 1 : 0, 1) {
-        cassandraSpan(it, 0, statement, keyspace)
+        cassandraSpan(it, 0, statement, keyspace, renameService)
       }
     }
 
@@ -62,19 +66,21 @@ class CassandraClientTest extends AgentTestRunner {
     session.close()
 
     where:
-    statement                                                                                         | keyspace
-    "DROP KEYSPACE IF EXISTS sync_test"                                                               | null
-    "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | null
-    "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )"                                 | "sync_test"
-    "INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')"                                 | "sync_test"
-    "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                        | "sync_test"
+    statement                                                                                         | keyspace    | renameService
+    "DROP KEYSPACE IF EXISTS sync_test"                                                               | null        | false
+    "CREATE KEYSPACE sync_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | null        | true
+    "CREATE TABLE sync_test.users ( id UUID PRIMARY KEY, name text )"                                 | "sync_test" | false
+    "INSERT INTO sync_test.users (id, name) values (uuid(), 'alice')"                                 | "sync_test" | false
+    "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                        | "sync_test" | true
   }
 
   def "test async"() {
     setup:
     Session session = cluster.connect(keyspace)
     runUnderTrace("parent") {
-      session.executeAsync(statement)
+      withConfigOverride(Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "$renameService") {
+        session.executeAsync(statement)
+      }
       blockUntilChildSpansFinished(1)
     }
 
@@ -82,12 +88,12 @@ class CassandraClientTest extends AgentTestRunner {
     assertTraces(keyspace ? 2 : 1) {
       if (keyspace) {
         trace(0, 1) {
-          cassandraSpan(it, 0, "USE $keyspace", null)
+          cassandraSpan(it, 0, "USE $keyspace", null, false)
         }
       }
       trace(keyspace ? 1 : 0, 2) {
         basicSpan(it, 0, "parent")
-        cassandraSpan(it, 1, statement, keyspace, span(0))
+        cassandraSpan(it, 1, statement, keyspace, renameService, span(0))
       }
     }
 
@@ -95,17 +101,17 @@ class CassandraClientTest extends AgentTestRunner {
     session.close()
 
     where:
-    statement                                                                                          | keyspace
-    "DROP KEYSPACE IF EXISTS async_test"                                                               | null
-    "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | null
-    "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )"                                 | "async_test"
-    "INSERT INTO async_test.users (id, name) values (uuid(), 'alice')"                                 | "async_test"
-    "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                         | "async_test"
+    statement                                                                                          | keyspace     | renameService
+    "DROP KEYSPACE IF EXISTS async_test"                                                               | null         | false
+    "CREATE KEYSPACE async_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}" | null         | true
+    "CREATE TABLE async_test.users ( id UUID PRIMARY KEY, name text )"                                 | "async_test" | false
+    "INSERT INTO async_test.users (id, name) values (uuid(), 'alice')"                                 | "async_test" | false
+    "SELECT * FROM users where name = 'alice' ALLOW FILTERING"                                         | "async_test" | true
   }
 
-  def cassandraSpan(TraceAssert trace, int index, String statement, String keyspace, Object parentSpan = null, Throwable exception = null) {
+  def cassandraSpan(TraceAssert trace, int index, String statement, String keyspace, boolean renameService, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      serviceName "cassandra"
+      serviceName renameService && keyspace ? keyspace : "cassandra"
       operationName "cassandra.query"
       resourceName statement
       spanType DDSpanTypes.CASSANDRA

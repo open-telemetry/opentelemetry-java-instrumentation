@@ -74,6 +74,8 @@ public class JMXFetch {
     final AppConfig.AppConfigBuilder configBuilder =
         AppConfig.builder()
             .action(ImmutableList.of(ACTION_COLLECT))
+            // App should be run as daemon otherwise CLI apps would not exit once main method exits.
+            .daemon(true)
             .confdDirectory(jmxFetchConfigDir)
             .yamlFileList(jmxFetchConfigs)
             .targetDirectInstances(true)
