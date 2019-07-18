@@ -7,6 +7,7 @@ import datadog.trace.api.DDTags
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import io.opentracing.Scope
+import io.opentracing.noop.NoopSpan
 import spock.lang.Specification
 
 import static datadog.opentracing.DDSpanContext.ORIGIN_KEY
@@ -176,12 +177,12 @@ class DDSpanBuilderTest extends Specification {
 
   def "should link to parent span implicitly"() {
     setup:
-    final Scope parent = nullParent ?
-      tracer.scopeManager().activate(null, false) :
+    final Scope parent = noopParent ?
+      tracer.scopeManager().activate(NoopSpan.INSTANCE, false) :
       tracer.buildSpan("parent")
         .startActive(false)
 
-    final String expectedParentId = nullParent ? "0" : parent.span().context().getSpanId()
+    final String expectedParentId = noopParent ? "0" : parent.span().context().getSpanId()
 
     final String expectedName = "fakeName"
 
@@ -198,7 +199,7 @@ class DDSpanBuilderTest extends Specification {
     parent.close()
 
     where:
-    nullParent << [false, true]
+    noopParent << [false, true]
   }
 
   def "should inherit the DD parent attributes"() {

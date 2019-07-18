@@ -96,19 +96,19 @@ class ScopeManagerTest extends Specification {
   def "sets parent as current upon close"() {
     setup:
     def parentScope = tracer.buildSpan("parent").startActive(finishSpan)
-    def childScope = nullChild ? tracer.scopeManager().activate(null, finishSpan) : tracer.buildSpan("parent").startActive(finishSpan)
+    def childScope = noopChild ? tracer.scopeManager().activate(NoopSpan.INSTANCE, finishSpan) : tracer.buildSpan("parent").startActive(finishSpan)
 
     expect:
     scopeManager.active() == childScope
-    nullChild || childScope.span().context().parentId == parentScope.span().context().spanId
-    nullChild || childScope.span().context().trace == parentScope.span().context().trace
+    noopChild || childScope.span().context().parentId == parentScope.span().context().spanId
+    noopChild || childScope.span().context().trace == parentScope.span().context().trace
 
     when:
     childScope.close()
 
     then:
     scopeManager.active() == parentScope
-    spanFinished(childScope.span()) == (nullChild ? null : finishSpan)
+    noopChild || spanFinished(childScope.span()) == finishSpan
     !spanFinished(parentScope.span())
     writer == []
 
@@ -116,13 +116,13 @@ class ScopeManagerTest extends Specification {
     parentScope.close()
 
     then:
-    spanFinished(childScope.span()) == (nullChild ? null : finishSpan)
+    noopChild || spanFinished(childScope.span()) == finishSpan
     spanFinished(parentScope.span()) == finishSpan
-    writer == [[parentScope.span(), childScope.span()]] || !finishSpan || nullChild
+    writer == [[parentScope.span(), childScope.span()]] || !finishSpan || noopChild
     scopeManager.active() == null
 
     where:
-    finishSpan | nullChild
+    finishSpan | noopChild
     true       | false
     false      | false
     true       | true
@@ -571,7 +571,7 @@ class ScopeManagerTest extends Specification {
     closedCount.get() == 4
   }
 
-  Boolean spanFinished(Span span) {
+  boolean spanFinished(Span span) {
     return ((DDSpan) span)?.isFinished()
   }
 

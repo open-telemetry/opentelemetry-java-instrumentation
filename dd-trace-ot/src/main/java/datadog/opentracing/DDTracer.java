@@ -619,7 +619,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       if (parentContext == null && !ignoreScope) {
         // use the Scope as parent unless overridden or ignored.
         final Scope scope = scopeManager.active();
-        if (scope != null && scope.span() != null) {
+        if (scope != null) {
           parentContext = scope.span().context();
         }
       }
