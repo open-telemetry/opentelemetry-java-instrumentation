@@ -175,6 +175,15 @@ class WeakMapSuppliers {
       public void putIfAbsent(final K key, final V value) {
         map.putIfAbsent(key, value);
       }
+
+      @Override
+      public V getOrCreate(K key, ValueSupplier<V> supplier) {
+        if (!map.containsKey(key)) {
+          map.put(key, supplier.get());
+        }
+
+        return map.get(key);
+      }
     }
 
     static class Inline implements WeakMap.Implementation {

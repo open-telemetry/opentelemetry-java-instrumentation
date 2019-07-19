@@ -108,7 +108,6 @@ public interface WeakMap<K, V> {
 
     @Override
     public synchronized V getOrCreate(K key, ValueSupplier<V> supplier) {
-
       if (!map.containsKey(key)) {
         map.put(key, supplier.get());
       }
