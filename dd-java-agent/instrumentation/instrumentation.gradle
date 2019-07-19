@@ -16,7 +16,7 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 
 Project instr_project = project
-subprojects { subProj ->
+subprojects {Project subProj ->
   apply plugin: "net.bytebuddy.byte-buddy"
   apply plugin: 'muzzle'
 
@@ -35,6 +35,19 @@ subprojects { subProj ->
         plugin = 'datadog.trace.agent.tooling.muzzle.MuzzleGradlePlugin'
         classPath = project(':dd-java-agent:agent-tooling').configurations.instrumentationMuzzle + subProj.configurations.compile + subProj.sourceSets.main.output
       }
+    }
+
+    dependencies {
+      // Apply common dependencies for instrumentation.
+      compile project(':dd-java-agent:agent-tooling')
+      compile deps.bytebuddy
+      compile deps.opentracing
+      annotationProcessor deps.autoservice
+      implementation deps.autoservice
+
+      testCompile project(':dd-java-agent:testing')
+      testAnnotationProcessor deps.autoservice
+      testImplementation deps.autoservice
     }
 
     // Make it so all instrumentation subproject tests can be run with a single command.

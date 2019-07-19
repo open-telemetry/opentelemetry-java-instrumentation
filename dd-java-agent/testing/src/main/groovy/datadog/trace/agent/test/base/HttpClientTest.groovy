@@ -21,7 +21,7 @@ import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
-abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRunner {
+abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends AgentTestRunner {
   protected static final BODY_METHODS = ["POST", "PUT"]
 
   @AutoCleanup
@@ -54,7 +54,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
   }
 
   @Shared
-  T decorator = decorator()
+  DECORATOR clientDecorator = decorator()
 
   /**
    * Make the request and return the status code response
@@ -63,7 +63,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
    */
   abstract int doRequest(String method, URI uri, Map<String, String> headers = [:], Closure callback = null)
 
-  abstract T decorator()
+  abstract DECORATOR decorator()
 
   Integer statusOnRedirectError() {
     return null
@@ -118,6 +118,8 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
     where:
     method << BODY_METHODS
   }
+
+  //FIXME: add tests for POST with large/chunked data
 
   @Unroll
   def "basic #method request with split-by-domain"() {
@@ -327,7 +329,7 @@ abstract class HttpClientTest<T extends HttpClientDecorator> extends AgentTestRu
         if (exception) {
           errorTags(exception.class, exception.message)
         }
-        "$Tags.COMPONENT.key" decorator.component()
+        "$Tags.COMPONENT.key" clientDecorator.component()
         if (status) {
           "$Tags.HTTP_STATUS.key" status
         }
