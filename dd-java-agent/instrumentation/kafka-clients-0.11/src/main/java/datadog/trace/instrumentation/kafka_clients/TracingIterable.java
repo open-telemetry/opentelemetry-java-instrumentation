@@ -7,6 +7,7 @@ public class TracingIterable implements Iterable<ConsumerRecord> {
   private final Iterable<ConsumerRecord> delegate;
   private final String operationName;
   private final KafkaDecorator decorator;
+  private boolean firstIterator = true;
 
   public TracingIterable(
       final Iterable<ConsumerRecord> delegate,
@@ -19,6 +20,17 @@ public class TracingIterable implements Iterable<ConsumerRecord> {
 
   @Override
   public Iterator<ConsumerRecord> iterator() {
-    return new TracingIterator(delegate.iterator(), operationName, decorator);
+    Iterator<ConsumerRecord> it;
+    // We should only return one iterator with tracing.
+    // However, this is not thread-safe, but usually the first (hopefully only) traversal of
+    // ConsumerRecords is performed in the same thread that called poll()
+    if (this.firstIterator) {
+      it = new TracingIterator(delegate.iterator(), operationName, decorator);
+      firstIterator = false;
+    } else {
+      it = delegate.iterator();
+    }
+
+    return it;
   }
 }
