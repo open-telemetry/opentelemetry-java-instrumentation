@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.trace_annotation;
 
 import static datadog.trace.instrumentation.trace_annotation.TraceDecorator.DECORATE;
 
-import datadog.opentracing.DDTracer;
+import datadog.trace.api.DDTags;
 import datadog.trace.api.Trace;
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
@@ -23,10 +23,8 @@ public class TraceAdvice {
     Tracer.SpanBuilder spanBuilder = GlobalTracer.get().buildSpan(operationName);
 
     final String resourceName = traceAnnotation == null ? null : traceAnnotation.resourceName();
-    if (resourceName != null
-        && !resourceName.isEmpty()
-        && spanBuilder instanceof DDTracer.DDSpanBuilder) {
-      spanBuilder = ((DDTracer.DDSpanBuilder) spanBuilder).withResourceName(resourceName);
+    if (resourceName != null && !resourceName.isEmpty()) {
+      spanBuilder = spanBuilder.withTag(DDTags.RESOURCE_NAME, resourceName);
     }
 
     return DECORATE.afterStart(spanBuilder.startActive(true));

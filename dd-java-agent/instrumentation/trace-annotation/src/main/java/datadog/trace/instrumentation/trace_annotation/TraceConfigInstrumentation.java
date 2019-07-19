@@ -123,9 +123,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
     @Override
     public String[] helperClassNames() {
       return new String[] {
-        "datadog.trace.agent.decorator.BaseDecorator",
-        "datadog.opentracing.DDTracer$DDSpanBuilder",
-        packageName + ".TraceDecorator",
+        "datadog.trace.agent.decorator.BaseDecorator", packageName + ".TraceDecorator",
       };
     }
 
