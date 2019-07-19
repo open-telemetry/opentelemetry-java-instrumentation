@@ -1,7 +1,6 @@
 package datadog.trace.instrumentation.kafka_clients;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -111,11 +110,6 @@ public class TracingList extends TracingIterable implements List<ConsumerRecord>
   @Override
   public int lastIndexOf(final Object o) {
     return delegate.lastIndexOf(o);
-  }
-
-  @Override
-  public Iterator<ConsumerRecord> iterator() {
-    return super.iterator();
   }
 
   @Override

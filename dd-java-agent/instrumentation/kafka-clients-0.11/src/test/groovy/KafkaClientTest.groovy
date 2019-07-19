@@ -5,7 +5,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.TopicPartition
-import org.junit.ClassRule
+import org.junit.Rule
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
@@ -14,7 +14,6 @@ import org.springframework.kafka.listener.MessageListener
 import org.springframework.kafka.test.rule.KafkaEmbedded
 import org.springframework.kafka.test.utils.ContainerTestUtils
 import org.springframework.kafka.test.utils.KafkaTestUtils
-import spock.lang.Shared
 
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -22,8 +21,7 @@ import java.util.concurrent.TimeUnit
 class KafkaClientTest extends AgentTestRunner {
   static final SHARED_TOPIC = "shared.topic"
 
-  @Shared
-  @ClassRule
+  @Rule
   KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, SHARED_TOPIC)
 
   def "test kafka produce and consume"() {
@@ -124,12 +122,10 @@ class KafkaClientTest extends AgentTestRunner {
     cleanup:
     producerFactory.stop()
     container?.stop()
-    embeddedKafka.after()
   }
 
   def "test records(TopicPartition) kafka consume"() {
     setup:
-    embeddedKafka.before()
 
     // set up the Kafka consumer properties
     def kafkaPartition = 0
@@ -145,27 +141,21 @@ class KafkaClientTest extends AgentTestRunner {
     when:
     def greeting = "Hello from MockConsumer!"
     producer.send(new ProducerRecord<Integer, String>(SHARED_TOPIC, kafkaPartition, null, greeting))
-    TEST_WRITER.waitForTraces(1)
 
     then:
-
+    TEST_WRITER.waitForTraces(1)
     def records = new LinkedBlockingQueue<ConsumerRecord<String, String>>()
     def pollResult = KafkaTestUtils.getRecords(consumer)
 
     def recs = pollResult.records(new TopicPartition(SHARED_TOPIC, kafkaPartition)).iterator()
 
-    def isFirst = true
-    while (recs.hasNext()) {
-      if(!isFirst) {
-        TEST_WRITER.waitForTraces(1) // ensure consistent ordering of traces
-      }
-      records.add(recs.next())
-      isFirst = false
+    def first = null
+    if (recs.hasNext()) {
+      first = recs.next()
     }
-    TEST_WRITER.waitForTraces(1) // ensure consistent ordering of traces
 
     then:
-    def first = records.poll(5, TimeUnit.SECONDS)
+    recs.hasNext() == false
     first.value() == greeting
     first.key() == null
 
@@ -210,7 +200,6 @@ class KafkaClientTest extends AgentTestRunner {
     cleanup:
     consumer.close()
     producer.close()
-    embeddedKafka.after()
 
   }
 
