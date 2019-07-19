@@ -20,7 +20,6 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
   @Override
   public void write(final ChannelHandlerContext ctx, final Object msg, final ChannelPromise prm) {
-    System.out.println("[STD LOG] About to write request handler");
     if (!(msg instanceof HttpRequest)) {
       ctx.write(msg, prm);
       return;
