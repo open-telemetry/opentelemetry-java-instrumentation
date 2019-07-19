@@ -13,4 +13,7 @@ public @interface Trace {
 
   /** The operation name to set. By default it takes the method's name */
   String operationName() default "";
+
+  /** The resource name. By default it uses the same value as the operation name */
+  String resourceName() default "";
 }
