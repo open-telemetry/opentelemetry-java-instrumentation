@@ -25,7 +25,7 @@ public class MuzzleVersionScanPlugin {
   static {
     // prevent WeakMap from logging warning while plugin is running
     WeakMap.Provider.registerIfAbsent(
-        new WeakMap.Supplier() {
+        new WeakMap.Implementation() {
           @Override
           public <K, V> WeakMap<K, V> get() {
             return new WeakMap.MapAdapter<>(Collections.synchronizedMap(new WeakHashMap<K, V>()));

@@ -36,7 +36,7 @@ class WeakMapSuppliers {
    * single thread to clean void weak references out for all instances. Cleaning is done every
    * second.
    */
-  static class WeakConcurrent implements WeakMap.Supplier {
+  static class WeakConcurrent implements WeakMap.Implementation {
 
     private static final long SHUTDOWN_WAIT_SECONDS = 5;
 
@@ -177,7 +177,7 @@ class WeakMapSuppliers {
       }
     }
 
-    static class Inline implements WeakMap.Supplier {
+    static class Inline implements WeakMap.Implementation {
 
       @Override
       public <K, V> WeakMap<K, V> get() {
@@ -186,7 +186,7 @@ class WeakMapSuppliers {
     }
   }
 
-  static class Guava implements WeakMap.Supplier {
+  static class Guava implements WeakMap.Implementation {
 
     @Override
     public <K, V> WeakMap<K, V> get() {
