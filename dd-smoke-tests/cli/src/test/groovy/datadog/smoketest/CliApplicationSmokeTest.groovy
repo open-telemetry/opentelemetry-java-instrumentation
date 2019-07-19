@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 
 class CliApplicationSmokeTest extends AbstractSmokeTest {
   // Estimate for the amount of time instrumentation, plus request, plus some extra
-  private static final int TIMEOUT_SECS = 10
+  private static final int TIMEOUT_SECS = 15
 
   @Override
   ProcessBuilder createProcessBuilder() {

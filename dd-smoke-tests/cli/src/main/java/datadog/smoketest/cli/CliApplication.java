@@ -11,6 +11,9 @@ public class CliApplication {
   public static void main(final String[] args) throws InterruptedException {
     final CliApplication app = new CliApplication();
 
+    // Sleep to ensure all of the processes are running
+    Thread.sleep(5000);
+
     System.out.println("Making request");
 
     app.makeRequest();
