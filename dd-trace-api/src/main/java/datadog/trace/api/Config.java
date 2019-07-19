@@ -1,9 +1,11 @@
 package datadog.trace.api;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -885,7 +887,7 @@ public class Config {
    *     exist or if it is in a wrong format.
    */
   private static Properties loadConfigurationFile() {
-    Properties properties = new Properties();
+    final Properties properties = new Properties();
 
     // Reading from system property first and from env after
     String configurationFilePath =
@@ -922,11 +924,38 @@ public class Config {
     return properties;
   }
 
-  /**
-   * Returns the detected hostname. This operation is time consuming so if the usage changes and
-   * this method will be called several times then we should implement some sort of caching.
-   */
+  /** Returns the detected hostname. First tries locally, then using DNS */
   private String getHostName() {
+    String possibleHostname = null;
+
+    // Try environment variable.  This works in almost all environments
+    if (System.getProperty("os.name").startsWith("Windows")) {
+      possibleHostname = System.getenv("COMPUTERNAME");
+    } else {
+      possibleHostname = System.getenv("HOSTNAME");
+    }
+
+    if (possibleHostname != null && !possibleHostname.isEmpty()) {
+      log.debug("Determined hostname from environment variable");
+      return possibleHostname.trim();
+    }
+
+    // Try hostname command
+    try {
+      final Process process = Runtime.getRuntime().exec("hostname");
+      final BufferedReader reader =
+          new BufferedReader(new InputStreamReader(process.getInputStream()));
+      possibleHostname = reader.readLine();
+    } catch (final Exception e) {
+      // Ignore.  Hostname command is not always available
+    }
+
+    if (possibleHostname != null && !possibleHostname.isEmpty()) {
+      log.debug("Determined hostname from hostname command");
+      return possibleHostname.trim();
+    }
+
+    // From DNS
     try {
       return InetAddress.getLocalHost().getHostName();
     } catch (final UnknownHostException e) {
