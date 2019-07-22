@@ -1,19 +1,21 @@
 import datadog.trace.api.Trace;
-import io.vertx.core.AbstractVerticle;
+import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
+import io.vertx.reactivex.circuitbreaker.CircuitBreaker;
+import io.vertx.reactivex.core.AbstractVerticle;
+import io.vertx.reactivex.core.buffer.Buffer;
+import io.vertx.reactivex.ext.web.Router;
+import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.client.WebClient;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-public class VertxWebTestServer extends AbstractVerticle {
+public class VertxRxWebTestServer extends AbstractVerticle {
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
 
   public static Vertx start(final int port) throws ExecutionException, InterruptedException {
@@ -24,7 +26,7 @@ public class VertxWebTestServer extends AbstractVerticle {
     final Vertx vertx = Vertx.vertx(new VertxOptions().setClusterPort(port));
 
     vertx.deployVerticle(
-        VertxWebTestServer.class.getName(),
+        VertxRxWebTestServer.class.getName(),
         new DeploymentOptions()
             .setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port))
             .setInstances(3),
@@ -42,11 +44,22 @@ public class VertxWebTestServer extends AbstractVerticle {
 
   @Override
   public void start(final Future<Void> startFuture) {
-    final HttpClient client = vertx.createHttpClient();
+    //    final io.vertx.reactivex.core.Vertx vertx = new io.vertx.reactivex.core.Vertx(this.vertx);
+    final WebClient client = WebClient.create(vertx);
 
     final int port = config().getInteger(CONFIG_HTTP_SERVER_PORT);
 
     final Router router = Router.router(vertx);
+    final CircuitBreaker breaker =
+        CircuitBreaker.create(
+            "my-circuit-breaker",
+            vertx,
+            new CircuitBreakerOptions()
+                .setMaxFailures(5) // number of failure before opening the circuit
+                .setTimeout(2000) // consider a failure if the operation does not succeed in time
+                //        .setFallbackOnFailure(true) // do we call the fallback on failure
+                .setResetTimeout(10000) // time spent in open state before attempting to re-try
+            );
 
     router
         .route("/")
@@ -64,21 +77,20 @@ public class VertxWebTestServer extends AbstractVerticle {
         .route("/proxy")
         .handler(
             routingContext -> {
-              client
-                  .get(
-                      port,
-                      "localhost",
-                      "/test",
-                      response -> {
-                        response.bodyHandler(
-                            buffer -> {
+              breaker.execute(
+                  ctx -> {
+                    client
+                        .get(port, "localhost", "/test")
+                        .rxSendBuffer(
+                            Optional.ofNullable(routingContext.getBody()).orElse(Buffer.buffer()))
+                        .subscribe(
+                            response -> {
                               routingContext
                                   .response()
                                   .setStatusCode(response.statusCode())
-                                  .end(buffer);
+                                  .end(response.body());
                             });
-                      })
-                  .end(Optional.ofNullable(routingContext.getBody()).orElse(Buffer.buffer()));
+                  });
             });
     router
         .route("/test")

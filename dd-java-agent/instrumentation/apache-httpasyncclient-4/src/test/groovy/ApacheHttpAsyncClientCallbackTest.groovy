@@ -1,6 +1,5 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator
-import io.opentracing.util.GlobalTracer
 import org.apache.http.HttpResponse
 import org.apache.http.concurrent.FutureCallback
 import org.apache.http.impl.nio.client.HttpAsyncClients
@@ -22,8 +21,6 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest<ApacheHttpAsyncCl
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    def hasParent = GlobalTracer.get().activeSpan() != null
-
     def request = new HttpUriRequest(method, uri)
     headers.entrySet().each {
       request.addHeader(new BasicHeader(it.key, it.value))
@@ -35,21 +32,13 @@ class ApacheHttpAsyncClientCallbackTest extends HttpClientTest<ApacheHttpAsyncCl
 
       @Override
       void completed(HttpResponse result) {
-        if (hasParent && GlobalTracer.get().activeSpan() == null) {
-          responseFuture.completeExceptionally(new Exception("Missing span in scope"))
-        } else {
-          responseFuture.complete(result.statusLine.statusCode)
-        }
+        responseFuture.complete(result.statusLine.statusCode)
         callback?.call()
       }
 
       @Override
       void failed(Exception ex) {
-        if (hasParent && GlobalTracer.get().activeSpan() == null) {
-          responseFuture.completeExceptionally(new Exception("Missing span in scope"))
-        } else {
-          responseFuture.completeExceptionally(ex)
-        }
+        responseFuture.completeExceptionally(ex)
       }
 
       @Override

@@ -9,7 +9,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import spock.lang.Shared
 
-class VertxServerTest extends AgentTestRunner {
+class VertxRxServerTest extends AgentTestRunner {
 
   @Shared
   OkHttpClient client = OkHttpUtils.client()
@@ -21,7 +21,7 @@ class VertxServerTest extends AgentTestRunner {
 
   def setupSpec() {
     port = PortUtils.randomOpenPort()
-    server = VertxWebTestServer.start(port)
+    server = VertxRxWebTestServer.start(port)
   }
 
   def cleanupSpec() {

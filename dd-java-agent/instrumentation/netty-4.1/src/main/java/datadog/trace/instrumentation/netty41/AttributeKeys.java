@@ -20,4 +20,7 @@ public class AttributeKeys {
 
   public static final AttributeKey<Span> CLIENT_ATTRIBUTE_KEY =
       AttributeKey.valueOf(HttpClientTracingHandler.class.getName() + ".span");
+
+  public static final AttributeKey<Span> CLIENT_PARENT_ATTRIBUTE_KEY =
+      AttributeKey.valueOf(HttpClientTracingHandler.class.getName() + ".parent");
 }
