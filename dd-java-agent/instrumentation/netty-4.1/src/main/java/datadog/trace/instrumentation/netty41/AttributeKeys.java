@@ -6,36 +6,35 @@ import datadog.trace.instrumentation.netty41.client.HttpClientTracingHandler;
 import datadog.trace.instrumentation.netty41.server.HttpServerTracingHandler;
 import io.netty.util.AttributeKey;
 import io.opentracing.Span;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class AttributeKeys {
 
   private static final WeakMap<ClassLoader, Map<String, AttributeKey<?>>> map =
-    WeakMap.Implementation.DEFAULT.get();
+      WeakMap.Implementation.DEFAULT.get();
 
   private static final WeakMap.ValueSupplier<Map<String, AttributeKey<?>>> mapSupplier =
-    new WeakMap.ValueSupplier<Map<String, AttributeKey<?>>>() {
-      @Override
-      public Map<String, AttributeKey<?>> get() {
-        return new ConcurrentHashMap<>();
-      }
-    };
+      new WeakMap.ValueSupplier<Map<String, AttributeKey<?>>>() {
+        @Override
+        public Map<String, AttributeKey<?>> get() {
+          return new ConcurrentHashMap<>();
+        }
+      };
 
   public static final AttributeKey<TraceScope.Continuation>
-    PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY =
-    attributeKey("datadog.trace.instrumentation.netty41.parent.connect.continuation");
+      PARENT_CONNECT_CONTINUATION_ATTRIBUTE_KEY =
+          attributeKey("datadog.trace.instrumentation.netty41.parent.connect.continuation");
 
   /**
    * This constant is copied over to datadog.trace.instrumentation.ratpack.server.TracingHandler, so
    * if this changes, that must also change.
    */
   public static final AttributeKey<Span> SERVER_ATTRIBUTE_KEY =
-    attributeKey(HttpServerTracingHandler.class.getName() + ".span");
+      attributeKey(HttpServerTracingHandler.class.getName() + ".span");
 
   public static final AttributeKey<Span> CLIENT_ATTRIBUTE_KEY =
-    attributeKey(HttpClientTracingHandler.class.getName() + ".span");
+      attributeKey(HttpClientTracingHandler.class.getName() + ".span");
 
   /**
    * Generate an attribute key or reuse the one existing in the global app map. This implementation
@@ -46,7 +45,7 @@ public class AttributeKeys {
    */
   private static <T> AttributeKey<T> attributeKey(String key) {
     Map<String, AttributeKey<?>> classLoaderMap =
-      map.getOrCreate(AttributeKey.class.getClassLoader(), mapSupplier);
+        map.getOrCreate(AttributeKey.class.getClassLoader(), mapSupplier);
     if (classLoaderMap.containsKey(key)) {
       return (AttributeKey<T>) classLoaderMap.get(key);
     }

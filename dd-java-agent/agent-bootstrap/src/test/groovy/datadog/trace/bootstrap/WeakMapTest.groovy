@@ -4,12 +4,11 @@ import spock.lang.Specification
 
 class WeakMapTest extends Specification {
 
+  def supplier = new CounterSupplier()
+
+  def sut = new WeakMap.MapAdapter<String, Integer>(new WeakHashMap<>())
 
   def "getOrCreate a value"() {
-    setup:
-    def supplier = new CounterSupplier()
-    def sut = new WeakMap.MapAdapter<String, Integer>(new WeakHashMap<>())
-
     when:
     def count = sut.getOrCreate('key', supplier)
 
@@ -19,10 +18,6 @@ class WeakMapTest extends Specification {
   }
 
   def "getOrCreate a value multiple times same class loader same key"() {
-    setup:
-    def supplier = new CounterSupplier()
-    def sut = new WeakMap.MapAdapter<String, Integer>(new WeakHashMap<>())
-
     when:
     def count1 = sut.getOrCreate('key', supplier)
     def count2 = sut.getOrCreate('key', supplier)
@@ -34,10 +29,6 @@ class WeakMapTest extends Specification {
   }
 
   def "getOrCreate a value multiple times same class loader different keys"() {
-    setup:
-    def supplier = new CounterSupplier()
-    def sut = new WeakMap.MapAdapter<String, Integer>(new WeakHashMap<>())
-
     when:
     def count1 = sut.getOrCreate('key1', supplier)
     def count2 = sut.getOrCreate('key2', supplier)
