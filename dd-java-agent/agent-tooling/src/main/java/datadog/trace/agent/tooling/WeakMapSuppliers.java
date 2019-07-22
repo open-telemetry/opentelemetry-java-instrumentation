@@ -179,7 +179,11 @@ class WeakMapSuppliers {
       @Override
       public V getOrCreate(K key, ValueSupplier<V> supplier) {
         if (!map.containsKey(key)) {
-          map.put(key, supplier.get());
+          synchronized (this) {
+            if (!map.containsKey(key)) {
+              map.put(key, supplier.get());
+            }
+          }
         }
 
         return map.get(key);
