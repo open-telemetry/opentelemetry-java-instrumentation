@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.springwebflux;
+package datadog.trace.instrumentation.springwebflux.server;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static java.util.Collections.singletonMap;

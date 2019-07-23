@@ -1,4 +1,4 @@
-package dd.trace.instrumentation.springwebflux
+package dd.trace.instrumentation.springwebflux.server
 
 import datadog.trace.api.Trace
 import org.springframework.http.MediaType

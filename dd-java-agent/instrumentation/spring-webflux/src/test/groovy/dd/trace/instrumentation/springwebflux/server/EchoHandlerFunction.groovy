@@ -1,4 +1,4 @@
-package dd.trace.instrumentation.springwebflux
+package dd.trace.instrumentation.springwebflux.server
 
 
 import org.springframework.web.reactive.function.server.HandlerFunction
