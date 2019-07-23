@@ -18,7 +18,7 @@ class TraceAssert {
 
   static void assertTrace(List<DDSpan> trace, int expectedSize,
                           @ClosureParams(value = SimpleType, options = ['datadog.trace.agent.test.asserts.TraceAssert'])
-                          @DelegatesTo(value = File, strategy = Closure.DELEGATE_FIRST) Closure spec) {
+                          @DelegatesTo(value = TraceAssert, strategy = Closure.DELEGATE_FIRST) Closure spec) {
     assert trace.size() == expectedSize
     def asserter = new TraceAssert(trace)
     def clone = (Closure) spec.clone()

@@ -37,8 +37,6 @@ class Netty40ServerTest  extends HttpServerTest<NettyHttpServerDecorator> {
 
   @Override
   void startServer(int port) {
-//    def handlers = [new HttpServerCodec()]
-    def handlers = [new HttpRequestDecoder(), new HttpResponseEncoder()]
     eventLoopGroup = new NioEventLoopGroup()
 
     ServerBootstrap bootstrap = new ServerBootstrap()
@@ -47,6 +45,8 @@ class Netty40ServerTest  extends HttpServerTest<NettyHttpServerDecorator> {
       .childHandler([
         initChannel: { ch ->
           ChannelPipeline pipeline = ch.pipeline()
+          // def handlers = [new HttpServerCodec()]
+          def handlers = [new HttpRequestDecoder(), new HttpResponseEncoder()]
           handlers.each { pipeline.addLast(it) }
           pipeline.addLast([
             channelRead0       : { ctx, msg ->

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 public class TagSettingAsyncListener implements AsyncListener {
@@ -41,12 +42,17 @@ public class TagSettingAsyncListener implements AsyncListener {
   @Override
   public void onError(final AsyncEvent event) throws IOException {
     if (event.getThrowable() != null && activated.compareAndSet(false, true)) {
+      DECORATE.onResponse(span, (HttpServletResponse) event.getSuppliedResponse());
       if (((HttpServletResponse) event.getSuppliedResponse()).getStatus()
           == HttpServletResponse.SC_OK) {
         // exception is thrown in filter chain, but status code is incorrect
         Tags.HTTP_STATUS.set(span, 500);
       }
-      DECORATE.onError(span, event.getThrowable());
+      Throwable throwable = event.getThrowable();
+      if(throwable instanceof ServletException && throwable.getCause() != null) {
+        throwable = throwable.getCause();
+      }
+      DECORATE.onError(span, throwable);
       DECORATE.beforeFinish(span);
       span.finish();
     }
