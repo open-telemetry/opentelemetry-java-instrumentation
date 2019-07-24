@@ -3,6 +3,7 @@ package datadog.trace.agent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -11,6 +12,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.jar.JarFile;
 
 /** Entry point for initializing the agent. */
@@ -317,26 +319,19 @@ public class TracingAgent {
    *
    * @return Agent version
    */
-  public static String getAgentVersion() throws Exception {
-    BufferedReader output = null;
-    InputStreamReader input = null;
+  public static String getAgentVersion() throws IOException {
     final StringBuilder sb = new StringBuilder();
-    try {
-      input =
-          new InputStreamReader(
-              TracingAgent.class.getResourceAsStream("/dd-java-agent.version"), "UTF-8");
-      output = new BufferedReader(input);
-      for (int c = output.read(); c != -1; c = output.read()) {
+    try (final BufferedReader reader =
+        new BufferedReader(
+            new InputStreamReader(
+                TracingAgent.class.getResourceAsStream("/dd-java-agent.version"),
+                StandardCharsets.UTF_8))) {
+
+      for (int c = reader.read(); c != -1; c = reader.read()) {
         sb.append((char) c);
       }
-    } finally {
-      if (null != input) {
-        input.close();
-      }
-      if (null != output) {
-        output.close();
-      }
     }
+
     return sb.toString().trim();
   }
 }
