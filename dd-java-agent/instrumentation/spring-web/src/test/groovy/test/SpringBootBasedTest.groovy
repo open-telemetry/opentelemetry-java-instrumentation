@@ -12,7 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.MethodArgumentNotValidException
-import org.springframework.web.util.NestedServletException
 
 import static test.Application.PASS
 import static test.Application.USER
@@ -246,7 +245,7 @@ class SpringBootBasedTest extends AgentTestRunner {
             "component" "java-web-servlet"
             "http.status_code" 500
             "$DDTags.USER_NAME" USER
-            errorTags NestedServletException, "Request processing failed; nested exception is java.lang.RuntimeException: qwerty"
+            errorTags RuntimeException, "qwerty"
             defaultTags()
           }
         }

@@ -33,7 +33,9 @@ public class Servlet3Advice {
     final HttpServletRequest httpServletRequest = (HttpServletRequest) req;
     final SpanContext extractedContext =
         GlobalTracer.get()
-          .extract(Format.Builtin.HTTP_HEADERS, new HttpServletRequestExtractAdapter(httpServletRequest));
+            .extract(
+                Format.Builtin.HTTP_HEADERS,
+                new HttpServletRequestExtractAdapter(httpServletRequest));
 
     final Scope scope =
         GlobalTracer.get()

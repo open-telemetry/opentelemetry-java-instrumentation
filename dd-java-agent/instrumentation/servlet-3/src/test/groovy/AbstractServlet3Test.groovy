@@ -59,23 +59,24 @@ abstract class AbstractServlet3Test<CONTEXT> extends HttpServerTest<Servlet3Deco
   }
 
   protected ServerEndpoint lastRequest
+
   @Override
-  Request.Builder request(ServerEndpoint uri, String _method, String body) {
+  Request.Builder request(ServerEndpoint uri, String method, String body) {
     lastRequest = uri
-    super.request(uri, _method, body)
+    super.request(uri, method, body)
   }
 
   @Override
-  void serverSpan(TraceAssert trace, int index, String _traceId = null, String _parentId = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       serviceName expectedServiceName()
       operationName expectedOperationName()
       resourceName endpoint.status == 404 ? "404" : "$method ${endpoint.resolve(address).path}"
       spanType DDSpanTypes.HTTP_SERVER
       errored endpoint.errored
-      if (_parentId != null) {
-        traceId _traceId
-        parentId _parentId
+      if (parentID != null) {
+        traceId traceID
+        parentId parentID
       } else {
         parent()
       }
@@ -87,9 +88,9 @@ abstract class AbstractServlet3Test<CONTEXT> extends HttpServerTest<Servlet3Deco
         "$Tags.COMPONENT.key" serverDecorator.component()
         if (endpoint.errored) {
           "$Tags.ERROR.key" endpoint.errored
-          "error.msg" { it == null || it == EXCEPTION.body}
-          "error.type" { it == null || it == Exception.name}
-          "error.stack" { it == null || it instanceof String}
+          "error.msg" { it == null || it == EXCEPTION.body }
+          "error.type" { it == null || it == Exception.name }
+          "error.stack" { it == null || it instanceof String }
         }
         "$Tags.HTTP_STATUS.key" endpoint.status
         "$Tags.HTTP_URL.key" "${endpoint.resolve(address)}"
@@ -97,7 +98,7 @@ abstract class AbstractServlet3Test<CONTEXT> extends HttpServerTest<Servlet3Deco
 //          "$DDTags.HTTP_QUERY" uri.query
 //          "$DDTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
 //        }
-        "$Tags.PEER_HOSTNAME.key" "localhost"
+        "$Tags.PEER_HOSTNAME.key" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_PORT.key" Integer
         "$Tags.PEER_HOST_IPV4.key" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_METHOD.key" method

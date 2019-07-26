@@ -49,7 +49,7 @@ public class TagSettingAsyncListener implements AsyncListener {
         Tags.HTTP_STATUS.set(span, 500);
       }
       Throwable throwable = event.getThrowable();
-      if(throwable instanceof ServletException && throwable.getCause() != null) {
+      if (throwable instanceof ServletException && throwable.getCause() != null) {
         throwable = throwable.getCause();
       }
       DECORATE.onError(span, throwable);

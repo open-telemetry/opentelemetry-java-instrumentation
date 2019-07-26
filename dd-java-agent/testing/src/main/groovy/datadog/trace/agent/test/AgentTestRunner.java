@@ -27,6 +27,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -202,7 +203,8 @@ public abstract class AgentTestRunner extends Specification {
     ListWriterAssert.assertTraces(TEST_WRITER, size, spec);
   }
 
-  public void blockUntilChildSpansFinished(final int numberOfSpans) throws InterruptedException {
+  @SneakyThrows
+  public static void blockUntilChildSpansFinished(final int numberOfSpans) {
     final Span span = io.opentracing.util.GlobalTracer.get().activeSpan();
     if (span instanceof DDSpan) {
       final PendingTrace pendingTrace = ((DDSpan) span).context().getTrace();

@@ -145,7 +145,7 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
     where:
     method = "GET"
     body = null
-    count << [ 1, 4, 50 ] // make multiple requests.
+    count << [1, 4, 50] // make multiple requests.
   }
 
   def "test success with parent"() {
@@ -251,7 +251,7 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
     // If this is failing, make sure HttpServerTestAdvice is applied correctly.
     TEST_WRITER.waitForTraces(size * 2)
     // TEST_WRITER is a CopyOnWriteArrayList, which doesn't support remove()
-    def toRemove = TEST_WRITER.findAll() {
+    def toRemove = TEST_WRITER.findAll {
       it.size() == 1 && it.get(0).operationName == "TEST_SPAN"
     }
     toRemove.each {
@@ -321,6 +321,7 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
   def setup() {
     ENABLE_TEST_ADVICE.set(true)
   }
+
   def cleanup() {
     ENABLE_TEST_ADVICE.set(false)
   }
