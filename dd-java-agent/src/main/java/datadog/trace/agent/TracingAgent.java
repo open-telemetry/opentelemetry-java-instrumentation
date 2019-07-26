@@ -31,8 +31,6 @@ public class TracingAgent {
   private static ClassLoader AGENT_CLASSLOADER = null;
   private static ClassLoader JMXFETCH_CLASSLOADER = null;
   private static File bootstrapJar = null;
-  private static File toolingJar = null;
-  private static File jmxFetchJar = null;
 
   public static void premain(final String agentArgs, final Instrumentation inst) throws Exception {
     agentmain(agentArgs, inst);
@@ -81,7 +79,8 @@ public class TracingAgent {
     if (AGENT_CLASSLOADER == null) {
       // bootstrap jar must be appended before agent classloader is created.
       inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
-      final ClassLoader agentClassLoader = createDatadogClassLoader(bootstrapJar, toolingJar);
+      final ClassLoader agentClassLoader =
+          createDatadogClassLoader(bootstrapJar, "agent-tooling-and-instrumentation.jar.zip");
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         Thread.currentThread().setContextClassLoader(agentClassLoader);
@@ -111,7 +110,8 @@ public class TracingAgent {
   public static synchronized void startJmxFetch() throws Exception {
     initializeJars();
     if (JMXFETCH_CLASSLOADER == null) {
-      final ClassLoader jmxFetchClassLoader = createDatadogClassLoader(bootstrapJar, jmxFetchJar);
+      final ClassLoader jmxFetchClassLoader =
+          createDatadogClassLoader(bootstrapJar, "agent-jmxfetch.jar.zip");
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         Thread.currentThread().setContextClassLoader(jmxFetchClassLoader);
@@ -151,18 +151,6 @@ public class TracingAgent {
               "agent-bootstrap.jar.zip",
               "agent-bootstrap.jar");
     }
-    if (toolingJar == null) {
-      toolingJar =
-          extractToTmpFile(
-              TracingAgent.class.getClassLoader(),
-              "agent-tooling-and-instrumentation.jar.zip",
-              "agent-tooling-and-instrumentation.jar");
-    }
-    if (jmxFetchJar == null) {
-      jmxFetchJar =
-          extractToTmpFile(
-              TracingAgent.class.getClassLoader(), "agent-jmxfetch.jar.zip", "agent-jmxfetch.jar");
-    }
   }
 
   /**
@@ -170,11 +158,12 @@ public class TracingAgent {
    * the bootstrap classpath.
    *
    * @param bootstrapJar datadog bootstrap jar which has been appended to the bootstrap loader
-   * @param toolingJar jar to use for the classpath of the datadog classloader
+   * @param innerJarFilename Filename of internal jar to use for the classpath of the datadog
+   *     classloader
    * @return Datadog Classloader
    */
   private static ClassLoader createDatadogClassLoader(
-      final File bootstrapJar, final File toolingJar) throws Exception {
+      final File bootstrapJar, final String innerJarFilename) throws Exception {
     final ClassLoader agentParent;
     final String javaVersion = System.getProperty("java.version");
     if (javaVersion.startsWith("1.7") || javaVersion.startsWith("1.8")) {
@@ -183,13 +172,18 @@ public class TracingAgent {
       // platform classloader is parent of system in java 9+
       agentParent = getPlatformClassLoader();
     }
+
     final Class<?> loaderClass =
         ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.DatadogClassLoader");
     final Constructor constructor =
-        loaderClass.getDeclaredConstructor(URL.class, URL.class, ClassLoader.class);
+        loaderClass.getDeclaredConstructor(
+            URL.class, String.class, ClassLoader.class, ClassLoader.class);
     return (ClassLoader)
         constructor.newInstance(
-            bootstrapJar.toURI().toURL(), toolingJar.toURI().toURL(), agentParent);
+            bootstrapJar.toURI().toURL(),
+            innerJarFilename,
+            TracingAgent.class.getClassLoader(),
+            agentParent);
   }
 
   /** Extract sourcePath out of loader to a temporary file named destName. */
