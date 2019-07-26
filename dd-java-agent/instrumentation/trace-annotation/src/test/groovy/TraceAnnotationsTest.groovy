@@ -38,6 +38,77 @@ class TraceAnnotationsTest extends AgentTestRunner {
     }
   }
 
+  def "test simple case with only operation name set"() {
+    setup:
+    // Test single span in new trace
+    SayTracedHello.sayHA()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "test"
+          resourceName "SAY_HA"
+          operationName "SAY_HA"
+          spanType "DB"
+          parent()
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "trace"
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
+
+  def "test simple case with only resource name set"() {
+    setup:
+    // Test single span in new trace
+    SayTracedHello.sayHelloOnlyResourceSet()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "test"
+          resourceName "WORLD"
+          operationName "SayTracedHello.sayHelloOnlyResourceSet"
+          parent()
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "trace"
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
+
+  def "test simple case with both resource and operation name set"() {
+    setup:
+    // Test single span in new trace
+    SayTracedHello.sayHAWithResource()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          serviceName "test"
+          resourceName "EARTH"
+          operationName "SAY_HA"
+          spanType "DB"
+          parent()
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "trace"
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
+
   def "test complex case annotations"() {
     when:
     // Test new trace with 2 children spans
@@ -82,6 +153,94 @@ class TraceAnnotationsTest extends AgentTestRunner {
     }
   }
 
+  def "test complex case with resource name at top level"() {
+    when:
+    // Test new trace with 2 children spans
+    SayTracedHello.sayHELLOsayHAWithResource()
+
+    then:
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          resourceName "WORLD"
+          operationName "NEW_TRACE"
+          parent()
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "trace"
+            defaultTags()
+          }
+        }
+        span(1) {
+          resourceName "SAY_HA"
+          operationName "SAY_HA"
+          spanType "DB"
+          childOf span(0)
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "trace"
+            defaultTags()
+          }
+        }
+        span(2) {
+          serviceName "test"
+          resourceName "SayTracedHello.sayHello"
+          operationName "SayTracedHello.sayHello"
+          childOf span(0)
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "trace"
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
+
+  def "test complex case with resource name at various levels"() {
+    when:
+    // Test new trace with 2 children spans
+    SayTracedHello.sayHELLOsayHAMixedResourceChildren()
+
+    then:
+    assertTraces(1) {
+      trace(0, 3) {
+        span(0) {
+          resourceName "WORLD"
+          operationName "NEW_TRACE"
+          parent()
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "trace"
+            defaultTags()
+          }
+        }
+        span(1) {
+          resourceName "EARTH"
+          operationName "SAY_HA"
+          spanType "DB"
+          childOf span(0)
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "trace"
+            defaultTags()
+          }
+        }
+        span(2) {
+          serviceName "test"
+          resourceName "SayTracedHello.sayHello"
+          operationName "SayTracedHello.sayHello"
+          childOf span(0)
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "trace"
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
+
   def "test exception exit"() {
     setup:
 
@@ -99,6 +258,35 @@ class TraceAnnotationsTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           resourceName "ERROR"
+          operationName "ERROR"
+          errored true
+          tags {
+            "$Tags.COMPONENT.key" "trace"
+            errorTags(error.class)
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
+
+  def "test exception exit with resource name"() {
+    setup:
+
+    TEST_TRACER.addDecorator(new ErrorFlag())
+
+    Throwable error = null
+    try {
+      SayTracedHello.sayERRORWithResource()
+    } catch (final Throwable ex) {
+      error = ex
+    }
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          resourceName "WORLD"
           operationName "ERROR"
           errored true
           tags {

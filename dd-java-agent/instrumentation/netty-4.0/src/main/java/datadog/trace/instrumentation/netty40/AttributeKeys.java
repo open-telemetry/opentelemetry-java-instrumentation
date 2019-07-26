@@ -32,6 +32,9 @@ public class AttributeKeys {
   public static final AttributeKey<Span> CLIENT_ATTRIBUTE_KEY =
       attributeKey(HttpClientTracingHandler.class.getName() + ".span");
 
+  public static final AttributeKey<Span> CLIENT_PARENT_ATTRIBUTE_KEY =
+      attributeKey(HttpClientTracingHandler.class.getName() + ".parent");
+
   /**
    * Generate an attribute key or reuse the one existing in the global app map. This implementation
    * creates attributes only once even if the current class is loaded by several class loaders and

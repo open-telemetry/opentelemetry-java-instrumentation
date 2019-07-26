@@ -31,7 +31,7 @@ class VertxServerTest extends AgentTestRunner {
   def "test server request/response"() {
     setup:
     def request = new Request.Builder()
-      .url("http://localhost:$port/test")
+      .url("http://localhost:$port/proxy")
       .header("x-datadog-trace-id", "123")
       .header("x-datadog-parent-id", "456")
       .get()
@@ -43,14 +43,13 @@ class VertxServerTest extends AgentTestRunner {
     response.body().string() == "Hello World"
 
     and:
-    assertTraces(1) {
+    assertTraces(2) {
       trace(0, 2) {
         span(0) {
-          traceId "123"
-          parentId "456"
           serviceName "unnamed-java-app"
           operationName "netty.request"
           resourceName "GET /test"
+          childOf(trace(1).get(1))
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -68,6 +67,47 @@ class VertxServerTest extends AgentTestRunner {
         span(1) {
           childOf span(0)
           assert span(1).operationName.endsWith('.tracedMethod')
+        }
+      }
+      trace(1, 2) {
+        span(0) {
+          serviceName "unnamed-java-app"
+          operationName "netty.request"
+          resourceName "GET /proxy"
+          traceId "123"
+          parentId "456"
+          spanType DDSpanTypes.HTTP_SERVER
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "netty"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.HTTP_URL.key" "http://localhost:$port/proxy"
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" Integer
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            defaultTags(true)
+          }
+        }
+        span(1) {
+          serviceName "unnamed-java-app"
+          operationName "netty.client.request"
+          resourceName "GET /test"
+          childOf(span(0))
+          spanType DDSpanTypes.HTTP_CLIENT
+          errored false
+          tags {
+            "$Tags.COMPONENT.key" "netty-client"
+            "$Tags.HTTP_METHOD.key" "GET"
+            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.HTTP_URL.key" "http://localhost:$port/test"
+            "$Tags.PEER_HOSTNAME.key" "localhost"
+            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+            "$Tags.PEER_PORT.key" Integer
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            defaultTags()
+          }
         }
       }
     }

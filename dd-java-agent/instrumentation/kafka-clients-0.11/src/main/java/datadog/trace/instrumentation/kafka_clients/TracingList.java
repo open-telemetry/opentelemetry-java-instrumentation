@@ -1,23 +1,19 @@
 package datadog.trace.instrumentation.kafka_clients;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-public class TracingList implements List<ConsumerRecord> {
+public class TracingList extends TracingIterable implements List<ConsumerRecord> {
   private final List<ConsumerRecord> delegate;
-  private final String operationName;
-  private final KafkaDecorator decorator;
 
   public TracingList(
       final List<ConsumerRecord> delegate,
       final String operationName,
       final KafkaDecorator decorator) {
+    super(delegate, operationName, decorator);
     this.delegate = delegate;
-    this.operationName = operationName;
-    this.decorator = decorator;
   }
 
   @Override
@@ -33,11 +29,6 @@ public class TracingList implements List<ConsumerRecord> {
   @Override
   public boolean contains(final Object o) {
     return delegate.contains(o);
-  }
-
-  @Override
-  public Iterator<ConsumerRecord> iterator() {
-    return new TracingIterator(delegate.iterator(), operationName, decorator);
   }
 
   @Override
@@ -137,6 +128,10 @@ public class TracingList implements List<ConsumerRecord> {
 
   @Override
   public List<ConsumerRecord> subList(final int fromIndex, final int toIndex) {
-    return new TracingList(delegate.subList(fromIndex, toIndex), operationName, decorator);
+    // TODO: the API for subList is not really good to instrument it in context of Kafka
+    // Consumer so we will not do that for now
+    // Kafka is essentially a sequential commit log. We should only enable tracing when traversing
+    // sequentially with an iterator
+    return delegate.subList(fromIndex, toIndex);
   }
 }

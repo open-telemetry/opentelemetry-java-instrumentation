@@ -25,8 +25,16 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
 
     def response
     try {
-      response = Http.get(system).singleRequest(request, materializer).toCompletableFuture().get()
+      response = Http.get(system)
+        .singleRequest(request, materializer)
+        //.whenComplete { result, error ->
+            // FIXME: Callback should be here instead.
+        //  callback?.call()
+        //}
+        .toCompletableFuture()
+        .get()
     } finally {
+      // FIXME: remove this when callback above works.
       blockUntilChildSpansFinished(1)
     }
     callback?.call()

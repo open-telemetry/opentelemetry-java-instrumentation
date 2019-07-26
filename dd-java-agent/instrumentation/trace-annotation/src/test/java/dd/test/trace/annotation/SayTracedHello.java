@@ -15,12 +15,27 @@ public class SayTracedHello {
     return "hello!";
   }
 
+  @Trace(resourceName = "WORLD")
+  public static String sayHelloOnlyResourceSet() {
+    new StringTag(DDTags.SERVICE_NAME)
+        .set(GlobalTracer.get().scopeManager().active().span(), "test");
+    return "hello!";
+  }
+
   @Trace(operationName = "SAY_HA")
   public static String sayHA() {
     new StringTag(DDTags.SERVICE_NAME)
         .set(GlobalTracer.get().scopeManager().active().span(), "test");
     new StringTag(DDTags.SPAN_TYPE).set(GlobalTracer.get().scopeManager().active().span(), "DB");
     return "HA!!";
+  }
+
+  @Trace(operationName = "SAY_HA", resourceName = "EARTH")
+  public static String sayHAWithResource() {
+    new StringTag(DDTags.SERVICE_NAME)
+        .set(GlobalTracer.get().scopeManager().active().span(), "test");
+    new StringTag(DDTags.SPAN_TYPE).set(GlobalTracer.get().scopeManager().active().span(), "DB");
+    return "HA EARTH!!";
   }
 
   @Trace(operationName = "NEW_TRACE")
@@ -30,8 +45,27 @@ public class SayTracedHello {
     return sayHello() + sayHA();
   }
 
+  @Trace(operationName = "NEW_TRACE", resourceName = "WORLD")
+  public static String sayHELLOsayHAWithResource() {
+    new StringTag(DDTags.SERVICE_NAME)
+        .set(GlobalTracer.get().scopeManager().active().span(), "test2");
+    return sayHello() + sayHA();
+  }
+
+  @Trace(operationName = "NEW_TRACE", resourceName = "WORLD")
+  public static String sayHELLOsayHAMixedResourceChildren() {
+    new StringTag(DDTags.SERVICE_NAME)
+        .set(GlobalTracer.get().scopeManager().active().span(), "test2");
+    return sayHello() + sayHAWithResource();
+  }
+
   @Trace(operationName = "ERROR")
   public static String sayERROR() {
+    throw new RuntimeException();
+  }
+
+  @Trace(operationName = "ERROR", resourceName = "WORLD")
+  public static String sayERRORWithResource() {
     throw new RuntimeException();
   }
 

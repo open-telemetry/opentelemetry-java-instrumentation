@@ -429,7 +429,7 @@ class RatpackTest extends AgentTestRunner {
           serviceName "unnamed-java-app"
           operationName "netty.client.request"
           spanType DDSpanTypes.HTTP_CLIENT
-          childOf(span(3))
+          childOf(span(1))
           errored false
           tags {
             "$Tags.COMPONENT.key" "netty-client"

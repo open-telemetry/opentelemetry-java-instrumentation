@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import datadog.opentracing.ContainerInfo;
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTraceOTInfo;
 import datadog.trace.common.writer.unixdomainsockets.UnixDomainSocketFactory;
@@ -35,6 +36,7 @@ public class DDApi {
   private static final String DATADOG_META_LANG_INTERPRETER_VENDOR =
       "Datadog-Meta-Lang-Interpreter-Vendor";
   private static final String DATADOG_META_TRACER_VERSION = "Datadog-Meta-Tracer-Version";
+  private static final String DATADOG_CONTAINER_ID = "Datadog-Container-ID";
   private static final String X_DATADOG_TRACE_COUNT = "X-Datadog-Trace-Count";
 
   private static final int HTTP_TIMEOUT = 1; // 1 second for conenct/read/write operations
@@ -261,13 +263,21 @@ public class DDApi {
   }
 
   private static Request.Builder prepareRequest(final HttpUrl url) {
-    return new Request.Builder()
-        .url(url)
-        .addHeader(DATADOG_META_LANG, "java")
-        .addHeader(DATADOG_META_LANG_VERSION, DDTraceOTInfo.JAVA_VERSION)
-        .addHeader(DATADOG_META_LANG_INTERPRETER, DDTraceOTInfo.JAVA_VM_NAME)
-        .addHeader(DATADOG_META_LANG_INTERPRETER_VENDOR, DDTraceOTInfo.JAVA_VM_VENDOR)
-        .addHeader(DATADOG_META_TRACER_VERSION, DDTraceOTInfo.VERSION);
+    final Request.Builder builder =
+        new Request.Builder()
+            .url(url)
+            .addHeader(DATADOG_META_LANG, "java")
+            .addHeader(DATADOG_META_LANG_VERSION, DDTraceOTInfo.JAVA_VERSION)
+            .addHeader(DATADOG_META_LANG_INTERPRETER, DDTraceOTInfo.JAVA_VM_NAME)
+            .addHeader(DATADOG_META_LANG_INTERPRETER_VENDOR, DDTraceOTInfo.JAVA_VM_VENDOR)
+            .addHeader(DATADOG_META_TRACER_VERSION, DDTraceOTInfo.VERSION);
+
+    final String containerId = ContainerInfo.get().getContainerId();
+    if (containerId == null) {
+      return builder;
+    } else {
+      return builder.addHeader(DATADOG_CONTAINER_ID, containerId);
+    }
   }
 
   @Override

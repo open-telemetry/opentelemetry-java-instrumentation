@@ -44,6 +44,7 @@ public class ContinuableScope implements Scope, TraceScope {
       final Continuation continuation,
       final DDSpan spanUnderScope,
       final boolean finishOnClose) {
+    assert spanUnderScope != null : "span must not be null";
     this.scopeManager = scopeManager;
     this.openCount = openCount;
     this.continuation = continuation;
