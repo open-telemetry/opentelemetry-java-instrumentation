@@ -137,25 +137,24 @@ class JettyServlet3TestDispatchImmediate extends JettyDispatchTest {
   }
 }
 
-// TODO: Behavior in this test is pretty inconsistent with expectations. Fix and reenable.
-//class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
-//  @Override
-//  Class<Servlet> servlet() {
-//    TestServlet3.Async
-//  }
-//
-//  @Override
-//  protected void setupServlets(ServletContextHandler context) {
-//    super.setupServlets(context)
-//
-//    addServlet(context, "/dispatch" + SUCCESS.path, TestServlet3.DispatchAsync)
-//    addServlet(context, "/dispatch" + ERROR.path, TestServlet3.DispatchAsync)
-//    addServlet(context, "/dispatch" + EXCEPTION.path, TestServlet3.DispatchAsync)
-//    addServlet(context, "/dispatch" + REDIRECT.path, TestServlet3.DispatchAsync)
-//    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet3.DispatchAsync)
-//    addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
-//  }
-//}
+class JettyServlet3TestDispatchAsync extends JettyDispatchTest {
+  @Override
+  Class<Servlet> servlet() {
+    TestServlet3.Async
+  }
+
+  @Override
+  protected void setupServlets(ServletContextHandler context) {
+    super.setupServlets(context)
+
+    addServlet(context, "/dispatch" + SUCCESS.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + ERROR.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + EXCEPTION.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + REDIRECT.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
+  }
+}
 
 abstract class JettyDispatchTest extends JettyServlet3Test {
   @Override

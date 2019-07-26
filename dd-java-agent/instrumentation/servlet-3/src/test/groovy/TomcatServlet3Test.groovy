@@ -178,25 +178,24 @@ class TomcatServlet3TestDispatchImmediate extends TomcatDispatchTest {
   }
 }
 
-// TODO: Behavior in this test is pretty inconsistent with expectations. Fix and reenable.
-//class TomcatServlet3TestDispatchAsync extends TomcatDispatchTest {
-//  @Override
-//  Class<Servlet> servlet() {
-//    TestServlet3.Async
-//  }
-//
-//  @Override
-//  protected void setupServlets(Context context) {
-//    super.setupServlets(context)
-//
-//    addServlet(context, "/dispatch" + SUCCESS.path, TestServlet3.DispatchAsync)
-//    addServlet(context, "/dispatch" + ERROR.path, TestServlet3.DispatchAsync)
-//    addServlet(context, "/dispatch" + EXCEPTION.path, TestServlet3.DispatchAsync)
-//    addServlet(context, "/dispatch" + REDIRECT.path, TestServlet3.DispatchAsync)
-//    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet3.DispatchAsync)
-//    addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
-//  }
-//}
+class TomcatServlet3TestDispatchAsync extends TomcatDispatchTest {
+  @Override
+  Class<Servlet> servlet() {
+    TestServlet3.Async
+  }
+
+  @Override
+  protected void setupServlets(Context context) {
+    super.setupServlets(context)
+
+    addServlet(context, "/dispatch" + SUCCESS.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + ERROR.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + EXCEPTION.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + REDIRECT.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, TestServlet3.DispatchAsync)
+    addServlet(context, "/dispatch/recursive", TestServlet3.DispatchRecursive)
+  }
+}
 
 abstract class TomcatDispatchTest extends TomcatServlet3Test {
   @Override

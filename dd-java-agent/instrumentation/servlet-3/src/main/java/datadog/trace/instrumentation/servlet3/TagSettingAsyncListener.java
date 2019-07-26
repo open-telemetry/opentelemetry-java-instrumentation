@@ -58,9 +58,9 @@ public class TagSettingAsyncListener implements AsyncListener {
     }
   }
 
-  /** Finish current span on dispatch. New listener will be attached by Servlet3Advice */
+  /** Transfer the listener over to the new context. */
   @Override
   public void onStartAsync(final AsyncEvent event) throws IOException {
-    onComplete(event);
+    event.getAsyncContext().addListener(this);
   }
 }
