@@ -55,7 +55,7 @@ class OkHttp3Test extends HttpClientTest<OkHttpClientDecorator> {
         if (exception) {
           errorTags(exception.class, exception.message)
         }
-        "$Tags.COMPONENT.key" decorator.component()
+        "$Tags.COMPONENT.key" clientDecorator.component()
         "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
       }
     }
