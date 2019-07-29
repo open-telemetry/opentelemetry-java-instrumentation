@@ -2,11 +2,8 @@ package datadog.trace.agent;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -30,7 +27,7 @@ public class TracingAgent {
   // fields must be managed under class lock
   private static ClassLoader AGENT_CLASSLOADER = null;
   private static ClassLoader JMXFETCH_CLASSLOADER = null;
-  private static File bootstrapJar = null;
+  private static URL BOOTSTRAP_URL = null;
 
   public static void premain(final String agentArgs, final Instrumentation inst) throws Exception {
     agentmain(agentArgs, inst);
@@ -39,7 +36,7 @@ public class TracingAgent {
   public static void agentmain(final String agentArgs, final Instrumentation inst)
       throws Exception {
     configureLogger();
-    startDatadogAgent(agentArgs, inst);
+    startDatadogAgent(inst);
     if (isAppUsingCustomLogManager()) {
       System.out.println("Custom logger detected. Delaying JMXFetch initialization.");
       /*
@@ -62,25 +59,22 @@ public class TracingAgent {
             @Override
             public void run() {
               try {
-                startJmxFetch();
+                startJmxFetch(inst);
               } catch (final Exception e) {
                 throw new RuntimeException(e);
               }
             }
           });
     } else {
-      startJmxFetch();
+      startJmxFetch(inst);
     }
   }
 
-  public static synchronized void startDatadogAgent(
-      final String agentArgs, final Instrumentation inst) throws Exception {
-    initializeJars();
+  public static synchronized void startDatadogAgent(final Instrumentation inst) throws Exception {
+    installBootstrapJar(inst);
     if (AGENT_CLASSLOADER == null) {
-      // bootstrap jar must be appended before agent classloader is created.
-      inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJar));
       final ClassLoader agentClassLoader =
-          createDatadogClassLoader(bootstrapJar, "agent-tooling-and-instrumentation.jar.zip");
+          createDatadogClassLoader("agent-tooling-and-instrumentation.jar.zip");
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         Thread.currentThread().setContextClassLoader(agentClassLoader);
@@ -107,11 +101,10 @@ public class TracingAgent {
     }
   }
 
-  public static synchronized void startJmxFetch() throws Exception {
-    initializeJars();
+  public static synchronized void startJmxFetch(final Instrumentation inst) throws Exception {
+    installBootstrapJar(inst);
     if (JMXFETCH_CLASSLOADER == null) {
-      final ClassLoader jmxFetchClassLoader =
-          createDatadogClassLoader(bootstrapJar, "agent-jmxfetch.jar.zip");
+      final ClassLoader jmxFetchClassLoader = createDatadogClassLoader("agent-jmxfetch.jar.zip");
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         Thread.currentThread().setContextClassLoader(jmxFetchClassLoader);
@@ -138,18 +131,13 @@ public class TracingAgent {
     }
   }
 
-  /**
-   * Extract embeded jars out of the dd-java-agent to a temporary location.
-   *
-   * <p>Has no effect if jars are already extracted.
-   */
-  private static synchronized void initializeJars() throws Exception {
-    if (bootstrapJar == null) {
-      bootstrapJar =
-          extractToTmpFile(
-              TracingAgent.class.getClassLoader(),
-              "agent-bootstrap.jar.zip",
-              "agent-bootstrap.jar");
+  private static synchronized void installBootstrapJar(final Instrumentation inst)
+      throws Exception {
+    if (BOOTSTRAP_URL == null) {
+      BOOTSTRAP_URL = TracingAgent.class.getProtectionDomain().getCodeSource().getLocation();
+
+      // bootstrap jar must be appended before agent classloader is created.
+      inst.appendToBootstrapClassLoaderSearch(new JarFile(new File(BOOTSTRAP_URL.toURI())));
     }
   }
 
@@ -157,13 +145,12 @@ public class TracingAgent {
    * Create the datadog classloader. This must be called after the bootstrap jar has been appened to
    * the bootstrap classpath.
    *
-   * @param bootstrapJar datadog bootstrap jar which has been appended to the bootstrap loader
    * @param innerJarFilename Filename of internal jar to use for the classpath of the datadog
    *     classloader
    * @return Datadog Classloader
    */
-  private static ClassLoader createDatadogClassLoader(
-      final File bootstrapJar, final String innerJarFilename) throws Exception {
+  private static ClassLoader createDatadogClassLoader(final String innerJarFilename)
+      throws Exception {
     final ClassLoader agentParent;
     final String javaVersion = System.getProperty("java.version");
     if (javaVersion.startsWith("1.7") || javaVersion.startsWith("1.8")) {
@@ -180,53 +167,7 @@ public class TracingAgent {
             URL.class, String.class, ClassLoader.class, ClassLoader.class);
     return (ClassLoader)
         constructor.newInstance(
-            bootstrapJar.toURI().toURL(),
-            innerJarFilename,
-            TracingAgent.class.getClassLoader(),
-            agentParent);
-  }
-
-  /** Extract sourcePath out of loader to a temporary file named destName. */
-  private static File extractToTmpFile(
-      final ClassLoader loader, final String sourcePath, final String destName) throws Exception {
-    final String destPrefix;
-    final String destSuffix;
-    {
-      final int i = destName.lastIndexOf('.');
-      if (i > 0) {
-        destPrefix = destName.substring(0, i);
-        destSuffix = destName.substring(i);
-      } else {
-        destPrefix = destName;
-        destSuffix = "";
-      }
-    }
-    InputStream inputStream = null;
-    OutputStream outputStream = null;
-    try {
-      inputStream = loader.getResourceAsStream(sourcePath);
-      if (inputStream == null) {
-        throw new RuntimeException(sourcePath + ": Not found by loader: " + loader);
-      }
-
-      int readBytes;
-      final byte[] buffer = new byte[4096];
-      final File tmpFile = File.createTempFile(destPrefix, destSuffix);
-      tmpFile.deleteOnExit();
-      outputStream = new FileOutputStream(tmpFile);
-      while ((readBytes = inputStream.read(buffer)) > 0) {
-        outputStream.write(buffer, 0, readBytes);
-      }
-
-      return tmpFile;
-    } finally {
-      if (null != inputStream) {
-        inputStream.close();
-      }
-      if (null != outputStream) {
-        outputStream.close();
-      }
-    }
+            BOOTSTRAP_URL, innerJarFilename, TracingAgent.class.getClassLoader(), agentParent);
   }
 
   private static ClassLoader getPlatformClassLoader()
