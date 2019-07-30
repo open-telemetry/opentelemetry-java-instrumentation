@@ -125,7 +125,7 @@ class ErrorHandlerValve extends ErrorReportValve {
       return
     }
     try {
-      response.writer.print(t.cause.message)
+      response.writer.print(t ? t.cause.message : response.message)
     } catch (IOException e) {
       e.printStackTrace()
     }

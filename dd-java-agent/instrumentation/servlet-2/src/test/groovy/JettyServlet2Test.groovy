@@ -1,197 +1,116 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.OkHttpUtils
-import datadog.trace.agent.test.utils.PortUtils
+import datadog.trace.agent.test.asserts.TraceAssert
+import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
-import okhttp3.Credentials
-import okhttp3.Interceptor
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
-import org.eclipse.jetty.http.HttpHeaders
-import org.eclipse.jetty.http.security.Constraint
-import org.eclipse.jetty.security.ConstraintMapping
-import org.eclipse.jetty.security.ConstraintSecurityHandler
-import org.eclipse.jetty.security.HashLoginService
-import org.eclipse.jetty.security.LoginService
-import org.eclipse.jetty.security.authentication.BasicAuthenticator
+import datadog.trace.instrumentation.servlet2.Servlet2Decorator
+import io.opentracing.tag.Tags
+import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
 
-class JettyServlet2Test extends AgentTestRunner {
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-  OkHttpClient client = OkHttpUtils.clientBuilder().addNetworkInterceptor(new Interceptor() {
-    @Override
-    Response intercept(Interceptor.Chain chain) throws IOException {
-      def response = chain.proceed(chain.request())
-      TEST_WRITER.waitForTraces(1)
-      return response
-    }
-  })
-    .build()
+class JettyServlet2Test extends HttpServerTest<Servlet2Decorator> {
 
-  int port
+  private static final CONTEXT = "ctx"
   private Server jettyServer
-  private ServletContextHandler servletContext
 
-  def setup() {
-    port = PortUtils.randomOpenPort()
+  @Override
+  void startServer(int port) {
     jettyServer = new Server(port)
-    servletContext = new ServletContextHandler()
-    servletContext.contextPath = "/ctx"
+    jettyServer.connectors.each { it.resolveNames = true } // get localhost instead of 127.0.0.1
+    ServletContextHandler servletContext = new ServletContextHandler(null, "/$CONTEXT")
+    servletContext.errorHandler = new ErrorHandler() {
+      protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
+        Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception")
+        writer.write(th ? th.message : message)
+      }
+    }
 
-    ConstraintSecurityHandler security = setupAuthentication(jettyServer)
+    // FIXME: Add tests for security/authentication.
+//    ConstraintSecurityHandler security = setupAuthentication(jettyServer)
+//    servletContext.setSecurityHandler(security)
 
-    servletContext.setSecurityHandler(security)
-    servletContext.addServlet(TestServlet2.Sync, "/sync")
-    servletContext.addServlet(TestServlet2.Sync, "/auth/sync")
+    servletContext.addServlet(TestServlet2.Sync, SUCCESS.path)
+    servletContext.addServlet(TestServlet2.Sync, ERROR.path)
+    servletContext.addServlet(TestServlet2.Sync, EXCEPTION.path)
+    servletContext.addServlet(TestServlet2.Sync, REDIRECT.path)
+    servletContext.addServlet(TestServlet2.Sync, AUTH_REQUIRED.path)
 
     jettyServer.setHandler(servletContext)
     jettyServer.start()
   }
 
-  def cleanup() {
+  @Override
+  void stopServer() {
     jettyServer.stop()
     jettyServer.destroy()
   }
 
-  def "test #path servlet call (auth: #auth, distributed tracing: #distributedTracing)"() {
-    setup:
-    def requestBuilder = new Request.Builder()
-      .url("http://localhost:$port/ctx/$path")
-      .get()
-    if (distributedTracing) {
-      requestBuilder.header("x-datadog-trace-id", "123")
-      requestBuilder.header("x-datadog-parent-id", "456")
-    }
-    if (auth) {
-      requestBuilder.header(HttpHeaders.AUTHORIZATION, Credentials.basic("user", "password"))
-    }
-    def response = client.newCall(requestBuilder.build()).execute()
-
-    expect:
-    response.body().string().trim() == expectedResponse
-
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          if (distributedTracing) {
-            traceId "123"
-            parentId "456"
-          } else {
-            parent()
-          }
-          serviceName "ctx"
-          operationName "servlet.request"
-          resourceName "GET /ctx/$path"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored false
-          tags {
-            "http.url" "http://localhost:$port/ctx/$path"
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "java-web-servlet"
-            "peer.hostname" "127.0.0.1"
-            "peer.ipv4" "127.0.0.1"
-            "span.origin.type" "TestServlet2\$Sync"
-            "servlet.context" "/ctx"
-            if (auth) {
-              "$DDTags.USER_NAME" "user"
-            }
-            defaultTags(distributedTracing)
-          }
-        }
-      }
-    }
-
-    where:
-    path        | expectedResponse | auth  | distributedTracing
-    "sync"      | "Hello Sync"     | false | false
-    "auth/sync" | "Hello Sync"     | true  | false
-    "sync"      | "Hello Sync"     | false | true
-    "auth/sync" | "Hello Sync"     | true  | true
+  @Override
+  URI buildAddress() {
+    return new URI("http://localhost:$port/$CONTEXT/")
   }
 
-  def "test #path error servlet call"() {
-    setup:
-    def request = new Request.Builder()
-      .url("http://localhost:$port/ctx/$path?error=true")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
-
-    expect:
-    response.body().string().trim() != expectedResponse
-
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "ctx"
-          operationName "servlet.request"
-          resourceName "GET /ctx/$path"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored true
-          parent()
-          tags {
-            "http.url" "http://localhost:$port/ctx/$path"
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "java-web-servlet"
-            "peer.hostname" "127.0.0.1"
-            "peer.ipv4" "127.0.0.1"
-            "span.origin.type" "TestServlet2\$Sync"
-            "servlet.context" "/ctx"
-            errorTags(RuntimeException, "some $path error")
-            defaultTags()
-          }
-        }
-      }
-    }
-
-    where:
-    path   | expectedResponse
-    "sync" | "Hello Sync"
+  @Override
+  Servlet2Decorator decorator() {
+    return Servlet2Decorator.DECORATE
   }
 
-  def "test #path non-throwing-error servlet call"() {
-    // This doesn't actually detect the error because we can't get the status code via the old servlet API.
-    setup:
-    def request = new Request.Builder()
-      .url("http://localhost:$port/ctx/$path?non-throwing-error=true")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
+  @Override
+  String expectedServiceName() {
+    CONTEXT
+  }
 
-    expect:
-    response.body().string().trim() != expectedResponse
+  @Override
+  String expectedOperationName() {
+    return "servlet.request"
+  }
 
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "ctx"
-          operationName "servlet.request"
-          resourceName "GET /ctx/$path"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored false
-          parent()
-          tags {
-            "http.url" "http://localhost:$port/ctx/$path"
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "java-web-servlet"
-            "peer.hostname" "127.0.0.1"
-            "peer.ipv4" "127.0.0.1"
-            "span.origin.type" "TestServlet2\$Sync"
-            "servlet.context" "/ctx"
-            defaultTags()
-          }
+  @Override
+  boolean testNotFound() {
+    false
+  }
+
+  // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    trace.span(index) {
+      serviceName expectedServiceName()
+      operationName expectedOperationName()
+      resourceName endpoint.status == 404 ? "404" : "$method ${endpoint.resolve(address).path}"
+      spanType DDSpanTypes.HTTP_SERVER
+      errored endpoint.errored
+      if (parentID != null) {
+        traceId traceID
+        parentId parentID
+      } else {
+        parent()
+      }
+      tags {
+        "servlet.context" "/$CONTEXT"
+        "span.origin.type" TestServlet2.Sync.name
+
+        defaultTags(true)
+        "$Tags.COMPONENT.key" serverDecorator.component()
+        if (endpoint.errored) {
+          "$Tags.ERROR.key" endpoint.errored
+          "error.msg" { it == null || it == EXCEPTION.body }
+          "error.type" { it == null || it == Exception.name }
+          "error.stack" { it == null || it instanceof String }
         }
+        "$Tags.HTTP_STATUS.key" endpoint.status
+        "$Tags.HTTP_URL.key" "${endpoint.resolve(address)}"
+        "$Tags.PEER_HOSTNAME.key" "localhost"
+        // No peer port
+        "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
+        "$Tags.HTTP_METHOD.key" method
+        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
       }
     }
-
-    where:
-    path   | expectedResponse
-    "sync" | "Hello Sync"
   }
 
   /**
@@ -204,26 +123,26 @@ class JettyServlet2Test extends AgentTestRunner {
    * @param jettyServer server to attach login service
    * @return SecurityHandler that can be assigned to servlet
    */
-  private ConstraintSecurityHandler setupAuthentication(Server jettyServer) {
-    ConstraintSecurityHandler security = new ConstraintSecurityHandler()
-
-    Constraint constraint = new Constraint()
-    constraint.setName("auth")
-    constraint.setAuthenticate(true)
-    constraint.setRoles("role")
-
-    ConstraintMapping mapping = new ConstraintMapping()
-    mapping.setPathSpec("/auth/*")
-    mapping.setConstraint(constraint)
-
-    security.setConstraintMappings(mapping)
-    security.setAuthenticator(new BasicAuthenticator())
-
-    LoginService loginService = new HashLoginService("TestRealm",
-      "src/test/resources/realm.properties")
-    security.setLoginService(loginService)
-    jettyServer.addBean(loginService)
-
-    security
-  }
+//  private ConstraintSecurityHandler setupAuthentication(Server jettyServer) {
+//    ConstraintSecurityHandler security = new ConstraintSecurityHandler()
+//
+//    Constraint constraint = new Constraint()
+//    constraint.setName("auth")
+//    constraint.setAuthenticate(true)
+//    constraint.setRoles("role")
+//
+//    ConstraintMapping mapping = new ConstraintMapping()
+//    mapping.setPathSpec("/auth/*")
+//    mapping.setConstraint(constraint)
+//
+//    security.setConstraintMappings(mapping)
+//    security.setAuthenticator(new BasicAuthenticator())
+//
+//    LoginService loginService = new HashLoginService("TestRealm",
+//      "src/test/resources/realm.properties")
+//    security.setLoginService(loginService)
+//    jettyServer.addBean(loginService)
+//
+//    security
+//  }
 }

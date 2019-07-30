@@ -11,6 +11,14 @@ muzzle {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
 dependencies {
   compileOnly group: 'javax.servlet', name: 'servlet-api', version: '2.3'
 
@@ -26,4 +34,7 @@ dependencies {
   }
   testCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.0.0.v20091005'
   testCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.0.0.v20091005'
+
+  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '7.+'
+  latestDepTestCompile group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '7.+'
 }

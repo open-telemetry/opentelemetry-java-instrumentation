@@ -43,13 +43,18 @@ public class Servlet2Decorator
 
   @Override
   protected Integer peerPort(final HttpServletRequest httpServletRequest) {
+    // HttpServletResponse doesn't have accessor for remote port.
     return null;
   }
 
   @Override
   protected Integer status(final ServletResponse httpServletResponse) {
-    // HttpServletResponse doesn't have accessor for status code.
-    return null;
+    if (httpServletResponse instanceof StatusSavingHttpServletResponseWrapper) {
+      return ((StatusSavingHttpServletResponseWrapper) httpServletResponse).status;
+    } else {
+      // HttpServletResponse doesn't have accessor for status code.
+      return null;
+    }
   }
 
   @Override

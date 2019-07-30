@@ -22,12 +22,14 @@ class TestServlet3 {
         resp.contentType = "text/plain"
         switch (endpoint) {
           case SUCCESS:
-          case ERROR:
             resp.status = endpoint.status
             resp.writer.print(endpoint.body)
             break
           case REDIRECT:
             resp.sendRedirect(endpoint.body)
+            break
+          case ERROR:
+            resp.sendError(endpoint.status, endpoint.body)
             break
           case EXCEPTION:
             throw new Exception(endpoint.body)
