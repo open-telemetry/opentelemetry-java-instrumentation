@@ -155,7 +155,15 @@ public class JMXFetch {
           integrationName.add(config.replace(".yaml", ""));
           if (Config.get().isJmxFetchIntegrationEnabled(integrationName, false)) {
             final URL resource = JMXFetch.class.getResource("metricconfigs/" + config);
-            result.add(resource.getPath().split("\\.jar!/")[1]);
+
+            // jar!/ means a file internal to a jar, only add the part after if it exists
+            final String path = resource.getPath();
+            final int filenameIndex = path.indexOf("jar!/");
+            if (filenameIndex != -1) {
+              result.add(path.substring(filenameIndex + 5));
+            } else {
+              result.add(path.substring(1));
+            }
           }
         }
         return result;

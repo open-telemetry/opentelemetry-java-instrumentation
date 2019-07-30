@@ -105,7 +105,7 @@ public class DatadogClassLoader extends URLClassLoader {
     }
 
     public BootstrapClassLoaderProxy(final URL[] urls) {
-      super(urls);
+      super(urls, null);
     }
 
     @Override
