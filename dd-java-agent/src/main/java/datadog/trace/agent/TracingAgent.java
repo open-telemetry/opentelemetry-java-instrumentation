@@ -53,20 +53,26 @@ public class TracingAgent {
       final Method registerCallbackMethod =
           agentInstallerClass.getMethod("registerClassLoadCallback", String.class, Runnable.class);
       registerCallbackMethod.invoke(
-          null,
-          "java.util.logging.LogManager",
-          new Runnable() {
-            @Override
-            public void run() {
-              try {
-                startJmxFetch(inst);
-              } catch (final Exception e) {
-                throw new RuntimeException(e);
-              }
-            }
-          });
+          null, "java.util.logging.LogManager", new LoggingCallback(inst));
     } else {
       startJmxFetch(inst);
+    }
+  }
+
+  protected static class LoggingCallback implements Runnable {
+    private final Instrumentation inst;
+
+    public LoggingCallback(final Instrumentation inst) {
+      this.inst = inst;
+    }
+
+    @Override
+    public void run() {
+      try {
+        startJmxFetch(inst);
+      } catch (final Exception e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 

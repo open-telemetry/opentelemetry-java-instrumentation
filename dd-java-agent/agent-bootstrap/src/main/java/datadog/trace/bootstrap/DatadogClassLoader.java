@@ -10,6 +10,7 @@ import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.nio.file.NoSuchFileException;
+import java.security.Permission;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -148,10 +149,16 @@ public class DatadogClassLoader extends URLClassLoader {
 
     @Override
     protected URLConnection openConnection(final URL url) throws IOException {
+      if (url.getFile().equals("/")) {
+        // "/" is used as the default url of the jar
+        // This is called by the SecureClassLoader trying to obtain permissions
+        return new InternalJarURLConnection(url, new byte[] {});
+      }
+
       final byte[] bytes = filenameToBytes.get(url.getFile());
 
       if (bytes == null) {
-        throw new NoSuchFileException(url.getFile());
+        throw new NoSuchFileException(url.getFile(), null, url.getFile() + " not in internal jar");
       }
 
       return new InternalJarURLConnection(url, bytes);
@@ -174,6 +181,12 @@ public class DatadogClassLoader extends URLClassLoader {
     @Override
     public InputStream getInputStream() throws IOException {
       return new ByteArrayInputStream(bytes);
+    }
+
+    @Override
+    public Permission getPermission() {
+      // No permissions needed because all classes are in memory
+      return null;
     }
   }
 
