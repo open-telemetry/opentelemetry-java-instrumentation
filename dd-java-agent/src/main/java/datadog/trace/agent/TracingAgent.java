@@ -5,11 +5,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.CodeSource;
 import java.util.jar.JarFile;
 
 /** Entry point for initializing the agent. */
@@ -140,10 +143,34 @@ public class TracingAgent {
   private static synchronized void installBootstrapJar(final Instrumentation inst)
       throws Exception {
     if (BOOTSTRAP_URL == null) {
-      BOOTSTRAP_URL = TracingAgent.class.getProtectionDomain().getCodeSource().getLocation();
+      File bootstrapJarFile = null;
 
-      // bootstrap jar must be appended before agent classloader is created.
-      inst.appendToBootstrapClassLoaderSearch(new JarFile(new File(BOOTSTRAP_URL.toURI())));
+      final CodeSource codeSource = TracingAgent.class.getProtectionDomain().getCodeSource();
+
+      if (codeSource != null) {
+        BOOTSTRAP_URL = codeSource.getLocation();
+        bootstrapJarFile = new File(BOOTSTRAP_URL.toURI());
+      }
+
+      if (bootstrapJarFile == null || bootstrapJarFile.isDirectory()) {
+        // Certain tests (and when running with an IDE) have a folder as the CP
+        // Get the jar from the -javaagent parameter
+        final RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+        for (final String arg : runtimeMxBean.getInputArguments()) {
+          if (arg.startsWith("-javaagent")) {
+            BOOTSTRAP_URL = new URL("file:" + arg.substring(arg.indexOf(":") + 1));
+            bootstrapJarFile = new File(BOOTSTRAP_URL.toURI());
+            break;
+          }
+        }
+
+        if (bootstrapJarFile == null) {
+          throw new Exception(
+              "Unable to install bootstrap jar because agent is running from directory");
+        }
+      }
+
+      inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJarFile));
     }
   }
 
@@ -169,11 +196,8 @@ public class TracingAgent {
     final Class<?> loaderClass =
         ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.DatadogClassLoader");
     final Constructor constructor =
-        loaderClass.getDeclaredConstructor(
-            URL.class, String.class, ClassLoader.class, ClassLoader.class);
-    return (ClassLoader)
-        constructor.newInstance(
-            BOOTSTRAP_URL, innerJarFilename, TracingAgent.class.getClassLoader(), agentParent);
+        loaderClass.getDeclaredConstructor(URL.class, String.class, ClassLoader.class);
+    return (ClassLoader) constructor.newInstance(BOOTSTRAP_URL, innerJarFilename, agentParent);
   }
 
   private static ClassLoader getPlatformClassLoader()

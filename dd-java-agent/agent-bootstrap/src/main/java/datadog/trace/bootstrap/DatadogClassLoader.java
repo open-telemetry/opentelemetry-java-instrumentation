@@ -34,7 +34,6 @@ public class DatadogClassLoader extends URLClassLoader {
   // As a workaround, we keep a reference to the bootstrap jar
   // to use only for resource lookups.
   private final BootstrapClassLoaderProxy bootstrapProxy;
-
   /**
    * Construct a new DatadogClassLoader
    *
@@ -44,25 +43,23 @@ public class DatadogClassLoader extends URLClassLoader {
    *     9+.
    */
   public DatadogClassLoader(
-      final URL bootstrapJarLocation,
-      final String internalJarFileName,
-      final ClassLoader classloaderForJarResource,
-      final ClassLoader parent) {
+      final URL bootstrapJarLocation, final String internalJarFileName, final ClassLoader parent) {
     super(new URL[] {}, parent);
     bootstrapProxy = new BootstrapClassLoaderProxy(new URL[] {bootstrapJarLocation});
 
-    if (classloaderForJarResource != null) { // Some tests pass null
+    if (internalJarFileName != null) { // some tests pass null
       try {
         // The fields of the URL are mostly dummy.  InternalJarURLHandler is the only important
         // field.  If extending this class from Classloader instead of URLClassloader required less
         // boilerplate it could be used and the need for dummy fields would be reduced
+
         final URL internalJarURL =
             new URL(
                 "x-internal-jar",
                 null,
                 0,
                 "/",
-                new InternalJarURLHandler(internalJarFileName, classloaderForJarResource));
+                new InternalJarURLHandler(internalJarFileName, bootstrapProxy));
 
         addURL(internalJarURL);
       } catch (final MalformedURLException e) {
