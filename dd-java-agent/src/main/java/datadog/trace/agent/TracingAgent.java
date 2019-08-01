@@ -5,15 +5,17 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
-import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.CodeSource;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import sun.management.ManagementFactoryHelper;
 
 /** Entry point for initializing the agent. */
 public class TracingAgent {
@@ -141,36 +143,31 @@ public class TracingAgent {
   }
 
   private static synchronized void installBootstrapJar(final Instrumentation inst)
-      throws Exception {
+      throws IOException, URISyntaxException {
     if (BOOTSTRAP_URL == null) {
-      File bootstrapJarFile = null;
 
-      final CodeSource codeSource = TracingAgent.class.getProtectionDomain().getCodeSource();
+      // ManagementFactory loads the Logging MBean class in JDKs after 1.8
+      // This prevents custom logging from working correctly
+      // Instead, use the helper to get the bean
+      final RuntimeMXBean runtimeMxBean = ManagementFactoryHelper.getRuntimeMXBean();
 
-      if (codeSource != null) {
-        BOOTSTRAP_URL = codeSource.getLocation();
-        bootstrapJarFile = new File(BOOTSTRAP_URL.toURI());
-      }
+      for (final String arg : runtimeMxBean.getInputArguments()) {
+        if (arg.startsWith("-javaagent")) {
+          // argument is of the form -javaagent:/path/to/dd-java-agent.jar=optionalargumentstring
+          final Matcher matcher = Pattern.compile("-javaagent:([^=]+).*").matcher(arg);
 
-      if (bootstrapJarFile == null || bootstrapJarFile.isDirectory()) {
-        // Certain tests (and when running with an IDE) have a folder as the CP
-        // Get the jar from the -javaagent parameter
-        final RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
-        for (final String arg : runtimeMxBean.getInputArguments()) {
-          if (arg.startsWith("-javaagent")) {
-            BOOTSTRAP_URL = new URL("file:" + arg.substring(arg.indexOf(":") + 1));
-            bootstrapJarFile = new File(BOOTSTRAP_URL.toURI());
-            break;
+          if (!matcher.matches()) {
+            throw new RuntimeException("Unable to parse javaagent parameter: " + arg);
           }
-        }
 
-        if (bootstrapJarFile == null) {
-          throw new Exception(
-              "Unable to install bootstrap jar because agent is running from directory");
+          BOOTSTRAP_URL = new URL("file:" + matcher.group(1));
+          inst.appendToBootstrapClassLoaderSearch(new JarFile(new File(BOOTSTRAP_URL.toURI())));
+          return;
         }
       }
 
-      inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapJarFile));
+      throw new RuntimeException(
+          "Unable to install bootstrap jar.  -javaagent parameter not found");
     }
   }
 
