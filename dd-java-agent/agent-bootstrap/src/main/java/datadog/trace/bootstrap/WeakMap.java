@@ -18,21 +18,23 @@ public interface WeakMap<K, V> {
 
   void putIfAbsent(K key, V value);
 
+  V getOrCreate(K key, ValueSupplier<V> supplier);
+
   @Slf4j
   class Provider {
-    private static final AtomicReference<Supplier> provider =
-        new AtomicReference<>(Supplier.DEFAULT);
+    private static final AtomicReference<Implementation> provider =
+        new AtomicReference<>(Implementation.DEFAULT);
 
-    public static void registerIfAbsent(final Supplier provider) {
-      if (provider != null && provider != Supplier.DEFAULT) {
-        if (Provider.provider.compareAndSet(Supplier.DEFAULT, provider)) {
+    public static void registerIfAbsent(final Implementation provider) {
+      if (provider != null && provider != Implementation.DEFAULT) {
+        if (Provider.provider.compareAndSet(Implementation.DEFAULT, provider)) {
           log.debug("Weak map provider set to {}", provider);
         }
       }
     }
 
     public static boolean isProviderRegistered() {
-      return provider.get() != Supplier.DEFAULT;
+      return provider.get() != Implementation.DEFAULT;
     }
 
     public static <K, V> WeakMap<K, V> newWeakMap() {
@@ -40,13 +42,13 @@ public interface WeakMap<K, V> {
     }
   }
 
-  interface Supplier {
+  interface Implementation {
     <K, V> WeakMap<K, V> get();
 
-    Supplier DEFAULT = new Default();
+    Implementation DEFAULT = new Default();
 
     @Slf4j
-    class Default implements Supplier {
+    class Default implements Implementation {
 
       @Override
       public <K, V> WeakMap<K, V> get() {
@@ -54,6 +56,14 @@ public interface WeakMap<K, V> {
         return new MapAdapter<>(Collections.synchronizedMap(new WeakHashMap<K, V>()));
       }
     }
+  }
+
+  /**
+   * Supplies the value to be stored and it is called only when a value does not exists yet in the
+   * registry.
+   */
+  interface ValueSupplier<V> {
+    V get();
   }
 
   class MapAdapter<K, V> implements WeakMap<K, V> {
@@ -94,6 +104,19 @@ public interface WeakMap<K, V> {
           }
         }
       }
+    }
+
+    @Override
+    public V getOrCreate(K key, ValueSupplier<V> supplier) {
+      if (!map.containsKey(key)) {
+        synchronized (this) {
+          if (!map.containsKey(key)) {
+            map.put(key, supplier.get());
+          }
+        }
+      }
+
+      return map.get(key);
     }
 
     @Override
