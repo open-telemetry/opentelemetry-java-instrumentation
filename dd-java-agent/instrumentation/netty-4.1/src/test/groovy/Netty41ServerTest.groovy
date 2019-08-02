@@ -46,7 +46,6 @@ class Netty41ServerTest extends HttpServerTest<NettyHttpServerDecorator> {
         initChannel: { ch ->
           ChannelPipeline pipeline = ch.pipeline()
           def handlers = [new HttpServerCodec()]
-          // def handlers = [new HttpRequestDecoder(), new HttpResponseEncoder()]
           handlers.each { pipeline.addLast(it) }
           pipeline.addLast([
             channelRead0       : { ctx, msg ->

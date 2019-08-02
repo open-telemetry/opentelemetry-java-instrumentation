@@ -94,10 +94,6 @@ abstract class AbstractServlet3Test<CONTEXT> extends HttpServerTest<Servlet3Deco
         }
         "$Tags.HTTP_STATUS.key" endpoint.status
         "$Tags.HTTP_URL.key" "${endpoint.resolve(address)}"
-//        if (tagQueryString) {
-//          "$DDTags.HTTP_QUERY" uri.query
-//          "$DDTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
-//        }
         "$Tags.PEER_HOSTNAME.key" { it == "localhost" || it == "127.0.0.1" }
         "$Tags.PEER_PORT.key" Integer
         "$Tags.PEER_HOST_IPV4.key" { it == null || it == "127.0.0.1" } // Optional

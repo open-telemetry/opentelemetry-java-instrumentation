@@ -250,7 +250,7 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
           resourceName endpoint.status == 404 ? "404" : "GET ${endpoint.resolve(address).path}"
           spanType DDSpanTypes.HTTP_SERVER
           errored endpoint.errored
-          // parent()
+          // we can't reliably assert parent or child relationship here since both are tested.
           tags {
             "servlet.context" "/$context"
             "servlet.dispatch" endpoint.path

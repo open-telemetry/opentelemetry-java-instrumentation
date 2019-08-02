@@ -85,11 +85,7 @@ public class Servlet3Advice {
             // exception is thrown in filter chain, but status code is incorrect
             Tags.HTTP_STATUS.set(span, 500);
           }
-          if (throwable.getCause() == null) {
-            DECORATE.onError(span, throwable);
-          } else {
-            DECORATE.onError(span, throwable.getCause());
-          }
+          DECORATE.onError(span, throwable);
           DECORATE.beforeFinish(span);
           req.removeAttribute(SERVLET_SPAN);
           span.finish(); // Finish the span manually since finishSpanOnClose was false
