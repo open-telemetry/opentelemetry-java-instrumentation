@@ -5,17 +5,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
-import java.lang.management.RuntimeMXBean;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import sun.management.ManagementFactoryHelper;
 
 /** Entry point for initializing the agent. */
 public class TracingAgent {
@@ -32,7 +35,6 @@ public class TracingAgent {
   // fields must be managed under class lock
   private static ClassLoader AGENT_CLASSLOADER = null;
   private static ClassLoader JMXFETCH_CLASSLOADER = null;
-  private static URL BOOTSTRAP_URL = null;
 
   public static void premain(final String agentArgs, final Instrumentation inst) throws Exception {
     agentmain(agentArgs, inst);
@@ -41,8 +43,13 @@ public class TracingAgent {
   public static void agentmain(final String agentArgs, final Instrumentation inst)
       throws Exception {
     configureLogger();
-    startDatadogAgent(inst);
-    if (isAppUsingCustomLogManager()) {
+
+    final boolean usingCustomLogManager = isAppUsingCustomLogManager();
+
+    final URL bootstrapURL = installBootstrapJar(inst, usingCustomLogManager);
+
+    startDatadogAgent(inst, bootstrapURL);
+    if (usingCustomLogManager) {
       System.out.println("Custom logger detected. Delaying JMXFetch initialization.");
       /*
        * java.util.logging.LogManager maintains a final static LogManager, which is created during class initialization.
@@ -58,34 +65,38 @@ public class TracingAgent {
       final Method registerCallbackMethod =
           agentInstallerClass.getMethod("registerClassLoadCallback", String.class, Runnable.class);
       registerCallbackMethod.invoke(
-          null, "java.util.logging.LogManager", new LoggingCallback(inst));
+          null, "java.util.logging.LogManager", new LoggingCallback(inst, bootstrapURL));
     } else {
-      startJmxFetch(inst);
+      startJmxFetch(inst, bootstrapURL);
     }
   }
 
   protected static class LoggingCallback implements Runnable {
     private final Instrumentation inst;
+    private final URL bootstrapURL;
 
-    public LoggingCallback(final Instrumentation inst) {
+    public LoggingCallback(final Instrumentation inst, final URL bootstrapURL) {
       this.inst = inst;
+      this.bootstrapURL = bootstrapURL;
     }
 
     @Override
     public void run() {
       try {
-        startJmxFetch(inst);
+        startJmxFetch(inst, bootstrapURL);
       } catch (final Exception e) {
+        e.printStackTrace();
         throw new RuntimeException(e);
       }
     }
   }
 
-  public static synchronized void startDatadogAgent(final Instrumentation inst) throws Exception {
-    installBootstrapJar(inst);
+  private static synchronized void startDatadogAgent(
+      final Instrumentation inst, final URL bootstrapURL) throws Exception {
+
     if (AGENT_CLASSLOADER == null) {
       final ClassLoader agentClassLoader =
-          createDatadogClassLoader("agent-tooling-and-instrumentation.jar.zip");
+          createDatadogClassLoader("agent-tooling-and-instrumentation.jar.zip", bootstrapURL);
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         Thread.currentThread().setContextClassLoader(agentClassLoader);
@@ -96,7 +107,8 @@ public class TracingAgent {
               agentInstallerClass.getMethod("installBytebuddyAgent", Instrumentation.class);
           agentInstallerMethod.invoke(null, inst);
         }
-        { // install global tracer
+        {
+          // install global tracer
           final Class<?> tracerInstallerClass =
               agentClassLoader.loadClass("datadog.trace.agent.tooling.TracerInstaller");
           final Method tracerInstallerMethod =
@@ -112,10 +124,11 @@ public class TracingAgent {
     }
   }
 
-  public static synchronized void startJmxFetch(final Instrumentation inst) throws Exception {
-    installBootstrapJar(inst);
+  private static synchronized void startJmxFetch(final Instrumentation inst, final URL bootstrapURL)
+      throws Exception {
     if (JMXFETCH_CLASSLOADER == null) {
-      final ClassLoader jmxFetchClassLoader = createDatadogClassLoader("agent-jmxfetch.jar.zip");
+      final ClassLoader jmxFetchClassLoader =
+          createDatadogClassLoader("agent-jmxfetch.jar.zip", bootstrapURL);
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         Thread.currentThread().setContextClassLoader(jmxFetchClassLoader);
@@ -142,32 +155,87 @@ public class TracingAgent {
     }
   }
 
-  private static synchronized void installBootstrapJar(final Instrumentation inst)
+  private static synchronized URL installBootstrapJar(
+      final Instrumentation inst, final boolean usingCustomLogManager)
       throws IOException, URISyntaxException {
-    if (BOOTSTRAP_URL == null) {
+    URL bootstrapURL = null;
+    final List<String> arguments;
 
-      // ManagementFactory loads the Logging MBean class in JDKs after 1.8
-      // This prevents custom logging from working correctly
-      // Instead, use the helper to get the bean
-      final RuntimeMXBean runtimeMxBean = ManagementFactoryHelper.getRuntimeMXBean();
+    // ManagementFactory indirectly references java.util.logging.LogManager
+    // - On Oracle-based JDKs after 1.8
+    // - On IBM-based JDKs since at least 1.7
+    // This prevents custom log managers from working correctly
+    // Use reflection to bypass the loading of the class
+    if (usingCustomLogManager) {
+      System.out.println("Custom log manager detected: getting vm args through reflection");
+      arguments = getVMArgumentsThroughReflection();
+    } else {
+      arguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
+    }
 
-      for (final String arg : runtimeMxBean.getInputArguments()) {
-        if (arg.startsWith("-javaagent")) {
-          // argument is of the form -javaagent:/path/to/dd-java-agent.jar=optionalargumentstring
-          final Matcher matcher = Pattern.compile("-javaagent:([^=]+).*").matcher(arg);
+    for (final String arg : arguments) {
+      if (arg.startsWith("-javaagent")) {
+        // argument is of the form -javaagent:/path/to/dd-java-agent.jar=optionalargumentstring
+        final Matcher matcher = Pattern.compile("-javaagent:([^=]+).*").matcher(arg);
 
-          if (!matcher.matches()) {
-            throw new RuntimeException("Unable to parse javaagent parameter: " + arg);
-          }
+        if (!matcher.matches()) {
+          throw new RuntimeException("Unable to parse javaagent parameter: " + arg);
+        }
 
-          BOOTSTRAP_URL = new URL("file:" + matcher.group(1));
-          inst.appendToBootstrapClassLoaderSearch(new JarFile(new File(BOOTSTRAP_URL.toURI())));
-          return;
+        try {
+          bootstrapURL = new URL("file:" + matcher.group(1));
+
+        } catch (final MalformedURLException e) {
+          throw new RuntimeException("Malformed javaagent parameter: " + arg);
         }
       }
+    }
 
+    if (bootstrapURL != null) {
+      inst.appendToBootstrapClassLoaderSearch(new JarFile(new File(bootstrapURL.toURI())));
+      return bootstrapURL;
+    } else {
       throw new RuntimeException(
-          "Unable to install bootstrap jar.  -javaagent parameter not found");
+          "Unable to install bootstrap jar.  -javaagent parameter not parsable");
+    }
+  }
+
+  private static List<String> getVMArgumentsThroughReflection() {
+    try {
+      // Try Oracle-based
+      final Class managementFactoryHelperClass =
+          TracingAgent.class.getClassLoader().loadClass("sun.management.ManagementFactoryHelper");
+
+      final Class vmManagementClass =
+          TracingAgent.class.getClassLoader().loadClass("sun.management.VMManagement");
+
+      Object vmManagement;
+
+      try {
+        vmManagement =
+            managementFactoryHelperClass.getDeclaredMethod("getVMManagement").invoke(null);
+      } catch (final NoSuchMethodException e) {
+        // Older vm before getVMManagement() existed
+        final Field field = managementFactoryHelperClass.getDeclaredField("jvm");
+        field.setAccessible(true);
+        vmManagement = field.get(null);
+        field.setAccessible(false);
+      }
+
+      return (List<String>) vmManagementClass.getMethod("getVmArguments").invoke(vmManagement);
+
+    } catch (final ReflectiveOperationException e) {
+      try { // Try IBM-based.
+        final Class VMClass = TracingAgent.class.getClassLoader().loadClass("com.ibm.oti.vm.VM");
+        final String[] argArray = (String[]) VMClass.getMethod("getVMArgs").invoke(null);
+        return Arrays.asList(argArray);
+      } catch (final ReflectiveOperationException e1) {
+        // Fallback to default
+        System.out.println(
+            "WARNING: Unable to get VM args through reflection.  A custom java.util.logging.LogManager may not work correctly");
+
+        return ManagementFactory.getRuntimeMXBean().getInputArguments();
+      }
     }
   }
 
@@ -177,10 +245,11 @@ public class TracingAgent {
    *
    * @param innerJarFilename Filename of internal jar to use for the classpath of the datadog
    *     classloader
+   * @param bootStrapURL
    * @return Datadog Classloader
    */
-  private static ClassLoader createDatadogClassLoader(final String innerJarFilename)
-      throws Exception {
+  private static ClassLoader createDatadogClassLoader(
+      final String innerJarFilename, final URL bootStrapURL) throws Exception {
     final ClassLoader agentParent;
     final String javaVersion = System.getProperty("java.version");
     if (javaVersion.startsWith("1.7") || javaVersion.startsWith("1.8")) {
@@ -194,7 +263,7 @@ public class TracingAgent {
         ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.DatadogClassLoader");
     final Constructor constructor =
         loaderClass.getDeclaredConstructor(URL.class, String.class, ClassLoader.class);
-    return (ClassLoader) constructor.newInstance(BOOTSTRAP_URL, innerJarFilename, agentParent);
+    return (ClassLoader) constructor.newInstance(bootStrapURL, innerJarFilename, agentParent);
   }
 
   private static ClassLoader getPlatformClassLoader()
