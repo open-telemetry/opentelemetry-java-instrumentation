@@ -104,6 +104,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
       final Scope scope =
           GlobalTracer.get()
               .buildSpan("akka-http.request")
+              .ignoreActiveSpan()
               .asChildOf(extractedContext)
               .startActive(false);
 
