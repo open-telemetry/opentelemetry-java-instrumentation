@@ -10,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.ArrayList;
@@ -175,6 +177,17 @@ public class IntegrationTestUtils {
     return (String[]) f.get(null);
   }
 
+  private static String getAgentArgument() {
+    final RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+    for (final String arg : runtimeMxBean.getInputArguments()) {
+      if (arg.startsWith("-javaagent")) {
+        return arg;
+      }
+    }
+
+    throw new RuntimeException("Agent jar not found");
+  }
+
   /**
    * On a separate JVM, run the main method for a given class.
    *
@@ -192,18 +205,11 @@ public class IntegrationTestUtils {
       throws Exception {
 
     final String separator = System.getProperty("file.separator");
-    final String agentJar = System.getProperty("agent.jar.to.forward");
-
-    if (agentJar == null) {
-      throw new RuntimeException("agent.jar.to.forward property must be set");
-    }
-
-    final String classpath =
-        agentJar + System.getProperty("path.separator") + System.getProperty("java.class.path");
+    final String classpath = System.getProperty("java.class.path");
     final String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
 
     final List<String> vmArgsList = new ArrayList<>(Arrays.asList(jvmArgs));
-    vmArgsList.add("-javaagent:" + agentJar);
+    vmArgsList.add(getAgentArgument());
 
     final List<String> commands = new ArrayList<>();
     commands.add(path);
@@ -212,7 +218,6 @@ public class IntegrationTestUtils {
     commands.add(classpath);
     commands.add(mainClassName);
     commands.addAll(Arrays.asList(mainMethodArgs));
-
     final ProcessBuilder processBuilder = new ProcessBuilder(commands.toArray(new String[0]));
     processBuilder.environment().putAll(envVars);
     final Process process = processBuilder.start();
