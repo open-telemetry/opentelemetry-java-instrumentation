@@ -5,20 +5,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
+import java.security.CodeSource;
 import java.util.jar.JarFile;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /** Entry point for initializing the agent. */
 public class TracingAgent {
@@ -157,86 +151,33 @@ public class TracingAgent {
 
   private static synchronized URL installBootstrapJar(
       final Instrumentation inst, final boolean usingCustomLogManager)
-      throws IOException, URISyntaxException {
+      throws IOException, URISyntaxException, ClassNotFoundException {
     URL bootstrapURL = null;
-    final List<String> arguments;
+    File bootstrapFile = null;
 
-    // ManagementFactory indirectly references java.util.logging.LogManager
-    // - On Oracle-based JDKs after 1.8
-    // - On IBM-based JDKs since at least 1.7
-    // This prevents custom log managers from working correctly
-    // Use reflection to bypass the loading of the class
-    if (usingCustomLogManager) {
-      System.out.println("Custom log manager detected: getting vm args through reflection");
-      arguments = getVMArgumentsThroughReflection();
-    } else {
-      arguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
+    final CodeSource codeSource = TracingAgent.class.getProtectionDomain().getCodeSource();
+    if (codeSource != null) {
+      bootstrapURL = codeSource.getLocation();
+
+      bootstrapFile = new File(bootstrapURL.toURI());
     }
 
-    for (final String arg : arguments) {
-      if (arg.startsWith("-javaagent")) {
-        // argument is of the form -javaagent:/path/to/dd-java-agent.jar=optionalargumentstring
-        final Matcher matcher = Pattern.compile("-javaagent:([^=]+).*").matcher(arg);
+    if (bootstrapFile == null || bootstrapFile.isDirectory()) {
+      // At most one of ( DatadogClassLoader.class , TracingAgent.class ) has a CodeSource that
+      // doesn't lead to the agent jar
 
-        if (!matcher.matches()) {
-          throw new RuntimeException("Unable to parse javaagent parameter: " + arg);
-        }
+      bootstrapURL =
+          ClassLoader.getSystemClassLoader()
+              .loadClass("datadog.trace.bootstrap.DatadogClassLoader")
+              .getProtectionDomain()
+              .getCodeSource()
+              .getLocation();
 
-        try {
-          bootstrapURL = new URL("file:" + matcher.group(1));
-
-        } catch (final MalformedURLException e) {
-          throw new RuntimeException("Malformed javaagent parameter: " + arg);
-        }
-      }
+      bootstrapFile = new File(bootstrapURL.toURI());
     }
 
-    if (bootstrapURL != null) {
-      inst.appendToBootstrapClassLoaderSearch(new JarFile(new File(bootstrapURL.toURI())));
-      return bootstrapURL;
-    } else {
-      throw new RuntimeException(
-          "Unable to install bootstrap jar.  -javaagent parameter not parsable");
-    }
-  }
-
-  private static List<String> getVMArgumentsThroughReflection() {
-    try {
-      // Try Oracle-based
-      final Class managementFactoryHelperClass =
-          TracingAgent.class.getClassLoader().loadClass("sun.management.ManagementFactoryHelper");
-
-      final Class vmManagementClass =
-          TracingAgent.class.getClassLoader().loadClass("sun.management.VMManagement");
-
-      Object vmManagement;
-
-      try {
-        vmManagement =
-            managementFactoryHelperClass.getDeclaredMethod("getVMManagement").invoke(null);
-      } catch (final NoSuchMethodException e) {
-        // Older vm before getVMManagement() existed
-        final Field field = managementFactoryHelperClass.getDeclaredField("jvm");
-        field.setAccessible(true);
-        vmManagement = field.get(null);
-        field.setAccessible(false);
-      }
-
-      return (List<String>) vmManagementClass.getMethod("getVmArguments").invoke(vmManagement);
-
-    } catch (final ReflectiveOperationException e) {
-      try { // Try IBM-based.
-        final Class VMClass = TracingAgent.class.getClassLoader().loadClass("com.ibm.oti.vm.VM");
-        final String[] argArray = (String[]) VMClass.getMethod("getVMArgs").invoke(null);
-        return Arrays.asList(argArray);
-      } catch (final ReflectiveOperationException e1) {
-        // Fallback to default
-        System.out.println(
-            "WARNING: Unable to get VM args through reflection.  A custom java.util.logging.LogManager may not work correctly");
-
-        return ManagementFactory.getRuntimeMXBean().getInputArguments();
-      }
-    }
+    inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapFile));
+    return bootstrapURL;
   }
 
   /**

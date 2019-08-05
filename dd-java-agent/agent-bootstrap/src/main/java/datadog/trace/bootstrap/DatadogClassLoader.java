@@ -117,11 +117,15 @@ public class DatadogClassLoader extends URLClassLoader {
     }
   }
 
-  private static class InternalJarURLHandler extends URLStreamHandler {
+  protected static class InternalJarURLHandler extends URLStreamHandler {
     private final Map<String, byte[]> filenameToBytes = new HashMap<>();
 
     public InternalJarURLHandler(
         final String internalJarFileName, final ClassLoader classloaderForJarResource) {
+
+      // "/" is used as the default url of the jar
+      // This is called by the SecureClassLoader trying to obtain permissions
+      filenameToBytes.put("/", new byte[] {});
 
       final InputStream jarStream =
           classloaderForJarResource.getResourceAsStream(internalJarFileName);
@@ -146,12 +150,6 @@ public class DatadogClassLoader extends URLClassLoader {
 
     @Override
     protected URLConnection openConnection(final URL url) throws IOException {
-      if (url.getFile().equals("/")) {
-        // "/" is used as the default url of the jar
-        // This is called by the SecureClassLoader trying to obtain permissions
-        return new InternalJarURLConnection(url, new byte[] {});
-      }
-
       final byte[] bytes = filenameToBytes.get(url.getFile());
 
       if (bytes == null) {
@@ -162,7 +160,7 @@ public class DatadogClassLoader extends URLClassLoader {
     }
   }
 
-  private static class InternalJarURLConnection extends URLConnection {
+  protected static class InternalJarURLConnection extends URLConnection {
     private final byte[] bytes;
 
     private InternalJarURLConnection(final URL url, final byte[] bytes) {
