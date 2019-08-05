@@ -1,3 +1,5 @@
+import static datadog.trace.agent.test.AgentTestRunner.blockUntilChildSpansFinished;
+
 import datadog.trace.api.Trace;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
@@ -77,6 +79,7 @@ public class VertxWebTestServer extends AbstractVerticle {
                                   .setStatusCode(response.statusCode())
                                   .end(buffer);
                             });
+                        blockUntilChildSpansFinished(1);
                       })
                   .end(Optional.ofNullable(routingContext.getBody()).orElse(Buffer.buffer()));
             });

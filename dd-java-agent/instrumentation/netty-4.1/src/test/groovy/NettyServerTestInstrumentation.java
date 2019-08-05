@@ -15,7 +15,6 @@ public class NettyServerTestInstrumentation implements Instrumenter {
         .transform(
             new AgentBuilder.Transformer.ForAdvice()
                 .advice(
-                    named("fireChannelRead"),
-                    HttpServerTestAdvice.ServerEntryAdvice.class.getName()));
+                    named("channelRead"), HttpServerTestAdvice.ServerEntryAdvice.class.getName()));
   }
 }

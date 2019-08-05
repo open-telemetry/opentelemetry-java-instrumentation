@@ -31,14 +31,12 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
-class Netty40ServerTest  extends HttpServerTest<NettyHttpServerDecorator> {
+class Netty40ServerTest extends HttpServerTest<NettyHttpServerDecorator> {
   @Shared
   EventLoopGroup eventLoopGroup
 
   @Override
   void startServer(int port) {
-//    def handlers = [new HttpServerCodec()]
-    def handlers = [new HttpRequestDecoder(), new HttpResponseEncoder()]
     eventLoopGroup = new NioEventLoopGroup()
 
     ServerBootstrap bootstrap = new ServerBootstrap()
@@ -47,6 +45,7 @@ class Netty40ServerTest  extends HttpServerTest<NettyHttpServerDecorator> {
       .childHandler([
         initChannel: { ch ->
           ChannelPipeline pipeline = ch.pipeline()
+          def handlers = [new HttpRequestDecoder(), new HttpResponseEncoder()]
           handlers.each { pipeline.addLast(it) }
           pipeline.addLast([
             channelRead0       : { ctx, msg ->

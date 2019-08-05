@@ -319,7 +319,14 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "http.status_code" 500
-            errorTags(JasperException, String)
+            "error" true
+            "error.type" { String tagExceptionType ->
+              return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
+            }
+            "error.msg" { String tagErrorMsg ->
+              return errorMessageOptional || tagErrorMsg instanceof String
+            }
+            "error.stack" String
             defaultTags()
           }
         }

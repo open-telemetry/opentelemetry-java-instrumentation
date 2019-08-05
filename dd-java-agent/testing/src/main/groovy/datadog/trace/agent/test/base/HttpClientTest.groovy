@@ -21,6 +21,7 @@ import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
+@Unroll
 abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends AgentTestRunner {
   protected static final BODY_METHODS = ["POST", "PUT"]
 
@@ -69,7 +70,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     return null
   }
 
-  @Unroll
   def "basic #method request #url - tagQueryString=#tagQueryString"() {
     when:
     def status = withConfigOverride(Config.HTTP_CLIENT_TAG_QUERY_STRING, "$tagQueryString") {
@@ -98,7 +98,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     url = server.address.resolve(path)
   }
 
-  @Unroll
   def "basic #method request with parent"() {
     when:
     def status = runUnderTrace("parent") {
@@ -121,7 +120,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
 
   //FIXME: add tests for POST with large/chunked data
 
-  @Unroll
   def "basic #method request with split-by-domain"() {
     when:
     def status = withConfigOverride(Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true") {
@@ -212,7 +210,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     method = "GET"
   }
 
-  @Unroll
   def "basic #method request with 1 redirect"() {
     given:
     assumeTrue(testRedirects())
@@ -235,7 +232,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     method = "GET"
   }
 
-  @Unroll
   def "basic #method request with 2 redirects"() {
     given:
     assumeTrue(testRedirects())
@@ -259,7 +255,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     method = "GET"
   }
 
-  @Unroll
   def "basic #method request with circular redirects"() {
     given:
     assumeTrue(testRedirects())

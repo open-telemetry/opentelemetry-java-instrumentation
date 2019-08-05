@@ -4,6 +4,7 @@ import datadog.trace.agent.decorator.HttpServerDecorator;
 import io.opentracing.Span;
 import java.net.URI;
 import java.net.URISyntaxException;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -58,5 +59,15 @@ public class Servlet3Decorator
       span.setTag("servlet.context", request.getContextPath());
     }
     return super.onRequest(span, request);
+  }
+
+  @Override
+  public Span onError(final Span span, final Throwable throwable) {
+    if (throwable instanceof ServletException && throwable.getCause() != null) {
+      super.onError(span, throwable.getCause());
+    } else {
+      super.onError(span, throwable);
+    }
+    return span;
   }
 }

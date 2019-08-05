@@ -31,7 +31,7 @@ public abstract class HttpServerTestAdvice {
       }
     }
 
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static void methodExit(@Advice.Enter final Scope scope) {
       scope.close();
     }

@@ -40,6 +40,7 @@ public class Servlet3Advice {
     final Scope scope =
         GlobalTracer.get()
             .buildSpan("servlet.request")
+            .ignoreActiveSpan()
             .asChildOf(extractedContext)
             .withTag("span.origin.type", servlet.getClass().getName())
             .startActive(false);

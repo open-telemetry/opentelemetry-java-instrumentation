@@ -41,6 +41,7 @@ public class TagSettingAsyncListener implements AsyncListener {
   @Override
   public void onError(final AsyncEvent event) throws IOException {
     if (event.getThrowable() != null && activated.compareAndSet(false, true)) {
+      DECORATE.onResponse(span, (HttpServletResponse) event.getSuppliedResponse());
       if (((HttpServletResponse) event.getSuppliedResponse()).getStatus()
           == HttpServletResponse.SC_OK) {
         // exception is thrown in filter chain, but status code is incorrect
@@ -52,9 +53,9 @@ public class TagSettingAsyncListener implements AsyncListener {
     }
   }
 
-  /** Finish current span on dispatch. New listener will be attached by Servlet3Advice */
+  /** Transfer the listener over to the new context. */
   @Override
   public void onStartAsync(final AsyncEvent event) throws IOException {
-    onComplete(event);
+    event.getAsyncContext().addListener(this);
   }
 }
