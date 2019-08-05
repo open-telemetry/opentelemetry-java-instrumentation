@@ -152,32 +152,16 @@ public class TracingAgent {
   private static synchronized URL installBootstrapJar(
       final Instrumentation inst, final boolean usingCustomLogManager)
       throws IOException, URISyntaxException, ClassNotFoundException {
-    URL bootstrapURL = null;
-    File bootstrapFile = null;
-
     final CodeSource codeSource = TracingAgent.class.getProtectionDomain().getCodeSource();
+
     if (codeSource != null) {
-      bootstrapURL = codeSource.getLocation();
+      final URL bootstrapURL = codeSource.getLocation();
 
-      bootstrapFile = new File(bootstrapURL.toURI());
+      inst.appendToBootstrapClassLoaderSearch(new JarFile(new File(bootstrapURL.toURI())));
+      return bootstrapURL;
+    } else {
+      throw new RuntimeException("Unable to install bootstrap jar.  Code source not found");
     }
-
-    if (bootstrapFile == null || bootstrapFile.isDirectory()) {
-      // At most one of ( DatadogClassLoader.class , TracingAgent.class ) has a CodeSource that
-      // doesn't lead to the agent jar
-
-      bootstrapURL =
-          ClassLoader.getSystemClassLoader()
-              .loadClass("datadog.trace.bootstrap.DatadogClassLoader")
-              .getProtectionDomain()
-              .getCodeSource()
-              .getLocation();
-
-      bootstrapFile = new File(bootstrapURL.toURI());
-    }
-
-    inst.appendToBootstrapClassLoaderSearch(new JarFile(bootstrapFile));
-    return bootstrapURL;
   }
 
   /**
@@ -186,11 +170,11 @@ public class TracingAgent {
    *
    * @param innerJarFilename Filename of internal jar to use for the classpath of the datadog
    *     classloader
-   * @param bootStrapURL
+   * @param bootstrapURL
    * @return Datadog Classloader
    */
   private static ClassLoader createDatadogClassLoader(
-      final String innerJarFilename, final URL bootStrapURL) throws Exception {
+      final String innerJarFilename, final URL bootstrapURL) throws Exception {
     final ClassLoader agentParent;
     final String javaVersion = System.getProperty("java.version");
     if (javaVersion.startsWith("1.7") || javaVersion.startsWith("1.8")) {
@@ -204,7 +188,7 @@ public class TracingAgent {
         ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.DatadogClassLoader");
     final Constructor constructor =
         loaderClass.getDeclaredConstructor(URL.class, String.class, ClassLoader.class);
-    return (ClassLoader) constructor.newInstance(bootStrapURL, innerJarFilename, agentParent);
+    return (ClassLoader) constructor.newInstance(bootstrapURL, innerJarFilename, agentParent);
   }
 
   private static ClassLoader getPlatformClassLoader()
