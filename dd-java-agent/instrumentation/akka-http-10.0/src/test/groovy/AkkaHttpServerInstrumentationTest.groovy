@@ -20,7 +20,7 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<AkkaHttp
   }
 
   @Override
-  boolean hasExceptionBody() {
+  boolean testExceptionBody() {
     false
   }
 

@@ -72,15 +72,15 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
     true
   }
 
-  boolean hasExceptionBody() {
+  boolean testExceptionBody() {
     true
   }
 
   public enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
+    REDIRECT("redirect", 302, null),
     ERROR("error", 500, "controller error"),
     EXCEPTION("exception", 500, "controller exception"),
-    REDIRECT("redirect", 302, null),
     NOT_FOUND("notFound", 404, "not found"),
     AUTH_REQUIRED("authRequired", 200, null),
 
@@ -214,7 +214,7 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
 
     expect:
     response.code() == EXCEPTION.status
-    if (hasExceptionBody()) {
+    if (testExceptionBody()) {
       assert response.body().string() == EXCEPTION.body
     }
 

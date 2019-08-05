@@ -5,21 +5,6 @@ ext {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
-muzzle {
-  pass {
-    group = "io.vertx"
-    module = "vertx-web"
-    versions = "[4.1.0.Final,)"
-    assertInverse = true
-  }
-  pass {
-    group = "io.netty"
-    module = "netty"
-    versions = "[4.1.0.Final,)"
-    assertInverse = true
-  }
-}
-
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
