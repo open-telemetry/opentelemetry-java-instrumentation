@@ -16,7 +16,7 @@ class ClassLoaderMatcherTest extends Specification {
   def "skips agent classloader"() {
     setup:
     URL root = new URL("file://")
-    final URLClassLoader agentLoader = new DatadogClassLoader(root, root, null)
+    final URLClassLoader agentLoader = new DatadogClassLoader(root, null, null)
     expect:
     ClassLoaderMatcher.skipClassLoader().matches(agentLoader)
   }

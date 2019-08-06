@@ -10,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.ArrayList;
@@ -175,6 +177,17 @@ public class IntegrationTestUtils {
     return (String[]) f.get(null);
   }
 
+  private static String getAgentArgument() {
+    final RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+    for (final String arg : runtimeMxBean.getInputArguments()) {
+      if (arg.startsWith("-javaagent")) {
+        return arg;
+      }
+    }
+
+    throw new RuntimeException("Agent jar not found");
+  }
+
   /**
    * On a separate JVM, run the main method for a given class.
    *
@@ -190,12 +203,17 @@ public class IntegrationTestUtils {
       final Map<String, String> envVars,
       final boolean printOutputStreams)
       throws Exception {
+
     final String separator = System.getProperty("file.separator");
     final String classpath = System.getProperty("java.class.path");
     final String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
+
+    final List<String> vmArgsList = new ArrayList<>(Arrays.asList(jvmArgs));
+    vmArgsList.add(getAgentArgument());
+
     final List<String> commands = new ArrayList<>();
     commands.add(path);
-    commands.addAll(Arrays.asList(jvmArgs));
+    commands.addAll(vmArgsList);
     commands.add("-cp");
     commands.add(classpath);
     commands.add(mainClassName);

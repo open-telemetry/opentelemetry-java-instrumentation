@@ -43,6 +43,11 @@ public class LogManagerSetter {
             "jmxfetch should start in premain when custom log manager found on classpath.");
       }
     } else if (System.getenv("JBOSS_HOME") != null) {
+      customAssert(
+          isJmxfetchStarted(),
+          false,
+          "jmxfetch startup must be delayed when JBOSS_HOME property is present.");
+
       System.setProperty("java.util.logging.manager", CustomLogManager.class.getName());
       customAssert(
           LogManager.getLogManager().getClass(),
@@ -50,7 +55,8 @@ public class LogManagerSetter {
               .getClassLoader()
               .loadClass(System.getProperty("java.util.logging.manager")),
           "Javaagent should not prevent setting a custom log manager");
-
+      customAssert(
+          isJmxfetchStarted(), true, "jmxfetch should start after loading with JBOSS_HOME SET.");
     } else {
       customAssert(
           isJmxfetchStarted(),

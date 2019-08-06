@@ -15,7 +15,7 @@ public class Utils {
   private static Method findLoadedClassMethod = null;
 
   private static final BootstrapClassLoaderProxy unitTestBootstrapProxy =
-      new BootstrapClassLoaderProxy(new URL[0], null);
+      new BootstrapClassLoaderProxy(new URL[0]);
 
   static {
     try {
