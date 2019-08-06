@@ -76,7 +76,7 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
     true
   }
 
-  public enum ServerEndpoint {
+  enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
     REDIRECT("redirect", 302, null),
     ERROR("error", 500, "controller error"),
@@ -96,11 +96,11 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
       this.errored = status >= 500
     }
 
-    public String getPath() {
+    String getPath() {
       return "/$path"
     }
 
-    public String rawPath() {
+    String rawPath() {
       return path
     }
 
@@ -124,9 +124,8 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
   static <T> T controller(ServerEndpoint endpoint, Closure<T> closure) {
     if (endpoint == NOT_FOUND) {
       return closure()
-    } else {
-      return runUnderTrace("controller", closure)
     }
+    return runUnderTrace("controller", closure)
   }
 
   def "test success with #count requests"() {

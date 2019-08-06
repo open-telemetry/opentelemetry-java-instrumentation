@@ -4,7 +4,6 @@ import datadog.trace.agent.test.base.HttpServerTest
 import io.vertx.circuitbreaker.CircuitBreakerOptions
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker
 import io.vertx.reactivex.core.AbstractVerticle
-import io.vertx.reactivex.core.Future
 import io.vertx.reactivex.ext.web.Router
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -39,7 +38,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
         }
         result.setHandler {
           if (it.failed()) {
-            throw it.cause();
+            throw it.cause()
           }
           HttpServerTest.ServerEndpoint endpoint = it.result()
           controller(endpoint) {
@@ -53,7 +52,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
         }
         result.setHandler {
           if (it.failed()) {
-            throw it.cause();
+            throw it.cause()
           }
           HttpServerTest.ServerEndpoint endpoint = it.result()
           controller(endpoint) {
@@ -67,7 +66,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
         }
         result.setHandler {
           if (it.failed()) {
-            throw it.cause();
+            throw it.cause()
           }
           HttpServerTest.ServerEndpoint endpoint = it.result()
           controller(endpoint) {
