@@ -44,12 +44,10 @@ public class TracingAgent {
       throws Exception {
     configureLogger();
 
-    final boolean usingCustomLogManager = isAppUsingCustomLogManager();
-
-    final URL bootstrapURL = installBootstrapJar(inst, usingCustomLogManager);
+    final URL bootstrapURL = installBootstrapJar(inst);
 
     startDatadogAgent(inst, bootstrapURL);
-    if (usingCustomLogManager) {
+    if (isAppUsingCustomLogManager()) {
       System.out.println("Custom logger detected. Delaying JMXFetch initialization.");
       /*
        * java.util.logging.LogManager maintains a final static LogManager, which is created during class initialization.
@@ -155,8 +153,7 @@ public class TracingAgent {
     }
   }
 
-  private static synchronized URL installBootstrapJar(
-      final Instrumentation inst, final boolean usingCustomLogManager)
+  private static synchronized URL installBootstrapJar(final Instrumentation inst)
       throws IOException, URISyntaxException {
     URL bootstrapURL = null;
 
@@ -180,13 +177,7 @@ public class TracingAgent {
     // - On IBM-based JDKs since at least 1.7
     // This prevents custom log managers from working correctly
     // Use reflection to bypass the loading of the class
-    final List<String> arguments;
-    if (usingCustomLogManager) {
-      System.out.println("Custom log manager detected: getting vm args through reflection");
-      arguments = getVMArgumentsThroughReflection();
-    } else {
-      arguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
-    }
+    final List<String> arguments = getVMArgumentsThroughReflection();
 
     String agentArgument = null;
     for (final String arg : arguments) {
