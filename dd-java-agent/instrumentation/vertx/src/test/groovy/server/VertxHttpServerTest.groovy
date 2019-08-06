@@ -12,7 +12,6 @@ import io.vertx.core.Vertx
 import io.vertx.core.VertxOptions
 import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
-import spock.lang.Shared
 
 import java.util.concurrent.CompletableFuture
 
@@ -21,15 +20,12 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class VertxHttpServerTest extends HttpServerTest<NettyHttpServerDecorator> {
+class VertxHttpServerTest extends HttpServerTest<Vertx, NettyHttpServerDecorator> {
   public static final String CONFIG_HTTP_SERVER_PORT = "http.server.port"
 
-  @Shared
-  Vertx server
-
   @Override
-  void startServer(int port) {
-    server = Vertx.vertx(new VertxOptions()
+  Vertx startServer(int port) {
+    def server = Vertx.vertx(new VertxOptions()
     // Useful for debugging:
     // .setBlockedThreadCheckInterval(Integer.MAX_VALUE)
       .setClusterPort(port))
@@ -45,6 +41,7 @@ class VertxHttpServerTest extends HttpServerTest<NettyHttpServerDecorator> {
     }
 
     future.get()
+    return server
   }
 
   protected Class<io.vertx.reactivex.core.AbstractVerticle> verticle() {
@@ -52,7 +49,7 @@ class VertxHttpServerTest extends HttpServerTest<NettyHttpServerDecorator> {
   }
 
   @Override
-  void stopServer() {
+  void stopServer(Vertx server) {
     server.close()
   }
 

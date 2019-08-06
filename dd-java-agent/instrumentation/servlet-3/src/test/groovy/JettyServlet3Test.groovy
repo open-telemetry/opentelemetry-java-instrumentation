@@ -10,7 +10,6 @@ import org.apache.catalina.core.ApplicationFilterChain
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
-import spock.lang.Shared
 
 import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
@@ -20,10 +19,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRE
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 
-abstract class JettyServlet3Test extends AbstractServlet3Test<ServletContextHandler> {
-
-  @Shared
-  private Server jettyServer
+abstract class JettyServlet3Test extends AbstractServlet3Test<Server, ServletContextHandler> {
 
   @Override
   boolean testNotFound() {
@@ -31,8 +27,8 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<ServletContextHand
   }
 
   @Override
-  void startServer(int port) {
-    jettyServer = new Server(port)
+  Server startServer(int port) {
+    def jettyServer = new Server(port)
     jettyServer.connectors.each {
       if (it.hasProperty("resolveNames")) {
         it.resolveNames = true  // get localhost instead of 127.0.0.1
@@ -52,14 +48,13 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<ServletContextHand
 
     jettyServer.start()
 
-    System.out.println(
-      "Jetty server: http://localhost:" + port + "/")
+    return jettyServer
   }
 
   @Override
-  void stopServer() {
-    jettyServer.stop()
-    jettyServer.destroy()
+  void stopServer(Server server) {
+    server.stop()
+    server.destroy()
   }
 
   @Override

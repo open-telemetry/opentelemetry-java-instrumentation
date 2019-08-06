@@ -7,7 +7,7 @@ import io.opentracing.tag.Tags
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<AkkaHttpServerDecorator> {
+abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, AkkaHttpServerDecorator> {
 
   @Override
   AkkaHttpServerDecorator decorator() {
@@ -26,12 +26,12 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<AkkaHttp
 
 // FIXME: This doesn't work because we don't support bindAndHandle.
 //  @Override
-//  void startServer(int port) {
+//  def startServer(int port) {
 //    AkkaHttpTestWebServer.start(port)
 //  }
 //
 //  @Override
-//  void stopServer() {
+//  void stopServer(Object ignore) {
 //    AkkaHttpTestWebServer.stop()
 //  }
 
@@ -68,24 +68,24 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<AkkaHttp
 
 class AkkaHttpServerInstrumentationTestSync extends AkkaHttpServerInstrumentationTest {
   @Override
-  void startServer(int port) {
+  def startServer(int port) {
     AkkaHttpTestSyncWebServer.start(port)
   }
 
   @Override
-  void stopServer() {
+  void stopServer(Object ignore) {
     AkkaHttpTestSyncWebServer.stop()
   }
 }
 
 class AkkaHttpServerInstrumentationTestAsync extends AkkaHttpServerInstrumentationTest {
   @Override
-  void startServer(int port) {
+  def startServer(int port) {
     AkkaHttpTestAsyncWebServer.start(port)
   }
 
   @Override
-  void stopServer() {
+  void stopServer(Object ignore) {
     AkkaHttpTestAsyncWebServer.stop()
   }
 }

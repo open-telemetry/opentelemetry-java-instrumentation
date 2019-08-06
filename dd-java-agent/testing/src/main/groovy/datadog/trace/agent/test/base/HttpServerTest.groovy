@@ -24,14 +24,17 @@ import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
 @Unroll
-abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends AgentTestRunner {
+abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> extends AgentTestRunner {
 
+  @Shared
+  SERVER server
   @Shared
   OkHttpClient client = OkHttpUtils.client()
   @Shared
@@ -47,18 +50,19 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
   DECORATOR serverDecorator = decorator()
 
   def setupSpec() {
-    startServer(port)
-    println "Http server started at: http://localhost:$port/"
+    server = startServer(port)
+    println getClass().name + " http server started at: http://localhost:$port/"
   }
 
-  abstract void startServer(int port)
+  abstract SERVER startServer(int port)
 
   def cleanupSpec() {
-    stopServer()
-    println "Http server stopped at: http://localhost:$port/"
+    stopServer(server)
+    server = null
+    println getClass().name + " http server stopped at: http://localhost:$port/"
   }
 
-  abstract void stopServer()
+  abstract void stopServer(SERVER server)
 
   abstract DECORATOR decorator()
 

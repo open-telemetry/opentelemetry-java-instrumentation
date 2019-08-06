@@ -14,14 +14,13 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-class JettyServlet2Test extends HttpServerTest<Servlet2Decorator> {
+class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
 
   private static final CONTEXT = "ctx"
-  private Server jettyServer
 
   @Override
-  void startServer(int port) {
-    jettyServer = new Server(port)
+  Server startServer(int port) {
+    def jettyServer = new Server(port)
     jettyServer.connectors.each { it.resolveNames = true } // get localhost instead of 127.0.0.1
     ServletContextHandler servletContext = new ServletContextHandler(null, "/$CONTEXT")
     servletContext.errorHandler = new ErrorHandler() {
@@ -43,12 +42,14 @@ class JettyServlet2Test extends HttpServerTest<Servlet2Decorator> {
 
     jettyServer.setHandler(servletContext)
     jettyServer.start()
+    
+    return jettyServer
   }
 
   @Override
-  void stopServer() {
-    jettyServer.stop()
-    jettyServer.destroy()
+  void stopServer(Server server) {
+    server.stop()
+    server.destroy()
   }
 
   @Override
