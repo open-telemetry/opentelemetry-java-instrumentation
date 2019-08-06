@@ -24,6 +24,12 @@ public class StatusSavingHttpServletResponseWrapper extends HttpServletResponseW
   }
 
   @Override
+  public void sendRedirect(final String location) throws IOException {
+    status = 302;
+    super.sendRedirect(location);
+  }
+
+  @Override
   public void setStatus(final int status) {
     this.status = status;
     super.setStatus(status);

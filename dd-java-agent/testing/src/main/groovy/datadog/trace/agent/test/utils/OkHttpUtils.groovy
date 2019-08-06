@@ -15,6 +15,6 @@ class OkHttpUtils {
   }
 
   static client() {
-    clientBuilder().build()
+    clientBuilder().followRedirects(false).build()
   }
 }

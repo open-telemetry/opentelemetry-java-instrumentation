@@ -56,7 +56,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
           }
           HttpServerTest.ServerEndpoint endpoint = it.result()
           controller(endpoint) {
-            ctx.response().setStatusCode(endpoint.status).putHeader("location", endpoint.body)
+            ctx.response().setStatusCode(endpoint.status).putHeader("location", endpoint.body).end()
           }
         }
       }

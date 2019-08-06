@@ -31,7 +31,7 @@ class VertxRxHttpServerTest extends VertxHttpServerTest {
       }
       router.route(REDIRECT.path).handler { ctx ->
         controller(REDIRECT) {
-          ctx.response().setStatusCode(REDIRECT.status).putHeader("location", REDIRECT.body)
+          ctx.response().setStatusCode(REDIRECT.status).putHeader("location", REDIRECT.body).end()
         }
       }
       router.route(ERROR.path).handler { ctx ->

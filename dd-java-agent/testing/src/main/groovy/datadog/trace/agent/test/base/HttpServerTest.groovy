@@ -78,7 +78,7 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
 
   enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
-    REDIRECT("redirect", 302, null),
+    REDIRECT("redirect", 302, "/redirected"),
     ERROR("error", 500, "controller error"),
     EXCEPTION("exception", 500, "controller exception"),
     NOT_FOUND("notFound", 404, "not found"),
@@ -175,6 +175,30 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
     cleanAndAssertTraces(1) {
       trace(0, 2) {
         serverSpan(it, 0, traceId, parentId)
+        controllerSpan(it, 1, span(0))
+      }
+    }
+
+    where:
+    method = "GET"
+    body = null
+  }
+
+  def "test redirect"() {
+    setup:
+    def request = request(REDIRECT, method, body).build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.code() == REDIRECT.status
+    response.header("location") == REDIRECT.body ||
+      response.header("location") == "${address.resolve(REDIRECT.body)}"
+    response.body().contentLength() < 1
+
+    and:
+    cleanAndAssertTraces(1) {
+      trace(0, 2) {
+        serverSpan(it, 0, null, null, method, REDIRECT)
         controllerSpan(it, 1, span(0))
       }
     }

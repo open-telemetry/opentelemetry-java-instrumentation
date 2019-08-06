@@ -62,7 +62,7 @@ class Netty40ServerTest extends HttpServerTest<NettyHttpServerDecorator> {
                       break
                     case REDIRECT:
                       response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(endpoint.status))
-                      response.headers().set(HttpHeaderNames.LOCATION, endpoint.body)
+                      response.headers().set(HttpHeaders.Names.LOCATION, endpoint.body)
                       break
                     case EXCEPTION:
                       throw new Exception(endpoint.body)
