@@ -21,13 +21,6 @@ dependencies {
 
   compile project(':dd-java-agent:agent-tooling')
 
-  compile deps.bytebuddy
-  compile deps.opentracing
-  compile deps.autoservice
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
   testCompile group: 'org.glassfish.main.extras', name: 'glassfish-embedded-all', version: '4.1.2'
 
   latestDepTestCompile sourceSets.test.output

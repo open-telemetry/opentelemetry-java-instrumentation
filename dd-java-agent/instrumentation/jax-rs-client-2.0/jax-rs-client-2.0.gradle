@@ -27,14 +27,6 @@ dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
   compileOnly group: 'javax.annotation', name: 'javax.annotation-api', version: '1.2'
 
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  compile project(':dd-java-agent:agent-tooling')
-
-  testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
 
   testCompile project(':dd-java-agent:instrumentation:jax-rs-client-2.0:connection-error-handling-jersey')

@@ -41,14 +41,7 @@ compileJava {
 dependencies {
   compileOnly group: 'com.sparkjava', name: 'spark-core', version: '2.3'
 
-  compile project(':dd-java-agent:agent-tooling')
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
   testCompile project(':dd-java-agent:instrumentation:jetty-8')
-  testCompile project(':dd-java-agent:testing')
 
   testCompile group: 'com.sparkjava', name: 'spark-core', version: '2.4'
 

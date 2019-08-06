@@ -20,15 +20,6 @@ testSets {
 dependencies {
   compileOnly group: 'net.spy', name: 'spymemcached', version: '2.12.0'
 
-  compile project(':dd-java-agent:agent-tooling')
-
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
-
   testCompile group: 'net.spy', name: 'spymemcached', version: '2.12.0'
   testCompile deps.testcontainers
 

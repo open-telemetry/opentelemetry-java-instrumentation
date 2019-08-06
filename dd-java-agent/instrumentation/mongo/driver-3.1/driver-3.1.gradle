@@ -20,14 +20,6 @@ testSets {
 dependencies {
   compileOnly group: 'org.mongodb', name: 'mongo-java-driver', version: '3.1.0'
 
-  compile project(':dd-java-agent:agent-tooling')
-
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:mongo').sourceSets.test.output
   testCompile group: 'de.flapdoodle.embed', name: 'de.flapdoodle.embed.mongo', version: '1.50.5'
 

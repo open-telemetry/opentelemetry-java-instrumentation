@@ -1,10 +1,6 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile project(':dd-java-agent:agent-tooling')
-  compile deps.bytebuddy
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
 
   // TODO: we should separate core and Eclipse tests at some point,
   // but right now core-specific tests are quite dump and are run with
@@ -12,6 +8,4 @@ dependencies {
   //testCompile group: 'org.osgi', name: 'org.osgi.core', version: '4.0.0'
   testCompile group: 'org.eclipse.platform', name: 'org.eclipse.osgi', version: '3.13.200'
   testCompile group: 'org.apache.felix', name: 'org.apache.felix.framework', version: '6.0.2'
-
-  testCompile project(':dd-java-agent:testing')
 }

@@ -41,10 +41,6 @@ dependencies {
   compileOnly sourceSets.main_java8.compileClasspath
   compile sourceSets.main_java8.output
 
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
   // Also include netty instrumentation because it is used by aws async client

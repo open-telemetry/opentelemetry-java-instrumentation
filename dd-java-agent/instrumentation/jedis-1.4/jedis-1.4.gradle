@@ -20,14 +20,6 @@ testSets {
 dependencies {
   compileOnly group: 'redis.clients', name: 'jedis', version: '1.4.0'
 
-  compile project(':dd-java-agent:agent-tooling')
-
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
   testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
   testCompile group: 'redis.clients', name: 'jedis', version: '1.4.0'
 

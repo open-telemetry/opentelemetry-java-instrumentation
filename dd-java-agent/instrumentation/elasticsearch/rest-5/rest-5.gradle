@@ -29,15 +29,8 @@ testSets {
 dependencies {
   compileOnly group: 'org.elasticsearch.client', name: 'rest', version: '5.0.0'
 
-  compile project(':dd-java-agent:agent-tooling')
   compile project(':dd-java-agent:instrumentation:elasticsearch')
 
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
   testCompile project(':dd-java-agent:instrumentation:apache-httpasyncclient-4')
 

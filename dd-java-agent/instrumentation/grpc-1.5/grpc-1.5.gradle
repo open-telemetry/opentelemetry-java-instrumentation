@@ -44,16 +44,6 @@ testSets {
 dependencies {
   compileOnly group: 'io.grpc', name: 'grpc-core', version: grpcVersion
 
-  compile project(':dd-java-agent:agent-tooling')
-
-  compile deps.bytebuddy
-  compile deps.opentracing
-  compile deps.autoservice
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
-
   testCompile group: 'io.grpc', name: 'grpc-netty', version: grpcVersion
   testCompile group: 'io.grpc', name: 'grpc-protobuf', version: grpcVersion
   testCompile group: 'io.grpc', name: 'grpc-stub', version: grpcVersion

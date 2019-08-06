@@ -23,15 +23,8 @@ apply from: "${rootDir}/gradle/java.gradle"
 dependencies {
   compileOnly group: 'org.elasticsearch.client', name: 'transport', version: '5.0.0'
 
-  compile project(':dd-java-agent:agent-tooling')
   compile project(':dd-java-agent:instrumentation:elasticsearch')
 
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
   // Ensure no cross interference
   testCompile project(':dd-java-agent:instrumentation:elasticsearch:rest-5')
   testCompile project(':dd-java-agent:instrumentation:apache-httpasyncclient-4')

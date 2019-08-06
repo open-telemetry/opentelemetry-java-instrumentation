@@ -15,14 +15,6 @@ testSets {
 }
 
 dependencies {
-  compile project(':dd-java-agent:agent-tooling')
-
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
   // jdbc unit testing
   testCompile group: 'com.h2database', name: 'h2', version: '1.3.169' // first version jdk 1.6 compatible
   testCompile group: 'org.apache.derby', name: 'derby', version: '10.6.1.0'

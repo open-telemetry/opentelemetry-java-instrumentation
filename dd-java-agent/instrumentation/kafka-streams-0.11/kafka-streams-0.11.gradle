@@ -19,14 +19,6 @@ testSets {
 dependencies {
   compileOnly group: 'org.apache.kafka', name: 'kafka-streams', version: '0.11.0.0'
 
-  compile project(':dd-java-agent:agent-tooling')
-
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
   // Include kafka-clients instrumentation for tests.
   testCompile project(':dd-java-agent:instrumentation:kafka-clients-0.11')
 
