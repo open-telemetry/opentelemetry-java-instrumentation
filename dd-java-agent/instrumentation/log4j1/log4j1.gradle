@@ -23,15 +23,5 @@ configurations {
 }
 
 dependencies {
-  compile project(':dd-trace-api')
-  compile project(':dd-java-agent:agent-tooling')
-
   testCompile group: 'log4j', name: 'log4j', version: log4jVersion
-
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
 }

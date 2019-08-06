@@ -7,13 +7,5 @@ project.ext {
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile project(':dd-java-agent:agent-tooling')
-
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
   testCompile group: 'org.springframework', name: 'spring-web', version: '4.3.7.RELEASE'
 }

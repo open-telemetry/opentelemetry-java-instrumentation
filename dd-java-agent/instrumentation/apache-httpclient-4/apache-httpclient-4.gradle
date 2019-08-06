@@ -31,14 +31,6 @@ testSets {
 dependencies {
   compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
 
-  compile project(':dd-java-agent:agent-tooling')
-
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
   testCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
 
   latestDepTestCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '+'

@@ -28,19 +28,11 @@ muzzle {
 dependencies {
   compileOnly group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
 
-  compile project(':dd-trace-api')
-  compile project(':dd-java-agent:agent-tooling')
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
   testCompile deps.scala
   testCompile group: 'com.typesafe.play', name: 'play_2.11', version: '2.4.0'
   testCompile group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.4.0'
   testCompile group: 'com.typesafe.play', name: 'play-ws_2.11', version: '2.4.0'
 
-  testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
   testCompile project(':dd-java-agent:instrumentation:trace-annotation')
   testCompile project(':dd-java-agent:instrumentation:akka-http-10.0')

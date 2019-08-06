@@ -27,15 +27,8 @@ testSets {
 dependencies {
   compileOnly group: 'org.hibernate', name: 'hibernate-core', version: '4.0.0.Final'
 
-  compile project(':dd-java-agent:agent-tooling')
   compile project(':dd-java-agent:instrumentation:hibernate')
 
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:jdbc')
   // Added to ensure cross compatibility:
   testCompile project(':dd-java-agent:instrumentation:hibernate:core-3.3')

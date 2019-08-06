@@ -1,14 +1,5 @@
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-  compile project(':dd-trace-api')
-  compile project(':dd-java-agent:agent-tooling')
-
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
-  testCompile project(':dd-java-agent:testing')
   testCompile group: 'com.newrelic.agent.java', name: 'newrelic-api', version: '+'
 }

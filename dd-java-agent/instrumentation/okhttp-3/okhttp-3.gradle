@@ -33,11 +33,6 @@ dependencies {
     exclude module: 'okhttp'
   }
 
-  compile deps.bytebuddy
-  compile deps.opentracing
-  annotationProcessor deps.autoservice
-  implementation deps.autoservice
-
   testCompile(project(':dd-java-agent:testing')) {
     exclude module: 'okhttp'
   }
