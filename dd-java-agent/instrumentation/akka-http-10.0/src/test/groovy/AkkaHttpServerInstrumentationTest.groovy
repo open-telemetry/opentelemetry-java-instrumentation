@@ -1,188 +1,91 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.OkHttpUtils
+import datadog.trace.agent.test.asserts.TraceAssert
+import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.akkahttp.AkkaHttpServerDecorator
 import io.opentracing.tag.Tags
-import okhttp3.Request
-import spock.lang.Shared
 
-class AkkaHttpServerInstrumentationTest extends AgentTestRunner {
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-  @Shared
-  int asyncPort
-  @Shared
-  int syncPort
+abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<AkkaHttpServerDecorator> {
 
-  @Shared
-  def client = OkHttpUtils.client()
-
-  def setupSpec() {
-    AkkaHttpTestAsyncWebServer.start()
-    asyncPort = AkkaHttpTestAsyncWebServer.port()
-    AkkaHttpTestSyncWebServer.start()
-    syncPort = AkkaHttpTestSyncWebServer.port()
+  @Override
+  AkkaHttpServerDecorator decorator() {
+    return AkkaHttpServerDecorator.DECORATE
   }
 
-  def cleanupSpec() {
-    AkkaHttpTestAsyncWebServer.stop()
+  @Override
+  String expectedOperationName() {
+    return "akka-http.request"
+  }
+
+  @Override
+  boolean testExceptionBody() {
+    false
+  }
+
+// FIXME: This doesn't work because we don't support bindAndHandle.
+//  @Override
+//  void startServer(int port) {
+//    AkkaHttpTestWebServer.start(port)
+//  }
+//
+//  @Override
+//  void stopServer() {
+//    AkkaHttpTestWebServer.stop()
+//  }
+
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    trace.span(index) {
+      serviceName expectedServiceName()
+      operationName expectedOperationName()
+      resourceName endpoint.status == 404 ? "404" : "$method ${endpoint.resolve(address).path}"
+      spanType DDSpanTypes.HTTP_SERVER
+      errored endpoint.errored
+      if (parentID != null) {
+        traceId traceID
+        parentId parentID
+      } else {
+        parent()
+      }
+      tags {
+        defaultTags(true)
+        "$Tags.COMPONENT.key" serverDecorator.component()
+        if (endpoint.errored) {
+          "$Tags.ERROR.key" endpoint.errored
+          "error.msg" { it == null || it == EXCEPTION.body }
+          "error.type" { it == null || it == Exception.name }
+          "error.stack" { it == null || it instanceof String }
+        }
+        "$Tags.HTTP_STATUS.key" endpoint.status
+        "$Tags.HTTP_URL.key" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_METHOD.key" method
+        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+      }
+    }
+  }
+}
+
+class AkkaHttpServerInstrumentationTestSync extends AkkaHttpServerInstrumentationTest {
+  @Override
+  void startServer(int port) {
+    AkkaHttpTestSyncWebServer.start(port)
+  }
+
+  @Override
+  void stopServer() {
     AkkaHttpTestSyncWebServer.stop()
   }
+}
 
-  def "#server 200 request trace"() {
-    setup:
-    def request = new Request.Builder()
-      .url("http://localhost:$port/test")
-      .header("x-datadog-trace-id", "123")
-      .header("x-datadog-parent-id", "456")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
-
-    expect:
-    response.code() == 200
-
-    assertTraces(1) {
-      trace(0, 2) {
-        span(0) {
-          traceId "123"
-          parentId "456"
-          serviceName "unnamed-java-app"
-          operationName "akka-http.request"
-          resourceName "GET /test"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored false
-          tags {
-            defaultTags(true)
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "http://localhost:$port/test"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.COMPONENT.key" "akka-http-server"
-          }
-        }
-        span(1) {
-          childOf span(0)
-          assert span(1).operationName.endsWith('.tracedMethod')
-        }
-      }
-    }
-
-    where:
-    server  | port
-    "async" | asyncPort
-    "sync"  | syncPort
+class AkkaHttpServerInstrumentationTestAsync extends AkkaHttpServerInstrumentationTest {
+  @Override
+  void startServer(int port) {
+    AkkaHttpTestAsyncWebServer.start(port)
   }
 
-  def "#server exceptions trace for #endpoint"() {
-    setup:
-    def request = new Request.Builder()
-      .url("http://localhost:$port/$endpoint")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
-
-    expect:
-    response.code() == 500
-
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "unnamed-java-app"
-          operationName "akka-http.request"
-          resourceName "GET /$endpoint"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored true
-          tags {
-            defaultTags()
-            "$Tags.HTTP_STATUS.key" 500
-            "$Tags.HTTP_URL.key" "http://localhost:$port/$endpoint"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.COMPONENT.key" "akka-http-server"
-            errorTags RuntimeException, errorMessage
-          }
-        }
-      }
-    }
-
-    where:
-    server  | port      | endpoint         | errorMessage
-    "async" | asyncPort | "throw-handler"  | "Oh no handler"
-    "async" | asyncPort | "throw-callback" | "Oh no callback"
-    "sync"  | syncPort  | "throw-handler"  | "Oh no handler"
-  }
-
-  def "#server 5xx trace"() {
-    setup:
-    def request = new Request.Builder()
-      .url("http://localhost:$port/server-error")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
-
-    expect:
-    response.code() == 500
-
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "unnamed-java-app"
-          operationName "akka-http.request"
-          resourceName "GET /server-error"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored true
-          tags {
-            defaultTags()
-            "$Tags.HTTP_STATUS.key" 500
-            "$Tags.HTTP_URL.key" "http://localhost:$port/server-error"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.COMPONENT.key" "akka-http-server"
-            "$Tags.ERROR.key" true
-          }
-        }
-      }
-    }
-
-    where:
-    server  | port
-    "async" | asyncPort
-    "sync"  | syncPort
-  }
-
-  def "#server 4xx trace"() {
-    setup:
-    def request = new Request.Builder()
-      .url("http://localhost:$port/not-found")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
-
-    expect:
-    response.code() == 404
-
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "unnamed-java-app"
-          operationName "akka-http.request"
-          resourceName "404"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored false
-          tags {
-            defaultTags()
-            "$Tags.HTTP_STATUS.key" 404
-            "$Tags.HTTP_URL.key" "http://localhost:$port/not-found"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.COMPONENT.key" "akka-http-server"
-          }
-        }
-      }
-    }
-
-    where:
-    server  | port
-    "async" | asyncPort
-    "sync"  | syncPort
+  @Override
+  void stopServer() {
+    AkkaHttpTestAsyncWebServer.stop()
   }
 }

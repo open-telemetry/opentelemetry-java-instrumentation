@@ -1,6 +1,7 @@
 package datadog.trace.agent.test.base;
 
 import datadog.trace.api.DDTags;
+import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import io.opentracing.noop.NoopScopeManager;
@@ -24,10 +25,13 @@ public abstract class HttpServerTestAdvice {
       if (tracer.activeSpan() != null) {
         return NoopScopeManager.NoopScope.INSTANCE;
       } else {
-        return tracer
-            .buildSpan("TEST_SPAN")
-            .withTag(DDTags.RESOURCE_NAME, "ServerEntry")
-            .startActive(true);
+        final Scope scope =
+            tracer
+                .buildSpan("TEST_SPAN")
+                .withTag(DDTags.RESOURCE_NAME, "ServerEntry")
+                .startActive(true);
+        ((TraceScope) scope).setAsyncPropagation(true);
+        return scope;
       }
     }
 

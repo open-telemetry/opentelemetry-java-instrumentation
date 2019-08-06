@@ -1,3 +1,5 @@
+package client
+
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.netty41.client.NettyHttpClientDecorator
 import io.vertx.core.VertxOptions

@@ -18,6 +18,12 @@ muzzle {
     versions = "[4.1.0.Final,)"
     assertInverse = true
   }
+  pass {
+    group = "io.vertx"
+    module = "vertx-core"
+    versions = "[3.3.0,)"
+    assertInverse = true
+  }
 }
 
 apply plugin: 'org.unbroken-dome.test-sets'

@@ -24,9 +24,10 @@ public abstract class AbstractServlet2Instrumentation extends Instrumenter.Defau
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ServerDecorator",
       "datadog.trace.agent.decorator.HttpServerDecorator",
+      packageName + ".Servlet2Decorator",
       packageName + ".HttpServletRequestExtractAdapter",
       packageName + ".HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
-      packageName + ".Servlet2Decorator",
+      packageName + ".StatusSavingHttpServletResponseWrapper",
     };
   }
 }

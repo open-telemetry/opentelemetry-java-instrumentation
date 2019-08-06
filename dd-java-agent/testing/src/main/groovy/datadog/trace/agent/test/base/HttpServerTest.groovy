@@ -48,12 +48,14 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
 
   def setupSpec() {
     startServer(port)
+    println "Http server started at: http://localhost:$port/"
   }
 
   abstract void startServer(int port)
 
   def cleanupSpec() {
     stopServer()
+    println "Http server stopped at: http://localhost:$port/"
   }
 
   abstract void stopServer()
@@ -70,11 +72,15 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
     true
   }
 
+  boolean testExceptionBody() {
+    true
+  }
+
   enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
+    REDIRECT("redirect", 302, null),
     ERROR("error", 500, "controller error"),
     EXCEPTION("exception", 500, "controller exception"),
-    REDIRECT("redirect", 302, null),
     NOT_FOUND("notFound", 404, "not found"),
     AUTH_REQUIRED("authRequired", 200, null),
 
@@ -92,6 +98,10 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
 
     String getPath() {
       return "/$path"
+    }
+
+    String rawPath() {
+      return path
     }
 
     URI resolve(URI address) {
@@ -113,10 +123,9 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
 
   static <T> T controller(ServerEndpoint endpoint, Closure<T> closure) {
     if (endpoint == NOT_FOUND) {
-      closure()
-    } else {
-      runUnderTrace("controller", closure)
+      return closure()
     }
+    return runUnderTrace("controller", closure)
   }
 
   def "test success with #count requests"() {
@@ -204,7 +213,9 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
 
     expect:
     response.code() == EXCEPTION.status
-    response.body().string() == EXCEPTION.body
+    if (testExceptionBody()) {
+      assert response.body().string() == EXCEPTION.body
+    }
 
     and:
     cleanAndAssertTraces(1) {

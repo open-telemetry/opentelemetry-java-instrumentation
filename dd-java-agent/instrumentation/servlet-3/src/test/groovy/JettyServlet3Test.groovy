@@ -43,7 +43,7 @@ abstract class JettyServlet3Test extends AbstractServlet3Test<ServletContextHand
     servletContext.errorHandler = new ErrorHandler() {
       protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
         Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception")
-        writer.write(th.message)
+        writer.write(th ? th.message : message)
       }
     }
 //    setupAuthentication(jettyServer, servletContext)
