@@ -34,7 +34,7 @@ class SpringWebfluxTest extends AgentTestRunner {
   @LocalServerPort
   private int port
 
-  OkHttpClient client = OkHttpUtils.client()
+  OkHttpClient client = OkHttpUtils.client(true)
 
   def "Basic GET test #testName"() {
     setup:

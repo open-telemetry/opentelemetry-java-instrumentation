@@ -3,6 +3,7 @@ import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.jetty8.JettyDecorator
 import io.opentracing.tag.Tags
+import javax.servlet.DispatcherType
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -23,20 +24,22 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
     System.setProperty("dd.integration.jetty.enabled", "true")
   }
 
+  static errorHandler = new ErrorHandler() {
+    @Override
+    protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
+      Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception")
+      message = th ? th.message : message
+      if (message) {
+        writer.write(message)
+      }
+    }
+  }
+
   @Override
   Server startServer(int port) {
     def server = new Server(port)
     server.setHandler(handler())
-    server.addBean(new ErrorHandler() {
-      @Override
-      protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
-        Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception")
-        message = th ? th.message : message
-        if (message) {
-          writer.write(message)
-        }
-      }
-    })
+    server.addBean(errorHandler)
     server.start()
     return server
   }
@@ -95,8 +98,12 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
 
     @Override
     void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-      handleRequest(baseRequest, response)
-      baseRequest.handled = true
+      if (baseRequest.dispatcherType != DispatcherType.ERROR) {
+        handleRequest(baseRequest, response)
+        baseRequest.handled = true
+      } else {
+        errorHandler.handle(target, baseRequest, response, response)
+      }
     }
   }
 
