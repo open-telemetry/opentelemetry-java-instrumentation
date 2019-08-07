@@ -16,13 +16,14 @@ import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 
 public class JettyHandlerAdvice {
+  public static final String SERVLET_SPAN = "datadog.servlet.span";
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope startSpan(
       @Advice.This final Object source, @Advice.Argument(2) final HttpServletRequest req) {
 
-    if (GlobalTracer.get().activeSpan() != null) {
-      // Tracing might already be applied.  If so ignore this.
+    if (req.getAttribute(SERVLET_SPAN) != null) {
+      // Request already being traced elsewhere.
       return null;
     }
 
@@ -32,6 +33,7 @@ public class JettyHandlerAdvice {
     final Scope scope =
         GlobalTracer.get()
             .buildSpan("jetty.request")
+            .ignoreActiveSpan()
             .asChildOf(extractedContext)
             .withTag("span.origin.type", source.getClass().getName())
             .startActive(false);
@@ -46,6 +48,7 @@ public class JettyHandlerAdvice {
     if (scope instanceof TraceScope) {
       ((TraceScope) scope).setAsyncPropagation(true);
     }
+    req.setAttribute(SERVLET_SPAN, span);
     return scope;
   }
 
