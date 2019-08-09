@@ -26,6 +26,9 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
         ctx.fireChannelRead(msg); // superclass does not throw
       } else {
         try (final Scope scope = tracer.scopeManager().activate(span, false)) {
+          if (scope instanceof TraceScope) {
+            ((TraceScope) scope).setAsyncPropagation(true);
+          }
           ctx.fireChannelRead(msg); // superclass does not throw
         }
       }

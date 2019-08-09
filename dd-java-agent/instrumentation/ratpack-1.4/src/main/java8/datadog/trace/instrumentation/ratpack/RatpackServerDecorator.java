@@ -79,4 +79,13 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
 
     return span;
   }
+
+  @Override
+  public Span onError(final Span span, final Throwable throwable) {
+    // Attempt to unwrap ratpack.handling.internal.HandlerException without direct reference.
+    if (throwable instanceof Error && throwable.getCause() != null) {
+      return super.onError(span, throwable.getCause());
+    }
+    return super.onError(span, throwable);
+  }
 }
