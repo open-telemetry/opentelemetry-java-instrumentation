@@ -16,7 +16,6 @@ dependencies {
 
   compile deps.slf4j
   compile deps.jackson
-  compile group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.16'
 
   compile project(':utils:gc-utils')
 
