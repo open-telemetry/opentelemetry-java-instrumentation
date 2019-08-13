@@ -14,7 +14,7 @@ class OkHttpUtils {
       .readTimeout(1, unit)
   }
 
-  static client() {
-    clientBuilder().build()
+  static client(boolean followRedirects = false) {
+    clientBuilder().followRedirects(followRedirects).build()
   }
 }

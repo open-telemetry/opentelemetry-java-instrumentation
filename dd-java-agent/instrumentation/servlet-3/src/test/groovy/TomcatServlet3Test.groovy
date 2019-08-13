@@ -15,7 +15,6 @@ import org.apache.catalina.startup.Tomcat
 import org.apache.catalina.valves.ErrorReportValve
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
-import spock.lang.Shared
 
 import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
@@ -26,14 +25,11 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRE
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 
-abstract class TomcatServlet3Test extends AbstractServlet3Test<Context> {
-
-  @Shared
-  Tomcat tomcatServer
+abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
 
   @Override
-  void startServer(int port) {
-    tomcatServer = new Tomcat()
+  Tomcat startServer(int port) {
+    def tomcatServer = new Tomcat()
 
     def baseDir = Files.createTempDir()
     baseDir.deleteOnExit()
@@ -62,14 +58,14 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Context> {
     (tomcatServer.host as StandardHost).errorReportValveClass = ErrorHandlerValve.name
 
     tomcatServer.start()
-    System.out.println(
-      "Tomcat server: http://" + tomcatServer.getHost().getName() + ":" + port + "/")
+    
+    return tomcatServer
   }
 
   @Override
-  void stopServer() {
-    tomcatServer.stop()
-    tomcatServer.destroy()
+  void stopServer(Tomcat server) {
+    server.stop()
+    server.destroy()
   }
 
   @Override

@@ -13,7 +13,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
-abstract class AbstractServlet3Test<CONTEXT> extends HttpServerTest<Servlet3Decorator> {
+abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERVER, Servlet3Decorator> {
   @Override
   URI buildAddress() {
     return new URI("http://localhost:$port/$context/")

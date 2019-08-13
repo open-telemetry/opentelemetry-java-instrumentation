@@ -19,7 +19,6 @@ import io.netty.handler.codec.http.HttpServerCodec
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import io.netty.util.CharsetUtil
-import spock.lang.Shared
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -31,13 +30,11 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1
 
-class Netty41ServerTest extends HttpServerTest<NettyHttpServerDecorator> {
-  @Shared
-  EventLoopGroup eventLoopGroup
+class Netty41ServerTest extends HttpServerTest<EventLoopGroup, NettyHttpServerDecorator> {
 
   @Override
-  void startServer(int port) {
-    eventLoopGroup = new NioEventLoopGroup()
+  EventLoopGroup startServer(int port) {
+    def eventLoopGroup = new NioEventLoopGroup()
 
     ServerBootstrap bootstrap = new ServerBootstrap()
       .group(eventLoopGroup)
@@ -91,11 +88,13 @@ class Netty41ServerTest extends HttpServerTest<NettyHttpServerDecorator> {
         }
       ] as ChannelInitializer).channel(NioServerSocketChannel)
     bootstrap.bind(port).sync()
+
+    return eventLoopGroup
   }
 
   @Override
-  void stopServer() {
-    eventLoopGroup?.shutdownGracefully()
+  void stopServer(EventLoopGroup server) {
+    server?.shutdownGracefully()
   }
 
   @Override

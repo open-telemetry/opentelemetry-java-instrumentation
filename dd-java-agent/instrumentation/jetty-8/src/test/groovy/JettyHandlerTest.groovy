@@ -1,204 +1,144 @@
-import datadog.trace.agent.test.AgentTestRunner
-import datadog.trace.agent.test.utils.OkHttpUtils
-import datadog.trace.agent.test.utils.PortUtils
+import datadog.trace.agent.test.asserts.TraceAssert
+import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
-import okhttp3.OkHttpClient
-import org.eclipse.jetty.continuation.Continuation
-import org.eclipse.jetty.continuation.ContinuationSupport
-import org.eclipse.jetty.server.Handler
-import org.eclipse.jetty.server.Request
-import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.server.handler.AbstractHandler
-
+import datadog.trace.instrumentation.jetty8.JettyDecorator
+import io.opentracing.tag.Tags
 import javax.servlet.DispatcherType
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import java.util.concurrent.atomic.AtomicBoolean
+import org.eclipse.jetty.server.Request
+import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server.handler.AbstractHandler
+import org.eclipse.jetty.server.handler.ErrorHandler
 
-class JettyHandlerTest extends AgentTestRunner {
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
+
+class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
 
   static {
     System.setProperty("dd.integration.jetty.enabled", "true")
   }
 
-  int port = PortUtils.randomOpenPort()
-  Server server = new Server(port)
+  static errorHandler = new ErrorHandler() {
+    @Override
+    protected void handleErrorPage(HttpServletRequest request, Writer writer, int code, String message) throws IOException {
+      Throwable th = (Throwable) request.getAttribute("javax.servlet.error.exception")
+      message = th ? th.message : message
+      if (message) {
+        writer.write(message)
+      }
+    }
+  }
 
-  OkHttpClient client = OkHttpUtils.client()
+  @Override
+  Server startServer(int port) {
+    def server = new Server(port)
+    server.setHandler(handler())
+    server.addBean(errorHandler)
+    server.start()
+    return server
+  }
 
-  def cleanup() {
+  AbstractHandler handler() {
+    TestHandler.INSTANCE
+  }
+
+  @Override
+  void stopServer(Server server) {
     server.stop()
   }
 
-  def "call to jetty creates a trace"() {
-    setup:
-    Handler handler = new AbstractHandler() {
-      @Override
-      void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        response.setContentType("text/plain;charset=utf-8")
-        response.setStatus(HttpServletResponse.SC_OK)
-        baseRequest.setHandled(true)
-        response.getWriter().println("Hello World")
-      }
-    }
-    server.setHandler(handler)
-    server.start()
-    def request = new okhttp3.Request.Builder()
-      .url("http://localhost:$port/")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
+  @Override
+  JettyDecorator decorator() {
+    return JettyDecorator.DECORATE
+  }
 
-    expect:
-    response.body().string().trim() == "Hello World"
+  @Override
+  String expectedOperationName() {
+    return "jetty.request"
+  }
 
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "unnamed-java-app"
-          operationName "jetty.request"
-          resourceName "GET ${handler.class.name}"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored false
-          parent()
-          tags {
-            "http.url" "http://localhost:$port/"
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "jetty-handler"
-            "span.origin.type" handler.class.name
-            "http.status_code" 200
-            "peer.hostname" "127.0.0.1"
-            "peer.ipv4" "127.0.0.1"
-            "peer.port" Integer
-            defaultTags()
-          }
-        }
+  @Override
+  boolean testExceptionBody() {
+    false
+  }
+
+  static void handleRequest(Request request, HttpServletResponse response) {
+    ServerEndpoint endpoint = ServerEndpoint.forPath(request.requestURI)
+    controller(endpoint) {
+      response.contentType = "text/plain"
+      switch (endpoint) {
+        case SUCCESS:
+          response.status = endpoint.status
+          response.writer.print(endpoint.body)
+          break
+        case REDIRECT:
+          response.sendRedirect(endpoint.body)
+          break
+        case ERROR:
+          response.sendError(endpoint.status, endpoint.body)
+          break
+        case EXCEPTION:
+          throw new Exception(endpoint.body)
+        default:
+          response.status = NOT_FOUND.status
+          response.writer.print(NOT_FOUND.body)
+          break
       }
     }
   }
 
-  def "handler instrumentation clears state after async request"() {
-    setup:
-    Handler handler = new AbstractHandler() {
-      @Override
-      void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        final Continuation continuation = ContinuationSupport.getContinuation(request)
-        continuation.suspend(response)
-        // By the way, this is a terrible async server
-        new Thread() {
-          @Override
-          void run() {
-            continuation.getServletResponse().setContentType("text/plain;charset=utf-8")
-            continuation.getServletResponse().getWriter().println("Hello World")
-            continuation.complete()
-          }
-        }.start()
+  static class TestHandler extends AbstractHandler {
+    static final TestHandler INSTANCE = new TestHandler()
 
-        baseRequest.setHandled(true)
-      }
-    }
-    server.setHandler(handler)
-    server.start()
-    def request = new okhttp3.Request.Builder()
-      .url("http://localhost:$port/")
-      .get()
-      .build()
-    def numTraces = 10
-    for (int i = 0; i < numTraces; ++i) {
-      assert client.newCall(request).execute().body().string().trim() == "Hello World"
-    }
-
-    expect:
-    assertTraces(numTraces) {
-      for (int i = 0; i < numTraces; ++i) {
-        trace(i, 1) {
-          span(0) {
-            serviceName "unnamed-java-app"
-            operationName "jetty.request"
-            resourceName "GET ${handler.class.name}"
-            spanType DDSpanTypes.HTTP_SERVER
-          }
-        }
+    @Override
+    void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+      if (baseRequest.dispatcherType != DispatcherType.ERROR) {
+        handleRequest(baseRequest, response)
+        baseRequest.handled = true
+      } else {
+        errorHandler.handle(target, baseRequest, response, response)
       }
     }
   }
 
-  def "call to jetty with error creates a trace"() {
-    setup:
-    def errorHandlerCalled = new AtomicBoolean(false)
-    Handler handler = new AbstractHandler() {
-      @Override
-      void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        if (baseRequest.dispatcherType == DispatcherType.ERROR) {
-          errorHandlerCalled.set(true)
-          baseRequest.setHandled(true)
-        } else {
-          throw new RuntimeException()
-        }
+  @Override
+  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    def handlerName = handler().class.name
+    trace.span(index) {
+      serviceName expectedServiceName()
+      operationName expectedOperationName()
+      resourceName endpoint.status == 404 ? "404" : "$method $handlerName"
+      spanType DDSpanTypes.HTTP_SERVER
+      errored endpoint.errored
+      if (parentID != null) {
+        traceId traceID
+        parentId parentID
+      } else {
+        parent()
       }
-    }
-    server.setHandler(handler)
-    server.start()
-    def request = new okhttp3.Request.Builder()
-      .url("http://localhost:$port/")
-      .get()
-      .build()
-    def response = client.newCall(request).execute()
-
-    expect:
-    response.body().string().trim() == ""
-
-    assertTraces(errorHandlerCalled.get() ? 2 : 1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "unnamed-java-app"
-          operationName "jetty.request"
-          resourceName "GET ${handler.class.name}"
-          spanType DDSpanTypes.HTTP_SERVER
-          errored true
-          parent()
-          tags {
-            "http.url" "http://localhost:$port/"
-            "http.method" "GET"
-            "span.kind" "server"
-            "component" "jetty-handler"
-            "span.origin.type" handler.class.name
-            "http.status_code" 500
-            "peer.hostname" "127.0.0.1"
-            "peer.ipv4" "127.0.0.1"
-            "peer.port" Integer
-            errorTags RuntimeException
-            defaultTags()
-          }
+      tags {
+        "span.origin.type" handlerName
+        defaultTags(true)
+        "$Tags.COMPONENT.key" serverDecorator.component()
+        if (endpoint.errored) {
+          "$Tags.ERROR.key" endpoint.errored
+          "error.msg" { it == null || it == EXCEPTION.body }
+          "error.type" { it == null || it == Exception.name }
+          "error.stack" { it == null || it instanceof String }
         }
-      }
-      if (errorHandlerCalled.get()) {
-        // FIXME: This doesn't ever seem to be called.
-        trace(1, 1) {
-          span(0) {
-            serviceName "unnamed-java-app"
-            operationName "jetty.request"
-            resourceName "GET ${handler.class.name}"
-            spanType DDSpanTypes.HTTP_SERVER
-            errored true
-            parent()
-            tags {
-              "http.url" "http://localhost:$port/"
-              "http.method" "GET"
-              "span.kind" "server"
-              "component" "jetty-handler"
-              "span.origin.type" handler.class.name
-              "http.status_code" 500
-              "peer.hostname" "127.0.0.1"
-              "peer.ipv4" "127.0.0.1"
-              "peer.port" Integer
-              "error" true
-              defaultTags()
-            }
-          }
-        }
+        "$Tags.HTTP_STATUS.key" endpoint.status
+        "$Tags.HTTP_URL.key" "${endpoint.resolve(address)}"
+        "$Tags.PEER_HOSTNAME.key" { it == "localhost" || it == "127.0.0.1" }
+        "$Tags.PEER_PORT.key" Integer
+        "$Tags.PEER_HOST_IPV4.key" { it == null || it == "127.0.0.1" } // Optional
+        "$Tags.HTTP_METHOD.key" method
+        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
       }
     }
   }

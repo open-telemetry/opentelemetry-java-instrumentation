@@ -24,14 +24,17 @@ import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.NOT_FOUND
+import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRECT
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static org.junit.Assume.assumeTrue
 
 @Unroll
-abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends AgentTestRunner {
+abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> extends AgentTestRunner {
 
+  @Shared
+  SERVER server
   @Shared
   OkHttpClient client = OkHttpUtils.client()
   @Shared
@@ -47,18 +50,19 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
   DECORATOR serverDecorator = decorator()
 
   def setupSpec() {
-    startServer(port)
-    println "Http server started at: http://localhost:$port/"
+    server = startServer(port)
+    println getClass().name + " http server started at: http://localhost:$port/"
   }
 
-  abstract void startServer(int port)
+  abstract SERVER startServer(int port)
 
   def cleanupSpec() {
-    stopServer()
-    println "Http server stopped at: http://localhost:$port/"
+    stopServer(server)
+    server = null
+    println getClass().name + " http server stopped at: http://localhost:$port/"
   }
 
-  abstract void stopServer()
+  abstract void stopServer(SERVER server)
 
   abstract DECORATOR decorator()
 
@@ -78,7 +82,7 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
 
   enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
-    REDIRECT("redirect", 302, null),
+    REDIRECT("redirect", 302, "/redirected"),
     ERROR("error", 500, "controller error"),
     EXCEPTION("exception", 500, "controller exception"),
     NOT_FOUND("notFound", 404, "not found"),
@@ -175,6 +179,30 @@ abstract class HttpServerTest<DECORATOR extends HttpServerDecorator> extends Age
     cleanAndAssertTraces(1) {
       trace(0, 2) {
         serverSpan(it, 0, traceId, parentId)
+        controllerSpan(it, 1, span(0))
+      }
+    }
+
+    where:
+    method = "GET"
+    body = null
+  }
+
+  def "test redirect"() {
+    setup:
+    def request = request(REDIRECT, method, body).build()
+    def response = client.newCall(request).execute()
+
+    expect:
+    response.code() == REDIRECT.status
+    response.header("location") == REDIRECT.body ||
+      response.header("location") == "${address.resolve(REDIRECT.body)}"
+    response.body().contentLength() < 1
+
+    and:
+    cleanAndAssertTraces(1) {
+      trace(0, 2) {
+        serverSpan(it, 0, null, null, method, REDIRECT)
         controllerSpan(it, 1, span(0))
       }
     }
