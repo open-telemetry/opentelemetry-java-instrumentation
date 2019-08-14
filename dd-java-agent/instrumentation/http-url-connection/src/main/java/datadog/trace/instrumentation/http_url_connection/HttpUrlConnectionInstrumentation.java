@@ -80,19 +80,6 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       final HttpUrlState state = contextStore.putIfAbsent(thiz, HttpUrlState.FACTORY);
 
       synchronized (state) {
-        /*
-         * AgentWriter uses HttpURLConnection to report to the trace-agent. We don't want to trace
-         * those requests. Check after the connected test above because getRequestProperty will
-         * throw an exception if already connected.
-         */
-        final boolean isTraceRequest =
-            Thread.currentThread().getName().equals("dd-agent-writer")
-                || (!connected && thiz.getRequestProperty("Datadog-Meta-Lang") != null);
-        if (isTraceRequest) {
-          state.finish();
-          return null;
-        }
-
         final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpURLConnection.class);
         if (callDepth > 0) {
           return null;
