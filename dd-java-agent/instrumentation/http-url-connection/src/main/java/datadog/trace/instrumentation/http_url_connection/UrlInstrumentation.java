@@ -12,11 +12,13 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
+import datadog.trace.bootstrap.InternalJarURLHandler;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.net.URL;
+import java.net.URLStreamHandler;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -49,10 +51,14 @@ public class UrlInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void errorSpan(
-        @Advice.This final URL url, @Advice.Thrown final Throwable throwable) {
+        @Advice.This final URL url,
+        @Advice.Thrown final Throwable throwable,
+        @Advice.FieldValue("handler") final URLStreamHandler handler) {
       if (throwable != null) {
-        final boolean isTraceRequest = Thread.currentThread().getName().equals("dd-agent-writer");
-        if (isTraceRequest) {
+        // Various agent components end up calling `openConnection` indirectly
+        // when loading classes. Avoid tracing these calls.
+        final boolean disableTracing = handler instanceof InternalJarURLHandler;
+        if (disableTracing) {
           return;
         }
 
