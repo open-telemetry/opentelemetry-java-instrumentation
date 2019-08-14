@@ -26,9 +26,9 @@ import net.bytebuddy.matcher.ElementMatchers;
  */
 @Slf4j
 @AutoService(Instrumenter.class)
-public final class GlassfishInstrumentation extends Instrumenter.Default {
+public final class GlassFishInstrumentation extends Instrumenter.Default {
 
-  public GlassfishInstrumentation() {
+  public GlassFishInstrumentation() {
     super("glassfish");
   }
 
@@ -55,7 +55,7 @@ public final class GlassfishInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void preventBlacklistingOfTracerClasses(
         @Advice.Argument(value = 0, readOnly = false) String name) {
-      for (String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
+      for (final String prefix : Constants.BOOTSTRAP_PACKAGE_PREFIXES) {
         if (name.startsWith(prefix)) {
           name = "__datadog_no_blacklist." + name;
           break;

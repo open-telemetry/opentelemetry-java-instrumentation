@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.servlet2;
 
+import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.instrumentation.servlet2.Servlet2Decorator.DECORATE;
 
 import datadog.trace.api.DDTags;
@@ -19,7 +20,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 
 public class Servlet2Advice {
-  public static final String SERVLET_SPAN = "datadog.servlet.span";
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope startSpan(
@@ -27,7 +27,7 @@ public class Servlet2Advice {
       @Advice.Argument(0) final ServletRequest req,
       @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
           ServletResponse resp) {
-    final Object spanAttr = req.getAttribute(SERVLET_SPAN);
+    final Object spanAttr = req.getAttribute(DD_SPAN_ATTRIBUTE);
     if (!(req instanceof HttpServletRequest) || spanAttr != null) {
       // Tracing might already be applied by the FilterChain.  If so ignore this.
       return null;
@@ -61,7 +61,7 @@ public class Servlet2Advice {
       ((TraceScope) scope).setAsyncPropagation(true);
     }
 
-    req.setAttribute(SERVLET_SPAN, span);
+    req.setAttribute(DD_SPAN_ATTRIBUTE, span);
     return scope;
   }
 

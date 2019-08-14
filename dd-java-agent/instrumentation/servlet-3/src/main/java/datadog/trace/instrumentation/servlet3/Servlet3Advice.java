@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.servlet3;
 
+import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.instrumentation.servlet3.Servlet3Decorator.DECORATE;
 
 import datadog.trace.api.DDTags;
@@ -19,12 +20,11 @@ import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 
 public class Servlet3Advice {
-  public static final String SERVLET_SPAN = "datadog.servlet.span";
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static Scope startSpan(
       @Advice.This final Object servlet, @Advice.Argument(0) final ServletRequest req) {
-    final Object spanAttr = req.getAttribute(SERVLET_SPAN);
+    final Object spanAttr = req.getAttribute(DD_SPAN_ATTRIBUTE);
     if (!(req instanceof HttpServletRequest) || spanAttr != null) {
       // Tracing might already be applied by the FilterChain.  If so ignore this.
       return null;
@@ -54,7 +54,7 @@ public class Servlet3Advice {
       ((TraceScope) scope).setAsyncPropagation(true);
     }
 
-    req.setAttribute(SERVLET_SPAN, span);
+    req.setAttribute(DD_SPAN_ATTRIBUTE, span);
     return scope;
   }
 
@@ -65,7 +65,7 @@ public class Servlet3Advice {
       @Advice.Enter final Scope scope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
-    final Object spanAttr = request.getAttribute(SERVLET_SPAN);
+    final Object spanAttr = request.getAttribute(DD_SPAN_ATTRIBUTE);
     if (spanAttr instanceof Span && request instanceof HttpServletRequest) {
       final Principal principal = ((HttpServletRequest) request).getUserPrincipal();
       if (principal != null) {
@@ -87,7 +87,7 @@ public class Servlet3Advice {
           }
           DECORATE.onError(span, throwable);
           DECORATE.beforeFinish(span);
-          req.removeAttribute(SERVLET_SPAN);
+          req.removeAttribute(DD_SPAN_ATTRIBUTE);
           span.finish(); // Finish the span manually since finishSpanOnClose was false
         } else {
           final AtomicBoolean activated = new AtomicBoolean(false);
@@ -103,7 +103,7 @@ public class Servlet3Advice {
           if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
             DECORATE.onResponse(span, resp);
             DECORATE.beforeFinish(span);
-            req.removeAttribute(SERVLET_SPAN);
+            req.removeAttribute(DD_SPAN_ATTRIBUTE);
             span.finish(); // Finish the span manually since finishSpanOnClose was false
           }
         }

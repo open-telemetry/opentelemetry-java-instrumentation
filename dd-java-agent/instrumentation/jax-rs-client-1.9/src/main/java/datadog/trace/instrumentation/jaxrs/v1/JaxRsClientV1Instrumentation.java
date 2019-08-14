@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.jaxrs.v1;
 
+import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.DECORATE;
 import static java.util.Collections.singletonMap;
@@ -66,7 +67,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         @Advice.This final ClientHandler thisObj) {
 
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
-      final boolean isRootClientHandler = null == request.getProperties().get("dd.span");
+      final boolean isRootClientHandler = null == request.getProperties().get(DD_SPAN_ATTRIBUTE);
       if (isRootClientHandler) {
         final Tracer tracer = GlobalTracer.get();
         final Span span =
@@ -76,7 +77,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
                 .start();
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, request);
-        request.getProperties().put("dd.span", span);
+        request.getProperties().put(DD_SPAN_ATTRIBUTE, span);
 
         tracer.inject(
             span.context(), Format.Builtin.HTTP_HEADERS, new InjectAdapter(request.getHeaders()));

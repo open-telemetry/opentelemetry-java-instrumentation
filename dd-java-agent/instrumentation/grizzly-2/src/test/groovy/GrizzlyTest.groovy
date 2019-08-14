@@ -16,6 +16,10 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCES
 
 class GrizzlyTest extends HttpServerTest<HttpServer, GrizzlyDecorator> {
 
+  static {
+    System.setProperty("dd.integration.grizzly.enabled", "true")
+  }
+
   @Override
   HttpServer startServer(int port) {
     ResourceConfig rc = new ResourceConfig()

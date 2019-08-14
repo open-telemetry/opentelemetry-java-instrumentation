@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.grizzly;
 
+import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.instrumentation.grizzly.GrizzlyDecorator.DECORATE;
 import static io.opentracing.propagation.Format.Builtin.TEXT_MAP;
 import static java.util.Collections.singletonMap;
@@ -28,6 +29,11 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
   public GrizzlyHttpHandlerInstrumentation() {
     super("grizzly");
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return false;
   }
 
   @Override
@@ -62,7 +68,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope methodEnter(@Advice.Argument(0) final Request request) {
-      if (request.getAttribute(SpanClosingListener.GRIZZLY_SPAN_SPAN) != null) {
+      if (request.getAttribute(DD_SPAN_ATTRIBUTE) != null) {
         return null;
       }
 
@@ -80,7 +86,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
         ((TraceScope) scope).setAsyncPropagation(true);
       }
 
-      request.setAttribute(SpanClosingListener.GRIZZLY_SPAN_SPAN, span);
+      request.setAttribute(DD_SPAN_ATTRIBUTE, span);
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
 
       return scope;
@@ -104,14 +110,13 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   }
 
   public static class SpanClosingListener implements AfterServiceListener {
-    public static final String GRIZZLY_SPAN_SPAN = "datadog.grizzly.span";
     public static final SpanClosingListener LISTENER = new SpanClosingListener();
 
     @Override
     public void onAfterService(final Request request) {
-      final Object spanAttr = request.getAttribute(GRIZZLY_SPAN_SPAN);
+      final Object spanAttr = request.getAttribute(DD_SPAN_ATTRIBUTE);
       if (spanAttr instanceof Span) {
-        request.removeAttribute(GRIZZLY_SPAN_SPAN);
+        request.removeAttribute(DD_SPAN_ATTRIBUTE);
         final Span span = (Span) spanAttr;
         DECORATE.onResponse(span, request.getResponse());
         DECORATE.beforeFinish(span);

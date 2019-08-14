@@ -1,6 +1,6 @@
-apply from: "${rootDir}/gradle/java.gradle"
-apply plugin: 'idea'
-apply plugin: 'org.unbroken-dome.test-sets'
+ext {
+  maxJavaVersionForTests = JavaVersion.VERSION_1_8
+}
 
 muzzle {
   pass {
@@ -11,6 +11,10 @@ muzzle {
   }
 }
 
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
 testSets {
   latestDepTest {
     dirName = 'test'
@@ -18,10 +22,9 @@ testSets {
 }
 
 dependencies {
+  testCompile project(':dd-java-agent:instrumentation:servlet-3')
+  testCompile project(':dd-java-agent:instrumentation:grizzly-2')
 
-  compile project(':dd-java-agent:agent-tooling')
-
-  testCompile group: 'org.glassfish.main.extras', name: 'glassfish-embedded-all', version: '4.1.2'
-
-  latestDepTestCompile sourceSets.test.output
+  testCompile group: 'org.glassfish.main.extras', name: 'glassfish-embedded-all', version: '4.0'
+  latestDepTestCompile group: 'org.glassfish.main.extras', name: 'glassfish-embedded-all', version: '+'
 }
