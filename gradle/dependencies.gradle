@@ -7,6 +7,8 @@ ext {
 
     slf4j      : "1.7.25",
     guava      : "20.0", // Last version to support Java 7
+
+    // When upgrading for security fixes, ensure corresponding change is reflected in jmxfetch.
     jackson    : "2.9.9.3", // https://nvd.nist.gov/vuln/detail/CVE-2019-14379
 
     spock      : "1.3-groovy-$spockGroovyVer",
