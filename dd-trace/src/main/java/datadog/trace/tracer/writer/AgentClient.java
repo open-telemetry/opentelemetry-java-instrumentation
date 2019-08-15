@@ -20,6 +20,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 
+// FIXME: this has to be migrated to okhttp before we can use this.
+// Otherwise http requests coming from here will get traced.
 @Slf4j
 class AgentClient {
 
