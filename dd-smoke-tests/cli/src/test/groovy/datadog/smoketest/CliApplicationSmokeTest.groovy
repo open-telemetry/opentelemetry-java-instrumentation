@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 
 class CliApplicationSmokeTest extends AbstractSmokeTest {
   // Estimate for the amount of time instrumentation, plus request, plus some extra
-  private static final int TIMEOUT_SECS = 15
+  private static final int TIMEOUT_SECS = 30
 
   @Override
   ProcessBuilder createProcessBuilder() {
@@ -20,6 +20,8 @@ class CliApplicationSmokeTest extends AbstractSmokeTest {
     processBuilder.directory(new File(buildDirectory))
   }
 
+  // TODO: once java7 support is dropped use waitFor() with timeout call added in java8
+  // instead of timeout on test
   @Timeout(value = TIMEOUT_SECS, unit = TimeUnit.SECONDS)
   def "Cli application process ends before timeout"() {
     expect:
