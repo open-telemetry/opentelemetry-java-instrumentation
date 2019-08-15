@@ -1,5 +1,6 @@
 package datadog.smoketest
 
+import spock.lang.Timeout
 
 import java.util.concurrent.TimeUnit
 
@@ -19,9 +20,11 @@ class CliApplicationSmokeTest extends AbstractSmokeTest {
     processBuilder.directory(new File(buildDirectory))
   }
 
+  // TODO: once java7 support is dropped use waitFor() with timeout call added in java8
+  // instead of timeout on test
+  @Timeout(value = TIMEOUT_SECS, unit = TimeUnit.SECONDS)
   def "Cli application process ends before timeout"() {
     expect:
-    serverProcess.waitFor(TIMEOUT_SECS, TimeUnit.SECONDS)
-    serverProcess.exitValue() == 0
+    assert serverProcess.waitFor() == 0
   }
 }
