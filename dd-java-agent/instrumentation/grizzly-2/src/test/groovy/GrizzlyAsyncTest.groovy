@@ -24,12 +24,12 @@ class GrizzlyAsyncTest extends GrizzlyTest {
   HttpServer startServer(int port) {
     ResourceConfig rc = new ResourceConfig()
     rc.register(SimpleExceptionMapper)
-    rc.register(ServiceResource)
+    rc.register(AsyncServiceResource)
     GrizzlyHttpServerFactory.createHttpServer(new URI("http://localhost:$port"), rc)
   }
 
   @Path("/")
-  static class ServiceResource {
+  static class AsyncServiceResource {
     private ExecutorService executor = Executors.newSingleThreadExecutor()
 
     @GET
