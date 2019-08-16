@@ -102,6 +102,7 @@ class Netty41ServerTest extends HttpServerTest<EventLoopGroup, NettyHttpServerDe
     NettyHttpServerDecorator.DECORATE
   }
 
+  @Override
   String expectedOperationName() {
     "netty.request"
   }

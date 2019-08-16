@@ -45,7 +45,9 @@ dependencies {
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
-  latestDepTest
+  latestDepTest {
+    dirName = 'test'
+  }
 }
 
 dependencies {

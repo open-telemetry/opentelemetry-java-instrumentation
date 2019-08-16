@@ -1,10 +1,8 @@
 package server
 
-import datadog.trace.agent.test.asserts.ListWriterAssert
+
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.instrumentation.netty41.server.NettyHttpServerDecorator
-import groovy.transform.stc.ClosureParams
-import groovy.transform.stc.SimpleType
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.DeploymentOptions
 import io.vertx.core.Future
@@ -68,6 +66,11 @@ class VertxHttpServerTest extends HttpServerTest<Vertx, NettyHttpServerDecorator
     false
   }
 
+  @Override
+  boolean reorderControllerSpan() {
+    true
+  }
+
   static class VertxWebTestServer extends AbstractVerticle {
 
     @Override
@@ -100,26 +103,5 @@ class VertxHttpServerTest extends HttpServerTest<Vertx, NettyHttpServerDecorator
         .requestHandler { router.accept(it) }
         .listen(port) { startFuture.complete() }
     }
-  }
-
-  void cleanAndAssertTraces(
-    final int size,
-    @ClosureParams(value = SimpleType, options = "datadog.trace.agent.test.asserts.ListWriterAssert")
-    @DelegatesTo(value = ListWriterAssert, strategy = Closure.DELEGATE_FIRST)
-    final Closure spec) {
-    // If this is failing, make sure HttpServerTestAdvice is applied correctly.
-    TEST_WRITER.waitForTraces(size * 2)
-
-    // Netty closes the parent span before the controller returns, so we need to manually reorder it.
-    TEST_WRITER.each {
-      def controllerSpan = it.find {
-        it.operationName == "controller"
-      }
-      if (controllerSpan) {
-        it.remove(controllerSpan)
-        it.add(controllerSpan)
-      }
-    }
-    super.cleanAndAssertTraces(size, spec)
   }
 }

@@ -1,6 +1,3 @@
-import datadog.trace.agent.test.asserts.ListWriterAssert
-import groovy.transform.stc.ClosureParams
-import groovy.transform.stc.SimpleType
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.container.AsyncResponse
@@ -26,6 +23,11 @@ class GrizzlyAsyncTest extends GrizzlyTest {
     rc.register(SimpleExceptionMapper)
     rc.register(AsyncServiceResource)
     GrizzlyHttpServerFactory.createHttpServer(new URI("http://localhost:$port"), rc)
+  }
+
+  @Override
+  boolean reorderControllerSpan() {
+    true
   }
 
   @Path("/")
@@ -75,26 +77,5 @@ class GrizzlyAsyncTest extends GrizzlyTest {
         }
       }
     }
-  }
-
-  void cleanAndAssertTraces(
-    final int size,
-    @ClosureParams(value = SimpleType, options = "datadog.trace.agent.test.asserts.ListWriterAssert")
-    @DelegatesTo(value = ListWriterAssert, strategy = Closure.DELEGATE_FIRST)
-    final Closure spec) {
-    // If this is failing, make sure HttpServerTestAdvice is applied correctly.
-    TEST_WRITER.waitForTraces(size * 2)
-
-    // AsyncResponse.resume closes the handler span before the controller returns, so we need to manually reorder it.
-    TEST_WRITER.each {
-      def controllerSpan = it.find {
-        it.operationName == "controller"
-      }
-      if (controllerSpan) {
-        it.remove(controllerSpan)
-        it.add(controllerSpan)
-      }
-    }
-    super.cleanAndAssertTraces(size, spec)
   }
 }

@@ -72,6 +72,14 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   abstract String expectedOperationName()
 
+  boolean hasHandlerSpan() {
+    false
+  }
+
+  boolean reorderControllerSpan() {
+    true
+  }
+
   boolean testNotFound() {
     true
   }
@@ -148,9 +156,17 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     and:
     cleanAndAssertTraces(count) {
       (1..count).eachWithIndex { val, i ->
-        trace(i, 2) {
-          serverSpan(it, 0)
-          controllerSpan(it, 1, span(0))
+        if (hasHandlerSpan()) {
+          trace(i, 3) {
+            serverSpan(it, 0)
+            handlerSpan(it, 1, span(0))
+            controllerSpan(it, 2, span(1))
+          }
+        } else {
+          trace(i, 2) {
+            serverSpan(it, 0)
+            controllerSpan(it, 1, span(0))
+          }
         }
       }
     }
@@ -177,9 +193,17 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
     and:
     cleanAndAssertTraces(1) {
-      trace(0, 2) {
-        serverSpan(it, 0, traceId, parentId)
-        controllerSpan(it, 1, span(0))
+      if (hasHandlerSpan()) {
+        trace(0, 3) {
+          serverSpan(it, 0, traceId, parentId)
+          handlerSpan(it, 1, span(0))
+          controllerSpan(it, 2, span(1))
+        }
+      } else {
+        trace(0, 2) {
+          serverSpan(it, 0, traceId, parentId)
+          controllerSpan(it, 1, span(0))
+        }
       }
     }
 
@@ -201,9 +225,17 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
     and:
     cleanAndAssertTraces(1) {
-      trace(0, 2) {
-        serverSpan(it, 0, null, null, method, REDIRECT)
-        controllerSpan(it, 1, span(0))
+      if (hasHandlerSpan()) {
+        trace(0, 3) {
+          serverSpan(it, 0, null, null, method, REDIRECT)
+          handlerSpan(it, 1, span(0))
+          controllerSpan(it, 2, span(1))
+        }
+      } else {
+        trace(0, 2) {
+          serverSpan(it, 0, null, null, method, REDIRECT)
+          controllerSpan(it, 1, span(0))
+        }
       }
     }
 
@@ -223,9 +255,17 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
     and:
     cleanAndAssertTraces(1) {
-      trace(0, 2) {
-        serverSpan(it, 0, null, null, method, ERROR)
-        controllerSpan(it, 1, span(0))
+      if (hasHandlerSpan()) {
+        trace(0, 3) {
+          serverSpan(it, 0, null, null, method, ERROR)
+          handlerSpan(it, 1, span(0), ERROR)
+          controllerSpan(it, 2, span(1))
+        }
+      } else {
+        trace(0, 2) {
+          serverSpan(it, 0, null, null, method, ERROR)
+          controllerSpan(it, 1, span(0))
+        }
       }
     }
 
@@ -247,9 +287,17 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
     and:
     cleanAndAssertTraces(1) {
-      trace(0, 2) {
-        serverSpan(it, 0, null, null, method, EXCEPTION)
-        controllerSpan(it, 1, span(0), EXCEPTION.body)
+      if (hasHandlerSpan()) {
+        trace(0, 3) {
+          serverSpan(it, 0, null, null, method, EXCEPTION)
+          handlerSpan(it, 1, span(0), EXCEPTION)
+          controllerSpan(it, 2, span(1), EXCEPTION.body)
+        }
+      } else {
+        trace(0, 2) {
+          serverSpan(it, 0, null, null, method, EXCEPTION)
+          controllerSpan(it, 1, span(0), EXCEPTION.body)
+        }
       }
     }
 
@@ -269,8 +317,15 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
     and:
     cleanAndAssertTraces(1) {
-      trace(0, 1) {
-        serverSpan(it, 0, null, null, method, NOT_FOUND)
+      if (hasHandlerSpan()) {
+        trace(0, 2) {
+          serverSpan(it, 0, null, null, method, NOT_FOUND)
+          handlerSpan(it, 1, span(0), NOT_FOUND)
+        }
+      } else {
+        trace(0, 1) {
+          serverSpan(it, 0, null, null, method, NOT_FOUND)
+        }
       }
     }
 
@@ -301,6 +356,19 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     assert toRemove.size() == size
     TEST_WRITER.removeAll(toRemove)
 
+    if(reorderControllerSpan()) {
+      // Some frameworks close the handler span before the controller returns, so we need to manually reorder it.
+      TEST_WRITER.each {
+        def controllerSpan = it.find {
+          it.operationName == "controller"
+        }
+        if (controllerSpan) {
+          it.remove(controllerSpan)
+          it.add(controllerSpan)
+        }
+      }
+    }
+
     assertTraces(size, spec)
   }
 
@@ -318,6 +386,10 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
         }
       }
     }
+  }
+
+  void handlerSpan(TraceAssert trace, int index, Object parent, ServerEndpoint endpoint = SUCCESS) {
+    throw new UnsupportedOperationException("handlerSpan not implemented in " + getClass().name)
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
