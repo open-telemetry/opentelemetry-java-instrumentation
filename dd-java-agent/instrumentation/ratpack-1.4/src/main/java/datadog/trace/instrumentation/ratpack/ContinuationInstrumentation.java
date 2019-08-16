@@ -7,12 +7,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
 import io.opentracing.util.GlobalTracer;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -35,7 +31,7 @@ public final class ContinuationInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      getClass().getName() + "$ResumeAdvice$BlockWrapper",
+      packageName + ".BlockWrapper",
     };
   }
 
@@ -50,45 +46,12 @@ public final class ContinuationInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrap(@Advice.Argument(value = 0, readOnly = false) Block block) {
-      final Span span = GlobalTracer.get().activeSpan();
-      if (span != null) {
-        block = BlockWrapper.wrapIfNeeded(block, span);
-      }
+      block = BlockWrapper.wrapIfNeeded(block, GlobalTracer.get().activeSpan());
     }
 
     public void muzzleCheck(final PathBinding binding) {
       // This was added in 1.4.  Added here to ensure consistency with other instrumentation.
       binding.getDescription();
-    }
-
-    @Slf4j
-    public static class BlockWrapper implements Block {
-      private final Block delegate;
-      private final Span span;
-
-      private BlockWrapper(final Block delegate, final Span span) {
-        assert span != null;
-        this.delegate = delegate;
-        this.span = span;
-      }
-
-      @Override
-      public void execute() throws Exception {
-          try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
-            if (scope instanceof TraceScope) {
-              ((TraceScope) scope).setAsyncPropagation(true);
-            }
-            delegate.execute();
-          }
-      }
-
-      public static Block wrapIfNeeded(final Block delegate, final Span span) {
-        if (delegate instanceof BlockWrapper) {
-          return delegate;
-        }
-        log.debug("Wrapping block {}", delegate);
-        return new BlockWrapper(delegate, span);
-      }
     }
   }
 }
