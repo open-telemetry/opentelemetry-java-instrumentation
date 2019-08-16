@@ -1,14 +1,11 @@
 package server
 
 import datadog.opentracing.DDSpan
-import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.netty41.server.NettyHttpServerDecorator
 import datadog.trace.instrumentation.ratpack.RatpackServerDecorator
-import groovy.transform.stc.ClosureParams
-import groovy.transform.stc.SimpleType
 import io.opentracing.tag.Tags
 import ratpack.error.ServerErrorHandler
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
@@ -95,25 +92,9 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
     true
   }
 
-  void cleanAndAssertTraces(
-    final int size,
-    @ClosureParams(value = SimpleType, options = "datadog.trace.agent.test.asserts.ListWriterAssert")
-    @DelegatesTo(value = ListWriterAssert, strategy = Closure.DELEGATE_FIRST)
-    final Closure spec) {
-    // If this is failing, make sure HttpServerTestAdvice is applied correctly.
-    TEST_WRITER.waitForTraces(size * 2)
-
-    // Ratpack closes the handler span before the controller returns, so we need to manually reorder it.
-    TEST_WRITER.each {
-      def controllerSpan = it.find {
-        it.operationName == "controller"
-      }
-      if (controllerSpan) {
-        it.remove(controllerSpan)
-        it.add(controllerSpan)
-      }
-    }
-    super.cleanAndAssertTraces(size, spec)
+  @Override
+  boolean reorderControllerSpan() {
+    true
   }
 
   @Override

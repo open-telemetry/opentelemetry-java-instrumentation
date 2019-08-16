@@ -62,34 +62,31 @@ public final class ContinuationInstrumentation extends Instrumenter.Default {
     }
 
     @Slf4j
-    public static class BlockWrapper<T> implements Block {
+    public static class BlockWrapper implements Block {
       private final Block delegate;
       private final Span span;
 
       private BlockWrapper(final Block delegate, final Span span) {
+        assert span != null;
         this.delegate = delegate;
         this.span = span;
       }
 
       @Override
       public void execute() throws Exception {
-        if (span != null) {
           try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
             if (scope instanceof TraceScope) {
               ((TraceScope) scope).setAsyncPropagation(true);
             }
             delegate.execute();
           }
-        } else {
-          delegate.execute();
-        }
       }
 
       public static Block wrapIfNeeded(final Block delegate, final Span span) {
-        if (delegate instanceof BlockWrapper || span == null) {
+        if (delegate instanceof BlockWrapper) {
           return delegate;
         }
-        log.debug("Wrapping action task {}", delegate);
+        log.debug("Wrapping block {}", delegate);
         return new BlockWrapper(delegate, span);
       }
     }

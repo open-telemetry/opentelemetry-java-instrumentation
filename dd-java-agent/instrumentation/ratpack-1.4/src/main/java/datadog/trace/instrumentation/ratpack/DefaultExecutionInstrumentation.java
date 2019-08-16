@@ -77,22 +77,19 @@ public final class DefaultExecutionInstrumentation extends Instrumenter.Default 
       private final Span span;
 
       private ActionWrapper(final Action<T> delegate, final Span span) {
+        assert span != null;
         this.delegate = delegate;
         this.span = span;
       }
 
       @Override
       public void execute(final T t) throws Exception {
-        if (span != null) {
           try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
             if (scope instanceof TraceScope) {
               ((TraceScope) scope).setAsyncPropagation(true);
             }
             delegate.execute(t);
           }
-        } else {
-          delegate.execute(t);
-        }
       }
 
       public static <T> Action<T> wrapIfNeeded(final Action<T> delegate, final Span span) {

@@ -76,6 +76,10 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     false
   }
 
+  boolean reorderControllerSpan() {
+    true
+  }
+
   boolean testNotFound() {
     true
   }
@@ -351,6 +355,19 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     }
     assert toRemove.size() == size
     TEST_WRITER.removeAll(toRemove)
+
+    if(reorderControllerSpan()) {
+      // Some frameworks close the handler span before the controller returns, so we need to manually reorder it.
+      TEST_WRITER.each {
+        def controllerSpan = it.find {
+          it.operationName == "controller"
+        }
+        if (controllerSpan) {
+          it.remove(controllerSpan)
+          it.add(controllerSpan)
+        }
+      }
+    }
 
     assertTraces(size, spec)
   }
