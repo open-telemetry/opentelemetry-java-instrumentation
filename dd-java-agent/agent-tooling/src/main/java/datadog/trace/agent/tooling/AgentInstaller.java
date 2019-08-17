@@ -29,14 +29,15 @@ import net.bytebuddy.utility.JavaModule;
 @Slf4j
 public class AgentInstaller {
   private static final Map<String, Runnable> classLoadCallbacks = new ConcurrentHashMap<>();
+  public static final Cleaner CLEANER = new Cleaner();
 
   static {
     // WeakMap is used by other classes below, so we need to register the provider first.
-    registerWeakMapProvider();
+    registerWeakMapProvider(CLEANER);
   }
 
   public static final DDLocationStrategy LOCATION_STRATEGY = new DDLocationStrategy();
-  public static final AgentBuilder.PoolStrategy POOL_STRATEGY = new DDCachingPoolStrategy();
+  public static final AgentBuilder.PoolStrategy POOL_STRATEGY = new DDCachingPoolStrategy(CLEANER);
   private static volatile Instrumentation INSTRUMENTATION;
 
   public static Instrumentation getInstrumentation() {
@@ -152,6 +153,7 @@ public class AgentInstaller {
     }
     log.debug("Installed {} instrumenter(s)", numInstrumenters);
 
+    CLEANER.start();
     return agentBuilder.installOn(inst);
   }
 
@@ -171,12 +173,12 @@ public class AgentInstaller {
     return matcher;
   }
 
-  private static void registerWeakMapProvider() {
+  private static void registerWeakMapProvider(final Cleaner cleaner) {
     if (!WeakMap.Provider.isProviderRegistered()) {
-      WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent());
+      WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent(cleaner));
+      //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent.Inline());
+      //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.Guava());
     }
-    //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent.Inline());
-    //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.Guava());
   }
 
   @Slf4j

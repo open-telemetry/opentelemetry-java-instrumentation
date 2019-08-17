@@ -8,9 +8,6 @@ import com.google.common.cache.CacheBuilder;
 import datadog.trace.bootstrap.WeakMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
@@ -33,6 +30,11 @@ import net.bytebuddy.pool.TypePool;
 public class DDCachingPoolStrategy implements PoolStrategy {
   private static final WeakMap<ClassLoader, TypePool.CacheProvider> typePoolCache =
       WeakMap.Provider.newWeakMap();
+  private final Cleaner cleaner;
+
+  public DDCachingPoolStrategy(final Cleaner cleaner) {
+    this.cleaner = cleaner;
+  }
 
   @Override
   public TypePool typePool(final ClassFileLocator classFileLocator, final ClassLoader classLoader) {
@@ -43,7 +45,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
       synchronized (key) {
         cache = typePoolCache.get(key);
         if (null == cache) {
-          cache = EvictingCacheProvider.withObjectType(10, TimeUnit.SECONDS);
+          cache = EvictingCacheProvider.withObjectType(cleaner, 10, TimeUnit.SECONDS);
           typePoolCache.put(key, cache);
         }
       }
@@ -53,30 +55,13 @@ public class DDCachingPoolStrategy implements PoolStrategy {
   }
 
   private static class EvictingCacheProvider implements TypePool.CacheProvider {
-    private static final ScheduledThreadPoolExecutor cleanerExecutorService =
-        new ScheduledThreadPoolExecutor(
-            1,
-            new ThreadFactory() {
-              @Override
-              public Thread newThread(final Runnable r) {
-                final Thread thread = new Thread(r, "dd-type-cache-cleaner");
-                thread.setDaemon(true);
-                thread.setPriority(Thread.MIN_PRIORITY);
-                return thread;
-              }
-            });
-
-    static {
-      cleanerExecutorService.setRemoveOnCancelPolicy(true);
-    }
 
     /** A map containing all cached resolutions by their names. */
     private final Cache<String, TypePool.Resolution> cache;
 
-    private final ScheduledFuture<?> cancelFuture;
-
     /** Creates a new simple cache. */
-    private EvictingCacheProvider(final long expireDuration, final TimeUnit unit) {
+    private EvictingCacheProvider(
+        final Cleaner cleaner, final long expireDuration, final TimeUnit unit) {
       cache =
           CacheBuilder.newBuilder()
               .initialCapacity(500)
@@ -89,15 +74,14 @@ public class DDCachingPoolStrategy implements PoolStrategy {
        * We want to ensure this happens more regularly, so we schedule a thread to do run cleanup manually.
        */
       final long cleanFrequency = expireDuration / 2;
-      cancelFuture =
-          cleanerExecutorService.scheduleAtFixedRate(
-              new CacheCleaner(), cleanFrequency, cleanFrequency, unit);
+      cleaner.scheduleCleaning(cache, CacheCleaner.CLEANER, cleanFrequency, unit);
     }
 
     private static EvictingCacheProvider withObjectType(
-        final long expireDuration, final TimeUnit unit) {
+        final Cleaner cleaner, final long expireDuration, final TimeUnit unit) {
       assert expireDuration % 2 == 0 : "expireDuration must be even";
-      final EvictingCacheProvider cacheProvider = new EvictingCacheProvider(expireDuration, unit);
+      final EvictingCacheProvider cacheProvider =
+          new EvictingCacheProvider(cleaner, expireDuration, unit);
       cacheProvider.register(
           Object.class.getName(), new TypePool.Resolution.Simple(TypeDescription.OBJECT));
       return cacheProvider;
@@ -126,15 +110,12 @@ public class DDCachingPoolStrategy implements PoolStrategy {
       return cache.size();
     }
 
-    @Override
-    public void finalize() {
-      cancelFuture.cancel(true);
-    }
+    private static class CacheCleaner implements Cleaner.Adapter<Cache> {
+      private static final CacheCleaner CLEANER = new CacheCleaner();
 
-    private class CacheCleaner implements Runnable {
       @Override
-      public void run() {
-        cache.cleanUp();
+      public void clean(final Cache target) {
+        target.cleanUp();
       }
     }
 
