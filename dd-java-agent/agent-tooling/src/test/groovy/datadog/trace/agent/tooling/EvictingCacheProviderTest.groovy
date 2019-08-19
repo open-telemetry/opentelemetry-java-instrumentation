@@ -9,13 +9,10 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
-import static datadog.trace.agent.tooling.AgentInstaller.CLEANER
+import static datadog.trace.agent.tooling.AgentTooling.CLEANER
 
 //@Timeout(5)
 class EvictingCacheProviderTest extends Specification {
-  static {
-    CLEANER.start()
-  }
 
   def "test provider"() {
     setup:

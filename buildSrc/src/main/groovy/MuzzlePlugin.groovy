@@ -33,6 +33,7 @@ class MuzzlePlugin implements Plugin<Project> {
    */
   private static final List<RemoteRepository> MUZZLE_REPOS
   private static final AtomicReference<ClassLoader> TOOLING_LOADER = new AtomicReference<>()
+  private static final AtomicReference<Set<Thread>> ALLOWED_THREADS = new AtomicReference<>()
   static {
     RemoteRepository central = new RemoteRepository.Builder("central", "default", "http://central.maven.org/maven2/").build()
     MUZZLE_REPOS = new ArrayList<RemoteRepository>(Arrays.asList(central))
@@ -94,18 +95,6 @@ class MuzzlePlugin implements Plugin<Project> {
       return
     }
 
-    if (!project.rootProject.tasks.getNames().contains('muzzleCleanup')) {
-      def muzzleCleanup = project.rootProject.task('muzzleCleanup') {
-        group = 'Muzzle'
-        doLast {
-          project.rootProject.getLogger().info("Cleaning up global tooling loader")
-          TOOLING_LOADER.set(null)
-        }
-      }
-      muzzleCleanup.outputs.upToDateWhen { false }
-    }
-    project.tasks.muzzle.finalizedBy(project.rootProject.tasks.muzzleCleanup)
-
     final RepositorySystem system = newRepositorySystem()
     final RepositorySystemSession session = newRepositorySystemSession(system)
 
@@ -131,18 +120,24 @@ class MuzzlePlugin implements Plugin<Project> {
   }
 
   private static ClassLoader getOrCreateToolingLoader(Project toolingProject) {
-    final ClassLoader toolingLoader = TOOLING_LOADER.get()
-    if (toolingLoader == null) {
-      Set<URL> ddUrls = new HashSet<>()
-      toolingProject.getLogger().info('creating classpath for agent-tooling')
-      for (File f : toolingProject.sourceSets.main.runtimeClasspath.getFiles()) {
-        toolingProject.getLogger().info('--' + f)
-        ddUrls.add(f.toURI().toURL())
+    synchronized (TOOLING_LOADER) {
+      final ClassLoader toolingLoader = TOOLING_LOADER.get()
+      if (toolingLoader == null) {
+        Set<URL> ddUrls = new HashSet<>()
+        toolingProject.getLogger().info('creating classpath for agent-tooling')
+        for (File f : toolingProject.sourceSets.main.runtimeClasspath.getFiles()) {
+          toolingProject.getLogger().info('--' + f)
+          ddUrls.add(f.toURI().toURL())
+        }
+        def loader = new URLClassLoader(ddUrls.toArray(new URL[0]), (ClassLoader) null)
+        assert TOOLING_LOADER.compareAndSet(null, loader)
+        loader.loadClass("datadog.trace.agent.tooling.AgentTooling").getMethod("init").invoke(null)
+        assert ALLOWED_THREADS.compareAndSet(null, new HashSet<Thread>(Arrays.asList(Thread.getThreads())))
+        assert ALLOWED_THREADS.get().size() > 0
+        return TOOLING_LOADER.get()
+      } else {
+        return toolingLoader
       }
-      TOOLING_LOADER.compareAndSet(null, new URLClassLoader(ddUrls.toArray(new URL[0]), (ClassLoader) null))
-      return TOOLING_LOADER.get()
-    } else {
-      return toolingLoader
     }
   }
 
@@ -263,7 +258,7 @@ class MuzzlePlugin implements Plugin<Project> {
   private static Task addMuzzleTask(MuzzleDirective muzzleDirective, Artifact versionArtifact, Project instrumentationProject, Task runAfter, Project bootstrapProject, Project toolingProject) {
     def taskName = "muzzle-Assert${muzzleDirective.assertPass ? "Pass" : "Fail"}-$versionArtifact.groupId-$versionArtifact.artifactId-$versionArtifact.version${muzzleDirective.name ? "-${muzzleDirective.getNameSlug()}" : ""}"
     def config = instrumentationProject.configurations.create(taskName)
-    def dep =  instrumentationProject.dependencies.create("$versionArtifact.groupId:$versionArtifact.artifactId:$versionArtifact.version") {
+    def dep = instrumentationProject.dependencies.create("$versionArtifact.groupId:$versionArtifact.artifactId:$versionArtifact.version") {
       transitive = true
     }
     // The following optional transitive dependencies are brought in by some legacy module such as log4j 1.x but are no
@@ -288,7 +283,7 @@ class MuzzlePlugin implements Plugin<Project> {
         assertionMethod.invoke(null, instrumentationCL, userCL, muzzleDirective.assertPass)
 
         for (Thread thread : Thread.getThreads()) {
-          if (thread.getName().startsWith("dd-")) {
+          if (!ALLOWED_THREADS.get().contains(thread)) {
             throw new GradleException("Task $taskName has spawned a thread: $thread. This will prevent GC of dynamic muzzle classes. Aborting muzzle run.")
           }
         }

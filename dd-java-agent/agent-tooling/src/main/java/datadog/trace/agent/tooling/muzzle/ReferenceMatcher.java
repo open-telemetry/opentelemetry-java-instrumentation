@@ -3,7 +3,7 @@ package datadog.trace.agent.tooling.muzzle;
 import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADER;
 
-import datadog.trace.agent.tooling.AgentInstaller;
+import datadog.trace.agent.tooling.AgentTooling;
 import datadog.trace.agent.tooling.Utils;
 import datadog.trace.agent.tooling.muzzle.Reference.Mismatch;
 import datadog.trace.agent.tooling.muzzle.Reference.Source;
@@ -84,8 +84,8 @@ public class ReferenceMatcher {
    */
   public static List<Reference.Mismatch> checkMatch(Reference reference, ClassLoader loader) {
     final TypePool typePool =
-        AgentInstaller.POOL_STRATEGY.typePool(
-            AgentInstaller.LOCATION_STRATEGY.classFileLocator(loader), loader);
+        AgentTooling.poolStrategy()
+            .typePool(AgentTooling.locationStrategy().classFileLocator(loader), loader);
     final List<Mismatch> mismatches = new ArrayList<>(0);
     try {
       final TypePool.Resolution resolution =

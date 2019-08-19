@@ -9,14 +9,11 @@ import spock.lang.Specification
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 
-import static datadog.trace.agent.tooling.AgentInstaller.CLEANER
+import static datadog.trace.agent.tooling.AgentTooling.CLEANER
 
 @Retry
 // These tests fail sometimes in CI.
 class WeakConcurrentSupplierTest extends Specification {
-  static {
-    CLEANER.start()
-  }
   @Shared
   def weakConcurrentSupplier = new WeakMapSuppliers.WeakConcurrent(CLEANER)
   @Shared

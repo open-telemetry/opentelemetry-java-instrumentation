@@ -1,16 +1,14 @@
 package datadog.trace.agent.tooling.muzzle;
 
+import datadog.trace.agent.tooling.AgentTooling;
 import datadog.trace.agent.tooling.HelperInjector;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.bootstrap.WeakMap;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.WeakHashMap;
 import net.bytebuddy.dynamic.ClassFileLocator;
 
 /**
@@ -23,14 +21,7 @@ import net.bytebuddy.dynamic.ClassFileLocator;
  */
 public class MuzzleVersionScanPlugin {
   static {
-    // prevent WeakMap from logging warning while plugin is running
-    WeakMap.Provider.registerIfAbsent(
-        new WeakMap.Implementation() {
-          @Override
-          public <K, V> WeakMap<K, V> get() {
-            return new WeakMap.MapAdapter<>(Collections.synchronizedMap(new WeakHashMap<K, V>()));
-          }
-        });
+    AgentTooling.init();
   }
 
   public static void assertInstrumentationMuzzled(
@@ -102,7 +93,7 @@ public class MuzzleVersionScanPlugin {
           // only default Instrumenters use muzzle. Skip custom instrumenters.
           continue;
         }
-        Instrumenter.Default defaultInstrumenter = (Instrumenter.Default) instrumenter;
+        final Instrumenter.Default defaultInstrumenter = (Instrumenter.Default) instrumenter;
         try {
           // verify helper injector works
           final String[] helperClassNames = defaultInstrumenter.helperClassNames();
@@ -119,7 +110,7 @@ public class MuzzleVersionScanPlugin {
     }
   }
 
-  private static Map<String, byte[]> createHelperMap(Instrumenter.Default instrumenter)
+  private static Map<String, byte[]> createHelperMap(final Instrumenter.Default instrumenter)
       throws IOException {
     final Map<String, byte[]> helperMap =
         new LinkedHashMap<>(instrumenter.helperClassNames().length);

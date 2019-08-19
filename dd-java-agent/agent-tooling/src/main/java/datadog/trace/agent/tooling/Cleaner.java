@@ -1,6 +1,7 @@
 package datadog.trace.agent.tooling;
 
 import java.lang.ref.WeakReference;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -25,47 +26,37 @@ class Cleaner {
         }
       };
 
-  private volatile ScheduledThreadPoolExecutor cleanerService = null;
-  private volatile Thread shutdownCallback = null;
+  private final ScheduledThreadPoolExecutor cleanerService;
+  private final Thread shutdownCallback;
+
+  Cleaner() {
+    cleanerService = new ScheduledThreadPoolExecutor(1, THREAD_FACTORY);
+    cleanerService.setRemoveOnCancelPolicy(true);
+    shutdownCallback = new ShutdownCallback(cleanerService);
+    try {
+      Runtime.getRuntime().addShutdownHook(shutdownCallback);
+    } catch (final IllegalStateException ex) {
+      // The JVM is already shutting down.
+    }
+  }
 
   <T> void scheduleCleaning(
       final T target, final Adapter<T> adapter, final long frequency, final TimeUnit unit) {
     final CleanupRunnable<T> command = new CleanupRunnable<>(target, adapter);
-    if (cleanerService == null) {
-      log.warn("Cleaning scheduled before starting cleaner. Target won't be cleaned {}", target);
+    if (cleanerService.isShutdown()) {
+      log.warn("Cleaning scheduled but cleaner is shutdown. Target won't be cleaned {}", target);
     } else {
-      command.setFuture(cleanerService.scheduleAtFixedRate(command, frequency, frequency, unit));
-    }
-  }
-
-  public void start() {
-    if (cleanerService == null) {
-      synchronized (this) {
-        if (cleanerService == null) {
-          cleanerService = new ScheduledThreadPoolExecutor(1, THREAD_FACTORY);
-          cleanerService.setRemoveOnCancelPolicy(true);
-          shutdownCallback = new ShutdownCallback(cleanerService);
-          try {
-            Runtime.getRuntime().addShutdownHook(shutdownCallback);
-          } catch (final IllegalStateException ex) {
-            // The JVM is already shutting down.
-          }
-        }
+      try {
+        command.setFuture(cleanerService.scheduleAtFixedRate(command, frequency, frequency, unit));
+      } catch (final RejectedExecutionException e) {
+        log.warn("Cleaning task rejected. Target won't be cleaned {}", target);
       }
     }
   }
 
-  public void stop() {
-    if (cleanerService == null) {
-      synchronized (this) {
-        if (cleanerService == null) {
-          cleanerService.shutdown();
-          Runtime.getRuntime().removeShutdownHook(shutdownCallback);
-          cleanerService = null;
-          shutdownCallback = null;
-        }
-      }
-    }
+  private void stop() {
+    cleanerService.shutdownNow();
+    Runtime.getRuntime().removeShutdownHook(shutdownCallback);
   }
 
   @Override
@@ -107,7 +98,7 @@ class Cleaner {
 
     private final ScheduledExecutorService executorService;
 
-    public ShutdownCallback(final ScheduledExecutorService executorService) {
+    private ShutdownCallback(final ScheduledExecutorService executorService) {
       this.executorService = executorService;
     }
 

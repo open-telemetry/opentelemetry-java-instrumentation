@@ -28,7 +28,7 @@ import net.bytebuddy.pool.TypePool;
  * <p>See eviction policy below.
  */
 public class DDCachingPoolStrategy implements PoolStrategy {
-  private static final WeakMap<ClassLoader, TypePool.CacheProvider> typePoolCache =
+  private final WeakMap<ClassLoader, TypePool.CacheProvider> typePoolCache =
       WeakMap.Provider.newWeakMap();
   private final Cleaner cleaner;
 
