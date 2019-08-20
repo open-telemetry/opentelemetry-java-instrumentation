@@ -73,13 +73,11 @@ public class DDCachingPoolStrategy implements PoolStrategy {
        * The cache only does cleanup on occasional reads and writes.
        * We want to ensure this happens more regularly, so we schedule a thread to do run cleanup manually.
        */
-      final long cleanFrequency = expireDuration / 2;
-      cleaner.scheduleCleaning(cache, CacheCleaner.CLEANER, cleanFrequency, unit);
+      cleaner.scheduleCleaning(cache, CacheCleaner.CLEANER, expireDuration, unit);
     }
 
     private static EvictingCacheProvider withObjectType(
         final Cleaner cleaner, final long expireDuration, final TimeUnit unit) {
-      assert expireDuration % 2 == 0 : "expireDuration must be even";
       final EvictingCacheProvider cacheProvider =
           new EvictingCacheProvider(cleaner, expireDuration, unit);
       cacheProvider.register(

@@ -11,8 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class Cleaner {
-  // TODO: add unit tests for this class.
-
   private static final long SHUTDOWN_WAIT_SECONDS = 5;
 
   private static final ThreadFactory THREAD_FACTORY =
@@ -47,6 +45,7 @@ class Cleaner {
       log.warn("Cleaning scheduled but cleaner is shutdown. Target won't be cleaned {}", target);
     } else {
       try {
+        // Schedule job and save future to allow job to be canceled if target is GC'd.
         command.setFuture(cleanerService.scheduleAtFixedRate(command, frequency, frequency, unit));
       } catch (final RejectedExecutionException e) {
         log.warn("Cleaning task rejected. Target won't be cleaned {}", target);
@@ -72,7 +71,7 @@ class Cleaner {
   private static class CleanupRunnable<T> implements Runnable {
     private final WeakReference<T> target;
     private final Adapter<T> adapter;
-    private ScheduledFuture<?> future = null;
+    private volatile ScheduledFuture<?> future = null;
 
     private CleanupRunnable(final T target, final Adapter<T> adapter) {
       this.target = new WeakReference<>(target);

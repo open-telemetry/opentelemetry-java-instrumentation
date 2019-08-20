@@ -4,6 +4,7 @@ import datadog.trace.util.gc.GCUtils
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.pool.TypePool
 import spock.lang.Specification
+import spock.lang.Timeout
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
@@ -11,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static datadog.trace.agent.tooling.AgentTooling.CLEANER
 
-//@Timeout(5)
+@Timeout(5)
 class EvictingCacheProviderTest extends Specification {
 
   def "test provider"() {
