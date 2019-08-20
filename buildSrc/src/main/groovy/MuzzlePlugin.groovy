@@ -22,6 +22,7 @@ import org.gradle.api.Task
 import org.gradle.api.model.ObjectFactory
 
 import java.lang.reflect.Method
+import java.security.SecureClassLoader
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -33,7 +34,6 @@ class MuzzlePlugin implements Plugin<Project> {
    */
   private static final List<RemoteRepository> MUZZLE_REPOS
   private static final AtomicReference<ClassLoader> TOOLING_LOADER = new AtomicReference<>()
-  private static final AtomicReference<Set<Thread>> ALLOWED_THREADS = new AtomicReference<>()
   static {
     RemoteRepository central = new RemoteRepository.Builder("central", "default", "http://central.maven.org/maven2/").build()
     MUZZLE_REPOS = new ArrayList<RemoteRepository>(Arrays.asList(central))
@@ -132,8 +132,6 @@ class MuzzlePlugin implements Plugin<Project> {
         def loader = new URLClassLoader(ddUrls.toArray(new URL[0]), (ClassLoader) null)
         assert TOOLING_LOADER.compareAndSet(null, loader)
         loader.loadClass("datadog.trace.agent.tooling.AgentTooling").getMethod("init").invoke(null)
-        assert ALLOWED_THREADS.compareAndSet(null, new HashSet<Thread>(Arrays.asList(Thread.getThreads())))
-        assert ALLOWED_THREADS.get().size() > 0
         return TOOLING_LOADER.get()
       } else {
         return toolingLoader
@@ -275,16 +273,23 @@ class MuzzlePlugin implements Plugin<Project> {
 
     def muzzleTask = instrumentationProject.task(taskName) {
       doLast {
-        final ClassLoader userCL = createClassLoaderForTask(instrumentationProject, bootstrapProject, taskName)
         final ClassLoader instrumentationCL = createInstrumentationClassloader(instrumentationProject, toolingProject)
-        // find all instrumenters, get muzzle, and assert
-        Method assertionMethod = instrumentationCL.loadClass('datadog.trace.agent.tooling.muzzle.MuzzleVersionScanPlugin')
-          .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
-        assertionMethod.invoke(null, instrumentationCL, userCL, muzzleDirective.assertPass)
+        def ccl = Thread.currentThread().contextClassLoader
+        def bogusLoader = new SecureClassLoader()
+        Thread.currentThread().contextClassLoader = bogusLoader
+        final ClassLoader userCL = createClassLoaderForTask(instrumentationProject, bootstrapProject, taskName)
+        try {
+          // find all instrumenters, get muzzle, and assert
+          Method assertionMethod = instrumentationCL.loadClass('datadog.trace.agent.tooling.muzzle.MuzzleVersionScanPlugin')
+            .getMethod('assertInstrumentationMuzzled', ClassLoader.class, ClassLoader.class, boolean.class)
+          assertionMethod.invoke(null, instrumentationCL, userCL, muzzleDirective.assertPass)
+        } finally {
+          Thread.currentThread().contextClassLoader = ccl
+        }
 
         for (Thread thread : Thread.getThreads()) {
-          if (!ALLOWED_THREADS.get().contains(thread)) {
-            throw new GradleException("Task $taskName has spawned a thread: $thread. This will prevent GC of dynamic muzzle classes. Aborting muzzle run.")
+          if (thread.contextClassLoader == bogusLoader || thread.contextClassLoader == instrumentationCL || thread.contextClassLoader == userCL) {
+            throw new GradleException("Task $taskName has spawned a thread: $thread with classloader $thread.contextClassLoader. This will prevent GC of dynamic muzzle classes. Aborting muzzle run.")
           }
         }
       }
