@@ -1,14 +1,18 @@
-package datadog.trace.instrumentation.play;
+package datadog.trace.instrumentation.play26;
 
 import datadog.trace.agent.decorator.HttpServerDecorator;
 import datadog.trace.api.DDTags;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import lombok.extern.slf4j.Slf4j;
 import play.api.mvc.Request;
 import play.api.mvc.Result;
+import play.api.routing.HandlerDef;
+import play.routing.Router;
 import scala.Option;
 
 @Slf4j
@@ -60,11 +64,11 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
     super.onRequest(span, request);
     if (request != null) {
       // more about routes here:
-      // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md#router-tags-are-now-attributes
-      final Option pathOption = request.tags().get("ROUTE_PATTERN");
-      if (!pathOption.isEmpty()) {
-        final String path = (String) pathOption.get();
-        //        scope.span().setTag(Tags.HTTP_URL.getKey(), path);
+      // https://github.com/playframework/playframework/blob/master/documentation/manual/releases/release26/migration26/Migration26.md
+      final Option<HandlerDef> defOption =
+          request.attrs().get(Router.Attrs.HANDLER_DEF.underlying());
+      if (!defOption.isEmpty()) {
+        final String path = defOption.get().path();
         span.setTag(DDTags.RESOURCE_NAME, request.method() + " " + path);
       }
     }
@@ -72,8 +76,19 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
   }
 
   @Override
-  public Span onError(final Span span, final Throwable throwable) {
+  public Span onError(final Span span, Throwable throwable) {
     Tags.HTTP_STATUS.set(span, 500);
+    if (throwable != null
+        // This can be moved to instanceof check when using Java 8.
+        && throwable.getClass().getName().equals("java.util.concurrent.CompletionException")
+        && throwable.getCause() != null) {
+      throwable = throwable.getCause();
+    }
+    while ((throwable instanceof InvocationTargetException
+            || throwable instanceof UndeclaredThrowableException)
+        && throwable.getCause() != null) {
+      throwable = throwable.getCause();
+    }
     return super.onError(span, throwable);
   }
 }
