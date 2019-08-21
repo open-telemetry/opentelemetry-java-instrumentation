@@ -2,6 +2,11 @@ package datadog.trace.agent.tooling;
 
 import datadog.trace.bootstrap.WeakMap;
 
+/**
+ * This class contains class references for objects shared by the agent installer as well as muzzle
+ * (both compile and runtime). Extracted out from AgentInstaller to begin separating some of the
+ * logic out.
+ */
 public class AgentTooling {
   private static final Cleaner CLEANER = new Cleaner();
 

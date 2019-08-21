@@ -45,7 +45,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
       synchronized (key) {
         cache = typePoolCache.get(key);
         if (null == cache) {
-          cache = EvictingCacheProvider.withObjectType(cleaner, 10, TimeUnit.SECONDS);
+          cache = EvictingCacheProvider.withObjectType(cleaner, 1, TimeUnit.MINUTES);
           typePoolCache.put(key, cache);
         }
       }
@@ -64,7 +64,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
         final Cleaner cleaner, final long expireDuration, final TimeUnit unit) {
       cache =
           CacheBuilder.newBuilder()
-              .initialCapacity(500)
+              .initialCapacity(1000)
               .maximumSize(10000)
               .expireAfterAccess(expireDuration, unit)
               .build();
