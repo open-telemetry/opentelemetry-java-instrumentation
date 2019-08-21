@@ -335,6 +335,7 @@ class MuzzlePlugin implements Plugin<Project> {
         version.contains("beta") ||
         version.contains("-b") ||
         version.contains(".m") ||
+        version.contains("-m") ||
         version.contains("-dev") ||
         version.contains("public_draft")
     }

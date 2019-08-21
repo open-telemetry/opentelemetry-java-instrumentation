@@ -13,7 +13,6 @@ dependencies {
   testCompile project(':dd-trace-api')
   testCompile deps.scala
 
-  testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
   testCompile project(':dd-java-agent:instrumentation:trace-annotation')
 }
