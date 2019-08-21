@@ -1,0 +1,22 @@
+plugins {
+  id 'org.beryx.jlink' version '2.1.1' // latest version that doesn't have a Java 11+ warning
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+sourceCompatibility = "1.9"
+targetCompatibility = "1.9"
+
+dependencies {
+  testCompile project(':dd-smoke-tests')
+}
+
+Project main_project = project
+subprojects { subProject ->
+  apply plugin: "org.beryx.jlink"
+
+  main_project.tasks.test.dependsOn subProject.tasks.jlink
+
+  main_project.tasks.test.jvmArgs "-Ddatadog.smoketest.${subProject.tasks.jlink.moduleName.get()}.image=${subProject.tasks.jlink.imageDir.get()}"
+}
+
