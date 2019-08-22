@@ -2,21 +2,34 @@ plugins {
   id 'org.beryx.jlink' version '2.1.1' // latest version that doesn't have a Java 11+ warning
 }
 
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_9
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
 
 sourceCompatibility = "1.9"
 targetCompatibility = "1.9"
 
-dependencies {
-  testCompile project(':dd-smoke-tests')
+jar {
+  manifest {
+    attributes(
+      'Main-Class': 'datadog.smoketest.moduleapp.ModuleApplication'
+    )
+  }
 }
 
-Project main_project = project
-subprojects { subProject ->
-  apply plugin: "org.beryx.jlink"
+jlink {
+  moduleName = 'datadog.smoketest.moduleapp'
+  options = ['--no-man-pages', '--no-header-files', '--add-modules', 'java.instrument']
+}
 
-  main_project.tasks.test.dependsOn subProject.tasks.jlink
+test {
+  dependsOn tasks.jlink
+  jvmArgs "-Ddatadog.smoketest.module.image=${jlink.imageDir.get()}"
+}
 
-  main_project.tasks.test.jvmArgs "-Ddatadog.smoketest.${subProject.tasks.jlink.moduleName.get()}.image=${subProject.tasks.jlink.imageDir.get()}"
+dependencies {
+  testCompile project(':dd-smoke-tests')
 }
 
