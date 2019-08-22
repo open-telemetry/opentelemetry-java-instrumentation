@@ -11,6 +11,8 @@ apply from: "${rootDir}/gradle/java.gradle"
 sourceCompatibility = "1.9"
 targetCompatibility = "1.9"
 
+mainClassName = 'datadog.smoketest.moduleapp.ModuleApplication'
+
 jar {
   manifest {
     attributes(
