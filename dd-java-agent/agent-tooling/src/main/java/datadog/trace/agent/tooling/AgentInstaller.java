@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import datadog.trace.api.Config;
-import datadog.trace.bootstrap.WeakMap;
 import java.lang.instrument.Instrumentation;
 import java.util.Collections;
 import java.util.List;
@@ -29,14 +28,6 @@ import net.bytebuddy.utility.JavaModule;
 @Slf4j
 public class AgentInstaller {
   private static final Map<String, Runnable> classLoadCallbacks = new ConcurrentHashMap<>();
-
-  static {
-    // WeakMap is used by other classes below, so we need to register the provider first.
-    registerWeakMapProvider();
-  }
-
-  public static final DDLocationStrategy LOCATION_STRATEGY = new DDLocationStrategy();
-  public static final AgentBuilder.PoolStrategy POOL_STRATEGY = new DDCachingPoolStrategy();
   private static volatile Instrumentation INSTRUMENTATION;
 
   public static Instrumentation getInstrumentation() {
@@ -67,10 +58,10 @@ public class AgentInstaller {
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(new RedefinitionLoggingListener())
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
-            .with(POOL_STRATEGY)
+            .with(AgentTooling.poolStrategy())
             .with(new TransformLoggingListener())
             .with(new ClassLoadListener())
-            .with(LOCATION_STRATEGY)
+            .with(AgentTooling.locationStrategy())
             // FIXME: we cannot enable it yet due to BB/JVM bug, see
             // https://github.com/raphw/byte-buddy/issues/558
             // .with(AgentBuilder.LambdaInstrumentationStrategy.ENABLED)
@@ -169,14 +160,6 @@ public class AgentInstaller {
       }
     }
     return matcher;
-  }
-
-  private static void registerWeakMapProvider() {
-    if (!WeakMap.Provider.isProviderRegistered()) {
-      WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent());
-    }
-    //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.WeakConcurrent.Inline());
-    //    WeakMap.Provider.registerIfAbsent(new WeakMapSuppliers.Guava());
   }
 
   @Slf4j

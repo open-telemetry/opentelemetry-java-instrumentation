@@ -1,7 +1,10 @@
 package datadog.trace.agent.tooling.muzzle;
 
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.bootstrap.WeakMap;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.WeakHashMap;
 import net.bytebuddy.build.Plugin;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
@@ -10,6 +13,17 @@ import net.bytebuddy.dynamic.DynamicType;
 
 /** Bytebuddy gradle plugin which creates muzzle-references at compile time. */
 public class MuzzleGradlePlugin implements Plugin {
+  static {
+    // prevent WeakMap from logging warning while plugin is running
+    WeakMap.Provider.registerIfAbsent(
+        new WeakMap.Implementation() {
+          @Override
+          public <K, V> WeakMap<K, V> get() {
+            return new WeakMap.MapAdapter<>(Collections.synchronizedMap(new WeakHashMap<K, V>()));
+          }
+        });
+  }
+
   private static final TypeDescription DefaultInstrumenterTypeDesc =
       new TypeDescription.ForLoadedType(Instrumenter.Default.class);
 

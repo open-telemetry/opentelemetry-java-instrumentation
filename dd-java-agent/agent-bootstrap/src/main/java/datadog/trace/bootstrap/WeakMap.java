@@ -107,7 +107,7 @@ public interface WeakMap<K, V> {
     }
 
     @Override
-    public V getOrCreate(K key, ValueSupplier<V> supplier) {
+    public V getOrCreate(final K key, final ValueSupplier<V> supplier) {
       if (!map.containsKey(key)) {
         synchronized (this) {
           if (!map.containsKey(key)) {
