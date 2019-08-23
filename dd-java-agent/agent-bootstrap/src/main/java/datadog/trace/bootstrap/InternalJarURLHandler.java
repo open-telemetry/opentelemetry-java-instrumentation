@@ -27,7 +27,9 @@ public class InternalJarURLHandler extends URLStreamHandler {
     filenameToBytes.put("/", new byte[] {});
 
     final InputStream jarStream =
-        classloaderForJarResource.getResourceAsStream(internalJarFileName);
+        internalJarFileName == null
+            ? null
+            : classloaderForJarResource.getResourceAsStream(internalJarFileName);
 
     if (jarStream != null) {
       try (final JarInputStream inputStream = new JarInputStream(jarStream)) {
