@@ -13,7 +13,7 @@ class ModuleInjectionTest extends AgentTestRunner {
    */
   def "test instrumenting java.desktop class"() {
     when:
-    RepaintManager repaintManager = new RepaintManager()
+    new RepaintManager()
 
     then:
     noExceptionThrown()
