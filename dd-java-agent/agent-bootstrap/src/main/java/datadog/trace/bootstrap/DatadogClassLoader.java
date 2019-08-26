@@ -33,27 +33,30 @@ public class DatadogClassLoader extends URLClassLoader {
   public DatadogClassLoader(
       final URL bootstrapJarLocation, final String internalJarFileName, final ClassLoader parent) {
     super(new URL[] {}, parent);
-    bootstrapProxy = new BootstrapClassLoaderProxy(new URL[] {bootstrapJarLocation});
 
-    if (internalJarFileName != null) { // some tests pass null
-      try {
-        // The fields of the URL are mostly dummy.  InternalJarURLHandler is the only important
-        // field.  If extending this class from Classloader instead of URLClassloader required less
-        // boilerplate it could be used and the need for dummy fields would be reduced
+    // some tests pass null
+    bootstrapProxy =
+        bootstrapJarLocation == null
+            ? new BootstrapClassLoaderProxy(new URL[0])
+            : new BootstrapClassLoaderProxy(new URL[] {bootstrapJarLocation});
 
-        final URL internalJarURL =
-            new URL(
-                "x-internal-jar",
-                null,
-                0,
-                "/",
-                new InternalJarURLHandler(internalJarFileName, bootstrapProxy));
+    try {
+      // The fields of the URL are mostly dummy.  InternalJarURLHandler is the only important
+      // field.  If extending this class from Classloader instead of URLClassloader required less
+      // boilerplate it could be used and the need for dummy fields would be reduced
 
-        addURL(internalJarURL);
-      } catch (final MalformedURLException e) {
-        // This can't happen with current URL constructor
-        log.error("URL malformed.  Unsupported JDK?", e);
-      }
+      final URL internalJarURL =
+          new URL(
+              "x-internal-jar",
+              null,
+              0,
+              "/",
+              new InternalJarURLHandler(internalJarFileName, bootstrapProxy));
+
+      addURL(internalJarURL);
+    } catch (final MalformedURLException e) {
+      // This can't happen with current URL constructor
+      log.error("URL malformed.  Unsupported JDK?", e);
     }
   }
 
