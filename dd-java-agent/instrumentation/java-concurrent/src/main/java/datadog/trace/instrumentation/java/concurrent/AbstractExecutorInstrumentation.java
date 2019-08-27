@@ -22,22 +22,24 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
 
   public static final String EXEC_NAME = "java_concurrent";
 
-  private static final boolean TRACE_ALL_EXECUTORS = Config.get().isTraceExecutorsAll();
+  private final boolean TRACE_ALL_EXECUTORS = Config.get().isTraceExecutorsAll();
 
   /**
    * Only apply executor instrumentation to whitelisted executors. To apply to all executors, use
    * override setting above.
    */
-  private static final Collection<String> WHITELISTED_EXECUTORS;
+  private final Collection<String> WHITELISTED_EXECUTORS;
 
   /**
    * Some frameworks have their executors defined as anon classes inside other classes. Referencing
    * anon classes by name would be fragile, so instead we will use list of class prefix names. Since
    * checking this list is more expensive (O(n)) we should try to keep it short.
    */
-  private static final Collection<String> WHITELISTED_EXECUTORS_PREFIXES;
+  private final Collection<String> WHITELISTED_EXECUTORS_PREFIXES;
 
-  static {
+  public AbstractExecutorInstrumentation(final String... additionalNames) {
+    super(EXEC_NAME, additionalNames);
+
     if (TRACE_ALL_EXECUTORS) {
       log.info("Tracing all executors enabled.");
       WHITELISTED_EXECUTORS = Collections.emptyList();
@@ -94,10 +96,6 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
       WHITELISTED_EXECUTORS_PREFIXES =
           Collections.unmodifiableCollection(Arrays.asList(whitelistPrefixes));
     }
-  }
-
-  public AbstractExecutorInstrumentation(final String... additionalNames) {
-    super(EXEC_NAME, additionalNames);
   }
 
   @Override
