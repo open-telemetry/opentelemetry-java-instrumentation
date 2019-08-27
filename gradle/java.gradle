@@ -16,6 +16,38 @@ if (applyCodeCoverage) {
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
+if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests') != JavaVersion.VERSION_1_7) {
+  def version = JavaVersion.toVersion(project.getProperty('minJavaVersionForTests'))
+  def name = "java$version.majorVersion"
+  sourceSets {
+    "main_$name" {
+      java.srcDirs "${project.projectDir}/src/main/$name"
+    }
+  }
+
+  "compileMain_${name}Java" {
+    sourceCompatibility = version
+    targetCompatibility = version
+  }
+
+  // Note: ideally lombok plugin would do this for us, but currently it doesn't support custom
+  // source sets. See https://github.com/franzbecker/gradle-lombok/issues/17.
+  dependencies {
+    compileOnly sourceSets."main_$name".compileClasspath
+    compile sourceSets."main_$name".output
+
+    "main_${name}CompileOnly" "org.projectlombok:lombok:${project.lombok.version}" transitive false
+    "main_${name}AnnotationProcessor" "org.projectlombok:lombok:${project.lombok.version}" transitive false
+  }
+
+  tasks.withType(JavaCompile).configureEach {
+    if (it.name.toLowerCase().contains("test")) {
+      sourceCompatibility = version
+      targetCompatibility = version
+    }
+  }
+}
+
 java {
   // See https://docs.gradle.org/current/userguide/upgrading_version_5.html, Automatic target JVM version
   disableAutoTargetJvm()
@@ -310,7 +342,7 @@ for (def env : System.getenv().entrySet()) {
 tasks.withType(Test).configureEach {
   // All tests must complete within 2 minutes.
   timeout = Duration.ofMinutes(2)
-  
+
   // Disable all tests if skipTests property was specified
   onlyIf { !project.rootProject.hasProperty("skipTests") }
 }

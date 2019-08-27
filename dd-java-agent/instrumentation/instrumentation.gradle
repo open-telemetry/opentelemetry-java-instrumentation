@@ -37,12 +37,24 @@ subprojects {Project subProj ->
       }
     }
 
+    String jdkCompile = null
+    if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests') != JavaVersion.VERSION_1_7) {
+      def version = JavaVersion.toVersion(project.getProperty('minJavaVersionForTests'))
+      def name = "java$version.majorVersion"
+      jdkCompile = "main_${name}Compile"
+    }
     dependencies {
       // Apply common dependencies for instrumentation.
       compile project(':dd-trace-api')
       compile project(':dd-java-agent:agent-tooling')
       compile deps.bytebuddy
       compile deps.opentracing
+      if(jdkCompile) {
+        "$jdkCompile" project(':dd-trace-api')
+        "$jdkCompile" project(':dd-java-agent:agent-tooling')
+        "$jdkCompile" deps.bytebuddy
+        "$jdkCompile" deps.opentracing
+      }
       annotationProcessor deps.autoservice
       implementation deps.autoservice
 

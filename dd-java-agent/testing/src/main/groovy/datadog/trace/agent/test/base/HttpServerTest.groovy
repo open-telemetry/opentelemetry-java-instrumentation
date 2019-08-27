@@ -57,6 +57,10 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   abstract SERVER startServer(int port)
 
   def cleanupSpec() {
+    if (server == null) {
+      println getClass().name + " can't stop null server"
+      return
+    }
     stopServer(server)
     server = null
     println getClass().name + " http server stopped at: http://localhost:$port/"
@@ -76,8 +80,13 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     false
   }
 
+  // Return the handler span's name
+  String reorderHandlerSpan() {
+    null
+  }
+
   boolean reorderControllerSpan() {
-    true
+    false
   }
 
   boolean testNotFound() {
@@ -356,7 +365,18 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     assert toRemove.size() == size
     TEST_WRITER.removeAll(toRemove)
 
-    if(reorderControllerSpan()) {
+    if (reorderHandlerSpan()) {
+      TEST_WRITER.each {
+        def controllerSpan = it.find {
+          it.operationName == reorderHandlerSpan()
+        }
+        if (controllerSpan) {
+          it.remove(controllerSpan)
+          it.add(controllerSpan)
+        }
+      }
+    }
+    if (reorderControllerSpan() || reorderHandlerSpan()) {
       // Some frameworks close the handler span before the controller returns, so we need to manually reorder it.
       TEST_WRITER.each {
         def controllerSpan = it.find {

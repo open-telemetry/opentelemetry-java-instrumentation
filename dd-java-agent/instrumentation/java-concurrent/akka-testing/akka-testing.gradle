@@ -15,7 +15,6 @@ dependencies {
   testCompile group: 'com.typesafe.akka', name: 'akka-actor_2.11', version: '2.3.16'
   testCompile group: 'com.typesafe.akka', name: 'akka-testkit_2.11', version: '2.3.16'
 
-  testCompile project(':dd-java-agent:testing')
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
   testCompile project(':dd-java-agent:instrumentation:trace-annotation')
 }

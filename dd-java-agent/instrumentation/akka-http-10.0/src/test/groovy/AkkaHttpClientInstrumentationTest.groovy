@@ -27,10 +27,10 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
     try {
       response = Http.get(system)
         .singleRequest(request, materializer)
-        //.whenComplete { result, error ->
-            // FIXME: Callback should be here instead.
-        //  callback?.call()
-        //}
+      //.whenComplete { result, error ->
+      // FIXME: Callback should be here instead.
+      //  callback?.call()
+      //}
         .toCompletableFuture()
         .get()
     } finally {
@@ -51,6 +51,7 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
     return "akka-http.request"
   }
 
+  @Override
   boolean testRedirects() {
     false
   }

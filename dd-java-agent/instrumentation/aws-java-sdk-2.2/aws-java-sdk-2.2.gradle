@@ -19,27 +19,8 @@ testSets {
   latestDepTest
 }
 
-sourceSets {
-  main_java8 {
-    java.srcDirs "${project.projectDir}/src/main/java8"
-  }
-}
-
-compileMain_java8Java {
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
-}
-
 dependencies {
   main_java8CompileOnly group: 'software.amazon.awssdk', name: 'aws-core', version: '2.2.0'
-
-  main_java8Compile project(':dd-java-agent:agent-tooling')
-
-  main_java8Compile deps.bytebuddy
-  main_java8Compile deps.opentracing
-
-  compileOnly sourceSets.main_java8.compileClasspath
-  compile sourceSets.main_java8.output
 
   // Include httpclient instrumentation for testing because it is a dependency for aws-sdk.
   testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
@@ -52,7 +33,6 @@ dependencies {
   testCompile group: 'software.amazon.awssdk', name: 'rds', version: '2.2.0'
   testCompile group: 'software.amazon.awssdk', name: 'ec2', version: '2.2.0'
 
-  latestDepTestCompile project(':dd-java-agent:testing')
   latestDepTestCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
   latestDepTestCompile project(':dd-java-agent:instrumentation:netty-4.1')
   latestDepTestCompile project(':dd-java-agent:instrumentation:java-concurrent')

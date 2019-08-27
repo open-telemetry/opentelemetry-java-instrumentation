@@ -5,6 +5,7 @@ import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
 import org.asynchttpclient.DefaultAsyncHttpClientConfig
 import org.asynchttpclient.Response
+import spock.lang.AutoCleanup
 import spock.lang.Shared
 
 import java.util.concurrent.ExecutionException
@@ -20,6 +21,7 @@ class Netty40ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
   @Shared
   def clientConfig = DefaultAsyncHttpClientConfig.Builder.newInstance().setRequestTimeout(TimeUnit.SECONDS.toMillis(10).toInteger())
   @Shared
+  @AutoCleanup
   AsyncHttpClient asyncHttpClient = asyncHttpClient(clientConfig)
 
   @Override

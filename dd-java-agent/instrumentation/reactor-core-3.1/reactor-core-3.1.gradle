@@ -15,23 +15,6 @@ muzzle {
 
 apply from: "${rootDir}/gradle/java.gradle"
 
-sourceSets {
-  main_java8 {
-    java.srcDirs "${project.projectDir}/src/main/java8"
-  }
-}
-
-compileMain_java8Java {
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
-}
-// Note: ideally lombok plugin would do this for us, but currently it doesn't support custom
-// source sets. See https://github.com/franzbecker/gradle-lombok/issues/17.
-dependencies {
-  main_java8CompileOnly "org.projectlombok:lombok:${project.lombok.version}" transitive false
-  main_java8AnnotationProcessor "org.projectlombok:lombok:${project.lombok.version}" transitive false
-}
-
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
@@ -39,28 +22,9 @@ testSets {
     dirName = 'test'
   }
 }
-compileTestJava {
-  sourceCompatibility = "1.8"
-  targetCompatibility = "1.8"
-}
-
-compileLatestDepTestJava {
-  sourceCompatibility = "1.8"
-  targetCompatibility = "1.8"
-}
 
 dependencies {
-
   main_java8CompileOnly group: 'io.projectreactor', name: 'reactor-core', version: '3.1.0.RELEASE'
-
-  main_java8Compile project(':dd-java-agent:agent-tooling')
-
-  main_java8Compile deps.bytebuddy
-  main_java8Compile deps.opentracing
-
-  compileOnly sourceSets.main_java8.compileClasspath
-
-  compile sourceSets.main_java8.output
 
   testCompile project(':dd-java-agent:instrumentation:trace-annotation')
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
