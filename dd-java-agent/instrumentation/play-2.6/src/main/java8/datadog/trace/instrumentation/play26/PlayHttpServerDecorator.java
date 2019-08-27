@@ -36,7 +36,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
 
   @Override
   protected URI url(final Request request) throws URISyntaxException {
-    return new URI(request.secure() ? "https://" : "http://" + request.host() + request.uri());
+    return new URI((request.secure() ? "https://" : "http://") + request.host() + request.uri());
   }
 
   @Override
