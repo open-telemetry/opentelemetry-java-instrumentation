@@ -1,3 +1,5 @@
+import org.beryx.jlink.BaseTask
+
 plugins {
   id 'org.beryx.jlink' version '2.1.1' // latest version that doesn't have a Java 11+ warning
 }
@@ -7,9 +9,6 @@ ext {
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
-
-sourceCompatibility = "1.9"
-targetCompatibility = "1.9"
 
 mainClassName = 'datadog.smoketest.moduleapp.ModuleApplication'
 
@@ -24,6 +23,10 @@ jar {
 jlink {
   moduleName = 'datadog.smoketest.moduleapp'
   options = ['--no-man-pages', '--no-header-files', '--add-modules', 'java.instrument']
+}
+
+tasks.withType(BaseTask).each {
+  it.enabled = JavaVersion.VERSION_1_9.compareTo(JavaVersion.current()) <= 0
 }
 
 test {
