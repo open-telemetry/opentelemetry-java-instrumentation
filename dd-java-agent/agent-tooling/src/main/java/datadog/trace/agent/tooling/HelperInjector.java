@@ -6,14 +6,16 @@ import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 import datadog.trace.bootstrap.WeakMap;
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.security.SecureClassLoader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +36,9 @@ public class HelperInjector implements Transformer {
   private final Set<String> helperClassNames;
   private Map<TypeDescription, byte[]> helperMap = null;
   private final WeakMap<ClassLoader, Boolean> injectedClassLoaders = newWeakMap();
-  private final Set<JavaModule> helperModules = new HashSet<>();
+
+  // Neither Module nor WeakReference implements equals or hashcode so using a list
+  private final List<WeakReference<Object>> helperModules = new ArrayList<>();
 
   /**
    * Construct HelperInjector.
@@ -110,16 +114,15 @@ public class HelperInjector implements Transformer {
                 final Class<?> injectedClass =
                     Class.forName(desc.getName(), false, Utils.getBootstrapProxy());
                 if (JavaModule.isSupported()) {
-                  helperModules.add(JavaModule.ofType(injectedClass));
+                  helperModules.add(new WeakReference<>(JavaModule.ofType(injectedClass).unwrap()));
                 }
               }
             } else {
               final Map<TypeDescription, Class<?>> classMap =
                   new ClassInjector.UsingReflection(classLoader).inject(helperMap);
-
               if (JavaModule.isSupported()) {
                 for (final Class<?> injectedClass : classMap.values()) {
-                  helperModules.add(JavaModule.ofType(injectedClass));
+                  helperModules.add(new WeakReference<>(JavaModule.ofType(injectedClass).unwrap()));
                 }
               }
             }
@@ -147,10 +150,15 @@ public class HelperInjector implements Transformer {
 
   private void ensureModuleCanReadHelperModules(final JavaModule target) {
     if (JavaModule.isSupported() && target != JavaModule.UNSUPPORTED && target.isNamed()) {
-      for (final JavaModule helperModule : helperModules) {
-        if (!target.canRead(helperModule)) {
-          log.debug("Adding module read from {} to {}", target, helperModule);
-          target.addReads(AgentInstaller.getInstrumentation(), helperModule);
+      for (final WeakReference<Object> helperModuleReference : helperModules) {
+        final Object realModule = helperModuleReference.get();
+        if (realModule != null) {
+          final JavaModule helperModule = JavaModule.of(realModule);
+
+          if (!target.canRead(helperModule)) {
+            log.debug("Adding module read from {} to {}", target, helperModule);
+            target.addReads(AgentInstaller.getInstrumentation(), helperModule);
+          }
         }
       }
     }
