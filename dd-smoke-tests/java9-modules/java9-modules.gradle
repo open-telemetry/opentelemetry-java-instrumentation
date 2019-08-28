@@ -31,7 +31,6 @@ tasks.withType(BaseTask).each {
 
 test {
   dependsOn tasks.jlink
-  jvmArgs "-Ddatadog.smoketest.module.image=${buildDir}/image"
 }
 
 dependencies {

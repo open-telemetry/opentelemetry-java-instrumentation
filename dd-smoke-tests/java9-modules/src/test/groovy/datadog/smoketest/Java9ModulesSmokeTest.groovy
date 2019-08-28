@@ -10,13 +10,8 @@ class Java9ModulesSmokeTest extends AbstractSmokeTest {
 
   @Override
   ProcessBuilder createProcessBuilder() {
-    println System.getProperties()
-    String imageDir = System.getProperty("datadog.smoketest.module.image")
-
-    assert imageDir != null
-
     List<String> command = new ArrayList<>()
-    command.add(imageDir + "/bin/java")
+    command.add(buildDirectory + "/image/bin/java")
     command.addAll(defaultJavaProperties)
     command.addAll((String[]) ["-m", "datadog.smoketest.moduleapp/datadog.smoketest.moduleapp.ModuleApplication"])
     ProcessBuilder processBuilder = new ProcessBuilder(command)
