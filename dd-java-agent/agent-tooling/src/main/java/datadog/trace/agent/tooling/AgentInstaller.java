@@ -80,8 +80,7 @@ public class AgentInstaller {
                                     "datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper")
                                 .or(
                                     named(
-                                            "datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper")
-                                        .or(nameStartsWith("datadog.trace.agent.test"))))))
+                                        "datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper")))))
             .or(nameStartsWith("datadog.opentracing."))
             .or(nameStartsWith("datadog.slf4j."))
             .or(nameStartsWith("net.bytebuddy."))
