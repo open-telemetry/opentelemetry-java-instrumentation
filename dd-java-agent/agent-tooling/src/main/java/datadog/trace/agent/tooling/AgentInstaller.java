@@ -80,7 +80,8 @@ public class AgentInstaller {
                                     "datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper")
                                 .or(
                                     named(
-                                        "datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper")))))
+                                            "datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper")
+                                        .or(nameStartsWith("datadog.trace.agent.test"))))))
             .or(nameStartsWith("datadog.opentracing."))
             .or(nameStartsWith("datadog.slf4j."))
             .or(nameStartsWith("net.bytebuddy."))
@@ -142,7 +143,7 @@ public class AgentInstaller {
       try {
         agentBuilder = instrumenter.instrument(agentBuilder);
         numInstrumenters++;
-      } catch (final Throwable e) {
+      } catch (final Exception | LinkageError e) {
         log.error("Unable to load instrumentation {}", instrumenter.getClass().getName(), e);
       }
     }
