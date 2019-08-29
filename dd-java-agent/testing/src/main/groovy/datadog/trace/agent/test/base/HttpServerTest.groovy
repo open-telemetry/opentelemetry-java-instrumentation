@@ -8,9 +8,11 @@ import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.context.TraceScope
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentracing.tag.Tags
+import io.opentracing.util.GlobalTracer
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -89,6 +91,10 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     false
   }
 
+  boolean redirectHasBody() {
+    false
+  }
+
   boolean testNotFound() {
     true
   }
@@ -143,6 +149,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   }
 
   static <T> T controller(ServerEndpoint endpoint, Closure<T> closure) {
+    assert ((TraceScope) GlobalTracer.get().scopeManager().active()).asyncPropagating
     if (endpoint == NOT_FOUND) {
       return closure()
     }
@@ -230,7 +237,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
     response.code() == REDIRECT.status
     response.header("location") == REDIRECT.body ||
       response.header("location") == "${address.resolve(REDIRECT.body)}"
-    response.body().contentLength() < 1
+    response.body().contentLength() < 1 || redirectHasBody()
 
     and:
     cleanAndAssertTraces(1) {
@@ -376,6 +383,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
         }
       }
     }
+
     if (reorderControllerSpan() || reorderHandlerSpan()) {
       // Some frameworks close the handler span before the controller returns, so we need to manually reorder it.
       TEST_WRITER.each {

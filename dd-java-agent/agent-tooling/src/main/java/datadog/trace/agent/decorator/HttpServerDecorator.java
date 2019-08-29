@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends ServerDecorator {
+  public static final String DD_SPAN_ATTRIBUTE = "datadog.span";
+
   // Source: https://www.regextester.com/22
   private static final Pattern VALID_IPV4_ADDRESS =
       Pattern.compile(
