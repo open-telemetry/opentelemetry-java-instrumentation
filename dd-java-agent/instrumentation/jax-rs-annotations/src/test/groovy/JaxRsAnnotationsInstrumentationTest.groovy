@@ -81,8 +81,8 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     DECORATE.resourceNames.get(obj.class).size() == 1
 
     where:
-    name | obj
-    "/a" | new Jax() {
+    name                        | obj
+    "/a"                        | new Jax() {
       @Path("/a")
       void call() {}
     }
