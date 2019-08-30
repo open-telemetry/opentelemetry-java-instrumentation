@@ -94,7 +94,7 @@ public class TracingAgent {
 
     if (AGENT_CLASSLOADER == null) {
       final ClassLoader agentClassLoader =
-          createDatadogClassLoader("agent-tooling-and-instrumentation.jar", bootstrapURL);
+          createDatadogClassLoader("agent-tooling-and-instrumentation.isolated", bootstrapURL);
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         Thread.currentThread().setContextClassLoader(agentClassLoader);
@@ -126,7 +126,7 @@ public class TracingAgent {
       throws Exception {
     if (JMXFETCH_CLASSLOADER == null) {
       final ClassLoader jmxFetchClassLoader =
-          createDatadogClassLoader("agent-jmxfetch.jar", bootstrapURL);
+          createDatadogClassLoader("agent-jmxfetch.isolated", bootstrapURL);
       final ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
       try {
         Thread.currentThread().setContextClassLoader(jmxFetchClassLoader);
