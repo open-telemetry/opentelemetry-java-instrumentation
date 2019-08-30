@@ -14,6 +14,29 @@ import static datadog.trace.instrumentation.jaxrs.JaxRsAnnotationsDecorator.DECO
 
 class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 
+  def "instrumentation can be used as root span and relevant tags are set"() {
+    setup:
+    new Jax() {
+      @POST
+      @Path("/a")
+      void call() {}
+    }.call()
+
+    expect:
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "jax-rs.endpoint"
+          resourceName 'POST /a'
+          tags {
+            "$Tags.COMPONENT.key" "jax-rs-controller"
+            defaultTags()
+          }
+        }
+      }
+    }
+  }
+
   def "span named '#name' from annotations on class"() {
     setup:
     def startingCacheSize = DECORATE.resourceNames.size()
@@ -34,8 +57,8 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "${className}.call"
-          resourceName "${className}.call"
+          operationName "jax-rs.endpoint"
+          resourceName name
           childOf span(0)
           tags {
             "$Tags.COMPONENT.key" "jax-rs-controller"
@@ -58,8 +81,8 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     DECORATE.resourceNames.get(obj.class).size() == 1
 
     where:
-    name                        | obj
-    "/a"                        | new Jax() {
+    name | obj
+    "/a" | new Jax() {
       @Path("/a")
       void call() {}
     }

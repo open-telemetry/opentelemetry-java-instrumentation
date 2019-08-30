@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.Scope;
+import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -20,6 +21,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(Instrumenter.class)
 public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default {
+
+  private static final String JAX_ENDPOINT_OPERATION_NAME = "jax-rs.endpoint";
 
   public JaxRsAnnotationsInstrumentation() {
     super("jax-rs", "jaxrs", "jax-rs-annotations");
@@ -58,12 +61,12 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope nameSpan(@Advice.Origin final Method method) {
       // Rename the parent span according to the path represented by these annotations.
-      final Scope scope = GlobalTracer.get().scopeManager().active();
-      DECORATE.updateParent(scope, method);
-
-      // Now create a span representing the method execution.
-      final String operationName = DECORATE.spanNameForMethod(method);
-      return DECORATE.afterStart(GlobalTracer.get().buildSpan(operationName).startActive(true));
+      final Scope parent = GlobalTracer.get().scopeManager().active();
+      Tracer.SpanBuilder span = GlobalTracer.get().buildSpan(JAX_ENDPOINT_OPERATION_NAME);
+      Scope scope = span.startActive(true);
+      DECORATE.updateParent(parent, method);
+      DECORATE.updateCurrentScope(scope, method);
+      return DECORATE.afterStart(scope);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

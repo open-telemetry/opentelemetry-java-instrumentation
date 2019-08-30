@@ -43,6 +43,27 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     final Span span = scope.span();
     Tags.COMPONENT.set(span, "jax-rs");
 
+    String resourceName = getResourceName(method);
+    if (!resourceName.isEmpty()) {
+      span.setTag(DDTags.RESOURCE_NAME, resourceName);
+    }
+  }
+
+  public void updateCurrentScope(final Scope scope, final Method method) {
+    String resourceName = getResourceName(method);
+    final Span span = scope.span();
+    if (!resourceName.isEmpty()) {
+      span.setTag(DDTags.RESOURCE_NAME, resourceName);
+    }
+  }
+
+  /**
+   * Returns the resource name given a JaxRS annotated method. Results are cached so this method can
+   * be called multiple times without significantly impacting on performance.
+   *
+   * @return The result can be an empty string but will never be {@code null}.
+   */
+  private String getResourceName(final Method method) {
     final Class<?> target = method.getDeclaringClass();
     Map<Method, String> classMap = resourceNames.get(target);
 
@@ -61,9 +82,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
       classMap.put(method, resourceName);
     }
 
-    if (!resourceName.isEmpty()) {
-      span.setTag(DDTags.RESOURCE_NAME, resourceName);
-    }
+    return resourceName;
   }
 
   private String locateHttpMethod(final Method method) {
