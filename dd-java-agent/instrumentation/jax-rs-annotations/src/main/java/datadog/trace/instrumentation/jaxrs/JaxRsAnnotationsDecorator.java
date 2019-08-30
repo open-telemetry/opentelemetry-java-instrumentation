@@ -59,7 +59,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
   /**
    * Returns the resource name given a JaxRS annotated method. Results are cached so this method can
-   * be called multiple times without significantly impacting on performance.
+   * be called multiple times without significantly impacting performance.
    *
    * @return The result can be an empty string but will never be {@code null}.
    */
