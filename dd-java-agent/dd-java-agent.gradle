@@ -26,13 +26,12 @@ def includeShadowJar(subproject, jarname) {
   def agent_project = project
   subproject.afterEvaluate {
     agent_project.processResources {
-      from(subproject.tasks.shadowJar)
-      rename {
-        it.equals(subproject.shadowJar.archivePath.getName()) ?
-          jarname :
-          it
+      from(zipTree(subproject.tasks.shadowJar.archivePath)) {
+        into jarname
+        rename '(^.*)\\.class$', '$1.classdata'
       }
     }
+
     agent_project.processResources.dependsOn subproject.tasks.shadowJar
     subproject.shadowJar {
       classifier null
@@ -59,8 +58,8 @@ def includeShadowJar(subproject, jarname) {
   }
 }
 
-includeShadowJar(project(':dd-java-agent:instrumentation'), 'agent-tooling-and-instrumentation.jar.zip')
-includeShadowJar(project(':dd-java-agent:agent-jmxfetch'), 'agent-jmxfetch.jar.zip')
+includeShadowJar(project(':dd-java-agent:instrumentation'), 'agent-tooling-and-instrumentation.isolated')
+includeShadowJar(project(':dd-java-agent:agent-jmxfetch'), 'agent-jmxfetch.isolated')
 
 jar {
   classifier = 'unbundled'

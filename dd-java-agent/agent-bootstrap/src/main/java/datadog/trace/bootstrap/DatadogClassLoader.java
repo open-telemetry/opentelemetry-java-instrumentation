@@ -51,7 +51,7 @@ public class DatadogClassLoader extends URLClassLoader {
               null,
               0,
               "/",
-              new InternalJarURLHandler(internalJarFileName, bootstrapProxy));
+              new InternalJarURLHandler(internalJarFileName, bootstrapJarLocation));
 
       addURL(internalJarURL);
     } catch (final MalformedURLException e) {

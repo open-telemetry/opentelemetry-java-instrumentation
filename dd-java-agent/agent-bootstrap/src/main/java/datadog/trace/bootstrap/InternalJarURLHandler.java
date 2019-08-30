@@ -2,58 +2,63 @@ package datadog.trace.bootstrap;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.nio.file.NoSuchFileException;
 import java.security.Permission;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
+import java.util.jar.JarFile;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class InternalJarURLHandler extends URLStreamHandler {
-  private final Map<String, byte[]> filenameToBytes = new HashMap<>();
+  private final Map<String, JarEntry> filenameToEntry = new HashMap<>();
+  private JarFile bootstrapJarFile;
 
-  InternalJarURLHandler(
-      final String internalJarFileName, final ClassLoader classloaderForJarResource) {
+  InternalJarURLHandler(final String internalJarFileName, final URL bootstrapJarLocation) {
+    try {
+      if (bootstrapJarLocation != null) {
+        bootstrapJarFile = new JarFile(new File(bootstrapJarLocation.toURI()));
+        final Enumeration<JarEntry> entries = bootstrapJarFile.entries();
+        while (entries.hasMoreElements()) {
+          final JarEntry entry = entries.nextElement();
 
-    // "/" is used as the default url of the jar
-    // This is called by the SecureClassLoader trying to obtain permissions
-    filenameToBytes.put("/", new byte[] {});
-
-    final InputStream jarStream =
-        internalJarFileName == null
-            ? null
-            : classloaderForJarResource.getResourceAsStream(internalJarFileName);
-
-    if (jarStream != null) {
-      try (final JarInputStream inputStream = new JarInputStream(jarStream)) {
-        JarEntry entry = inputStream.getNextJarEntry();
-
-        while (entry != null) {
-          filenameToBytes.put("/" + entry.getName(), getBytes(inputStream));
-
-          entry = inputStream.getNextJarEntry();
+          if (!entry.isDirectory() && entry.getName().startsWith(internalJarFileName + "/")) {
+            filenameToEntry.put(entry.getName().substring(internalJarFileName.length()), entry);
+          }
         }
-
-      } catch (final IOException e) {
-        log.error("Unable to read internal jar", e);
       }
-    } else {
-      log.error("Internal jar not found");
+    } catch (final URISyntaxException | IOException e) {
+      log.error("Unable to read internal jar", e);
+    }
+
+    if (filenameToEntry.isEmpty()) {
+      log.warn("Internal jar entries found");
     }
   }
 
   @Override
   protected URLConnection openConnection(final URL url) throws IOException {
-    final byte[] bytes = filenameToBytes.get(url.getFile());
 
-    if (bytes == null) {
+    final byte[] bytes;
+
+    final String filename = url.getFile().replaceAll("\\.class$", ".classdata");
+    if ("/".equals(filename)) {
+      // "/" is used as the default url of the jar
+      // This is called by the SecureClassLoader trying to obtain permissions
+      bytes = new byte[0];
+    } else if (filenameToEntry.containsKey(filename)) {
+      final JarEntry entry = filenameToEntry.get(filename);
+      bytes = getBytes(bootstrapJarFile.getInputStream(entry));
+    } else {
       throw new NoSuchFileException(url.getFile(), null, url.getFile() + " not in internal jar");
     }
 
