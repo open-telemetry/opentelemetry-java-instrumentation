@@ -26,7 +26,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          operationName "jax-rs.endpoint"
+          operationName "jax-rs.request"
           resourceName "POST /a"
           spanType "web"
           tags {
@@ -58,7 +58,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           }
         }
         span(1) {
-          operationName "jax-rs.endpoint"
+          operationName "jax-rs.request"
           resourceName name
           spanType "web"
           childOf span(0)
