@@ -37,15 +37,15 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return "jax-rs-controller";
   }
 
-  public void updateScope(final Scope scope, final Scope parent, final Method method) {
-    String resourceName = getResourceName(method);
+  public void onControllerStart(final Scope scope, final Scope parent, final Method method) {
+    final String resourceName = getPathResourceName(method);
     updateParent(parent, resourceName);
 
     final Span span = scope.span();
     span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
 
-    // When jax-rs is the root scope, then we
-    boolean isRootScope = parent == null;
+    // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
+    final boolean isRootScope = parent == null;
     if (isRootScope && !resourceName.isEmpty()) {
       span.setTag(DDTags.RESOURCE_NAME, resourceName);
     } else {
@@ -65,25 +65,13 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     }
   }
 
-  public void updateCurrentScope(final Scope scope, final Method method, boolean isRootScope) {
-    final Span span = scope.span();
-    span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
-
-    if (isRootScope) {
-      String resourceName = getResourceName(method);
-      if (!resourceName.isEmpty()) {
-        span.setTag(DDTags.RESOURCE_NAME, resourceName);
-      }
-    }
-  }
-
   /**
    * Returns the resource name given a JaxRS annotated method. Results are cached so this method can
    * be called multiple times without significantly impacting performance.
    *
    * @return The result can be an empty string but will never be {@code null}.
    */
-  private String getResourceName(final Method method) {
+  private String getPathResourceName(final Method method) {
     final Class<?> target = method.getDeclaringClass();
     Map<Method, String> classMap = resourceNames.get(target);
 

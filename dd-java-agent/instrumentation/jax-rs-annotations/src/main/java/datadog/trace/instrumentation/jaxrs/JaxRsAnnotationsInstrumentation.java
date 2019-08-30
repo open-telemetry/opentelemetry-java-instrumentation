@@ -60,11 +60,11 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope nameSpan(@Advice.Origin final Method method) {
-      Tracer tracer = GlobalTracer.get();
+      final Tracer tracer = GlobalTracer.get();
       // Rename the parent span according to the path represented by these annotations.
       final Scope parent = tracer.scopeManager().active();
-      Scope scope = tracer.buildSpan(JAX_ENDPOINT_OPERATION_NAME).startActive(true);
-      DECORATE.updateScope(scope, parent, method);
+      final Scope scope = tracer.buildSpan(JAX_ENDPOINT_OPERATION_NAME).startActive(true);
+      DECORATE.onControllerStart(scope, parent, method);
       return DECORATE.afterStart(scope);
     }
 
