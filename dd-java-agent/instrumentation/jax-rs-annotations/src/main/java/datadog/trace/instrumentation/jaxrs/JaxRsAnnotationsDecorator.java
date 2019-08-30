@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.jaxrs;
 import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 
 import datadog.trace.agent.decorator.BaseDecorator;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.WeakMap;
 import io.opentracing.Scope;
@@ -50,8 +51,9 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   }
 
   public void updateCurrentScope(final Scope scope, final Method method) {
-    String resourceName = getResourceName(method);
     final Span span = scope.span();
+    span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
+    String resourceName = getResourceName(method);
     if (!resourceName.isEmpty()) {
       span.setTag(DDTags.RESOURCE_NAME, resourceName);
     }

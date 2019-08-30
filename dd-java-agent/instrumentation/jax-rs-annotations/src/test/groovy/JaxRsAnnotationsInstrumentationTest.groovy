@@ -27,7 +27,8 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "jax-rs.endpoint"
-          resourceName 'POST /a'
+          resourceName "POST /a"
+          spanType "web"
           tags {
             "$Tags.COMPONENT.key" "jax-rs-controller"
             defaultTags()
@@ -59,6 +60,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
         span(1) {
           operationName "jax-rs.endpoint"
           resourceName name
+          spanType "web"
           childOf span(0)
           tags {
             "$Tags.COMPONENT.key" "jax-rs-controller"
