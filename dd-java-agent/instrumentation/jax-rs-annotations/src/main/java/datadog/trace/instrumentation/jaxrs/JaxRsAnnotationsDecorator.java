@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.jaxrs;
 import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 
 import datadog.trace.agent.decorator.BaseDecorator;
+import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.WeakMap;
 import io.opentracing.Scope;
@@ -36,13 +37,41 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return "jax-rs-controller";
   }
 
-  public void updateParent(final Scope scope, final Method method) {
+  public void onControllerStart(final Scope scope, final Scope parent, final Method method) {
+    final String resourceName = getPathResourceName(method);
+    updateParent(parent, resourceName);
+
+    final Span span = scope.span();
+    span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
+
+    // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
+    final boolean isRootScope = parent == null;
+    if (isRootScope && !resourceName.isEmpty()) {
+      span.setTag(DDTags.RESOURCE_NAME, resourceName);
+    } else {
+      span.setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method));
+    }
+  }
+
+  private void updateParent(final Scope scope, final String resourceName) {
     if (scope == null) {
       return;
     }
     final Span span = scope.span();
     Tags.COMPONENT.set(span, "jax-rs");
 
+    if (!resourceName.isEmpty()) {
+      span.setTag(DDTags.RESOURCE_NAME, resourceName);
+    }
+  }
+
+  /**
+   * Returns the resource name given a JaxRS annotated method. Results are cached so this method can
+   * be called multiple times without significantly impacting performance.
+   *
+   * @return The result can be an empty string but will never be {@code null}.
+   */
+  private String getPathResourceName(final Method method) {
     final Class<?> target = method.getDeclaringClass();
     Map<Method, String> classMap = resourceNames.get(target);
 
@@ -61,9 +90,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
       classMap.put(method, resourceName);
     }
 
-    if (!resourceName.isEmpty()) {
-      span.setTag(DDTags.RESOURCE_NAME, resourceName);
-    }
+    return resourceName;
   }
 
   private String locateHttpMethod(final Method method) {
