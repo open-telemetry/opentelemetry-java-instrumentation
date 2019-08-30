@@ -37,25 +37,43 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return "jax-rs-controller";
   }
 
-  public void updateParent(final Scope scope, final Method method) {
+  public void updateScope(final Scope scope, final Scope parent, final Method method) {
+    String resourceName = getResourceName(method);
+    updateParent(parent, resourceName);
+
+    final Span span = scope.span();
+    span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
+
+    // When jax-rs is the root scope, then we
+    boolean isRootScope = parent == null;
+    if (isRootScope && !resourceName.isEmpty()) {
+      span.setTag(DDTags.RESOURCE_NAME, resourceName);
+    } else {
+      span.setTag(DDTags.RESOURCE_NAME, DECORATE.spanNameForMethod(method));
+    }
+  }
+
+  private void updateParent(final Scope scope, final String resourceName) {
     if (scope == null) {
       return;
     }
     final Span span = scope.span();
     Tags.COMPONENT.set(span, "jax-rs");
 
-    String resourceName = getResourceName(method);
     if (!resourceName.isEmpty()) {
       span.setTag(DDTags.RESOURCE_NAME, resourceName);
     }
   }
 
-  public void updateCurrentScope(final Scope scope, final Method method) {
+  public void updateCurrentScope(final Scope scope, final Method method, boolean isRootScope) {
     final Span span = scope.span();
     span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
-    String resourceName = getResourceName(method);
-    if (!resourceName.isEmpty()) {
-      span.setTag(DDTags.RESOURCE_NAME, resourceName);
+
+    if (isRootScope) {
+      String resourceName = getResourceName(method);
+      if (!resourceName.isEmpty()) {
+        span.setTag(DDTags.RESOURCE_NAME, resourceName);
+      }
     }
   }
 

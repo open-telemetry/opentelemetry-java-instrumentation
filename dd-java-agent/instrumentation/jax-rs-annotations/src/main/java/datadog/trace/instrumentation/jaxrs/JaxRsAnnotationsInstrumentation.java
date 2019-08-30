@@ -64,8 +64,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       // Rename the parent span according to the path represented by these annotations.
       final Scope parent = tracer.scopeManager().active();
       Scope scope = tracer.buildSpan(JAX_ENDPOINT_OPERATION_NAME).startActive(true);
-      DECORATE.updateParent(parent, method);
-      DECORATE.updateCurrentScope(scope, method);
+      DECORATE.updateScope(scope, parent, method);
       return DECORATE.afterStart(scope);
     }
 
