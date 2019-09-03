@@ -76,7 +76,7 @@ class ConfigTest extends Specification {
     config.traceResolverEnabled == true
     config.serviceMapping == [:]
     config.mergedSpanTags == [:]
-    config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
+    config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName]
     config.headerTags == [:]
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..499).toSet()
@@ -150,7 +150,7 @@ class ConfigTest extends Specification {
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]
-    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
+    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName]
     config.headerTags == [e: "5"]
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
@@ -215,7 +215,7 @@ class ConfigTest extends Specification {
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]
-    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
+    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName]
     config.headerTags == [e: "5"]
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
@@ -405,7 +405,7 @@ class ConfigTest extends Specification {
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]
-    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName, (LANGUAGE_TAG_KEY): LANGUAGE_TAG_VALUE]
+    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE): config.serviceName]
     config.headerTags == [e: "5"]
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()

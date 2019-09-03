@@ -1,5 +1,6 @@
 package datadog.trace.agent.decorator
 
+import datadog.trace.api.Config
 import datadog.trace.api.DDTags
 import io.opentracing.Span
 import io.opentracing.tag.Tags
@@ -14,6 +15,7 @@ class ServerDecoratorTest extends BaseDecoratorTest {
     decorator.afterStart(span)
 
     then:
+    1 * span.setTag(Config.LANGUAGE_TAG_KEY, Config.LANGUAGE_TAG_VALUE)
     1 * span.setTag(Tags.COMPONENT.key, "test-component")
     1 * span.setTag(Tags.SPAN_KIND.key, "server")
     1 * span.setTag(DDTags.SPAN_TYPE, decorator.spanType())

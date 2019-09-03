@@ -424,6 +424,7 @@ public class Config {
   public Map<String, String> getLocalRootSpanTags() {
     final Map<String, String> runtimeTags = getRuntimeTags();
     final Map<String, String> result = new HashMap<>(runtimeTags);
+    result.put(LANGUAGE_TAG_KEY, LANGUAGE_TAG_VALUE);
 
     if (reportHostName) {
       final String hostName = getHostName();
@@ -484,7 +485,6 @@ public class Config {
   private Map<String, String> getRuntimeTags() {
     final Map<String, String> result = newHashMap(2);
     result.put(RUNTIME_ID_TAG, runtimeId);
-    result.put(LANGUAGE_TAG_KEY, LANGUAGE_TAG_VALUE);
     return Collections.unmodifiableMap(result);
   }
 
