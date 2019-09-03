@@ -1,9 +1,3 @@
-// Set properties before any plugins get loaded
-project.ext {
-  // Execute tests on all JVMs, even rare and outdated ones
-  coreJavaInstrumentation = true
-}
-
 apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/test-with-scala.gradle"
 
