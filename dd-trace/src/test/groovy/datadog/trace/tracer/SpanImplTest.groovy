@@ -346,9 +346,9 @@ class SpanImplTest extends Specification {
   def "test JSON rendering with big ID values"() {
     setup: "create span"
     def parentContext = new SpanContextImpl(
-      new BigInteger(2).pow(64).subtract(1).toString(),
+      BigInteger.valueOf(2).pow(64).subtract(1).toString(),
       "123",
-      new BigInteger(2).pow(64).subtract(2).toString())
+      BigInteger.valueOf(2).pow(64).subtract(2).toString())
     def span = new SpanImpl(trace, parentContext, startTimestamp)
     span.finish()
 
