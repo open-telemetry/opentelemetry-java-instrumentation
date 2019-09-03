@@ -1,19 +1,20 @@
 package datadog.opentracing.propagation;
 
+import static datadog.opentracing.propagation.HttpCodec.ZERO;
+import static datadog.opentracing.propagation.HttpCodec.validateUInt64BitsID;
+
 import datadog.opentracing.DDSpanContext;
 import datadog.trace.api.sampling.PrioritySampling;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMap;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import static datadog.opentracing.propagation.HttpCodec.ZERO;
-import static datadog.opentracing.propagation.HttpCodec.validateUInt64BitsID;
+import lombok.extern.slf4j.Slf4j;
 
 /**
+ * A codec designed for HTTP transport via headers using Haystack headers.
+ *
  * @author Alex Antonov
  */
 @Slf4j
@@ -46,6 +47,7 @@ public class HaystackHttpCodec {
   public static class Extractor implements HttpCodec.Extractor {
     private final Map<String, String> taggedHeaders;
 
+    /** Creates Header Extractor using Haystack propagation. */
     public Extractor(final Map<String, String> taggedHeaders) {
       this.taggedHeaders = new HashMap<>();
       for (final Map.Entry<String, String> mapping : taggedHeaders.entrySet()) {
@@ -75,11 +77,11 @@ public class HaystackHttpCodec {
             traceId = validateUInt64BitsID(value, 10);
           } else if (SPAN_ID_KEY.equalsIgnoreCase(key)) {
             spanId = validateUInt64BitsID(value, 10);
-          } else if (key.startsWith(OT_BAGGAGE_PREFIX)) {
+          } else if (key.startsWith(OT_BAGGAGE_PREFIX.toLowerCase())) {
             if (baggage.isEmpty()) {
               baggage = new HashMap<>();
             }
-            baggage.put(key.replace(OT_BAGGAGE_PREFIX, ""), HttpCodec.decode(value));
+            baggage.put(key.replace(OT_BAGGAGE_PREFIX.toLowerCase(), ""), HttpCodec.decode(value));
           }
 
           if (taggedHeaders.containsKey(key)) {
@@ -92,7 +94,7 @@ public class HaystackHttpCodec {
 
         if (!ZERO.equals(traceId)) {
           final ExtractedContext context =
-            new ExtractedContext(traceId, spanId, samplingPriority, origin, baggage, tags);
+              new ExtractedContext(traceId, spanId, samplingPriority, origin, baggage, tags);
           context.lockSamplingPriority();
 
           log.debug("{} - Parent context extracted", context.getTraceId());
