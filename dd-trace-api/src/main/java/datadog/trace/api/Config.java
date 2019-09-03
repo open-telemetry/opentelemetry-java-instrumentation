@@ -1,5 +1,9 @@
 package datadog.trace.api;
 
+import lombok.Getter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,9 +24,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.UUID;
 import java.util.regex.Pattern;
-import lombok.Getter;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Config reads values with the following priority: 1) system properties, 2) environment variables,
@@ -463,9 +464,9 @@ public class Config {
    * Returns the sample rate for the specified instrumentation or {@link
    * #DEFAULT_ANALYTICS_SAMPLE_RATE} if none specified.
    */
-  public float getInstrumentationAnalyticsSampleRate(String... aliases) {
+  public float getInstrumentationAnalyticsSampleRate(final String... aliases) {
     for (final String alias : aliases) {
-      Float rate = getFloatSettingFromEnvironment(alias + ".analytics.sample-rate", null);
+      final Float rate = getFloatSettingFromEnvironment(alias + ".analytics.sample-rate", null);
       if (null != rate) {
         return rate;
       }
@@ -724,7 +725,7 @@ public class Config {
    * @param setting The setting name, e.g. `service.name`
    * @return The public facing system property name
    */
-  private static String propertyNameToSystemPropertyName(String setting) {
+  private static String propertyNameToSystemPropertyName(final String setting) {
     return PREFIX + setting;
   }
 
@@ -905,18 +906,18 @@ public class Config {
         configurationFilePath.replaceFirst("^~", System.getProperty("user.home"));
 
     // Configuration properties file is optional
-    File configurationFile = new File(configurationFilePath);
+    final File configurationFile = new File(configurationFilePath);
     if (!configurationFile.exists()) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
       return properties;
     }
 
     try {
-      FileReader fileReader = new FileReader(configurationFile);
+      final FileReader fileReader = new FileReader(configurationFile);
       properties.load(fileReader);
-    } catch (FileNotFoundException fnf) {
+    } catch (final FileNotFoundException fnf) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
-    } catch (IOException ioe) {
+    } catch (final IOException ioe) {
       log.error(
           "Configuration file '{}' cannot be accessed or correctly parsed.", configurationFilePath);
     }
