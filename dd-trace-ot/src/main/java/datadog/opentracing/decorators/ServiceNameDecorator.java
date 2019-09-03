@@ -7,7 +7,12 @@ public class ServiceNameDecorator extends AbstractDecorator {
 
   public ServiceNameDecorator() {
     super();
-    this.setMatchingTag(DDTags.SERVICE_NAME);
+    setMatchingTag(DDTags.SERVICE_NAME);
+  }
+
+  public ServiceNameDecorator(final String splitByTag) {
+    super();
+    setMatchingTag(splitByTag);
   }
 
   @Override

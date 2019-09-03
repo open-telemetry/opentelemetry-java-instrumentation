@@ -33,6 +33,7 @@ public abstract class DatabaseClientDecorator<CONNECTION> extends ClientDecorato
       Tags.DB_USER.set(span, dbUser(connection));
       final String instanceName = dbInstance(connection);
       Tags.DB_INSTANCE.set(span, instanceName);
+
       if (instanceName != null && Config.get().isDbClientSplitByInstance()) {
         span.setTag(DDTags.SERVICE_NAME, instanceName);
       }

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,6 +72,7 @@ public class Config {
   public static final String HTTP_CLIENT_TAG_QUERY_STRING = "http.client.tag.query-string";
   public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
   public static final String DB_CLIENT_HOST_SPLIT_BY_INSTANCE = "trace.db.client.split-by-instance";
+  public static final String SPLIT_BY_TAGS = "trace.split-by-tags";
   public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
@@ -116,6 +118,7 @@ public class Config {
   private static final boolean DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING = false;
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final boolean DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE = false;
+  private static final String DEFAULT_SPLIT_BY_TAGS = "";
   private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 1000;
   private static final String DEFAULT_PROPAGATION_STYLE_EXTRACT = PropagationStyle.DATADOG.name();
   private static final String DEFAULT_PROPAGATION_STYLE_INJECT = PropagationStyle.DATADOG.name();
@@ -170,6 +173,7 @@ public class Config {
   @Getter private final boolean httpClientTagQueryString;
   @Getter private final boolean httpClientSplitByDomain;
   @Getter private final boolean dbClientSplitByInstance;
+  @Getter private final Set<String> splitByTags;
   @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
   @Getter private final Set<PropagationStyle> propagationStylesToExtract;
@@ -256,6 +260,11 @@ public class Config {
     dbClientSplitByInstance =
         getBooleanSettingFromEnvironment(
             DB_CLIENT_HOST_SPLIT_BY_INSTANCE, DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE);
+
+    splitByTags =
+        Collections.unmodifiableSet(
+            new LinkedHashSet<>(
+                getListSettingFromEnvironment(SPLIT_BY_TAGS, DEFAULT_SPLIT_BY_TAGS)));
 
     partialFlushMinSpans =
         getIntegerSettingFromEnvironment(PARTIAL_FLUSH_MIN_SPANS, DEFAULT_PARTIAL_FLUSH_MIN_SPANS);
@@ -365,6 +374,12 @@ public class Config {
         getPropertyBooleanValue(
             properties, DB_CLIENT_HOST_SPLIT_BY_INSTANCE, parent.dbClientSplitByInstance);
 
+    splitByTags =
+        Collections.unmodifiableSet(
+            new LinkedHashSet<>(
+                getPropertyListValue(
+                    properties, SPLIT_BY_TAGS, new ArrayList<>(parent.splitByTags))));
+
     partialFlushMinSpans =
         getPropertyIntegerValue(properties, PARTIAL_FLUSH_MIN_SPANS, parent.partialFlushMinSpans);
 
@@ -462,9 +477,9 @@ public class Config {
    * Returns the sample rate for the specified instrumentation or {@link
    * #DEFAULT_ANALYTICS_SAMPLE_RATE} if none specified.
    */
-  public float getInstrumentationAnalyticsSampleRate(String... aliases) {
+  public float getInstrumentationAnalyticsSampleRate(final String... aliases) {
     for (final String alias : aliases) {
-      Float rate = getFloatSettingFromEnvironment(alias + ".analytics.sample-rate", null);
+      final Float rate = getFloatSettingFromEnvironment(alias + ".analytics.sample-rate", null);
       if (null != rate) {
         return rate;
       }
@@ -724,7 +739,7 @@ public class Config {
    * @param setting The setting name, e.g. `service.name`
    * @return The public facing system property name
    */
-  private static String propertyNameToSystemPropertyName(String setting) {
+  private static String propertyNameToSystemPropertyName(final String setting) {
     return PREFIX + setting;
   }
 
@@ -849,6 +864,10 @@ public class Config {
     }
 
     final String[] tokens = str.split(",", -1);
+    // Remove whitespace from each item.
+    for (int i = 0; i < tokens.length; i++) {
+      tokens[i] = tokens[i].trim();
+    }
     return Collections.unmodifiableList(Arrays.asList(tokens));
   }
 
@@ -905,18 +924,18 @@ public class Config {
         configurationFilePath.replaceFirst("^~", System.getProperty("user.home"));
 
     // Configuration properties file is optional
-    File configurationFile = new File(configurationFilePath);
+    final File configurationFile = new File(configurationFilePath);
     if (!configurationFile.exists()) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
       return properties;
     }
 
     try {
-      FileReader fileReader = new FileReader(configurationFile);
+      final FileReader fileReader = new FileReader(configurationFile);
       properties.load(fileReader);
-    } catch (FileNotFoundException fnf) {
+    } catch (final FileNotFoundException fnf) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
-    } catch (IOException ioe) {
+    } catch (final IOException ioe) {
       log.error(
           "Configuration file '{}' cannot be accessed or correctly parsed.", configurationFilePath);
     }
