@@ -1,4 +1,4 @@
-def groovyVer = "2.5.7"
+def groovyVer = "2.5.8"
 def spockGroovyVer = groovyVer.replaceAll(/\.\d+$/, '')
 
 ext {
@@ -61,8 +61,8 @@ ext {
       dependencies.create(group: 'org.slf4j', name: 'jcl-over-slf4j', version: versions.slf4j),
       dependencies.create(group: 'org.slf4j', name: 'jul-to-slf4j', version: versions.slf4j),
     ],
-    scala         : dependencies.create(group: 'org.scala-lang', name: 'scala-library', version: "${versions.scala}"),
-    kotlin        : dependencies.create(group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: "${versions.kotlin}"),
-    coroutines    : dependencies.create(group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: "${versions.coroutines}"),
+    scala          : dependencies.create(group: 'org.scala-lang', name: 'scala-library', version: "${versions.scala}"),
+    kotlin         : dependencies.create(group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: "${versions.kotlin}"),
+    coroutines     : dependencies.create(group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: "${versions.coroutines}"),
   ]
 }
