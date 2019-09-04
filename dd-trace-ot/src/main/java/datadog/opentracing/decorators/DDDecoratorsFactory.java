@@ -22,7 +22,7 @@ public class DDDecoratorsFactory {
                 new PeerServiceDecorator(),
                 new ResourceNameDecorator(),
                 new ServiceNameDecorator(),
-                new ServiceNameDecorator("service"),
+                new ServiceNameDecorator("service", false),
                 new ServletContextDecorator(),
                 new SpanTypeDecorator(),
                 new Status404Decorator(),
@@ -30,7 +30,7 @@ public class DDDecoratorsFactory {
                 new URLAsResourceName()));
 
     for (final String splitByTag : Config.get().getSplitByTags()) {
-      decorators.add(new ServiceNameDecorator(splitByTag));
+      decorators.add(new ServiceNameDecorator(splitByTag, true));
     }
 
     return decorators;

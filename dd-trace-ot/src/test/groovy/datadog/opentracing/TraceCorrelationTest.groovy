@@ -1,10 +1,14 @@
 package datadog.opentracing
 
+import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.common.writer.ListWriter
 import spock.lang.Shared
 import spock.lang.Specification
 
 class TraceCorrelationTest extends Specification {
+  static {
+    ConfigUtils.makeConfigInstanceModifiable()
+  }
 
   static final WRITER = new ListWriter()
 

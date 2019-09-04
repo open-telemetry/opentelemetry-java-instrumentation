@@ -23,6 +23,12 @@ class SpanDecoratorTest extends Specification {
       System.setProperty("dd.$Config.SPLIT_BY_TAGS", "sn.tag1,sn.tag2")
     }
   }
+
+  def cleanupSpec() {
+    ConfigUtils.updateConfig {
+      System.clearProperty("dd.$Config.SPLIT_BY_TAGS")
+    }
+  }
   def tracer = new DDTracer(new LoggingWriter())
   def span = SpanFactory.newSpanOf(tracer)
 

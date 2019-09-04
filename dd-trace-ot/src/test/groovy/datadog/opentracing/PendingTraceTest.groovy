@@ -1,5 +1,6 @@
 package datadog.opentracing
 
+import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.Config
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.gc.GCUtils
@@ -14,6 +15,10 @@ import java.util.concurrent.atomic.AtomicInteger
 import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
 
 class PendingTraceTest extends Specification {
+  static {
+    ConfigUtils.makeConfigInstanceModifiable()
+  }
+
   def traceCount = new AtomicInteger()
   def writer = new ListWriter() {
     @Override
