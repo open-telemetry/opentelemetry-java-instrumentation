@@ -137,7 +137,8 @@ public class Config {
 
   public enum PropagationStyle {
     DATADOG,
-    B3
+    B3,
+    HAYSTACK
   }
 
   /** A tag intended for internal use only, hence not added to the public api DDTags class. */
