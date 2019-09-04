@@ -32,12 +32,19 @@ dependencies {
   testCompile group: 'software.amazon.awssdk', name: 's3', version: '2.2.0'
   testCompile group: 'software.amazon.awssdk', name: 'rds', version: '2.2.0'
   testCompile group: 'software.amazon.awssdk', name: 'ec2', version: '2.2.0'
+  testCompile group: 'software.amazon.awssdk', name: 'sqs', version: '2.2.0'
+  testCompile group: 'software.amazon.awssdk', name: 'dynamodb', version: '2.2.0'
+  testCompile group: 'software.amazon.awssdk', name: 'kinesis', version: '2.2.0'
 
   latestDepTestCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
   latestDepTestCompile project(':dd-java-agent:instrumentation:netty-4.1')
   latestDepTestCompile project(':dd-java-agent:instrumentation:java-concurrent')
+
   latestDepTestCompile group: 'software.amazon.awssdk', name: 'apache-client', version: '+'
   latestDepTestCompile group: 'software.amazon.awssdk', name: 's3', version: '+'
   latestDepTestCompile group: 'software.amazon.awssdk', name: 'rds', version: '+'
   latestDepTestCompile group: 'software.amazon.awssdk', name: 'ec2', version: '+'
+  latestDepTestCompile group: 'software.amazon.awssdk', name: 'sqs', version: '+'
+  latestDepTestCompile group: 'software.amazon.awssdk', name: 'dynamodb', version: '+'
+  latestDepTestCompile group: 'software.amazon.awssdk', name: 'kinesis', version: '+'
 }
