@@ -5,13 +5,6 @@
  * instrumentation isn't able to reference it.
  */
 
-// Set properties before any plugins get loaded
-project.ext {
-  // Execute tests on all JVMs, even rare and outdated ones
-  coreJavaInstrumentation = true
-  minJavaVersionForTests = JavaVersion.VERSION_1_7
-}
-
 muzzle {
   pass {
     group = "org.hibernate"

@@ -7,6 +7,7 @@ import datadog.trace.tracer.writer.AgentWriter
 import datadog.trace.tracer.writer.SampleRateByService
 import datadog.trace.tracer.writer.Writer
 import datadog.trace.util.gc.GCUtils
+import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -14,6 +15,7 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
+@Requires({ !System.getProperty("java.vm.name").contains("IBM J9 VM") })
 class TracerTest extends Specification {
 
   @Shared

@@ -255,22 +255,6 @@ def isJdkForced(String javaName) {
   return (project.hasProperty('forceJdk') && project.getProperty('forceJdk').contains(javaName))
 }
 
-// JVM names we would like to run complete test suite on
-// Note: complete test suite is always run on JVM used for compilation
-// Note2: apparently there is no way to have a 'global' variable, so instead we have per project
-// attribute that has same value in all projects
-project.ext.majorSupportedJVMs = ["7", "11"]
-
-def isTestingEnabled(String javaName) {
-  if (javaName in project.majorSupportedJVMs) {
-    return true
-  }
-  if (project.findProperty("coreJavaInstrumentation") || project.findProperty("integrationTests")) {
-    return true
-  }
-  return false
-}
-
 // Disable default test tasks if current JVM doesn't match version requirements
 tasks.withType(Test).configureEach {
   if (name.endsWith("Generated")) {
@@ -326,7 +310,7 @@ for (def env : System.getenv().entrySet()) {
         jvmArgs '-XX:CompileCommand=exclude,net.bytebuddy.description.type.TypeDescription$Generic$Visitor$Substitutor::onParameterizedType'
       }
 
-      onlyIf { (isJavaVersionAllowed(javaVersion) && isTestingEnabled(javaName)) || isJdkForced(javaName) }
+      onlyIf { isJavaVersionAllowed(javaVersion) || isJdkForced(javaName) }
       if (applyCodeCoverage) {
         jacoco {
           // Disable jacoco for additional JVM tests to speed things up a bit

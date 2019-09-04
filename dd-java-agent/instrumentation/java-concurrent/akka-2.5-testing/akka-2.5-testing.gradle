@@ -1,8 +1,6 @@
 // Set properties before any plugins get loaded
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_8
-  // Execute tests on all JVMs, even rare and outdated ones
-  coreJavaInstrumentation = true
 }
 
 apply from: "${rootDir}/gradle/java.gradle"

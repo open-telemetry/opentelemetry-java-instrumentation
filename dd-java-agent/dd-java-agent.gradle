@@ -2,12 +2,6 @@ plugins {
   id "com.github.johnrengelman.shadow" version "4.0.4"
 }
 
-// Set properties before any plugins get loaded
-project.ext {
-  // Execute tests on all JVMs, even rare and outdated ones
-  integrationTests = true
-}
-
 description = 'dd-java-agent'
 
 apply from: "${rootDir}/gradle/java.gradle"
