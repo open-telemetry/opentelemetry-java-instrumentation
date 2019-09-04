@@ -246,6 +246,10 @@ JavaVersion getJavaExecutableVersion(String path) {
   }
 }
 
+ext {
+  getJavaExecutableVersion = this.&getJavaExecutableVersion
+}
+
 def isJavaVersionAllowed(JavaVersion version) {
   if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests').compareTo(version) > 0) {
     return false

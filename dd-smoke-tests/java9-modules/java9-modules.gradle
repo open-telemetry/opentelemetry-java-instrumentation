@@ -1,16 +1,8 @@
-import org.beryx.jlink.BaseTask
-
-plugins {
-  id 'org.beryx.jlink' version '2.1.1' // latest version that doesn't have a Java 11+ warning
-}
-
 ext {
   minJavaVersionForTests = JavaVersion.VERSION_1_9
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
-
-mainClassName = 'datadog.smoketest.moduleapp.ModuleApplication'
 
 jar {
   manifest {
@@ -20,20 +12,32 @@ jar {
   }
 }
 
-jlink {
-  moduleName = 'datadog.smoketest.moduleapp'
-  options = ['--no-man-pages', '--no-header-files', '--add-modules', 'java.instrument']
-}
+/**
+ * For each Test task, creates a jlink image using the java bin directory of the test
+ */
+tasks.withType(Test).each {
+  def javaExecutable = it.executable
+  def javaVersion = getJavaExecutableVersion(javaExecutable)
 
-tasks.withType(BaseTask).each {
-  it.enabled = JavaVersion.VERSION_1_9.compareTo(JavaVersion.current()) <= 0
-}
+  if (JavaVersion.VERSION_1_9.compareTo(javaVersion) > 0) {
+    return
+  }
 
-test {
-  dependsOn tasks.jlink
+  def jlinkExecutable = file(javaExecutable).parent + "/jlink"
+  def generatedImageDir = "${buildDir}/${it.name}image"
+  
+  it.doFirst {
+    exec {
+      commandLine jlinkExecutable, '--no-man-pages', '--no-header-files',
+        '--add-modules', 'java.instrument,datadog.smoketest.moduleapp',
+        "--module-path", jar.archiveFile.get().toString(), "--output", generatedImageDir
+    }
+  }
+
+  it.jvmArgs "-Ddatadog.smoketest.module.image=${generatedImageDir}"
+  it.dependsOn jar
 }
 
 dependencies {
   testCompile project(':dd-smoke-tests')
 }
-
