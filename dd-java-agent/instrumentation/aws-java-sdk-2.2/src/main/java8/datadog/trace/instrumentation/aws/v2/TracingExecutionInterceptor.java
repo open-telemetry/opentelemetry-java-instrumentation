@@ -44,9 +44,9 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   public void afterMarshalling(
       final Context.AfterMarshalling context, final ExecutionAttributes executionAttributes) {
     final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-    final SdkHttpRequest httpRequest = context.httpRequest();
 
-    DECORATE.onRequest(span, httpRequest);
+    DECORATE.onRequest(span, context.httpRequest());
+    DECORATE.onSdkRequest(span, context.request());
     DECORATE.onAttributes(span, executionAttributes);
   }
 
