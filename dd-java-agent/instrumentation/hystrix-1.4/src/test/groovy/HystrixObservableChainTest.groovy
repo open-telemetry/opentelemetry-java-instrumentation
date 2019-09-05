@@ -99,7 +99,7 @@ class HystrixObservableChainTest extends AgentTestRunner {
         }
         span(2) {
           serviceName "unnamed-java-app"
-          operationName "HystrixObservableChainTest\$2.tracedMethod"
+          operationName "trace.annotation"
           resourceName "HystrixObservableChainTest\$2.tracedMethod"
           spanType null
           childOf span(1)
@@ -126,7 +126,7 @@ class HystrixObservableChainTest extends AgentTestRunner {
         }
         span(4) {
           serviceName "unnamed-java-app"
-          operationName "HystrixObservableChainTest\$1.tracedMethod"
+          operationName "trace.annotation"
           resourceName "HystrixObservableChainTest\$1.tracedMethod"
           spanType null
           childOf span(3)

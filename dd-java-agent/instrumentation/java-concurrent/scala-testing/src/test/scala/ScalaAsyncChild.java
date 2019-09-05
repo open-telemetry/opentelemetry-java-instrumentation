@@ -54,6 +54,6 @@ public class ScalaAsyncChild extends ForkJoinTask implements Runnable, Callable 
     }
   }
 
-  @Trace(operationName = "asyncChild")
+  @Trace(operationName = "asyncChild", resourceName = "asyncChild")
   private void asyncChild() {}
 }

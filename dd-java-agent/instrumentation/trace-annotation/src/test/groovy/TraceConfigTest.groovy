@@ -37,7 +37,7 @@ class TraceConfigTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           resourceName "ConfigTracedCallable.call"
-          operationName "ConfigTracedCallable.call"
+          operationName "trace.annotation"
         }
       }
     }

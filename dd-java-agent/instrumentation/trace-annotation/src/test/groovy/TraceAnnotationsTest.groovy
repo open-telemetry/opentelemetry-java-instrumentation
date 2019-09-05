@@ -26,7 +26,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(0) {
           serviceName "test"
           resourceName "SayTracedHello.sayHello"
-          operationName "SayTracedHello.sayHello"
+          operationName "trace.annotation"
           parent()
           errored false
           tags {
@@ -48,7 +48,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           serviceName "test"
-          resourceName "SAY_HA"
+          resourceName "SayTracedHello.sayHA"
           operationName "SAY_HA"
           spanType "DB"
           parent()
@@ -73,7 +73,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(0) {
           serviceName "test"
           resourceName "WORLD"
-          operationName "SayTracedHello.sayHelloOnlyResourceSet"
+          operationName "trace.annotation"
           parent()
           errored false
           tags {
@@ -118,7 +118,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          resourceName "NEW_TRACE"
+          resourceName "SayTracedHello.sayHELLOsayHA"
           operationName "NEW_TRACE"
           parent()
           errored false
@@ -128,7 +128,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           }
         }
         span(1) {
-          resourceName "SAY_HA"
+          resourceName "SayTracedHello.sayHA"
           operationName "SAY_HA"
           spanType "DB"
           childOf span(0)
@@ -141,7 +141,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(2) {
           serviceName "test"
           resourceName "SayTracedHello.sayHello"
-          operationName "SayTracedHello.sayHello"
+          operationName "trace.annotation"
           childOf span(0)
           errored false
           tags {
@@ -172,7 +172,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           }
         }
         span(1) {
-          resourceName "SAY_HA"
+          resourceName "SayTracedHello.sayHA"
           operationName "SAY_HA"
           spanType "DB"
           childOf span(0)
@@ -185,7 +185,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(2) {
           serviceName "test"
           resourceName "SayTracedHello.sayHello"
-          operationName "SayTracedHello.sayHello"
+          operationName "trace.annotation"
           childOf span(0)
           errored false
           tags {
@@ -229,7 +229,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(2) {
           serviceName "test"
           resourceName "SayTracedHello.sayHello"
-          operationName "SayTracedHello.sayHello"
+          operationName "trace.annotation"
           childOf span(0)
           errored false
           tags {
@@ -257,7 +257,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          resourceName "ERROR"
+          resourceName "SayTracedHello.sayERROR"
           operationName "ERROR"
           errored true
           tags {
@@ -309,7 +309,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           resourceName "SayTracedHello\$1.call"
-          operationName "SayTracedHello\$1.call"
+          operationName "trace.annotation"
         }
       }
     }
@@ -330,12 +330,12 @@ class TraceAnnotationsTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           resourceName "SayTracedHello\$1.call"
-          operationName "SayTracedHello\$1.call"
+          operationName "trace.annotation"
         }
         trace(1, 1) {
           span(0) {
             resourceName "TraceAnnotationsTest\$1.call"
-            operationName "TraceAnnotationsTest\$1.call"
+            operationName "trace.annotation"
           }
         }
       }
