@@ -5,6 +5,7 @@ import datadog.trace.agent.test.asserts.ListWriterAssert
 import io.opentracing.SpanContext
 import io.opentracing.Tracer
 import io.opentracing.propagation.Format
+import io.opentracing.tag.Tags
 import io.opentracing.util.GlobalTracer
 import org.eclipse.jetty.http.HttpMethods
 import org.eclipse.jetty.server.Handler
@@ -104,6 +105,7 @@ class TestHttpServer implements AutoCloseable {
           childOf(parentSpan)
         }
         tags {
+          "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
           defaultTags(parentSpan != null)
         }
       }
@@ -235,6 +237,7 @@ class TestHttpServer implements AutoCloseable {
           tracer.extract(Format.Builtin.HTTP_HEADERS, new HttpServletRequestExtractAdapter(req))
         def builder = tracer
           .buildSpan("test-http-server")
+          .withTag(Tags.SPAN_KIND.key, Tags.SPAN_KIND_SERVER)
         if (extractedContext != null) {
           builder.asChildOf(extractedContext)
         }

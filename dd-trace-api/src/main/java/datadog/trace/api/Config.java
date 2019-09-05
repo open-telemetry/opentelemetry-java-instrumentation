@@ -425,6 +425,7 @@ public class Config {
   public Map<String, String> getLocalRootSpanTags() {
     final Map<String, String> runtimeTags = getRuntimeTags();
     final Map<String, String> result = new HashMap<>(runtimeTags);
+    result.put(LANGUAGE_TAG_KEY, LANGUAGE_TAG_VALUE);
 
     if (reportHostName) {
       final String hostName = getHostName();
@@ -463,9 +464,9 @@ public class Config {
    * Returns the sample rate for the specified instrumentation or {@link
    * #DEFAULT_ANALYTICS_SAMPLE_RATE} if none specified.
    */
-  public float getInstrumentationAnalyticsSampleRate(String... aliases) {
+  public float getInstrumentationAnalyticsSampleRate(final String... aliases) {
     for (final String alias : aliases) {
-      Float rate = getFloatSettingFromEnvironment(alias + ".analytics.sample-rate", null);
+      final Float rate = getFloatSettingFromEnvironment(alias + ".analytics.sample-rate", null);
       if (null != rate) {
         return rate;
       }
@@ -485,7 +486,6 @@ public class Config {
   private Map<String, String> getRuntimeTags() {
     final Map<String, String> result = newHashMap(2);
     result.put(RUNTIME_ID_TAG, runtimeId);
-    result.put(LANGUAGE_TAG_KEY, LANGUAGE_TAG_VALUE);
     return Collections.unmodifiableMap(result);
   }
 
@@ -725,7 +725,7 @@ public class Config {
    * @param setting The setting name, e.g. `service.name`
    * @return The public facing system property name
    */
-  private static String propertyNameToSystemPropertyName(String setting) {
+  private static String propertyNameToSystemPropertyName(final String setting) {
     return PREFIX + setting;
   }
 
@@ -906,18 +906,18 @@ public class Config {
         configurationFilePath.replaceFirst("^~", System.getProperty("user.home"));
 
     // Configuration properties file is optional
-    File configurationFile = new File(configurationFilePath);
+    final File configurationFile = new File(configurationFilePath);
     if (!configurationFile.exists()) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
       return properties;
     }
 
     try {
-      FileReader fileReader = new FileReader(configurationFile);
+      final FileReader fileReader = new FileReader(configurationFile);
       properties.load(fileReader);
-    } catch (FileNotFoundException fnf) {
+    } catch (final FileNotFoundException fnf) {
       log.error("Configuration file '{}' not found.", configurationFilePath);
-    } catch (IOException ioe) {
+    } catch (final IOException ioe) {
       log.error(
           "Configuration file '{}' cannot be accessed or correctly parsed.", configurationFilePath);
     }

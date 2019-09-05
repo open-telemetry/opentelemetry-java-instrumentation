@@ -4,6 +4,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.api.Config
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import io.opentracing.tag.Tags
 
 import java.util.regex.Pattern
 
@@ -39,11 +40,20 @@ class TagsAssert {
 
     assert tags["thread.name"] != null
     assert tags["thread.id"] != null
-    if ("0" == spanParentId || distributedRootSpan) {
+
+    // FIXME: DQH - Too much conditional logic?  Maybe create specialized methods for client & server cases
+
+    boolean isRoot = ("0" == spanParentId)
+    if (isRoot || distributedRootSpan) {
       assert tags[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
-      assert tags[Config.LANGUAGE_TAG_KEY] == Config.LANGUAGE_TAG_VALUE
     } else {
       assert tags[Config.RUNTIME_ID_TAG] == null
+    }
+
+    boolean isServer = (tags[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_SERVER)
+    if (isRoot || distributedRootSpan || isServer) {
+      assert tags[Config.LANGUAGE_TAG_KEY] == Config.LANGUAGE_TAG_VALUE
+    } else {
       assert tags[Config.LANGUAGE_TAG_KEY] == null
     }
   }
