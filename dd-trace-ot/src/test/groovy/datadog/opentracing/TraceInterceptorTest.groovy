@@ -1,5 +1,6 @@
 package datadog.opentracing
 
+import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.GlobalTracer
 import datadog.trace.api.interceptor.MutableSpan
 import datadog.trace.api.interceptor.TraceInterceptor
@@ -9,6 +10,10 @@ import spock.lang.Specification
 import java.util.concurrent.atomic.AtomicBoolean
 
 class TraceInterceptorTest extends Specification {
+  static {
+    ConfigUtils.makeConfigInstanceModifiable()
+  }
+
   def writer = new ListWriter()
   def tracer = new DDTracer(writer)
 

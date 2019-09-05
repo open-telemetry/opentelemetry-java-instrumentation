@@ -34,6 +34,7 @@ import static datadog.trace.api.Config.SERVICE
 import static datadog.trace.api.Config.SERVICE_MAPPING
 import static datadog.trace.api.Config.SERVICE_NAME
 import static datadog.trace.api.Config.SPAN_TAGS
+import static datadog.trace.api.Config.SPLIT_BY_TAGS
 import static datadog.trace.api.Config.TRACE_AGENT_PORT
 import static datadog.trace.api.Config.TRACE_ENABLED
 import static datadog.trace.api.Config.TRACE_REPORT_HOSTNAME
@@ -80,6 +81,7 @@ class ConfigTest extends Specification {
     config.httpClientErrorStatuses == (400..499).toSet()
     config.httpClientSplitByDomain == false
     config.dbClientSplitByInstance == false
+    config.splitByTags == [].toSet()
     config.partialFlushMinSpans == 1000
     config.reportHostName == false
     config.runtimeContextFieldInjection == true
@@ -122,6 +124,7 @@ class ConfigTest extends Specification {
     prop.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     prop.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     prop.setProperty(DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
+    prop.setProperty(SPLIT_BY_TAGS, "some.tag1,some.tag2,some.tag1")
     prop.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
     prop.setProperty(TRACE_REPORT_HOSTNAME, "true")
     prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
@@ -154,6 +157,7 @@ class ConfigTest extends Specification {
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
     config.dbClientSplitByInstance == true
+    config.splitByTags == ["some.tag1", "some.tag2"].toSet()
     config.partialFlushMinSpans == 15
     config.reportHostName == true
     config.runtimeContextFieldInjection == false
@@ -187,6 +191,7 @@ class ConfigTest extends Specification {
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "111")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     System.setProperty(PREFIX + DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
+    System.setProperty(PREFIX + SPLIT_BY_TAGS, "some.tag3, some.tag2, some.tag1")
     System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "25")
     System.setProperty(PREFIX + TRACE_REPORT_HOSTNAME, "true")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
@@ -219,6 +224,7 @@ class ConfigTest extends Specification {
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
     config.dbClientSplitByInstance == true
+    config.splitByTags == ["some.tag3", "some.tag2", "some.tag1"].toSet()
     config.partialFlushMinSpans == 25
     config.reportHostName == true
     config.runtimeContextFieldInjection == false
@@ -314,6 +320,7 @@ class ConfigTest extends Specification {
     config.httpClientErrorStatuses == (400..499).toSet()
     config.httpClientSplitByDomain == false
     config.dbClientSplitByInstance == false
+    config.splitByTags == [].toSet()
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
   }
@@ -409,6 +416,7 @@ class ConfigTest extends Specification {
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
     config.dbClientSplitByInstance == true
+    config.splitByTags == [].toSet()
     config.partialFlushMinSpans == 15
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
