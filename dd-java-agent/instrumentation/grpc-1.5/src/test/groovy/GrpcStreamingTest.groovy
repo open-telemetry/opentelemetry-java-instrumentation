@@ -91,6 +91,7 @@ class GrpcStreamingTest extends AgentTestRunner {
           childOf trace(1).get(0)
           errored false
           tags {
+            "status.code" "OK"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT.key" "grpc-server"
             defaultTags(true)
