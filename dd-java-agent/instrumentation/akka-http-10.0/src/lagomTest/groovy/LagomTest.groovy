@@ -26,13 +26,13 @@ class LagomTest extends AgentTestRunner {
       .withCassandra(false)
       .withJdbc(false)
       .configureBuilder(
-      new Function<GuiceApplicationBuilder, GuiceApplicationBuilder>() {
-        @Override
-        GuiceApplicationBuilder apply(GuiceApplicationBuilder builder) {
-          return builder
-            .bindings(new ServiceTestModule())
-        }
-      }))
+        new Function<GuiceApplicationBuilder, GuiceApplicationBuilder>() {
+          @Override
+          GuiceApplicationBuilder apply(GuiceApplicationBuilder builder) {
+            return builder
+              .bindings(new ServiceTestModule())
+          }
+        }))
   }
 
   def cleanupSpec() {
@@ -75,7 +75,8 @@ class LagomTest extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName 'EchoServiceImpl.tracedMethod'
+          operationName 'trace.annotation'
+          resourceName 'EchoServiceImpl.tracedMethod'
         }
       }
     }

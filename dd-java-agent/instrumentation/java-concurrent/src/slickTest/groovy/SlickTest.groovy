@@ -18,8 +18,8 @@ class SlickTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "SlickUtils.startQuery"
           serviceName "unnamed-java-app"
+          operationName "trace.annotation"
           resourceName "SlickUtils.startQuery"
           parent()
           errored false

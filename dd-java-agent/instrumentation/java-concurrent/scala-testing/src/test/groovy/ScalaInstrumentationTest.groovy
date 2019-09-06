@@ -12,7 +12,7 @@ class ScalaInstrumentationTest extends AgentTestRunner {
 
     expect:
     trace.size() == expectedNumberOfSpans
-    trace[0].operationName == "ScalaConcurrentTests.traceWithFutureAndCallbacks"
+    trace[0].resourceName == "ScalaConcurrentTests.traceWithFutureAndCallbacks"
     findSpan(trace, "goodFuture").context().getParentId() == trace[0].context().getSpanId()
     findSpan(trace, "badFuture").context().getParentId() == trace[0].context().getSpanId()
     findSpan(trace, "successCallback").context().getParentId() == trace[0].context().getSpanId()
@@ -28,7 +28,7 @@ class ScalaInstrumentationTest extends AgentTestRunner {
 
     expect:
     trace.size() == expectedNumberOfSpans
-    trace[0].operationName == "ScalaConcurrentTests.tracedAcrossThreadsWithNoTrace"
+    trace[0].resourceName == "ScalaConcurrentTests.tracedAcrossThreadsWithNoTrace"
     findSpan(trace, "callback").context().getParentId() == trace[0].context().getSpanId()
   }
 
@@ -42,7 +42,7 @@ class ScalaInstrumentationTest extends AgentTestRunner {
     expect:
     TEST_WRITER.size() == 1
     trace.size() == expectedNumberOfSpans
-    trace[0].operationName == "ScalaConcurrentTests.traceWithPromises"
+    trace[0].resourceName == "ScalaConcurrentTests.traceWithPromises"
     findSpan(trace, "keptPromise").context().getParentId() == trace[0].context().getSpanId()
     findSpan(trace, "keptPromise2").context().getParentId() == trace[0].context().getSpanId()
     findSpan(trace, "brokenPromise").context().getParentId() == trace[0].context().getSpanId()
