@@ -31,6 +31,7 @@ public class GrpcServerBuilderInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.instrumentation.grpc.server.TracingServerInterceptor",
+      "datadog.trace.instrumentation.grpc.server.TracingServerInterceptor$TracingServerCall",
       "datadog.trace.instrumentation.grpc.server.TracingServerInterceptor$TracingServerCallListener",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ServerDecorator",
