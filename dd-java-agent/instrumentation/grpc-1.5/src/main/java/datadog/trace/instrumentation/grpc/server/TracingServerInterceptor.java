@@ -91,6 +91,27 @@ public class TracingServerInterceptor implements ServerInterceptor {
     }
 
     @Override
+    public void onClose(final Status status, final Metadata trailers) {
+      DECORATE.onClose(span, status);
+      // Finishes span.
+      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
+        if (scope instanceof TraceScope) {
+          ((TraceScope) scope).setAsyncPropagation(true);
+        }
+        delegate().onClose(status, trailers);
+        if (scope instanceof TraceScope) {
+          ((TraceScope) scope).setAsyncPropagation(false);
+        }
+      } catch (final Throwable e) {
+        DECORATE.onError(span, e);
+        throw e;
+      } finally {
+        DECORATE.beforeFinish(span);
+        span.finish();
+      }
+    }
+
+    @Override
     public void onMessage(final ReqT message) {
       final Scope scope =
           tracer
@@ -177,6 +198,7 @@ public class TracingServerInterceptor implements ServerInterceptor {
         span.finish();
       }
     }
+
 
     @Override
     public void onReady() {
