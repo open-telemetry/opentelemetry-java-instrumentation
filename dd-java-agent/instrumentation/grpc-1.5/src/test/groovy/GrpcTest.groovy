@@ -47,6 +47,7 @@ class GrpcTest extends AgentTestRunner {
           childOf trace(1).get(0)
           errored false
           tags {
+            "status.code" "OK"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT.key" "grpc-server"
             defaultTags(true)
@@ -143,11 +144,10 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT.key" "grpc-server"
             if(status.cause != null){
-              "error.msg" status.cause.message
-              "error.type" status.cause.class.canonicalName
-              "error.stack" String
+              errorTags status.cause.class, status.cause.message
+            }else{
+              tag "error", true
             }
-            tag "error", true
             defaultTags(true)
           }
         }
