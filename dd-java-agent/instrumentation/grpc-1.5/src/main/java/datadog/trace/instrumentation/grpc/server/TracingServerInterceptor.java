@@ -7,10 +7,10 @@ import datadog.trace.context.TraceScope;
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Metadata;
-import io.grpc.Status;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
+import io.grpc.Status;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -64,7 +64,8 @@ public class TracingServerInterceptor implements ServerInterceptor {
     try {
       // Wrap the server call so that we can decorate the span
       // with the resulting status
-      TracingServerCall<ReqT, RespT> tracingServerCall = new TracingServerCall<>(tracer, span, call);
+      TracingServerCall<ReqT, RespT> tracingServerCall =
+          new TracingServerCall<>(tracer, span, call);
 
       // call other interceptors
       result = next.startCall(tracingServerCall, headers);
@@ -85,11 +86,12 @@ public class TracingServerInterceptor implements ServerInterceptor {
   }
 
   static final class TracingServerCall<ReqT, RespT>
-    extends ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT> {
+      extends ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT> {
     final Tracer tracer;
     final Span span;
 
-    TracingServerCall(final Tracer tracer, final Span span, final ServerCall<ReqT, RespT> delegate) {
+    TracingServerCall(
+        final Tracer tracer, final Span span, final ServerCall<ReqT, RespT> delegate) {
       super(delegate);
       this.tracer = tracer;
       this.span = span;
@@ -98,7 +100,6 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void close(final Status status, final Metadata trailers) {
       DECORATE.onClose(span, status);
-      // Finishes span.
       try (final Scope scope = tracer.scopeManager().activate(span, false)) {
         if (scope instanceof TraceScope) {
           ((TraceScope) scope).setAsyncPropagation(true);
@@ -112,7 +113,6 @@ public class TracingServerInterceptor implements ServerInterceptor {
         throw e;
       }
     }
-
   }
 
   static final class TracingServerCallListener<ReqT>
@@ -214,7 +214,6 @@ public class TracingServerInterceptor implements ServerInterceptor {
         span.finish();
       }
     }
-
 
     @Override
     public void onReady() {
