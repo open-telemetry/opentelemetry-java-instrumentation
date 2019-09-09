@@ -47,6 +47,7 @@ class GrpcTest extends AgentTestRunner {
           childOf trace(1).get(0)
           errored false
           tags {
+            "status.code" "OK"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT.key" "grpc-server"
             defaultTags(true)
@@ -136,10 +137,17 @@ class GrpcTest extends AgentTestRunner {
           resourceName "example.Greeter/SayHello"
           spanType DDSpanTypes.RPC
           childOf trace(1).get(0)
-          errored false
+          errored true
           tags {
+            "status.code" "${status.code.name()}"
+            "status.description" description
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT.key" "grpc-server"
+            if(status.cause != null){
+              errorTags status.cause.class, status.cause.message
+            }else{
+              tag "error", true
+            }
             defaultTags(true)
           }
         }
