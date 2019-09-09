@@ -1,10 +1,11 @@
 package util
 
-
 import com.couchbase.client.core.metrics.DefaultLatencyMetricsCollectorConfig
 import com.couchbase.client.core.metrics.DefaultMetricsCollectorConfig
+import com.couchbase.client.java.CouchbaseAsyncCluster
 import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.bucket.BucketType
+import com.couchbase.client.java.cluster.AsyncClusterManager
 import com.couchbase.client.java.cluster.BucketSettings
 import com.couchbase.client.java.cluster.ClusterManager
 import com.couchbase.client.java.cluster.DefaultBucketSettings
@@ -14,6 +15,7 @@ import com.couchbase.mock.Bucket
 import com.couchbase.mock.BucketConfiguration
 import com.couchbase.mock.CouchbaseMock
 import com.couchbase.mock.http.query.QueryServer
+import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.utils.PortUtils
@@ -59,7 +61,11 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
   @Shared
   protected CouchbaseCluster couchbaseCluster
   @Shared
+  protected CouchbaseAsyncCluster couchbaseAsyncCluster
+  @Shared
   protected CouchbaseCluster memcacheCluster
+  @Shared
+  protected CouchbaseAsyncCluster memcacheAsyncCluster
   @Shared
   protected CouchbaseEnvironment couchbaseEnvironment
   @Shared
@@ -67,7 +73,11 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
   @Shared
   protected ClusterManager couchbaseManager
   @Shared
+  protected AsyncClusterManager couchbaseAsyncManager
+  @Shared
   protected ClusterManager memcacheManager
+  @Shared
+  protected AsyncClusterManager memcacheAsyncManager
 
   def setupSpec() {
 
@@ -80,13 +90,17 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
 
     couchbaseEnvironment = envBuilder(bucketCouchbase).build()
     couchbaseCluster = CouchbaseCluster.create(couchbaseEnvironment, Arrays.asList("127.0.0.1"))
+    couchbaseAsyncCluster = CouchbaseAsyncCluster.create(couchbaseEnvironment, Arrays.asList("127.0.0.1"))
     couchbaseManager = couchbaseCluster.clusterManager(USERNAME, PASSWORD)
+    couchbaseAsyncManager = couchbaseAsyncCluster.clusterManager(USERNAME, PASSWORD).toBlocking().single()
 
     mock.createBucket(convert(bucketMemcache))
 
     memcacheEnvironment = envBuilder(bucketMemcache).build()
     memcacheCluster = CouchbaseCluster.create(memcacheEnvironment, Arrays.asList("127.0.0.1"))
+    memcacheAsyncCluster = CouchbaseAsyncCluster.create(memcacheEnvironment, Arrays.asList("127.0.0.1"))
     memcacheManager = memcacheCluster.clusterManager(USERNAME, PASSWORD)
+    memcacheAsyncManager = memcacheAsyncCluster.clusterManager(USERNAME, PASSWORD).toBlocking().single()
 
     // Cache buckets:
     couchbaseCluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password())
@@ -145,19 +159,23 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       .socketConnectTimeout(timeout.intValue())
   }
 
-  void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null) {
+  void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
       serviceName "couchbase"
       resourceName name
       operationName "couchbase.call"
       spanType DDSpanTypes.COUCHBASE
       errored false
-      parent()
+      if (parentSpan == null) {
+        parent()
+      } else {
+        childOf((DDSpan) parentSpan)
+      }
       tags {
         "$Tags.COMPONENT.key" "couchbase-client"
         "$Tags.DB_TYPE.key" "couchbase"
         "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-        if (bucketName) {
+        if (bucketName != null) {
           "bucket" bucketName
         }
         defaultTags()
