@@ -2,37 +2,31 @@ import com.couchbase.client.java.Bucket
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.query.N1qlQuery
-import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
 import util.AbstractCouchbaseTest
 
 class CouchbaseClientTest extends AbstractCouchbaseTest {
 
-  def "test client #type"() {
+  def "test hasBucket #type"() {
     when:
-    manager.hasBucket(bucketSettings.name())
+    def hasBucket = manager.hasBucket(bucketSettings.name())
 
     then:
+    assert hasBucket
     assertTraces(1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "ClusterManager.hasBucket"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "ClusterManager.hasBucket")
       }
     }
-    TEST_WRITER.clear()
 
+    where:
+    manager          | cluster          | bucketSettings
+    couchbaseManager | couchbaseCluster | bucketCouchbase
+    memcacheManager  | memcacheCluster  | bucketMemcache
+
+    type = bucketSettings.type().name()
+  }
+
+  def "test upsert and get #type"() {
     when:
     // Connect to the bucket and open it
     Bucket bkt = cluster.openBucket(bucketSettings.name(), bucketSettings.password())
@@ -40,58 +34,20 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     // Create a JSON document and store it with the ID "helloworld"
     JsonObject content = JsonObject.create().put("hello", "world")
     def inserted = bkt.upsert(JsonDocument.create("helloworld", content))
-
-    then:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.upsert"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bkt.name()
-            defaultTags()
-          }
-        }
-      }
-    }
-    TEST_WRITER.clear()
-
-    when:
     def found = bkt.get("helloworld")
 
     then:
     found == inserted
     found.content().getString("hello") == "world"
 
-    and:
-    assertTraces(1) {
+    assertTraces(2) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.get"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bkt.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Bucket.upsert", bucketSettings.name())
+      }
+      trace(1, 1) {
+        assertCouchbaseCall(it, 0, "Bucket.get", bucketSettings.name())
       }
     }
-    TEST_WRITER.clear()
-
 
     where:
     manager          | cluster          | bucketSettings
@@ -118,21 +74,7 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     and:
     assertTraces(1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.query"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bkt.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Bucket.query", bucketSettings.name())
       }
     }
 

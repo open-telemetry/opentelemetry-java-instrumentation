@@ -15,8 +15,11 @@ import com.couchbase.mock.BucketConfiguration
 import com.couchbase.mock.CouchbaseMock
 import com.couchbase.mock.http.query.QueryServer
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.Config
+import datadog.trace.api.DDSpanTypes
+import io.opentracing.tag.Tags
 import spock.lang.Shared
 
 import java.util.concurrent.RejectedExecutionException
@@ -140,5 +143,25 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       .searchTimeout(timeout)
       .analyticsTimeout(timeout)
       .socketConnectTimeout(timeout.intValue())
+  }
+
+  void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null) {
+    trace.span(index) {
+      serviceName "couchbase"
+      resourceName name
+      operationName "couchbase.call"
+      spanType DDSpanTypes.COUCHBASE
+      errored false
+      parent()
+      tags {
+        "$Tags.COMPONENT.key" "couchbase-client"
+        "$Tags.DB_TYPE.key" "couchbase"
+        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+        if (bucketName) {
+          "bucket" bucketName
+        }
+        defaultTags()
+      }
+    }
   }
 }
