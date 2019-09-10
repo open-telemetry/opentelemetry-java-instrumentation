@@ -39,6 +39,10 @@ if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJav
     "main_${name}CompileOnly" "org.projectlombok:lombok:${project.lombok.version}" transitive false
     "main_${name}AnnotationProcessor" "org.projectlombok:lombok:${project.lombok.version}" transitive false
   }
+  
+  jar {
+    from sourceSets."main_$name".output
+  }
 
   tasks.withType(JavaCompile).configureEach {
     if (it.name.toLowerCase().contains("test")) {
@@ -239,6 +243,10 @@ JavaVersion getJavaExecutableVersion(String path) {
       throw new GradleScriptException("Cannot determine java version: ${stream.toString}")
     }
   }
+}
+
+ext {
+  getJavaExecutableVersion = this.&getJavaExecutableVersion
 }
 
 def isJavaVersionAllowed(JavaVersion version) {
