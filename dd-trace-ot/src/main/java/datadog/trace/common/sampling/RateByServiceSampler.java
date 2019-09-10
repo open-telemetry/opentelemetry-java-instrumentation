@@ -1,10 +1,13 @@
 package datadog.trace.common.sampling;
 
+import static java.util.Collections.singletonMap;
+import static java.util.Collections.unmodifiableMap;
+
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NumericNode;
 import datadog.opentracing.DDSpan;
 import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.writer.DDApi.ResponseListener;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -18,12 +21,13 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class RateByServiceSampler implements Sampler, ResponseListener {
-  /** Key for setting the baseline rate */
-  private static final String BASE_KEY = "service:,env:";
-  /** Sampler to use if service+env is not in the map */
-  private volatile RateSampler baseSampler = new RateSampler(1.0);
+  /** Key for setting the default/baseline rate */
+  private static final String DEFAULT_KEY = "service:,env:";
 
-  private volatile Map<String, RateSampler> serviceRates = Collections.emptyMap();
+  private static final double DEFAULT_RATE = 1.0;
+
+  private volatile Map<String, RateSampler> serviceRates =
+      unmodifiableMap(singletonMap(DEFAULT_KEY, new RateSampler(DEFAULT_RATE)));
 
   @Override
   public boolean sample(final DDSpan span) {
@@ -49,10 +53,12 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
     final String env = getSpanEnv(span);
     final String key = "service:" + serviceName + ",env:" + env;
 
+    final Map<String, RateSampler> rates = serviceRates;
     RateSampler sampler = serviceRates.get(key);
     if (sampler == null) {
-      sampler = baseSampler;
+      sampler = rates.get(DEFAULT_KEY);
     }
+
     if (sampler.sample(span)) {
       span.setSamplingPriority(PrioritySampling.SAMPLER_KEEP);
     } else {
@@ -73,18 +79,20 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
       final Iterator<String> itr = newServiceRates.fieldNames();
       while (itr.hasNext()) {
         final String key = itr.next();
+        final JsonNode value = newServiceRates.get(key);
         try {
-          final float val = Float.parseFloat(newServiceRates.get(key).toString());
-          if (BASE_KEY.equals(key)) {
-            baseSampler = new RateSampler(val);
+          if (value instanceof NumericNode) {
+            updatedServiceRates.put(key, new RateSampler(value.doubleValue()));
           } else {
-            updatedServiceRates.put(key, new RateSampler(val));
+            log.debug("Unable to parse new service rate {} -> {}", key, value);
           }
         } catch (final NumberFormatException nfe) {
-          log.debug("Unable to parse new service rate {} -> {}", key, newServiceRates.get(key));
+          log.debug("Unable to parse new service rate {} -> {}", key, value);
         }
       }
-      serviceRates = Collections.unmodifiableMap(updatedServiceRates);
+      if (!updatedServiceRates.isEmpty()) {
+        serviceRates = unmodifiableMap(updatedServiceRates);
+      }
     }
   }
 

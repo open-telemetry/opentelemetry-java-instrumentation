@@ -6,6 +6,8 @@ import datadog.opentracing.SpanFactory
 import datadog.trace.common.sampling.RateByServiceSampler
 import spock.lang.Specification
 
+import static datadog.trace.common.sampling.RateByServiceSampler.DEFAULT_KEY
+
 class RateByServiceSamplerTest extends Specification {
 
   def "invalid rate -> 1"() {
@@ -15,7 +17,7 @@ class RateByServiceSamplerTest extends Specification {
     String response = '{"rate_by_service": {"service:,env:":' + rate + '}}'
     serviceSampler.onResponse("traces", serializer.readTree(response))
     expect:
-    serviceSampler.baseSampler.sampleRate == expectedRate
+    serviceSampler.serviceRates[DEFAULT_KEY].sampleRate == expectedRate
 
     where:
     rate | expectedRate
