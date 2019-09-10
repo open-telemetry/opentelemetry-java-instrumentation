@@ -90,6 +90,7 @@ public class Config {
   public static final String LOGS_INJECTION_ENABLED = "logs.injection";
 
   public static final String SERVICE_TAG = "service";
+  @Deprecated public static final String SERVICE = SERVICE_TAG; // To be removed in 0.34.0
   public static final String RUNTIME_ID_TAG = "runtime-id";
   public static final String LANGUAGE_TAG_KEY = "language";
   public static final String LANGUAGE_TAG_VALUE = "jvm";
