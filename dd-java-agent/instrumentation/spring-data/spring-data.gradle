@@ -4,7 +4,6 @@ muzzle {
     group = 'org.springframework.data'
     module = 'spring-data-commons'
     versions = "[1.5.0.RELEASE,)"
-    extraDependency "javax.servlet:javax.servlet.api:3.0.0"
   }
 }
 
@@ -32,9 +31,9 @@ dependencies {
   testCompile project(':dd-java-agent:instrumentation:jdbc')
   testCompile group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
   testCompile group: 'org.springframework', name: 'spring-test', version: '3.0.0.RELEASE'
-  testCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.0.0.RELEASE'
+  testCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.2.0.RELEASE'
+  testCompile group: 'com.mysema.querydsl', name: 'querydsl-jpa', version: '3.7.4'
   testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
-  testCompile group: 'org.eclipse.persistence', name: 'org.eclipse.persistence.jpa', version: '2.7.4'
   testCompile group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
 
   latestDepTestCompile group: 'org.springframework', name: 'spring-test', version: '+'
@@ -43,3 +42,4 @@ dependencies {
   latestDepTestCompile group: 'org.springframework', name: 'spring-aop', version: '+'
   latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '+'
 }
+
