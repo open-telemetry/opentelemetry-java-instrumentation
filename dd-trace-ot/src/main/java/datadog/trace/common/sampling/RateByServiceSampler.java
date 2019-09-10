@@ -90,9 +90,10 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
           log.debug("Unable to parse new service rate {} -> {}", key, value);
         }
       }
-      if (!updatedServiceRates.isEmpty()) {
-        serviceRates = unmodifiableMap(updatedServiceRates);
+      if (!updatedServiceRates.containsKey(DEFAULT_KEY)) {
+        updatedServiceRates.put(DEFAULT_KEY, new RateSampler(DEFAULT_RATE));
       }
+      serviceRates = unmodifiableMap(updatedServiceRates);
     }
   }
 
@@ -107,16 +108,12 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
     /** The sample rate used */
     private final double sampleRate;
 
-    public RateSampler(final String sampleRate) {
-      this(sampleRate == null ? 1 : Double.valueOf(sampleRate));
-    }
-
     /**
      * Build an instance of the sampler. The Sample rate is fixed for each instance.
      *
      * @param sampleRate a number [0,1] representing the rate ratio.
      */
-    public RateSampler(double sampleRate) {
+    private RateSampler(double sampleRate) {
 
       if (sampleRate < 0) {
         sampleRate = 1;

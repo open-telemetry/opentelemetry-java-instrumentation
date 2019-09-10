@@ -35,22 +35,20 @@ class RateByServiceSamplerTest extends Specification {
     ObjectMapper serializer = new ObjectMapper()
 
     when:
-    String response = '{"rate_by_service": {"service:,env:":1.0, "service:spock,env:test":0.000001}}'
+    String response = '{"rate_by_service": {"service:spock,env:test":0.0}}'
     serviceSampler.onResponse("traces", serializer.readTree(response))
     DDSpan span1 = SpanFactory.newSpanOf("foo", "bar")
     serviceSampler.initializeSamplingPriority(span1)
     then:
     span1.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
     serviceSampler.sample(span1)
-    // !serviceSampler.sample(SpanFactory.newSpanOf("spock", "test"))
 
     when:
-    response = '{"rate_by_service": {"service:,env:":0.000001, "service:spock,env:test":1.0}}'
+    response = '{"rate_by_service": {"service:spock,env:test":1.0}}'
     serviceSampler.onResponse("traces", serializer.readTree(response))
     DDSpan span2 = SpanFactory.newSpanOf("spock", "test")
     serviceSampler.initializeSamplingPriority(span2)
     then:
-    // !serviceSampler.sample(SpanFactory.newSpanOf("foo", "bar"))
     span2.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
     serviceSampler.sample(span2)
   }
