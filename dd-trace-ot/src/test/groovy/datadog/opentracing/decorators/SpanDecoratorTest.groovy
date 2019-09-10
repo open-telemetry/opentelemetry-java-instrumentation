@@ -19,6 +19,7 @@ import static java.util.Collections.emptyMap
 
 class SpanDecoratorTest extends Specification {
   static {
+    ConfigUtils.makeConfigInstanceModifiable()
     ConfigUtils.updateConfig {
       System.setProperty("dd.$Config.SPLIT_BY_TAGS", "sn.tag1,sn.tag2")
     }
