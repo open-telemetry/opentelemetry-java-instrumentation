@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -122,7 +123,7 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
 
     @Override
     public boolean doSample(final DDSpan span) {
-      final boolean sample = Math.random() <= sampleRate;
+      final boolean sample = ThreadLocalRandom.current().nextFloat() <= sampleRate;
       log.debug("{} - Span is sampled: {}", span, sample);
       return sample;
     }
