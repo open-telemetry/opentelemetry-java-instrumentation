@@ -54,8 +54,10 @@ tasks.withType(Test).each {
     return
   }
 
-  // JAVA_HOME/bin/java -> JAVA_HOME/bin/jlink
-  def jlinkExecutable = file(javaExecutable).parent + "/jlink"
+  // JAVA_HOME/bin/java -> JAVA_HOME
+  def specificJDKHome = file(javaExecutable).parentFile.parent
+  def jlinkExecutable = specificJDKHome + "/bin/jlink"
+  def jdkModulesPath = specificJDKHome + "/jmods"
   def generatedImageDir = "${buildDir}/${it.name}image"
 
   it.doFirst {
@@ -64,7 +66,7 @@ tasks.withType(Test).each {
     exec {
       commandLine jlinkExecutable, '--no-man-pages', '--no-header-files',
         '--add-modules', 'java.instrument,datadog.smoketest.moduleapp',
-        "--module-path", jar.archiveFile.get().toString(), "--output", generatedImageDir
+        "--module-path", "${jdkModulesPath}:" + jar.archiveFile.get().toString(), "--output", generatedImageDir
     }
   }
 
