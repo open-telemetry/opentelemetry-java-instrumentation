@@ -12,14 +12,16 @@ jar {
   }
 }
 
-// This can be made more generic in java.gradle to handle the matrix of
-// java versions required and available for each project.
-// However since this project is the only one that requires Java 9,
-// it's much simpler to just special case it here
-// This finds at one version of java >= 9 and uses it to compile this project
+// If the current JDK version (the one running gradle) is < 9, we need to find a version >= 9
+// to compile this project.  java.gradle creates a map of java executables 
+// called "javaExecutableVersionCache" pulled from the environment.
+// This loops over the cache to find a usable jdk.
+// Since this project is the only one that requires a version above Java 8
+// it's special cased here instead of putting a generic version matcher in java.gradle
 if (JavaVersion.VERSION_1_9.compareTo(JavaVersion.current()) > 0) {
   def targetJavaHome
-
+  
+  // Find a compatible version in the cache
   ext.javaExecutableVersionCache.find { key, value ->
     if (JavaVersion.VERSION_1_9.compareTo(value) <= 0) {
       // JAVA_HOME/bin/java -> JAVA_HOME
@@ -31,6 +33,7 @@ if (JavaVersion.VERSION_1_9.compareTo(JavaVersion.current()) > 0) {
   }
 
   if (targetJavaHome != null) {
+    // if we found a compatible jdk, compile the src/main/java9 folder with it
     compileMain_java9Java {
       options.fork = true
       options.forkOptions.javaHome = targetJavaHome
@@ -44,12 +47,14 @@ if (JavaVersion.VERSION_1_9.compareTo(JavaVersion.current()) > 0) {
   }
 }
 
-// For each Test task, creates a jlink image using the specific JAVA_HOME/bin of the test
-// At the end, we should have 1 jlink image per JVM.  Each one used by a testXXXGenerated task
+// java.gradle generates a test task per jdk and assigns the test task its own java executable
+// For each Test task, this loop creates a jlink image using the test's executable
+// At the end, we have 1 jlink image per JVM: each one used by a testXXXGenerated task
 tasks.withType(Test).each {
   def javaExecutable = it.executable
   def javaVersion = getJavaExecutableVersion(javaExecutable)
 
+  // Only Java 9 and above have jlink
   if (JavaVersion.VERSION_1_9.compareTo(javaVersion) > 0) {
     return
   }
@@ -62,7 +67,8 @@ tasks.withType(Test).each {
 
   it.doFirst {
     delete generatedImageDir
-
+    
+    // Run the jlink command to create the image
     exec {
       commandLine jlinkExecutable, '--no-man-pages', '--no-header-files',
         '--add-modules', 'java.instrument,datadog.smoketest.moduleapp',
