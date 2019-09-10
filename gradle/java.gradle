@@ -59,7 +59,6 @@ java {
 
 [JavaCompile, ScalaCompile].each { type ->
   tasks.withType(type) {
-    onlyIf { JavaVersion.toVersion(sourceCompatibility).compareTo(JavaVersion.current()) <= 0 }
     doFirst {
       // We do this specifically for Java7 bytecode generation because we would like to be able to compile
       // with Java8+ compiler. This likely would require some modifications when we switch to java11 compiler.

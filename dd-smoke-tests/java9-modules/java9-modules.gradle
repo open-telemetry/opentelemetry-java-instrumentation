@@ -12,9 +12,40 @@ jar {
   }
 }
 
-/**
- * For each Test task, creates a jlink image using the java bin directory of the test
- */
+// This can be made more generic in java.gradle to handle the matrix of
+// java versions required and available for each project.
+// However since this project is the only one that requires Java 9,
+// it's much simpler to just special case it here
+// This finds at one version of java >= 9 and uses it to compile this project
+if (JavaVersion.VERSION_1_9.compareTo(JavaVersion.current()) > 0) {
+  def targetJavaHome
+
+  ext.javaExecutableVersionCache.find { key, value ->
+    if (JavaVersion.VERSION_1_9.compareTo(value) <= 0) {
+      // JAVA_HOME/bin/java -> JAVA_HOME
+      targetJavaHome = file(key).parentFile.parentFile
+      return true
+    }
+
+    return false
+  }
+
+  if (targetJavaHome != null) {
+    compileMain_java9Java {
+      options.fork = true
+      options.forkOptions.javaHome = targetJavaHome
+      options.compilerArgs = ['--module-path', classpath.asPath]
+      options.sourcepath = files(sourceSets.main_java9.java.srcDirs)
+    }
+  } else {
+    compileMain_java9Java {
+      enabled = false
+    }
+  }
+}
+
+// For each Test task, creates a jlink image using the specific JAVA_HOME/bin of the test
+// At the end, we should have 1 jlink image per JVM.  Each one used by a testXXXGenerated task
 tasks.withType(Test).each {
   def javaExecutable = it.executable
   def javaVersion = getJavaExecutableVersion(javaExecutable)
@@ -23,10 +54,13 @@ tasks.withType(Test).each {
     return
   }
 
+  // JAVA_HOME/bin/java -> JAVA_HOME/bin/jlink
   def jlinkExecutable = file(javaExecutable).parent + "/jlink"
   def generatedImageDir = "${buildDir}/${it.name}image"
-  
+
   it.doFirst {
+    delete generatedImageDir
+
     exec {
       commandLine jlinkExecutable, '--no-man-pages', '--no-header-files',
         '--add-modules', 'java.instrument,datadog.smoketest.moduleapp',
