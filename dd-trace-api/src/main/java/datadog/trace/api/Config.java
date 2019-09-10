@@ -44,7 +44,6 @@ public class Config {
 
   public static final String CONFIGURATION_FILE = "trace.config";
   public static final String SERVICE_NAME = "service.name";
-  public static final String SERVICE = "service";
   public static final String TRACE_ENABLED = "trace.enabled";
   public static final String INTEGRATIONS_ENABLED = "integrations.enabled";
   public static final String WRITER_TYPE = "writer.type";
@@ -90,6 +89,7 @@ public class Config {
 
   public static final String LOGS_INJECTION_ENABLED = "logs.injection";
 
+  public static final String SERVICE_TAG = "service";
   public static final String RUNTIME_ID_TAG = "runtime-id";
   public static final String LANGUAGE_TAG_KEY = "language";
   public static final String LANGUAGE_TAG_VALUE = "jvm";
@@ -471,7 +471,7 @@ public class Config {
     // service name set here instead of getRuntimeTags because apm already manages the service tag
     // and may chose to override it.
     // Additionally, infra/JMX metrics require `service` rather than APM's `service.name` tag
-    result.put(SERVICE, serviceName);
+    result.put(SERVICE_TAG, serviceName);
     return Collections.unmodifiableMap(result);
   }
 
