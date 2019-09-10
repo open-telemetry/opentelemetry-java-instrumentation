@@ -25,10 +25,10 @@ class SpringJpaTest extends AgentTestRunner {
     !repo.findAll().iterator().hasNext()
 
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 3) {
         span(0) {
           operationName "CrudRepository.findAll"
-          serviceName "hsqldb"
+          serviceName "spring-data"
           errored false
           tags {
             "$Tags.COMPONENT.key" "spring-data"
@@ -38,7 +38,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
         span(1) {
           operationName "SimpleJpaRepository.findAll"
-          serviceName "hsqldb"
+          serviceName "spring-data"
           childOf(span(0))
           errored false
           tags {
@@ -51,11 +51,6 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(1))
-        }
-        span(3) {
-          serviceName "hsqldb"
-          spanType "sql"
-          childOf(span(2))
         }
       }
     }
@@ -68,10 +63,10 @@ class SpringJpaTest extends AgentTestRunner {
     then:
     customer.id != null
     assertTraces(1) {
-      trace(0, 4) {
+      trace(0, 3) {
         span(0) {
           operationName "CrudRepository.save"
-          serviceName "hsqldb"
+          serviceName "spring-data"
           errored false
           tags {
             "$Tags.COMPONENT.key" "spring-data"
@@ -81,7 +76,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
         span(1) {
           operationName "SimpleJpaRepository.save"
-          serviceName "hsqldb"
+          serviceName "spring-data"
           childOf(span(0))
           errored false
           tags {
@@ -94,11 +89,6 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(1))
-        }
-        span(3) {
-          serviceName "hsqldb"
-          spanType "sql"
-          childOf(span(2))
         }
       }
     }
@@ -111,10 +101,10 @@ class SpringJpaTest extends AgentTestRunner {
     then:
     customer.id == savedId
     assertTraces(1) {
-      trace(0, 5) {
+      trace(0, 4) {
         span(0) {
           operationName "CrudRepository.save"
-          serviceName "hsqldb"
+          serviceName "spring-data"
           errored false
           tags {
             "$Tags.COMPONENT.key" "spring-data"
@@ -129,7 +119,7 @@ class SpringJpaTest extends AgentTestRunner {
         }
         span(2) {
           operationName "SimpleJpaRepository.save"
-          serviceName "hsqldb"
+          serviceName "spring-data"
           childOf(span(0))
           errored false
           tags {
@@ -143,11 +133,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanType "sql"
           childOf(span(2))
         }
-        span(4) {
-          serviceName "hsqldb"
-          spanType "sql"
-          childOf(span(3))
-        }
       }
     }
     TEST_WRITER.clear()
@@ -159,10 +144,10 @@ class SpringJpaTest extends AgentTestRunner {
     customer.id == savedId
     customer.firstName == "Bill"
     assertTraces(1) {
-      trace(0, 3) {
+      trace(0, 2) {
         span(0) {
           operationName "CustomerRepository.findByLastName"
-          serviceName "hsqldb"
+          serviceName "spring-data"
           errored false
           tags {
             "$Tags.COMPONENT.key" "spring-data"
@@ -175,11 +160,6 @@ class SpringJpaTest extends AgentTestRunner {
           spanType "sql"
           childOf(span(0))
         }
-        span(2) {
-          serviceName "hsqldb"
-          spanType "sql"
-          childOf(span(1))
-        }
       }
       TEST_WRITER.clear()
 
@@ -188,10 +168,10 @@ class SpringJpaTest extends AgentTestRunner {
 
       then:
       assertTraces(1) {
-        trace(0, 5) {
+        trace(0, 4) {
           span(0) {
             operationName "CrudRepository.delete"
-            serviceName "hsqldb"
+            serviceName "spring-data"
             errored false
             tags {
               "$Tags.COMPONENT.key" "spring-data"
@@ -206,7 +186,7 @@ class SpringJpaTest extends AgentTestRunner {
           }
           span(2) {
             operationName "SimpleJpaRepository.delete"
-            serviceName "hsqldb"
+            serviceName "spring-data"
             childOf(span(0))
             errored false
             tags {
@@ -219,11 +199,6 @@ class SpringJpaTest extends AgentTestRunner {
             serviceName "hsqldb"
             spanType "sql"
             childOf(span(2))
-          }
-          span(4) {
-            serviceName "hsqldb"
-            spanType "sql"
-            childOf(span(3))
           }
         }
       }
