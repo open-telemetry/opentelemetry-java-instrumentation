@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import datadog.opentracing.DDSpan;
 import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.writer.DDApi.ResponseListener;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -19,19 +20,19 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
   /** Key for setting the baseline rate */
   private static final String BASE_KEY = "service:,env:";
   /** Sampler to use if service+env is not in the map */
-  private RateSampler baseSampler = new RateSampler(1.0);
+  private volatile RateSampler baseSampler = new RateSampler(1.0);
 
-  private final Map<String, RateSampler> serviceRates = new HashMap<String, RateSampler>();
+  private volatile Map<String, RateSampler> serviceRates = Collections.emptyMap();
 
   @Override
-  public synchronized boolean sample(DDSpan span) {
+  public boolean sample(final DDSpan span) {
     // Priority sampling sends all traces to the core agent, including traces marked dropped.
     // This allows the core agent to collect stats on all traces.
     return true;
   }
 
   /** If span is a root span, set the span context samplingPriority to keep or drop */
-  public void initializeSamplingPriority(DDSpan span) {
+  public void initializeSamplingPriority(final DDSpan span) {
     if (span.isRootSpan()) {
       // Run the priority sampler on the new span
       setSamplingPriorityOnSpanContext(span);
@@ -42,14 +43,13 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
     }
   }
 
-  private synchronized void setSamplingPriorityOnSpanContext(DDSpan span) {
+  private void setSamplingPriorityOnSpanContext(final DDSpan span) {
     final String serviceName = span.getServiceName();
     final String env = getSpanEnv(span);
     final String key = "service:" + serviceName + ",env:" + env;
-    final RateSampler sampler;
-    if (serviceRates.containsKey(key)) {
-      sampler = serviceRates.get(key);
-    } else {
+
+    RateSampler sampler = serviceRates.get(key);
+    if (sampler == null) {
       sampler = baseSampler;
     }
     if (sampler.sample(span)) {
@@ -59,32 +59,31 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
     }
   }
 
-  private static String getSpanEnv(DDSpan span) {
+  private static String getSpanEnv(final DDSpan span) {
     return null == span.getTags().get("env") ? "" : String.valueOf(span.getTags().get("env"));
   }
 
   @Override
-  public void onResponse(String endpoint, JsonNode responseJson) {
-    JsonNode newServiceRates = responseJson.get("rate_by_service");
+  public void onResponse(final String endpoint, final JsonNode responseJson) {
+    final JsonNode newServiceRates = responseJson.get("rate_by_service");
     if (null != newServiceRates) {
       log.debug("Update service sampler rates: {} -> {}", endpoint, responseJson);
-      synchronized (this) {
-        serviceRates.clear();
-        Iterator<String> itr = newServiceRates.fieldNames();
-        while (itr.hasNext()) {
-          final String key = itr.next();
-          try {
-            final float val = Float.parseFloat(newServiceRates.get(key).toString());
-            if (BASE_KEY.equals(key)) {
-              baseSampler = new RateSampler(val);
-            } else {
-              serviceRates.put(key, new RateSampler(val));
-            }
-          } catch (NumberFormatException nfe) {
-            log.debug("Unable to parse new service rate {} -> {}", key, newServiceRates.get(key));
+      final Map<String, RateSampler> updatedServiceRates = new HashMap<>();
+      final Iterator<String> itr = newServiceRates.fieldNames();
+      while (itr.hasNext()) {
+        final String key = itr.next();
+        try {
+          final float val = Float.parseFloat(newServiceRates.get(key).toString());
+          if (BASE_KEY.equals(key)) {
+            baseSampler = new RateSampler(val);
+          } else {
+            updatedServiceRates.put(key, new RateSampler(val));
           }
+        } catch (final NumberFormatException nfe) {
+          log.debug("Unable to parse new service rate {} -> {}", key, newServiceRates.get(key));
         }
       }
+      serviceRates = Collections.unmodifiableMap(updatedServiceRates);
     }
   }
 
@@ -110,7 +109,7 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
      */
     public RateSampler(double sampleRate) {
 
-      if (sampleRate <= 0) {
+      if (sampleRate < 0) {
         sampleRate = 1;
         log.error("SampleRate is negative or null, disabling the sampler");
       } else if (sampleRate > 1) {
@@ -123,13 +122,13 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
 
     @Override
     public boolean doSample(final DDSpan span) {
-      final boolean sample = Math.random() <= this.sampleRate;
+      final boolean sample = Math.random() <= sampleRate;
       log.debug("{} - Span is sampled: {}", span, sample);
       return sample;
     }
 
     public double getSampleRate() {
-      return this.sampleRate;
+      return sampleRate;
     }
 
     @Override
