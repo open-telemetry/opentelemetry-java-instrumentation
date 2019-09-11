@@ -22,7 +22,7 @@ class SpringJpaTest extends AgentTestRunner {
 
     expect:
     customer.id == null
-    !repo.findAll().iterator().hasNext()
+    !repo.findAll().iterator().hasNext() // select
 
     assertTraces(1) {
       trace(0, 3) {
@@ -47,7 +47,7 @@ class SpringJpaTest extends AgentTestRunner {
             defaultTags()
           }
         }
-        span(2) {
+        span(2) { // select
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(1))
@@ -57,7 +57,7 @@ class SpringJpaTest extends AgentTestRunner {
     TEST_WRITER.clear()
 
     when:
-    repo.save(customer)
+    repo.save(customer) // insert
     def savedId = customer.id
 
     then:
@@ -85,11 +85,13 @@ class SpringJpaTest extends AgentTestRunner {
             defaultTags()
           }
         }
-        span(2) {
+        span(2) { // insert
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(1))
         }
+
+        // commit?
       }
     }
     TEST_WRITER.clear()
@@ -112,7 +114,7 @@ class SpringJpaTest extends AgentTestRunner {
             defaultTags()
           }
         }
-        span(1) {
+        span(1) { // update
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
@@ -128,7 +130,7 @@ class SpringJpaTest extends AgentTestRunner {
             defaultTags()
           }
         }
-        span(3) {
+        span(3) { // select
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(2))
@@ -138,7 +140,7 @@ class SpringJpaTest extends AgentTestRunner {
     TEST_WRITER.clear()
 
     when:
-    customer = repo.findByLastName("Anonymous")[0]
+    customer = repo.findByLastName("Anonymous")[0] // select
 
     then:
     customer.id == savedId
@@ -155,7 +157,7 @@ class SpringJpaTest extends AgentTestRunner {
             defaultTags()
           }
         }
-        span(1) {
+        span(1) { // select
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
@@ -164,7 +166,7 @@ class SpringJpaTest extends AgentTestRunner {
       TEST_WRITER.clear()
 
       when:
-      repo.delete(customer)
+      repo.delete(customer) //delete
 
       then:
       assertTraces(1) {
@@ -179,7 +181,7 @@ class SpringJpaTest extends AgentTestRunner {
               defaultTags()
             }
           }
-          span(1) {
+          span(1) { // delete
             serviceName "hsqldb"
             spanType "sql"
             childOf(span(0))
@@ -195,7 +197,7 @@ class SpringJpaTest extends AgentTestRunner {
               defaultTags()
             }
           }
-          span(3) {
+          span(3) { // select
             serviceName "hsqldb"
             spanType "sql"
             childOf(span(2))
