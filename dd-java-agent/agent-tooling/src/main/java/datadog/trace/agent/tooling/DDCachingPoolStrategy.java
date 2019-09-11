@@ -1,6 +1,7 @@
 package datadog.trace.agent.tooling;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER;
+import static datadog.trace.agent.tooling.ClassLoaderMatcher.skipClassLoader;
 import static net.bytebuddy.agent.builder.AgentBuilder.PoolStrategy;
 
 import com.google.common.cache.Cache;
@@ -45,7 +46,14 @@ public class DDCachingPoolStrategy implements PoolStrategy {
       synchronized (key) {
         cache = typePoolCache.get(key);
         if (null == cache) {
-          cache = EvictingCacheProvider.withObjectType(cleaner, 1, TimeUnit.MINUTES);
+          if (skipClassLoader().matches(classLoader)) {
+            // Don't bother creating a cache for a classloader that won't match.
+            // (avoiding a lot of DelegatingClassLoader instances)
+            // This is primarily an optimization.
+            cache = TypePool.CacheProvider.NoOp.INSTANCE;
+          } else {
+            cache = EvictingCacheProvider.withObjectType(cleaner, 1, TimeUnit.MINUTES);
+          }
           typePoolCache.put(key, cache);
         }
       }
@@ -64,7 +72,7 @@ public class DDCachingPoolStrategy implements PoolStrategy {
         final Cleaner cleaner, final long expireDuration, final TimeUnit unit) {
       cache =
           CacheBuilder.newBuilder()
-              .initialCapacity(1000)
+              .initialCapacity(100) // Per classloader, so we want a small default.
               .maximumSize(10000)
               .expireAfterAccess(expireDuration, unit)
               .build();
