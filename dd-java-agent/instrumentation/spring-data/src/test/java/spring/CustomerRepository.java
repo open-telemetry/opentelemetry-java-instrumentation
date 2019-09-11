@@ -1,4 +1,3 @@
-// Modified by SignalFx
 package spring;
 
 import java.util.List;

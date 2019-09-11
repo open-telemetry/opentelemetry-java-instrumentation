@@ -1,4 +1,3 @@
-// Modifed by SignalFx
 package datadog.trace.instrumentation.springdata;
 
 import datadog.trace.agent.decorator.OrmClientDecorator;

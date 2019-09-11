@@ -1,4 +1,3 @@
-// Modifed by SignalFx
 package spring;
 
 import javax.sql.DataSource;

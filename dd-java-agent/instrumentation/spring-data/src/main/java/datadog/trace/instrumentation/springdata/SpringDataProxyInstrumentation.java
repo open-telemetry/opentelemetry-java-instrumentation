@@ -1,4 +1,3 @@
-// Modified by SignalFx
 package datadog.trace.instrumentation.springdata;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
@@ -67,7 +66,7 @@ public final class SpringDataProxyInstrumentation extends Instrumenter.Default {
   public static class ProxyAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
-        @Advice.Argument(value = 1, readOnly = false) Method invokedMethod) {
+        @Advice.Argument(value = 1, readOnly = false) final Method invokedMethod) {
       final Class<?> clazz = invokedMethod.getDeclaringClass();
       // getting a proxy's target during type matching doesn't appear possible,
       // so we manually check the target method's class here.  As more spring functionality is
@@ -77,7 +76,7 @@ public final class SpringDataProxyInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      boolean isPublic = Modifier.isPublic(invokedMethod.getModifiers());
+      final boolean isPublic = Modifier.isPublic(invokedMethod.getModifiers());
       if (!isPublic) {
         return null;
       }

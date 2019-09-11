@@ -1,4 +1,3 @@
-// Modified by SignalFx
 package datadog.trace.instrumentation.springdata;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
