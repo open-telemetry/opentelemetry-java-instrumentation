@@ -42,6 +42,8 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
       cluster.openBucket(bucketSettings.name(), bucketSettings.password()).subscribe({ bkt ->
         bkt.upsert(JsonDocument.create("helloworld", content)).subscribe({ result -> inserted.set(result) })
       })
+
+      blockUntilChildSpansFinished(2) // Improve span ordering consistency
     }
 
     then:
@@ -51,8 +53,8 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
 
-        assertCouchbaseCall(it, 0, "Cluster.openBucket", null, span(0))
-        assertCouchbaseCall(it, 0, "Bucket.upsert", bucketSettings.name(), span(0))
+        assertCouchbaseCall(it, 2, "Cluster.openBucket", null, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketSettings.name(), span(2))
       }
     }
 
@@ -81,6 +83,8 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
               })
           })
       })
+
+      blockUntilChildSpansFinished(3) // Improve span ordering consistency
     }
 
     // Create a JSON document and store it with the ID "helloworld"
@@ -91,10 +95,10 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     assertTraces(1) {
       trace(0, 4) {
         basicSpan(it, 0, "someTrace")
-        
-        assertCouchbaseCall(it, 0, "Cluster.openBucket", null, span(0))
-        assertCouchbaseCall(it, 0, "Bucket.upsert", bucketSettings.name(), span(0))
-        assertCouchbaseCall(it, 0, "Bucket.get", bucketSettings.name(), span(0))
+
+        assertCouchbaseCall(it, 3, "Cluster.openBucket", null, span(0))
+        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(3))
+        assertCouchbaseCall(it, 1, "Bucket.get", bucketSettings.name(), span(2))
       }
     }
 
@@ -121,6 +125,8 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
             .single()
             .subscribe({ row -> queryResult.set(row.value()) })
       })
+
+      blockUntilChildSpansFinished(2) // Improve span ordering consistency
     }
 
     then:
@@ -130,8 +136,8 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
 
-        assertCouchbaseCall(it, 0, "Cluster.openBucket", null, span(0))
-        assertCouchbaseCall(it, 0, "Bucket.query", bucketSettings.name(), span(0))
+        assertCouchbaseCall(it, 2, "Cluster.openBucket", null, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.query", bucketSettings.name(), span(2))
       }
     }
 

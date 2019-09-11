@@ -44,8 +44,10 @@ muzzle {
 }
 
 dependencies {
+  compile project(':dd-java-agent:instrumentation:rxjava-1')
+  
   compileOnly group: 'com.couchbase.client', name: 'java-client', version: '2.0.0'
-
+  
   testCompile group: 'com.couchbase.mock', name: 'CouchbaseMock', version: '1.5.19'
 
   testCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '2.0.0.RELEASE'

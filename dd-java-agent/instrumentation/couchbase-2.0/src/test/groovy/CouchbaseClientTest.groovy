@@ -4,6 +4,9 @@ import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.query.N1qlQuery
 import util.AbstractCouchbaseTest
 
+import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+
 class CouchbaseClientTest extends AbstractCouchbaseTest {
 
   def "test hasBucket #type"() {
@@ -46,6 +49,42 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
       }
       trace(1, 1) {
         assertCouchbaseCall(it, 0, "Bucket.get", bucketSettings.name())
+      }
+    }
+
+    where:
+    manager          | cluster          | bucketSettings
+    couchbaseManager | couchbaseCluster | bucketCouchbase
+    memcacheManager  | memcacheCluster  | bucketMemcache
+
+    type = bucketSettings.type().name()
+  }
+
+  def "test upsert and get #type under trace"() {
+    when:
+    // Connect to the bucket and open it
+    Bucket bkt = cluster.openBucket(bucketSettings.name(), bucketSettings.password())
+
+    // Create a JSON document and store it with the ID "helloworld"
+    JsonObject content = JsonObject.create().put("hello", "world")
+
+    def inserted
+    def found
+
+    runUnderTrace("someTrace") {
+      inserted = bkt.upsert(JsonDocument.create("helloworld", content))
+      found = bkt.get("helloworld")
+    }
+
+    then:
+    found == inserted
+    found.content().getString("hello") == "world"
+
+    assertTraces(1) {
+      trace(0, 3) {
+        basicSpan(it, 0, "someTrace")
+        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(0))
+        assertCouchbaseCall(it, 1, "Bucket.get", bucketSettings.name(), span(0))
       }
     }
 
