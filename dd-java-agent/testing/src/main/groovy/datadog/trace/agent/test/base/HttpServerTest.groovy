@@ -106,9 +106,12 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   enum ServerEndpoint {
     SUCCESS("success", 200, "success"),
     REDIRECT("redirect", 302, "/redirected"),
-    ERROR("error", 500, "controller error"),
+    ERROR("error-status", 500, "controller error"), // "error" is a special path for some frameworks
     EXCEPTION("exception", 500, "controller exception"),
     NOT_FOUND("notFound", 404, "not found"),
+
+    // TODO: add tests for the following cases:
+    PATH_PARAM("path/123/param", 200, "123"),
     AUTH_REQUIRED("authRequired", 200, null),
 
     private final String path
@@ -244,7 +247,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
       if (hasHandlerSpan()) {
         trace(0, 3) {
           serverSpan(it, 0, null, null, method, REDIRECT)
-          handlerSpan(it, 1, span(0))
+          handlerSpan(it, 1, span(0), REDIRECT)
           controllerSpan(it, 2, span(1))
         }
       } else {
