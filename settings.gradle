@@ -1,16 +1,12 @@
 rootProject.name = 'dd-trace-java'
 
-// core tracing projects
+// external apis
 include ':dd-trace-api'
-include ':dd-java-agent:agent-bootstrap'
-include ':dd-trace'
-include ':dd-trace-ext'
-
-// implements for third-party tracing libraries
 include ':dd-trace-ot'
 
 // agent projects
 include ':dd-java-agent'
+include ':dd-java-agent:agent-bootstrap'
 include ':dd-java-agent:agent-tooling'
 include ':dd-java-agent:agent-jmxfetch'
 
