@@ -1,8 +1,12 @@
+import com.couchbase.client.java.AsyncCluster
+import com.couchbase.client.java.CouchbaseAsyncCluster
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.query.N1qlQuery
 import spock.util.concurrent.BlockingVariable
 import util.AbstractCouchbaseTest
+
+import java.util.concurrent.TimeUnit
 
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
@@ -13,21 +17,29 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     def hasBucket = new BlockingVariable<Boolean>()
 
     when:
-    manager.hasBucket(bucketSettings.name()).subscribe({ result -> hasBucket.set(result) })
+    cluster.openBucket(bucketSettings.name(), bucketSettings.password()).subscribe({ bkt ->
+      manager.hasBucket(bucketSettings.name()).subscribe({ result -> hasBucket.set(result) })
+    })
 
     then:
     assert hasBucket.get()
-    assertTraces(1) {
-      trace(0, 1) {
-        assertCouchbaseCall(it, 0, "ClusterManager.hasBucket")
+    sortAndAssertTraces(1) {
+      trace(0, 2) {
+        assertCouchbaseCall(it, 0, "Cluster.openBucket", null)
+        assertCouchbaseCall(it, 1, "ClusterManager.hasBucket", null, span(0))
       }
     }
 
-    where:
-    manager               | cluster               | bucketSettings
-    couchbaseAsyncManager | couchbaseAsyncCluster | bucketCouchbase
-    memcacheAsyncManager  | memcacheAsyncCluster  | bucketMemcache
+    cleanup:
+    cluster?.disconnect()?.timeout(5, TimeUnit.SECONDS)?.toBlocking()?.single()
 
+    where:
+    environment          | bucketSettings
+    couchbaseEnvironment | bucketCouchbase
+    memcacheEnvironment  | bucketMemcache
+
+    cluster = CouchbaseAsyncCluster.create(environment, Arrays.asList("127.0.0.1"))
+    manager = cluster.clusterManager(USERNAME, PASSWORD).toBlocking().single()
     type = bucketSettings.type().name()
   }
 
@@ -49,7 +61,7 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     then:
     inserted.get().content().getString("hello") == "world"
 
-    assertTraces(1) {
+    sortAndAssertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
 
@@ -58,11 +70,15 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
       }
     }
 
-    where:
-    manager               | cluster               | bucketSettings
-    couchbaseAsyncManager | couchbaseAsyncCluster | bucketCouchbase
-    memcacheAsyncManager  | memcacheAsyncCluster  | bucketMemcache
+    cleanup:
+    cluster?.disconnect()?.timeout(5, TimeUnit.SECONDS)?.toBlocking()?.single()
 
+    where:
+    environment          | bucketSettings
+    couchbaseEnvironment | bucketCouchbase
+    memcacheEnvironment  | bucketMemcache
+
+    cluster = CouchbaseAsyncCluster.create(environment, Arrays.asList("127.0.0.1"))
     type = bucketSettings.type().name()
   }
 
@@ -92,7 +108,7 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     found.get() == inserted.get()
     found.get().content().getString("hello") == "world"
 
-    assertTraces(1) {
+    sortAndAssertTraces(1) {
       trace(0, 4) {
         basicSpan(it, 0, "someTrace")
 
@@ -102,23 +118,29 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
       }
     }
 
-    where:
-    manager               | cluster               | bucketSettings
-    couchbaseAsyncManager | couchbaseAsyncCluster | bucketCouchbase
-    memcacheAsyncManager  | memcacheAsyncCluster  | bucketMemcache
+    cleanup:
+    cluster?.disconnect()?.timeout(5, TimeUnit.SECONDS)?.toBlocking()?.single()
 
+    where:
+    environment          | bucketSettings
+    couchbaseEnvironment | bucketCouchbase
+    memcacheEnvironment  | bucketMemcache
+
+    cluster = CouchbaseAsyncCluster.create(environment, Arrays.asList("127.0.0.1"))
     type = bucketSettings.type().name()
   }
 
   def "test query"() {
     setup:
+    // Only couchbase buckets support queries.
+    AsyncCluster cluster = CouchbaseAsyncCluster.create(couchbaseEnvironment, Arrays.asList("127.0.0.1"))
     def queryResult = new BlockingVariable<JsonObject>()
 
     when:
     // Mock expects this specific query.
     // See com.couchbase.mock.http.query.QueryServer.handleString.
     runUnderTrace("someTrace") {
-      cluster.openBucket(bucketSettings.name(), bucketSettings.password()).subscribe({
+      cluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password()).subscribe({
         bkt ->
           bkt.query(N1qlQuery.simple("SELECT mockrow"))
             .flatMap({ query -> query.rows() })
@@ -132,20 +154,16 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     then:
     queryResult.get().get("row") == "value"
 
-    assertTraces(1) {
+    sortAndAssertTraces(1) {
       trace(0, 3) {
         basicSpan(it, 0, "someTrace")
 
         assertCouchbaseCall(it, 2, "Cluster.openBucket", null, span(0))
-        assertCouchbaseCall(it, 1, "Bucket.query", bucketSettings.name(), span(2))
+        assertCouchbaseCall(it, 1, "Bucket.query", bucketCouchbase.name(), span(2))
       }
     }
 
-    where:
-    manager               | cluster               | bucketSettings
-    couchbaseAsyncManager | couchbaseAsyncCluster | bucketCouchbase
-    // Only couchbase buckets support queries.
-
-    type = bucketSettings.type().name()
+    cleanup:
+    cluster?.disconnect()?.timeout(5, TimeUnit.SECONDS)?.toBlocking()?.single()
   }
 }

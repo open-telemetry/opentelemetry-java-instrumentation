@@ -2,12 +2,8 @@ package util
 
 import com.couchbase.client.core.metrics.DefaultLatencyMetricsCollectorConfig
 import com.couchbase.client.core.metrics.DefaultMetricsCollectorConfig
-import com.couchbase.client.java.CouchbaseAsyncCluster
-import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.bucket.BucketType
-import com.couchbase.client.java.cluster.AsyncClusterManager
 import com.couchbase.client.java.cluster.BucketSettings
-import com.couchbase.client.java.cluster.ClusterManager
 import com.couchbase.client.java.cluster.DefaultBucketSettings
 import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment
@@ -17,20 +13,22 @@ import com.couchbase.mock.CouchbaseMock
 import com.couchbase.mock.http.query.QueryServer
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
 import io.opentracing.tag.Tags
 import spock.lang.Shared
 
-import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 
 abstract class AbstractCouchbaseTest extends AgentTestRunner {
 
-  private static final USERNAME = "Administrator"
-  private static final PASSWORD = "password"
+  static final USERNAME = "Administrator"
+  static final PASSWORD = "password"
 
   @Shared
   private int port = PortUtils.randomOpenPort()
@@ -58,53 +56,23 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
 
   @Shared
   CouchbaseMock mock
-  @Shared
-  protected CouchbaseCluster couchbaseCluster
-  @Shared
-  protected CouchbaseAsyncCluster couchbaseAsyncCluster
-  @Shared
-  protected CouchbaseCluster memcacheCluster
-  @Shared
-  protected CouchbaseAsyncCluster memcacheAsyncCluster
+
   @Shared
   protected CouchbaseEnvironment couchbaseEnvironment
   @Shared
   protected CouchbaseEnvironment memcacheEnvironment
-  @Shared
-  protected ClusterManager couchbaseManager
-  @Shared
-  protected AsyncClusterManager couchbaseAsyncManager
-  @Shared
-  protected ClusterManager memcacheManager
-  @Shared
-  protected AsyncClusterManager memcacheAsyncManager
 
   def setupSpec() {
-
     mock = new CouchbaseMock("127.0.0.1", port, 1, 1)
     mock.httpServer.register("/query", new QueryServer())
     mock.start()
     println "CouchbaseMock listening on localhost:$port"
 
     mock.createBucket(convert(bucketCouchbase))
-
-    couchbaseEnvironment = envBuilder(bucketCouchbase).build()
-    couchbaseCluster = CouchbaseCluster.create(couchbaseEnvironment, Arrays.asList("127.0.0.1"))
-    couchbaseAsyncCluster = CouchbaseAsyncCluster.create(couchbaseEnvironment, Arrays.asList("127.0.0.1"))
-    couchbaseManager = couchbaseCluster.clusterManager(USERNAME, PASSWORD)
-    couchbaseAsyncManager = couchbaseAsyncCluster.clusterManager(USERNAME, PASSWORD).toBlocking().single()
-
     mock.createBucket(convert(bucketMemcache))
 
+    couchbaseEnvironment = envBuilder(bucketCouchbase).build()
     memcacheEnvironment = envBuilder(bucketMemcache).build()
-    memcacheCluster = CouchbaseCluster.create(memcacheEnvironment, Arrays.asList("127.0.0.1"))
-    memcacheAsyncCluster = CouchbaseAsyncCluster.create(memcacheEnvironment, Arrays.asList("127.0.0.1"))
-    memcacheManager = memcacheCluster.clusterManager(USERNAME, PASSWORD)
-    memcacheAsyncManager = memcacheAsyncCluster.clusterManager(USERNAME, PASSWORD).toBlocking().single()
-
-    // Cache buckets:
-    couchbaseCluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password())
-    memcacheCluster.openBucket(bucketMemcache.name(), bucketMemcache.password())
 
     // This setting should have no effect since decorator returns null for the instance.
     System.setProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
@@ -121,17 +89,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
   }
 
   def cleanupSpec() {
-    try {
-      couchbaseCluster?.disconnect()
-    } catch (RejectedExecutionException e) {
-      // already closed by a test?
-    }
-    try {
-      memcacheCluster?.disconnect()
-    } catch (RejectedExecutionException e) {
-      // already closed by a test?
-    }
-
     mock?.stop()
 
     System.clearProperty(Config.PREFIX + Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE)
@@ -157,6 +114,33 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       .searchTimeout(timeout)
       .analyticsTimeout(timeout)
       .socketConnectTimeout(timeout.intValue())
+  }
+
+  void sortAndAssertTraces(
+    final int size,
+    @ClosureParams(value = SimpleType, options = "datadog.trace.agent.test.asserts.ListWriterAssert")
+    @DelegatesTo(value = ListWriterAssert, strategy = Closure.DELEGATE_FIRST)
+    final Closure spec) {
+
+    TEST_WRITER.waitForTraces(size)
+
+    TEST_WRITER.each {
+      it.sort({
+        a, b ->
+          boolean aIsCouchbaseOperation = a.operationName == "couchbase.call"
+          boolean bIsCouchbaseOperation = b.operationName == "couchbase.call"
+
+          if (aIsCouchbaseOperation && !bIsCouchbaseOperation) {
+            return 1
+          } else if (!aIsCouchbaseOperation && bIsCouchbaseOperation) {
+            return -1
+          }
+
+          return a.resourceName.compareTo(b.resourceName)
+      })
+    }
+
+    assertTraces(size, spec)
   }
 
   void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object parentSpan = null) {

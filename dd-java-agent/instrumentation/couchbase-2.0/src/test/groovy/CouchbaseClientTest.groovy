@@ -1,4 +1,6 @@
 import com.couchbase.client.java.Bucket
+import com.couchbase.client.java.Cluster
+import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
 import com.couchbase.client.java.query.N1qlQuery
@@ -8,24 +10,28 @@ import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class CouchbaseClientTest extends AbstractCouchbaseTest {
-
   def "test hasBucket #type"() {
     when:
     def hasBucket = manager.hasBucket(bucketSettings.name())
 
     then:
     assert hasBucket
-    assertTraces(1) {
+    sortAndAssertTraces(1) {
       trace(0, 1) {
         assertCouchbaseCall(it, 0, "ClusterManager.hasBucket")
       }
     }
 
-    where:
-    manager          | cluster          | bucketSettings
-    couchbaseManager | couchbaseCluster | bucketCouchbase
-    memcacheManager  | memcacheCluster  | bucketMemcache
+    cleanup:
+    cluster?.disconnect()
 
+    where:
+    environment          | bucketSettings
+    couchbaseEnvironment | bucketCouchbase
+    memcacheEnvironment  | bucketMemcache
+
+    cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
+    manager = cluster.clusterManager(USERNAME, PASSWORD)
     type = bucketSettings.type().name()
   }
 
@@ -43,20 +49,27 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     found == inserted
     found.content().getString("hello") == "world"
 
-    assertTraces(2) {
+    sortAndAssertTraces(3) {
       trace(0, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.upsert", bucketSettings.name())
+        assertCouchbaseCall(it, 0, "Cluster.openBucket")
       }
       trace(1, 1) {
+        assertCouchbaseCall(it, 0, "Bucket.upsert", bucketSettings.name())
+      }
+      trace(2, 1) {
         assertCouchbaseCall(it, 0, "Bucket.get", bucketSettings.name())
       }
     }
 
-    where:
-    manager          | cluster          | bucketSettings
-    couchbaseManager | couchbaseCluster | bucketCouchbase
-    memcacheManager  | memcacheCluster  | bucketMemcache
+    cleanup:
+    cluster?.disconnect()
 
+    where:
+    environment          | bucketSettings
+    couchbaseEnvironment | bucketCouchbase
+    memcacheEnvironment  | bucketMemcache
+
+    cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
     type = bucketSettings.type().name()
   }
 
@@ -74,31 +87,42 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     runUnderTrace("someTrace") {
       inserted = bkt.upsert(JsonDocument.create("helloworld", content))
       found = bkt.get("helloworld")
+
+      blockUntilChildSpansFinished(2)
     }
 
     then:
     found == inserted
     found.content().getString("hello") == "world"
 
-    assertTraces(1) {
-      trace(0, 3) {
+    sortAndAssertTraces(2) {
+      trace(0, 1) {
+        assertCouchbaseCall(it, 0, "Cluster.openBucket")
+      }
+      trace(1, 3) {
         basicSpan(it, 0, "someTrace")
         assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(0))
         assertCouchbaseCall(it, 1, "Bucket.get", bucketSettings.name(), span(0))
       }
     }
 
-    where:
-    manager          | cluster          | bucketSettings
-    couchbaseManager | couchbaseCluster | bucketCouchbase
-    memcacheManager  | memcacheCluster  | bucketMemcache
+    cleanup:
+    cluster?.disconnect()
 
+    where:
+    environment          | bucketSettings
+    couchbaseEnvironment | bucketCouchbase
+    memcacheEnvironment  | bucketMemcache
+
+    cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
     type = bucketSettings.type().name()
   }
-
+  
   def "test query"() {
     setup:
-    Bucket bkt = cluster.openBucket(bucketSettings.name(), bucketSettings.password())
+    // Only couchbase buckets support queries.
+    Cluster cluster = CouchbaseCluster.create(couchbaseEnvironment, Arrays.asList("127.0.0.1"))
+    Bucket bkt = cluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password())
 
     when:
     // Mock expects this specific query.
@@ -111,17 +135,16 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     result.first().value().get("row") == "value"
 
     and:
-    assertTraces(1) {
+    sortAndAssertTraces(2) {
       trace(0, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.query", bucketSettings.name())
+        assertCouchbaseCall(it, 0, "Cluster.openBucket")
+      }
+      trace(1, 1) {
+        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name())
       }
     }
 
-    where:
-    manager          | cluster          | bucketSettings
-    couchbaseManager | couchbaseCluster | bucketCouchbase
-    // Only couchbase buckets support queries.
-
-    type = bucketSettings.type().name()
+    cleanup:
+    cluster?.disconnect()
   }
 }

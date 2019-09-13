@@ -1,9 +1,9 @@
 package springdata
 
+import com.couchbase.client.java.Cluster
+import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.view.DefaultView
 import com.couchbase.client.java.view.DesignDocument
-import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.data.repository.CrudRepository
@@ -31,20 +31,21 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
   DocRepository repo
 
   def setupSpec() {
+    Cluster couchbaseCluster = CouchbaseCluster.create(memcacheEnvironment, Arrays.asList("127.0.0.1"))
 
     // Create view for SpringRepository's findAll()
     couchbaseCluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password()).bucketManager()
       .insertDesignDocument(
-      DesignDocument.create("doc", Collections.singletonList(DefaultView.create("all",
-        '''
+        DesignDocument.create("doc", Collections.singletonList(DefaultView.create("all",
+          '''
           function (doc, meta) {
              if (doc._class == "springdata.Doc") {
                emit(meta.id, null);
              }
           }
         '''.stripIndent()
-      )))
-    )
+        )))
+      )
     CouchbaseConfig.setEnvironment(couchbaseEnvironment)
     CouchbaseConfig.setBucketSettings(bucketCouchbase)
 
@@ -75,21 +76,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     and:
     assertTraces(1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.query"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name())
       }
     }
 
@@ -107,21 +94,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     and:
     assertTraces(1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.upsert"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Bucket.upsert", bucketCouchbase.name())
       }
     }
     TEST_WRITER.clear()
@@ -132,21 +105,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     and:
     assertTraces(1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.get"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Bucket.get", bucketCouchbase.name())
       }
     }
     TEST_WRITER.clear()
@@ -160,55 +119,13 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
 
     assertTraces(3) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.upsert"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Bucket.upsert", bucketCouchbase.name())
       }
       trace(1, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.query"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name())
       }
       trace(2, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.get"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Bucket.get", bucketCouchbase.name())
       }
     }
     TEST_WRITER.clear()
@@ -222,38 +139,10 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     and:
     assertTraces(2) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.remove"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Bucket.remove", bucketCouchbase.name())
       }
       trace(1, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.query"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name())
       }
     }
   }

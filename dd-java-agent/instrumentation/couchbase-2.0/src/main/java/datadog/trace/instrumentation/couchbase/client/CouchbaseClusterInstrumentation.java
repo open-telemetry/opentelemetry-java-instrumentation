@@ -53,7 +53,7 @@ public class CouchbaseClusterInstrumentation extends Instrumenter.Default {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod().and(isPublic()).and(returns(named("rx.Observable"))),
+        isMethod().and(isPublic()).and(returns(named("rx.Observable"))).and(not(named("core"))),
         CouchbaseClientAdvice.class.getName());
   }
 
