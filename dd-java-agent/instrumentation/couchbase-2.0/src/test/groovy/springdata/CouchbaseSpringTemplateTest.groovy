@@ -4,11 +4,10 @@ import com.couchbase.client.java.Bucket
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.cluster.ClusterManager
+import com.couchbase.client.java.env.CouchbaseEnvironment
 import org.springframework.data.couchbase.core.CouchbaseTemplate
 import spock.lang.Shared
 import util.AbstractCouchbaseTest
-
-import java.util.concurrent.TimeUnit
 
 class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
@@ -20,8 +19,16 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
   @Shared
   Cluster memcacheCluster
+  
+  @Shared
+  protected CouchbaseEnvironment couchbaseEnvironment
+  @Shared
+  protected CouchbaseEnvironment memcacheEnvironment
 
   def setupSpec() {
+    couchbaseEnvironment = envBuilder(bucketCouchbase).build()
+    memcacheEnvironment = envBuilder(bucketMemcache).build()
+
     couchbaseCluster = CouchbaseCluster.create(couchbaseEnvironment, Arrays.asList("127.0.0.1"))
     memcacheCluster = CouchbaseCluster.create(memcacheEnvironment, Arrays.asList("127.0.0.1"))
     ClusterManager couchbaseManager = couchbaseCluster.clusterManager(USERNAME, PASSWORD)
@@ -35,8 +42,10 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
   }
 
   def cleanupSpec() {
-    couchbaseCluster?.disconnect(5, TimeUnit.SECONDS)
-    memcacheCluster?.disconnect(5, TimeUnit.SECONDS)
+    couchbaseCluster?.disconnect()
+    memcacheCluster?.disconnect()
+    couchbaseEnvironment.shutdown()
+    memcacheEnvironment.shutdown()
   }
 
   def "test write #name"() {

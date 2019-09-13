@@ -2,6 +2,7 @@ package springdata
 
 import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.CouchbaseCluster
+import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.view.DefaultView
 import com.couchbase.client.java.view.DesignDocument
 import org.springframework.context.ConfigurableApplicationContext
@@ -31,7 +32,8 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
   DocRepository repo
 
   def setupSpec() {
-    Cluster couchbaseCluster = CouchbaseCluster.create(memcacheEnvironment, Arrays.asList("127.0.0.1"))
+    CouchbaseEnvironment environment = envBuilder(bucketCouchbase).build()
+    Cluster couchbaseCluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
 
     // Create view for SpringRepository's findAll()
     couchbaseCluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password()).bucketManager()
@@ -46,7 +48,7 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
         '''.stripIndent()
         )))
       )
-    CouchbaseConfig.setEnvironment(couchbaseEnvironment)
+    CouchbaseConfig.setEnvironment(environment)
     CouchbaseConfig.setBucketSettings(bucketCouchbase)
 
     // Close all buckets and disconnect

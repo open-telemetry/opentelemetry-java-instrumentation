@@ -3,6 +3,7 @@ import com.couchbase.client.java.Cluster
 import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
+import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.query.N1qlQuery
 import util.AbstractCouchbaseTest
 
@@ -24,12 +25,12 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
 
     cleanup:
     cluster?.disconnect()
+    environment.shutdown()
 
     where:
-    environment          | bucketSettings
-    couchbaseEnvironment | bucketCouchbase
-    memcacheEnvironment  | bucketMemcache
+    bucketSettings << [bucketCouchbase, bucketMemcache]
 
+    environment = envBuilder(bucketSettings).build()
     cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
     manager = cluster.clusterManager(USERNAME, PASSWORD)
     type = bucketSettings.type().name()
@@ -63,12 +64,12 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
 
     cleanup:
     cluster?.disconnect()
+    environment.shutdown()
 
     where:
-    environment          | bucketSettings
-    couchbaseEnvironment | bucketCouchbase
-    memcacheEnvironment  | bucketMemcache
+    bucketSettings << [bucketCouchbase, bucketMemcache]
 
+    environment = envBuilder(bucketSettings).build()
     cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
     type = bucketSettings.type().name()
   }
@@ -108,20 +109,21 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
 
     cleanup:
     cluster?.disconnect()
+    environment.shutdown()
 
     where:
-    environment          | bucketSettings
-    couchbaseEnvironment | bucketCouchbase
-    memcacheEnvironment  | bucketMemcache
+    bucketSettings << [bucketCouchbase, bucketMemcache]
 
+    environment = envBuilder(bucketSettings).build()
     cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
     type = bucketSettings.type().name()
   }
-  
+
   def "test query"() {
     setup:
     // Only couchbase buckets support queries.
-    Cluster cluster = CouchbaseCluster.create(couchbaseEnvironment, Arrays.asList("127.0.0.1"))
+    CouchbaseEnvironment environment = envBuilder(bucketCouchbase).build()
+    Cluster cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
     Bucket bkt = cluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password())
 
     when:
@@ -146,5 +148,6 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
 
     cleanup:
     cluster?.disconnect()
+    environment.shutdown()
   }
 }

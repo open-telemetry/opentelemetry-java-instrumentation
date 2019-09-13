@@ -2,6 +2,7 @@ import com.couchbase.client.java.AsyncCluster
 import com.couchbase.client.java.CouchbaseAsyncCluster
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
+import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.query.N1qlQuery
 import spock.util.concurrent.BlockingVariable
 import util.AbstractCouchbaseTest
@@ -31,13 +32,13 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     }
 
     cleanup:
-    cluster?.disconnect()?.timeout(5, TimeUnit.SECONDS)?.toBlocking()?.single()
+    cluster?.disconnect()?.timeout(10, TimeUnit.SECONDS)?.toBlocking()?.single()
+    environment.shutdown()
 
     where:
-    environment          | bucketSettings
-    couchbaseEnvironment | bucketCouchbase
-    memcacheEnvironment  | bucketMemcache
+    bucketSettings << [bucketCouchbase, bucketMemcache]
 
+    environment = envBuilder(bucketSettings).build()
     cluster = CouchbaseAsyncCluster.create(environment, Arrays.asList("127.0.0.1"))
     manager = cluster.clusterManager(USERNAME, PASSWORD).toBlocking().single()
     type = bucketSettings.type().name()
@@ -71,13 +72,13 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     }
 
     cleanup:
-    cluster?.disconnect()?.timeout(5, TimeUnit.SECONDS)?.toBlocking()?.single()
+    cluster?.disconnect()?.timeout(10, TimeUnit.SECONDS)?.toBlocking()?.single()
+    environment.shutdown()
 
     where:
-    environment          | bucketSettings
-    couchbaseEnvironment | bucketCouchbase
-    memcacheEnvironment  | bucketMemcache
+    bucketSettings << [bucketCouchbase, bucketMemcache]
 
+    environment = envBuilder(bucketSettings).build()
     cluster = CouchbaseAsyncCluster.create(environment, Arrays.asList("127.0.0.1"))
     type = bucketSettings.type().name()
   }
@@ -119,13 +120,13 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     }
 
     cleanup:
-    cluster?.disconnect()?.timeout(5, TimeUnit.SECONDS)?.toBlocking()?.single()
+    cluster?.disconnect()?.timeout(10, TimeUnit.SECONDS)?.toBlocking()?.single()
+    environment.shutdown()
 
     where:
-    environment          | bucketSettings
-    couchbaseEnvironment | bucketCouchbase
-    memcacheEnvironment  | bucketMemcache
+    bucketSettings << [bucketCouchbase, bucketMemcache]
 
+    environment = envBuilder(bucketSettings).build()
     cluster = CouchbaseAsyncCluster.create(environment, Arrays.asList("127.0.0.1"))
     type = bucketSettings.type().name()
   }
@@ -133,7 +134,8 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
   def "test query"() {
     setup:
     // Only couchbase buckets support queries.
-    AsyncCluster cluster = CouchbaseAsyncCluster.create(couchbaseEnvironment, Arrays.asList("127.0.0.1"))
+    CouchbaseEnvironment environment = envBuilder(bucketCouchbase).build()
+    AsyncCluster cluster = CouchbaseAsyncCluster.create(environment, Arrays.asList("127.0.0.1"))
     def queryResult = new BlockingVariable<JsonObject>()
 
     when:
@@ -164,6 +166,7 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     }
 
     cleanup:
-    cluster?.disconnect()?.timeout(5, TimeUnit.SECONDS)?.toBlocking()?.single()
+    cluster?.disconnect()?.timeout(10, TimeUnit.SECONDS)?.toBlocking()?.single()
+    environment.shutdown()
   }
 }
