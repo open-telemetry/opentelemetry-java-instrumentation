@@ -13,9 +13,11 @@ import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
+  static final int TIMEOUT = 10
+
   def "test hasBucket #type"() {
     setup:
-    def hasBucket = new BlockingVariable<Boolean>()
+    def hasBucket = new BlockingVariable<Boolean>(TIMEOUT)
 
     when:
     cluster.openBucket(bucketSettings.name(), bucketSettings.password()).subscribe({ bkt ->
@@ -32,7 +34,7 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     }
 
     cleanup:
-    cluster?.disconnect()?.timeout(10, TimeUnit.SECONDS)?.toBlocking()?.single()
+    cluster?.disconnect()?.timeout(TIMEOUT, TimeUnit.SECONDS)?.toBlocking()?.single()
     environment.shutdown()
 
     where:
@@ -47,7 +49,7 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
   def "test upsert #type"() {
     setup:
     JsonObject content = JsonObject.create().put("hello", "world")
-    def inserted = new BlockingVariable<JsonDocument>()
+    def inserted = new BlockingVariable<JsonDocument>(TIMEOUT)
 
     when:
     runUnderTrace("someTrace") {
@@ -72,7 +74,7 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     }
 
     cleanup:
-    cluster?.disconnect()?.timeout(10, TimeUnit.SECONDS)?.toBlocking()?.single()
+    cluster?.disconnect()?.timeout(TIMEOUT, TimeUnit.SECONDS)?.toBlocking()?.single()
     environment.shutdown()
 
     where:
@@ -86,8 +88,8 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
   def "test upsert and get #type"() {
     setup:
     JsonObject content = JsonObject.create().put("hello", "world")
-    def inserted = new BlockingVariable<JsonDocument>()
-    def found = new BlockingVariable<JsonDocument>()
+    def inserted = new BlockingVariable<JsonDocument>(TIMEOUT)
+    def found = new BlockingVariable<JsonDocument>(TIMEOUT)
 
     when:
     runUnderTrace("someTrace") {
@@ -120,7 +122,7 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     }
 
     cleanup:
-    cluster?.disconnect()?.timeout(10, TimeUnit.SECONDS)?.toBlocking()?.single()
+    cluster?.disconnect()?.timeout(TIMEOUT, TimeUnit.SECONDS)?.toBlocking()?.single()
     environment.shutdown()
 
     where:
@@ -136,7 +138,7 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     // Only couchbase buckets support queries.
     CouchbaseEnvironment environment = envBuilder(bucketCouchbase).build()
     AsyncCluster cluster = CouchbaseAsyncCluster.create(environment, Arrays.asList("127.0.0.1"))
-    def queryResult = new BlockingVariable<JsonObject>()
+    def queryResult = new BlockingVariable<JsonObject>(TIMEOUT)
 
     when:
     // Mock expects this specific query.
@@ -166,7 +168,7 @@ class CouchbaseAsyncClientTest extends AbstractCouchbaseTest {
     }
 
     cleanup:
-    cluster?.disconnect()?.timeout(10, TimeUnit.SECONDS)?.toBlocking()?.single()
+    cluster?.disconnect()?.timeout(TIMEOUT, TimeUnit.SECONDS)?.toBlocking()?.single()
     environment.shutdown()
   }
 }
