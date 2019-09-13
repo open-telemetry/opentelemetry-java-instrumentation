@@ -1,38 +1,42 @@
 import com.couchbase.client.java.Bucket
+import com.couchbase.client.java.Cluster
+import com.couchbase.client.java.CouchbaseCluster
 import com.couchbase.client.java.document.JsonDocument
 import com.couchbase.client.java.document.json.JsonObject
+import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.query.N1qlQuery
-import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
 import util.AbstractCouchbaseTest
 
-class CouchbaseClientTest extends AbstractCouchbaseTest {
+import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
-  def "test client #type"() {
+class CouchbaseClientTest extends AbstractCouchbaseTest {
+  def "test hasBucket #type"() {
     when:
-    manager.hasBucket(bucketSettings.name())
+    def hasBucket = manager.hasBucket(bucketSettings.name())
 
     then:
-    assertTraces(1) {
+    assert hasBucket
+    sortAndAssertTraces(1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "ClusterManager.hasBucket"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "ClusterManager.hasBucket")
       }
     }
-    TEST_WRITER.clear()
 
+    cleanup:
+    cluster?.disconnect()
+    environment.shutdown()
+
+    where:
+    bucketSettings << [bucketCouchbase, bucketMemcache]
+
+    environment = envBuilder(bucketSettings).build()
+    cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
+    manager = cluster.clusterManager(USERNAME, PASSWORD)
+    type = bucketSettings.type().name()
+  }
+
+  def "test upsert and get #type"() {
     when:
     // Connect to the bucket and open it
     Bucket bkt = cluster.openBucket(bucketSettings.name(), bucketSettings.password())
@@ -40,70 +44,87 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     // Create a JSON document and store it with the ID "helloworld"
     JsonObject content = JsonObject.create().put("hello", "world")
     def inserted = bkt.upsert(JsonDocument.create("helloworld", content))
-
-    then:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.upsert"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bkt.name()
-            defaultTags()
-          }
-        }
-      }
-    }
-    TEST_WRITER.clear()
-
-    when:
     def found = bkt.get("helloworld")
 
     then:
     found == inserted
     found.content().getString("hello") == "world"
 
-    and:
-    assertTraces(1) {
+    sortAndAssertTraces(3) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.get"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bkt.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Cluster.openBucket")
+      }
+      trace(1, 1) {
+        assertCouchbaseCall(it, 0, "Bucket.upsert", bucketSettings.name())
+      }
+      trace(2, 1) {
+        assertCouchbaseCall(it, 0, "Bucket.get", bucketSettings.name())
       }
     }
-    TEST_WRITER.clear()
 
+    cleanup:
+    cluster?.disconnect()
+    environment.shutdown()
 
     where:
-    manager          | cluster          | bucketSettings
-    couchbaseManager | couchbaseCluster | bucketCouchbase
-    memcacheManager  | memcacheCluster  | bucketMemcache
+    bucketSettings << [bucketCouchbase, bucketMemcache]
 
+    environment = envBuilder(bucketSettings).build()
+    cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
+    type = bucketSettings.type().name()
+  }
+
+  def "test upsert and get #type under trace"() {
+    when:
+    // Connect to the bucket and open it
+    Bucket bkt = cluster.openBucket(bucketSettings.name(), bucketSettings.password())
+
+    // Create a JSON document and store it with the ID "helloworld"
+    JsonObject content = JsonObject.create().put("hello", "world")
+
+    def inserted
+    def found
+
+    runUnderTrace("someTrace") {
+      inserted = bkt.upsert(JsonDocument.create("helloworld", content))
+      found = bkt.get("helloworld")
+
+      blockUntilChildSpansFinished(2)
+    }
+
+    then:
+    found == inserted
+    found.content().getString("hello") == "world"
+
+    sortAndAssertTraces(2) {
+      trace(0, 1) {
+        assertCouchbaseCall(it, 0, "Cluster.openBucket")
+      }
+      trace(1, 3) {
+        basicSpan(it, 0, "someTrace")
+        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketSettings.name(), span(0))
+        assertCouchbaseCall(it, 1, "Bucket.get", bucketSettings.name(), span(0))
+      }
+    }
+
+    cleanup:
+    cluster?.disconnect()
+    environment.shutdown()
+
+    where:
+    bucketSettings << [bucketCouchbase, bucketMemcache]
+
+    environment = envBuilder(bucketSettings).build()
+    cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
     type = bucketSettings.type().name()
   }
 
   def "test query"() {
     setup:
-    Bucket bkt = cluster.openBucket(bucketSettings.name(), bucketSettings.password())
+    // Only couchbase buckets support queries.
+    CouchbaseEnvironment environment = envBuilder(bucketCouchbase).build()
+    Cluster cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
+    Bucket bkt = cluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password())
 
     when:
     // Mock expects this specific query.
@@ -116,31 +137,17 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
     result.first().value().get("row") == "value"
 
     and:
-    assertTraces(1) {
+    sortAndAssertTraces(2) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.query"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bkt.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Cluster.openBucket")
+      }
+      trace(1, 1) {
+        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name())
       }
     }
 
-    where:
-    manager          | cluster          | bucketSettings
-    couchbaseManager | couchbaseCluster | bucketCouchbase
-    // Only couchbase buckets support queries.
-
-    type = bucketSettings.type().name()
+    cleanup:
+    cluster?.disconnect()
+    environment.shutdown()
   }
 }

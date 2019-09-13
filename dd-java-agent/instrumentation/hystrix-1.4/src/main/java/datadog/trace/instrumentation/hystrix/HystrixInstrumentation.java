@@ -8,23 +8,15 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import com.google.auto.service.AutoService;
 import com.netflix.hystrix.HystrixInvokableInfo;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.ScopeManager;
+import datadog.trace.instrumentation.rxjava.TracedOnSubscribe;
 import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.util.GlobalTracer;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import rx.DDTracingUtil;
 import rx.Observable;
-import rx.Subscriber;
-import rx.Subscription;
 
 @AutoService(Instrumenter.class)
 public class HystrixInstrumentation extends Instrumenter.Default {
@@ -47,10 +39,11 @@ public class HystrixInstrumentation extends Instrumenter.Default {
     return new String[] {
       "rx.DDTracingUtil",
       "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.instrumentation.rxjava.SpanFinishingSubscription",
+      "datadog.trace.instrumentation.rxjava.TracedSubscriber",
+      "datadog.trace.instrumentation.rxjava.TracedOnSubscribe",
       packageName + ".HystrixDecorator",
-      packageName + ".HystrixInstrumentation$SpanFinishingSubscription",
-      packageName + ".HystrixInstrumentation$TracedSubscriber",
-      packageName + ".HystrixInstrumentation$TracedOnSubscribe",
+      packageName + ".HystrixInstrumentation$HystrixOnSubscribe",
     };
   }
 
@@ -73,11 +66,8 @@ public class HystrixInstrumentation extends Instrumenter.Default {
         @Advice.This final HystrixInvokableInfo<?> command,
         @Advice.Return(readOnly = false) Observable result,
         @Advice.Thrown final Throwable throwable) {
-      final Observable.OnSubscribe<?> onSubscribe = DDTracingUtil.extractOnSubscribe(result);
-      result =
-          Observable.create(
-              new TracedOnSubscribe(
-                  onSubscribe, command, "execute", GlobalTracer.get().scopeManager().active()));
+
+      result = Observable.create(new HystrixOnSubscribe(result, command, "execute"));
     }
   }
 
@@ -88,171 +78,30 @@ public class HystrixInstrumentation extends Instrumenter.Default {
         @Advice.This final HystrixInvokableInfo<?> command,
         @Advice.Return(readOnly = false) Observable<?> result,
         @Advice.Thrown final Throwable throwable) {
-      final Observable.OnSubscribe<?> onSubscribe = DDTracingUtil.extractOnSubscribe(result);
-      result =
-          Observable.create(
-              new TracedOnSubscribe(
-                  onSubscribe, command, "fallback", GlobalTracer.get().scopeManager().active()));
+
+      result = Observable.create(new HystrixOnSubscribe(result, command, "fallback"));
     }
   }
 
-  public static class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
-
-    private final Observable.OnSubscribe<?> delegate;
+  public static class HystrixOnSubscribe extends TracedOnSubscribe {
     private final HystrixInvokableInfo<?> command;
     private final String methodName;
-    private final TraceScope.Continuation continuation;
 
-    public TracedOnSubscribe(
-        final Observable.OnSubscribe<?> delegate,
+    public HystrixOnSubscribe(
+        final Observable originalObservable,
         final HystrixInvokableInfo<?> command,
-        final String methodName,
-        final Scope parentScope) {
-      this.delegate = delegate;
+        final String methodName) {
+      super(originalObservable, OPERATION_NAME, DECORATE);
+
       this.command = command;
       this.methodName = methodName;
-      continuation =
-          parentScope instanceof TraceScope ? ((TraceScope) parentScope).capture() : null;
     }
 
     @Override
-    public void call(final Subscriber<? super T> subscriber) {
-      final Tracer tracer = GlobalTracer.get();
-      final Span span; // span finished by TracedSubscriber
-      if (continuation != null) {
-        try (final TraceScope scope = continuation.activate()) {
-          span = tracer.buildSpan(OPERATION_NAME).start();
-        }
-      } else {
-        span = tracer.buildSpan(OPERATION_NAME).start();
-      }
-      DECORATE.afterStart(span);
+    protected void afterStart(final Span span) {
+      super.afterStart(span);
+
       DECORATE.onCommand(span, command, methodName);
-
-      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
-        if (!((TraceScope) scope).isAsyncPropagating()) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
-        delegate.call(new TracedSubscriber(span, subscriber));
-      }
-    }
-  }
-
-  public static class TracedSubscriber<T> extends Subscriber<T> {
-
-    private final ScopeManager scopeManager = GlobalTracer.get().scopeManager();
-    private final AtomicReference<Span> spanRef;
-    private final Subscriber<T> delegate;
-
-    public TracedSubscriber(final Span span, final Subscriber<T> delegate) {
-      spanRef = new AtomicReference<>(span);
-      this.delegate = delegate;
-      final SpanFinishingSubscription subscription = new SpanFinishingSubscription(spanRef);
-      delegate.add(subscription);
-    }
-
-    @Override
-    public void onStart() {
-      final Span span = spanRef.get();
-      if (span != null) {
-        try (final Scope scope = scopeManager.activate(span, false)) {
-          if (scope instanceof TraceScope) {
-            ((TraceScope) scope).setAsyncPropagation(true);
-          }
-          delegate.onStart();
-        }
-      } else {
-        delegate.onStart();
-      }
-    }
-
-    @Override
-    public void onNext(final T value) {
-      final Span span = spanRef.get();
-      if (span != null) {
-        try (final Scope scope = scopeManager.activate(span, false)) {
-          if (scope instanceof TraceScope) {
-            ((TraceScope) scope).setAsyncPropagation(true);
-          }
-          delegate.onNext(value);
-        } catch (final Throwable e) {
-          onError(e);
-        }
-      } else {
-        delegate.onNext(value);
-      }
-    }
-
-    @Override
-    public void onCompleted() {
-      final Span span = spanRef.getAndSet(null);
-      if (span != null) {
-        boolean errored = false;
-        try (final Scope scope = scopeManager.activate(span, false)) {
-          if (scope instanceof TraceScope) {
-            ((TraceScope) scope).setAsyncPropagation(true);
-          }
-          delegate.onCompleted();
-        } catch (final Throwable e) {
-          // Repopulate the spanRef for onError
-          spanRef.compareAndSet(null, span);
-          onError(e);
-          errored = true;
-        } finally {
-          // finish called by onError, so don't finish again.
-          if (!errored) {
-            DECORATE.beforeFinish(span);
-            span.finish();
-          }
-        }
-      } else {
-        delegate.onCompleted();
-      }
-    }
-
-    @Override
-    public void onError(final Throwable e) {
-      final Span span = spanRef.getAndSet(null);
-      if (span != null) {
-        try (final Scope scope = scopeManager.activate(span, false)) {
-          if (scope instanceof TraceScope) {
-            ((TraceScope) scope).setAsyncPropagation(true);
-          }
-          DECORATE.onError(span, e);
-          delegate.onError(e);
-        } catch (final Throwable e2) {
-          DECORATE.onError(span, e2);
-          throw e2;
-        } finally {
-          DECORATE.beforeFinish(span);
-          span.finish();
-        }
-      } else {
-        delegate.onError(e);
-      }
-    }
-  }
-
-  public static class SpanFinishingSubscription implements Subscription {
-
-    private final AtomicReference<Span> spanRef;
-
-    public SpanFinishingSubscription(final AtomicReference<Span> spanRef) {
-      this.spanRef = spanRef;
-    }
-
-    @Override
-    public void unsubscribe() {
-      final Span span = spanRef.getAndSet(null);
-      if (span != null) {
-        DECORATE.beforeFinish(span);
-        span.finish();
-      }
-    }
-
-    @Override
-    public boolean isUnsubscribed() {
-      return spanRef.get() == null;
     }
   }
 }
