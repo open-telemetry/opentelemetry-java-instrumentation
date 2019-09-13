@@ -19,7 +19,7 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
   @Shared
   Cluster memcacheCluster
-  
+
   @Shared
   protected CouchbaseEnvironment couchbaseEnvironment
   @Shared
@@ -54,11 +54,10 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
     when:
     template.save(doc)
+    def result = template.findById("1", Doc)
 
     then:
-    template.findById("1", Doc) != null
-
-    and:
+    result != null
     assertTraces(2) {
       trace(0, 1) {
         assertCouchbaseCall(it, 0, "Bucket.upsert", name)
@@ -82,17 +81,23 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     template.remove(doc)
 
     then:
-    template.findById("1", Doc) == null
-
-    and:
-    assertTraces(3) {
+    assertTraces(2) {
       trace(0, 1) {
         assertCouchbaseCall(it, 0, "Bucket.upsert", name)
       }
       trace(1, 1) {
         assertCouchbaseCall(it, 0, "Bucket.remove", name)
       }
-      trace(2, 1) {
+    }
+
+    when:
+    TEST_WRITER.clear()
+    def result = template.findById("1", Doc)
+
+    then:
+    result == null
+    assertTraces(1) {
+      trace(0, 1) {
         assertCouchbaseCall(it, 0, "Bucket.get", name)
       }
     }
