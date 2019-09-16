@@ -77,7 +77,9 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
           state = new CouchbaseRequestState(span);
           contextStore.put(request, state);
 
-          span.setTag("couchbase.operation_id", request.operationId());
+          if (request.operationId() != null) {
+            span.setTag("couchbase.operation_id", request.operationId());
+          }
         }
       }
     }

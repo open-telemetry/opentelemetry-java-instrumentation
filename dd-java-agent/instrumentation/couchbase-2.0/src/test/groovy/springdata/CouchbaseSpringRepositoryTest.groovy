@@ -83,9 +83,6 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
         assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name())
       }
     }
-
-    where:
-    indexName = "test-index"
   }
 
   def "test CRUD"() {

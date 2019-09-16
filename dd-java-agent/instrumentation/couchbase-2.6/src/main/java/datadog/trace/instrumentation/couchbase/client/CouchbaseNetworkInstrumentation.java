@@ -61,7 +61,7 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
   }
 
   public static class CouchbaseNetworkAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addNetworkTagsToSpan(
         @Advice.FieldValue("remoteHostname") final String remoteHostname,
         @Advice.FieldValue("remoteSocket") final String remoteSocket,
