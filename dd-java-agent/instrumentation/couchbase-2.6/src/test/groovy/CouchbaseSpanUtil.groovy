@@ -24,15 +24,17 @@ class CouchbaseSpanUtil {
         "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
         if (bucketName != null) {
           "bucket" bucketName
-          "$Tags.PEER_HOSTNAME.key" { it == "localhost" || it == "127.0.0.1" }
-          "$Tags.PEER_PORT.key" Number
-          "local.address" String
-
-          // Not all couchbase operations have operation id.  Notably, 'ViewQuery's do not
-          // We assign a resourceName of 'Bucket.query' and this is shared with n1ql queries
-          // that do have operation ids
-          "couchbase.operation_id" { it == null || String }
         }
+
+        // Because of caching, not all requests hit the server so these tags may be absent
+        "$Tags.PEER_HOSTNAME.key" { it == "localhost" || it == "127.0.0.1" || it == null }
+        "$Tags.PEER_PORT.key" { it == null || Number }
+        "local.address" { it == null || String }
+
+        // Not all couchbase operations have operation id.  Notably, 'ViewQuery's do not
+        // We assign a resourceName of 'Bucket.query' and this is shared with n1ql queries
+        // that do have operation ids
+        "couchbase.operation_id" { it == null || String }
         defaultTags()
       }
     }
