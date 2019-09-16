@@ -58,7 +58,6 @@ class ShadowPackageRenamingTest extends Specification {
   def "agent jar contains no bootstrap classes"() {
     setup:
     final ClassPath agentClasspath = ClassPath.from(IntegrationTestUtils.getAgentClassLoader())
-    final ClassPath jmxFetchClasspath = ClassPath.from(IntegrationTestUtils.getJmxFetchClassLoader())
 
     final ClassPath bootstrapClasspath = ClassPath.from(IntegrationTestUtils.getBootstrapProxy())
     final Set<String> bootstrapClasses = new HashSet<>()
@@ -99,28 +98,9 @@ class ShadowPackageRenamingTest extends Specification {
       }
     }
 
-    final List<ClassPath.ClassInfo> jmxFetchDuplicateClassFile = new ArrayList<>()
-    final List<String> badJmxFetchPrefixes = []
-    for (ClassPath.ClassInfo classInfo : jmxFetchClasspath.getAllClasses()) {
-      if (bootstrapClasses.contains(classInfo.getName())) {
-        jmxFetchDuplicateClassFile.add(classInfo)
-      }
-      boolean goodPrefix = true
-      for (int i = 0; i < bootstrapPrefixes.length; ++i) {
-        if (classInfo.getName().startsWith(bootstrapPrefixes[i])) {
-          goodPrefix = false
-          break
-        }
-      }
-      if (!goodPrefix) {
-        badJmxFetchPrefixes.add(classInfo.getName())
-      }
-    }
-
     expect:
     agentDuplicateClassFile == []
     badBootstrapPrefixes == []
     badAgentPrefixes == []
-    badJmxFetchPrefixes == []
   }
 }

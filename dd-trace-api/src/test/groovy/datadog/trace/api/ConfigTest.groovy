@@ -10,18 +10,14 @@ import static datadog.trace.api.Config.AGENT_PORT_LEGACY
 import static datadog.trace.api.Config.AGENT_UNIX_DOMAIN_SOCKET
 import static datadog.trace.api.Config.CONFIGURATION_FILE
 import static datadog.trace.api.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
-import static datadog.trace.api.Config.DEFAULT_JMX_FETCH_STATSD_PORT
 import static datadog.trace.api.Config.GLOBAL_TAGS
 import static datadog.trace.api.Config.HEADER_TAGS
+import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
+import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_HOST
+import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_PORT
 import static datadog.trace.api.Config.HTTP_CLIENT_ERROR_STATUSES
 import static datadog.trace.api.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
 import static datadog.trace.api.Config.HTTP_SERVER_ERROR_STATUSES
-import static datadog.trace.api.Config.JMX_FETCH_CHECK_PERIOD
-import static datadog.trace.api.Config.JMX_FETCH_ENABLED
-import static datadog.trace.api.Config.JMX_FETCH_METRICS_CONFIGS
-import static datadog.trace.api.Config.JMX_FETCH_REFRESH_BEANS_PERIOD
-import static datadog.trace.api.Config.JMX_FETCH_STATSD_HOST
-import static datadog.trace.api.Config.JMX_FETCH_STATSD_PORT
 import static datadog.trace.api.Config.JMX_TAGS
 import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
 import static datadog.trace.api.Config.PREFIX
@@ -40,9 +36,6 @@ import static datadog.trace.api.Config.TRACE_ENABLED
 import static datadog.trace.api.Config.TRACE_REPORT_HOSTNAME
 import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
 import static datadog.trace.api.Config.WRITER_TYPE
-import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
-import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_HOST
-import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_PORT
 
 class ConfigTest extends DDSpecification {
   @Rule
@@ -58,7 +51,6 @@ class ConfigTest extends DDSpecification {
   private static final DD_HEADER_TAGS_ENV = "DD_HEADER_TAGS"
   private static final DD_PROPAGATION_STYLE_EXTRACT = "DD_PROPAGATION_STYLE_EXTRACT"
   private static final DD_PROPAGATION_STYLE_INJECT = "DD_PROPAGATION_STYLE_INJECT"
-  private static final DD_JMXFETCH_METRICS_CONFIGS_ENV = "DD_JMXFETCH_METRICS_CONFIGS"
   private static final DD_TRACE_AGENT_PORT_ENV = "DD_TRACE_AGENT_PORT"
   private static final DD_AGENT_PORT_LEGACY_ENV = "DD_AGENT_PORT"
   private static final DD_TRACE_REPORT_HOSTNAME = "DD_TRACE_REPORT_HOSTNAME"
@@ -90,12 +82,6 @@ class ConfigTest extends DDSpecification {
     config.runtimeContextFieldInjection == true
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
-    config.jmxFetchEnabled == true
-    config.jmxFetchMetricsConfigs == []
-    config.jmxFetchCheckPeriod == null
-    config.jmxFetchRefreshBeansPeriod == null
-    config.jmxFetchStatsdHost == null
-    config.jmxFetchStatsdPort == DEFAULT_JMX_FETCH_STATSD_PORT
     config.healthMetricsEnabled == false
     config.healthMetricsStatsdHost == null
     config.healthMetricsStatsdPort == null
@@ -136,12 +122,6 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
     prop.setProperty(PROPAGATION_STYLE_EXTRACT, "Datadog, B3")
     prop.setProperty(PROPAGATION_STYLE_INJECT, "B3, Datadog")
-    prop.setProperty(JMX_FETCH_ENABLED, "false")
-    prop.setProperty(JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
-    prop.setProperty(JMX_FETCH_CHECK_PERIOD, "100")
-    prop.setProperty(JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
-    prop.setProperty(JMX_FETCH_STATSD_HOST, "statsd host")
-    prop.setProperty(JMX_FETCH_STATSD_PORT, "321")
     prop.setProperty(HEALTH_METRICS_ENABLED, "true")
     prop.setProperty(HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
     prop.setProperty(HEALTH_METRICS_STATSD_PORT, "654")
@@ -172,12 +152,6 @@ class ConfigTest extends DDSpecification {
     config.runtimeContextFieldInjection == false
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
-    config.jmxFetchEnabled == false
-    config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
-    config.jmxFetchCheckPeriod == 100
-    config.jmxFetchRefreshBeansPeriod == 200
-    config.jmxFetchStatsdHost == "statsd host"
-    config.jmxFetchStatsdPort == 321
     config.healthMetricsEnabled == true
     config.healthMetricsStatsdHost == "metrics statsd host"
     config.healthMetricsStatsdPort == 654
@@ -209,12 +183,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
     System.setProperty(PREFIX + PROPAGATION_STYLE_EXTRACT, "Datadog, B3")
     System.setProperty(PREFIX + PROPAGATION_STYLE_INJECT, "B3, Datadog")
-    System.setProperty(PREFIX + JMX_FETCH_ENABLED, "false")
-    System.setProperty(PREFIX + JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
-    System.setProperty(PREFIX + JMX_FETCH_CHECK_PERIOD, "100")
-    System.setProperty(PREFIX + JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
-    System.setProperty(PREFIX + JMX_FETCH_STATSD_HOST, "statsd host")
-    System.setProperty(PREFIX + JMX_FETCH_STATSD_PORT, "321")
     System.setProperty(PREFIX + HEALTH_METRICS_ENABLED, "true")
     System.setProperty(PREFIX + HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
     System.setProperty(PREFIX + HEALTH_METRICS_STATSD_PORT, "654")
@@ -245,12 +213,6 @@ class ConfigTest extends DDSpecification {
     config.runtimeContextFieldInjection == false
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
-    config.jmxFetchEnabled == false
-    config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
-    config.jmxFetchCheckPeriod == 100
-    config.jmxFetchRefreshBeansPeriod == 200
-    config.jmxFetchStatsdHost == "statsd host"
-    config.jmxFetchStatsdPort == 321
     config.healthMetricsEnabled == true
     config.healthMetricsStatsdHost == "metrics statsd host"
     config.healthMetricsStatsdPort == 654
@@ -263,7 +225,6 @@ class ConfigTest extends DDSpecification {
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
     environmentVariables.set(DD_PROPAGATION_STYLE_EXTRACT, "B3 Datadog")
     environmentVariables.set(DD_PROPAGATION_STYLE_INJECT, "Datadog B3")
-    environmentVariables.set(DD_JMXFETCH_METRICS_CONFIGS_ENV, "some/file")
     environmentVariables.set(DD_TRACE_REPORT_HOSTNAME, "true")
 
     when:
@@ -275,7 +236,6 @@ class ConfigTest extends DDSpecification {
     config.writerType == "LoggingWriter"
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
-    config.jmxFetchMetricsConfigs == ["some/file"]
     config.reportHostName == true
   }
 
@@ -408,11 +368,6 @@ class ConfigTest extends DDSpecification {
     properties.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
     properties.setProperty(PROPAGATION_STYLE_EXTRACT, "B3 Datadog")
     properties.setProperty(PROPAGATION_STYLE_INJECT, "Datadog B3")
-    properties.setProperty(JMX_FETCH_METRICS_CONFIGS, "/foo.yaml,/bar.yaml")
-    properties.setProperty(JMX_FETCH_CHECK_PERIOD, "100")
-    properties.setProperty(JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
-    properties.setProperty(JMX_FETCH_STATSD_HOST, "statsd host")
-    properties.setProperty(JMX_FETCH_STATSD_PORT, "321")
 
     when:
     def config = Config.get(properties)
@@ -438,11 +393,6 @@ class ConfigTest extends DDSpecification {
     config.partialFlushMinSpans == 15
     config.propagationStylesToExtract.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
     config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
-    config.jmxFetchMetricsConfigs == ["/foo.yaml", "/bar.yaml"]
-    config.jmxFetchCheckPeriod == 100
-    config.jmxFetchRefreshBeansPeriod == 200
-    config.jmxFetchStatsdHost == "statsd host"
-    config.jmxFetchStatsdPort == 321
   }
 
   def "override null properties"() {
@@ -491,40 +441,6 @@ class ConfigTest extends DDSpecification {
 
     expect:
     Config.get().isIntegrationEnabled(integrationNames, defaultEnabled) == expected
-
-    where:
-    names                          | defaultEnabled | expected
-    []                             | true           | true
-    []                             | false          | false
-    ["invalid"]                    | true           | true
-    ["invalid"]                    | false          | false
-    ["test-prop"]                  | false          | true
-    ["test-env"]                   | false          | true
-    ["disabled-prop"]              | true           | false
-    ["disabled-env"]               | true           | false
-    ["other", "test-prop"]         | false          | true
-    ["other", "test-env"]          | false          | true
-    ["order"]                      | false          | true
-    ["test-prop", "disabled-prop"] | false          | true
-    ["disabled-env", "test-env"]   | false          | true
-    ["test-prop", "disabled-prop"] | true           | false
-    ["disabled-env", "test-env"]   | true           | false
-
-    integrationNames = new TreeSet<>(names)
-  }
-
-  def "verify integration jmxfetch config"() {
-    setup:
-    environmentVariables.set("DD_JMXFETCH_ORDER_ENABLED", "false")
-    environmentVariables.set("DD_JMXFETCH_TEST_ENV_ENABLED", "true")
-    environmentVariables.set("DD_JMXFETCH_DISABLED_ENV_ENABLED", "false")
-
-    System.setProperty("dd.jmxfetch.order.enabled", "true")
-    System.setProperty("dd.jmxfetch.test-prop.enabled", "true")
-    System.setProperty("dd.jmxfetch.disabled-prop.enabled", "false")
-
-    expect:
-    Config.get().isJmxFetchIntegrationEnabled(integrationNames, defaultEnabled) == expected
 
     where:
     names                          | defaultEnabled | expected
@@ -711,21 +627,6 @@ class ConfigTest extends DDSpecification {
     mapString | map
     null      | [:]
     ""        | [:]
-  }
-
-  def "verify empty value list configs on tracer"() {
-    setup:
-    System.setProperty(PREFIX + JMX_FETCH_METRICS_CONFIGS, listString)
-
-    when:
-    def config = new Config()
-
-    then:
-    config.jmxFetchMetricsConfigs == list
-
-    where:
-    listString | list
-    ""         | []
   }
 
   def "verify hostname not added to root span tags by default"() {
