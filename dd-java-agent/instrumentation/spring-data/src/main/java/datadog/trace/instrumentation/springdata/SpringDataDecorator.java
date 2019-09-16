@@ -51,7 +51,7 @@ public class SpringDataDecorator extends OrmClientDecorator {
       final Class<?> clazz = method.getDeclaringClass();
       final String methodName = method.getName();
       final String className = clazz.getSimpleName();
-      name = String.format("%s.%s", className, methodName);
+      name = className + "." + methodName;
     }
 
     return name;
