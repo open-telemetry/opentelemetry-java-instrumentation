@@ -9,10 +9,12 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.data.repository.CrudRepository
 import spock.lang.Shared
+import spock.lang.Unroll
 import util.AbstractCouchbaseTest
 
+@Unroll
 class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
-  private static final Closure<Doc> FIND
+  static final Closure<Doc> FIND
   static {
     // This method is different in Spring Data 2+
     try {
