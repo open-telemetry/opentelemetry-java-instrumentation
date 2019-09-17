@@ -48,10 +48,10 @@ public final class SpringTransactionInstrumentation extends Instrumenter.Default
             .and(isPublic())
             .and(named("invoke"))
             .and(takesArgument(0, named("org.aopalliance.intercept.MethodInvocation"))),
-        QueryInterceptorAdvice.class.getName());
+        TransactionInterceptorAdvice.class.getName());
   }
 
-  public static class QueryInterceptorAdvice {
+  public static class TransactionInterceptorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope startSpan(
