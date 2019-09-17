@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
@@ -64,6 +65,11 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       // Rename the parent span according to the path represented by these annotations.
       final Scope parent = tracer.scopeManager().active();
       final Scope scope = tracer.buildSpan(JAX_ENDPOINT_OPERATION_NAME).startActive(true);
+
+      if (scope instanceof TraceScope) {
+        ((TraceScope) scope).setAsyncPropagation(true);
+      }
+
       DECORATE.onControllerStart(scope, parent, method);
       return DECORATE.afterStart(scope);
     }
