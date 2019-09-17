@@ -17,6 +17,7 @@ testSets {
 }
 
 dependencies {
+  compileOnly(group: 'aopalliance', name: 'aopalliance', version: '1.0')
   compileOnly(group: 'org.springframework.data', name: 'spring-data-commons', version: '1.5.0.RELEASE')
   compileOnly(group: 'org.springframework', name: 'spring-aop', version: '3.0.0.RELEASE')
 
