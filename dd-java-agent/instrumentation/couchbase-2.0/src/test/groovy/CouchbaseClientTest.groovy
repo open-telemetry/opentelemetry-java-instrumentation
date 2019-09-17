@@ -45,44 +45,6 @@ class CouchbaseClientTest extends AbstractCouchbaseTest {
 
     // Create a JSON document and store it with the ID "helloworld"
     JsonObject content = JsonObject.create().put("hello", "world")
-    def inserted = bkt.upsert(JsonDocument.create("helloworld", content))
-    def found = bkt.get("helloworld")
-
-    then:
-    found == inserted
-    found.content().getString("hello") == "world"
-
-    sortAndAssertTraces(3) {
-      trace(0, 1) {
-        assertCouchbaseCall(it, 0, "Cluster.openBucket")
-      }
-      trace(1, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.upsert", bucketSettings.name())
-      }
-      trace(2, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.get", bucketSettings.name())
-      }
-    }
-
-    cleanup:
-    cluster?.disconnect()
-    environment.shutdown()
-
-    where:
-    bucketSettings << [bucketCouchbase, bucketMemcache]
-
-    environment = envBuilder(bucketSettings).build()
-    cluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
-    type = bucketSettings.type().name()
-  }
-
-  def "test upsert and get #type under trace"() {
-    when:
-    // Connect to the bucket and open it
-    Bucket bkt = cluster.openBucket(bucketSettings.name(), bucketSettings.password())
-
-    // Create a JSON document and store it with the ID "helloworld"
-    JsonObject content = JsonObject.create().put("hello", "world")
 
     def inserted
     def found
