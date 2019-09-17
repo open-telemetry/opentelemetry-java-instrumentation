@@ -74,7 +74,7 @@ class GrizzlyTest extends HttpServerTest<HttpServer, GrizzlyDecorator> {
     }
 
     @GET
-    @Path("error")
+    @Path("error-status")
     Response error() {
       controller(ERROR) {
         Response.status(ERROR.status).entity(ERROR.body).build()
