@@ -1,24 +1,21 @@
 package datadog.trace.instrumentation.springdata;
 
+import static datadog.trace.instrumentation.springdata.SpringDataDecorator.DECORATOR;
+import static net.bytebuddy.matcher.ElementMatchers.*;
+
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.util.GlobalTracer;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.aopalliance.intercept.MethodInvocation;
-import org.springframework.data.repository.Repository;
-
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.Map;
-
-import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static datadog.trace.instrumentation.springdata.SpringDataDecorator.DECORATOR;
-import static net.bytebuddy.matcher.ElementMatchers.*;
 
 @AutoService(Instrumenter.class)
 public final class SpringTransactionInstrumentation extends Instrumenter.Default {
@@ -47,17 +44,18 @@ public final class SpringTransactionInstrumentation extends Instrumenter.Default
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
-      isMethod()
-        .and(isPublic())
-        .and(named("invoke"))
-        .and(takesArgument(0, named("org.aopalliance.intercept.MethodInvocation"))),
-      QueryInterceptorAdvice.class.getName());
+        isMethod()
+            .and(isPublic())
+            .and(named("invoke"))
+            .and(takesArgument(0, named("org.aopalliance.intercept.MethodInvocation"))),
+        QueryInterceptorAdvice.class.getName());
   }
 
   public static class QueryInterceptorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(@Advice.Argument(value = 0, readOnly = true) final MethodInvocation methodInvocation) {
+    public static Scope startSpan(
+        @Advice.Argument(value = 0, readOnly = true) final MethodInvocation methodInvocation) {
       final Method invokedMethod = methodInvocation.getMethod();
       final Class<?> clazz = invokedMethod.getDeclaringClass();
 
