@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.springdata;
 
-import static datadog.trace.instrumentation.springdata.SpringDataDecorator.DECORATOR;
+import static datadog.trace.instrumentation.springdata.SpringTransactionDecorator.DECORATOR;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.google.auto.service.AutoService;
@@ -35,9 +35,7 @@ public final class SpringTransactionInstrumentation extends Instrumenter.Default
     return new String[] {
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
-      "datadog.trace.agent.decorator.DatabaseClientDecorator",
-      "datadog.trace.agent.decorator.OrmClientDecorator",
-      packageName + ".SpringDataDecorator"
+      packageName + ".SpringTransactionDecorator"
     };
   }
 
@@ -59,7 +57,7 @@ public final class SpringTransactionInstrumentation extends Instrumenter.Default
       final Method invokedMethod = methodInvocation.getMethod();
       final Class<?> clazz = invokedMethod.getDeclaringClass();
 
-      final Scope scope = GlobalTracer.get().buildSpan("repository.query").startActive(true);
+      final Scope scope = GlobalTracer.get().buildSpan("transactional.operation").startActive(true);
       final Span span = scope.span();
       DECORATOR.afterStart(span);
       DECORATOR.onOperation(span, invokedMethod);
