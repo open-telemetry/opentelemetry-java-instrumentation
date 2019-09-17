@@ -1,8 +1,9 @@
 muzzle {
   pass {
-    group = 'org.springframework.data'
-    module = 'spring-data-commons'
-    versions = "[1.5.0.RELEASE,)"
+    group = 'org.springframework'
+    module = 'spring-tx'
+    versions = "[2.5.0.RELEASE,)"
+    extraDependency "aopalliance:aopalliance:1.0"
   }
 }
 
@@ -34,5 +35,6 @@ dependencies {
   latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-commons', version: '+'
   latestDepTestCompile group: 'org.springframework', name: 'spring-aop', version: '+'
   latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '+'
+  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-jdbc', version: '+'
 }
 
