@@ -37,7 +37,7 @@ class CleanerTest extends Specification {
     cleaner.scheduleCleaning(target, action, 10, MILLISECONDS)
 
     then:
-    latch.await(100, MILLISECONDS)
+    latch.await(200, MILLISECONDS)
   }
 
   def "test canceling"() {
