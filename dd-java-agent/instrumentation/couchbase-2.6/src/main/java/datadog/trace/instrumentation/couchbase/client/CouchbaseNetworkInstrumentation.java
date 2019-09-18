@@ -68,9 +68,11 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
       if (span != null) {
         Tags.PEER_HOSTNAME.set(span, remoteHostname);
 
-        final int splitIndex = remoteSocket.lastIndexOf(":");
-        if (splitIndex != -1) {
-          Tags.PEER_PORT.set(span, Integer.valueOf(remoteSocket.substring(splitIndex + 1)));
+        if (remoteSocket != null) {
+          final int splitIndex = remoteSocket.lastIndexOf(":");
+          if (splitIndex != -1) {
+            Tags.PEER_PORT.set(span, Integer.valueOf(remoteSocket.substring(splitIndex + 1)));
+          }
         }
 
         span.setTag("local.address", localSocket);
