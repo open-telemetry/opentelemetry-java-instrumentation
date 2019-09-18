@@ -35,15 +35,9 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".CouchbaseRequestState"};
-  }
-
-  @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(
-        "com.couchbase.client.core.message.CouchbaseRequest",
-        CouchbaseRequestState.class.getName());
+        "com.couchbase.client.core.message.CouchbaseRequest", Span.class.getName());
   }
 
   @Override
@@ -51,12 +45,12 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
     // encode(ChannelHandlerContext ctx, REQUEST msg, List<Object> out)
     return singletonMap(
         isMethod()
+            .and(named("encode"))
             .and(takesArguments(3))
             .and(
                 takesArgument(
                     0, named("com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext")))
-            .and(takesArgument(2, named("java.util.List")))
-            .and(named("encode")),
+            .and(takesArgument(2, named("java.util.List"))),
         CouchbaseNetworkAdvice.class.getName());
   }
 
@@ -67,13 +61,11 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
         @Advice.FieldValue("remoteSocket") final String remoteSocket,
         @Advice.FieldValue("localSocket") final String localSocket,
         @Advice.Argument(1) final CouchbaseRequest request) {
-      final ContextStore<CouchbaseRequest, CouchbaseRequestState> contextStore =
-          InstrumentationContext.get(CouchbaseRequest.class, CouchbaseRequestState.class);
+      final ContextStore<CouchbaseRequest, Span> contextStore =
+          InstrumentationContext.get(CouchbaseRequest.class, Span.class);
 
-      final CouchbaseRequestState state = contextStore.get(request);
-      if (state != null) {
-        final Span span = state.getSpan();
-
+      final Span span = contextStore.get(request);
+      if (span != null) {
         Tags.PEER_HOSTNAME.set(span, remoteHostname);
 
         final int splitIndex = remoteSocket.lastIndexOf(":");

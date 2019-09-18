@@ -47,6 +47,7 @@ configurations {
   testArtifacts
 }
 
+// Create test artifacts so couchbase-2.6 can reuse tests
 artifacts {
   testArtifacts testJar
 }

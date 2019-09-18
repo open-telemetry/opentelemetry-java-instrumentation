@@ -35,15 +35,9 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
   }
 
   @Override
-  public String[] helperClassNames() {
-    return new String[] {packageName + ".CouchbaseRequestState"};
-  }
-
-  @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(
-        "com.couchbase.client.core.message.CouchbaseRequest",
-        CouchbaseRequestState.class.getName());
+        "com.couchbase.client.core.message.CouchbaseRequest", Span.class.getName());
   }
 
   @Override
@@ -66,16 +60,14 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
         // The scope from the initial rxJava subscribe is not available to the networking layer
         // To transfer the span, the span is added to the context store
 
-        final ContextStore<CouchbaseRequest, CouchbaseRequestState> contextStore =
-            InstrumentationContext.get(CouchbaseRequest.class, CouchbaseRequestState.class);
+        final ContextStore<CouchbaseRequest, Span> contextStore =
+            InstrumentationContext.get(CouchbaseRequest.class, Span.class);
 
-        CouchbaseRequestState state = contextStore.get(request);
+        Span span = contextStore.get(request);
 
-        if (state == null) {
-          final Span span = GlobalTracer.get().activeSpan();
-
-          state = new CouchbaseRequestState(span);
-          contextStore.put(request, state);
+        if (span == null) {
+          span = GlobalTracer.get().activeSpan();
+          contextStore.put(request, span);
 
           if (request.operationId() != null) {
             span.setTag("couchbase.operation_id", request.operationId());
