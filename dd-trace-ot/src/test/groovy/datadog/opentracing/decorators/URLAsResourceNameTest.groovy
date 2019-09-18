@@ -21,29 +21,43 @@ class URLAsResourceNameTest extends Specification {
   @Subject
   def decorator = new URLAsResourceName()
 
-  def "remove query params"() {
+  def "pulls path from url #input"() {
     when:
-    def norm = decorator.norm(input)
+    def path = decorator.rawPathFromUrlString(input)
 
     then:
-    norm == output
+    path == expected
 
     where:
-    input                          | output
-    ""                             | "/"
-    " "                            | "/"
-    "\t"                           | "/"
-    "/"                            | "/"
-    "/?asdf"                       | "/"
-    "/search"                      | "/search"
-    "/search?"                     | "/search"
-    "/search?id=100&private=true"  | "/search"
-    "/search?id=100&private=true?" | "/search"
+    input                                                            | expected
+    ""                                                               | "/"
+    "/"                                                              | "/"
+    "/?asdf"                                                         | "/"
+    "/search"                                                        | "/search"
+    "/search?"                                                       | "/search"
+    "/search?id=100&private=true"                                    | "/search"
+    "/search?id=100&private=true?"                                   | "/search"
+    "http://localhost"                                               | "/"
+    "http://localhost/"                                              | "/"
+    "http://localhost/?asdf"                                         | "/"
+    "http://local.host:8080/search"                                  | "/search"
+    "https://localhost:443/search?"                                  | "/search"
+    "http://local.host:80/search?id=100&private=true"                | "/search"
+    "http://localhost:80/search?id=100&private=true?"                | "/search"
+    "http://10.0.0.1/?asdf"                                          | "/"
+    "http://127.0.0.1/?asdf"                                         | "/"
+    "http://[FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80/index.html" | "/index.html"
+    "http://[1080:0:0:0:8:800:200C:417A]/index.html"                 | "/index.html"
+    "http://[3ffe:2a00:100:7031::1]"                                 | "/"
+    "http://[1080::8:800:200C:417A]/foo"                             | "/foo"
+    "http://[::192.9.5.5]/ipng"                                      | "/ipng"
+    "http://[::FFFF:129.144.52.38]:80/index.html"                    | "/index.html"
+    "http://[2010:836B:4179::836B:4179]"                             | "/"
   }
 
   def "should replace all digits"() {
     when:
-    def norm = decorator.norm(input)
+    def norm = decorator.normalizePath(input)
 
     then:
     norm == output
@@ -60,7 +74,7 @@ class URLAsResourceNameTest extends Specification {
 
   def "should replace segments with mixed-characters"() {
     when:
-    def norm = decorator.norm(input)
+    def norm = decorator.normalizePath(input)
 
     then:
     norm == output
@@ -69,20 +83,22 @@ class URLAsResourceNameTest extends Specification {
     input                                              | output
     "/a1/v2"                                           | "/?/?"
     "/v3/1a"                                           | "/v3/?"
-    "/V01/v9/abc/-1?"                                  | "/V01/v9/abc/?"
+    "/V01/v9/abc/-1"                                   | "/V01/v9/abc/?"
     "/ABC/av-1/b_2/c.3/d4d/v5f/v699/7"                 | "/ABC/?/?/?/?/?/?/?"
     "/user/asdf123/repository/01234567-9ABC-DEF0-1234" | "/user/?/repository/?"
   }
 
   def "should leave other segments alone"() {
     when:
-    def norm = decorator.norm(input)
+    def norm = decorator.normalizePath(input)
 
     then:
     norm == input
 
     where:
     input      | _
+    "/v0/"     | _
+    "/v10/xyz" | _
     "/a-b"     | _
     "/a_b"     | _
     "/a.b"     | _
@@ -116,6 +132,9 @@ class URLAsResourceNameTest extends Specification {
 
     where:
     value                       | resourceName        | tags
+    null                        | "fakeResource"      | [:]
+    " "                         | "/"                 | [:]
+    "\t"                        | "/"                 | [:]
     "/path"                     | "/path"             | [:]
     "/ABC/a-1/b_2/c.3/d4d/5f/6" | "/ABC/?/?/?/?/?/?"  | [:]
     "/not-found"                | "fakeResource"      | [(Tags.HTTP_STATUS.key): 404]

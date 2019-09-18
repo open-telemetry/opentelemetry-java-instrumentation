@@ -9,7 +9,7 @@ class SpanFactory {
     ConfigUtils.makeConfigInstanceModifiable()
   }
 
-  static newSpanOf(long timestampMicro, String threadName = Thread.currentThread().name) {
+  static DDSpan newSpanOf(long timestampMicro, String threadName = Thread.currentThread().name) {
     def writer = new ListWriter()
     def tracer = new DDTracer(writer)
     def currentThreadName = Thread.currentThread().getName()
@@ -33,7 +33,7 @@ class SpanFactory {
     return new DDSpan(timestampMicro, context)
   }
 
-  static newSpanOf(DDTracer tracer) {
+  static DDSpan newSpanOf(DDTracer tracer) {
     def context = new DDSpanContext(
       "1",
       "1",
@@ -52,7 +52,7 @@ class SpanFactory {
     return new DDSpan(1, context)
   }
 
-  static newSpanOf(PendingTrace trace) {
+  static DDSpan newSpanOf(PendingTrace trace) {
     def context = new DDSpanContext(
       trace.traceId,
       "1",
