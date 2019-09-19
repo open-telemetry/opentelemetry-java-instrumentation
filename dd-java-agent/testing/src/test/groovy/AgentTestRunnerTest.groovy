@@ -10,6 +10,7 @@ import io.opentracing.Tracer
 import spock.lang.Shared
 
 import java.lang.reflect.Field
+import java.util.concurrent.TimeoutException
 
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 import static datadog.trace.api.Config.TRACE_CLASSES_EXCLUDE
@@ -65,6 +66,16 @@ class AgentTestRunnerTest extends AgentTestRunner {
     getAgentTransformer() != null
     GlobalTracerUtils.getUnderlyingGlobalTracer() == datadog.trace.api.GlobalTracer.get()
     bootstrapClassesIncorrectlyLoaded == []
+  }
+
+  def "waiting for child spans times out"() {
+    when:
+    runUnderTrace("parent") {
+      blockUntilChildSpansFinished(1)
+    }
+
+    then:
+    thrown(TimeoutException)
   }
 
   def "logging works"() {

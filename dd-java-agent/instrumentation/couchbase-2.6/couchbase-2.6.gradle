@@ -19,12 +19,12 @@ muzzle {
   fail {
     group = 'com.couchbase.client'
     module = 'java-client'
-    versions = "[,2.0.0)"
+    versions = "[,2.6.0)"
   }
   pass {
     group = 'com.couchbase.client'
     module = 'java-client'
-    versions = "[2.0.0,2.7.5)"
+    versions = "[2.6.0,2.7.5)"
   }
   pass {
     group = 'com.couchbase.client'
@@ -43,27 +43,21 @@ muzzle {
   }
 }
 
-configurations {
-  testArtifacts
-}
-
-// Create test artifacts so couchbase-2.6 can reuse tests
-artifacts {
-  testArtifacts testJar
-}
-
 dependencies {
   compile project(':dd-java-agent:instrumentation:rxjava-1')
-
-  compileOnly group: 'com.couchbase.client', name: 'java-client', version: '2.0.0'
-
-  testCompile group: 'com.couchbase.mock', name: 'CouchbaseMock', version: '1.5.19'
   
-  testCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '2.0.0.RELEASE'
-  // Earliest version that seems to allow queries with CouchbaseMock:
-  testCompile group: 'com.couchbase.client', name: 'java-client', version: '2.5.0'
+  compileOnly group: 'com.couchbase.client', name: 'java-client', version: '2.6.0'
 
-  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.+'
+  testCompile project(':dd-java-agent:instrumentation:couchbase-2.0')
+  testCompile project(path: ':dd-java-agent:instrumentation:couchbase-2.0', configuration: 'testArtifacts')
+  testCompile group: 'com.couchbase.mock', name: 'CouchbaseMock', version: '1.5.19'
+
+  testCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1.0.RELEASE'
+
+  testCompile group: 'com.couchbase.client', name: 'java-client', version: '2.6.0'
+  testCompile group: 'com.couchbase.client', name: 'encryption', version: '1.0.0'
+  
+  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '3.1+'
   latestDepTestCompile group: 'com.couchbase.client', name: 'java-client', version: '2.6+'
   latestDepTestCompile group: 'com.couchbase.client', name: 'encryption', version: '+'
 }

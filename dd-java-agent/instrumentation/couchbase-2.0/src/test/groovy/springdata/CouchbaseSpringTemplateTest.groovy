@@ -7,8 +7,13 @@ import com.couchbase.client.java.cluster.ClusterManager
 import com.couchbase.client.java.env.CouchbaseEnvironment
 import org.springframework.data.couchbase.core.CouchbaseTemplate
 import spock.lang.Shared
+import spock.lang.Unroll
 import util.AbstractCouchbaseTest
 
+import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+
+@Unroll
 class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
 
   @Shared
@@ -51,19 +56,25 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
   def "test write #name"() {
     setup:
     def doc = new Doc()
+    def result
 
     when:
-    template.save(doc)
-    def result = template.findById("1", Doc)
+    runUnderTrace("someTrace") {
+      template.save(doc)
+      result = template.findById("1", Doc)
+
+      blockUntilChildSpansFinished(2)
+    }
+
 
     then:
     result != null
-    assertTraces(2) {
-      trace(0, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.upsert", name)
-      }
-      trace(1, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.get", name)
+
+    sortAndAssertTraces(1) {
+      trace(0, 3) {
+        basicSpan(it, 0, "someTrace")
+        assertCouchbaseCall(it, 2, "Bucket.upsert", name, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.get", name, span(0))
       }
     }
 
@@ -77,16 +88,20 @@ class CouchbaseSpringTemplateTest extends AbstractCouchbaseTest {
     def doc = new Doc()
 
     when:
-    template.save(doc)
-    template.remove(doc)
+    runUnderTrace("someTrace") {
+      template.save(doc)
+      template.remove(doc)
+
+      blockUntilChildSpansFinished(2)
+    }
+
 
     then:
-    assertTraces(2) {
-      trace(0, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.upsert", name)
-      }
-      trace(1, 1) {
-        assertCouchbaseCall(it, 0, "Bucket.remove", name)
+    sortAndAssertTraces(1) {
+      trace(0, 3) {
+        basicSpan(it, 0, "someTrace")
+        assertCouchbaseCall(it, 2, "Bucket.upsert", name, span(0))
+        assertCouchbaseCall(it, 1, "Bucket.remove", name, span(0))
       }
     }
 
