@@ -7,7 +7,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
-import com.couchbase.client.java.transcoder.crypto.JsonCryptoTranscoder;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
@@ -74,11 +73,6 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
           }
         }
       }
-    }
-
-    // 2.6.0 and above
-    public static void muzzleCheck(final JsonCryptoTranscoder transcoder) {
-      transcoder.documentType();
     }
   }
 }
