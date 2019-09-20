@@ -67,16 +67,6 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     applicationContext.close()
   }
 
-  def setup() {
-    repo.deleteAll()
-    TEST_WRITER.waitForTraces(1) // There might be more if there were documents to delete
-    TEST_WRITER.clear()
-  }
-
-  def cleanup() {
-    repo.deleteAll()
-  }
-
   def "test empty repo"() {
     when:
     def result = repo.findAll()
@@ -106,6 +96,11 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
         assertCouchbaseCall(it, 0, "Bucket.upsert", bucketCouchbase.name())
       }
     }
+
+    cleanup:
+    TEST_WRITER.clear()
+    repo.deleteAll()
+    TEST_WRITER.waitForTraces(2)
   }
 
   def "test save and retrieve"() {
@@ -130,6 +125,11 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
         assertCouchbaseCall(it, 1, "Bucket.get", bucketCouchbase.name(), span(0))
       }
     }
+
+    cleanup:
+    TEST_WRITER.clear()
+    repo.deleteAll()
+    TEST_WRITER.waitForTraces(2)
   }
 
   def "test save and update"() {
@@ -154,6 +154,11 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
         assertCouchbaseCall(it, 2, "Bucket.upsert", bucketCouchbase.name(), span(0))
       }
     }
+
+    cleanup:
+    TEST_WRITER.clear()
+    repo.deleteAll()
+    TEST_WRITER.waitForTraces(2)
   }
 
   def "save and delete"() {
