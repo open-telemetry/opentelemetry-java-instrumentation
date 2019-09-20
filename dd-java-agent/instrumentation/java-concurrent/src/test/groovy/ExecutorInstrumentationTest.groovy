@@ -14,6 +14,7 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.Executor
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.ForkJoinTask
 import java.util.concurrent.Future
@@ -23,6 +24,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+
+import static org.junit.Assume.assumeTrue
 
 class ExecutorInstrumentationTest extends AgentTestRunner {
 
@@ -59,6 +62,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
 
   def "#poolImpl '#name' propagates"() {
     setup:
+    assumeTrue(poolImpl != null) // skip for Java 7 CompletableFuture
     def pool = poolImpl
     def m = method
 
@@ -133,7 +137,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     "invokeAny with timeout" | invokeAnyTimeout    | new CustomThreadPoolExecutor()
 
     // Internal executor used by CompletableFuture
-    "execute Runnable"       | executeRunnable     | new CompletableFuture.ThreadPerTaskExecutor()
+    "execute Runnable"       | executeRunnable     | java7SafeCompletableFutureThreadPerTaskExecutor()
   }
 
   def "#poolImpl '#name' disabled wrapping"() {
@@ -241,6 +245,14 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     // ForkJoinPool has additional set of method overloads for ForkJoinTask to deal with
     "submit Runnable"   | submitRunnable   | new ForkJoinPool()
     "submit Callable"   | submitCallable   | new ForkJoinPool()
+  }
+
+  private static Executor java7SafeCompletableFutureThreadPerTaskExecutor() {
+    try {
+      return new CompletableFuture.ThreadPerTaskExecutor()
+    } catch (NoClassDefFoundError e) {
+      return null
+    }
   }
 
   static class CustomThreadPoolExecutor extends AbstractExecutorService {
