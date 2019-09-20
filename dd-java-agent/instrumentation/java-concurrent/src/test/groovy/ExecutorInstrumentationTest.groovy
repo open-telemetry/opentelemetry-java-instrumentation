@@ -12,6 +12,7 @@ import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.ForkJoinTask
@@ -84,7 +85,9 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     trace.get(1).parentId == trace.get(0).spanId
 
     cleanup:
-    pool?.shutdown()
+    if (pool?.hasProperty("shutdown")) {
+      pool?.shutdown()
+    }
 
     // Unfortunately, there's no simple way to test the cross product of methods/pools.
     where:
@@ -128,6 +131,9 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
     "invokeAll with timeout" | invokeAllTimeout    | new CustomThreadPoolExecutor()
     "invokeAny"              | invokeAny           | new CustomThreadPoolExecutor()
     "invokeAny with timeout" | invokeAnyTimeout    | new CustomThreadPoolExecutor()
+
+    // Internal executor used by CompletableFuture
+    "execute Runnable"       | executeRunnable     | new CompletableFuture.ThreadPerTaskExecutor()
   }
 
   def "#poolImpl '#name' disabled wrapping"() {

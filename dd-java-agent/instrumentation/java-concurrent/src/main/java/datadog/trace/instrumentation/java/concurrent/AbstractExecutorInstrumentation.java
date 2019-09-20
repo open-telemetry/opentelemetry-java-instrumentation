@@ -73,6 +73,7 @@ public abstract class AbstractExecutorInstrumentation extends Instrumenter.Defau
         "io.netty.util.concurrent.MultithreadEventExecutorGroup",
         "io.netty.util.concurrent.SingleThreadEventExecutor",
         "java.util.concurrent.AbstractExecutorService",
+        "java.util.concurrent.CompletableFuture$ThreadPerTaskExecutor",
         "java.util.concurrent.Executors$DelegatedExecutorService",
         "java.util.concurrent.Executors$FinalizableDelegatedExecutorService",
         "java.util.concurrent.ForkJoinPool",
