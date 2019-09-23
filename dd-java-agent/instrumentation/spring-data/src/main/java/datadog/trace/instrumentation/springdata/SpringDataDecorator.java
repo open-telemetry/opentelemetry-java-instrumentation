@@ -29,13 +29,13 @@ public final class SpringDataDecorator extends ClientDecorator {
     return "spring-data";
   }
 
-  public Span onOperation(final Span span, final Method transactionalMethod) {
+  public Span onOperation(final Span span, final Method method) {
     assert span != null;
-    assert transactionalMethod != null;
+    assert method != null;
 
-    if (transactionalMethod != null) {
-      final Class<?> clazz = transactionalMethod.getDeclaringClass();
-      final String methodName = transactionalMethod.getName();
+    if (method != null) {
+      final Class<?> clazz = method.getDeclaringClass();
+      final String methodName = method.getName();
       final String className = clazz.getSimpleName();
       final String operationName = className + "." + methodName;
 
