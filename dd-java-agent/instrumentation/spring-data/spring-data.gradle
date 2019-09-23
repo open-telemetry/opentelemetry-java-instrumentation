@@ -1,8 +1,8 @@
 muzzle {
   pass {
     group = 'org.springframework'
-    module = 'spring-tx'
-    versions = "[2.5.0.RELEASE,)"
+    module = 'sring-data'
+    versions = "[2.0.0.RELEASE,)"
     extraDependency "aopalliance:aopalliance:1.0"
   }
 }
