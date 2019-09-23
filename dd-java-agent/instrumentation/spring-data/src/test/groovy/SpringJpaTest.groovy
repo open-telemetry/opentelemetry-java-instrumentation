@@ -1,7 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import io.opentracing.tag.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import spock.lang.Shared
 import spring.Customer
 import spring.CustomerRepository
 import spring.PersistenceConfig
