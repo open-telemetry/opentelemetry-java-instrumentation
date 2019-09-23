@@ -1,29 +1,26 @@
 package datadog.trace.instrumentation.springdata;
 
+import static datadog.trace.instrumentation.springdata.SpringDataDecorator.DECORATOR;
+import static net.bytebuddy.matcher.ElementMatchers.*;
+
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.util.GlobalTracer;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.utility.JavaModule;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
-
-import java.lang.reflect.Method;
-import java.security.ProtectionDomain;
-import java.util.Collections;
-import java.util.Map;
-
-import static datadog.trace.instrumentation.springdata.SpringDataDecorator.DECORATOR;
-import static net.bytebuddy.matcher.ElementMatchers.*;
 
 @AutoService(Instrumenter.class)
 public final class SpringRepositoryInstrumentation extends Instrumenter.Default {
@@ -50,22 +47,22 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
-      isConstructor(),
-      RepositoryFactorySupportAdvice.class.getName());
+        isConstructor(), RepositoryFactorySupportAdvice.class.getName());
   }
 
   public static class RepositoryFactorySupportAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onConstruction(
-      @Advice.This RepositoryFactorySupport repositoryFactorySupport) {
+        @Advice.This RepositoryFactorySupport repositoryFactorySupport) {
       repositoryFactorySupport.addRepositoryProxyPostProcessor(
-        InterceptingRepositoryProxyPostProcessor.INSTANCE);
+          InterceptingRepositoryProxyPostProcessor.INSTANCE);
     }
   }
 
-  public static final class InterceptingRepositoryProxyPostProcessor implements RepositoryProxyPostProcessor {
+  public static final class InterceptingRepositoryProxyPostProcessor
+      implements RepositoryProxyPostProcessor {
     public static final RepositoryProxyPostProcessor INSTANCE =
-      new InterceptingRepositoryProxyPostProcessor();
+        new InterceptingRepositoryProxyPostProcessor();
 
     @Override
     public void postProcess(ProxyFactory factory) {
@@ -86,7 +83,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
       boolean isRepositoryOp = Repository.class.isAssignableFrom(clazz);
       // non-Repository methods including Object methods will also flow through
       // this interceptor.  Don't create spans for those.
-      if ( !isRepositoryOp ) {
+      if (!isRepositoryOp) {
         return methodInvocation.proceed();
       }
 
@@ -98,7 +95,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
       Object result = null;
       try {
         result = methodInvocation.proceed();
-      } catch ( Throwable t ) {
+      } catch (Throwable t) {
         DECORATOR.onError(scope, t);
       } finally {
         DECORATOR.beforeFinish(scope);
