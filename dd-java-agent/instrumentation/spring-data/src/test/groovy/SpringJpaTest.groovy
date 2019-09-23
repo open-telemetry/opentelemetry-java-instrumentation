@@ -8,14 +8,14 @@ import spring.PersistenceConfig
 
 // Modified from signalfx version because of differences in JDBC integration
 class SpringJpaTest extends AgentTestRunner {
-
-  @Shared
-  def context = new AnnotationConfigApplicationContext(PersistenceConfig)
-
-  @Shared
-  def repo = context.getBean(CustomerRepository)
-
   def "test CRUD"() {
+    // moved inside test -- otherwise, miss the opportunity to instrument
+    def context = new AnnotationConfigApplicationContext(PersistenceConfig)
+    def repo = context.getBean(CustomerRepository)
+
+    // when Spring JPA sets up, it issues metadata queries -- clear those traces
+    TEST_WRITER.clear()
+
     setup:
     def customer = new Customer("Bob", "Anonymous")
 

@@ -1,14 +1,13 @@
 package datadog.trace.instrumentation.springdata;
 
 import datadog.trace.agent.decorator.ClientDecorator;
-import datadog.trace.agent.decorator.OrmClientDecorator;
 import io.opentracing.Span;
 import java.lang.reflect.Method;
 
-public final class SpringTransactionDecorator extends ClientDecorator {
-  public static final SpringTransactionDecorator DECORATOR = new SpringTransactionDecorator();
+public final class SpringDataDecorator extends ClientDecorator {
+  public static final SpringDataDecorator DECORATOR = new SpringDataDecorator();
 
-  private SpringTransactionDecorator() {}
+  private SpringDataDecorator() {}
 
   @Override
   protected String service() {
