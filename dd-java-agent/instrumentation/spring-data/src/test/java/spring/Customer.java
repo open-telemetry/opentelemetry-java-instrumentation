@@ -1,3 +1,5 @@
+// This file includes software developed at SignalFx
+
 package spring;
 
 import javax.persistence.Entity;

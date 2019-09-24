@@ -1,3 +1,4 @@
+// This file includes software developed at SignalFx
 import datadog.trace.agent.test.AgentTestRunner
 import io.opentracing.tag.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -5,7 +6,6 @@ import spring.Customer
 import spring.CustomerRepository
 import spring.PersistenceConfig
 
-// Modified from signalfx version because of differences in JDBC integration
 class SpringJpaTest extends AgentTestRunner {
   def "test CRUD"() {
     // moved inside test -- otherwise, miss the opportunity to instrument

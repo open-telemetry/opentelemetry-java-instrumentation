@@ -1,3 +1,5 @@
+// This file includes software developed at SignalFx
+
 package datadog.trace.instrumentation.springdata;
 
 import static datadog.trace.instrumentation.springdata.SpringDataDecorator.DECORATOR;
