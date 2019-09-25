@@ -67,7 +67,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
     public static final RepositoryProxyPostProcessor INSTANCE =
         new InterceptingRepositoryProxyPostProcessor();
 
-    // DQH - TODO: Implement old & new signatures of postProcess for versiosn compatibility
+    // DQH - TODO: Implement old & new signatures of postProcess for version compatibility
     // Probably better to split by version
 
     public void postProcess(final ProxyFactory factory) {
