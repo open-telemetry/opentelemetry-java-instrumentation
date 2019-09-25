@@ -2,21 +2,21 @@
 import datadog.trace.agent.test.AgentTestRunner
 import io.opentracing.tag.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import spring.jpa.Customer
-import spring.jpa.CustomerRepository
+import spring.jpa.JpaCustomer
+import spring.jpa.JpaCustomerRepository
 import spring.jpa.JpaPersistenceConfig
 
 class SpringJpaTest extends AgentTestRunner {
   def "test CRUD"() {
     // moved inside test -- otherwise, miss the opportunity to instrument
     def context = new AnnotationConfigApplicationContext(JpaPersistenceConfig)
-    def repo = context.getBean(CustomerRepository)
+    def repo = context.getBean(JpaCustomerRepository)
 
     // when Spring JPA sets up, it issues metadata queries -- clear those traces
     TEST_WRITER.clear()
 
     setup:
-    def customer = new Customer("Bob", "Anonymous")
+    def customer = new JpaCustomer("Bob", "Anonymous")
 
     expect:
     customer.id == null
@@ -112,7 +112,7 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "CustomerRepository.findByLastName"
+          operationName "JpaCustomerRepository.findByLastName"
           serviceName "spring-data"
           errored false
           tags {
