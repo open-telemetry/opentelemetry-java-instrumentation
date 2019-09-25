@@ -21,13 +21,14 @@ testSets {
 
 dependencies {
   compileOnly(group: 'aopalliance', name: 'aopalliance', version: '1.0')
-  compileOnly(group: 'org.springframework.data', name: 'spring-data-commons', version: '1.5.0.RELEASE')
+  compileOnly(group: 'org.springframework.data', name: 'spring-data-commons', version: '2.0.0.RELEASE')
   compileOnly(group: 'org.springframework', name: 'spring-aop', version: '3.0.0.RELEASE')
 
   testCompile project(':dd-java-agent:instrumentation:jdbc')
   testCompile group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
   testCompile group: 'org.springframework', name: 'spring-test', version: '3.0.0.RELEASE'
   testCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.2.0.RELEASE'
+  // testCompile group: 'org.springframework.data', name: 'spring-data-jdbc', version: '1.0.0.RELEASE'
   testCompile group: 'com.mysema.querydsl', name: 'querydsl-jpa', version: '3.7.4'
   testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
   testCompile group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
