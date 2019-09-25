@@ -15,8 +15,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 @EnableJpaRepositories(basePackages = "spring/jpa")
 public class JpaPersistenceConfig {
 
-  @Bean(name = "transactionManager")
-  public PlatformTransactionManager dbTransactionManager() {
+  @Bean
+  public PlatformTransactionManager transactionManager() {
     final JpaTransactionManager transactionManager = new JpaTransactionManager();
     transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
     return transactionManager;
