@@ -2,7 +2,7 @@ package datadog.trace.context;
 
 import java.io.Closeable;
 
-/** An object when can propagate a datadog trace across multiple threads. */
+/** An object which can propagate a datadog trace across multiple threads. */
 public interface TraceScope extends Closeable {
   /**
    * Prevent the trace attached to this TraceScope from reporting until the returned Continuation
