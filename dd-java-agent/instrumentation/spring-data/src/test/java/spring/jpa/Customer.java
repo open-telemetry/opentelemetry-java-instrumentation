@@ -1,4 +1,6 @@
-package spring;
+// This file includes software developed at SignalFx
+
+package spring.jpa;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

@@ -2,9 +2,9 @@
 import datadog.trace.agent.test.AgentTestRunner
 import io.opentracing.tag.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import spring.Customer
-import spring.CustomerRepository
-import spring.PersistenceConfig
+import spring.jpa.Customer
+import spring.jpa.CustomerRepository
+import spring.jpa.PersistenceConfig
 
 class SpringJpaTest extends AgentTestRunner {
   def "test CRUD"() {

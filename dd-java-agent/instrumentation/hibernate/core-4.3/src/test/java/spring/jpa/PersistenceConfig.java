@@ -1,4 +1,4 @@
-package spring;
+package spring.jpa;
 
 import java.util.Properties;
 import javax.sql.DataSource;
@@ -11,7 +11,7 @@ import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-@EnableJpaRepositories(basePackages = "spring")
+@EnableJpaRepositories(basePackages = "spring/jpa")
 public class PersistenceConfig {
 
   @Bean(name = "transactionManager")
@@ -30,7 +30,7 @@ public class PersistenceConfig {
 
     final LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
     em.setDataSource(dataSource());
-    em.setPackagesToScan("spring");
+    em.setPackagesToScan("spring/jpa");
     em.setJpaVendorAdapter(vendorAdapter);
     em.setJpaProperties(additionalProperties());
 

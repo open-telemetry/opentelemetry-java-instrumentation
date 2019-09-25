@@ -1,9 +1,9 @@
 import datadog.trace.agent.test.AgentTestRunner
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
-import spring.Customer
-import spring.CustomerRepository
-import spring.PersistenceConfig
+import spring.jpa.Customer
+import spring.jpa.CustomerRepository
+import spring.jpa.PersistenceConfig
 
 
 /**
