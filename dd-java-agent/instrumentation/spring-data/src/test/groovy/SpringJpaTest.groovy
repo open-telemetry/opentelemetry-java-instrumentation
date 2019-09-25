@@ -4,12 +4,12 @@ import io.opentracing.tag.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spring.jpa.Customer
 import spring.jpa.CustomerRepository
-import spring.jpa.PersistenceConfig
+import spring.jpa.JpaPersistenceConfig
 
 class SpringJpaTest extends AgentTestRunner {
   def "test CRUD"() {
     // moved inside test -- otherwise, miss the opportunity to instrument
-    def context = new AnnotationConfigApplicationContext(PersistenceConfig)
+    def context = new AnnotationConfigApplicationContext(JpaPersistenceConfig)
     def repo = context.getBean(CustomerRepository)
 
     // when Spring JPA sets up, it issues metadata queries -- clear those traces
