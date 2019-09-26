@@ -12,7 +12,7 @@ import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-@EnableJpaRepositories(basePackages = "spring/jpa")
+@EnableJpaRepositories(basePackages="spring.jpa")
 public class JpaPersistenceConfig {
 
   @Bean
@@ -24,14 +24,13 @@ public class JpaPersistenceConfig {
 
   @Bean
   public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-
     final HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     vendorAdapter.setDatabase(Database.HSQL);
     vendorAdapter.setGenerateDdl(true);
 
     final LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
     em.setDataSource(dataSource());
-    em.setPackagesToScan("spring/jpa");
+    em.setPackagesToScan("spring.jpa");
     em.setJpaVendorAdapter(vendorAdapter);
     return em;
   }
