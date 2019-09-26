@@ -17,7 +17,6 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.opentracing.propagation.Format;
-import io.opentracing.util.GlobalTracer;
 
 public class TracingClientInterceptor implements ClientInterceptor {
 
@@ -38,7 +37,7 @@ public class TracingClientInterceptor implements ClientInterceptor {
             .buildSpan("grpc.client")
             .withTag(DDTags.RESOURCE_NAME, method.getFullMethodName())
             .start();
-    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+    try (final Scope scope = tracer.scopeManager().activate(span, false)) {
       DECORATE.afterStart(span);
       if (scope instanceof TraceScope) {
         ((TraceScope) scope).setAsyncPropagation(true);
