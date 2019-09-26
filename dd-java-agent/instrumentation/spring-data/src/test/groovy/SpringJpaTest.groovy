@@ -25,7 +25,7 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "CrudRepository.findAll"
+          operationName "JpaRepository.findAll"
           serviceName "spring-data"
           errored false
           tags {
