@@ -4,7 +4,7 @@ muzzle {
   pass {
     group = 'org.springframework'
     module = 'sring-data'
-    versions = "[2.0.0.RELEASE,)"
+    versions = "[1.9.0.RELEASE,)"
     extraDependency "aopalliance:aopalliance:1.0"
   }
 }
@@ -27,15 +27,16 @@ dependencies {
   compileOnly(group: 'org.springframework.data', name: 'spring-data-commons', version: '1.9.0.RELEASE')
   compileOnly(group: 'org.springframework', name: 'spring-aop', version: '3.0.0.RELEASE')
 
-  testCompile project(':dd-java-agent:instrumentation:jdbc')
   testCompile group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
+
+  // JPA dependencies
+  testCompile project(':dd-java-agent:instrumentation:jdbc')
   testCompile group: 'org.springframework', name: 'spring-test', version: '3.0.0.RELEASE'
   testCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.7.0.RELEASE'
-  testCompile group: 'org.springframework.data', name: 'spring-data-elasticsearch', version: '1.1.0.RELEASE'
   testCompile group: 'com.mysema.querydsl', name: 'querydsl-jpa', version: '3.7.4'
   testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
   testCompile group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
-
+  
   latestDepTestCompile group: 'org.springframework', name: 'spring-test', version: '+'
   latestDepTestCompile group: 'org.springframework', name: 'spring-context', version: '+'
   latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-commons', version: '1.9.+'
