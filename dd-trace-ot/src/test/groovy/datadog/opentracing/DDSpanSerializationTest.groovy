@@ -1,6 +1,5 @@
 package datadog.opentracing
 
-
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.collect.Maps
 import datadog.trace.agent.test.utils.ConfigUtils
@@ -128,7 +127,9 @@ class DDSpanSerializationTest extends Specification {
     value                                                       | _
     BigInteger.ZERO                                             | _
     BigInteger.ONE                                              | _
+    new BigInteger("8223372036854775807")                       | _
     BigInteger.valueOf(Long.MAX_VALUE).subtract(BigInteger.ONE) | _
     BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE)      | _
+    BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE)      | _
   }
 }
