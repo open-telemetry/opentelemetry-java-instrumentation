@@ -2,7 +2,9 @@
 
 package datadog.trace.instrumentation.springdata;
 
+import datadog.opentracing.DDSpan;
 import datadog.trace.agent.decorator.ClientDecorator;
+import datadog.trace.api.interceptor.MutableSpan;
 import io.opentracing.Span;
 import java.lang.reflect.Method;
 
@@ -13,7 +15,7 @@ public final class SpringDataDecorator extends ClientDecorator {
 
   @Override
   protected String service() {
-    return "spring-data";
+    return null;
   }
 
   @Override
@@ -36,12 +38,9 @@ public final class SpringDataDecorator extends ClientDecorator {
     assert method != null;
 
     if (method != null) {
-      final Class<?> clazz = method.getDeclaringClass();
-      final String methodName = method.getName();
-      final String className = clazz.getSimpleName();
-      final String operationName = className + "." + methodName;
-
-      span.setOperationName(operationName);
+      if ( span instanceof MutableSpan ) {
+        ((MutableSpan)span).setResourceName(spanNameForMethod(method));
+      }
     }
     return span;
   }

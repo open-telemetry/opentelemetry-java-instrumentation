@@ -25,8 +25,8 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "JpaRepository.findAll"
-          serviceName "spring-data"
+          operationName "repository.operation"
+          resourceName "JpaRepository.findAll"
           errored false
           tags {
             "$Tags.COMPONENT.key" "spring-data"
@@ -52,8 +52,8 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "CrudRepository.save"
-          serviceName "spring-data"
+          operationName "repository.operation"
+          resourceName "CrudRepository.save"
           errored false
           tags {
             "$Tags.COMPONENT.key" "spring-data"
@@ -79,8 +79,8 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "CrudRepository.save"
-          serviceName "spring-data"
+          operationName "repository.operation"
+          resourceName "CrudRepository.save"
           errored false
           tags {
             "$Tags.COMPONENT.key" "spring-data"
@@ -112,8 +112,8 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          operationName "JpaCustomerRepository.findByLastName"
-          serviceName "spring-data"
+          operationName "repository.operation"
+          resourceName "JpaCustomerRepository.findByLastName"
           errored false
           tags {
             "$Tags.COMPONENT.key" "spring-data"
@@ -137,8 +137,8 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          operationName "CrudRepository.delete"
-          serviceName "spring-data"
+          operationName "repository.operation"
+          resourceName "CrudRepository.delete"
           errored false
           tags {
             "$Tags.COMPONENT.key" "spring-data"
