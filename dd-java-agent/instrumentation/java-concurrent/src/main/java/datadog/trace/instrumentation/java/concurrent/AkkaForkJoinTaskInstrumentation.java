@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.java.concurrent;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -64,11 +65,9 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(
+    return singletonMap(
         named("exec").and(takesArguments(0)).and(not(isAbstract())),
         ForkJoinTaskAdvice.class.getName());
-    return transformers;
   }
 
   public static class ForkJoinTaskAdvice {
