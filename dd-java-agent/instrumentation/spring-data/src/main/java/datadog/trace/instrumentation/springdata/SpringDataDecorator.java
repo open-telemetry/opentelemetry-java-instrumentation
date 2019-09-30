@@ -4,7 +4,6 @@ package datadog.trace.instrumentation.springdata;
 
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDTags;
-import datadog.trace.api.interceptor.MutableSpan;
 import io.opentracing.Span;
 import java.lang.reflect.Method;
 
