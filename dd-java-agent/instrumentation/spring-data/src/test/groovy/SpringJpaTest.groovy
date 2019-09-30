@@ -106,9 +106,6 @@ class SpringJpaTest extends AgentTestRunner {
     customer = repo.findByLastName("Anonymous")[0] // select
 
     then:
-    // TODO unnecessary?
-    // customer.id == savedId
-    // customer.firstName == "Bill"
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
