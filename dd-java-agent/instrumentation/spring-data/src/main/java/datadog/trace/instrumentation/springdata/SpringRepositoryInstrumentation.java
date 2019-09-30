@@ -7,6 +7,7 @@ import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.util.GlobalTracer;
@@ -99,6 +100,10 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
       }
 
       final Scope scope = GlobalTracer.get().buildSpan("repository.operation").startActive(true);
+      if (scope instanceof TraceScope) {
+        ((TraceScope) scope).setAsyncPropagation(true);
+      }
+
       final Span span = scope.span();
       DECORATOR.afterStart(span);
       DECORATOR.onOperation(span, invokedMethod);
