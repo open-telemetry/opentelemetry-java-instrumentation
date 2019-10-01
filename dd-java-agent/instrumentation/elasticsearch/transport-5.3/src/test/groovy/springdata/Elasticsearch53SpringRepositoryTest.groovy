@@ -4,19 +4,44 @@ import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import io.opentracing.tag.Tags
-import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
+import java.lang.reflect.Proxy
+
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
 
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 @RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
-  @Shared
-  ApplicationContext applicationContext = new AnnotationConfigApplicationContext(Config)
+  // Setting up appContext & repo with @Shared doesn't allow
+  // spring-data instrumentation to applied.
+  // To change the timing without adding ugly checks everywhere -
+  // use a dynamic proxy.  There's probably a more "groovy" way to do this.
 
   @Shared
-  DocRepository repo = applicationContext.getBean(DocRepository)
+  DocRepository repo = Proxy.newProxyInstance(
+    getClass().getClassLoader(),
+    [DocRepository] as Class[],
+    new LazyProxyInvoker());
+
+  static class LazyProxyInvoker implements InvocationHandler {
+    def repo;
+
+    DocRepository getOrCreateRepository() {
+      if ( repo != null ) return repo;
+
+      def applicationContext = new AnnotationConfigApplicationContext(Config)
+      repo = applicationContext.getBean(DocRepository)
+      return repo
+    }
+
+    @Override
+    Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      return method.invoke(getOrCreateRepository(), args)
+    }
+  }
 
   def setup() {
     TEST_WRITER.clear()
