@@ -12,22 +12,43 @@ import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 @RetryOnFailure(times = 3, delaySeconds = 1)
 class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
-  @Shared
-  ApplicationContext applicationContext = new AnnotationConfigApplicationContext(Config)
+  static def repo
 
-  @Shared
-  DocRepository repo = applicationContext.getBean(DocRepository)
+  def createRepo() {
+    def applicationContext
+    def repo
 
-  def setup() {
+    runUnderTrace("createRepo") {
+      applicationContext = new AnnotationConfigApplicationContext(Config)
+      repo = applicationContext.getBean(DocRepository)
+    }
+    // NodeStatsAction
+    // IndicesExistAction
+    // IndexAction
+    // RefreshAction
+    TEST_WRITER.waitForTraces(1)
     TEST_WRITER.clear()
+
+    return repo
+  }
+
+  def setupRepo() {
+    if (repo == null) {
+      repo = createRepo()
+    }
+
     runUnderTrace("delete") {
       repo.deleteAll()
     }
     TEST_WRITER.waitForTraces(1)
     TEST_WRITER.clear()
+
+    return repo
   }
 
   def "test empty repo"() {
+    def repo = setupRepo()
+
     when:
     def result = repo.findAll()
 
@@ -62,6 +83,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
   }
 
   def "test CRUD"() {
+    def repo = setupRepo()
+
     when:
     def doc = new Doc()
 
