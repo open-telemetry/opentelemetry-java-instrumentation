@@ -32,8 +32,14 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     DocRepository getOrCreateRepository() {
       if ( repo != null ) return repo;
 
-      def applicationContext = new AnnotationConfigApplicationContext(Config)
-      repo = applicationContext.getBean(DocRepository)
+      TEST_WRITER.clear()
+      runUnderTrace("setup") {
+        def applicationContext = new AnnotationConfigApplicationContext(Config)
+        repo = applicationContext.getBean(DocRepository)
+      }
+      TEST_WRITER.waitForTraces(1)
+      TEST_WRITER.clear()
+
       return repo
     }
 
@@ -61,13 +67,25 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
 
     and:
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
+          operationName "repository.operation"
+          resourceName "CrudRepository.findAll"
+          tags {
+            "$Tags.COMPONENT.key" "spring-data"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            defaultTags()
+          }
+        }
+
+        span(1) {
           serviceName "elasticsearch"
           resourceName "SearchAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           errored false
+          childOf(span(0))
+
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
@@ -94,12 +112,42 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     repo.index(doc) == doc
 
     and:
-    assertTraces(2) {
-      trace(0, 1) {
+    assertTraces(1) {
+      trace(0, 3) {
         span(0) {
+          resourceName "ElasticsearchRepository.index"
+          operationName "repository.operation"
+          tags {
+            "$Tags.COMPONENT.key" "spring-data"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            defaultTags()
+          }
+        }
+
+        span(1) {
+          resourceName "RefreshAction"
+          operationName "elasticsearch.query"
+          spanType DDSpanTypes.ELASTICSEARCH
+          childOf(span(0))
+          tags {
+            "$Tags.COMPONENT.key" "elasticsearch-java"
+            "$Tags.DB_TYPE.key" "elasticsearch"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "elasticsearch.action" "RefreshAction"
+            "elasticsearch.request" "RefreshRequest"
+            "elasticsearch.request.indices" indexName
+            "elasticsearch.shard.broadcast.failed" 0
+            "elasticsearch.shard.broadcast.successful" 5
+            "elasticsearch.shard.broadcast.total" 10
+            defaultTags()
+          }
+        }
+
+        span(2) {
           resourceName "IndexAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
+          childOf(span(0))
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
@@ -117,25 +165,6 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
       }
-      trace(1, 1) {
-        span(0) {
-          resourceName "RefreshAction"
-          operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
-          tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "elasticsearch.action" "RefreshAction"
-            "elasticsearch.request" "RefreshRequest"
-            "elasticsearch.request.indices" indexName
-            "elasticsearch.shard.broadcast.failed" 0
-            "elasticsearch.shard.broadcast.successful" 5
-            "elasticsearch.shard.broadcast.total" 10
-            defaultTags()
-          }
-        }
-      }
     }
     TEST_WRITER.clear()
 
@@ -144,12 +173,23 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
 
     and:
     assertTraces(1) {
-      trace(0, 1) {
+      trace(0, 2) {
         span(0) {
+          resourceName "CrudRepository.findById"
+          operationName "repository.operation"
+          tags {
+            "$Tags.COMPONENT.key" "spring-data"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            defaultTags()
+          }
+        }
+
+        span(1) {
           serviceName "elasticsearch"
           resourceName "GetAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
+          childOf(span(0))
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
@@ -175,12 +215,40 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     repo.findById("1").get() == doc
 
     and:
-    assertTraces(3) {
-      trace(0, 1) {
+    assertTraces(2) {
+      trace(0, 3) {
         span(0) {
+          resourceName "ElasticsearchRepository.index"
+          operationName "repository.operation"
+          tags {
+            "$Tags.COMPONENT.key" "spring-data"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            defaultTags()
+          }
+        }
+        span(1) {
+          resourceName "RefreshAction"
+          operationName "elasticsearch.query"
+          spanType DDSpanTypes.ELASTICSEARCH
+          childOf(span(0))
+          tags {
+            "$Tags.COMPONENT.key" "elasticsearch-java"
+            "$Tags.DB_TYPE.key" "elasticsearch"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "elasticsearch.action" "RefreshAction"
+            "elasticsearch.request" "RefreshRequest"
+            "elasticsearch.request.indices" indexName
+            "elasticsearch.shard.broadcast.failed" 0
+            "elasticsearch.shard.broadcast.successful" 5
+            "elasticsearch.shard.broadcast.total" 10
+            defaultTags()
+          }
+        }
+        span(2) {
           resourceName "IndexAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
+          childOf(span(0))
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
@@ -198,31 +266,23 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
       }
-      trace(1, 1) {
+      trace(1, 2) {
         span(0) {
-          resourceName "RefreshAction"
-          operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
+          resourceName "CrudRepository.findById"
+          operationName "repository.operation"
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
+            "$Tags.COMPONENT.key" "spring-data"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "elasticsearch.action" "RefreshAction"
-            "elasticsearch.request" "RefreshRequest"
-            "elasticsearch.request.indices" indexName
-            "elasticsearch.shard.broadcast.failed" 0
-            "elasticsearch.shard.broadcast.successful" 5
-            "elasticsearch.shard.broadcast.total" 10
             defaultTags()
           }
         }
-      }
-      trace(2, 1) {
-        span(0) {
+
+        span(1) {
           serviceName "elasticsearch"
           resourceName "GetAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
+          childOf(span(0))
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
@@ -247,12 +307,41 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
     !repo.findAll().iterator().hasNext()
 
     and:
-    assertTraces(3) {
-      trace(0, 1) {
+    assertTraces(2) {
+      trace(0, 3) {
         span(0) {
+          resourceName "CrudRepository.deleteById"
+          operationName "repository.operation"
+          tags {
+            "$Tags.COMPONENT.key" "spring-data"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            defaultTags()
+          }
+        }
+
+        span(1) {
+          resourceName "RefreshAction"
+          operationName "elasticsearch.query"
+          spanType DDSpanTypes.ELASTICSEARCH
+          childOf(span(0))
+          tags {
+            "$Tags.COMPONENT.key" "elasticsearch-java"
+            "$Tags.DB_TYPE.key" "elasticsearch"
+            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "elasticsearch.action" "RefreshAction"
+            "elasticsearch.request" "RefreshRequest"
+            "elasticsearch.request.indices" indexName
+            "elasticsearch.shard.broadcast.failed" 0
+            "elasticsearch.shard.broadcast.successful" 5
+            "elasticsearch.shard.broadcast.total" 10
+            defaultTags()
+          }
+        }
+        span(2) {
           resourceName "DeleteAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
+          childOf(span(0))
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
@@ -269,31 +358,24 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           }
         }
       }
-      trace(1, 1) {
+
+      trace(1, 2) {
         span(0) {
-          resourceName "RefreshAction"
-          operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
+          resourceName "CrudRepository.findAll"
+          operationName "repository.operation"
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
+            "$Tags.COMPONENT.key" "spring-data"
             "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "elasticsearch.action" "RefreshAction"
-            "elasticsearch.request" "RefreshRequest"
-            "elasticsearch.request.indices" indexName
-            "elasticsearch.shard.broadcast.failed" 0
-            "elasticsearch.shard.broadcast.successful" 5
-            "elasticsearch.shard.broadcast.total" 10
             defaultTags()
           }
         }
-      }
-      trace(2, 1) {
-        span(0) {
+
+        span(1) {
           serviceName "elasticsearch"
           resourceName "SearchAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
+          childOf(span(0))
           tags {
             "$Tags.COMPONENT.key" "elasticsearch-java"
             "$Tags.DB_TYPE.key" "elasticsearch"
