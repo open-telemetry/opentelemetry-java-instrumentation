@@ -105,12 +105,12 @@ public class TracingServerInterceptor implements ServerInterceptor {
         delegate().onMessage(message);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
-        DECORATE.beforeFinish(span);
+        DECORATE.beforeFinish(this.span);
         this.span.finish();
         throw e;
       } finally {
         scope.setAsyncPropagation(false);
-        DECORATE.afterStart(span);
+        DECORATE.beforeFinish(span);
         scope.close();
       }
     }
