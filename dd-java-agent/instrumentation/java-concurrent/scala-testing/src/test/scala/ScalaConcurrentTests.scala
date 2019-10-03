@@ -1,6 +1,5 @@
 import datadog.trace.api.Trace
-import datadog.trace.context.TraceScope
-import io.opentracing.util.GlobalTracer
+import datadog.trace.instrumentation.api.AgentTracer.{activeScope, activeSpan}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
@@ -13,7 +12,7 @@ class ScalaConcurrentTests {
     */
   @Trace
   def traceWithFutureAndCallbacks(): Integer = {
-    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
+    activeScope().setAsyncPropagation(true)
     val goodFuture: Future[Integer] = Future {
       tracedChild("goodFuture")
       1
@@ -34,7 +33,7 @@ class ScalaConcurrentTests {
 
   @Trace
   def tracedAcrossThreadsWithNoTrace(): Integer = {
-    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
+    activeScope().setAsyncPropagation(true)
     val goodFuture: Future[Integer] = Future {
       1
     }
@@ -54,7 +53,7 @@ class ScalaConcurrentTests {
     */
   @Trace
   def traceWithPromises(): Integer = {
-    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
+    activeScope().setAsyncPropagation(true)
     val keptPromise = Promise[Boolean]()
     val brokenPromise = Promise[Boolean]()
     val afterPromise = keptPromise.future
@@ -87,7 +86,7 @@ class ScalaConcurrentTests {
     */
   @Trace
   def tracedWithFutureFirstCompletions(): Integer = {
-    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
+    activeScope().setAsyncPropagation(true)
     val completedVal = Future.firstCompletedOf(
       List(
         Future {
@@ -111,7 +110,7 @@ class ScalaConcurrentTests {
     */
   @Trace
   def tracedTimeout(): Integer = {
-    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
+    activeScope().setAsyncPropagation(true)
     val f: Future[String] = Future {
       tracedChild("timeoutChild")
       while (true) {
@@ -130,6 +129,6 @@ class ScalaConcurrentTests {
 
   @Trace
   def tracedChild(opName: String): Unit = {
-    GlobalTracer.get().activeSpan().setOperationName(opName)
+    activeSpan().setSpanName(opName)
   }
 }

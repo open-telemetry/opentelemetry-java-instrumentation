@@ -1,7 +1,6 @@
 import datadog.trace.api.Trace
-import datadog.trace.context.TraceScope
-import io.opentracing.Scope
-import io.opentracing.util.GlobalTracer
+import datadog.trace.instrumentation.api.AgentTracer.activeScope
+import datadog.trace.instrumentation.api.AgentTracer.activeSpan
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.selects.select
@@ -126,15 +125,12 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
 
   @Trace
   fun tracedChild(opName: String){
-    GlobalTracer.get().activeSpan().setOperationName(opName)
+    activeSpan().setSpanName(opName)
   }
 
   private fun <T> runTest(asyncPropagation: Boolean = true, block: suspend CoroutineScope.()->T ): T {
-    GlobalTracer.get().scopeManager().active().setAsyncPropagation(asyncPropagation)
+    activeScope().setAsyncPropagation(asyncPropagation)
     return runBlocking(dispatcher,block = block)
   }
-
-  private fun Scope.setAsyncPropagation(value: Boolean): Unit =
-    (this as TraceScope).setAsyncPropagation(value)
 }
 

@@ -1,10 +1,11 @@
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.Scope
-import io.opentracing.Tracer
+import datadog.trace.instrumentation.api.AgentScope
 import io.opentracing.tag.Tags
-import io.opentracing.util.GlobalTracer
 import org.hibernate.*
 import spock.lang.Shared
+
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan
 
 class SessionTest extends AbstractHibernateTest {
 
@@ -484,9 +485,7 @@ class SessionTest extends AbstractHibernateTest {
   def "test hibernate overlapping Sessions"() {
     setup:
 
-    Tracer tracer = GlobalTracer.get()
-
-    Scope scope = tracer.buildSpan("overlapping Sessions").startActive(true)
+    AgentScope scope = activateSpan(startSpan("overlapping Sessions"), true)
 
     def session1 = sessionFactory.openSession()
     session1.beginTransaction()

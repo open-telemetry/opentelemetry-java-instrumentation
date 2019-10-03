@@ -1,6 +1,5 @@
 import datadog.trace.api.Trace
-import datadog.trace.context.TraceScope
-import io.opentracing.util.GlobalTracer
+import datadog.trace.instrumentation.api.AgentTracer.activeScope
 import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.duration.Duration
@@ -22,7 +21,7 @@ class SlickUtils {
 
   @Trace
   def startQuery(query: String): Future[Vector[Int]] = {
-    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
+    activeScope().setAsyncPropagation(true)
     database.run(sql"#$query".as[Int])
   }
 
