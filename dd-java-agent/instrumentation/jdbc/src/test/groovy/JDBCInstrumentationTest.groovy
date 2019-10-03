@@ -4,7 +4,7 @@ import com.zaxxer.hikari.HikariDataSource
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import javax.sql.DataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver

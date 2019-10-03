@@ -2,7 +2,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.ActiveMQMessageConsumer
 import org.apache.activemq.ActiveMQMessageProducer
@@ -127,8 +127,8 @@ class JMS1Test extends AgentTestRunner {
 
           tags {
             defaultTags()
-            "${Tags.COMPONENT.key}" "jms"
-            "${Tags.SPAN_KIND.key}" "consumer"
+            "${Tags.COMPONENT}" "jms"
+            "${Tags.SPAN_KIND}" "consumer"
             "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
@@ -165,8 +165,8 @@ class JMS1Test extends AgentTestRunner {
 
           tags {
             defaultTags()
-            "${Tags.COMPONENT.key}" "jms"
-            "${Tags.SPAN_KIND.key}" "consumer"
+            "${Tags.COMPONENT}" "jms"
+            "${Tags.SPAN_KIND}" "consumer"
             "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
@@ -216,8 +216,8 @@ class JMS1Test extends AgentTestRunner {
 
           tags {
             defaultTags()
-            "${Tags.COMPONENT.key}" "jms"
-            "${Tags.SPAN_KIND.key}" "consumer"
+            "${Tags.COMPONENT}" "jms"
+            "${Tags.SPAN_KIND}" "consumer"
             "span.origin.type" ActiveMQMessageConsumer.name
           }
         }
@@ -248,8 +248,8 @@ class JMS1Test extends AgentTestRunner {
 
         tags {
           defaultTags()
-          "${Tags.COMPONENT.key}" "jms"
-          "${Tags.SPAN_KIND.key}" "producer"
+          "${Tags.COMPONENT}" "jms"
+          "${Tags.SPAN_KIND}" "producer"
           "span.origin.type" ActiveMQMessageProducer.name
         }
       }
@@ -273,8 +273,8 @@ class JMS1Test extends AgentTestRunner {
 
         tags {
           defaultTags(true)
-          "${Tags.COMPONENT.key}" "jms"
-          "${Tags.SPAN_KIND.key}" "consumer"
+          "${Tags.COMPONENT}" "jms"
+          "${Tags.SPAN_KIND}" "consumer"
           "span.origin.type" origin.name
         }
       }

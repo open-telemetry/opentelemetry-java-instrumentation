@@ -4,7 +4,7 @@ import akka.stream.testkit.TestSubscriber.Probe
 import akka.stream.testkit.javadsl.TestSink
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import play.inject.guice.GuiceApplicationBuilder
 import spock.lang.Shared
 
@@ -66,11 +66,11 @@ class LagomTest extends AgentTestRunner {
           errored false
           tags {
             defaultTags()
-            "$Tags.HTTP_STATUS.key" 101
-            "$Tags.HTTP_URL.key" "ws://localhost:${server.port()}/echo"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.COMPONENT.key" "akka-http-server"
+            "$Tags.HTTP_STATUS" 101
+            "$Tags.HTTP_URL" "ws://localhost:${server.port()}/echo"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+            "$Tags.COMPONENT" "akka-http-server"
           }
         }
         span(1) {
@@ -105,12 +105,12 @@ class LagomTest extends AgentTestRunner {
           errored true
           tags {
             defaultTags()
-            "$Tags.HTTP_STATUS.key" 500
-            "$Tags.HTTP_URL.key" "ws://localhost:${server.port()}/error"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.COMPONENT.key" "akka-http-server"
-            "$Tags.ERROR.key" true
+            "$Tags.HTTP_STATUS" 500
+            "$Tags.HTTP_URL" "ws://localhost:${server.port()}/error"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+            "$Tags.COMPONENT" "akka-http-server"
+            "$Tags.ERROR" true
           }
         }
       }

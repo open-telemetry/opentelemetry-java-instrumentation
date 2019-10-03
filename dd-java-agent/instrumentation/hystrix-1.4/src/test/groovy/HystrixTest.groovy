@@ -1,7 +1,7 @@
 import com.netflix.hystrix.HystrixCommand
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import spock.lang.Timeout
 
 import java.util.concurrent.BlockingQueue
@@ -65,7 +65,7 @@ class HystrixTest extends AgentTestRunner {
             "hystrix.command" "HystrixTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT.key" "hystrix"
+            "$Tags.COMPONENT" "hystrix"
             defaultTags()
           }
         }
@@ -77,7 +77,7 @@ class HystrixTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -143,7 +143,7 @@ class HystrixTest extends AgentTestRunner {
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT.key" "hystrix"
+            "$Tags.COMPONENT" "hystrix"
             errorTags(IllegalArgumentException)
             defaultTags()
           }
@@ -159,7 +159,7 @@ class HystrixTest extends AgentTestRunner {
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT.key" "hystrix"
+            "$Tags.COMPONENT" "hystrix"
             defaultTags()
           }
         }

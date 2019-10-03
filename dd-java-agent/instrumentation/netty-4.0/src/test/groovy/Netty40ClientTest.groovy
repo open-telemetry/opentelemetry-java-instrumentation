@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.base.HttpClientTest
+import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty40.client.NettyHttpClientDecorator
-import io.opentracing.tag.Tags
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
 import org.asynchttpclient.DefaultAsyncHttpClientConfig
@@ -83,7 +83,7 @@ class Netty40ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT.key" "netty"
+            "$Tags.COMPONENT" "netty"
             Class errorClass = ConnectException
             try {
               errorClass = Class.forName('io.netty.channel.AbstractChannel$AnnotatedConnectException')

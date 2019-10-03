@@ -1,7 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -70,14 +70,14 @@ class RatpackOtherTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT.key" "netty"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${app.address.resolve(path)}"
-            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
-            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-            "$Tags.PEER_PORT.key" Integer
+            "$Tags.COMPONENT" "netty"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" 200
+            "$Tags.HTTP_URL" "${app.address.resolve(path)}"
+            "$Tags.PEER_HOSTNAME" "$app.address.host"
+            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
+            "$Tags.PEER_PORT" Integer
             defaultTags()
           }
         }
@@ -89,13 +89,13 @@ class RatpackOtherTest extends AgentTestRunner {
           childOf(span(0))
           errored false
           tags {
-            "$Tags.COMPONENT.key" "ratpack"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${app.address.resolve(path)}"
-            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
-            "$Tags.PEER_PORT.key" Integer
+            "$Tags.COMPONENT" "ratpack"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" 200
+            "$Tags.HTTP_URL" "${app.address.resolve(path)}"
+            "$Tags.PEER_HOSTNAME" "$app.address.host"
+            "$Tags.PEER_PORT" Integer
             defaultTags()
           }
         }

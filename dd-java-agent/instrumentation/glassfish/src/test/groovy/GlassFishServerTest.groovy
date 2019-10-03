@@ -1,8 +1,8 @@
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.servlet3.Servlet3Decorator
-import io.opentracing.tag.Tags
 import org.apache.catalina.servlets.DefaultServlet
 import org.glassfish.embeddable.BootstrapProperties
 import org.glassfish.embeddable.Deployer
@@ -104,20 +104,20 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
         "span.origin.type" { it.startsWith("TestServlets\$") || it == DefaultServlet.name }
 
         defaultTags(true)
-        "$Tags.COMPONENT.key" serverDecorator.component()
+        "$Tags.COMPONENT" serverDecorator.component()
         if (endpoint.errored) {
-          "$Tags.ERROR.key" endpoint.errored
+          "$Tags.ERROR" endpoint.errored
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
-        "$Tags.HTTP_STATUS.key" endpoint.status
-        "$Tags.HTTP_URL.key" "${endpoint.resolve(address)}"
-        "$Tags.PEER_HOSTNAME.key" { it == "localhost" || it == "127.0.0.1" }
-        "$Tags.PEER_PORT.key" Integer
-        "$Tags.PEER_HOST_IPV4.key" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_METHOD.key" method
-        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+        "$Tags.HTTP_STATUS" endpoint.status
+        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
+        "$Tags.PEER_PORT" Integer
+        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+        "$Tags.HTTP_METHOD" method
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
       }
     }
   }

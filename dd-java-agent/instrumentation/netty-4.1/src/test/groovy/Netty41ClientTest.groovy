@@ -1,6 +1,7 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.Trace
+import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty41.client.HttpClientTracingHandler
 import datadog.trace.instrumentation.netty41.client.NettyHttpClientDecorator
 import io.netty.channel.AbstractChannel
@@ -10,7 +11,6 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInitializer
 import io.netty.channel.embedded.EmbeddedChannel
 import io.netty.handler.codec.http.HttpClientCodec
-import io.opentracing.tag.Tags
 import org.asynchttpclient.AsyncCompletionHandler
 import org.asynchttpclient.AsyncHttpClient
 import org.asynchttpclient.DefaultAsyncHttpClientConfig
@@ -92,7 +92,7 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
           childOf span(0)
           errored true
           tags {
-            "$Tags.COMPONENT.key" "netty"
+            "$Tags.COMPONENT" "netty"
             errorTags AbstractChannel.AnnotatedConnectException, "Connection refused: localhost/127.0.0.1:$UNUSABLE_PORT"
             defaultTags()
           }
@@ -199,7 +199,7 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
           errored false
           tags {
             defaultTags()
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
           }
         }
         clientSpan(it, 2, span(1), method)

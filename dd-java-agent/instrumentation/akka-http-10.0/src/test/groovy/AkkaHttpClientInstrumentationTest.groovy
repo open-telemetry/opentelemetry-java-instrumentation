@@ -7,7 +7,7 @@ import akka.stream.ActorMaterializer
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.akkahttp.AkkaHttpClientDecorator
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import spock.lang.Shared
 
 class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDecorator> {
@@ -74,9 +74,9 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
           errored true
           tags {
             defaultTags()
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.COMPONENT.key" "akka-http-client"
-            "$Tags.ERROR.key" true
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "akka-http-client"
+            "$Tags.ERROR" true
             errorTags(NullPointerException)
           }
         }

@@ -11,7 +11,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate
 import org.springframework.amqp.core.Queue
@@ -368,14 +368,14 @@ class RabbitMQTest extends AgentTestRunner {
         if (exception) {
           errorTags(exception.class, errorMsg)
         }
-        "$Tags.COMPONENT.key" "rabbitmq-amqp"
-        "$Tags.PEER_HOSTNAME.key" { it == null || it instanceof String }
-        "$Tags.PEER_HOST_IPV4.key" { "127.0.0.1" }
-        "$Tags.PEER_PORT.key" { it == null || it instanceof Integer }
+        "$Tags.COMPONENT" "rabbitmq-amqp"
+        "$Tags.PEER_HOSTNAME" { it == null || it instanceof String }
+        "$Tags.PEER_HOST_IPV4" { "127.0.0.1" }
+        "$Tags.PEER_PORT" { it == null || it instanceof Integer }
 
         switch (tag("amqp.command")) {
           case "basic.publish":
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_PRODUCER
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             "amqp.command" "basic.publish"
             "amqp.exchange" { it == null || it == "some-exchange" || it == "some-error-exchange" }
             "amqp.routing_key" {
@@ -385,20 +385,20 @@ class RabbitMQTest extends AgentTestRunner {
             "message.size" Integer
             break
           case "basic.get":
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CONSUMER
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "amqp.command" "basic.get"
             "amqp.queue" { it == "some-queue" || it == "some-routing-queue" || it.startsWith("amq.gen-") }
             "message.size" { it == null || it instanceof Integer }
             break
           case "basic.deliver":
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CONSUMER
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "amqp.command" "basic.deliver"
             "span.origin.type" { it == "RabbitMQTest\$1" || it == "RabbitMQTest\$2" }
             "amqp.exchange" { it == "some-exchange" || it == "some-error-exchange" }
             "message.size" Integer
             break
           default:
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "amqp.command" { it == null || it == resource }
         }
         defaultTags(distributedRootSpan)

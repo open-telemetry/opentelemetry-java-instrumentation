@@ -1,5 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
+
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HEAD
@@ -30,7 +31,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           resourceName "POST /a"
           spanType "web"
           tags {
-            "$Tags.COMPONENT.key" "jax-rs-controller"
+            "$Tags.COMPONENT" "jax-rs-controller"
             defaultTags()
           }
         }
@@ -53,7 +54,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           resourceName name
           parent()
           tags {
-            "$Tags.COMPONENT.key" "jax-rs"
+            "$Tags.COMPONENT" "jax-rs"
             defaultTags()
           }
         }
@@ -63,7 +64,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
           spanType "web"
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "jax-rs-controller"
+            "$Tags.COMPONENT" "jax-rs-controller"
             defaultTags()
           }
         }

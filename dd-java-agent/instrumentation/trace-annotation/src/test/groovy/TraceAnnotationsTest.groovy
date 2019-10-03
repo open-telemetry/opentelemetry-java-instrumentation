@@ -2,8 +2,8 @@ import datadog.opentracing.decorators.ErrorFlag
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.Trace
+import datadog.trace.instrumentation.api.Tags
 import dd.test.trace.annotation.SayTracedHello
-import io.opentracing.tag.Tags
 
 import java.util.concurrent.Callable
 
@@ -30,7 +30,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -54,7 +54,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -77,7 +77,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -101,7 +101,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -123,7 +123,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -134,7 +134,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -145,7 +145,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -167,7 +167,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -178,7 +178,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -189,7 +189,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -211,7 +211,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -222,7 +222,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -233,7 +233,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -261,7 +261,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           operationName "ERROR"
           errored true
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             errorTags(error.class)
             defaultTags()
           }
@@ -290,7 +290,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           operationName "ERROR"
           errored true
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             errorTags(error.class)
             defaultTags()
           }

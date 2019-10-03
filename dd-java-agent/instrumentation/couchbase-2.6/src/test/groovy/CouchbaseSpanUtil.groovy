@@ -1,7 +1,7 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 
 class CouchbaseSpanUtil {
   // Reusable span assertion method.  Cannot directly override AbstractCouchbaseTest.assertCouchbaseSpan because
@@ -19,16 +19,16 @@ class CouchbaseSpanUtil {
         childOf((DDSpan) parentSpan)
       }
       tags {
-        "$Tags.COMPONENT.key" "couchbase-client"
-        "$Tags.DB_TYPE.key" "couchbase"
-        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+        "$Tags.COMPONENT" "couchbase-client"
+        "$Tags.DB_TYPE" "couchbase"
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         if (bucketName != null) {
           "bucket" bucketName
         }
 
         // Because of caching, not all requests hit the server so these tags may be absent
-        "$Tags.PEER_HOSTNAME.key" { it == "localhost" || it == "127.0.0.1" || it == null }
-        "$Tags.PEER_PORT.key" { it == null || Number }
+        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" || it == null }
+        "$Tags.PEER_PORT" { it == null || Number }
         "local.address" { it == null || String }
 
         // Not all couchbase operations have operation id.  Notably, 'ViewQuery's do not

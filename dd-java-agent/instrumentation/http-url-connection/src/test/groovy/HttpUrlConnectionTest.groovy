@@ -1,8 +1,8 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
-import io.opentracing.tag.Tags
 import spock.lang.Ignore
 import spock.lang.Requires
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
@@ -96,13 +96,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "http-url-connection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" STATUS
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.COMPONENT" "http-url-connection"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_URL" "$url"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" STATUS
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -114,13 +114,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "http-url-connection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" STATUS
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.COMPONENT" "http-url-connection"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_URL" "$url"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" STATUS
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -181,13 +181,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "http-url-connection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" STATUS
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.COMPONENT" "http-url-connection"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_URL" "$url"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" STATUS
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -199,13 +199,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "http-url-connection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" STATUS
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.COMPONENT" "http-url-connection"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_URL" "$url"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" STATUS
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -251,13 +251,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "http-url-connection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" STATUS
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.COMPONENT" "http-url-connection"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_URL" "$url"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" STATUS
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -319,13 +319,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "http-url-connection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
-            "$Tags.HTTP_METHOD.key" "POST"
-            "$Tags.HTTP_STATUS.key" STATUS
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.COMPONENT" "http-url-connection"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_URL" "$url"
+            "$Tags.HTTP_METHOD" "POST"
+            "$Tags.HTTP_STATUS" STATUS
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }

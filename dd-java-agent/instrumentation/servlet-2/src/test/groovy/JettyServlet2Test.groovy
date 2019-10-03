@@ -1,12 +1,13 @@
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.servlet2.Servlet2Decorator
-import io.opentracing.tag.Tags
-import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
+
+import javax.servlet.http.HttpServletRequest
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
@@ -42,7 +43,7 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
 
     jettyServer.setHandler(servletContext)
     jettyServer.start()
-    
+
     return jettyServer
   }
 
@@ -96,20 +97,20 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
         "span.origin.type" TestServlet2.Sync.name
 
         defaultTags(true)
-        "$Tags.COMPONENT.key" serverDecorator.component()
+        "$Tags.COMPONENT" serverDecorator.component()
         if (endpoint.errored) {
-          "$Tags.ERROR.key" endpoint.errored
+          "$Tags.ERROR" endpoint.errored
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
-        "$Tags.HTTP_STATUS.key" endpoint.status
-        "$Tags.HTTP_URL.key" "${endpoint.resolve(address)}"
-        "$Tags.PEER_HOSTNAME.key" "localhost"
+        "$Tags.HTTP_STATUS" endpoint.status
+        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.PEER_HOSTNAME" "localhost"
         // No peer port
-        "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-        "$Tags.HTTP_METHOD.key" method
-        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+        "$Tags.PEER_HOST_IPV4" "127.0.0.1"
+        "$Tags.HTTP_METHOD" method
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
       }
     }
   }

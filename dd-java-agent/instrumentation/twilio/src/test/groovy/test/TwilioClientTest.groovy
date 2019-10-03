@@ -12,7 +12,7 @@ import com.twilio.rest.api.v2010.account.Message
 import com.twilio.type.PhoneNumber
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import org.apache.http.HttpEntity
 import org.apache.http.HttpStatus
 import org.apache.http.StatusLine
@@ -147,8 +147,8 @@ class TwilioClientTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT.key" "twilio-sdk"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "twilio-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -201,8 +201,8 @@ class TwilioClientTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT.key" "twilio-sdk"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "twilio-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Call"
             "twilio.account" "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             "twilio.sid" "CAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -277,8 +277,8 @@ class TwilioClientTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT.key" "twilio-sdk"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "twilio-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -376,8 +376,8 @@ class TwilioClientTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT.key" "twilio-sdk"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "twilio-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -490,8 +490,8 @@ class TwilioClientTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT.key" "twilio-sdk"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "twilio-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -506,8 +506,8 @@ class TwilioClientTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT.key" "twilio-sdk"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "twilio-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -612,8 +612,8 @@ class TwilioClientTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT.key" "twilio-sdk"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "twilio-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -675,8 +675,8 @@ class TwilioClientTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT.key" "twilio-sdk"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "twilio-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -691,8 +691,8 @@ class TwilioClientTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
           tags {
-            "$Tags.COMPONENT.key" "twilio-sdk"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "twilio-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "twilio.type" "com.twilio.rest.api.v2010.account.Message"
             "twilio.account" "AC14984e09e497506cf0d5eb59b1f6ace7"
             "twilio.sid" "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"

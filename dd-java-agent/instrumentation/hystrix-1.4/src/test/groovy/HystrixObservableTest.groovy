@@ -3,7 +3,7 @@ import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import rx.Observable
 import rx.schedulers.Schedulers
 import spock.lang.Retry
@@ -85,7 +85,7 @@ class HystrixObservableTest extends AgentTestRunner {
             "hystrix.command" "HystrixObservableTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT.key" "hystrix"
+            "$Tags.COMPONENT" "hystrix"
             defaultTags()
           }
         }
@@ -97,7 +97,7 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -195,7 +195,7 @@ class HystrixObservableTest extends AgentTestRunner {
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT.key" "hystrix"
+            "$Tags.COMPONENT" "hystrix"
             errorTags(IllegalArgumentException)
             defaultTags()
           }
@@ -211,7 +211,7 @@ class HystrixObservableTest extends AgentTestRunner {
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT.key" "hystrix"
+            "$Tags.COMPONENT" "hystrix"
             defaultTags()
           }
         }
@@ -315,7 +315,7 @@ class HystrixObservableTest extends AgentTestRunner {
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT.key" "hystrix"
+            "$Tags.COMPONENT" "hystrix"
             errorTags(IllegalArgumentException)
             defaultTags()
           }
@@ -331,7 +331,7 @@ class HystrixObservableTest extends AgentTestRunner {
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT.key" "hystrix"
+            "$Tags.COMPONENT" "hystrix"
             errorTags(UnsupportedOperationException, "No fallback available.")
             defaultTags()
           }

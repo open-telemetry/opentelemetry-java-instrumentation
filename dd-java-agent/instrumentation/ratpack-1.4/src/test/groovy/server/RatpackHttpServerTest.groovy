@@ -4,9 +4,9 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty41.server.NettyHttpServerDecorator
 import datadog.trace.instrumentation.ratpack.RatpackServerDecorator
-import io.opentracing.tag.Tags
 import ratpack.error.ServerErrorHandler
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.handling.Context
@@ -106,17 +106,17 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf(parent as DDSpan)
       tags {
-        "$Tags.COMPONENT.key" RatpackServerDecorator.DECORATE.component()
-        "$Tags.HTTP_STATUS.key" Integer
-        "$Tags.HTTP_URL.key" String
-        "$Tags.PEER_HOSTNAME.key" "localhost"
-        "$Tags.PEER_PORT.key" Integer
-        "$Tags.PEER_HOST_IPV4.key" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_METHOD.key" String
-        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+        "$Tags.COMPONENT" RatpackServerDecorator.DECORATE.component()
+        "$Tags.HTTP_STATUS" Integer
+        "$Tags.HTTP_URL" String
+        "$Tags.PEER_HOSTNAME" "localhost"
+        "$Tags.PEER_PORT" Integer
+        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+        "$Tags.HTTP_METHOD" String
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         defaultTags()
         if (endpoint == ERROR) {
-          "$Tags.ERROR.key" true
+          "$Tags.ERROR" true
         } else if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }

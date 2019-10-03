@@ -2,10 +2,9 @@ import com.google.common.io.Files
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentracing.tag.Tags
-import javax.servlet.Servlet
 import org.apache.catalina.Context
 import org.apache.catalina.connector.Request
 import org.apache.catalina.connector.Response
@@ -15,6 +14,8 @@ import org.apache.catalina.startup.Tomcat
 import org.apache.catalina.valves.ErrorReportValve
 import org.apache.tomcat.JarScanFilter
 import org.apache.tomcat.JarScanType
+
+import javax.servlet.Servlet
 
 import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
@@ -58,7 +59,7 @@ abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> 
     (tomcatServer.host as StandardHost).errorReportValveClass = ErrorHandlerValve.name
 
     tomcatServer.start()
-    
+
     return tomcatServer
   }
 
@@ -255,20 +256,20 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
             }
 
             defaultTags(true)
-            "$Tags.COMPONENT.key" serverDecorator.component()
+            "$Tags.COMPONENT" serverDecorator.component()
             if (endpoint.errored) {
-              "$Tags.ERROR.key" endpoint.errored
+              "$Tags.ERROR" endpoint.errored
               "error.msg" { it == null || it == EXCEPTION.body }
               "error.type" { it == null || it == Exception.name }
               "error.stack" { it == null || it instanceof String }
             }
-            "$Tags.HTTP_STATUS.key" endpoint.status
-            "$Tags.HTTP_URL.key" "${endpoint.resolve(address)}"
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" Integer
-            "$Tags.PEER_HOST_IPV4.key" { it == null || it == "127.0.0.1" } // Optional
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_STATUS" endpoint.status
+            "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" Integer
+            "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
           }
         }
       }

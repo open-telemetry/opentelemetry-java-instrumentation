@@ -1,5 +1,5 @@
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import org.hibernate.Query
 import org.hibernate.Session
 
@@ -33,8 +33,8 @@ class QueryTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           parent()
           tags {
-            "$Tags.COMPONENT.key" "java-hibernate"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "java-hibernate"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -45,8 +45,8 @@ class QueryTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "java-hibernate"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "java-hibernate"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -57,8 +57,8 @@ class QueryTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "java-hibernate"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "java-hibernate"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -78,8 +78,8 @@ class QueryTest extends AbstractHibernateTest {
             spanType DDSpanTypes.HIBERNATE
             parent()
             tags {
-              "$Tags.COMPONENT.key" "java-hibernate"
-              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+              "$Tags.COMPONENT" "java-hibernate"
+              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               defaultTags()
             }
           }
@@ -90,8 +90,8 @@ class QueryTest extends AbstractHibernateTest {
             spanType DDSpanTypes.HIBERNATE
             childOf span(0)
             tags {
-              "$Tags.COMPONENT.key" "java-hibernate"
-              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+              "$Tags.COMPONENT" "java-hibernate"
+              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               defaultTags()
             }
           }
@@ -151,8 +151,8 @@ class QueryTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           parent()
           tags {
-            "$Tags.COMPONENT.key" "java-hibernate"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "java-hibernate"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -163,8 +163,8 @@ class QueryTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "java-hibernate"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "java-hibernate"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -175,8 +175,8 @@ class QueryTest extends AbstractHibernateTest {
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "java-hibernate"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "java-hibernate"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }

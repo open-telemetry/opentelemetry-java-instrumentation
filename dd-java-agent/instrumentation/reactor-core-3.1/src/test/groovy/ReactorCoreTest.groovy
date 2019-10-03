@@ -1,8 +1,8 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
 import datadog.trace.instrumentation.api.AgentSpan
+import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.reactor.core.ReactorCoreAdviceUtils
-import io.opentracing.tag.Tags
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import reactor.core.publisher.Flux
@@ -37,7 +37,7 @@ class ReactorCoreTest extends AgentTestRunner {
           operationName "trace-parent"
           parent()
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -47,7 +47,7 @@ class ReactorCoreTest extends AgentTestRunner {
             operationName "addOne"
             childOf(span(publisherParentSpanIndex))
             tags {
-              "$Tags.COMPONENT.key" "trace"
+              "$Tags.COMPONENT" "trace"
               defaultTags()
             }
           }
@@ -93,7 +93,7 @@ class ReactorCoreTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
             defaultTags()
           }
@@ -134,7 +134,7 @@ class ReactorCoreTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
             defaultTags()
           }
@@ -145,7 +145,7 @@ class ReactorCoreTest extends AgentTestRunner {
             operationName "addOne"
             childOf(span(publisherParentSpanIndex))
             tags {
-              "$Tags.COMPONENT.key" "trace"
+              "$Tags.COMPONENT" "trace"
               defaultTags()
             }
           }
@@ -181,7 +181,7 @@ class ReactorCoreTest extends AgentTestRunner {
           operationName "trace-parent"
           parent()
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
