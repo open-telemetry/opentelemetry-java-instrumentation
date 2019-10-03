@@ -4,7 +4,6 @@ import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.aws.v2.AwsSdkClientDecorator.DECORATE;
 
-import datadog.trace.instrumentation.api.AgentPropagation;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.function.Consumer;
@@ -14,7 +13,6 @@ import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttribute;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
-import software.amazon.awssdk.http.SdkHttpRequest;
 
 /** AWS request execution interceptor */
 public class TracingExecutionInterceptor implements ExecutionInterceptor {
@@ -95,21 +93,5 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   public static void muzzleCheck() {
     // Noop
-  }
-
-  /**
-   * Inject headers into the request builder.
-   *
-   * <p>Note: we inject headers at aws-client level because aws requests may be signed and adding
-   * headers on http-client level may break signature.
-   */
-  public static class InjectAdapter implements AgentPropagation.Setter<SdkHttpRequest.Builder> {
-
-    public static final InjectAdapter SETTER = new InjectAdapter();
-
-    @Override
-    public void set(final SdkHttpRequest.Builder carrier, final String key, final String value) {
-      carrier.putHeader(key, value);
-    }
   }
 }
