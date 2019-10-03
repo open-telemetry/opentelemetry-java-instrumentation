@@ -36,7 +36,7 @@ import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.AgentSpan.Context;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -123,7 +123,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       final AgentSpan span =
           startSpan("amqp.command")
               .setTag(DDTags.RESOURCE_NAME, method)
-              .setTag(Tags.PEER_PORT.getKey(), connection.getPort());
+              .setTag(Tags.PEER_PORT, connection.getPort());
       DECORATE.afterStart(span);
       DECORATE.onPeerConnection(span, connection.getAddress());
       return activateSpan(span, true);
@@ -246,7 +246,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
       if (response != null) {
         span.setTag("message.size", response.getBody().length);
       }
-      span.setTag(Tags.PEER_PORT.getKey(), connection.getPort());
+      span.setTag(Tags.PEER_PORT, connection.getPort());
       try (final AgentScope scope = activateSpan(span, false)) {
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onGet(span, queue);

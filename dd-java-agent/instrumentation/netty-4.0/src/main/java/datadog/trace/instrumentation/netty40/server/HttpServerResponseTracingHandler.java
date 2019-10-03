@@ -3,12 +3,12 @@ package datadog.trace.instrumentation.netty40.server;
 import static datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator.DECORATE;
 
 import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.Tags;
 import datadog.trace.instrumentation.netty40.AttributeKeys;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpResponse;
-import io.opentracing.tag.Tags;
 
 public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdapter {
 
@@ -26,7 +26,7 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       ctx.write(msg, prm);
     } catch (final Throwable throwable) {
       DECORATE.onError(span, throwable);
-      span.setTag(Tags.HTTP_STATUS.getKey(), 500);
+      span.setTag(Tags.HTTP_STATUS, 500);
       span.finish(); // Finish the span manually since finishSpanOnClose was false
       throw throwable;
     }

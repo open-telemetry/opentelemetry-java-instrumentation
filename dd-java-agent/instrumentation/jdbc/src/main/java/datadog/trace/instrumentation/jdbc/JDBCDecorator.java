@@ -4,7 +4,7 @@ import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -81,7 +81,7 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
     }
 
     if (dbInfo != null) {
-      span.setTag(Tags.DB_TYPE.getKey(), dbInfo.getType());
+      span.setTag(Tags.DB_TYPE, dbInfo.getType());
       span.setTag(DDTags.SERVICE_NAME, dbInfo.getType());
     }
     return super.onConnection(span, dbInfo);
@@ -91,7 +91,7 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   public AgentSpan onStatement(final AgentSpan span, final String statement) {
     final String resourceName = statement == null ? DB_QUERY : statement;
     span.setTag(DDTags.RESOURCE_NAME, resourceName);
-    span.setTag(Tags.COMPONENT.getKey(), "java-jdbc-statement");
+    span.setTag(Tags.COMPONENT, "java-jdbc-statement");
     return super.onStatement(span, statement);
   }
 
@@ -99,7 +99,7 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
     final String sql = JDBCMaps.preparedStatements.get(statement);
     final String resourceName = sql == null ? DB_QUERY : sql;
     span.setTag(DDTags.RESOURCE_NAME, resourceName);
-    span.setTag(Tags.COMPONENT.getKey(), "java-jdbc-prepared_statement");
+    span.setTag(Tags.COMPONENT, "java-jdbc-prepared_statement");
     return super.onStatement(span, sql);
   }
 }

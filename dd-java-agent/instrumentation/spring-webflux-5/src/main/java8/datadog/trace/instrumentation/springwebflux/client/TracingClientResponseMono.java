@@ -9,7 +9,7 @@ import static datadog.trace.instrumentation.springwebflux.client.SpringWebfluxHt
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.AgentTracer;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
@@ -40,7 +40,7 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
     } else {
       span = startSpan("http.request");
     }
-    span.setTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
+    span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT);
     DECORATE.afterStart(span);
 
     try (final AgentScope scope = activateSpan(span, false)) {

@@ -7,7 +7,7 @@ import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.WeakMap;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
@@ -55,7 +55,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     if (span == null) {
       return;
     }
-    span.setTag(Tags.COMPONENT.getKey(), "jax-rs");
+    span.setTag(Tags.COMPONENT, "jax-rs");
 
     if (!resourceName.isEmpty()) {
       span.setTag(DDTags.RESOURCE_NAME, resourceName);

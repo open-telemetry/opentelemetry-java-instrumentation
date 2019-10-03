@@ -6,7 +6,7 @@ import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 
 public class RabbitDecorator extends ClientDecorator {
 
@@ -71,7 +71,7 @@ public class RabbitDecorator extends ClientDecorator {
             : routingKey.startsWith("amq.gen-") ? "<generated>" : routingKey;
     span.setTag(DDTags.RESOURCE_NAME, "basic.publish " + exchangeName + " -> " + routing);
     span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.MESSAGE_PRODUCER);
-    span.setTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_PRODUCER);
+    span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_PRODUCER);
     span.setTag("amqp.command", "basic.publish");
     span.setTag("amqp.exchange", exchange);
     span.setTag("amqp.routing_key", routingKey);

@@ -3,7 +3,7 @@ package datadog.trace.instrumentation.elasticsearch;
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import org.elasticsearch.client.Response;
 
 public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
@@ -46,15 +46,15 @@ public class ElasticsearchRestClientDecorator extends DatabaseClientDecorator {
   }
 
   public AgentSpan onRequest(final AgentSpan span, final String method, final String endpoint) {
-    span.setTag(Tags.HTTP_METHOD.getKey(), method);
-    span.setTag(Tags.HTTP_URL.getKey(), endpoint);
+    span.setTag(Tags.HTTP_METHOD, method);
+    span.setTag(Tags.HTTP_URL, endpoint);
     return span;
   }
 
   public AgentSpan onResponse(final AgentSpan span, final Response response) {
     if (response != null && response.getHost() != null) {
-      span.setTag(Tags.PEER_HOSTNAME.getKey(), response.getHost().getHostName());
-      span.setTag(Tags.PEER_PORT.getKey(), response.getHost().getPort());
+      span.setTag(Tags.PEER_HOSTNAME, response.getHost().getHostName());
+      span.setTag(Tags.PEER_PORT, response.getHost().getPort());
     }
     return span;
   }

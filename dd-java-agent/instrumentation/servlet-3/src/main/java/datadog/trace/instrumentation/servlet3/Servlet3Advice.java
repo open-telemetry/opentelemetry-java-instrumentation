@@ -10,7 +10,7 @@ import static datadog.trace.instrumentation.servlet3.Servlet3Decorator.DECORATE;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import java.security.Principal;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.ServletRequest;
@@ -75,7 +75,7 @@ public class Servlet3Advice {
         DECORATE.onResponse(span, resp);
         if (resp.getStatus() == HttpServletResponse.SC_OK) {
           // exception is thrown in filter chain, but status code is incorrect
-          span.setTag(Tags.HTTP_STATUS.getKey(), 500);
+          span.setTag(Tags.HTTP_STATUS, 500);
         }
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
