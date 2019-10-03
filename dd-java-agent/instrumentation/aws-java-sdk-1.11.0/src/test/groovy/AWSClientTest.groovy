@@ -24,7 +24,6 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.api.Tags
-import io.opentracing.Tracer
 import org.apache.http.conn.HttpHostConnectException
 import org.apache.http.impl.execchain.RequestAbortedException
 import spock.lang.AutoCleanup
@@ -34,6 +33,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 import static datadog.trace.agent.test.utils.PortUtils.UNUSABLE_PORT
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
 
 class AWSClientTest extends AgentTestRunner {
 
@@ -258,7 +258,7 @@ class AWSClientTest extends AgentTestRunner {
     client.getObject("someBucket", "someKey")
 
     then:
-    ((Tracer) TEST_TRACER).activeSpan() == null
+    activeSpan() == null
     thrown RuntimeException
 
     assertTraces(1) {
@@ -304,7 +304,7 @@ class AWSClientTest extends AgentTestRunner {
     client.getObject("someBucket", "someKey")
 
     then:
-    ((Tracer) TEST_TRACER).activeSpan() == null
+    activeSpan() == null
     thrown AmazonClientException
 
     assertTraces(1) {
