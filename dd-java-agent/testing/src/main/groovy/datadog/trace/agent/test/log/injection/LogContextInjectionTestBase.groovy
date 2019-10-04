@@ -3,10 +3,13 @@ package datadog.trace.agent.test.log.injection
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.CorrelationIdentifier
-import io.opentracing.Scope
-import io.opentracing.util.GlobalTracer
+import datadog.trace.instrumentation.api.AgentScope
+import datadog.trace.instrumentation.api.AgentSpan
 
 import java.util.concurrent.atomic.AtomicReference
+
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan
 
 /**
  * This class represents the standard test cases that new logging library integrations MUST
@@ -33,7 +36,8 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
   def "Log context shows trace and span ids for active scope"() {
     when:
     put("foo", "bar")
-    Scope rootScope = GlobalTracer.get().buildSpan("root").startActive(true)
+    AgentSpan rootSpan = startSpan("root")
+    AgentScope rootScope = activateSpan(rootSpan, true)
 
     then:
     get(CorrelationIdentifier.getTraceIdKey()) == CorrelationIdentifier.getTraceId()
@@ -41,7 +45,8 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
     get("foo") == "bar"
 
     when:
-    Scope childScope = GlobalTracer.get().buildSpan("child").startActive(true)
+    AgentSpan childSpan = startSpan("child")
+    AgentScope childScope = activateSpan(childSpan, true)
 
     then:
     get(CorrelationIdentifier.getTraceIdKey()) == CorrelationIdentifier.getTraceId()
@@ -85,7 +90,8 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
       @Override
       void run() {
         // other trace in scope
-        final Scope thread2Scope = GlobalTracer.get().buildSpan("root2").startActive(true)
+        final AgentSpan thread2Span = startSpan("root2")
+        final AgentScope thread2Scope = activateSpan(thread2Span, true)
         try {
           thread2TraceId.set(get(CorrelationIdentifier.getTraceIdKey()))
         } finally {
@@ -93,7 +99,8 @@ abstract class LogContextInjectionTestBase extends AgentTestRunner {
         }
       }
     }
-    final Scope mainScope = GlobalTracer.get().buildSpan("root").startActive(true)
+    final AgentSpan mainSpan = startSpan("root")
+    final AgentScope mainScope = activateSpan(mainSpan, true)
     thread1.start()
     thread2.start()
     final String mainThreadTraceId = get(CorrelationIdentifier.getTraceIdKey())

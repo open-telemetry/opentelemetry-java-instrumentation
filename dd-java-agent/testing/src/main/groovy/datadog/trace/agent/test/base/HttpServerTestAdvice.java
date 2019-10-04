@@ -1,11 +1,12 @@
 package datadog.trace.agent.test.base;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+
 import datadog.trace.api.DDTags;
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Tracer;
-import io.opentracing.noop.NoopScopeManager;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import net.bytebuddy.asm.Advice;
 
 public abstract class HttpServerTestAdvice {
@@ -16,28 +17,26 @@ public abstract class HttpServerTestAdvice {
    */
   public static class ServerEntryAdvice {
     @Advice.OnMethodEnter
-    public static Scope methodEnter() {
+    public static AgentScope methodEnter() {
       if (!HttpServerTest.ENABLE_TEST_ADVICE.get()) {
         // Skip if not running the HttpServerTest.
-        return NoopScopeManager.NoopScope.INSTANCE;
+        return null;
       }
-      final Tracer tracer = GlobalTracer.get();
-      if (tracer.activeSpan() != null) {
-        return NoopScopeManager.NoopScope.INSTANCE;
+      if (activeSpan() != null) {
+        return null;
       } else {
-        final Scope scope =
-            tracer
-                .buildSpan("TEST_SPAN")
-                .withTag(DDTags.RESOURCE_NAME, "ServerEntry")
-                .startActive(true);
-        ((TraceScope) scope).setAsyncPropagation(true);
+        final AgentSpan span = startSpan("TEST_SPAN").setTag(DDTags.RESOURCE_NAME, "ServerEntry");
+        final AgentScope scope = activateSpan(span, true);
+        scope.setAsyncPropagation(true);
         return scope;
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
-    public static void methodExit(@Advice.Enter final Scope scope) {
-      scope.close();
+    public static void methodExit(@Advice.Enter final AgentScope scope) {
+      if (scope != null) {
+        scope.close();
+      }
     }
   }
 }

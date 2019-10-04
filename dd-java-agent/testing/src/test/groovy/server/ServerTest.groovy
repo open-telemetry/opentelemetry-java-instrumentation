@@ -1,10 +1,9 @@
 package server
 
-import datadog.opentracing.DDTracer
+
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.agent.test.utils.OkHttpUtils
-import datadog.trace.common.writer.ListWriter
 import okhttp3.MultipartBody
 import okhttp3.Request
 import spock.lang.Shared
@@ -300,8 +299,6 @@ class ServerTest extends AgentTestRunner {
         }
       }
     }
-    def writer = new ListWriter()
-    server.tracer = new DDTracer(writer)
 
     when:
     def request = new Request.Builder()
@@ -315,7 +312,7 @@ class ServerTest extends AgentTestRunner {
     response.code() == 200
     response.body().string().trim() == "done"
 
-    ListWriterAssert.assertTraces(writer, 1) {
+    ListWriterAssert.assertTraces(TEST_WRITER, 1) {
       server.distributedRequestTrace(it, 0)
     }
 

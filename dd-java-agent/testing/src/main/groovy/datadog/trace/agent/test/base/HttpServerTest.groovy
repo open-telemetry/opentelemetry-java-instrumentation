@@ -8,11 +8,9 @@ import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.context.TraceScope
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import io.opentracing.tag.Tags
-import io.opentracing.util.GlobalTracer
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -30,6 +28,8 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRE
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
 import static org.junit.Assume.assumeTrue
 
 @Unroll
@@ -152,8 +152,8 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   }
 
   static <T> T controller(ServerEndpoint endpoint, Closure<T> closure) {
-    assert GlobalTracer.get().activeSpan() != null: "Controller should have a parent span."
-    assert ((TraceScope) GlobalTracer.get().scopeManager().active()).asyncPropagating: "Scope should be propagating async."
+    assert activeSpan() != null: "Controller should have a parent span."
+    assert activeScope().asyncPropagating: "Scope should be propagating async."
     if (endpoint == NOT_FOUND) {
       return closure()
     }
