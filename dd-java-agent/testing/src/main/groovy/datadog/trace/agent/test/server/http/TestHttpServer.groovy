@@ -3,7 +3,7 @@ package datadog.trace.agent.test.server.http
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.instrumentation.api.AgentSpan
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import org.eclipse.jetty.http.HttpMethods
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Request
@@ -104,7 +104,7 @@ class TestHttpServer implements AutoCloseable {
           childOf(parentSpan)
         }
         tags {
-          "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+          "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
           defaultTags(parentSpan != null)
         }
       }
@@ -235,10 +235,10 @@ class TestHttpServer implements AutoCloseable {
         final AgentSpan.Context extractedContext = propagate().extract(req, GETTER)
         if (extractedContext != null) {
           startSpan("test-http-server", extractedContext)
-            .setTag(Tags.SPAN_KIND.key, Tags.SPAN_KIND_SERVER).finish()
+            .setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER).finish()
         } else {
           startSpan("test-http-server")
-            .setTag(Tags.SPAN_KIND.key, Tags.SPAN_KIND_SERVER).finish()
+            .setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER).finish()
         }
       }
     }
