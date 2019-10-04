@@ -38,7 +38,7 @@ dependencies {
   testCompile group: 'net.java.dev.jna', name: 'jna', version: '4.5.1'
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.0'
   testCompile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.11.0'
-  
+
   testCompile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-smile', version: '2.9.9'
   // ^ is needed because we are using a newer version of jackson that isn't compatible without this.
 

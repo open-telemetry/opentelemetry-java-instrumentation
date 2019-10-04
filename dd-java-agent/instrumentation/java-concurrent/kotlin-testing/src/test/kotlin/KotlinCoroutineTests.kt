@@ -14,7 +14,7 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
   @Trace
   fun tracedAcrossChannels(): Int = runTest {
     val producer = produce {
-      repeat(3){
+      repeat(3) {
         tracedChild("produce_$it")
         send(it)
       }
@@ -94,7 +94,7 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
     5
   }
 
-   /**
+  /**
    * @return Number of expected spans in the trace
    */
   @Trace
@@ -123,17 +123,17 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
       }
     }
 
-   4
+    4
   }
 
   @Trace
-  fun tracedChild(opName: String){
+  fun tracedChild(opName: String) {
     activeSpan().setSpanName(opName)
   }
 
-  private fun <T> runTest(asyncPropagation: Boolean = true, block: suspend CoroutineScope.()->T ): T {
+  private fun <T> runTest(asyncPropagation: Boolean = true, block: suspend CoroutineScope.() -> T): T {
     activeScope().setAsyncPropagation(asyncPropagation)
-    return runBlocking(dispatcher,block = block)
+    return runBlocking(dispatcher, block = block)
   }
 }
 

@@ -16,7 +16,7 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 
 Project instr_project = project
-subprojects {Project subProj ->
+subprojects { Project subProj ->
   apply plugin: "net.bytebuddy.byte-buddy"
   apply plugin: 'muzzle'
 
@@ -48,7 +48,7 @@ subprojects {Project subProj ->
       compile project(':dd-trace-api')
       compile project(':dd-java-agent:agent-tooling')
       compile deps.bytebuddy
-      if(jdkCompile) {
+      if (jdkCompile) {
         "$jdkCompile" project(':dd-trace-api')
         "$jdkCompile" project(':dd-java-agent:agent-tooling')
         "$jdkCompile" deps.bytebuddy

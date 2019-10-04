@@ -104,7 +104,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
     assertTraces(1) {
       trace(0, 1) {
         mongoSpan(it, 0) {
-          assert it.replaceAll(" ", "")  == "{\"count\":\"$collectionName\",\"query\":{}}" ||
+          assert it.replaceAll(" ", "") == "{\"count\":\"$collectionName\",\"query\":{}}" ||
             it == "{\"count\": \"$collectionName\", \"query\": {}, \"\$db\": \"?\", \"\$readPreference\": {\"mode\": \"?\"}}"
           true
         }

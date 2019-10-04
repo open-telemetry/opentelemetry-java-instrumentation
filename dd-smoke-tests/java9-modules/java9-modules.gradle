@@ -20,7 +20,7 @@ jar {
 // it's special cased here instead of putting a generic version matcher in java.gradle
 if (JavaVersion.VERSION_1_9.compareTo(JavaVersion.current()) > 0) {
   def targetJavaHome
-  
+
   // Find a compatible version in the cache
   ext.javaExecutableVersionCache.find { key, value ->
     if (JavaVersion.VERSION_1_9.compareTo(value) <= 0) {
@@ -67,7 +67,7 @@ tasks.withType(Test).each {
 
   it.doFirst {
     delete generatedImageDir
-    
+
     // Run the jlink command to create the image
     exec {
       commandLine jlinkExecutable, '--no-man-pages', '--no-header-files',

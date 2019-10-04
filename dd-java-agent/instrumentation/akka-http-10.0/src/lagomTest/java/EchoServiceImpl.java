@@ -23,5 +23,4 @@ public class EchoServiceImpl implements EchoService {
   public List<String> tracedMethod() {
     return java.util.Arrays.asList("msg1", "msg2", "msg3");
   }
-
 }

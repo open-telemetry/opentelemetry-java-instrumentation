@@ -51,11 +51,11 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
     client = RestClient.builder(new HttpHost("localhost", httpPort))
       .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
       .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
-      @Override
-      RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder builder) {
-        return builder.setConnectTimeout(Integer.MAX_VALUE).setSocketTimeout(Integer.MAX_VALUE)
-      }
-    })
+        @Override
+        RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder builder) {
+          return builder.setConnectTimeout(Integer.MAX_VALUE).setSocketTimeout(Integer.MAX_VALUE)
+        }
+      })
       .build()
 
   }

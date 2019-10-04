@@ -10,7 +10,7 @@ dependencies {
 subprojects { subProject ->
   subProject.tasks.withType(Test).configureEach {
     dependsOn project(':dd-java-agent').shadowJar
-    
+
     // Tests depend on this to know where to run things and what agent jar to use
     jvmArgs "-Ddatadog.smoketest.builddir=${buildDir}"
     jvmArgs "-Ddatadog.smoketest.agent.shadowJar.path=${project(':dd-java-agent').tasks.shadowJar.archivePath}"

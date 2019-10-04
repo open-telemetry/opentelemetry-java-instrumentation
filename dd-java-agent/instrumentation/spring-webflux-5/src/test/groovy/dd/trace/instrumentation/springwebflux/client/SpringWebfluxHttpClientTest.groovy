@@ -32,7 +32,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
       }
       .block()
 
-    if(hasParent) {
+    if (hasParent) {
       blockUntilChildSpansFinished(callback ? 3 : 2)
     }
     response.statusCode().value()

@@ -39,7 +39,7 @@ if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJav
     "main_${name}CompileOnly" "org.projectlombok:lombok:${project.lombok.version}" transitive false
     "main_${name}AnnotationProcessor" "org.projectlombok:lombok:${project.lombok.version}" transitive false
   }
-  
+
   jar {
     from sourceSets."main_$name".output
   }

@@ -20,11 +20,11 @@ public class TracingIterable implements Iterable<ConsumerRecord> {
 
   @Override
   public Iterator<ConsumerRecord> iterator() {
-    Iterator<ConsumerRecord> it;
+    final Iterator<ConsumerRecord> it;
     // We should only return one iterator with tracing.
     // However, this is not thread-safe, but usually the first (hopefully only) traversal of
     // ConsumerRecords is performed in the same thread that called poll()
-    if (this.firstIterator) {
+    if (firstIterator) {
       it = new TracingIterator(delegate.iterator(), operationName, decorator);
       firstIterator = false;
     } else {
