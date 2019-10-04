@@ -3,9 +3,10 @@ import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.servlet3.Servlet3Decorator
-import javax.servlet.Servlet
 import okhttp3.Request
 import org.apache.catalina.core.ApplicationFilterChain
+
+import javax.servlet.Servlet
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR

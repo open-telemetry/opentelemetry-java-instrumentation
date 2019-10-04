@@ -1,5 +1,6 @@
 import datadog.trace.agent.test.base.HttpServerTest
 import groovy.servlet.AbstractHttpServlet
+
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 

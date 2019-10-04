@@ -1,5 +1,9 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.instrumentation.jaxrs.JaxRsClientDecorator
+import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
+import org.glassfish.jersey.client.JerseyClientBuilder
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
+
 import javax.ws.rs.client.AsyncInvoker
 import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
@@ -8,9 +12,6 @@ import javax.ws.rs.client.InvocationCallback
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
-import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl
-import org.glassfish.jersey.client.JerseyClientBuilder
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder
 
 abstract class JaxRsClientAsyncTest extends HttpClientTest<JaxRsClientDecorator> {
 

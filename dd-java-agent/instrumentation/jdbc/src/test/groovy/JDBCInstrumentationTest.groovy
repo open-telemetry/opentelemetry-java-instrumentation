@@ -5,13 +5,13 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.api.Tags
-import javax.sql.DataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
 import org.hsqldb.jdbc.JDBCDriver
 import spock.lang.Shared
 import spock.lang.Unroll
 
+import javax.sql.DataSource
 import java.sql.CallableStatement
 import java.sql.Connection
 import java.sql.PreparedStatement

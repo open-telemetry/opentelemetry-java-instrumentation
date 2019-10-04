@@ -4,12 +4,13 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import javax.servlet.Servlet
-import javax.servlet.http.HttpServletRequest
 import org.apache.catalina.core.ApplicationFilterChain
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
+
+import javax.servlet.Servlet
+import javax.servlet.http.HttpServletRequest
 
 import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED

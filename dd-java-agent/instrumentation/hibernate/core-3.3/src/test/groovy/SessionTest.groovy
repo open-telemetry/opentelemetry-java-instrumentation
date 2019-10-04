@@ -1,7 +1,11 @@
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.api.AgentScope
 import datadog.trace.instrumentation.api.Tags
-import org.hibernate.*
+import org.hibernate.LockMode
+import org.hibernate.MappingException
+import org.hibernate.Query
+import org.hibernate.ReplicationMode
+import org.hibernate.Session
 import spock.lang.Shared
 
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan

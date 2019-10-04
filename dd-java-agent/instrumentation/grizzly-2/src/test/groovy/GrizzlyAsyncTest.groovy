@@ -1,12 +1,12 @@
+import org.glassfish.grizzly.http.server.HttpServer
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
+import org.glassfish.jersey.server.ResourceConfig
+
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.container.AsyncResponse
 import javax.ws.rs.container.Suspended
 import javax.ws.rs.core.Response
-import org.glassfish.grizzly.http.server.HttpServer
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
-import org.glassfish.jersey.server.ResourceConfig
-
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 

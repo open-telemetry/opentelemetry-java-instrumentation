@@ -2,7 +2,10 @@ import datadog.trace.api.Trace
 import datadog.trace.instrumentation.api.AgentTracer.activeScope
 import datadog.trace.instrumentation.api.AgentTracer.activeSpan
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.channels.actor
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.channels.toChannel
 import kotlinx.coroutines.selects.select
 import java.util.concurrent.TimeUnit
 
