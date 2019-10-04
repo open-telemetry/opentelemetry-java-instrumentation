@@ -32,23 +32,23 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<NettyHttpClientD
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
     def request = client.request(HttpMethod.valueOf(method), uri.port, uri.host, "$uri")
     headers.each { request.putHeader(it.key, it.value) }
-    Future<HttpResponse> result = breaker.execute { command ->
+
+    def future = new CompletableFuture<Integer>()
+
+    Future<HttpResponse> result = breaker.executeCommand({ command ->
       request.rxSend().doOnSuccess {
         command.complete(it)
       }.doOnError {
         command.fail(it)
       }.subscribe()
-    }
-
-    def future = new CompletableFuture<Integer>()
-    result.setHandler {
+    }, {
       callback?.call()
       if (it.succeeded()) {
         future.complete(it.result().statusCode())
       } else {
         future.completeExceptionally(it.cause())
       }
-    }
+    })
     return future.get()
   }
 
