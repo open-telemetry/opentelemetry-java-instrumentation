@@ -5,9 +5,7 @@ import datadog.trace.instrumentation.netty41.client.NettyHttpClientDecorator
 import io.vertx.circuitbreaker.CircuitBreakerOptions
 import io.vertx.core.VertxOptions
 import io.vertx.core.http.HttpMethod
-import io.vertx.ext.web.client.HttpResponse
 import io.vertx.reactivex.circuitbreaker.CircuitBreaker
-import io.vertx.reactivex.core.Future
 import io.vertx.reactivex.core.Vertx
 import io.vertx.reactivex.ext.web.client.WebClient
 import spock.lang.Shared
@@ -35,7 +33,7 @@ class VertxRxCircuitBreakerWebClientTest extends HttpClientTest<NettyHttpClientD
 
     def future = new CompletableFuture<Integer>()
 
-    Future<HttpResponse> result = breaker.executeCommand({ command ->
+    breaker.executeCommand({ command ->
       request.rxSend().doOnSuccess {
         command.complete(it)
       }.doOnError {

@@ -33,7 +33,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
         )
 
       router.route(SUCCESS.path).handler { ctx ->
-        def result = breaker.executeCommand({ future ->
+        breaker.executeCommand({ future ->
           future.complete(SUCCESS)
         }, { it ->
           if (it.failed()) {
@@ -46,7 +46,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
         })
       }
       router.route(REDIRECT.path).handler { ctx ->
-        def result = breaker.executeCommand({ future ->
+        breaker.executeCommand({ future ->
           future.complete(REDIRECT)
         }, {
           if (it.failed()) {
@@ -59,7 +59,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
         })
       }
       router.route(ERROR.path).handler { ctx ->
-        def result = breaker.executeCommand({ future ->
+        breaker.executeCommand({ future ->
           future.complete(ERROR)
         }, {
           if (it.failed()) {
@@ -72,7 +72,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
         })
       }
       router.route(EXCEPTION.path).handler { ctx ->
-        def result = breaker.executeCommand({ future ->
+        breaker.executeCommand({ future ->
           future.fail(new Exception(EXCEPTION.body))
         }, {
           try {
