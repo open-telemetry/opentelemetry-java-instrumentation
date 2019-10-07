@@ -2,17 +2,16 @@ package datadog.trace
 
 import datadog.opentracing.DDTracer
 import datadog.opentracing.propagation.HttpCodec
-import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.Config
 import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.common.writer.LoggingWriter
+import datadog.trace.util.test.DDSpecification
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
-import spock.lang.Specification
 
 import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 import static datadog.trace.api.Config.HEADER_TAGS
@@ -22,10 +21,7 @@ import static datadog.trace.api.Config.SERVICE_MAPPING
 import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.WRITER_TYPE
 
-class DDTracerTest extends Specification {
-  static {
-    ConfigUtils.makeConfigInstanceModifiable()
-  }
+class DDTracerTest extends DDSpecification {
 
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()

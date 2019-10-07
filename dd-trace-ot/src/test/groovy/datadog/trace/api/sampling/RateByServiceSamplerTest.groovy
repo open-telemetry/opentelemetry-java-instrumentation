@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import datadog.opentracing.DDSpan
 import datadog.opentracing.SpanFactory
 import datadog.trace.common.sampling.RateByServiceSampler
-import spock.lang.Specification
+import datadog.trace.util.test.DDSpecification
 
 import static datadog.trace.common.sampling.RateByServiceSampler.DEFAULT_KEY
 
-class RateByServiceSamplerTest extends Specification {
+class RateByServiceSamplerTest extends DDSpecification {
 
   def "invalid rate -> 1"() {
     setup:

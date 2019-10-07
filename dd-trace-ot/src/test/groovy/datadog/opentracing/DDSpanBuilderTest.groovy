@@ -2,24 +2,18 @@ package datadog.opentracing
 
 import datadog.opentracing.propagation.ExtractedContext
 import datadog.opentracing.propagation.TagContext
-import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
+import datadog.trace.util.test.DDSpecification
 import io.opentracing.Scope
 import io.opentracing.noop.NoopSpan
-import spock.lang.Specification
 
 import static datadog.opentracing.DDSpanContext.ORIGIN_KEY
 import static java.util.concurrent.TimeUnit.MILLISECONDS
-import static org.mockito.Mockito.mock
-import static org.mockito.Mockito.when
 
-class DDSpanBuilderTest extends Specification {
-  static {
-    ConfigUtils.makeConfigInstanceModifiable()
-  }
+class DDSpanBuilderTest extends DDSpecification {
 
   def writer = new ListWriter()
   def config = Config.get()
@@ -158,11 +152,12 @@ class DDSpanBuilderTest extends Specification {
     final String spanId = "1"
     final long expectedParentId = spanId
 
-    final DDSpanContext mockedContext = mock(DDSpanContext)
-    when(mockedContext.getTraceId()).thenReturn(spanId)
-    when(mockedContext.getSpanId()).thenReturn(spanId)
-    when(mockedContext.getServiceName()).thenReturn("foo")
-    when(mockedContext.getTrace()).thenReturn(new PendingTrace(tracer, "1", [:]))
+    final DDSpanContext mockedContext = Mock()
+    1 * mockedContext.getTraceId() >> spanId
+    1 * mockedContext.getSpanId() >> spanId
+    _ * mockedContext.getServiceName() >> "foo"
+    1 * mockedContext.getBaggageItems() >> [:]
+    1 * mockedContext.getTrace() >> new PendingTrace(tracer, "1", [:])
 
     final String expectedName = "fakeName"
 

@@ -49,9 +49,14 @@ ext {
     ],
 
     // Testing
-    spock          : dependencies.create("org.spockframework:spock-core:${versions.spock}", {
-      exclude group: 'org.codehaus.groovy', module: 'groovy-all'
-    }),
+
+    spock          : [
+      dependencies.create("org.spockframework:spock-core:${versions.spock}", {
+        exclude group: 'org.codehaus.groovy', module: 'groovy-all'
+      }),
+      // Used by Spock for mocking:
+      dependencies.create(group: 'org.objenesis', name: 'objenesis', version: '2.6') // Last version to support Java7
+    ],
     groovy         : "org.codehaus.groovy:groovy-all:${versions.groovy}",
     junit          : "junit:junit:${versions.junit}",
     testcontainers : "org.testcontainers:testcontainers:1.7.3",

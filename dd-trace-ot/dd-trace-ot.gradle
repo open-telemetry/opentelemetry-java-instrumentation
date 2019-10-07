@@ -44,10 +44,7 @@ dependencies {
 
   testCompile project(":dd-java-agent:testing")
   testCompile project(':utils:gc-utils')
-  testCompile group: 'org.assertj', name: 'assertj-core', version: '2.9.+'
-  testCompile group: 'org.mockito', name: 'mockito-core', version: '2.19.0'
-  testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6' // Last version to support Java7
-  testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
+//  testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
   testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.17.1'
 
   traceAgentTestCompile deps.testcontainers

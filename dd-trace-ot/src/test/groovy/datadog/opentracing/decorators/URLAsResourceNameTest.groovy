@@ -3,17 +3,13 @@ package datadog.opentracing.decorators
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
-import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
+import datadog.trace.util.test.DDSpecification
 import io.opentracing.tag.Tags
-import spock.lang.Specification
 import spock.lang.Subject
 
-class URLAsResourceNameTest extends Specification {
-  static {
-    ConfigUtils.makeConfigInstanceModifiable()
-  }
+class URLAsResourceNameTest extends DDSpecification {
 
   def writer = new ListWriter()
   def tracer = new DDTracer(writer)

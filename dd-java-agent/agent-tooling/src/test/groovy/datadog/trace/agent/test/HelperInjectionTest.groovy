@@ -1,14 +1,14 @@
 package datadog.trace.agent.test
 
-import datadog.trace.agent.test.utils.ConfigUtils
+
 import datadog.trace.agent.tooling.AgentInstaller
 import datadog.trace.agent.tooling.HelperInjector
 import datadog.trace.agent.tooling.Utils
+import datadog.trace.util.test.DDSpecification
 import net.bytebuddy.agent.ByteBuddyAgent
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.dynamic.loading.ClassInjector
-import spock.lang.Specification
 import spock.lang.Timeout
 
 import java.lang.ref.WeakReference
@@ -18,10 +18,7 @@ import static datadog.trace.agent.test.utils.ClasspathUtils.isClassLoaded
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.BOOTSTRAP_CLASSLOADER
 import static datadog.trace.util.gc.GCUtils.awaitGC
 
-class HelperInjectionTest extends Specification {
-  static {
-    ConfigUtils.makeConfigInstanceModifiable()
-  }
+class HelperInjectionTest extends DDSpecification {
 
   @Timeout(10)
   def "helpers injected to non-delegating classloader"() {

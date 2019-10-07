@@ -1,21 +1,16 @@
 package datadog.trace.agent.decorator
 
-
 import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.DDTags
+import datadog.trace.util.test.DDSpecification
 import io.opentracing.Scope
 import io.opentracing.Span
 import io.opentracing.tag.Tags
 import spock.lang.Shared
-import spock.lang.Specification
 
 import static io.opentracing.log.Fields.ERROR_OBJECT
 
-class BaseDecoratorTest extends Specification {
-
-  static {
-    ConfigUtils.makeConfigInstanceModifiable()
-  }
+class BaseDecoratorTest extends DDSpecification {
 
   @Shared
   def decorator = newDecorator()

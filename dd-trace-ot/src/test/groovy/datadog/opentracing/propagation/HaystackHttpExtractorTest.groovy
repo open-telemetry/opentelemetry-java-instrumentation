@@ -1,16 +1,16 @@
 package datadog.opentracing.propagation
 
 import datadog.trace.api.sampling.PrioritySampling
+import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
 import io.opentracing.propagation.TextMapExtractAdapter
-import spock.lang.Specification
 
 import static datadog.opentracing.propagation.HaystackHttpCodec.OT_BAGGAGE_PREFIX
 import static datadog.opentracing.propagation.HaystackHttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.HaystackHttpCodec.TRACE_ID_KEY
 import static datadog.opentracing.propagation.HttpCodec.UINT64_MAX
 
-class HaystackHttpExtractorTest extends Specification {
+class HaystackHttpExtractorTest extends DDSpecification {
 
   HttpCodec.Extractor extractor = new HaystackHttpCodec.Extractor(["SOME_HEADER": "some-tag"])
 
@@ -53,8 +53,8 @@ class HaystackHttpExtractorTest extends Specification {
 
 
     where:
-    headers                                                         | _
-    [SOME_HEADER: "my-interesting-info"]                            | _
+    headers                              | _
+    [SOME_HEADER: "my-interesting-info"] | _
   }
 
   def "extract empty headers returns null"() {

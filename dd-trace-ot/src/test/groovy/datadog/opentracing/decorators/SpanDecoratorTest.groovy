@@ -9,17 +9,16 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.writer.LoggingWriter
+import datadog.trace.util.test.DDSpecification
 import io.opentracing.tag.StringTag
 import io.opentracing.tag.Tags
-import spock.lang.Specification
 
 import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 import static datadog.trace.api.DDTags.EVENT_SAMPLE_RATE
 import static java.util.Collections.emptyMap
 
-class SpanDecoratorTest extends Specification {
+class SpanDecoratorTest extends DDSpecification {
   static {
-    ConfigUtils.makeConfigInstanceModifiable()
     ConfigUtils.updateConfig {
       System.setProperty("dd.$Config.SPLIT_BY_TAGS", "sn.tag1,sn.tag2")
     }

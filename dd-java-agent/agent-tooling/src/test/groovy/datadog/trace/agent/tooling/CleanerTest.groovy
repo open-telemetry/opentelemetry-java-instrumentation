@@ -1,7 +1,7 @@
 package datadog.trace.agent.tooling
 
 import datadog.trace.util.gc.GCUtils
-import spock.lang.Specification
+import datadog.trace.util.test.DDSpecification
 import spock.lang.Subject
 
 import java.lang.ref.WeakReference
@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
-class CleanerTest extends Specification {
+class CleanerTest extends DDSpecification {
 
   @Subject
   def cleaner = new Cleaner()

@@ -1,20 +1,17 @@
 package datadog.opentracing.propagation
 
-import datadog.trace.agent.test.utils.ConfigUtils
+
 import datadog.trace.api.Config
+import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
 import io.opentracing.propagation.TextMapExtractAdapter
 import spock.lang.Shared
-import spock.lang.Specification
 
 import static datadog.opentracing.propagation.HttpCodec.UINT64_MAX
 import static datadog.trace.api.Config.PropagationStyle.B3
 import static datadog.trace.api.Config.PropagationStyle.DATADOG
 
-class HttpExtractorTest extends Specification {
-  static {
-    ConfigUtils.makeConfigInstanceModifiable()
-  }
+class HttpExtractorTest extends DDSpecification {
 
   @Shared
   String outOfRangeTraceId = UINT64_MAX.add(BigInteger.ONE)
