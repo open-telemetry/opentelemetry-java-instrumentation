@@ -4,6 +4,7 @@ import static datadog.trace.instrumentation.trace_annotation.TraceDecorator.DECO
 
 import datadog.trace.api.DDTags;
 import datadog.trace.api.Trace;
+import datadog.trace.context.TraceScope;
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
@@ -29,7 +30,13 @@ public class TraceAdvice {
     }
     spanBuilder = spanBuilder.withTag(DDTags.RESOURCE_NAME, resourceName);
 
-    return DECORATE.afterStart(spanBuilder.startActive(true));
+    final Scope scope = DECORATE.afterStart(spanBuilder.startActive(true));
+
+    if (scope instanceof TraceScope) {
+      ((TraceScope) scope).setAsyncPropagation(true);
+    }
+
+    return scope;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
