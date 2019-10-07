@@ -92,12 +92,12 @@ public final class OSGIClassloadingInstrumentation extends Instrumenter.Default 
     }
 
     public static String getNewValue(final String existingValue) {
-      if (null != existingValue
-          && !"".equals(existingValue)
-          && !existingValue.contains(PROPERTY_VALUE)) {
+      if (existingValue == null || "".equals(existingValue)) {
+        return PROPERTY_VALUE;
+      } else if (!existingValue.contains(PROPERTY_VALUE)) {
         return existingValue + "," + PROPERTY_VALUE;
       } else {
-        return PROPERTY_VALUE;
+        return existingValue;
       }
     }
   }
