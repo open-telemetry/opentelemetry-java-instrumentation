@@ -12,7 +12,7 @@ configurations {
 }
 /*
  * Include subproject's shadowJar in the dd-java-agent jar.
- * Note jarname must end in .zip, or its classes will be on the classpath of
+ * Note jarname must not end with '.jar', or its classes will be on the classpath of
  * the dd-java-agent jar.
  */
 
@@ -23,6 +23,8 @@ def includeShadowJar(subproject, jarname) {
       from(zipTree(subproject.tasks.shadowJar.archivePath)) {
         into jarname
         rename '(^.*)\\.class$', '$1.classdata'
+        // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
+        rename '^LICENSE$', 'LICENSE.renamed'
       }
     }
 
