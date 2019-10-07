@@ -12,7 +12,7 @@ configurations {
 }
 /*
  * Include subproject's shadowJar in the dd-java-agent jar.
- * Note jarname must end in .zip, or its classes will be on the classpath of
+ * Note jarname must not end with '.jar', or its classes will be on the classpath of
  * the dd-java-agent jar.
  */
 
