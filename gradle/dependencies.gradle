@@ -16,7 +16,7 @@ ext {
     junit      : "4.12",
     logback    : "1.2.3",
     lombok     : "1.18.8",
-    bytebuddy  : "1.10.0",
+    bytebuddy  : "1.10.1",
     scala      : "2.11.12",  // Last version to support Java 7 (2.12+ require Java 8+)
     kotlin     : "1.3.50",
     coroutines : "1.3.0"
@@ -40,6 +40,7 @@ ext {
       dependencies.create(group: 'org.msgpack', name: 'jackson-dataformat-msgpack', version: '0.8.17'),
     ],
     bytebuddy      : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy', version: "${versions.bytebuddy}"),
+    bytebuddyagent : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: "${versions.bytebuddy}"),
     autoservice    : [
       dependencies.create(group: 'com.google.auto.service', name: 'auto-service', version: '1.0-rc3'),
       dependencies.create(group: 'com.google.auto', name: 'auto-common', version: '0.8'),
@@ -51,7 +52,6 @@ ext {
     spock          : dependencies.create("org.spockframework:spock-core:${versions.spock}", {
       exclude group: 'org.codehaus.groovy', module: 'groovy-all'
     }),
-    bytebuddyagent : dependencies.create(group: 'net.bytebuddy', name: 'byte-buddy-agent', version: "${versions.bytebuddy}"),
     groovy         : "org.codehaus.groovy:groovy-all:${versions.groovy}",
     junit          : "junit:junit:${versions.junit}",
     testcontainers : "org.testcontainers:testcontainers:1.7.3",

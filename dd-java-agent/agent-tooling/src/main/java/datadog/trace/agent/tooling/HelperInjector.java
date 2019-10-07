@@ -157,7 +157,13 @@ public class HelperInjector implements Transformer {
 
           if (!target.canRead(helperModule)) {
             log.debug("Adding module read from {} to {}", target, helperModule);
-            target.addReads(AgentInstaller.getInstrumentation(), helperModule);
+            target.modify(
+                AgentInstaller.getInstrumentation(),
+                Collections.singleton(helperModule),
+                Collections.<String, Set<JavaModule>>emptyMap(),
+                Collections.<String, Set<JavaModule>>emptyMap(),
+                Collections.<Class<?>>emptySet(),
+                Collections.<Class<?>, List<Class<?>>>emptyMap());
           }
         }
       }
