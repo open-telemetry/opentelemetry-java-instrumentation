@@ -7,7 +7,6 @@ import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class JerseyTest extends AgentTestRunner {
 
-  // FIXME: migrate test.
   @Shared
   @ClassRule
   ResourceTestRule resources = ResourceTestRule.builder().addResource(new TestResource()).build()

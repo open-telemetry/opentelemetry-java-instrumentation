@@ -1,6 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
 import io.opentracing.tag.Tags
-
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HEAD
@@ -10,7 +9,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
-import static datadog.trace.instrumentation.jaxrs.JaxRsAnnotationsDecorator.DECORATE
+import static datadog.trace.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.DECORATE
 
 class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 
@@ -19,7 +18,8 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     new Jax() {
       @POST
       @Path("/a")
-      void call() {}
+      void call() {
+      }
     }.call()
 
     expect:
@@ -86,39 +86,47 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     name                        | obj
     "/a"                        | new Jax() {
       @Path("/a")
-      void call() {}
+      void call() {
+      }
     }
     "GET /b"                    | new Jax() {
       @GET
       @Path("/b")
-      void call() {}
+      void call() {
+      }
     }
     "POST /c"                   | new InterfaceWithPath() {
       @POST
       @Path("/c")
-      void call() {}
+      void call() {
+      }
     }
     "HEAD"                      | new InterfaceWithPath() {
       @HEAD
-      void call() {}
+      void call() {
+      }
     }
     "POST /abstract/d"          | new AbstractClassWithPath() {
       @POST
       @Path("/d")
-      void call() {}
+      void call() {
+      }
     }
     "PUT /abstract"             | new AbstractClassWithPath() {
       @PUT
-      void call() {}
+      void call() {
+      }
     }
     "OPTIONS /abstract/child/e" | new ChildClassWithPath() {
       @OPTIONS
       @Path("/e")
-      void call() {}
+      void call() {
+      }
     }
     "DELETE /abstract/child"    | new ChildClassWithPath() {
       @DELETE
-      void call() {}
+      void call() {
+      }
     }
     "POST /abstract/child/call" | new ChildClassWithPath()
 
@@ -147,16 +155,20 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     where:
     obj | _
     new Jax() {
-      void call() {}
+      void call() {
+      }
     }   | _
     new InterfaceWithPath() {
-      void call() {}
+      void call() {
+      }
     }   | _
     new AbstractClassWithPath() {
-      void call() {}
+      void call() {
+      }
     }   | _
     new ChildClassWithPath() {
-      void call() {}
+      void call() {
+      }
     }   | _
   }
 
@@ -180,7 +192,8 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
   class ChildClassWithPath extends AbstractClassWithPath {
     @Path("call")
     @POST
-    void call() {}
+    void call() {
+    }
   }
 
   def getName(Class clazz) {

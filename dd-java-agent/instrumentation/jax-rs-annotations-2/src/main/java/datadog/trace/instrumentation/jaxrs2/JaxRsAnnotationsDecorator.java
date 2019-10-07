@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.jaxrs;
+package datadog.trace.instrumentation.jaxrs2;
 
 import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 
