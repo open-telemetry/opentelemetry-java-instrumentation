@@ -106,7 +106,6 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       if (asyncResponse != null && asyncResponse.isSuspended()) {
         InstrumentationContext.get(AsyncResponse.class, Span.class).put(asyncResponse, span);
       } else {
-        System.out.println("FINISHING: " + asyncResponse);
         JaxRsAnnotationsDecorator.DECORATE.beforeFinish(span);
         span.finish();
       }
