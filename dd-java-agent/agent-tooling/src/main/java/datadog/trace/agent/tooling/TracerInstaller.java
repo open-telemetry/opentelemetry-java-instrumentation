@@ -2,6 +2,7 @@ package datadog.trace.agent.tooling;
 
 import datadog.opentracing.DDTracer;
 import datadog.trace.api.Config;
+import datadog.trace.instrumentation.api.AgentTracer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -14,6 +15,7 @@ public class TracerInstaller {
         try {
           io.opentracing.util.GlobalTracer.register(tracer);
           datadog.trace.api.GlobalTracer.registerIfAbsent(tracer);
+          AgentTracer.registerIfAbsent(new OpenTracing31());
         } catch (final RuntimeException re) {
           log.warn("Failed to register tracer '" + tracer + "'", re);
         }
