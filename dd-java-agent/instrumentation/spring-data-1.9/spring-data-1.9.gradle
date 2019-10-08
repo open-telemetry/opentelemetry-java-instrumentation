@@ -40,9 +40,6 @@ dependencies {
   latestDepTestCompile group: 'org.springframework', name: 'spring-test', version: '+'
   latestDepTestCompile group: 'org.springframework', name: 'spring-context', version: '+'
 
-  latestDepTestCompile group: 'org.springframework', name: 'spring-core', version: '+'
-  latestDepTestCompile group: 'org.springframework', name: 'spring-aop', version: '+'
-  latestDepTestCompile group: 'org.springframework', name: 'spring-tx', version: '+'
   latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-commons', version: '+'
   latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '+'
 }
