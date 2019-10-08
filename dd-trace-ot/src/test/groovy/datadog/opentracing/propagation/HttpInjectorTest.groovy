@@ -3,20 +3,16 @@ package datadog.opentracing.propagation
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
-import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.Config
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
+import datadog.trace.util.test.DDSpecification
 import io.opentracing.propagation.TextMapInjectAdapter
-import spock.lang.Specification
 
 import static datadog.trace.api.Config.PropagationStyle.B3
 import static datadog.trace.api.Config.PropagationStyle.DATADOG
 
-class HttpInjectorTest extends Specification {
-  static {
-    ConfigUtils.makeConfigInstanceModifiable()
-  }
+class HttpInjectorTest extends DDSpecification {
 
   def "inject http headers"() {
     setup:

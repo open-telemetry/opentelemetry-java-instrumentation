@@ -2,9 +2,9 @@ package datadog.trace.agent.tooling
 
 import datadog.trace.bootstrap.WeakMap
 import datadog.trace.util.gc.GCUtils
+import datadog.trace.util.test.DDSpecification
 import spock.lang.Retry
 import spock.lang.Shared
-import spock.lang.Specification
 
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
@@ -13,7 +13,7 @@ import static datadog.trace.agent.tooling.AgentTooling.CLEANER
 
 @Retry
 // These tests fail sometimes in CI.
-class WeakConcurrentSupplierTest extends Specification {
+class WeakConcurrentSupplierTest extends DDSpecification {
   @Shared
   def weakConcurrentSupplier = new WeakMapSuppliers.WeakConcurrent(CLEANER)
   @Shared

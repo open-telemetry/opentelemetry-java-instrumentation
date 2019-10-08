@@ -1,9 +1,9 @@
 package datadog.opentracing.propagation
 
 import datadog.trace.api.sampling.PrioritySampling
+import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
 import io.opentracing.propagation.TextMapExtractAdapter
-import spock.lang.Specification
 
 import static datadog.opentracing.propagation.DatadogHttpCodec.ORIGIN_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.OT_BAGGAGE_PREFIX
@@ -12,7 +12,7 @@ import static datadog.opentracing.propagation.DatadogHttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.TRACE_ID_KEY
 import static datadog.opentracing.propagation.HttpCodec.UINT64_MAX
 
-class DatadogHttpExtractorTest extends Specification {
+class DatadogHttpExtractorTest extends DDSpecification {
 
   HttpCodec.Extractor extractor = new DatadogHttpCodec.Extractor(["SOME_HEADER": "some-tag"])
 

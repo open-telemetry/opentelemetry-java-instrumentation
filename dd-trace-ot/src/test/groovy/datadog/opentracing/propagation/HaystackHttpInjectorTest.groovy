@@ -5,15 +5,15 @@ import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
+import datadog.trace.util.test.DDSpecification
 import io.opentracing.propagation.TextMapInjectAdapter
-import spock.lang.Specification
 
 import static datadog.opentracing.propagation.HaystackHttpCodec.OT_BAGGAGE_PREFIX
 import static datadog.opentracing.propagation.HaystackHttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.HaystackHttpCodec.TRACE_ID_KEY
 import static datadog.opentracing.propagation.HttpCodec.UINT64_MAX
 
-class HaystackHttpInjectorTest extends Specification {
+class HaystackHttpInjectorTest extends DDSpecification {
 
   HttpCodec.Injector injector = new HaystackHttpCodec.Injector()
 
@@ -53,7 +53,6 @@ class HaystackHttpInjectorTest extends Specification {
     1 * carrier.put(SPAN_ID_KEY, spanId)
     1 * carrier.put(OT_BAGGAGE_PREFIX + "k1", "v1")
     1 * carrier.put(OT_BAGGAGE_PREFIX + "k2", "v2")
-
 
 
     where:

@@ -2,18 +2,15 @@ package datadog.trace.agent.test
 
 import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.agent.tooling.Instrumenter
+import datadog.trace.util.test.DDSpecification
 import net.bytebuddy.agent.builder.AgentBuilder
 import net.bytebuddy.description.type.TypeDescription
 import net.bytebuddy.matcher.ElementMatcher
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
-import spock.lang.Specification
 
-class DefaultInstrumenterTest extends Specification {
-  static {
-    ConfigUtils.makeConfigInstanceModifiable()
-  }
+class DefaultInstrumenterTest extends DDSpecification {
 
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()

@@ -2,9 +2,9 @@ package datadog.trace
 
 import datadog.opentracing.SpanFactory
 import datadog.trace.api.DDTags
-import spock.lang.Specification
+import datadog.trace.util.test.DDSpecification
 
-class DDSpanContextTest extends Specification {
+class DDSpanContextTest extends DDSpecification {
 
   def "null values for tags delete existing tags"() {
     setup:

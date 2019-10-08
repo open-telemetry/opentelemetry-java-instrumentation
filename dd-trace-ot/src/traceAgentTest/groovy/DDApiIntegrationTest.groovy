@@ -6,11 +6,11 @@ import datadog.opentracing.PendingTrace
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.ListWriter
+import datadog.trace.util.test.DDSpecification
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.startupcheck.MinimumDurationRunningStartupCheckStrategy
 import spock.lang.Requires
 import spock.lang.Shared
-import spock.lang.Specification
 
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -20,7 +20,7 @@ class DDApiIntegrationTest {
   // Do not run tests locally on Java7 since testcontainers are not compatible with Java7
   // It is fine to run on CI because CI provides rabbitmq externally, not through testcontainers
   @Requires({ "true" == System.getenv("CI") || jvm.java8Compatible })
-  static class DDApiIntegrationV4Test extends Specification {
+  static class DDApiIntegrationV4Test extends DDSpecification {
     static final WRITER = new ListWriter()
     static final TRACER = new DDTracer(WRITER)
     static final CONTEXT = new DDSpanContext(

@@ -1,22 +1,21 @@
 package datadog.trace.api.writer
 
-
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import datadog.trace.util.test.DDSpecification
 import org.msgpack.core.MessagePack
 import org.msgpack.jackson.dataformat.MessagePackFactory
 import spock.lang.Shared
-import spock.lang.Specification
 
 import static java.util.Collections.singletonMap
 
-class SerializationTest extends Specification {
+class SerializationTest extends DDSpecification {
   @Shared
   def jsonMapper = new ObjectMapper()
   @Shared
   def mpMapper = new ObjectMapper(new MessagePackFactory())
 
-  
+
   def "test json mapper serialization"() {
     setup:
     def map = ["key1": "val1"]

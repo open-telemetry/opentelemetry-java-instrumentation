@@ -7,13 +7,13 @@ import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
 import datadog.opentracing.PendingTrace;
 import datadog.trace.agent.test.asserts.ListWriterAssert;
-import datadog.trace.agent.test.utils.ConfigUtils;
 import datadog.trace.agent.test.utils.GlobalTracerUtils;
 import datadog.trace.agent.tooling.AgentInstaller;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.GlobalTracer;
 import datadog.trace.common.writer.ListWriter;
 import datadog.trace.common.writer.Writer;
+import datadog.trace.util.test.DDSpecification;
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
 import groovy.transform.stc.ClosureParams;
@@ -41,7 +41,6 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.slf4j.LoggerFactory;
 import org.spockframework.runtime.model.SpecMetadata;
-import spock.lang.Specification;
 
 /**
  * A spock test runner which automatically applies instrumentation and exposes a global trace
@@ -61,7 +60,7 @@ import spock.lang.Specification;
 @RunWith(SpockRunner.class)
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
 @Slf4j
-public abstract class AgentTestRunner extends Specification {
+public abstract class AgentTestRunner extends DDSpecification {
   private static final long TIMEOUT_MILLIS = 10 * 1000;
   /**
    * For test runs, agent's global tracer will report to this list writer.
@@ -87,8 +86,6 @@ public abstract class AgentTestRunner extends Specification {
 
     ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.WARN);
     ((Logger) LoggerFactory.getLogger("datadog")).setLevel(Level.DEBUG);
-
-    ConfigUtils.makeConfigInstanceModifiable();
 
     TEST_WRITER =
         new ListWriter() {

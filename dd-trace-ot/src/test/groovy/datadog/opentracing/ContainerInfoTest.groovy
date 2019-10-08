@@ -1,10 +1,9 @@
 package datadog.opentracing
 
-import spock.lang.Specification
+import datadog.trace.util.test.DDSpecification
 import spock.lang.Unroll
 
-
-class ContainerInfoTest extends Specification {
+class ContainerInfoTest extends DDSpecification {
 
   @Unroll
   def "CGroupInfo is parsed from individual lines"() {

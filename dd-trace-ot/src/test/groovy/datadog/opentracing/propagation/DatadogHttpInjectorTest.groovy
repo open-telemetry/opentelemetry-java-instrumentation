@@ -5,8 +5,8 @@ import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
+import datadog.trace.util.test.DDSpecification
 import io.opentracing.propagation.TextMapInjectAdapter
-import spock.lang.Specification
 
 import static datadog.opentracing.propagation.DatadogHttpCodec.ORIGIN_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.OT_BAGGAGE_PREFIX
@@ -15,7 +15,7 @@ import static datadog.opentracing.propagation.DatadogHttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.TRACE_ID_KEY
 import static datadog.opentracing.propagation.HttpCodec.UINT64_MAX
 
-class DatadogHttpInjectorTest extends Specification {
+class DatadogHttpInjectorTest extends DDSpecification {
 
   HttpCodec.Injector injector = new DatadogHttpCodec.Injector()
 

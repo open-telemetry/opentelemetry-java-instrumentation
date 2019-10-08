@@ -5,14 +5,14 @@ import com.fasterxml.jackson.databind.JsonNode
 import datadog.opentracing.SpanFactory
 import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.DDApi.ResponseListener
-import spock.lang.Specification
+import datadog.trace.util.test.DDSpecification
 
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
 import static datadog.trace.agent.test.server.http.TestHttpServer.httpServer
 
-class DDApiTest extends Specification {
+class DDApiTest extends DDSpecification {
   static mapper = DDApi.OBJECT_MAPPER
 
   def "sending an empty list of traces returns no errors"() {

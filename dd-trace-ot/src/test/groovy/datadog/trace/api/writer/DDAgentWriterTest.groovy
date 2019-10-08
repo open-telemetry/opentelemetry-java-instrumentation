@@ -7,7 +7,7 @@ import datadog.opentracing.PendingTrace
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.DDApi
-import spock.lang.Specification
+import datadog.trace.util.test.DDSpecification
 import spock.lang.Timeout
 
 import java.util.concurrent.TimeUnit
@@ -16,7 +16,7 @@ import static datadog.opentracing.SpanFactory.newSpanOf
 import static datadog.trace.common.writer.DDAgentWriter.DISRUPTOR_BUFFER_SIZE
 
 @Timeout(20)
-class DDAgentWriterTest extends Specification {
+class DDAgentWriterTest extends DDSpecification {
 
   def api = Mock(DDApi)
 

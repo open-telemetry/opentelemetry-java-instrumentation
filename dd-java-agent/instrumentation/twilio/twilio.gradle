@@ -20,7 +20,6 @@ dependencies {
   testCompile group: 'com.twilio.sdk', name: 'twilio', version: '0.0.1'
   testCompile project(':dd-java-agent:instrumentation:apache-httpclient-4')
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
-  testCompile group: 'org.objenesis', name: 'objenesis', version: '2.6' // Last version to support Java7
   testCompile group: 'nl.jqno.equalsverifier', name: 'equalsverifier', version: '2.5.2' // Last version to support Java7
 
   latestDepTestCompile group: 'com.twilio.sdk', name: 'twilio', version: '+'

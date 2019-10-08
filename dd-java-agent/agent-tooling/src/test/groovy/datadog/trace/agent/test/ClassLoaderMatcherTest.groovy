@@ -2,9 +2,9 @@ package datadog.trace.agent.test
 
 import datadog.trace.agent.tooling.ClassLoaderMatcher
 import datadog.trace.bootstrap.DatadogClassLoader
-import spock.lang.Specification
+import datadog.trace.util.test.DDSpecification
 
-class ClassLoaderMatcherTest extends Specification {
+class ClassLoaderMatcherTest extends DDSpecification {
 
   def "skip non-delegating classloader"() {
     setup:

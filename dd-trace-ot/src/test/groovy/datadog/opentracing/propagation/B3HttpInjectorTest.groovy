@@ -5,15 +5,15 @@ import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
+import datadog.trace.util.test.DDSpecification
 import io.opentracing.propagation.TextMapInjectAdapter
-import spock.lang.Specification
 
 import static datadog.opentracing.propagation.B3HttpCodec.SAMPLING_PRIORITY_KEY
 import static datadog.opentracing.propagation.B3HttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.B3HttpCodec.TRACE_ID_KEY
 import static datadog.opentracing.propagation.HttpCodec.UINT64_MAX
 
-class B3HttpInjectorTest extends Specification {
+class B3HttpInjectorTest extends DDSpecification {
 
   HttpCodec.Injector injector = new B3HttpCodec.Injector()
 

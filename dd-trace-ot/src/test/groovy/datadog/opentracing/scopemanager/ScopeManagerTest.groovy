@@ -3,14 +3,13 @@ package datadog.opentracing.scopemanager
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
-import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.context.ScopeListener
 import datadog.trace.util.gc.GCUtils
+import datadog.trace.util.test.DDSpecification
 import io.opentracing.Scope
 import io.opentracing.Span
 import io.opentracing.noop.NoopSpan
-import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Timeout
 
@@ -22,10 +21,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import static java.util.concurrent.TimeUnit.SECONDS
 
-class ScopeManagerTest extends Specification {
-  static {
-    ConfigUtils.makeConfigInstanceModifiable()
-  }
+class ScopeManagerTest extends DDSpecification {
   def latch
   def writer
   def tracer
