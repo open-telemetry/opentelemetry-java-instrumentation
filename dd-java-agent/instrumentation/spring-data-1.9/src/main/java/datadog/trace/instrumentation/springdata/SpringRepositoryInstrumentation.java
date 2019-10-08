@@ -93,8 +93,8 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
       final Class<?> clazz = invokedMethod.getDeclaringClass();
 
       boolean isRepositoryOp = Repository.class.isAssignableFrom(clazz);
-      // non-Repository methods including Object methods will also flow through
-      // this interceptor.  Don't create spans for those.
+      // Since this interceptor is the outer most interceptor, non-Repository methods
+      // including Object methods will also flow through here.  Don't create spans for those.
       if (!isRepositoryOp) {
         return methodInvocation.proceed();
       }
