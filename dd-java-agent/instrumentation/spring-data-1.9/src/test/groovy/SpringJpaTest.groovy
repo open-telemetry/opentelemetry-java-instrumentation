@@ -6,7 +6,33 @@ import spring.jpa.JpaCustomer
 import spring.jpa.JpaCustomerRepository
 import spring.jpa.JpaPersistenceConfig
 
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+
 class SpringJpaTest extends AgentTestRunner {
+  def "test object method"() {
+    setup:
+    def context = new AnnotationConfigApplicationContext(JpaPersistenceConfig)
+    def repo = context.getBean(JpaCustomerRepository)
+
+    // when Spring JPA sets up, it issues metadata queries -- clear those traces
+    TEST_WRITER.clear()
+
+    when:
+    runUnderTrace("toString test") {
+      repo.toString()
+    }
+
+    then:
+    // Asserting that a span is NOT created for toString
+    assertTraces(1) {
+      trace(0, 1) {
+        span(0) {
+          operationName "toString test"
+        }
+      }
+    }
+  }
+
   def "test CRUD"() {
     // moved inside test -- otherwise, miss the opportunity to instrument
     def context = new AnnotationConfigApplicationContext(JpaPersistenceConfig)
