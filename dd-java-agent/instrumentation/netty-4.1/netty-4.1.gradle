@@ -38,6 +38,7 @@ dependencies {
   compileOnly group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
 
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  testCompile project(':dd-java-agent:instrumentation:trace-annotation')
   testCompile group: 'io.netty', name: 'netty-codec-http', version: '4.1.0.Final'
   testCompile group: 'org.asynchttpclient', name: 'async-http-client', version: '2.1.0'
 

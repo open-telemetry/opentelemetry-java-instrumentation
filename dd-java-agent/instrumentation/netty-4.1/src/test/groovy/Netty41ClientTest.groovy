@@ -1,4 +1,6 @@
+import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.base.HttpClientTest
+import datadog.trace.api.Trace
 import datadog.trace.instrumentation.netty41.client.HttpClientTracingHandler
 import datadog.trace.instrumentation.netty41.client.NettyHttpClientDecorator
 import io.netty.channel.AbstractChannel
@@ -174,11 +176,54 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
     null != channel.pipeline().remove(HttpClientTracingHandler.getName())
   }
 
+  def "request with trace annotated method"() {
+    given:
+    def annotatedClass = new AnnotatedClass()
+
+    when:
+    def status = runUnderTrace("parent") {
+      annotatedClass.makeRequestUnderTrace(method)
+    }
+
+    then:
+    status == 200
+    assertTraces(2) {
+      server.distributedRequestTrace(it, 0, trace(1).last())
+      trace(1, size(3)) {
+        basicSpan(it, 0, "parent")
+        span(1) {
+          childOf((DDSpan) span(0))
+          serviceName "unnamed-java-app"
+          operationName "trace.annotation"
+          resourceName "AnnotatedClass.makeRequestUnderTrace"
+          errored false
+          tags {
+            defaultTags()
+            "$Tags.COMPONENT.key" "trace"
+          }
+        }
+        clientSpan(it, 2, span(1), method)
+      }
+    }
+
+    where:
+    method << BODY_METHODS
+  }
+
+  class AnnotatedClass {
+    @Trace
+    int makeRequestUnderTrace(String method) {
+      return doRequest(method, server.address.resolve("/success"))
+    }
+  }
+
   class SimpleHandler implements ChannelHandler {
     @Override
     void handlerAdded(ChannelHandlerContext ctx) throws Exception {}
+
     @Override
     void handlerRemoved(ChannelHandlerContext ctx) throws Exception {}
+
     @Override
     void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {}
   }
@@ -186,8 +231,10 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
   class OtherSimpleHandler implements ChannelHandler {
     @Override
     void handlerAdded(ChannelHandlerContext ctx) throws Exception {}
+
     @Override
     void handlerRemoved(ChannelHandlerContext ctx) throws Exception {}
+
     @Override
     void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {}
   }
