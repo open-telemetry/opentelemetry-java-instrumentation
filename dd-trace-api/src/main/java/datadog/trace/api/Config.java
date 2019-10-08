@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,7 +44,6 @@ public class Config {
 
   public static final String CONFIGURATION_FILE = "trace.config";
   public static final String SERVICE_NAME = "service.name";
-  public static final String SERVICE = "service";
   public static final String TRACE_ENABLED = "trace.enabled";
   public static final String INTEGRATIONS_ENABLED = "integrations.enabled";
   public static final String WRITER_TYPE = "writer.type";
@@ -71,6 +71,7 @@ public class Config {
   public static final String HTTP_CLIENT_TAG_QUERY_STRING = "http.client.tag.query-string";
   public static final String HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN = "trace.http.client.split-by-domain";
   public static final String DB_CLIENT_HOST_SPLIT_BY_INSTANCE = "trace.db.client.split-by-instance";
+  public static final String SPLIT_BY_TAGS = "trace.split-by-tags";
   public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
@@ -88,6 +89,8 @@ public class Config {
 
   public static final String LOGS_INJECTION_ENABLED = "logs.injection";
 
+  public static final String SERVICE_TAG = "service";
+  @Deprecated public static final String SERVICE = SERVICE_TAG; // To be removed in 0.34.0
   public static final String RUNTIME_ID_TAG = "runtime-id";
   public static final String LANGUAGE_TAG_KEY = "language";
   public static final String LANGUAGE_TAG_VALUE = "jvm";
@@ -116,6 +119,7 @@ public class Config {
   private static final boolean DEFAULT_HTTP_CLIENT_TAG_QUERY_STRING = false;
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final boolean DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE = false;
+  private static final String DEFAULT_SPLIT_BY_TAGS = "";
   private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 1000;
   private static final String DEFAULT_PROPAGATION_STYLE_EXTRACT = PropagationStyle.DATADOG.name();
   private static final String DEFAULT_PROPAGATION_STYLE_INJECT = PropagationStyle.DATADOG.name();
@@ -171,6 +175,7 @@ public class Config {
   @Getter private final boolean httpClientTagQueryString;
   @Getter private final boolean httpClientSplitByDomain;
   @Getter private final boolean dbClientSplitByInstance;
+  @Getter private final Set<String> splitByTags;
   @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
   @Getter private final Set<PropagationStyle> propagationStylesToExtract;
@@ -257,6 +262,11 @@ public class Config {
     dbClientSplitByInstance =
         getBooleanSettingFromEnvironment(
             DB_CLIENT_HOST_SPLIT_BY_INSTANCE, DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE);
+
+    splitByTags =
+        Collections.unmodifiableSet(
+            new LinkedHashSet<>(
+                getListSettingFromEnvironment(SPLIT_BY_TAGS, DEFAULT_SPLIT_BY_TAGS)));
 
     partialFlushMinSpans =
         getIntegerSettingFromEnvironment(PARTIAL_FLUSH_MIN_SPANS, DEFAULT_PARTIAL_FLUSH_MIN_SPANS);
@@ -366,6 +376,12 @@ public class Config {
         getPropertyBooleanValue(
             properties, DB_CLIENT_HOST_SPLIT_BY_INSTANCE, parent.dbClientSplitByInstance);
 
+    splitByTags =
+        Collections.unmodifiableSet(
+            new LinkedHashSet<>(
+                getPropertyListValue(
+                    properties, SPLIT_BY_TAGS, new ArrayList<>(parent.splitByTags))));
+
     partialFlushMinSpans =
         getPropertyIntegerValue(properties, PARTIAL_FLUSH_MIN_SPANS, parent.partialFlushMinSpans);
 
@@ -456,7 +472,7 @@ public class Config {
     // service name set here instead of getRuntimeTags because apm already manages the service tag
     // and may chose to override it.
     // Additionally, infra/JMX metrics require `service` rather than APM's `service.name` tag
-    result.put(SERVICE, serviceName);
+    result.put(SERVICE_TAG, serviceName);
     return Collections.unmodifiableMap(result);
   }
 
@@ -850,6 +866,10 @@ public class Config {
     }
 
     final String[] tokens = str.split(",", -1);
+    // Remove whitespace from each item.
+    for (int i = 0; i < tokens.length; i++) {
+      tokens[i] = tokens[i].trim();
+    }
     return Collections.unmodifiableList(Arrays.asList(tokens));
   }
 

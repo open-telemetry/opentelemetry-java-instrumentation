@@ -70,11 +70,6 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     transformers.put(
         named("schedule").and(takesArgument(0, Callable.class)),
         SetCallableStateAdvice.class.getName());
-    transformers.put( // kotlinx.coroutines.scheduling.CoroutineScheduler
-        named("dispatch")
-            .and(takesArgument(0, Runnable.class))
-            .and(takesArgument(1, named("kotlinx.coroutines.scheduling.TaskContext"))),
-        SetExecuteRunnableStateAdvice.class.getName());
     return transformers;
   }
 

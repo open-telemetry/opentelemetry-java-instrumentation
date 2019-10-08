@@ -2,6 +2,7 @@ package datadog.opentracing
 
 import datadog.opentracing.propagation.ExtractedContext
 import datadog.opentracing.propagation.TagContext
+import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
 import datadog.trace.api.sampling.PrioritySampling
@@ -16,6 +17,10 @@ import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
 
 class DDSpanBuilderTest extends Specification {
+  static {
+    ConfigUtils.makeConfigInstanceModifiable()
+  }
+
   def writer = new ListWriter()
   def config = Config.get()
   def tracer = new DDTracer(writer)

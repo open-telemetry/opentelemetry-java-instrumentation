@@ -1,7 +1,11 @@
 package datadog.opentracing
 
+
+import com.fasterxml.jackson.databind.ObjectMapper
 import datadog.opentracing.propagation.ExtractedContext
 import datadog.opentracing.propagation.TagContext
+import datadog.trace.agent.test.utils.ConfigUtils
+import datadog.trace.api.DDTags
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.ListWriter
@@ -14,11 +18,21 @@ import java.util.concurrent.TimeUnit
 import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 
 class DDSpanTest extends Specification {
+  static {
+    ConfigUtils.makeConfigInstanceModifiable()
+  }
+
   def writer = new ListWriter()
-  def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer, new RateByServiceSampler(), [:])
+  def sampler = new RateByServiceSampler()
+  def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer, sampler, [:])
 
   @Shared
   def defaultSamplingPriority = PrioritySampling.SAMPLER_KEEP
+
+  def setup() {
+    sampler.onResponse("test", new ObjectMapper()
+      .readTree('{"rate_by_service":{"service:,env:":1.0,"service:spock,env:":0.0}}'))
+  }
 
   def "getters and setters"() {
     setup:
@@ -210,7 +224,7 @@ class DDSpanTest extends Specification {
 
   def "isRootSpan() in and not in the context of distributed tracing"() {
     setup:
-    def root = tracer.buildSpan("root").asChildOf((SpanContext)extractedContext).start()
+    def root = tracer.buildSpan("root").asChildOf((SpanContext) extractedContext).start()
     def child = tracer.buildSpan("child").asChildOf(root).start()
 
     expect:
@@ -222,14 +236,14 @@ class DDSpanTest extends Specification {
     root.finish()
 
     where:
-    extractedContext | isTraceRootSpan
-    null | true
+    extractedContext                                       | isTraceRootSpan
+    null                                                   | true
     new ExtractedContext("123", "456", 1, "789", [:], [:]) | false
   }
 
   def "getApplicationRootSpan() in and not in the context of distributed tracing"() {
     setup:
-    def root = tracer.buildSpan("root").asChildOf((SpanContext)extractedContext).start()
+    def root = tracer.buildSpan("root").asChildOf((SpanContext) extractedContext).start()
     def child = tracer.buildSpan("child").asChildOf(root).start()
 
     expect:
@@ -244,13 +258,34 @@ class DDSpanTest extends Specification {
     root.finish()
 
     where:
-    extractedContext | isTraceRootSpan
-    null | true
+    extractedContext                                       | isTraceRootSpan
+    null                                                   | true
     new ExtractedContext("123", "456", 1, "789", [:], [:]) | false
   }
 
-  def "setting forced tracing via tag"() {
+  def "sampling priority set on init"() {
+    setup:
+    def span = tracer.buildSpan("test").start()
 
+    expect:
+    span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+
+    when:
+    span.setTag(DDTags.SERVICE_NAME, "spock")
+
+    then:
+    // FIXME: priority currently only applies if service name set before span started.
+    span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+//    span.getSamplingPriority() == PrioritySampling.SAMPLER_DROP
+
+    when:
+    span = tracer.buildSpan("test").withTag(DDTags.SERVICE_NAME, "spock").start()
+
+    then:
+    span.getSamplingPriority() == PrioritySampling.SAMPLER_DROP
+  }
+
+  def "setting forced tracing via tag"() {
     setup:
     def span = tracer.buildSpan("root").start()
     if (tagName) {
@@ -264,9 +299,9 @@ class DDSpanTest extends Specification {
     span.finish()
 
     where:
-    tagName | tagValue | expectedPriority
-    'manual.drop' | true | PrioritySampling.USER_DROP
-    'manual.keep' | true | PrioritySampling.USER_KEEP
+    tagName       | tagValue | expectedPriority
+    'manual.drop' | true     | PrioritySampling.USER_DROP
+    'manual.keep' | true     | PrioritySampling.USER_KEEP
   }
 
   def "not setting forced tracing via tag or setting it wrong value not causing exception"() {
@@ -284,9 +319,9 @@ class DDSpanTest extends Specification {
     span.finish()
 
     where:
-    tagName | tagValue
+    tagName       | tagValue
     // When no tag is set default to
-    null | null
+    null          | null
     // Setting to not known value
     'manual.drop' | false
     'manual.keep' | false

@@ -172,11 +172,11 @@ class SpringWebfluxTest extends AgentTestRunner {
           if (annotatedMethod == null) {
             // Functional API
             resourceName "SpringWebFluxTestApplication.tracedMethod"
-            operationName "SpringWebFluxTestApplication.tracedMethod"
+            operationName "trace.annotation"
           } else {
             // Annotation API
             resourceName "TestController.tracedMethod"
-            operationName "TestController.tracedMethod"
+            operationName "trace.annotation"
           }
           childOf(span(0))
           errored false

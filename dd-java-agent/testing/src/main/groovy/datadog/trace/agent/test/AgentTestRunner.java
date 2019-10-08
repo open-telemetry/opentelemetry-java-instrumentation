@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +62,7 @@ import spock.lang.Specification;
 @SpecMetadata(filename = "AgentTestRunner.java", line = 0)
 @Slf4j
 public abstract class AgentTestRunner extends Specification {
+  private static final long TIMEOUT_MILLIS = 10 * 1000;
   /**
    * For test runs, agent's global tracer will report to this list writer.
    *
@@ -206,10 +208,15 @@ public abstract class AgentTestRunner extends Specification {
   @SneakyThrows
   public static void blockUntilChildSpansFinished(final int numberOfSpans) {
     final Span span = io.opentracing.util.GlobalTracer.get().activeSpan();
+    final long deadline = System.currentTimeMillis() + TIMEOUT_MILLIS;
     if (span instanceof DDSpan) {
       final PendingTrace pendingTrace = ((DDSpan) span).context().getTrace();
 
       while (pendingTrace.size() < numberOfSpans) {
+        if (System.currentTimeMillis() > deadline) {
+          throw new TimeoutException(
+              "Timed out waiting for child spans.  Received: " + pendingTrace.size());
+        }
         Thread.sleep(10);
       }
     }

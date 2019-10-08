@@ -1,17 +1,23 @@
 package springdata
 
+import com.couchbase.client.java.Cluster
+import com.couchbase.client.java.CouchbaseCluster
+import com.couchbase.client.java.env.CouchbaseEnvironment
 import com.couchbase.client.java.view.DefaultView
 import com.couchbase.client.java.view.DesignDocument
-import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.data.repository.CrudRepository
 import spock.lang.Shared
+import spock.lang.Unroll
 import util.AbstractCouchbaseTest
 
+import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+
+@Unroll
 class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
-  private static final Closure<Doc> FIND
+  static final Closure<Doc> FIND
   static {
     // This method is different in Spring Data 2+
     try {
@@ -31,21 +37,23 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
   DocRepository repo
 
   def setupSpec() {
+    CouchbaseEnvironment environment = envBuilder(bucketCouchbase).build()
+    Cluster couchbaseCluster = CouchbaseCluster.create(environment, Arrays.asList("127.0.0.1"))
 
     // Create view for SpringRepository's findAll()
     couchbaseCluster.openBucket(bucketCouchbase.name(), bucketCouchbase.password()).bucketManager()
       .insertDesignDocument(
-      DesignDocument.create("doc", Collections.singletonList(DefaultView.create("all",
-        '''
+        DesignDocument.create("doc", Collections.singletonList(DefaultView.create("all",
+          '''
           function (doc, meta) {
              if (doc._class == "springdata.Doc") {
                emit(meta.id, null);
              }
           }
         '''.stripIndent()
-      )))
-    )
-    CouchbaseConfig.setEnvironment(couchbaseEnvironment)
+        )))
+      )
+    CouchbaseConfig.setEnvironment(environment)
     CouchbaseConfig.setBucketSettings(bucketCouchbase)
 
     // Close all buckets and disconnect
@@ -59,12 +67,6 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     applicationContext.close()
   }
 
-  def setup() {
-    repo.deleteAll()
-    TEST_WRITER.waitForTraces(1) // There might be more if there were documents to delete
-    TEST_WRITER.clear()
-  }
-
   def "test empty repo"() {
     when:
     def result = repo.findAll()
@@ -75,185 +77,112 @@ class CouchbaseSpringRepositoryTest extends AbstractCouchbaseTest {
     and:
     assertTraces(1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.query"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Bucket.query", bucketCouchbase.name())
       }
     }
-
-    where:
-    indexName = "test-index"
   }
 
-  def "test CRUD"() {
-    when:
+  def "test save"() {
+    setup:
     def doc = new Doc()
 
-    then: // CREATE
-    repo.save(doc) == doc
-
-    and:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.upsert"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
-      }
-    }
-    TEST_WRITER.clear()
-
-    and: // RETRIEVE
-    FIND(repo, "1") == doc
-
-    and:
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.get"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
-      }
-    }
-    TEST_WRITER.clear()
-
     when:
-    doc.data = "other data"
-
-    then: // UPDATE
-    repo.save(doc) == doc
-    repo.findAll().asList() == [doc]
-
-    assertTraces(3) {
-      trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.upsert"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
-      }
-      trace(1, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.query"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
-      }
-      trace(2, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.get"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
-      }
-    }
-    TEST_WRITER.clear()
-
-    when: // DELETE
-    repo.delete("1")
+    def result = repo.save(doc)
 
     then:
-    !repo.findAll().iterator().hasNext()
-
-    and:
-    assertTraces(2) {
+    result == doc
+    assertTraces(1) {
       trace(0, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.remove"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
+        assertCouchbaseCall(it, 0, "Bucket.upsert", bucketCouchbase.name())
       }
-      trace(1, 1) {
-        span(0) {
-          serviceName "couchbase"
-          resourceName "Bucket.query"
-          operationName "couchbase.call"
-          spanType DDSpanTypes.COUCHBASE
-          errored false
-          parent()
-          tags {
-            "$Tags.COMPONENT.key" "couchbase-client"
-            "$Tags.DB_TYPE.key" "couchbase"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "bucket" bucketCouchbase.name()
-            defaultTags()
-          }
-        }
+    }
+
+    cleanup:
+    TEST_WRITER.clear()
+    repo.deleteAll()
+    TEST_WRITER.waitForTraces(2)
+  }
+
+  def "test save and retrieve"() {
+    setup:
+    def doc = new Doc()
+    def result
+
+    when:
+    runUnderTrace("someTrace") {
+      repo.save(doc)
+      result = FIND(repo, "1")
+
+      blockUntilChildSpansFinished(2)
+    }
+
+    then: // RETRIEVE
+    result == doc
+    sortAndAssertTraces(1) {
+      trace(0, 3) {
+        basicSpan(it, 0, "someTrace")
+        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 1, "Bucket.get", bucketCouchbase.name(), span(0))
+      }
+    }
+
+    cleanup:
+    TEST_WRITER.clear()
+    repo.deleteAll()
+    TEST_WRITER.waitForTraces(2)
+  }
+
+  def "test save and update"() {
+    setup:
+    def doc = new Doc()
+
+    when:
+    runUnderTrace("someTrace") {
+      repo.save(doc)
+      doc.data = "other data"
+      repo.save(doc)
+
+      blockUntilChildSpansFinished(2)
+    }
+
+
+    then:
+    sortAndAssertTraces(1) {
+      trace(0, 3) {
+        basicSpan(it, 0, "someTrace")
+        assertCouchbaseCall(it, 1, "Bucket.upsert", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 2, "Bucket.upsert", bucketCouchbase.name(), span(0))
+      }
+    }
+
+    cleanup:
+    TEST_WRITER.clear()
+    repo.deleteAll()
+    TEST_WRITER.waitForTraces(2)
+  }
+
+  def "save and delete"() {
+    setup:
+    def doc = new Doc()
+    def result
+
+    when: // DELETE
+    runUnderTrace("someTrace") {
+      repo.save(doc)
+      repo.delete("1")
+      result = repo.findAll().iterator().hasNext()
+
+      blockUntilChildSpansFinished(3)
+    }
+
+    then:
+    assert !result
+    sortAndAssertTraces(1) {
+      trace(0, 4) {
+        basicSpan(it, 0, "someTrace")
+        assertCouchbaseCall(it, 3, "Bucket.upsert", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 2, "Bucket.remove", bucketCouchbase.name(), span(0))
+        assertCouchbaseCall(it, 1, "Bucket.query", bucketCouchbase.name(), span(0))
       }
     }
   }

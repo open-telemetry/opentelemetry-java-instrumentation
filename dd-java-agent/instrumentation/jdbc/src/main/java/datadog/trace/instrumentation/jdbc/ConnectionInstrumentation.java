@@ -43,7 +43,7 @@ public final class ConnectionInstrumentation extends Instrumenter.Default {
         nameStartsWith("prepare")
             .and(takesArgument(0, String.class))
             // Also include CallableStatement, which is a sub type of PreparedStatement
-            .and(returns(safeHasSuperType(named(PreparedStatement.class.getName())))),
+            .and(returns(safeHasSuperType(named("java.sql.PreparedStatement")))),
         ConnectionPrepareAdvice.class.getName());
   }
 

@@ -150,9 +150,14 @@ public class ClassLoaderMatcher {
     @Override
     public boolean matches(final ClassLoader target) {
       if (target != null) {
+        Boolean result = cache.get(target);
+        if (result != null) {
+          return result;
+        }
         synchronized (target) {
-          if (cache.containsKey(target)) {
-            return cache.get(target);
+          result = cache.get(target);
+          if (result != null) {
+            return result;
           }
           for (final String name : names) {
             if (target.getResource(Utils.getResourceName(name)) == null) {
@@ -184,9 +189,14 @@ public class ClassLoaderMatcher {
     @Override
     public boolean matches(final ClassLoader target) {
       if (target != null) {
+        Boolean result = cache.get(target);
+        if (result != null) {
+          return result;
+        }
         synchronized (target) {
-          if (cache.containsKey(target)) {
-            return cache.get(target);
+          result = cache.get(target);
+          if (result != null) {
+            return result;
           }
           try {
             final Class<?> aClass = Class.forName(className, false, target);
@@ -225,9 +235,14 @@ public class ClassLoaderMatcher {
     @Override
     public boolean matches(final ClassLoader target) {
       if (target != null) {
+        Boolean result = cache.get(target);
+        if (result != null) {
+          return result;
+        }
         synchronized (target) {
-          if (cache.containsKey(target)) {
-            return cache.get(target);
+          result = cache.get(target);
+          if (result != null) {
+            return result;
           }
           try {
             final Class<?> aClass = Class.forName(className, false, target);

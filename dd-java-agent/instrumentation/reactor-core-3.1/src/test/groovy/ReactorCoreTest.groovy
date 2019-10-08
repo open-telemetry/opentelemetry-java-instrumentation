@@ -201,7 +201,7 @@ class ReactorCoreTest extends AgentTestRunner {
     "basic flux" | Flux.fromIterable([5, 6])
   }
 
-  @Trace(operationName = "trace-parent")
+  @Trace(operationName = "trace-parent", resourceName = "trace-parent")
   def runUnderTrace(def publisher) {
     // This is important sequence of events:
     // We have a 'trace-parent' that covers whole span and then we have publisher-parent that overs only
@@ -221,7 +221,7 @@ class ReactorCoreTest extends AgentTestRunner {
     throw new RuntimeException("Unknown publisher: " + publisher)
   }
 
-  @Trace(operationName = "trace-parent")
+  @Trace(operationName = "trace-parent", resourceName = "trace-parent")
   def cancelUnderTrace(def publisher) {
     final Scope scope = GlobalTracer.get().buildSpan("publisher-parent").startActive(true)
     publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, scope.span())
@@ -232,15 +232,18 @@ class ReactorCoreTest extends AgentTestRunner {
         subscription.cancel()
       }
 
-      void onNext(Integer t) {}
+      void onNext(Integer t) {
+      }
 
-      void onError(Throwable error) {}
+      void onError(Throwable error) {
+      }
 
-      void onComplete() {}
+      void onComplete() {
+      }
     })
   }
 
-  @Trace(operationName = "addOne")
+  @Trace(operationName = "addOne", resourceName = "addOne")
   def static addOneFunc(int i) {
     return i + 1
   }

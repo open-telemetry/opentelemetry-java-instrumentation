@@ -55,7 +55,7 @@ class GrizzlyAsyncTest extends GrizzlyTest {
     }
 
     @GET
-    @Path("error")
+    @Path("error-status")
     void error(@Suspended AsyncResponse ar) {
       executor.execute {
         controller(ERROR) {

@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono
  */
 @Component
 class EchoHandler {
-  @Trace(operationName = "echo")
+  @Trace(operationName = "echo", resourceName = "echo")
   Mono<ServerResponse> echo(ServerRequest request) {
     return ServerResponse.accepted().contentType(MediaType.TEXT_PLAIN)
       .body(request.bodyToMono(String), String)

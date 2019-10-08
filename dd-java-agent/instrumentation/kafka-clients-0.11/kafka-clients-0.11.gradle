@@ -31,7 +31,7 @@ dependencies {
   // This seems to help with jar compatibility hell.
   latestDepTestCompile group: 'org.apache.kafka', name: 'kafka_2.11', version: '+'
   latestDepTestCompile group: 'org.apache.kafka', name: 'kafka-clients', version: '+'
-  latestDepTestCompile group: 'org.springframework.kafka', name: 'spring-kafka', version: '+'
-  latestDepTestCompile group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '+'
+  latestDepTestCompile group: 'org.springframework.kafka', name: 'spring-kafka', version: '2.2.+'
+  latestDepTestCompile group: 'org.springframework.kafka', name: 'spring-kafka-test', version: '2.2.+'
   latestDepTestCompile group: 'org.assertj', name: 'assertj-core', version: '3.+'
 }

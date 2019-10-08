@@ -43,7 +43,7 @@ public class TestServlets {
     }
   }
 
-  @WebServlet("/error")
+  @WebServlet("/error-status")
   public static class Error extends HttpServlet {
     @Override
     protected void service(final HttpServletRequest req, final HttpServletResponse resp) {

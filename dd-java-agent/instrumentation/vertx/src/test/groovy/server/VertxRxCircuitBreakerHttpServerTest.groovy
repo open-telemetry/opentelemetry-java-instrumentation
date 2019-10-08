@@ -33,10 +33,9 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
         )
 
       router.route(SUCCESS.path).handler { ctx ->
-        def result = breaker.execute { future ->
+        breaker.executeCommand({ future ->
           future.complete(SUCCESS)
-        }
-        result.setHandler {
+        }, { it ->
           if (it.failed()) {
             throw it.cause()
           }
@@ -44,13 +43,12 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
           controller(endpoint) {
             ctx.response().setStatusCode(endpoint.status).end(endpoint.body)
           }
-        }
+        })
       }
       router.route(REDIRECT.path).handler { ctx ->
-        def result = breaker.execute { future ->
+        breaker.executeCommand({ future ->
           future.complete(REDIRECT)
-        }
-        result.setHandler {
+        }, {
           if (it.failed()) {
             throw it.cause()
           }
@@ -58,13 +56,12 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
           controller(endpoint) {
             ctx.response().setStatusCode(endpoint.status).putHeader("location", endpoint.body).end()
           }
-        }
+        })
       }
       router.route(ERROR.path).handler { ctx ->
-        def result = breaker.execute { future ->
+        breaker.executeCommand({ future ->
           future.complete(ERROR)
-        }
-        result.setHandler {
+        }, {
           if (it.failed()) {
             throw it.cause()
           }
@@ -72,13 +69,12 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
           controller(endpoint) {
             ctx.response().setStatusCode(endpoint.status).end(endpoint.body)
           }
-        }
+        })
       }
       router.route(EXCEPTION.path).handler { ctx ->
-        def result = breaker.execute { future ->
+        breaker.executeCommand({ future ->
           future.fail(new Exception(EXCEPTION.body))
-        }
-        result.setHandler {
+        }, {
           try {
             def cause = it.cause()
             controller(EXCEPTION) {
@@ -87,7 +83,7 @@ class VertxRxCircuitBreakerHttpServerTest extends VertxHttpServerTest {
           } catch (Exception ex) {
             ctx.response().setStatusCode(EXCEPTION.status).end(ex.message)
           }
-        }
+        })
       }
 
       super.@vertx.createHttpServer()

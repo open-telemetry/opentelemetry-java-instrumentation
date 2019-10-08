@@ -1,10 +1,15 @@
 package datadog.opentracing
 
+import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 
 class SpanFactory {
-  static newSpanOf(long timestampMicro, String threadName = Thread.currentThread().name) {
+  static {
+    ConfigUtils.makeConfigInstanceModifiable()
+  }
+
+  static DDSpan newSpanOf(long timestampMicro, String threadName = Thread.currentThread().name) {
     def writer = new ListWriter()
     def tracer = new DDTracer(writer)
     def currentThreadName = Thread.currentThread().getName()
@@ -28,7 +33,7 @@ class SpanFactory {
     return new DDSpan(timestampMicro, context)
   }
 
-  static newSpanOf(DDTracer tracer) {
+  static DDSpan newSpanOf(DDTracer tracer) {
     def context = new DDSpanContext(
       "1",
       "1",
@@ -47,7 +52,7 @@ class SpanFactory {
     return new DDSpan(1, context)
   }
 
-  static newSpanOf(PendingTrace trace) {
+  static DDSpan newSpanOf(PendingTrace trace) {
     def context = new DDSpanContext(
       trace.traceId,
       "1",

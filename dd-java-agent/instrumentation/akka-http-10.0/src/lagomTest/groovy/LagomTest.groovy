@@ -26,13 +26,13 @@ class LagomTest extends AgentTestRunner {
       .withCassandra(false)
       .withJdbc(false)
       .configureBuilder(
-      new Function<GuiceApplicationBuilder, GuiceApplicationBuilder>() {
-        @Override
-        GuiceApplicationBuilder apply(GuiceApplicationBuilder builder) {
-          return builder
-            .bindings(new ServiceTestModule())
-        }
-      }))
+        new Function<GuiceApplicationBuilder, GuiceApplicationBuilder>() {
+          @Override
+          GuiceApplicationBuilder apply(GuiceApplicationBuilder builder) {
+            return builder
+              .bindings(new ServiceTestModule())
+          }
+        }))
   }
 
   def cleanupSpec() {
@@ -61,7 +61,7 @@ class LagomTest extends AgentTestRunner {
         span(0) {
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
-          resourceName "GET ws://?/echo"
+          resourceName "GET /echo"
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -75,7 +75,8 @@ class LagomTest extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          operationName 'EchoServiceImpl.tracedMethod'
+          operationName 'trace.annotation'
+          resourceName 'EchoServiceImpl.tracedMethod'
         }
       }
     }
@@ -99,7 +100,7 @@ class LagomTest extends AgentTestRunner {
         span(0) {
           serviceName "unnamed-java-app"
           operationName "akka-http.request"
-          resourceName "GET ws://?/error"
+          resourceName "GET /error"
           spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {

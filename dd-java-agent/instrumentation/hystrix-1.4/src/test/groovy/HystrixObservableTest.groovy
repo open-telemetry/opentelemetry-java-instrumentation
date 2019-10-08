@@ -91,7 +91,7 @@ class HystrixObservableTest extends AgentTestRunner {
         }
         span(2) {
           serviceName "unnamed-java-app"
-          operationName "HystrixObservableTest\$1.tracedMethod"
+          operationName "trace.annotation"
           resourceName "HystrixObservableTest\$1.tracedMethod"
           spanType null
           childOf span(1)

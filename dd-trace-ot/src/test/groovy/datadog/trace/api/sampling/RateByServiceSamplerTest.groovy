@@ -6,6 +6,8 @@ import datadog.opentracing.SpanFactory
 import datadog.trace.common.sampling.RateByServiceSampler
 import spock.lang.Specification
 
+import static datadog.trace.common.sampling.RateByServiceSampler.DEFAULT_KEY
+
 class RateByServiceSamplerTest extends Specification {
 
   def "invalid rate -> 1"() {
@@ -15,13 +17,13 @@ class RateByServiceSamplerTest extends Specification {
     String response = '{"rate_by_service": {"service:,env:":' + rate + '}}'
     serviceSampler.onResponse("traces", serializer.readTree(response))
     expect:
-    serviceSampler.baseSampler.sampleRate == expectedRate
+    serviceSampler.serviceRates[DEFAULT_KEY].sampleRate == expectedRate
 
     where:
     rate | expectedRate
     null | 1
     1    | 1
-    0    | 1
+    0    | 0.0
     -5   | 1
     5    | 1
     0.5  | 0.5
@@ -33,22 +35,20 @@ class RateByServiceSamplerTest extends Specification {
     ObjectMapper serializer = new ObjectMapper()
 
     when:
-    String response = '{"rate_by_service": {"service:,env:":1.0, "service:spock,env:test":0.000001}}'
+    String response = '{"rate_by_service": {"service:spock,env:test":0.0}}'
     serviceSampler.onResponse("traces", serializer.readTree(response))
     DDSpan span1 = SpanFactory.newSpanOf("foo", "bar")
     serviceSampler.initializeSamplingPriority(span1)
     then:
     span1.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
     serviceSampler.sample(span1)
-    // !serviceSampler.sample(SpanFactory.newSpanOf("spock", "test"))
 
     when:
-    response = '{"rate_by_service": {"service:,env:":0.000001, "service:spock,env:test":1.0}}'
+    response = '{"rate_by_service": {"service:spock,env:test":1.0}}'
     serviceSampler.onResponse("traces", serializer.readTree(response))
     DDSpan span2 = SpanFactory.newSpanOf("spock", "test")
     serviceSampler.initializeSamplingPriority(span2)
     then:
-    // !serviceSampler.sample(SpanFactory.newSpanOf("foo", "bar"))
     span2.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
     serviceSampler.sample(span2)
   }

@@ -3,6 +3,7 @@ package datadog.opentracing.propagation
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
+import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.Config
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
@@ -13,6 +14,9 @@ import static datadog.trace.api.Config.PropagationStyle.B3
 import static datadog.trace.api.Config.PropagationStyle.DATADOG
 
 class HttpInjectorTest extends Specification {
+  static {
+    ConfigUtils.makeConfigInstanceModifiable()
+  }
 
   def "inject http headers"() {
     setup:
