@@ -1,4 +1,6 @@
-package spring;
+// This file includes software developed at SignalFx
+
+package spring.jpa;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -8,7 +10,7 @@ import lombok.Data;
 
 @Data
 @Entity
-public class Customer {
+public class JpaCustomer {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
@@ -17,9 +19,9 @@ public class Customer {
   private String firstName;
   private String lastName;
 
-  protected Customer() {}
+  protected JpaCustomer() {}
 
-  public Customer(final String firstName, final String lastName) {
+  public JpaCustomer(final String firstName, final String lastName) {
     this.firstName = firstName;
     this.lastName = lastName;
   }

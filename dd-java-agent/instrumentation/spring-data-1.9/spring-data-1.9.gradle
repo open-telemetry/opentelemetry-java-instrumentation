@@ -1,0 +1,46 @@
+// This file includes software developed at SignalFx
+
+muzzle {
+  pass {
+    group = 'org.springframework'
+    module = 'sring-data'
+    versions = "[1.9.0.RELEASE,)"
+    extraDependency "aopalliance:aopalliance:1.0"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+// DQH - API changes that impact instrumentation occurred in spring-data-commons in March 2014.
+// For now, that limits support to spring-data-commons 1.9.0 (maybe 1.8.0).
+// For testing, chose a couple spring-data modules that are old enough to work with 1.9.0.
+dependencies {
+  compileOnly(group: 'aopalliance', name: 'aopalliance', version: '1.0')
+  compileOnly(group: 'org.springframework.data', name: 'spring-data-commons', version: '1.9.0.RELEASE')
+  compileOnly(group: 'org.springframework', name: 'spring-aop', version: '3.0.0.RELEASE')
+
+  testCompile group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
+  testCompile group: 'org.springframework', name: 'spring-test', version: '3.0.0.RELEASE'
+
+  // JPA dependencies
+  testCompile project(':dd-java-agent:instrumentation:jdbc')
+  testCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '1.7.0.RELEASE'
+  testCompile group: 'com.mysema.querydsl', name: 'querydsl-jpa', version: '3.7.4'
+  testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.0.0'
+  testCompile group: 'org.hibernate', name: 'hibernate-entitymanager', version: '4.3.0.Final'
+
+  latestDepTestCompile group: 'org.springframework', name: 'spring-test', version: '+'
+  latestDepTestCompile group: 'org.springframework', name: 'spring-context', version: '+'
+
+  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-commons', version: '+'
+  latestDepTestCompile group: 'org.springframework.data', name: 'spring-data-jpa', version: '+'
+}
+

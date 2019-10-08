@@ -1,6 +1,7 @@
-package spring;
+// This file includes software developed at SignalFx
 
-import java.util.Properties;
+package spring.jpa;
+
 import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
@@ -11,11 +12,11 @@ import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 
-@EnableJpaRepositories(basePackages = "spring")
-public class PersistenceConfig {
+@EnableJpaRepositories(basePackages = "spring.jpa")
+public class JpaPersistenceConfig {
 
-  @Bean(name = "transactionManager")
-  public PlatformTransactionManager dbTransactionManager() {
+  @Bean
+  public PlatformTransactionManager transactionManager() {
     final JpaTransactionManager transactionManager = new JpaTransactionManager();
     transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
     return transactionManager;
@@ -23,17 +24,14 @@ public class PersistenceConfig {
 
   @Bean
   public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-
     final HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     vendorAdapter.setDatabase(Database.HSQL);
     vendorAdapter.setGenerateDdl(true);
 
     final LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
     em.setDataSource(dataSource());
-    em.setPackagesToScan("spring");
+    em.setPackagesToScan("spring.jpa");
     em.setJpaVendorAdapter(vendorAdapter);
-    em.setJpaProperties(additionalProperties());
-
     return em;
   }
 
@@ -45,16 +43,5 @@ public class PersistenceConfig {
     dataSource.setUsername("sa");
     dataSource.setPassword("1");
     return dataSource;
-  }
-
-  private Properties additionalProperties() {
-    final Properties properties = new Properties();
-    properties.setProperty("hibernate.show_sql", "true");
-    properties.setProperty("hibernate.hbm2ddl.auto", "create");
-    properties.setProperty("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
-    //    properties.setProperty(
-    //        "hibernate.format_sql",
-    // env.getProperty("spring.jpa.properties.hibernate.format_sql"));
-    return properties;
   }
 }
