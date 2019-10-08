@@ -145,6 +145,11 @@ public class TracingAgent {
     setSystemPropertyDefault(SIMPLE_LOGGER_SHOW_DATE_TIME_PROPERTY, "true");
     setSystemPropertyDefault(
         SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY, SIMPLE_LOGGER_DATE_TIME_FORMAT_DEFAULT);
+
+    final boolean debugEnabled = isDebugMode();
+    if (debugEnabled) {
+      setSystemPropertyDefault(SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY, "DEBUG");
+    }
   }
 
   private static void setSystemPropertyDefault(final String property, final String value) {
@@ -286,14 +291,41 @@ public class TracingAgent {
   }
 
   /**
+   * Determine if we should log in debug level according to dd.trace.debug
+   *
+   * @return true if we should
+   */
+  private static boolean isDebugMode() {
+    final String tracerDebugLevelSysprop = "dd.trace.debug";
+    final String tracerDebugLevelProp = System.getProperty(tracerDebugLevelSysprop);
+
+    if (tracerDebugLevelProp != null) {
+      return Boolean.parseBoolean(tracerDebugLevelProp);
+    }
+
+    final String tracerDebugLevelEnv =
+        System.getenv(tracerDebugLevelSysprop.replace('.', '_').toUpperCase());
+
+    if (tracerDebugLevelEnv != null) {
+      return Boolean.parseBoolean(tracerDebugLevelEnv);
+    }
+    return false;
+  }
+
+  /**
    * Search for java or datadog-tracer sysprops which indicate that a custom log manager will be
    * used. Also search for any app classes known to set a custom log manager.
    *
    * @return true if we detect a custom log manager being used.
    */
   private static boolean isAppUsingCustomLogManager() {
-    final boolean debugEnabled =
-        "debug".equalsIgnoreCase(System.getProperty(SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY));
+    boolean debugEnabled = false;
+    if (System.getProperty(SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY) != null) {
+      debugEnabled =
+          "debug".equalsIgnoreCase(System.getProperty(SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY));
+    } else {
+      debugEnabled = isDebugMode();
+    }
 
     final String tracerCustomLogManSysprop = "dd.app.customlogmanager";
     final String customLogManagerProp = System.getProperty(tracerCustomLogManSysprop);
