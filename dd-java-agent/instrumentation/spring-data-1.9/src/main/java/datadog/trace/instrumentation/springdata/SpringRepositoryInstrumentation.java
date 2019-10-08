@@ -113,6 +113,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
         result = methodInvocation.proceed();
       } catch (Throwable t) {
         DECORATOR.onError(scope, t);
+        throw t;
       } finally {
         DECORATOR.beforeFinish(scope);
         scope.close();
