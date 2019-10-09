@@ -69,7 +69,7 @@ class LogLevelTest extends Specification {
 
 
 
-  def " datadog.slf4j.simpleLogger.defaultLogLevel=debug && DD_TRACE_DEBUG=false"() {
+  def "SLF4J DEBUG && DD_TRACE_DEBUG=false"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
       , ["-Ddatadog.slf4j.simpleLogger.defaultLogLevel=debug","-Ddd.jmxfetch.enabled=false","-Ddd.trace.enabled=false"] as String[]
@@ -78,7 +78,7 @@ class LogLevelTest extends Specification {
       , true) == 0
   }
 
-  def " datadog.slf4j.simpleLogger.defaultLogLevel=info && DD_TRACE_DEBUG=true"() {
+  def "SLF4J INFO && DD_TRACE_DEBUG=true"() {
     expect:
     IntegrationTestUtils.runOnSeparateJvm(LogLevelChecker.getName()
       , ["-Ddatadog.slf4j.simpleLogger.defaultLogLevel=info","-Ddd.jmxfetch.enabled=false","-Ddd.trace.enabled=false"] as String[]
