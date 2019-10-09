@@ -103,7 +103,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     if (baggageItems == null) {
       this.baggageItems = new ConcurrentHashMap<>(0);
     } else {
-      this.baggageItems = baggageItems;
+      this.baggageItems = new ConcurrentHashMap<>(baggageItems);
     }
 
     if (tags != null) {
