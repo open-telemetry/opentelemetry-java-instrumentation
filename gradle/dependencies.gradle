@@ -9,7 +9,7 @@ ext {
     guava      : "20.0", // Last version to support Java 7
 
     // When upgrading for security fixes, ensure corresponding change is reflected in jmxfetch.
-    jackson    : "2.9.9.3", // https://nvd.nist.gov/vuln/detail/CVE-2019-14379
+    jackson    : "2.10.0", // https://nvd.nist.gov/vuln/detail/CVE-2019-16942 et al
 
     spock      : "1.3-groovy-$spockGroovyVer",
     groovy     : groovyVer,
