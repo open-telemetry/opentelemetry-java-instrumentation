@@ -21,6 +21,7 @@ excludedClassesCoverage += [
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
+  compatabilityTest
   traceAgentTest
 }
 
@@ -44,10 +45,15 @@ dependencies {
 
   testCompile project(":dd-java-agent:testing")
   testCompile project(':utils:gc-utils')
-//  testCompile group: 'cglib', name: 'cglib-nodep', version: '3.2.5'
   testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.17.1'
 
   traceAgentTestCompile deps.testcontainers
+}
+
+[configurations.compatabilityTestCompile, configurations.compatabilityTestRuntime].each {
+  it.resolutionStrategy {
+    force group: 'io.opentracing', name: 'opentracing-api', version: '0.31.0'
+  }
 }
 
 jmh {
