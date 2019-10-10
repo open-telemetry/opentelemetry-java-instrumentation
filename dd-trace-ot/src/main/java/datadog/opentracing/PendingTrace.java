@@ -43,6 +43,9 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
       Collections.newSetFromMap(new ConcurrentHashMap<WeakReference<?>, Boolean>());
 
   private final AtomicInteger pendingReferenceCount = new AtomicInteger(0);
+
+  // We must maintain a separate count because ConcurrentLinkedDeque.size() is a linear operation.
+  private final AtomicInteger completedSpanCount = new AtomicInteger(0);
   /**
    * During a trace there are cases where the root span must be accessed (e.g. priority sampling and
    * trace-search tags).
@@ -209,6 +212,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
               final DDSpan span = it.next();
               if (span != rootSpan) {
                 partialTrace.add(span);
+                completedSpanCount.decrementAndGet();
                 it.remove();
               }
             }
@@ -252,6 +256,17 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
           count);
     }
     return count > 0;
+  }
+
+  @Override
+  public void addFirst(final DDSpan span) {
+    super.addFirst(span);
+    completedSpanCount.incrementAndGet();
+  }
+
+  @Override
+  public int size() {
+    return completedSpanCount.get();
   }
 
   private void addPendingTrace() {
