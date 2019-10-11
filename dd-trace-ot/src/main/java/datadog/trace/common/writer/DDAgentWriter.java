@@ -61,6 +61,7 @@ public class DDAgentWriter implements Writer {
   private static final ThreadFactory SCHEDULED_FLUSH_THREAD_FACTORY =
       new DaemonThreadFactory("dd-trace-writer");
 
+  private final Runnable flushTask = new FlushTask();
   private final DDApi api;
   private final int flushFrequencySeconds;
   private final Disruptor<Event<List<DDSpan>>> disruptor;
@@ -135,9 +136,17 @@ public class DDAgentWriter implements Writer {
   @Override
   public void close() {
     running = false;
+    // We have to shutdown scheduled executor first to make sure no flush events issued after
+    // disruptor has been shutdown.
+    // Otherwise those events will never be processed and flush call will wait forever.
+    scheduledWriterExecutor.shutdown();
+    try {
+      scheduledWriterExecutor.awaitTermination(flushFrequencySeconds, SECONDS);
+    } catch (final InterruptedException e) {
+      log.warn("Waiting for flush executor shutdown interrupted.", e);
+    }
     flush();
     disruptor.shutdown();
-    scheduledWriterExecutor.shutdown();
   }
 
   /** This method will block until the flush is complete. */
@@ -169,8 +178,6 @@ public class DDAgentWriter implements Writer {
       }
     }
   }
-
-  private final Runnable flushTask = new FlushTask();
 
   private class FlushTask implements Runnable {
     @Override
