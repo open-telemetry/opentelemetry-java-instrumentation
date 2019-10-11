@@ -86,12 +86,12 @@ class EvictingCacheProviderTest extends DDSpecification {
     setup:
     def provider = new DDCachingPoolStrategy.EvictingCacheProvider(CLEANER, 2, TimeUnit.MINUTES)
     def typeDef = new TypePool.Resolution.Simple(TypeDescription.VOID)
-    for (int i = 0; i < 20000; i++) {
+    for (int i = 0; i < 10000; i++) {
       provider.register("ClassName$i", typeDef)
     }
 
     expect:
-    provider.size() == 10000
+    provider.size() == 5000
 
     when:
     provider.clear()

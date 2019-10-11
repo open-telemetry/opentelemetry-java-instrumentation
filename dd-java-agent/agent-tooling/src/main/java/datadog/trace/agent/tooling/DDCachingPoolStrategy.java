@@ -73,7 +73,8 @@ public class DDCachingPoolStrategy implements PoolStrategy {
       cache =
           CacheBuilder.newBuilder()
               .initialCapacity(100) // Per classloader, so we want a small default.
-              .maximumSize(10000)
+              .maximumSize(5000)
+              .softValues()
               .expireAfterAccess(expireDuration, unit)
               .build();
 
