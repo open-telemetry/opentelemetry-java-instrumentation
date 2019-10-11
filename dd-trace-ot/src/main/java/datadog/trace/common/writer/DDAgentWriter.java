@@ -151,15 +151,17 @@ public class DDAgentWriter implements Writer {
 
   /** This method will block until the flush is complete. */
   public void flush() {
-    log.info("Flushing any remaining traces.");
-    // Register with the phaser so we can block until the flush completion.
-    apiPhaser.register();
-    disruptor.publishEvent(FLUSH_TRANSLATOR);
-    try {
-      // Allow thread to be interrupted.
-      apiPhaser.awaitAdvanceInterruptibly(apiPhaser.arriveAndDeregister());
-    } catch (final InterruptedException e) {
-      log.warn("Waiting for flush interrupted.", e);
+    if (running) {
+      log.info("Flushing any remaining traces.");
+      // Register with the phaser so we can block until the flush completion.
+      apiPhaser.register();
+      disruptor.publishEvent(FLUSH_TRANSLATOR);
+      try {
+        // Allow thread to be interrupted.
+        apiPhaser.awaitAdvanceInterruptibly(apiPhaser.arriveAndDeregister());
+      } catch (final InterruptedException e) {
+        log.warn("Waiting for flush interrupted.", e);
+      }
     }
   }
 
