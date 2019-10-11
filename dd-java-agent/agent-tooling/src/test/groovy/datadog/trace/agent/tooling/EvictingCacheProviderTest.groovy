@@ -74,7 +74,7 @@ class EvictingCacheProviderTest extends DDSpecification {
 
     then:
     // Verify properly GC'd
-    provider.size() == 0
+    provider.find(className) == null
     weakRef.get() == null
 
     where:
