@@ -5,7 +5,7 @@ import datadog.trace.context.TraceScope.Continuation;
 import datadog.trace.instrumentation.api.AgentSpan.Context;
 import java.util.concurrent.atomic.AtomicReference;
 
-public abstract class AgentTracer {
+public class AgentTracer {
 
   // Implicit parent
   public static AgentSpan startSpan(final String spanName) {
@@ -59,6 +59,9 @@ public abstract class AgentTracer {
   public static TracerAPI get() {
     return provider.get();
   }
+
+  // Not intended to be constructed.
+  private AgentTracer() {}
 
   public interface TracerAPI {
     AgentSpan startSpan(String spanName);
