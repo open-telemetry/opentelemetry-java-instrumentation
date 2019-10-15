@@ -6,11 +6,11 @@ import static java.util.Collections.singletonMap;
 
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.instrumentation.api.AgentPropagation.Getter;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.AgentTracer.TracerAPI;
-import datadog.trace.instrumentation.api.Propagation;
-import datadog.trace.instrumentation.api.Propagation.Getter;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -28,7 +28,7 @@ import java.util.Map.Entry;
 public final class OpenTracing31 implements TracerAPI {
 
   private final Tracer tracer = GlobalTracer.get();
-  private final OT31Propagation propagation = new OT31Propagation();
+  private final OT31AgentPropagation propagation = new OT31AgentPropagation();
 
   private final OT31Span NOOP_SPAN = new OT31Span("", NoopSpan.INSTANCE);
 
@@ -44,7 +44,7 @@ public final class OpenTracing31 implements TracerAPI {
 
   @Override
   public AgentSpan startSpan(final String spanName, final AgentSpan.Context parent) {
-    return new OT31Span(spanName, parent);
+    return new OT31Span(spanName, (OT31Context) parent);
   }
 
   @Override
@@ -63,13 +63,17 @@ public final class OpenTracing31 implements TracerAPI {
   @Override
   public AgentSpan activeSpan() {
     final Span span = tracer.activeSpan();
+    if (span == null) {
+      return null;
+    }
+
     final String spanName;
     if (span instanceof MutableSpan) {
       spanName = ((MutableSpan) span).getOperationName();
     } else {
       spanName = "";
     }
-    return span == null ? null : new OT31Span(spanName, span);
+    return new OT31Span(spanName, span);
   }
 
   @Override
@@ -83,7 +87,7 @@ public final class OpenTracing31 implements TracerAPI {
   }
 
   @Override
-  public Propagation propagate() {
+  public AgentPropagation propagate() {
     return propagation;
   }
 
@@ -97,36 +101,32 @@ public final class OpenTracing31 implements TracerAPI {
     private final Span span;
     private volatile String spanName;
 
-    public OT31Span(final String spanName) {
+    private OT31Span(final String spanName) {
       this(spanName, tracer.buildSpan(spanName).start());
     }
 
-    public OT31Span(final String spanName, final long startTimeMicros) {
+    private OT31Span(final String spanName, final long startTimeMicros) {
       this(spanName, tracer.buildSpan(spanName).withStartTimestamp(startTimeMicros).start());
     }
 
-    public OT31Span(final String spanName, final Context parent) {
+    private OT31Span(final String spanName, final OT31Context parent) {
       this(
           spanName,
-          tracer
-              .buildSpan(spanName)
-              .ignoreActiveSpan()
-              .asChildOf(((OTContext) parent).context)
-              .start());
+          tracer.buildSpan(spanName).ignoreActiveSpan().asChildOf(parent.context).start());
     }
 
-    public OT31Span(final String spanName, final Context parent, final long startTimeMicros) {
+    private OT31Span(final String spanName, final Context parent, final long startTimeMicros) {
       this(
           spanName,
           tracer
               .buildSpan(spanName)
               .ignoreActiveSpan()
-              .asChildOf(((OTContext) parent).context)
+              .asChildOf(((OT31Context) parent).context)
               .withStartTimestamp(startTimeMicros)
               .start());
     }
 
-    public OT31Span(final String spanName, final Span span) {
+    private OT31Span(final String spanName, final Span span) {
       this.spanName = spanName;
       this.span = span;
     }
@@ -180,9 +180,9 @@ public final class OpenTracing31 implements TracerAPI {
     }
 
     @Override
-    public OTContext context() {
+    public OT31Context context() {
       final SpanContext context = span.context();
-      return new OTContext(context);
+      return new OT31Context(context);
     }
 
     @Override
@@ -201,7 +201,7 @@ public final class OpenTracing31 implements TracerAPI {
       span.setOperationName(spanName);
     }
 
-    Span getSpan() {
+    private Span getSpan() {
       return span;
     }
   }
@@ -211,7 +211,7 @@ public final class OpenTracing31 implements TracerAPI {
     private final OT31Span span;
     private final Scope scope;
 
-    public OT31Scope(final AgentSpan span, final Scope scope) {
+    private OT31Scope(final AgentSpan span, final Scope scope) {
       assert span instanceof OT31Span;
       this.span = (OT31Span) span;
       this.scope = scope;
@@ -235,7 +235,7 @@ public final class OpenTracing31 implements TracerAPI {
     }
   }
 
-  private final class OT31Propagation implements Propagation {
+  private final class OT31AgentPropagation implements AgentPropagation {
 
     @Override
     public TraceScope.Continuation capture() {
@@ -253,14 +253,14 @@ public final class OpenTracing31 implements TracerAPI {
       tracer.inject(
           ((OT31Span) span).getSpan().context(),
           TEXT_MAP,
-          new OT31Propagation.Injector<>(carrier, setter));
+          new OT31AgentPropagation.Injector<>(carrier, setter));
     }
 
     private final class Injector<C> implements TextMap {
       private final C carrier;
       private final Setter<C> setter;
 
-      public Injector(final C carrier, final Setter<C> setter) {
+      private Injector(final C carrier, final Setter<C> setter) {
         this.carrier = carrier;
         this.setter = setter;
       }
@@ -278,14 +278,14 @@ public final class OpenTracing31 implements TracerAPI {
 
     @Override
     public <C> AgentSpan.Context extract(final C carrier, final Getter<C> getter) {
-      return new OTContext(tracer.extract(TEXT_MAP, new Extractor(carrier, getter)));
+      return new OT31Context(tracer.extract(TEXT_MAP, new Extractor(carrier, getter)));
     }
   }
 
   private static final class Extractor<C> implements TextMap {
     private final Map<String, String> extracted;
 
-    public Extractor(final C carrier, final Getter<C> getter) {
+    private Extractor(final C carrier, final Getter<C> getter) {
       extracted = new HashMap<>();
       for (final String key : getter.keys(carrier)) {
         extracted.put(key, getter.get(carrier, key));
@@ -303,10 +303,10 @@ public final class OpenTracing31 implements TracerAPI {
     }
   }
 
-  private static final class OTContext implements AgentSpan.Context, SpanContext {
+  private static final class OT31Context implements AgentSpan.Context, SpanContext {
     private final SpanContext context;
 
-    public OTContext(final SpanContext context) {
+    private OT31Context(final SpanContext context) {
       this.context = context;
     }
 

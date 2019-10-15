@@ -40,7 +40,7 @@ public abstract class AgentTracer {
     return get().activeScope();
   }
 
-  public static Propagation propagate() {
+  public static AgentPropagation propagate() {
     return get().propagate();
   }
 
@@ -75,7 +75,7 @@ public abstract class AgentTracer {
 
     TraceScope activeScope();
 
-    Propagation propagate();
+    AgentPropagation propagate();
 
     AgentSpan noopSpan();
   }
@@ -121,8 +121,8 @@ public abstract class AgentTracer {
     }
 
     @Override
-    public Propagation propagate() {
-      return NoopPropagation.INSTANCE;
+    public AgentPropagation propagate() {
+      return NoopAgentPropagation.INSTANCE;
     }
 
     @Override
@@ -206,8 +206,8 @@ public abstract class AgentTracer {
     public void close() {}
   }
 
-  static class NoopPropagation implements Propagation {
-    static final NoopPropagation INSTANCE = new NoopPropagation();
+  static class NoopAgentPropagation implements AgentPropagation {
+    static final NoopAgentPropagation INSTANCE = new NoopAgentPropagation();
 
     @Override
     public Continuation capture() {

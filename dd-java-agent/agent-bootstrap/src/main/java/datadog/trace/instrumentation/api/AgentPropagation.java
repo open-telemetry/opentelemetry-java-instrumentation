@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.api;
 
 import datadog.trace.context.TraceScope;
 
-public interface Propagation {
+public interface AgentPropagation {
 
   TraceScope.Continuation capture();
 
