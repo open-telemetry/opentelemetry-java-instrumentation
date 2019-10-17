@@ -93,7 +93,7 @@ OpenTracing defines a [standard set of tags](https://github.com/opentracing/spec
   ActiveSpan valuableSpan = tracer.
       buildSpan("componentTracking")
       .withTag("custom-meta", "some-useful-value")
-      .withTag(Tags.COMPONENT, "my-component-mysql")
+      .withTag(Tags.COMPONENT.getKey(), "my-component-mysql")
       .startActive(true);
 
 

@@ -23,7 +23,9 @@ import io.opentracing.ScopeManager;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMap;
+import io.opentracing.propagation.TextMapExtract;
+import io.opentracing.propagation.TextMapInject;
+import io.opentracing.tag.Tag;
 import java.io.Closeable;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -329,14 +331,19 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   @Override
+  public Scope activateSpan(final Span span) {
+    return scopeManager.activate(span);
+  }
+
+  @Override
   public DDSpanBuilder buildSpan(final String operationName) {
     return new DDSpanBuilder(operationName, scopeManager);
   }
 
   @Override
   public <T> void inject(final SpanContext spanContext, final Format<T> format, final T carrier) {
-    if (carrier instanceof TextMap) {
-      injector.inject((DDSpanContext) spanContext, (TextMap) carrier);
+    if (carrier instanceof TextMapInject) {
+      injector.inject((DDSpanContext) spanContext, (TextMapInject) carrier);
     } else {
       log.debug("Unsupported format for propagation - {}", format.getClass().getName());
     }
@@ -344,8 +351,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Override
   public <T> SpanContext extract(final Format<T> format, final T carrier) {
-    if (carrier instanceof TextMap) {
-      return extractor.extract((TextMap) carrier);
+    if (carrier instanceof TextMapExtract) {
+      return extractor.extract((TextMapExtract) carrier);
     } else {
       log.debug("Unsupported format for propagation - {}", format.getClass().getName());
       return null;
@@ -517,6 +524,11 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     @Override
     public DDSpanBuilder withTag(final String tag, final boolean bool) {
       return withTag(tag, (Object) bool);
+    }
+
+    @Override
+    public <T> SpanBuilder withTag(final Tag<T> tag, final T value) {
+      return withTag(tag.getKey(), value);
     }
 
     @Override

@@ -13,6 +13,7 @@ import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.util.Clock;
 import io.opentracing.Span;
+import io.opentracing.tag.Tag;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -185,6 +186,12 @@ public class DDSpan implements Span, MutableSpan {
   @Override
   public final DDSpan setTag(final String tag, final Number value) {
     context().setTag(tag, (Object) value);
+    return this;
+  }
+
+  @Override
+  public <T> Span setTag(final Tag<T> tag, final T value) {
+    context().setTag(tag.getKey(), value);
     return this;
   }
 

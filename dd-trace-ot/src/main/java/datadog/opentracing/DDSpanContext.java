@@ -132,11 +132,21 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     return traceId;
   }
 
+  @Override
+  public String toTraceId() {
+    return traceId;
+  }
+
   public String getParentId() {
     return parentId;
   }
 
   public String getSpanId() {
+    return spanId;
+  }
+
+  @Override
+  public String toSpanId() {
     return spanId;
   }
 

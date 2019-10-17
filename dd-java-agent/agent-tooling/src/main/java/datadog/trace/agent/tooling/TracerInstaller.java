@@ -15,7 +15,7 @@ public class TracerInstaller {
         try {
           io.opentracing.util.GlobalTracer.register(tracer);
           datadog.trace.api.GlobalTracer.registerIfAbsent(tracer);
-          AgentTracer.registerIfAbsent(new OpenTracing31());
+          AgentTracer.registerIfAbsent(new OpenTracing32());
         } catch (final RuntimeException re) {
           log.warn("Failed to register tracer '" + tracer + "'", re);
         }

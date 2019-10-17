@@ -30,6 +30,11 @@ public class ContextualScopeManager implements ScopeManager {
   }
 
   @Override
+  public Scope activate(final Span span) {
+    return activate(span, false);
+  }
+
+  @Override
   public Scope active() {
     for (final ScopeContext csm : scopeContexts) {
       if (csm.inContext()) {
@@ -37,6 +42,12 @@ public class ContextualScopeManager implements ScopeManager {
       }
     }
     return tlsScope.get();
+  }
+
+  @Override
+  public Span activeSpan() {
+    final Scope active = active();
+    return active == null ? null : active.span();
   }
 
   @Deprecated
