@@ -3,6 +3,7 @@ package datadog.opentracing
 
 import datadog.opentracing.propagation.ExtractedContext
 import datadog.opentracing.propagation.TagContext
+import datadog.trace.api.Config
 import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.ListWriter
@@ -167,6 +168,22 @@ class DDSpanTest extends DDSpecification {
 
     expect:
     span.durationNano == 1
+  }
+
+  def "stacktrace captured when duration exceeds configured threshold"() {
+    setup:
+    def stackString = new StringWriter()
+    new Exception().printStackTrace(new PrintWriter(stackString))
+    // Get the part of the stack before this test is called.
+    def stack = stackString.toString().split(getClass().getName())[1].split('\n', 2)[1]
+
+    def span = tracer.buildSpan("test").start()
+    span.finish(span.startTimeMicro + TimeUnit.NANOSECONDS.toMicros(Config.get().spanDurationStacktraceNanos) + 1)
+    def actual = span.tags["slow.stack"]
+
+    expect:
+    !actual.toString().isEmpty()
+    actual.endsWith(stack)
   }
 
   def "priority sampling metric set only on root span"() {
