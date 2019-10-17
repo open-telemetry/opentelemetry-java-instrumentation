@@ -1,6 +1,6 @@
 package datadog.trace.agent.test.utils;
 
-import datadog.trace.agent.tooling.OpenTracing31;
+import datadog.trace.agent.tooling.OpenTracing32;
 import datadog.trace.instrumentation.api.AgentTracer;
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
@@ -10,7 +10,7 @@ public class GlobalTracerUtils {
   public static void registerOrReplaceGlobalTracer(final Tracer tracer) {
     try {
       GlobalTracer.register(tracer);
-      AgentTracer.registerIfAbsent(new OpenTracing31());
+      AgentTracer.registerIfAbsent(new OpenTracing32());
     } catch (final Exception e) {
       // Force it anyway using reflection
       Field field = null;
