@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.instrumentation.TestBean
 import org.jboss.weld.environment.se.Weld
 import org.jboss.weld.environment.se.WeldContainer
 import org.jboss.weld.environment.se.threading.RunnableDecorator
@@ -9,7 +10,8 @@ class CDIContainerTest extends AgentTestRunner {
     given:
     Weld builder = new Weld()
       .disableDiscovery()
-      .decorators(RunnableDecorator)
+      .addDecorator(RunnableDecorator)
+      .addBeanClass(TestBean)
 
     when:
     WeldContainer container = builder.initialize()
