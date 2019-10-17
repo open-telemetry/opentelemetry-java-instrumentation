@@ -152,7 +152,8 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   }
 
   static <T> T controller(ServerEndpoint endpoint, Closure<T> closure) {
-    assert ((TraceScope) GlobalTracer.get().scopeManager().active()).asyncPropagating
+    assert GlobalTracer.get().activeSpan() != null: "Controller should have a parent span."
+    assert ((TraceScope) GlobalTracer.get().scopeManager().active()).asyncPropagating: "Scope should be propagating async."
     if (endpoint == NOT_FOUND) {
       return closure()
     }

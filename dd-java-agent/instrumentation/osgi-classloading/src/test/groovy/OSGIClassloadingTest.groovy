@@ -10,7 +10,7 @@ class OSGIClassloadingTest extends AgentTestRunner {
   @Rule
   public final RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties()
 
-  static final String BOOT_DELEGATION_ADDITION = "datadog.slf4j.*,datadog.slf4j,datadog.trace.agent.TracingAgent.*,datadog.trace.agent.TracingAgent,datadog.trace.api.*,datadog.trace.api,datadog.trace.bootstrap.*,datadog.trace.bootstrap,datadog.trace.context.*,datadog.trace.context,io.opentracing.*,io.opentracing"
+  static final String BOOT_DELEGATION_ADDITION = "datadog.slf4j.*,datadog.slf4j,datadog.trace.agent.TracingAgent.*,datadog.trace.agent.TracingAgent,datadog.trace.api.*,datadog.trace.api,datadog.trace.bootstrap.*,datadog.trace.bootstrap,datadog.trace.context.*,datadog.trace.context,datadog.trace.instrumentation.api.*,datadog.trace.instrumentation.api,io.opentracing.*,io.opentracing"
 
   def "delegation property set on module load"() {
     when:
