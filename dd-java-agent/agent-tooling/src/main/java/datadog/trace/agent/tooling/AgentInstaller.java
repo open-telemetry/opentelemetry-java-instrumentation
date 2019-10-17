@@ -2,6 +2,7 @@ package datadog.trace.agent.tooling;
 
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.skipClassLoader;
 import static net.bytebuddy.matcher.ElementMatchers.any;
+import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.nameMatches;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -130,6 +131,7 @@ public class AgentInstaller {
             .or(nameContains("javassist"))
             .or(nameContains(".asm."))
             .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"))
+            .or(isAnnotatedWith(named("javax.decorator.Decorator")))
             .or(matchesConfiguredExcludes());
 
     for (final AgentBuilder.Listener listener : listeners) {
