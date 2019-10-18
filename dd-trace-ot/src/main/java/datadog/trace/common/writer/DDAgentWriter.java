@@ -171,7 +171,7 @@ public class DDAgentWriter implements Writer {
   }
 
   private void scheduleFlush() {
-    if (flushFrequencySeconds > 0) {
+    if (flushFrequencySeconds > 0 && !scheduledWriterExecutor.isShutdown()) {
       final ScheduledFuture<?> previous =
           flushSchedule.getAndSet(
               scheduledWriterExecutor.schedule(flushTask, flushFrequencySeconds, SECONDS));
