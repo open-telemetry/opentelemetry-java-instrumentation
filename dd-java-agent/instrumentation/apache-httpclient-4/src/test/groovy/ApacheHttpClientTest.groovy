@@ -35,12 +35,30 @@ abstract class ApacheHttpClientTest<T extends HttpRequest> extends HttpClientTes
   abstract T createRequest(String method, URI uri)
 
   abstract HttpResponse executeRequest(T request, URI uri)
+
+  static String fullPathFromURI(URI uri) {
+    StringBuilder builder = new StringBuilder()
+    if (uri.getPath() != null) {
+      builder.append(uri.getPath())
+    }
+
+    if (uri.getQuery() != null) {
+      builder.append('?')
+      builder.append(uri.getQuery())
+    }
+
+    if (uri.getFragment() != null) {
+      builder.append('#')
+      builder.append(uri.getFragment())
+    }
+    return builder.toString()
+  }
 }
 
 class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
-    return new BasicHttpRequest(method, uri.getPath())
+    return new BasicHttpRequest(method, fullPathFromURI(uri))
   }
 
   @Override
@@ -52,7 +70,7 @@ class ApacheClientHostRequest extends ApacheHttpClientTest<BasicHttpRequest> {
 class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
-    return new BasicHttpRequest(method, uri.getPath())
+    return new BasicHttpRequest(method, fullPathFromURI(uri))
   }
 
   @Override
@@ -64,7 +82,7 @@ class ApacheClientHostRequestContext extends ApacheHttpClientTest<BasicHttpReque
 class ApacheClientHostRequestResponseHandler extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
-    return new BasicHttpRequest(method, uri.getPath())
+    return new BasicHttpRequest(method, fullPathFromURI(uri))
   }
 
   @Override
@@ -76,7 +94,7 @@ class ApacheClientHostRequestResponseHandler extends ApacheHttpClientTest<BasicH
 class ApacheClientHostRequestResponseHandlerContext extends ApacheHttpClientTest<BasicHttpRequest> {
   @Override
   BasicHttpRequest createRequest(String method, URI uri) {
-    return new BasicHttpRequest(method, uri.getPath())
+    return new BasicHttpRequest(method, fullPathFromURI(uri))
   }
 
   @Override
