@@ -42,7 +42,6 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
       "datadog.trace.agent.decorator.HttpServerDecorator",
       packageName + ".JettyDecorator",
       packageName + ".HttpServletRequestExtractAdapter",
-      packageName + ".HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
       packageName + ".TagSettingAsyncListener"
     };
   }
