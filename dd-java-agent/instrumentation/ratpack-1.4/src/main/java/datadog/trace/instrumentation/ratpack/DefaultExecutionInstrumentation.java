@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.ratpack;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -7,8 +8,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -56,7 +56,7 @@ public final class DefaultExecutionInstrumentation extends Instrumenter.Default 
        * Here we pass along the span instead of a continuation because we aren't sure the callback
        * will actually be called.
        */
-      final Span span = GlobalTracer.get().activeSpan();
+      final AgentSpan span = activeSpan();
       onError = ActionWrapper.wrapIfNeeded(onError, span);
       segment = ActionWrapper.wrapIfNeeded(segment, span);
     }
