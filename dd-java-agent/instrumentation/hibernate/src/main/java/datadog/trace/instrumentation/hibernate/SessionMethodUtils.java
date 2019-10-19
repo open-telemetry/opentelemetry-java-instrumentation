@@ -1,12 +1,13 @@
 package datadog.trace.instrumentation.hibernate;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.bootstrap.ContextStore;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,17 +37,14 @@ public class SessionMethodUtils {
       return null; // This method call is being traced already.
     }
 
-    final Scope scope;
+    final AgentScope scope;
     if (createSpan) {
-      scope =
-          GlobalTracer.get()
-              .buildSpan(operationName)
-              .asChildOf(sessionState.getSessionSpan())
-              .startActive(true);
-      DECORATOR.afterStart(scope.span());
-      DECORATOR.onOperation(scope.span(), entity);
+      final AgentSpan span = startSpan(operationName, sessionState.getSessionSpan().context());
+      DECORATOR.afterStart(span);
+      DECORATOR.onOperation(span, entity);
+      scope = activateSpan(span, true);
     } else {
-      scope = GlobalTracer.get().scopeManager().activate(sessionState.getSessionSpan(), false);
+      scope = activateSpan(sessionState.getSessionSpan(), false);
       sessionState.setHasChildSpan(false);
     }
 
@@ -65,8 +63,8 @@ public class SessionMethodUtils {
     }
 
     CallDepthThreadLocalMap.reset(SessionMethodUtils.class);
-    final Scope scope = sessionState.getMethodScope();
-    final Span span = scope.span();
+    final AgentScope scope = sessionState.getMethodScope();
+    final AgentSpan span = scope.span();
     if (span != null && sessionState.hasChildSpan) {
       DECORATOR.onError(span, throwable);
       if (entity != null) {
