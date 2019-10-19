@@ -1,9 +1,16 @@
 package datadog.trace.instrumentation.rabbitmq.amqp;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.noopSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.rabbitmq.amqp.RabbitDecorator.CONSUMER_DECORATE;
 import static datadog.trace.instrumentation.rabbitmq.amqp.RabbitDecorator.DECORATE;
 import static datadog.trace.instrumentation.rabbitmq.amqp.RabbitDecorator.PRODUCER_DECORATE;
+import static datadog.trace.instrumentation.rabbitmq.amqp.TextMapExtractAdapter.GETTER;
+import static datadog.trace.instrumentation.rabbitmq.amqp.TextMapInjectAdapter.SETTER;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -26,13 +33,10 @@ import com.rabbitmq.client.MessageProperties;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.noop.NoopSpan;
-import io.opentracing.propagation.Format;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentSpan.Context;
 import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -107,7 +111,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
   public static class ChannelMethodAdvice {
     @Advice.OnMethodEnter
-    public static Scope startSpan(
+    public static AgentScope onEnter(
         @Advice.This final Channel channel, @Advice.Origin("Channel.#m") final String method) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
       if (callDepth > 0) {
@@ -116,20 +120,18 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       final Connection connection = channel.getConnection();
 
-      final Scope scope =
-          GlobalTracer.get()
-              .buildSpan("amqp.command")
-              .withTag(DDTags.RESOURCE_NAME, method)
-              .withTag(Tags.PEER_PORT.getKey(), connection.getPort())
-              .startActive(true);
-      DECORATE.afterStart(scope);
-      DECORATE.onPeerConnection(scope.span(), connection.getAddress());
-      return scope;
+      final AgentSpan span =
+          startSpan("amqp.command")
+              .setTag(DDTags.RESOURCE_NAME, method)
+              .setTag(Tags.PEER_PORT.getKey(), connection.getPort());
+      DECORATE.afterStart(span);
+      DECORATE.onPeerConnection(span, connection.getAddress());
+      return activateSpan(span, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
       if (scope != null) {
         DECORATE.onError(scope, throwable);
         DECORATE.beforeFinish(scope);
@@ -146,7 +148,7 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.Argument(1) final String routingKey,
         @Advice.Argument(value = 4, readOnly = false) AMQP.BasicProperties props,
         @Advice.Argument(5) final byte[] body) {
-      final Span span = GlobalTracer.get().activeSpan();
+      final AgentSpan span = activeSpan();
 
       if (span != null) {
         PRODUCER_DECORATE.afterStart(span); // Overwrite tags set by generic decorator.
@@ -157,14 +159,16 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         if (props == null) {
           props = MessageProperties.MINIMAL_BASIC;
         }
-        span.setTag("amqp.delivery_mode", props.getDeliveryMode());
+        final Integer deliveryMode = props.getDeliveryMode();
+        if (deliveryMode != null) {
+          span.setTag("amqp.delivery_mode", deliveryMode);
+        }
 
         // We need to copy the BasicProperties and provide a header map we can modify
         Map<String, Object> headers = props.getHeaders();
         headers = (headers == null) ? new HashMap<String, Object>() : new HashMap<>(headers);
 
-        GlobalTracer.get()
-            .inject(span.context(), Format.Builtin.TEXT_MAP, new TextMapInjectAdapter(headers));
+        propagate().inject(span, headers, SETTER);
 
         props =
             new AMQP.BasicProperties(
@@ -189,11 +193,12 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
   public static class ChannelGetAdvice {
     @Advice.OnMethodEnter
     public static long takeTimestamp(
-        @Advice.Local("placeholderScope") Scope placeholderScope,
+        @Advice.Local("placeholderScope") AgentScope placeholderScope,
         @Advice.Local("callDepth") int callDepth) {
+
       callDepth = CallDepthThreadLocalMap.incrementCallDepth(Channel.class);
       // Don't want RabbitCommandInstrumentation to mess up our actual parent span.
-      placeholderScope = GlobalTracer.get().scopeManager().activate(NoopSpan.INSTANCE, false);
+      placeholderScope = activateSpan(noopSpan(), false);
       return System.currentTimeMillis();
     }
 
@@ -202,32 +207,26 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
         @Advice.This final Channel channel,
         @Advice.Argument(0) final String queue,
         @Advice.Enter final long startTime,
-        @Advice.Local("placeholderScope") final Scope placeholderScope,
+        @Advice.Local("placeholderScope") final AgentScope placeholderScope,
         @Advice.Local("callDepth") final int callDepth,
         @Advice.Return final GetResponse response,
         @Advice.Thrown final Throwable throwable) {
 
-      if (placeholderScope.span() instanceof NoopSpan) {
-        placeholderScope.close();
-      }
+      placeholderScope.close();
 
       if (callDepth > 0) {
         return;
       }
-      SpanContext parentContext = null;
+      Context parentContext = null;
 
       if (response != null && response.getProps() != null) {
         final Map<String, Object> headers = response.getProps().getHeaders();
 
-        parentContext =
-            headers == null
-                ? null
-                : GlobalTracer.get()
-                    .extract(Format.Builtin.TEXT_MAP, new TextMapExtractAdapter(headers));
+        parentContext = headers == null ? null : propagate().extract(headers, GETTER);
       }
 
       if (parentContext == null) {
-        final Span parent = GlobalTracer.get().activeSpan();
+        final AgentSpan parent = activeSpan();
         if (parent != null) {
           parentContext = parent.context();
         }
@@ -235,19 +234,19 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
 
       final Connection connection = channel.getConnection();
 
-      final Integer length = response == null ? null : response.getBody().length;
-
       // TODO: it would be better if we could actually have span wrapped into the scope started in
       // OnMethodEnter
-      final Span span =
-          GlobalTracer.get()
-              .buildSpan("amqp.command")
-              .withStartTimestamp(TimeUnit.MILLISECONDS.toMicros(startTime))
-              .asChildOf(parentContext)
-              .withTag("message.size", length)
-              .withTag(Tags.PEER_PORT.getKey(), connection.getPort())
-              .start();
-      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      final AgentSpan span;
+      if (parentContext != null) {
+        span = startSpan("amqp.command", parentContext, TimeUnit.MILLISECONDS.toMicros(startTime));
+      } else {
+        span = startSpan("amqp.command", TimeUnit.MILLISECONDS.toMicros(startTime));
+      }
+      if (response != null) {
+        span.setTag("message.size", response.getBody().length);
+      }
+      span.setTag(Tags.PEER_PORT.getKey(), connection.getPort());
+      try (final AgentScope scope = activateSpan(span, false)) {
         CONSUMER_DECORATE.afterStart(span);
         CONSUMER_DECORATE.onGet(span, queue);
         CONSUMER_DECORATE.onPeerConnection(span, connection.getAddress());
