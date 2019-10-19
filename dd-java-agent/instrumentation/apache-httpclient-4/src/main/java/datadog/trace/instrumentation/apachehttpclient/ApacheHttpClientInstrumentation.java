@@ -2,6 +2,10 @@ package datadog.trace.instrumentation.apachehttpclient;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.apachehttpclient.ApacheHttpClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.apachehttpclient.HttpHeadersInjectAdapter.SETTER;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -13,15 +17,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMap;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -52,7 +51,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   public String[] helperClassNames() {
     return new String[] {
       getClass().getName() + "$HelperMethods",
-      getClass().getName() + "$HttpHeadersInjectAdapter",
+      packageName + ".HttpHeadersInjectAdapter",
       getClass().getName() + "$WrappingStatusSettingResponseHandler",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
@@ -150,10 +149,9 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   public static class HelperMethods {
-    public static Scope doMethodEnter(final HttpUriRequest request) {
-      final Tracer tracer = GlobalTracer.get();
-      final Scope scope = tracer.buildSpan("http.request").startActive(true);
-      final Span span = scope.span();
+    public static AgentScope doMethodEnter(final HttpUriRequest request) {
+      final AgentSpan span = startSpan("http.request");
+      final AgentScope scope = activateSpan(span, true);
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
@@ -161,17 +159,16 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
       final boolean awsClientCall = request.getHeaders("amz-sdk-invocation-id").length > 0;
       // AWS calls are often signed, so we can't add headers without breaking the signature.
       if (!awsClientCall) {
-        tracer.inject(
-            span.context(), Format.Builtin.HTTP_HEADERS, new HttpHeadersInjectAdapter(request));
+        propagate().inject(span, request, SETTER);
       }
       return scope;
     }
 
     public static void doMethodExit(
-        final Scope scope, final Object result, final Throwable throwable) {
+        final AgentScope scope, final Object result, final Throwable throwable) {
       if (scope != null) {
         try {
-          final Span span = scope.span();
+          final AgentSpan span = scope.span();
 
           if (result instanceof HttpResponse) {
             DECORATE.onResponse(span, (HttpResponse) result);
@@ -189,7 +186,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class UriRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope methodEnter(@Advice.Argument(0) final HttpUriRequest request) {
+    public static AgentScope methodEnter(@Advice.Argument(0) final HttpUriRequest request) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
         return null;
@@ -200,7 +197,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Scope scope,
+        @Advice.Enter final AgentScope scope,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
 
@@ -211,7 +208,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   public static class UriRequestWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope methodEnter(
+    public static AgentScope methodEnter(
         @Advice.Argument(0) final HttpUriRequest request,
         @Advice.Argument(
                 value = 1,
@@ -224,7 +221,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Scope scope = HelperMethods.doMethodEnter(request);
+      final AgentScope scope = HelperMethods.doMethodEnter(request);
 
       // Wrap the handler so we capture the status code
       if (handler instanceof ResponseHandler) {
@@ -235,7 +232,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Scope scope,
+        @Advice.Enter final AgentScope scope,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
 
@@ -245,7 +242,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class RequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope methodEnter(
+    public static AgentScope methodEnter(
         @Advice.Argument(0) final HttpHost host, @Advice.Argument(1) final HttpRequest request) {
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(HttpClient.class);
       if (callDepth > 0) {
@@ -261,7 +258,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Scope scope,
+        @Advice.Enter final AgentScope scope,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
 
@@ -272,7 +269,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   public static class RequestWithHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope methodEnter(
+    public static AgentScope methodEnter(
         @Advice.Argument(0) final HttpHost host,
         @Advice.Argument(1) final HttpRequest request,
         @Advice.Argument(
@@ -286,7 +283,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Scope scope;
+      final AgentScope scope;
 
       if (request instanceof HttpUriRequest) {
         scope = HelperMethods.doMethodEnter((HttpUriRequest) request);
@@ -303,7 +300,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Scope scope,
+        @Advice.Enter final AgentScope scope,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
 
@@ -312,10 +309,11 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   public static class WrappingStatusSettingResponseHandler implements ResponseHandler {
-    final Span span;
+    final AgentSpan span;
     final ResponseHandler handler;
 
-    public WrappingStatusSettingResponseHandler(final Span span, final ResponseHandler handler) {
+    public WrappingStatusSettingResponseHandler(
+        final AgentSpan span, final ResponseHandler handler) {
       this.span = span;
       this.handler = handler;
     }
@@ -327,26 +325,6 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
         DECORATE.onResponse(span, response);
       }
       return handler.handleResponse(response);
-    }
-  }
-
-  public static class HttpHeadersInjectAdapter implements TextMap {
-
-    private final HttpRequest httpRequest;
-
-    public HttpHeadersInjectAdapter(final HttpRequest httpRequest) {
-      this.httpRequest = httpRequest;
-    }
-
-    @Override
-    public void put(final String key, final String value) {
-      httpRequest.addHeader(key, value);
-    }
-
-    @Override
-    public Iterator<Map.Entry<String, String>> iterator() {
-      throw new UnsupportedOperationException(
-          "This class should be used only with tracer#inject()");
     }
   }
 }
