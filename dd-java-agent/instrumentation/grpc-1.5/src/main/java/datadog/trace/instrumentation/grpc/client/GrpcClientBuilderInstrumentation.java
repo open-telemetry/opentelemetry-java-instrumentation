@@ -7,7 +7,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import io.grpc.ClientInterceptor;
-import io.opentracing.util.GlobalTracer;
 import java.util.List;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -58,7 +57,7 @@ public class GrpcClientBuilderInstrumentation extends Instrumenter.Default {
         }
       }
       if (shouldRegister) {
-        interceptors.add(0, new TracingClientInterceptor(GlobalTracer.get()));
+        interceptors.add(0, TracingClientInterceptor.INSTANCE);
       }
     }
   }

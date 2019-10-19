@@ -2,9 +2,8 @@ package datadog.trace.instrumentation.grpc.client;
 
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.grpc.Status;
-import io.opentracing.Span;
-import io.opentracing.tag.Tags;
 
 public class GrpcClientDecorator extends ClientDecorator {
   public static final GrpcClientDecorator DECORATE = new GrpcClientDecorator();
@@ -29,14 +28,14 @@ public class GrpcClientDecorator extends ClientDecorator {
     return null;
   }
 
-  public Span onClose(final Span span, final Status status) {
+  public AgentSpan onClose(final AgentSpan span, final Status status) {
 
     span.setTag("status.code", status.getCode().name());
     span.setTag("status.description", status.getDescription());
 
     onError(span, status.getCause());
     if (!status.isOk()) {
-      Tags.ERROR.set(span, true);
+      span.setError(true);
     }
 
     return span;

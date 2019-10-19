@@ -1,9 +1,14 @@
 package datadog.trace.instrumentation.grpc.client;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.grpc.client.GrpcClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.grpc.client.GrpcInjectAdapter.SETTER;
 
 import datadog.trace.api.DDTags;
-import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
@@ -13,18 +18,10 @@ import io.grpc.ForwardingClientCallListener;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Status;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
 
 public class TracingClientInterceptor implements ClientInterceptor {
 
-  private final Tracer tracer;
-
-  public TracingClientInterceptor(final Tracer tracer) {
-    this.tracer = tracer;
-  }
+  public static final TracingClientInterceptor INSTANCE = new TracingClientInterceptor();
 
   @Override
   public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(
@@ -32,16 +29,11 @@ public class TracingClientInterceptor implements ClientInterceptor {
       final CallOptions callOptions,
       final Channel next) {
 
-    final Span span =
-        tracer
-            .buildSpan("grpc.client")
-            .withTag(DDTags.RESOURCE_NAME, method.getFullMethodName())
-            .start();
-    try (final Scope scope = tracer.scopeManager().activate(span, false)) {
+    final AgentSpan span =
+        startSpan("grpc.client").setTag(DDTags.RESOURCE_NAME, method.getFullMethodName());
+    try (final AgentScope scope = activateSpan(span, false)) {
       DECORATE.afterStart(span);
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
+      scope.setAsyncPropagation(true);
 
       final ClientCall<ReqT, RespT> result;
       try {
@@ -54,31 +46,26 @@ public class TracingClientInterceptor implements ClientInterceptor {
         throw e;
       }
 
-      return new TracingClientCall<>(tracer, span, result);
+      return new TracingClientCall<>(span, result);
     }
   }
 
   static final class TracingClientCall<ReqT, RespT>
       extends ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT> {
-    final Tracer tracer;
-    final Span span;
+    final AgentSpan span;
 
-    TracingClientCall(
-        final Tracer tracer, final Span span, final ClientCall<ReqT, RespT> delegate) {
+    TracingClientCall(final AgentSpan span, final ClientCall<ReqT, RespT> delegate) {
       super(delegate);
-      this.tracer = tracer;
       this.span = span;
     }
 
     @Override
     public void start(final Listener<RespT> responseListener, final Metadata headers) {
-      tracer.inject(span.context(), Format.Builtin.TEXT_MAP, new GrpcInjectAdapter(headers));
+      propagate().inject(span, headers, SETTER);
 
-      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
-        super.start(new TracingClientCallListener<>(tracer, span, responseListener), headers);
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
+        super.start(new TracingClientCallListener<>(span, responseListener), headers);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);
@@ -89,10 +76,8 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void sendMessage(final ReqT message) {
-      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
         super.sendMessage(message);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -105,29 +90,21 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
   static final class TracingClientCallListener<RespT>
       extends ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT> {
-    final Tracer tracer;
-    final Span span;
+    final AgentSpan span;
 
-    TracingClientCallListener(
-        final Tracer tracer, final Span span, final ClientCall.Listener<RespT> delegate) {
+    TracingClientCallListener(final AgentSpan span, final ClientCall.Listener<RespT> delegate) {
       super(delegate);
-      this.tracer = tracer;
       this.span = span;
     }
 
     @Override
     public void onMessage(final RespT message) {
-      final Scope scope =
-          tracer
-              .buildSpan("grpc.message")
-              .asChildOf(span)
-              .withTag("message.type", message.getClass().getName())
-              .startActive(true);
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
-      final Span messageSpan = scope.span();
+      final AgentSpan messageSpan =
+          startSpan("grpc.message", span.context())
+              .setTag("message.type", message.getClass().getName());
       DECORATE.afterStart(messageSpan);
+      final AgentScope scope = activateSpan(messageSpan, true);
+      scope.setAsyncPropagation(true);
       try {
         delegate().onMessage(message);
       } catch (final Throwable e) {
@@ -143,10 +120,8 @@ public class TracingClientInterceptor implements ClientInterceptor {
     public void onClose(final Status status, final Metadata trailers) {
       DECORATE.onClose(span, status);
       // Finishes span.
-      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
         delegate().onClose(status, trailers);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
@@ -159,10 +134,8 @@ public class TracingClientInterceptor implements ClientInterceptor {
 
     @Override
     public void onReady() {
-      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
         delegate().onReady();
       } catch (final Throwable e) {
         DECORATE.onError(span, e);

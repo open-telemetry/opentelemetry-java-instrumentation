@@ -1,25 +1,14 @@
 package datadog.trace.instrumentation.grpc.client;
 
+import datadog.trace.instrumentation.api.AgentPropagation;
 import io.grpc.Metadata;
-import io.opentracing.propagation.TextMap;
-import java.util.Iterator;
-import java.util.Map;
 
-public final class GrpcInjectAdapter implements TextMap {
-  private final Metadata metadata;
+public final class GrpcInjectAdapter implements AgentPropagation.Setter<Metadata> {
 
-  public GrpcInjectAdapter(final Metadata metadata) {
-    this.metadata = metadata;
-  }
+  public static final GrpcInjectAdapter SETTER = new GrpcInjectAdapter();
 
   @Override
-  public Iterator<Map.Entry<String, String>> iterator() {
-    throw new UnsupportedOperationException(
-        "GrpcInjectAdapter should only be used with Tracer.inject()");
-  }
-
-  @Override
-  public void put(final String key, final String value) {
-    this.metadata.put(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER), value);
+  public void set(final Metadata carrier, final String key, final String value) {
+    carrier.put(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER), value);
   }
 }
