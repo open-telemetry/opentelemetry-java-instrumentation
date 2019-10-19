@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.couchbase.client;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -11,9 +13,8 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -36,7 +37,7 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
   @Override
   public Map<String, String> contextStore() {
     return Collections.singletonMap(
-        "com.couchbase.client.core.message.CouchbaseRequest", Span.class.getName());
+        "com.couchbase.client.core.message.CouchbaseRequest", AgentSpan.class.getName());
   }
 
   @Override
@@ -54,18 +55,18 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) final CouchbaseRequest request) {
 
-      final Scope scope = GlobalTracer.get().scopeManager().active();
+      final TraceScope scope = activeScope();
       if (scope != null) {
         // The scope from the initial rxJava subscribe is not available to the networking layer
         // To transfer the span, the span is added to the context store
 
-        final ContextStore<CouchbaseRequest, Span> contextStore =
-            InstrumentationContext.get(CouchbaseRequest.class, Span.class);
+        final ContextStore<CouchbaseRequest, AgentSpan> contextStore =
+            InstrumentationContext.get(CouchbaseRequest.class, AgentSpan.class);
 
-        Span span = contextStore.get(request);
+        AgentSpan span = contextStore.get(request);
 
         if (span == null) {
-          span = GlobalTracer.get().activeSpan();
+          span = activeSpan();
           contextStore.put(request, span);
 
           if (request.operationId() != null) {
