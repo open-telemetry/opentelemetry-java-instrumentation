@@ -1,9 +1,11 @@
 package datadog.trace.instrumentation.okhttp3;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.okhttp3.OkHttpClientDecorator.DECORATE;
 
-import io.opentracing.Scope;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Interceptor;
@@ -23,16 +25,17 @@ public class TracingInterceptor implements Interceptor {
 
     // application interceptor?
     if (chain.connection() == null) {
-      final Scope scope = GlobalTracer.get().buildSpan("okhttp.http").startActive(true);
-      DECORATE.afterStart(scope);
+      final AgentSpan span = startSpan("okhttp.http");
+      DECORATE.afterStart(span);
 
       final Request.Builder requestBuilder = chain.request().newBuilder();
 
       final Object tag = chain.request().tag();
       final TagWrapper tagWrapper =
           tag instanceof TagWrapper ? (TagWrapper) tag : new TagWrapper(tag);
-      requestBuilder.tag(new TagWrapper(tagWrapper, scope.span()));
+      requestBuilder.tag(new TagWrapper(tagWrapper, span));
 
+      final AgentScope scope = activateSpan(span, true);
       try {
         response = chain.proceed(requestBuilder.build());
       } catch (final Throwable ex) {

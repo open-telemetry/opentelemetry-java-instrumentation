@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.okhttp3;
 
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 
 /**
  * Tag wrapper to store parent span context and user defined tags.
@@ -8,7 +8,7 @@ import io.opentracing.Span;
  * @author Pavol Loffay
  */
 public class TagWrapper {
-  private Span span;
+  private AgentSpan span;
 
   private Object tag;
 
@@ -21,9 +21,9 @@ public class TagWrapper {
    * @param wrapper previous wrapper
    * @param span span
    */
-  TagWrapper(final TagWrapper wrapper, final Span span) {
+  TagWrapper(final TagWrapper wrapper, final AgentSpan span) {
     this.span = span;
-    this.tag = wrapper.tag;
+    tag = wrapper.tag;
   }
 
   public void setTag(final Object tag) {
@@ -34,7 +34,7 @@ public class TagWrapper {
     return tag;
   }
 
-  Span getSpan() {
+  AgentSpan getSpan() {
     return span;
   }
 }
