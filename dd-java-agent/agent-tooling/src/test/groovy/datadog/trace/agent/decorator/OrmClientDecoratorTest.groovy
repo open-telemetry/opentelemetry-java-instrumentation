@@ -1,7 +1,6 @@
 package datadog.trace.agent.decorator
 
 import datadog.trace.api.DDTags
-import datadog.trace.instrumentation.api.AgentSpan
 
 class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
 
@@ -30,7 +29,7 @@ class OrmClientDecoratorTest extends DatabaseClientDecoratorTest {
     decorator = newDecorator({ e -> null })
 
     when:
-    decorator.onOperation((AgentSpan) null, null)
+    decorator.onOperation(null, null)
 
     then:
     thrown(AssertionError)

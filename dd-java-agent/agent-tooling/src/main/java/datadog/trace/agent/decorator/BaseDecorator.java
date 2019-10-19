@@ -1,14 +1,9 @@
 package datadog.trace.agent.decorator;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static java.util.Collections.singletonMap;
-
 import datadog.trace.api.Config;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.Scope;
-import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.lang.reflect.Method;
 import java.net.Inet4Address;
@@ -44,30 +39,10 @@ public abstract class BaseDecorator {
     return false;
   }
 
-  @Deprecated
-  public Scope afterStart(final Scope scope) {
-    assert scope != null;
-    afterStart(scope.span());
-    return scope;
-  }
-
   public AgentScope afterStart(final AgentScope scope) {
     assert scope != null;
     afterStart(scope.span());
     return scope;
-  }
-
-  @Deprecated
-  public Span afterStart(final Span span) {
-    assert span != null;
-    if (spanType() != null) {
-      span.setTag(DDTags.SPAN_TYPE, spanType());
-    }
-    Tags.COMPONENT.set(span, component());
-    if (traceAnalyticsEnabled) {
-      span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, traceAnalyticsSampleRate);
-    }
-    return span;
   }
 
   public AgentSpan afterStart(final AgentSpan span) {
@@ -82,35 +57,15 @@ public abstract class BaseDecorator {
     return span;
   }
 
-  @Deprecated
-  public Scope beforeFinish(final Scope scope) {
-    assert scope != null;
-    beforeFinish(scope.span());
-    return scope;
-  }
-
   public AgentScope beforeFinish(final AgentScope scope) {
     assert scope != null;
     beforeFinish(scope.span());
     return scope;
   }
 
-  @Deprecated
-  public Span beforeFinish(final Span span) {
-    assert span != null;
-    return span;
-  }
-
   public AgentSpan beforeFinish(final AgentSpan span) {
     assert span != null;
     return span;
-  }
-
-  @Deprecated
-  public Scope onError(final Scope scope, final Throwable throwable) {
-    assert scope != null;
-    onError(scope.span(), throwable);
-    return scope;
   }
 
   public AgentScope onError(final AgentScope scope, final Throwable throwable) {
@@ -119,36 +74,11 @@ public abstract class BaseDecorator {
     return scope;
   }
 
-  @Deprecated
-  public Span onError(final Span span, final Throwable throwable) {
-    assert span != null;
-    if (throwable != null) {
-      Tags.ERROR.set(span, true);
-      span.log(
-          singletonMap(
-              ERROR_OBJECT,
-              throwable instanceof ExecutionException ? throwable.getCause() : throwable));
-    }
-    return span;
-  }
-
   public AgentSpan onError(final AgentSpan span, final Throwable throwable) {
     assert span != null;
     if (throwable != null) {
       span.setError(true);
       span.addThrowable(throwable instanceof ExecutionException ? throwable.getCause() : throwable);
-    }
-    return span;
-  }
-
-  @Deprecated
-  public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
-    assert span != null;
-    if (remoteConnection != null) {
-      onPeerConnection(span, remoteConnection.getAddress());
-
-      span.setTag(Tags.PEER_HOSTNAME.getKey(), remoteConnection.getHostName());
-      span.setTag(Tags.PEER_PORT.getKey(), remoteConnection.getPort());
     }
     return span;
   }
@@ -161,20 +91,6 @@ public abstract class BaseDecorator {
 
       span.setTag(Tags.PEER_HOSTNAME.getKey(), remoteConnection.getHostName());
       span.setTag(Tags.PEER_PORT.getKey(), remoteConnection.getPort());
-    }
-    return span;
-  }
-
-  @Deprecated
-  public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
-    assert span != null;
-    if (remoteAddress != null) {
-      span.setTag(Tags.PEER_HOSTNAME.getKey(), remoteAddress.getHostName());
-      if (remoteAddress instanceof Inet4Address) {
-        Tags.PEER_HOST_IPV4.set(span, remoteAddress.getHostAddress());
-      } else if (remoteAddress instanceof Inet6Address) {
-        Tags.PEER_HOST_IPV6.set(span, remoteAddress.getHostAddress());
-      }
     }
     return span;
   }

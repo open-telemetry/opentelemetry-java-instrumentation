@@ -4,7 +4,6 @@ import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.Span;
 import io.opentracing.tag.Tags;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -40,50 +39,6 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   @Override
   protected boolean traceAnalyticsDefault() {
     return Config.get().isTraceAnalyticsEnabled();
-  }
-
-  @Deprecated
-  public Span onRequest(final Span span, final REQUEST request) {
-    assert span != null;
-    if (request != null) {
-      Tags.HTTP_METHOD.set(span, method(request));
-
-      // Copy of HttpClientDecorator url handling
-      try {
-        final URI url = url(request);
-        if (url != null) {
-          final StringBuilder urlNoParams = new StringBuilder();
-          if (url.getScheme() != null) {
-            urlNoParams.append(url.getScheme());
-            urlNoParams.append("://");
-          }
-          if (url.getHost() != null) {
-            urlNoParams.append(url.getHost());
-            if (url.getPort() > 0 && url.getPort() != 80 && url.getPort() != 443) {
-              urlNoParams.append(":");
-              urlNoParams.append(url.getPort());
-            }
-          }
-          final String path = url.getPath();
-          if (path.isEmpty()) {
-            urlNoParams.append("/");
-          } else {
-            urlNoParams.append(path);
-          }
-
-          Tags.HTTP_URL.set(span, urlNoParams.toString());
-
-          if (Config.get().isHttpServerTagQueryString()) {
-            span.setTag(DDTags.HTTP_QUERY, url.getQuery());
-            span.setTag(DDTags.HTTP_FRAGMENT, url.getFragment());
-          }
-        }
-      } catch (final Exception e) {
-        log.debug("Error tagging url", e);
-      }
-      // TODO set resource name from URL.
-    }
-    return span;
   }
 
   public AgentSpan onRequest(final AgentSpan span, final REQUEST request) {
@@ -129,26 +84,6 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     return span;
   }
 
-  @Deprecated
-  public Span onConnection(final Span span, final CONNECTION connection) {
-    assert span != null;
-    if (connection != null) {
-      Tags.PEER_HOSTNAME.set(span, peerHostname(connection));
-      final String ip = peerHostIP(connection);
-      if (ip != null) {
-        if (VALID_IPV4_ADDRESS.matcher(ip).matches()) {
-          Tags.PEER_HOST_IPV4.set(span, ip);
-        } else if (ip.contains(":")) {
-          Tags.PEER_HOST_IPV6.set(span, ip);
-        }
-      }
-      final Integer port = peerPort(connection);
-      // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
-      Tags.PEER_PORT.set(span, port != null && port > 0 ? port : null);
-    }
-    return span;
-  }
-
   public AgentSpan onConnection(final AgentSpan span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
@@ -165,22 +100,6 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {
         span.setTag(Tags.PEER_PORT.getKey(), port);
-      }
-    }
-    return span;
-  }
-
-  @Deprecated
-  public Span onResponse(final Span span, final RESPONSE response) {
-    assert span != null;
-    if (response != null) {
-      final Integer status = status(response);
-      if (status != null) {
-        Tags.HTTP_STATUS.set(span, status);
-
-        if (Config.get().getHttpServerErrorStatuses().contains(status)) {
-          Tags.ERROR.set(span, true);
-        }
       }
     }
     return span;

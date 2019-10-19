@@ -89,13 +89,13 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     thrown(AssertionError)
 
     when:
-    decorator.onConnection((AgentSpan) null, null)
+    decorator.onConnection(null, null)
 
     then:
     thrown(AssertionError)
 
     when:
-    decorator.onStatement((AgentSpan) null, null)
+    decorator.onStatement(null, null)
 
     then:
     thrown(AssertionError)

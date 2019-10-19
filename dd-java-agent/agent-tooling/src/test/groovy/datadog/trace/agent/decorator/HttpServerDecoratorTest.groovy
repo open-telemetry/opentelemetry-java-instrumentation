@@ -138,13 +138,13 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    decorator.onRequest((AgentSpan) null, null)
+    decorator.onRequest(null, null)
 
     then:
     thrown(AssertionError)
 
     when:
-    decorator.onRequest((AgentSpan) null, null)
+    decorator.onResponse(null, null)
 
     then:
     thrown(AssertionError)
