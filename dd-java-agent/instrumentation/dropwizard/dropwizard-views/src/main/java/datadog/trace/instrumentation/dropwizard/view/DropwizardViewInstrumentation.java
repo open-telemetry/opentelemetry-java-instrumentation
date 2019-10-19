@@ -1,7 +1,8 @@
 package datadog.trace.instrumentation.dropwizard.view;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -13,12 +14,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.dropwizard.views.View;
-import io.opentracing.Scope;
-import io.opentracing.Span;
 import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
-import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -50,28 +49,24 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
   public static class RenderAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(
+    public static AgentScope onEnter(
         @Advice.This final Object obj, @Advice.Argument(0) final View view) {
-      final Scope scope =
-          GlobalTracer.get()
-              .buildSpan("view.render")
-              .withTag(DDTags.RESOURCE_NAME, "View " + view.getTemplateName())
-              .withTag(Tags.COMPONENT.getKey(), "dropwizard-view")
-              .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
-              .withTag("span.origin.type", obj.getClass().getSimpleName())
-              .startActive(true);
-
-      return scope;
+      final AgentSpan span =
+          startSpan("view.render")
+              .setTag(DDTags.RESOURCE_NAME, "View " + view.getTemplateName())
+              .setTag(Tags.COMPONENT.getKey(), "dropwizard-view")
+              .setTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
+              .setTag("span.origin.type", obj.getClass().getSimpleName());
+      return activateSpan(span, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
-
-      final Span span = scope.span();
+        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
+      final AgentSpan span = scope.span();
       if (throwable != null) {
-        Tags.ERROR.set(span, Boolean.TRUE);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+        span.setError(true);
+        span.addThrowable(throwable);
       }
       scope.close();
     }
