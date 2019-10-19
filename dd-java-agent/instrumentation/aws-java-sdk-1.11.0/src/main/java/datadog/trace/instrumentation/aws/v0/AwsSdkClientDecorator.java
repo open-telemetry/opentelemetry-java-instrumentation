@@ -5,7 +5,7 @@ import com.amazonaws.Request;
 import com.amazonaws.Response;
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import datadog.trace.api.DDTags;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -20,7 +20,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   private final Map<Class, String> operationNames = new ConcurrentHashMap<>();
 
   @Override
-  public Span onRequest(final Span span, final Request request) {
+  public AgentSpan onRequest(final AgentSpan span, final Request request) {
     // Call super first because we override the resource name below.
     super.onRequest(span, request);
 
@@ -40,7 +40,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<Request, Response
   }
 
   @Override
-  public Span onResponse(final Span span, final Response response) {
+  public AgentSpan onResponse(final AgentSpan span, final Response response) {
     if (response.getAwsResponse() instanceof AmazonWebServiceResponse) {
       final AmazonWebServiceResponse awsResp = (AmazonWebServiceResponse) response.getAwsResponse();
       span.setTag("aws.requestId", awsResp.getRequestId());
