@@ -1,10 +1,11 @@
 package datadog.trace.instrumentation.spymemcached;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.spymemcached.MemcacheClientDecorator.DECORATE;
 
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import lombok.extern.slf4j.Slf4j;
@@ -25,12 +26,12 @@ public abstract class CompletionListener<T> {
   static final String MISS = "miss";
 
   private final MemcachedConnection connection;
-  private final Span span;
+  private final AgentSpan span;
 
   public CompletionListener(final MemcachedConnection connection, final String methodName) {
     this.connection = connection;
-    span = GlobalTracer.get().buildSpan(OPERATION_NAME).start();
-    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+    span = startSpan(OPERATION_NAME);
+    try (final AgentScope scope = activateSpan(span, false)) {
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, connection);
       DECORATE.onOperation(span, methodName);
@@ -38,7 +39,7 @@ public abstract class CompletionListener<T> {
   }
 
   protected void closeAsyncSpan(final T future) {
-    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+    try (final AgentScope scope = activateSpan(span, false)) {
       try {
         processResult(span, future);
       } catch (final CancellationException e) {
@@ -66,17 +67,17 @@ public abstract class CompletionListener<T> {
   }
 
   protected void closeSyncSpan(final Throwable thrown) {
-    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+    try (final AgentScope scope = activateSpan(span, false)) {
       DECORATE.onError(span, thrown);
       DECORATE.beforeFinish(span);
       span.finish();
     }
   }
 
-  protected abstract void processResult(Span span, T future)
+  protected abstract void processResult(AgentSpan span, T future)
       throws ExecutionException, InterruptedException;
 
-  protected void setResultTag(final Span span, final boolean hit) {
+  protected void setResultTag(final AgentSpan span, final boolean hit) {
     span.setTag(MEMCACHED_RESULT, hit ? HIT : MISS);
   }
 }

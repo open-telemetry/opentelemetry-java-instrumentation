@@ -3,7 +3,7 @@ package datadog.trace.instrumentation.spymemcached;
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import net.spy.memcached.MemcachedConnection;
 
 public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedConnection> {
@@ -44,7 +44,7 @@ public class MemcacheClientDecorator extends DatabaseClientDecorator<MemcachedCo
     return null;
   }
 
-  public Span onOperation(final Span span, final String methodName) {
+  public AgentSpan onOperation(final AgentSpan span, final String methodName) {
 
     final char[] chars =
         methodName

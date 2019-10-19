@@ -1,6 +1,6 @@
 package datadog.trace.instrumentation.spymemcached;
 
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.concurrent.ExecutionException;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.GetFuture;
@@ -17,7 +17,7 @@ public class GetCompletionListener extends CompletionListener<GetFuture<?>>
   }
 
   @Override
-  protected void processResult(final Span span, final GetFuture<?> future)
+  protected void processResult(final AgentSpan span, final GetFuture<?> future)
       throws ExecutionException, InterruptedException {
     final Object result = future.get();
     setResultTag(span, result != null);
