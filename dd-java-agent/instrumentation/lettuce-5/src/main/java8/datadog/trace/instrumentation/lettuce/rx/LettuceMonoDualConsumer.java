@@ -1,11 +1,10 @@
 package datadog.trace.instrumentation.lettuce.rx;
 
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.slf4j.LoggerFactory;
@@ -14,7 +13,7 @@ import reactor.core.publisher.Mono;
 public class LettuceMonoDualConsumer<R, T, U extends Throwable>
     implements Consumer<R>, BiConsumer<T, Throwable> {
 
-  private Span span = null;
+  private AgentSpan span = null;
   private final RedisCommand command;
   private final boolean finishSpanOnClose;
 
@@ -25,11 +24,12 @@ public class LettuceMonoDualConsumer<R, T, U extends Throwable>
 
   @Override
   public void accept(final R r) {
-    final Scope scope = GlobalTracer.get().buildSpan("redis.query").startActive(finishSpanOnClose);
-    span = scope.span();
+    span = startSpan("redis.query");
     DECORATE.afterStart(span);
     DECORATE.onCommand(span, command);
-    scope.close();
+    if (finishSpanOnClose) {
+      span.finish();
+    }
   }
 
   @Override
