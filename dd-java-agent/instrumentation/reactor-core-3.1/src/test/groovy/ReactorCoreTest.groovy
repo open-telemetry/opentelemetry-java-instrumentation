@@ -1,9 +1,8 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
+import datadog.trace.instrumentation.api.AgentSpan
 import datadog.trace.instrumentation.reactor.core.ReactorCoreAdviceUtils
-import io.opentracing.Scope
 import io.opentracing.tag.Tags
-import io.opentracing.util.GlobalTracer
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 import reactor.core.publisher.Flux
@@ -11,6 +10,8 @@ import reactor.core.publisher.Mono
 import spock.lang.Shared
 
 import java.time.Duration
+
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan
 
 class ReactorCoreTest extends AgentTestRunner {
 
@@ -207,9 +208,9 @@ class ReactorCoreTest extends AgentTestRunner {
     // We have a 'trace-parent' that covers whole span and then we have publisher-parent that overs only
     // operation to create publisher (and set its context).
     // The expectation is that then publisher is executed under 'publisher-parent', not under 'trace-parent'
-    final Scope scope = GlobalTracer.get().buildSpan("publisher-parent").startActive(true)
-    publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, scope.span())
-    scope.close()
+    final AgentSpan span = startSpan("publisher-parent")
+    publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, span)
+    span.finish()
 
     // Read all data from publisher
     if (publisher instanceof Mono) {
@@ -223,9 +224,9 @@ class ReactorCoreTest extends AgentTestRunner {
 
   @Trace(operationName = "trace-parent", resourceName = "trace-parent")
   def cancelUnderTrace(def publisher) {
-    final Scope scope = GlobalTracer.get().buildSpan("publisher-parent").startActive(true)
-    publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, scope.span())
-    scope.close()
+    final AgentSpan span = startSpan("publisher-parent")
+    publisher = ReactorCoreAdviceUtils.setPublisherSpan(publisher, span)
+    span.finish()
 
     publisher.subscribe(new Subscriber<Integer>() {
       void onSubscribe(Subscription subscription) {
