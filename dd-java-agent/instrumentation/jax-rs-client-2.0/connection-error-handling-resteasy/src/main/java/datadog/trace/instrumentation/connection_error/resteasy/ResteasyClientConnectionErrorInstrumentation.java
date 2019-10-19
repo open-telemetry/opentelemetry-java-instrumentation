@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.connection_error.resteasy;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -8,11 +7,8 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.jaxrs.ClientTracingFilter;
-import io.opentracing.Span;
-import io.opentracing.log.Fields;
-import io.opentracing.tag.Tags;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -66,10 +62,10 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
         final Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
-        if (prop instanceof Span) {
-          final Span span = (Span) prop;
-          Tags.ERROR.set(span, true);
-          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+        if (prop instanceof AgentSpan) {
+          final AgentSpan span = (AgentSpan) prop;
+          span.setError(true);
+          span.addThrowable(throwable);
           span.finish();
         }
       }
@@ -119,10 +115,10 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
         return wrapped.get();
       } catch (final ExecutionException e) {
         final Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
-        if (prop instanceof Span) {
-          final Span span = (Span) prop;
-          Tags.ERROR.set(span, true);
-          span.log(Collections.singletonMap(Fields.ERROR_OBJECT, e.getCause()));
+        if (prop instanceof AgentSpan) {
+          final AgentSpan span = (AgentSpan) prop;
+          span.setError(true);
+          span.addThrowable(e.getCause());
           span.finish();
         }
         throw e;
@@ -136,10 +132,10 @@ public final class ResteasyClientConnectionErrorInstrumentation extends Instrume
         return wrapped.get(timeout, unit);
       } catch (final ExecutionException e) {
         final Object prop = context.getProperty(ClientTracingFilter.SPAN_PROPERTY_NAME);
-        if (prop instanceof Span) {
-          final Span span = (Span) prop;
-          Tags.ERROR.set(span, true);
-          span.log(Collections.singletonMap(Fields.ERROR_OBJECT, e.getCause()));
+        if (prop instanceof AgentSpan) {
+          final AgentSpan span = (AgentSpan) prop;
+          span.setError(true);
+          span.addThrowable(e.getCause());
           span.finish();
         }
         throw e;
