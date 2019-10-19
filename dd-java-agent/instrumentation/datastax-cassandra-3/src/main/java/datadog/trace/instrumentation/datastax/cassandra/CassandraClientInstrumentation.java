@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.datastax.driver.core.Session;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.util.GlobalTracer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -64,7 +63,7 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
       if (session.getClass().getName().endsWith("cassandra.TracingSession")) {
         return;
       }
-      session = new TracingSession(session, GlobalTracer.get());
+      session = new TracingSession(session);
     }
   }
 }

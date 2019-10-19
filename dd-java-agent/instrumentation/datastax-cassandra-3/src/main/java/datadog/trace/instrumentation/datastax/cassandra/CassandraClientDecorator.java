@@ -5,7 +5,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 
 public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
@@ -46,10 +46,10 @@ public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
     return session.getLoggedKeyspace();
   }
 
-  public Span onResponse(final Span span, final ResultSet result) {
+  public AgentSpan onResponse(final AgentSpan span, final ResultSet result) {
     if (result != null) {
       final Host host = result.getExecutionInfo().getQueriedHost();
-      Tags.PEER_PORT.set(span, host.getSocketAddress().getPort());
+      span.setTag(Tags.PEER_PORT.getKey(), host.getSocketAddress().getPort());
       onPeerConnection(span, host.getSocketAddress().getAddress());
     }
     return span;
