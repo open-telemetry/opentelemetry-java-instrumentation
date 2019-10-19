@@ -1,16 +1,18 @@
 package datadog.trace.instrumentation.servlet2;
 
 import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.servlet2.HttpServletRequestExtractAdapter.GETTER;
 import static datadog.trace.instrumentation.servlet2.Servlet2Decorator.DECORATE;
 
 import datadog.trace.api.DDTags;
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentSpan.Context;
 import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
 import java.security.Principal;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -22,7 +24,7 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 public class Servlet2Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static Scope startSpan(
+  public static AgentScope onEnter(
       @Advice.This final Object servlet,
       @Advice.Argument(0) final ServletRequest req,
       @Advice.Argument(value = 1, readOnly = false, typing = Assigner.Typing.DYNAMIC)
@@ -38,30 +40,20 @@ public class Servlet2Advice {
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) req;
-    final SpanContext extractedContext =
-        GlobalTracer.get()
-            .extract(
-                Format.Builtin.HTTP_HEADERS,
-                new HttpServletRequestExtractAdapter(httpServletRequest));
+    final Context extractedContext = propagate().extract(httpServletRequest, GETTER);
 
-    final Scope scope =
-        GlobalTracer.get()
-            .buildSpan("servlet.request")
-            .ignoreActiveSpan()
-            .asChildOf(extractedContext)
-            .withTag("span.origin.type", servlet.getClass().getName())
-            .startActive(true);
+    final AgentSpan span =
+        startSpan("servlet.request", extractedContext)
+            .setTag("span.origin.type", servlet.getClass().getName());
 
-    final Span span = scope.span();
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, httpServletRequest);
     DECORATE.onRequest(span, httpServletRequest);
 
-    if (scope instanceof TraceScope) {
-      ((TraceScope) scope).setAsyncPropagation(true);
-    }
-
     req.setAttribute(DD_SPAN_ATTRIBUTE, span);
+
+    final AgentScope scope = activateSpan(span, true);
+    scope.setAsyncPropagation(true);
     return scope;
   }
 
@@ -69,10 +61,10 @@ public class Servlet2Advice {
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final Scope scope,
+      @Advice.Enter final AgentScope scope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
-    final Span currentSpan = GlobalTracer.get().activeSpan();
+    final AgentSpan currentSpan = activeSpan();
     if (currentSpan != null) {
       if (request instanceof HttpServletRequest) {
         final Principal principal = ((HttpServletRequest) request).getUserPrincipal();
@@ -83,22 +75,20 @@ public class Servlet2Advice {
     }
 
     if (scope != null) {
-      final Span span = scope.span();
+      final AgentSpan span = scope.span();
       DECORATE.onResponse(span, response);
       if (throwable != null) {
         if (response instanceof StatusSavingHttpServletResponseWrapper
             && ((StatusSavingHttpServletResponseWrapper) response).status
                 == HttpServletResponse.SC_OK) {
           // exception was thrown but status code wasn't set
-          Tags.HTTP_STATUS.set(span, 500);
+          span.setTag(Tags.HTTP_STATUS.getKey(), 500);
         }
         DECORATE.onError(span, throwable);
       }
       DECORATE.beforeFinish(span);
 
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(false);
-      }
+      scope.setAsyncPropagation(false);
       scope.close();
     }
   }
