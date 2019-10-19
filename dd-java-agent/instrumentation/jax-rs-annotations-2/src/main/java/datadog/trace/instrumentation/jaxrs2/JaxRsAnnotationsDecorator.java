@@ -6,8 +6,7 @@ import datadog.trace.agent.decorator.BaseDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.WeakMap;
-import io.opentracing.Scope;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -37,11 +36,10 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return "jax-rs-controller";
   }
 
-  public void onControllerStart(final Scope scope, final Scope parent, final Method method) {
+  public void onControllerStart(final AgentSpan span, final AgentSpan parent, final Method method) {
     final String resourceName = getPathResourceName(method);
     updateParent(parent, resourceName);
 
-    final Span span = scope.span();
     span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
 
     // When jax-rs is the root, we want to name using the path, otherwise use the class/method.
@@ -53,12 +51,11 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     }
   }
 
-  private void updateParent(final Scope scope, final String resourceName) {
-    if (scope == null) {
+  private void updateParent(final AgentSpan span, final String resourceName) {
+    if (span == null) {
       return;
     }
-    final Span span = scope.span();
-    Tags.COMPONENT.set(span, "jax-rs");
+    span.setTag(Tags.COMPONENT.getKey(), "jax-rs");
 
     if (!resourceName.isEmpty()) {
       span.setTag(DDTags.RESOURCE_NAME, resourceName);
