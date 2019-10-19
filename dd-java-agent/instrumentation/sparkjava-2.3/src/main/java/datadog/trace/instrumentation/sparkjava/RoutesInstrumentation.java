@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.sparkjava;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -9,8 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
-import io.opentracing.Scope;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -52,10 +52,10 @@ public class RoutesInstrumentation extends Instrumenter.Default {
     public static void routeMatchEnricher(
         @Advice.Argument(0) final HttpMethod method, @Advice.Return final RouteMatch routeMatch) {
 
-      final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (scope != null && routeMatch != null) {
+      final AgentSpan span = activeSpan();
+      if (span != null && routeMatch != null) {
         final String resourceName = method.name().toUpperCase() + " " + routeMatch.getMatchUri();
-        scope.span().setTag(DDTags.RESOURCE_NAME, resourceName);
+        span.setTag(DDTags.RESOURCE_NAME, resourceName);
       }
     }
   }
