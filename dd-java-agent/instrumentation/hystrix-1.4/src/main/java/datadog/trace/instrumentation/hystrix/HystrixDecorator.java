@@ -3,7 +3,7 @@ package datadog.trace.instrumentation.hystrix;
 import com.netflix.hystrix.HystrixInvokableInfo;
 import datadog.trace.agent.decorator.BaseDecorator;
 import datadog.trace.api.DDTags;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 
 public class HystrixDecorator extends BaseDecorator {
   public static HystrixDecorator DECORATE = new HystrixDecorator();
@@ -24,7 +24,7 @@ public class HystrixDecorator extends BaseDecorator {
   }
 
   public void onCommand(
-      final Span span, final HystrixInvokableInfo<?> command, final String methodName) {
+      final AgentSpan span, final HystrixInvokableInfo<?> command, final String methodName) {
     if (command != null) {
       final String commandName = command.getCommandKey().name();
       final String groupName = command.getCommandGroup().name();

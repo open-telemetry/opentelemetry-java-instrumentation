@@ -8,8 +8,8 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import com.google.auto.service.AutoService;
 import com.netflix.hystrix.HystrixInvokableInfo;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.rxjava.TracedOnSubscribe;
-import io.opentracing.Span;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -98,7 +98,7 @@ public class HystrixInstrumentation extends Instrumenter.Default {
     }
 
     @Override
-    protected void afterStart(final Span span) {
+    protected void afterStart(final AgentSpan span) {
       super.afterStart(span);
 
       DECORATE.onCommand(span, command, methodName);
