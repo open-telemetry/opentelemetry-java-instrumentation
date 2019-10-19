@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.servlet3;
 
 import static datadog.trace.instrumentation.servlet3.Servlet3Decorator.DECORATE;
 
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -12,9 +12,9 @@ import javax.servlet.http.HttpServletResponse;
 
 public class TagSettingAsyncListener implements AsyncListener {
   private final AtomicBoolean activated;
-  private final Span span;
+  private final AgentSpan span;
 
-  public TagSettingAsyncListener(final AtomicBoolean activated, final Span span) {
+  public TagSettingAsyncListener(final AtomicBoolean activated, final AgentSpan span) {
     this.activated = activated;
     this.span = span;
   }
@@ -31,7 +31,7 @@ public class TagSettingAsyncListener implements AsyncListener {
   @Override
   public void onTimeout(final AsyncEvent event) throws IOException {
     if (activated.compareAndSet(false, true)) {
-      Tags.ERROR.set(span, Boolean.TRUE);
+      span.setError(true);
       span.setTag("timeout", event.getAsyncContext().getTimeout());
       DECORATE.beforeFinish(span);
       span.finish();
@@ -45,7 +45,7 @@ public class TagSettingAsyncListener implements AsyncListener {
       if (((HttpServletResponse) event.getSuppliedResponse()).getStatus()
           == HttpServletResponse.SC_OK) {
         // exception is thrown in filter chain, but status code is incorrect
-        Tags.HTTP_STATUS.set(span, 500);
+        span.setTag(Tags.HTTP_STATUS.getKey(), 500);
       }
       DECORATE.onError(span, event.getThrowable());
       DECORATE.beforeFinish(span);

@@ -28,7 +28,6 @@ public final class FilterChain3Instrumentation extends Instrumenter.Default {
       "datadog.trace.agent.decorator.ServerDecorator",
       "datadog.trace.agent.decorator.HttpServerDecorator",
       packageName + ".HttpServletRequestExtractAdapter",
-      packageName + ".HttpServletRequestExtractAdapter$MultivaluedMapFlatIterator",
       packageName + ".Servlet3Decorator",
       packageName + ".TagSettingAsyncListener"
     };

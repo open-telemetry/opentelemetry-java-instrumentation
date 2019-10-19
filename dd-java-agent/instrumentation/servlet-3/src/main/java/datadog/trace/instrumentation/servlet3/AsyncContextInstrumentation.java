@@ -2,6 +2,8 @@ package datadog.trace.instrumentation.servlet3;
 
 import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.servlet3.HttpServletRequestInjectAdapter.SETTER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -12,9 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import io.opentracing.Span;
-import io.opentracing.propagation.Format;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Map;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletRequest;
@@ -64,17 +64,13 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
 
       final ServletRequest request = context.getRequest();
       final Object spanAttr = request.getAttribute(DD_SPAN_ATTRIBUTE);
-      if (spanAttr instanceof Span) {
+      if (spanAttr instanceof AgentSpan) {
         request.removeAttribute(DD_SPAN_ATTRIBUTE);
-        final Span span = (Span) spanAttr;
+        final AgentSpan span = (AgentSpan) spanAttr;
         // Override propagation headers by injecting attributes from the current span
         // into the new request
         if (request instanceof HttpServletRequest) {
-          GlobalTracer.get()
-              .inject(
-                  span.context(),
-                  Format.Builtin.TEXT_MAP,
-                  new HttpServletRequestInjectAdapter((HttpServletRequest) request));
+          propagate().inject(span, (HttpServletRequest) request, SETTER);
         }
         final String path;
         if (args.length == 1 && args[0] instanceof String) {
