@@ -3,12 +3,14 @@ package datadog.trace.agent.test.utils
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.decorator.BaseDecorator
 import datadog.trace.agent.test.asserts.TraceAssert
-import datadog.trace.context.TraceScope
-import io.opentracing.Scope
-import io.opentracing.util.GlobalTracer
+import datadog.trace.instrumentation.api.AgentScope
+import datadog.trace.instrumentation.api.AgentSpan
 import lombok.SneakyThrows
 
 import java.util.concurrent.Callable
+
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan
 
 class TraceUtils {
 
@@ -28,17 +30,19 @@ class TraceUtils {
 
   @SneakyThrows
   static <T> T runUnderTrace(final String rootOperationName, final Callable<T> r) {
-    final Scope scope = GlobalTracer.get().buildSpan(rootOperationName).startActive(true)
-    DECORATOR.afterStart(scope)
-    ((TraceScope) scope).setAsyncPropagation(true)
+    final AgentSpan span = startSpan(rootOperationName)
+    DECORATOR.afterStart(span)
+
+    AgentScope scope = activateSpan(span, true)
+    scope.setAsyncPropagation(true)
 
     try {
       return r.call()
     } catch (final Exception e) {
-      DECORATOR.onError(scope, e)
+      DECORATOR.onError(span, e)
       throw e
     } finally {
-      DECORATOR.beforeFinish(scope)
+      DECORATOR.beforeFinish(span)
       scope.close()
     }
   }
