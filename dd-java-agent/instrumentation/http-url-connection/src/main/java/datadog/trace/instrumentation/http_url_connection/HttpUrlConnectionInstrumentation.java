@@ -1,6 +1,10 @@
 package datadog.trace.instrumentation.http_url_connection;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.http_url_connection.HeadersInjectAdapter.SETTER;
 import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -13,14 +17,9 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMap;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.HttpURLConnection;
-import java.util.Iterator;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -48,7 +47,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.HttpClientDecorator",
       packageName + ".HttpUrlConnectionDecorator",
-      HttpUrlConnectionInstrumentation.class.getName() + "$HeadersInjectAdapter",
+      packageName + ".HeadersInjectAdapter",
       HttpUrlConnectionInstrumentation.class.getName() + "$HttpUrlState",
       HttpUrlConnectionInstrumentation.class.getName() + "$HttpUrlState$1",
     };
@@ -86,11 +85,9 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         }
 
         if (!state.hasSpan() && !state.isFinished()) {
-          final Span span = state.startSpan(thiz);
+          final AgentSpan span = state.start(thiz);
           if (!connected) {
-            GlobalTracer.get()
-                .inject(
-                    span.context(), Format.Builtin.HTTP_HEADERS, new HeadersInjectAdapter(thiz));
+            propagate().inject(span, thiz, SETTER);
           }
         }
         return state;
@@ -122,32 +119,6 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class HeadersInjectAdapter implements TextMap {
-
-    private final HttpURLConnection connection;
-
-    public HeadersInjectAdapter(final HttpURLConnection connection) {
-      this.connection = connection;
-    }
-
-    @Override
-    public void put(final String key, final String value) {
-      try {
-        connection.setRequestProperty(key, value);
-      } catch (final IllegalStateException e) {
-        // There are cases when this can through an exception. E.g. some implementations have
-        // 'connecting' state. Just guard against that here, there is not much we can do at this
-        // point.
-      }
-    }
-
-    @Override
-    public Iterator<Map.Entry<String, String>> iterator() {
-      throw new UnsupportedOperationException(
-          "This class should be used only with tracer#inject()");
-    }
-  }
-
   public static class HttpUrlState {
 
     public static final String OPERATION_NAME = "http.request";
@@ -160,13 +131,12 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
           }
         };
 
-    private volatile Span span = null;
+    private volatile AgentSpan span = null;
     private volatile boolean finished = false;
 
-    public Span startSpan(final HttpURLConnection connection) {
-      final Tracer.SpanBuilder builder = GlobalTracer.get().buildSpan(OPERATION_NAME);
-      span = builder.start();
-      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+    public AgentSpan start(final HttpURLConnection connection) {
+      span = startSpan(OPERATION_NAME);
+      try (final AgentScope scope = activateSpan(span, false)) {
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, connection);
         return span;
@@ -186,7 +156,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
     }
 
     public void finishSpan(final Throwable throwable) {
-      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      try (final AgentScope scope = activateSpan(span, false)) {
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.finish();
@@ -202,7 +172,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
        * (e.g. breaks getOutputStream).
        */
       if (responseCode > 0) {
-        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+        try (final AgentScope scope = activateSpan(span, false)) {
           DECORATE.onResponse(span, responseCode);
           DECORATE.beforeFinish(span);
           span.finish();

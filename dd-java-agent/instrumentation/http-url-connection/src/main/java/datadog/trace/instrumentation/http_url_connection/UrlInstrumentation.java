@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.http_url_connection;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -13,13 +14,11 @@ import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.InternalJarURLHandler;
-import io.opentracing.Scope;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
 import java.net.URL;
 import java.net.URLStreamHandler;
-import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -65,23 +64,22 @@ public class UrlInstrumentation extends Instrumenter.Default {
         String protocol = url.getProtocol();
         protocol = protocol != null ? protocol : "url";
 
-        final Span span =
-            GlobalTracer.get()
-                .buildSpan(protocol + ".request")
-                .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-                .withTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
-                .withTag(Tags.COMPONENT.getKey(), COMPONENT)
-                .start();
-        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
-          Tags.HTTP_URL.set(span, url.toString());
-          Tags.PEER_PORT.set(span, url.getPort() == -1 ? 80 : url.getPort());
-          Tags.PEER_HOSTNAME.set(span, url.getHost());
+        final AgentSpan span =
+            startSpan(protocol + ".request")
+                .setTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
+                .setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
+                .setTag(Tags.COMPONENT.getKey(), COMPONENT);
+
+        try (final AgentScope scope = activateSpan(span, false)) {
+          span.setTag(Tags.HTTP_URL.getKey(), url.toString());
+          span.setTag(Tags.PEER_PORT.getKey(), url.getPort() == -1 ? 80 : url.getPort());
+          span.setTag(Tags.PEER_HOSTNAME.getKey(), url.getHost());
           if (Config.get().isHttpClientSplitByDomain()) {
             span.setTag(DDTags.SERVICE_NAME, url.getHost());
           }
 
-          Tags.ERROR.set(span, true);
-          span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+          span.setError(true);
+          span.addThrowable(throwable);
           span.finish();
         }
       }
