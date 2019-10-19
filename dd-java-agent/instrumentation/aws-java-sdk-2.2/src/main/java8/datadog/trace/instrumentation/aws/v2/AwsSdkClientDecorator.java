@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.aws.v2;
 
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import datadog.trace.api.DDTags;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.URI;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.SdkRequest;
@@ -17,7 +17,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
 
   static final String COMPONENT_NAME = "java-aws-sdk";
 
-  public Span onSdkRequest(final Span span, final SdkRequest request) {
+  public AgentSpan onSdkRequest(final AgentSpan span, final SdkRequest request) {
     // S3
     request
         .getValueForField("Bucket", String.class)
@@ -40,7 +40,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
     return span;
   }
 
-  public Span onAttributes(final Span span, final ExecutionAttributes attributes) {
+  public AgentSpan onAttributes(final AgentSpan span, final ExecutionAttributes attributes) {
 
     final String awsServiceName = attributes.getAttribute(SdkExecutionAttribute.SERVICE_NAME);
     final String awsOperation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
@@ -56,7 +56,7 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
   }
 
   // Not overriding the super.  Should call both with each type of response.
-  public Span onResponse(final Span span, final SdkResponse response) {
+  public AgentSpan onResponse(final AgentSpan span, final SdkResponse response) {
     if (response instanceof AwsResponse) {
       span.setTag("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
     }
