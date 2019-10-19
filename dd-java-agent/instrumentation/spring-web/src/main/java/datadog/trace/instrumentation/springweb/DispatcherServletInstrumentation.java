@@ -1,5 +1,8 @@
 package datadog.trace.instrumentation.springweb;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE;
 import static datadog.trace.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE_RENDER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -10,10 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -66,16 +67,16 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   public static class DispatcherAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(@Advice.Argument(0) final ModelAndView mv) {
-      final Scope scope = GlobalTracer.get().buildSpan("response.render").startActive(true);
-      DECORATE_RENDER.afterStart(scope);
-      DECORATE_RENDER.onRender(scope, mv);
-      return scope;
+    public static AgentScope onEnter(@Advice.Argument(0) final ModelAndView mv) {
+      final AgentSpan span = startSpan("response.render");
+      DECORATE_RENDER.afterStart(span);
+      DECORATE_RENDER.onRender(span, mv);
+      return activateSpan(span, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
       DECORATE_RENDER.onError(scope, throwable);
       DECORATE_RENDER.beforeFinish(scope);
       scope.close();
@@ -85,13 +86,12 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
   public static class ErrorHandlerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void nameResource(@Advice.Argument(3) final Exception exception) {
-      final Scope scope = GlobalTracer.get().scopeManager().active();
-      if (scope != null && exception != null) {
-        final Span span = scope.span();
+      final AgentSpan span = activeSpan();
+      if (span != null && exception != null) {
         DECORATE.onError(span, exception);
         // We want to capture the stacktrace, but that doesn't mean it should be an error.
         // We rely on a decorator to set the error state based on response code. (5xx -> error)
-        Tags.ERROR.set(span, false);
+        span.setError(false);
       }
     }
   }
