@@ -1,12 +1,13 @@
 package datadog.trace.instrumentation.springwebflux.server;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 
-import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.reactor.core.ReactorCoreAdviceUtils;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
 import java.util.function.Function;
 import net.bytebuddy.asm.Advice;
 import org.reactivestreams.Publisher;
@@ -20,24 +21,27 @@ import reactor.core.publisher.Mono;
 public class DispatcherHandlerAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static Scope methodEnter(@Advice.Argument(0) final ServerWebExchange exchange) {
+  public static AgentScope methodEnter(@Advice.Argument(0) final ServerWebExchange exchange) {
     // Unfortunately Netty EventLoop is not instrumented well enough to attribute all work to the
     // right things so we have to store span in request itself. We also store parent (netty's) span
     // so we could update resource name.
-    final Span parentSpan = GlobalTracer.get().activeSpan();
+    final AgentSpan parentSpan = activeSpan();
     if (parentSpan != null) {
       exchange.getAttributes().put(AdviceUtils.PARENT_SPAN_ATTRIBUTE, parentSpan);
     }
-    final Scope scope = GlobalTracer.get().buildSpan("DispatcherHandler.handle").startActive(false);
-    DECORATE.afterStart(scope);
-    ((TraceScope) scope).setAsyncPropagation(true);
-    exchange.getAttributes().put(AdviceUtils.SPAN_ATTRIBUTE, scope.span());
+
+    final AgentSpan span = startSpan("DispatcherHandler.handle");
+    DECORATE.afterStart(span);
+    exchange.getAttributes().put(AdviceUtils.SPAN_ATTRIBUTE, span);
+
+    final AgentScope scope = activateSpan(span, false);
+    scope.setAsyncPropagation(true);
     return scope;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-      @Advice.Enter final Scope scope,
+      @Advice.Enter final AgentScope scope,
       @Advice.Thrown final Throwable throwable,
       @Advice.Argument(0) final ServerWebExchange exchange,
       @Advice.Return(readOnly = false) Mono<Object> mono) {

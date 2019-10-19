@@ -7,11 +7,12 @@ import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.netty41.client.NettyHttpClientDecorator
 import datadog.trace.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator
 import io.opentracing.tag.Tags
-import io.opentracing.util.GlobalTracer
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import spock.lang.Shared
+
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan
 
 class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClientDecorator> {
 
@@ -20,7 +21,7 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
 
   @Override
   int doRequest(String method, URI uri, Map<String, String> headers, Closure callback) {
-    def hasParent = GlobalTracer.get().activeSpan() != null
+    def hasParent = activeSpan() != null
     ClientResponse response = client.method(HttpMethod.resolve(method))
       .headers { h -> headers.forEach({ key, value -> h.add(key, value) }) }
       .uri(uri)

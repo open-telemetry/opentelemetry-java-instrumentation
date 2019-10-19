@@ -1,6 +1,5 @@
 package datadog.trace.instrumentation.springwebflux.client;
 
-import io.opentracing.util.GlobalTracer;
 import net.bytebuddy.asm.Advice;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -23,7 +22,7 @@ public class DefaultWebClientAdvice {
       // is already decorated (we detect this if the "x-datadog-trace-id" is added), the result is not decorated again
       // to avoid StackOverflowErrors.
       && !clientRequest.headers().keySet().contains("x-datadog-trace-id")) {
-      mono = new TracingClientResponseMono(clientRequest, exchangeFunction, GlobalTracer.get());
+      mono = new TracingClientResponseMono(clientRequest, exchangeFunction);
     }
   }
 }
