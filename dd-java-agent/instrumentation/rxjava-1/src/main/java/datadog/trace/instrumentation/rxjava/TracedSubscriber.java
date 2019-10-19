@@ -1,23 +1,21 @@
 package datadog.trace.instrumentation.rxjava;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+
 import datadog.trace.agent.decorator.BaseDecorator;
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.ScopeManager;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscriber;
 
 public class TracedSubscriber<T> extends Subscriber<T> {
 
-  private final ScopeManager scopeManager = GlobalTracer.get().scopeManager();
-  private final AtomicReference<Span> spanRef;
+  private final AtomicReference<AgentSpan> spanRef;
   private final Subscriber<T> delegate;
   private final BaseDecorator decorator;
 
   public TracedSubscriber(
-      final Span span, final Subscriber<T> delegate, final BaseDecorator decorator) {
+      final AgentSpan span, final Subscriber<T> delegate, final BaseDecorator decorator) {
     spanRef = new AtomicReference<>(span);
     this.delegate = delegate;
     this.decorator = decorator;
@@ -28,12 +26,10 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   @Override
   public void onStart() {
-    final Span span = spanRef.get();
+    final AgentSpan span = spanRef.get();
     if (span != null) {
-      try (final Scope scope = scopeManager.activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
         delegate.onStart();
       }
     } else {
@@ -43,12 +39,10 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   @Override
   public void onNext(final T value) {
-    final Span span = spanRef.get();
+    final AgentSpan span = spanRef.get();
     if (span != null) {
-      try (final Scope scope = scopeManager.activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
         delegate.onNext(value);
       } catch (final Throwable e) {
         onError(e);
@@ -60,13 +54,11 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   @Override
   public void onCompleted() {
-    final Span span = spanRef.getAndSet(null);
+    final AgentSpan span = spanRef.getAndSet(null);
     if (span != null) {
       boolean errored = false;
-      try (final Scope scope = scopeManager.activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
         delegate.onCompleted();
       } catch (final Throwable e) {
         // Repopulate the spanRef for onError
@@ -87,12 +79,10 @@ public class TracedSubscriber<T> extends Subscriber<T> {
 
   @Override
   public void onError(final Throwable e) {
-    final Span span = spanRef.getAndSet(null);
+    final AgentSpan span = spanRef.getAndSet(null);
     if (span != null) {
-      try (final Scope scope = scopeManager.activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
         decorator.onError(span, e);
         delegate.onError(e);
       } catch (final Throwable e2) {

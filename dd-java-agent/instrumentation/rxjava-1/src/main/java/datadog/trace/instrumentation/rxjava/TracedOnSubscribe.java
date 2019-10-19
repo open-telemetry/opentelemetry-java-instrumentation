@@ -1,11 +1,13 @@
 package datadog.trace.instrumentation.rxjava;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+
 import datadog.trace.agent.decorator.BaseDecorator;
 import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import rx.DDTracingUtil;
 import rx.Observable;
 import rx.Subscriber;
@@ -21,38 +23,33 @@ public class TracedOnSubscribe<T> implements Observable.OnSubscribe<T> {
       final Observable originalObservable,
       final String operationName,
       final BaseDecorator decorator) {
-    this.delegate = DDTracingUtil.extractOnSubscribe(originalObservable);
+    delegate = DDTracingUtil.extractOnSubscribe(originalObservable);
     this.operationName = operationName;
     this.decorator = decorator;
 
-    final Scope parentScope = GlobalTracer.get().scopeManager().active();
-
-    continuation = parentScope instanceof TraceScope ? ((TraceScope) parentScope).capture() : null;
+    continuation = propagate().capture();
   }
 
   @Override
   public void call(final Subscriber<? super T> subscriber) {
-    final Tracer tracer = GlobalTracer.get();
-    final Span span; // span finished by TracedSubscriber
+    final AgentSpan span; // span finished by TracedSubscriber
     if (continuation != null) {
       try (final TraceScope scope = continuation.activate()) {
-        span = tracer.buildSpan(operationName).start();
+        span = startSpan(operationName);
       }
     } else {
-      span = tracer.buildSpan(operationName).start();
+      span = startSpan(operationName);
     }
 
     afterStart(span);
 
-    try (final Scope scope = tracer.scopeManager().activate(span, false)) {
-      if (!((TraceScope) scope).isAsyncPropagating()) {
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
+    try (final AgentScope scope = activateSpan(span, false)) {
+      scope.setAsyncPropagation(true);
       delegate.call(new TracedSubscriber(span, subscriber, decorator));
     }
   }
 
-  protected void afterStart(final Span span) {
+  protected void afterStart(final AgentSpan span) {
     decorator.afterStart(span);
   }
 }

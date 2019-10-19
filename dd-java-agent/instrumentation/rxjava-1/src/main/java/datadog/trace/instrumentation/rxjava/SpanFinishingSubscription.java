@@ -1,23 +1,23 @@
 package datadog.trace.instrumentation.rxjava;
 
 import datadog.trace.agent.decorator.BaseDecorator;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.concurrent.atomic.AtomicReference;
 import rx.Subscription;
 
 public class SpanFinishingSubscription implements Subscription {
   private final BaseDecorator decorator;
-  private final AtomicReference<Span> spanRef;
+  private final AtomicReference<AgentSpan> spanRef;
 
   public SpanFinishingSubscription(
-      final BaseDecorator decorator, final AtomicReference<Span> spanRef) {
+      final BaseDecorator decorator, final AtomicReference<AgentSpan> spanRef) {
     this.decorator = decorator;
     this.spanRef = spanRef;
   }
 
   @Override
   public void unsubscribe() {
-    final Span span = spanRef.getAndSet(null);
+    final AgentSpan span = spanRef.getAndSet(null);
     if (span != null) {
       decorator.beforeFinish(span);
       span.finish();
