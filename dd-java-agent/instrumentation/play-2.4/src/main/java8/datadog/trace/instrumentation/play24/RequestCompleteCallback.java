@@ -1,19 +1,19 @@
 package datadog.trace.instrumentation.play24;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
 import static datadog.trace.instrumentation.play24.PlayHttpServerDecorator.DECORATE;
 
 import datadog.trace.context.TraceScope;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentSpan;
 import lombok.extern.slf4j.Slf4j;
 import play.api.mvc.Result;
 import scala.util.Try;
 
 @Slf4j
 public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try<Result>, Object> {
-  private final Span span;
+  private final AgentSpan span;
 
-  public RequestCompleteCallback(final Span span) {
+  public RequestCompleteCallback(final AgentSpan span) {
     this.span = span;
   }
 
@@ -26,8 +26,9 @@ public class RequestCompleteCallback extends scala.runtime.AbstractFunction1<Try
         DECORATE.onResponse(span, result.get());
       }
       DECORATE.beforeFinish(span);
-      if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
-        ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(false);
+      final TraceScope scope = activeScope();
+      if (scope != null) {
+        scope.setAsyncPropagation(false);
       }
     } catch (final Throwable t) {
       log.debug("error in play instrumentation", t);
