@@ -127,12 +127,6 @@ class BaseDecoratorTest extends DDSpecification {
     def scope = Mock(AgentScope)
 
     when:
-    decorator.afterStart(scope)
-
-    then:
-    1 * scope.span() >> span
-
-    when:
     decorator.onError(scope, null)
 
     then:
