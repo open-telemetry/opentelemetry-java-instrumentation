@@ -2,16 +2,16 @@ package datadog.trace.instrumentation.elasticsearch5;
 
 import static datadog.trace.instrumentation.elasticsearch.ElasticsearchRestClientDecorator.DECORATE;
 
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 
 public class RestResponseListener implements ResponseListener {
 
   private final ResponseListener listener;
-  private final Span span;
+  private final AgentSpan span;
 
-  public RestResponseListener(final ResponseListener listener, final Span span) {
+  public RestResponseListener(final ResponseListener listener, final AgentSpan span) {
     this.listener = listener;
     this.span = span;
   }

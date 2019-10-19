@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.elasticsearch2;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.elasticsearch.ElasticsearchTransportClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -10,9 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -67,25 +68,26 @@ public class Elasticsearch2TransportClientInstrumentation extends Instrumenter.D
   public static class ElasticsearchTransportClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(
+    public static AgentScope onEnter(
         @Advice.Argument(0) final Action action,
         @Advice.Argument(1) final ActionRequest actionRequest,
         @Advice.Argument(value = 2, readOnly = false)
             ActionListener<ActionResponse> actionListener) {
 
-      final Scope scope = GlobalTracer.get().buildSpan("elasticsearch.query").startActive(false);
-      DECORATE.afterStart(scope.span());
-      DECORATE.onRequest(scope.span(), action.getClass(), actionRequest.getClass());
+      final AgentSpan span = startSpan("elasticsearch.query");
+      DECORATE.afterStart(span);
+      DECORATE.onRequest(span, action.getClass(), actionRequest.getClass());
 
-      actionListener = new TransportActionListener<>(actionRequest, actionListener, scope.span());
-      return scope;
+      actionListener = new TransportActionListener<>(actionRequest, actionListener, span);
+
+      return activateSpan(span, false);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final Span span = scope.span();
+        final AgentSpan span = scope.span();
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.finish();
