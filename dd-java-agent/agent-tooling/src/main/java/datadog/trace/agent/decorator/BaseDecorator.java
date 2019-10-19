@@ -5,6 +5,8 @@ import static java.util.Collections.singletonMap;
 
 import datadog.trace.api.Config;
 import datadog.trace.api.DDTags;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.tag.Tags;
@@ -23,7 +25,7 @@ public abstract class BaseDecorator {
   protected final float traceAnalyticsSampleRate;
 
   protected BaseDecorator() {
-    Config config = Config.get();
+    final Config config = Config.get();
     final String[] instrumentationNames = instrumentationNames();
     traceAnalyticsEnabled =
         instrumentationNames.length > 0
@@ -42,12 +44,20 @@ public abstract class BaseDecorator {
     return false;
   }
 
+  @Deprecated
   public Scope afterStart(final Scope scope) {
     assert scope != null;
     afterStart(scope.span());
     return scope;
   }
 
+  public AgentScope afterStart(final AgentScope scope) {
+    assert scope != null;
+    afterStart(scope.span());
+    return scope;
+  }
+
+  @Deprecated
   public Span afterStart(final Span span) {
     assert span != null;
     if (spanType() != null) {
@@ -60,23 +70,56 @@ public abstract class BaseDecorator {
     return span;
   }
 
+  public AgentSpan afterStart(final AgentSpan span) {
+    assert span != null;
+    if (spanType() != null) {
+      span.setTag(DDTags.SPAN_TYPE, spanType());
+    }
+    span.setTag(Tags.COMPONENT.getKey(), component());
+    if (traceAnalyticsEnabled) {
+      span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, traceAnalyticsSampleRate);
+    }
+    return span;
+  }
+
+  @Deprecated
   public Scope beforeFinish(final Scope scope) {
     assert scope != null;
     beforeFinish(scope.span());
     return scope;
   }
 
+  public AgentScope beforeFinish(final AgentScope scope) {
+    assert scope != null;
+    beforeFinish(scope.span());
+    return scope;
+  }
+
+  @Deprecated
   public Span beforeFinish(final Span span) {
     assert span != null;
     return span;
   }
 
+  public AgentSpan beforeFinish(final AgentSpan span) {
+    assert span != null;
+    return span;
+  }
+
+  @Deprecated
   public Scope onError(final Scope scope, final Throwable throwable) {
     assert scope != null;
     onError(scope.span(), throwable);
     return scope;
   }
 
+  public AgentScope onError(final AgentScope scope, final Throwable throwable) {
+    assert scope != null;
+    onError(scope.span(), throwable);
+    return scope;
+  }
+
+  @Deprecated
   public Span onError(final Span span, final Throwable throwable) {
     assert span != null;
     if (throwable != null) {
@@ -89,6 +132,16 @@ public abstract class BaseDecorator {
     return span;
   }
 
+  public AgentSpan onError(final AgentSpan span, final Throwable throwable) {
+    assert span != null;
+    if (throwable != null) {
+      span.setError(true);
+      span.addThrowable(throwable instanceof ExecutionException ? throwable.getCause() : throwable);
+    }
+    return span;
+  }
+
+  @Deprecated
   public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
     assert span != null;
     if (remoteConnection != null) {
@@ -100,6 +153,19 @@ public abstract class BaseDecorator {
     return span;
   }
 
+  public AgentSpan onPeerConnection(
+      final AgentSpan span, final InetSocketAddress remoteConnection) {
+    assert span != null;
+    if (remoteConnection != null) {
+      onPeerConnection(span, remoteConnection.getAddress());
+
+      span.setTag(Tags.PEER_HOSTNAME.getKey(), remoteConnection.getHostName());
+      span.setTag(Tags.PEER_PORT.getKey(), remoteConnection.getPort());
+    }
+    return span;
+  }
+
+  @Deprecated
   public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
     assert span != null;
     if (remoteAddress != null) {
@@ -108,6 +174,19 @@ public abstract class BaseDecorator {
         Tags.PEER_HOST_IPV4.set(span, remoteAddress.getHostAddress());
       } else if (remoteAddress instanceof Inet6Address) {
         Tags.PEER_HOST_IPV6.set(span, remoteAddress.getHostAddress());
+      }
+    }
+    return span;
+  }
+
+  public AgentSpan onPeerConnection(final AgentSpan span, final InetAddress remoteAddress) {
+    assert span != null;
+    if (remoteAddress != null) {
+      span.setTag(Tags.PEER_HOSTNAME.getKey(), remoteAddress.getHostName());
+      if (remoteAddress instanceof Inet4Address) {
+        span.setTag(Tags.PEER_HOST_IPV4.getKey(), remoteAddress.getHostAddress());
+      } else if (remoteAddress instanceof Inet6Address) {
+        span.setTag(Tags.PEER_HOST_IPV6.getKey(), remoteAddress.getHostAddress());
       }
     }
     return span;

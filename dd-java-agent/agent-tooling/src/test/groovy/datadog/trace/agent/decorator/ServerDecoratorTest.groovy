@@ -2,12 +2,12 @@ package datadog.trace.agent.decorator
 
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
-import io.opentracing.Span
+import datadog.trace.instrumentation.api.AgentSpan
 import io.opentracing.tag.Tags
 
 class ServerDecoratorTest extends BaseDecoratorTest {
 
-  def span = Mock(Span)
+  def span = Mock(AgentSpan)
 
   def "test afterStart"() {
     def decorator = newDecorator()
