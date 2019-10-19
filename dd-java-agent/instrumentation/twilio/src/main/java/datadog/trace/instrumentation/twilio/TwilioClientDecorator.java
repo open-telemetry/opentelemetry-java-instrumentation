@@ -6,7 +6,7 @@ import com.twilio.rest.api.v2010.account.Message;
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -40,8 +40,8 @@ public class TwilioClientDecorator extends ClientDecorator {
   }
 
   /** Decorate trace based on service execution metadata. */
-  public Span onServiceExecution(
-      final Span span, final Object serviceExecutor, final String methodName) {
+  public AgentSpan onServiceExecution(
+      final AgentSpan span, final Object serviceExecutor, final String methodName) {
 
     // Drop common package prefix (com.twilio.rest)
     final String simpleClassName =
@@ -53,7 +53,7 @@ public class TwilioClientDecorator extends ClientDecorator {
   }
 
   /** Annotate the span with the results of the operation. */
-  public Span onResult(final Span span, Object result) {
+  public AgentSpan onResult(final AgentSpan span, Object result) {
 
     // Unwrap ListenableFuture (if present)
     if (result instanceof ListenableFuture) {
@@ -105,7 +105,7 @@ public class TwilioClientDecorator extends ClientDecorator {
    * required.
    */
   private void setTagIfPresent(
-      final Span span, final Object result, final String tag, final String getter) {
+      final AgentSpan span, final Object result, final String tag, final String getter) {
     try {
       final Method method = result.getClass().getMethod(getter);
       final Object value = method.invoke(result);

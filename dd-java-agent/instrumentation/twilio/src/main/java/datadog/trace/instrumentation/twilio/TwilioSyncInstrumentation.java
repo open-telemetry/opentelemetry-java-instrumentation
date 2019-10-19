@@ -1,6 +1,8 @@
 package datadog.trace.instrumentation.twilio;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.twilio.TwilioClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -13,9 +15,8 @@ import com.google.auto.service.AutoService;
 import com.twilio.Twilio;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -81,7 +82,7 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
 
     /** Method entry instrumentation. */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope methodEnter(
+    public static AgentScope methodEnter(
         @Advice.This final Object that, @Advice.Origin("#m") final String methodName) {
 
       // Ensure that we only create a span for the top-level Twilio client method; except in the
@@ -93,26 +94,24 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Scope scope = GlobalTracer.get().buildSpan("twilio.sdk").startActive(true);
-      final Span span = scope.span();
-
+      final AgentSpan span = startSpan("twilio.sdk");
       DECORATE.afterStart(span);
       DECORATE.onServiceExecution(span, that, methodName);
 
-      return scope;
+      return activateSpan(span, true);
     }
 
     /** Method exit instrumentation. */
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Scope scope,
+        @Advice.Enter final AgentScope scope,
         @Advice.Thrown final Throwable throwable,
         @Advice.Return final Object response) {
 
       // If we have a scope (i.e. we were the top-level Twilio SDK invocation),
       if (scope != null) {
         try {
-          final Span span = scope.span();
+          final AgentSpan span = scope.span();
 
           DECORATE.onResult(span, response);
           DECORATE.onError(span, throwable);
