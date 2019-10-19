@@ -1,25 +1,19 @@
 package datadog.trace.instrumentation.netty41.server;
 
-import io.netty.handler.codec.http.HttpHeaders;
+import datadog.trace.instrumentation.api.AgentPropagation;
 import io.netty.handler.codec.http.HttpRequest;
-import io.opentracing.propagation.TextMap;
-import java.util.Iterator;
-import java.util.Map;
 
-public class NettyRequestExtractAdapter implements TextMap {
-  private final HttpHeaders headers;
+public class NettyRequestExtractAdapter implements AgentPropagation.Getter<HttpRequest> {
 
-  NettyRequestExtractAdapter(final HttpRequest request) {
-    this.headers = request.headers();
+  public static final NettyRequestExtractAdapter GETTER = new NettyRequestExtractAdapter();
+
+  @Override
+  public Iterable<String> keys(final HttpRequest carrier) {
+    return carrier.headers().names();
   }
 
   @Override
-  public Iterator<Map.Entry<String, String>> iterator() {
-    return headers.iteratorAsString();
-  }
-
-  @Override
-  public void put(final String key, final String value) {
-    throw new UnsupportedOperationException("This class should be used only with Tracer.inject()!");
+  public String get(final HttpRequest carrier, final String key) {
+    return carrier.headers().get(key);
   }
 }

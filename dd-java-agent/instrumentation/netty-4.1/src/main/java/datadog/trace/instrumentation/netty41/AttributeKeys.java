@@ -2,10 +2,10 @@ package datadog.trace.instrumentation.netty41;
 
 import datadog.trace.bootstrap.WeakMap;
 import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.netty41.client.HttpClientTracingHandler;
 import datadog.trace.instrumentation.netty41.server.HttpServerTracingHandler;
 import io.netty.util.AttributeKey;
-import io.opentracing.Span;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,13 +30,13 @@ public class AttributeKeys {
    * This constant is copied over to datadog.trace.instrumentation.ratpack.server.TracingHandler, so
    * if this changes, that must also change.
    */
-  public static final AttributeKey<Span> SERVER_ATTRIBUTE_KEY =
+  public static final AttributeKey<AgentSpan> SERVER_ATTRIBUTE_KEY =
       attributeKey(HttpServerTracingHandler.class.getName() + ".span");
 
-  public static final AttributeKey<Span> CLIENT_ATTRIBUTE_KEY =
+  public static final AttributeKey<AgentSpan> CLIENT_ATTRIBUTE_KEY =
       attributeKey(HttpClientTracingHandler.class.getName() + ".span");
 
-  public static final AttributeKey<Span> CLIENT_PARENT_ATTRIBUTE_KEY =
+  public static final AttributeKey<AgentSpan> CLIENT_PARENT_ATTRIBUTE_KEY =
       attributeKey(HttpClientTracingHandler.class.getName() + ".parent");
 
   /**
