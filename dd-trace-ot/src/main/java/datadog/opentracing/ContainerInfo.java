@@ -66,7 +66,8 @@ public class ContainerInfo {
   }
 
   public static boolean isRunningInContainer() {
-    return Files.isReadable(CGROUP_DEFAULT_PROCFILE);
+    return Files.isReadable(CGROUP_DEFAULT_PROCFILE)
+        && CGROUP_DEFAULT_PROCFILE.toFile().length() > 0;
   }
 
   public static ContainerInfo fromDefaultProcFile() throws IOException, ParseException {
