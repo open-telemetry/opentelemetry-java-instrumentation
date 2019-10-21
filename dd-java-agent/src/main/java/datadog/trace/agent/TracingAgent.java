@@ -28,7 +28,7 @@ public class TracingAgent {
   private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_PROPERTY =
       "datadog.slf4j.simpleLogger.dateTimeFormat";
   private static final String SIMPLE_LOGGER_DATE_TIME_FORMAT_DEFAULT =
-      "'[dd.tracing.agent - 'yyyy-MM-dd HH:mm:ss:SSS Z']'";
+      "'[dd.trace 'yyyy-MM-dd HH:mm:ss:SSS Z']'";
   private static final String SIMPLE_LOGGER_DEFAULT_LOG_LEVEL_PROPERTY =
       "datadog.slf4j.simpleLogger.defaultLogLevel";
 
