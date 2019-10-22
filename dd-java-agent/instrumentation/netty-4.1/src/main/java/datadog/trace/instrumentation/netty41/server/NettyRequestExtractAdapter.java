@@ -1,19 +1,19 @@
 package datadog.trace.instrumentation.netty41.server;
 
 import datadog.trace.instrumentation.api.AgentPropagation;
-import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpHeaders;
 
-public class NettyRequestExtractAdapter implements AgentPropagation.Getter<HttpRequest> {
+public class NettyRequestExtractAdapter implements AgentPropagation.Getter<HttpHeaders> {
 
   public static final NettyRequestExtractAdapter GETTER = new NettyRequestExtractAdapter();
 
   @Override
-  public Iterable<String> keys(final HttpRequest carrier) {
-    return carrier.headers().names();
+  public Iterable<String> keys(final HttpHeaders headers) {
+    return headers.names();
   }
 
   @Override
-  public String get(final HttpRequest carrier, final String key) {
-    return carrier.headers().get(key);
+  public String get(final HttpHeaders headers, final String key) {
+    return headers.get(key);
   }
 }

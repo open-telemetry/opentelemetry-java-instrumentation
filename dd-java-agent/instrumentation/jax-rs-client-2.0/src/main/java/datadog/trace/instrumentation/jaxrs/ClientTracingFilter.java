@@ -31,7 +31,7 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, requestContext);
 
-      propagate().inject(span, requestContext, SETTER);
+      propagate().inject(span, requestContext.getHeaders(), SETTER);
 
       requestContext.setProperty(SPAN_PROPERTY_NAME, span);
     }

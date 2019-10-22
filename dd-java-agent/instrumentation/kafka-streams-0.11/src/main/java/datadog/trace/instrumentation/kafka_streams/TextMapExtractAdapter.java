@@ -4,25 +4,25 @@ import datadog.trace.instrumentation.api.AgentPropagation;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.Headers;
 
-public class TextMapExtractAdapter implements AgentPropagation.Getter<ConsumerRecord> {
+public class TextMapExtractAdapter implements AgentPropagation.Getter<Headers> {
 
   public static final TextMapExtractAdapter GETTER = new TextMapExtractAdapter();
 
   @Override
-  public Iterable<String> keys(final ConsumerRecord carrier) {
+  public Iterable<String> keys(final Headers headers) {
     final List<String> keys = new ArrayList<>();
-    for (final Header header : carrier.headers()) {
+    for (final Header header : headers) {
       keys.add(header.key());
     }
     return keys;
   }
 
   @Override
-  public String get(final ConsumerRecord carrier, final String key) {
-    final Header header = carrier.headers().lastHeader(key);
+  public String get(final Headers headers, final String key) {
+    final Header header = headers.lastHeader(key);
     if (header == null) {
       return null;
     }

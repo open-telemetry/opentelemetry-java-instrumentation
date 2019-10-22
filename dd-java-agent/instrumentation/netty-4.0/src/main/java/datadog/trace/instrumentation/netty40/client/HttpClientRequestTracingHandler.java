@@ -47,7 +47,7 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
       // AWS calls are often signed, so we can't add headers without breaking the signature.
       if (!request.headers().contains("amz-sdk-invocation-id")) {
-        propagate().inject(span, request, SETTER);
+        propagate().inject(span, request.headers(), SETTER);
       }
 
       ctx.channel().attr(AttributeKeys.CLIENT_ATTRIBUTE_KEY).set(span);

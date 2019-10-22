@@ -54,7 +54,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
 
     try {
       if (next != null) {
-        final Context spanContext = propagate().extract(next, GETTER);
+        final Context spanContext = propagate().extract(next.headers(), GETTER);
         final AgentSpan span = startSpan(operationName, spanContext);
         decorator.afterStart(span);
         decorator.onConsume(span, next);

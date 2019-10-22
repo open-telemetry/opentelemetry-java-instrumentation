@@ -80,7 +80,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
       // https://github.com/apache/kafka/blob/05fcfde8f69b0349216553f711fdfc3f0259c601/clients/src/main/java/org/apache/kafka/common/record/MemoryRecordsBuilder.java#L411-L412
       if (apiVersions.maxUsableProduceMagic() >= RecordBatch.MAGIC_VALUE_V2) {
         try {
-          propagate().inject(span, record, SETTER);
+          propagate().inject(span, record.headers(), SETTER);
         } catch (final IllegalStateException e) {
           // headers must be read-only from reused record. try again with new one.
           record =
@@ -92,7 +92,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
                   record.value(),
                   record.headers());
 
-          propagate().inject(span, record, SETTER);
+          propagate().inject(span, record.headers(), SETTER);
         }
       }
 

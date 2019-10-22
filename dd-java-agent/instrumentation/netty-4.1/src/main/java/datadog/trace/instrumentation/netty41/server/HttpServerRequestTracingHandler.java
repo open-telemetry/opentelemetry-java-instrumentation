@@ -34,7 +34,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
 
     final HttpRequest request = (HttpRequest) msg;
 
-    final Context extractedContext = propagate().extract(request, GETTER);
+    final Context extractedContext = propagate().extract(request.headers(), GETTER);
 
     final AgentSpan span = startSpan("netty.request", extractedContext);
     try (final AgentScope scope = activateSpan(span, false)) {

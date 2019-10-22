@@ -75,7 +75,7 @@ public class KafkaStreamsProcessorInstrumentation {
           return;
         }
 
-        final Context extractedContext = propagate().extract(record.value, GETTER);
+        final Context extractedContext = propagate().extract(record.value.headers(), GETTER);
 
         final AgentSpan span = startSpan("kafka.consume", extractedContext);
         CONSUMER_DECORATE.afterStart(span);

@@ -22,7 +22,7 @@ public class PlayAdvice {
   public static AgentScope onEnter(@Advice.Argument(0) final Request req) {
     final AgentSpan span;
     if (activeSpan() == null) {
-      final Context extractedContext = propagate().extract(req, GETTER);
+      final Context extractedContext = propagate().extract(req.headers(), GETTER);
       span = startSpan("play.request", extractedContext);
     } else {
       // An upstream framework (e.g. akka-http, netty) has already started the span.

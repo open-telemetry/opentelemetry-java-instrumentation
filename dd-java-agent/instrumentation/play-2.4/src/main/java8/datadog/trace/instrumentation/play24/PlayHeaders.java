@@ -1,22 +1,22 @@
 package datadog.trace.instrumentation.play24;
 
 import datadog.trace.instrumentation.api.AgentPropagation;
-import play.api.mvc.Request;
+import play.api.mvc.Headers;
 import scala.Option;
 import scala.collection.JavaConversions;
 
-public class PlayHeaders implements AgentPropagation.Getter<Request> {
+public class PlayHeaders implements AgentPropagation.Getter<Headers> {
 
   public static final PlayHeaders GETTER = new PlayHeaders();
 
   @Override
-  public Iterable<String> keys(final Request carrier) {
-    return JavaConversions.asJavaIterable(carrier.headers().keys());
+  public Iterable<String> keys(final Headers headers) {
+    return JavaConversions.asJavaIterable(headers.keys());
   }
 
   @Override
-  public String get(final Request carrier, final String key) {
-    final Option<String> option = carrier.headers().get(key);
+  public String get(final Headers headers, final String key) {
+    final Option<String> option = headers.get(key);
     if (option.isDefined()) {
       return option.get();
     } else {

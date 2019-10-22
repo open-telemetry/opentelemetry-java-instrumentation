@@ -77,7 +77,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         DECORATE.onRequest(span, request);
         request.getProperties().put(DD_SPAN_ATTRIBUTE, span);
 
-        propagate().inject(span, request, SETTER);
+        propagate().inject(span, request.getHeaders(), SETTER);
         return activateSpan(span, true);
       }
       return null;
