@@ -9,13 +9,9 @@ import javax.jms.Message;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MessagePropertyTextMap
-    implements AgentPropagation.Getter<Message>, AgentPropagation.Setter<Message> {
+public class MessageExtractAdapter implements AgentPropagation.Getter<Message> {
 
-  public static final MessagePropertyTextMap GETTER = new MessagePropertyTextMap();
-  public static final MessagePropertyTextMap SETTER = new MessagePropertyTextMap();
-
-  static final String DASH = "__dash__";
+  public static final MessageExtractAdapter GETTER = new MessageExtractAdapter();
 
   @Override
   public Iterable<String> keys(final Message carrier) {
@@ -27,7 +23,7 @@ public class MessagePropertyTextMap
           final String key = (String) enumeration.nextElement();
           final Object value = carrier.getObjectProperty(key);
           if (value instanceof String) {
-            keys.add(key.replace(DASH, "-"));
+            keys.add(key.replace(MessageInjectAdapter.DASH, "-"));
           }
         }
       }
@@ -39,7 +35,7 @@ public class MessagePropertyTextMap
 
   @Override
   public String get(final Message carrier, final String key) {
-    final String propName = key.replace("-", DASH);
+    final String propName = key.replace("-", MessageInjectAdapter.DASH);
     final Object value;
     try {
       value = carrier.getObjectProperty(propName);
@@ -50,18 +46,6 @@ public class MessagePropertyTextMap
       return (String) value;
     } else {
       return null;
-    }
-  }
-
-  @Override
-  public void set(final Message carrier, final String key, final String value) {
-    final String propName = key.replace("-", DASH);
-    try {
-      carrier.setStringProperty(propName, value);
-    } catch (final JMSException e) {
-      if (log.isDebugEnabled()) {
-        log.debug("Failure setting jms property: " + propName, e);
-      }
     }
   }
 }

@@ -5,7 +5,7 @@ import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jms.JMSDecorator.CONSUMER_DECORATE;
-import static datadog.trace.instrumentation.jms.MessagePropertyTextMap.GETTER;
+import static datadog.trace.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -48,7 +48,8 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
       packageName + ".JMSDecorator",
       packageName + ".JMSDecorator$1",
       packageName + ".JMSDecorator$2",
-      packageName + ".MessagePropertyTextMap",
+      packageName + ".MessageExtractAdapter",
+      packageName + ".MessageInjectAdapter"
     };
   }
 
