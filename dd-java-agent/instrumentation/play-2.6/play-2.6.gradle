@@ -4,11 +4,14 @@ ext {
   maxJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
+def scalaVersion = '2.11'
+def playVersion = '2.6.0'
+
 muzzle {
   pass {
     group = 'com.typesafe.play'
-    module = 'play_$scalaVersion'
-    versions = '[2.6.0,)'
+    module = "play_$scalaVersion"
+    versions = "[$playVersion,)"
     assertInverse = true
   }
   pass {
@@ -35,9 +38,6 @@ testSets {
   }
 }
 
-def scalaVersion = '2.11'
-def playVersion = '2.6.0'
-
 dependencies {
   main_java8Compile group: 'com.typesafe.play', name: "play_$scalaVersion", version: playVersion
 
@@ -48,12 +48,12 @@ dependencies {
 
   testCompile group: 'com.typesafe.play', name: "play-java_$scalaVersion", version: playVersion
   // TODO: Play WS is a separately versioned library starting with 2.6 and needs separate instrumentation.
-  testCompile (group: 'com.typesafe.play', name: "play-test_$scalaVersion", version: playVersion) {
+  testCompile(group: 'com.typesafe.play', name: "play-test_$scalaVersion", version: playVersion) {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'
   }
 
   latestDepTestCompile group: 'com.typesafe.play', name: "play-java_$scalaVersion", version: '2.+'
-  latestDepTestCompile (group: 'com.typesafe.play', name: "play-test_$scalaVersion", version: '2.+') {
+  latestDepTestCompile(group: 'com.typesafe.play', name: "play-test_$scalaVersion", version: '2.+') {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'
   }
 }

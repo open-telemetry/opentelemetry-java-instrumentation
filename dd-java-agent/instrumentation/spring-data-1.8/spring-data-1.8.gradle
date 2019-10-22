@@ -1,11 +1,20 @@
 // This file includes software developed at SignalFx
 
 muzzle {
+  // We have two independent covariants, so we have to test them independently.
+  pass {
+    group = 'org.springframework.data'
+    module = 'spring-data-commons'
+    versions = "[1.8.0.RELEASE,]"
+    extraDependency "org.springframework:spring-aop:1.2"
+    assertInverse = true
+  }
   pass {
     group = 'org.springframework'
-    module = 'sring-data'
-    versions = "[1.9.0.RELEASE,)"
-    extraDependency "aopalliance:aopalliance:1.0"
+    module = 'spring-aop'
+    versions = "[1.2,]"
+    extraDependency "org.springframework.data:spring-data-commons:1.8.0.RELEASE"
+    assertInverse = true
   }
 }
 
@@ -23,9 +32,8 @@ testSets {
 // For now, that limits support to spring-data-commons 1.9.0 (maybe 1.8.0).
 // For testing, chose a couple spring-data modules that are old enough to work with 1.9.0.
 dependencies {
-  compileOnly(group: 'aopalliance', name: 'aopalliance', version: '1.0')
-  compileOnly(group: 'org.springframework.data', name: 'spring-data-commons', version: '1.9.0.RELEASE')
-  compileOnly(group: 'org.springframework', name: 'spring-aop', version: '3.0.0.RELEASE')
+  compileOnly(group: 'org.springframework.data', name: 'spring-data-commons', version: '1.8.0.RELEASE')
+  compileOnly(group: 'org.springframework', name: 'spring-aop', version: '1.2')
 
   testCompile group: 'org.spockframework', name: 'spock-spring', version: "$versions.spock"
   testCompile group: 'org.springframework', name: 'spring-test', version: '3.0.0.RELEASE'

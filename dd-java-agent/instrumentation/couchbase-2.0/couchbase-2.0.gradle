@@ -16,11 +16,6 @@ testSets {
 muzzle {
   // Version 2.7.5 and 2.7.8 were not released properly and muzzle cannot test against it causing failure.
   // So we have to skip them resulting in this verbose setup.
-  fail {
-    group = 'com.couchbase.client'
-    module = 'java-client'
-    versions = "[,2.0.0)"
-  }
   pass {
     group = 'com.couchbase.client'
     module = 'java-client'
@@ -58,7 +53,7 @@ dependencies {
   compileOnly group: 'com.couchbase.client', name: 'java-client', version: '2.0.0'
 
   testCompile group: 'com.couchbase.mock', name: 'CouchbaseMock', version: '1.5.19'
-  
+
   testCompile group: 'org.springframework.data', name: 'spring-data-couchbase', version: '2.0.0.RELEASE'
   // Earliest version that seems to allow queries with CouchbaseMock:
   testCompile group: 'com.couchbase.client', name: 'java-client', version: '2.5.0'
