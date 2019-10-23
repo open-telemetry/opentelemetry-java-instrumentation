@@ -1,0 +1,25 @@
+muzzle {
+  pass {
+    group = "com.sun.jersey"
+    module = "jersey-client"
+    versions = "[,]"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'com.sun.jersey', name: 'jersey-client', version: '1.1.4'
+
+  testCompile group: 'com.sun.jersey', name: 'jersey-client', version: '1.1.4'
+
+  latestDepTestCompile group: 'com.sun.jersey', name: 'jersey-client', version: '+'
+}

@@ -1,6 +1,5 @@
 import com.sun.jersey.api.client.Client
 import com.sun.jersey.api.client.ClientResponse
-import com.sun.jersey.api.client.filter.CsrfProtectionFilter
 import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter
 import com.sun.jersey.api.client.filter.LoggingFilter
 import datadog.trace.agent.test.base.HttpClientTest
@@ -16,7 +15,6 @@ class JaxRsClientV1Test extends HttpClientTest<JaxRsClientV1Decorator> {
     // Add filters to ensure spans aren't duplicated.
     client.addFilter(new LoggingFilter())
     client.addFilter(new GZIPContentEncodingFilter())
-    client.addFilter(new CsrfProtectionFilter())
   }
 
   @Override
