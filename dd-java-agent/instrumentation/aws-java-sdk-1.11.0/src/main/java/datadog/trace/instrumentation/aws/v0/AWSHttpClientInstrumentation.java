@@ -12,7 +12,7 @@ import com.amazonaws.Request;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.Scope;
+import datadog.trace.instrumentation.api.AgentScope;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -60,7 +60,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 0, optional = true) final Request<?> request,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final Scope scope = request.getHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY);
+        final AgentScope scope = request.getHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY);
         if (scope != null) {
           request.addHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY, null);
           DECORATE.onError(scope.span(), throwable);
@@ -96,7 +96,8 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
           @Advice.FieldValue("request") final Request<?> request,
           @Advice.Thrown final Throwable throwable) {
         if (throwable != null) {
-          final Scope scope = request.getHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY);
+          final AgentScope scope =
+              request.getHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY);
           if (scope != null) {
             request.addHandlerContext(TracingRequestHandler.SCOPE_CONTEXT_KEY, null);
             DECORATE.onError(scope.span(), throwable);

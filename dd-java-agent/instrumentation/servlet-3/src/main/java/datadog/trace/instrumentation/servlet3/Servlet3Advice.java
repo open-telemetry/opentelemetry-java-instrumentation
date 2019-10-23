@@ -1,16 +1,16 @@
 package datadog.trace.instrumentation.servlet3;
 
 import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.servlet3.HttpServletRequestExtractAdapter.GETTER;
 import static datadog.trace.instrumentation.servlet3.Servlet3Decorator.DECORATE;
 
 import datadog.trace.api.DDTags;
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
 import java.security.Principal;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.ServletRequest;
@@ -22,7 +22,7 @@ import net.bytebuddy.asm.Advice;
 public class Servlet3Advice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static Scope startSpan(
+  public static AgentScope onEnter(
       @Advice.This final Object servlet, @Advice.Argument(0) final ServletRequest req) {
     final Object spanAttr = req.getAttribute(DD_SPAN_ATTRIBUTE);
     if (!(req instanceof HttpServletRequest) || spanAttr != null) {
@@ -31,30 +31,19 @@ public class Servlet3Advice {
     }
 
     final HttpServletRequest httpServletRequest = (HttpServletRequest) req;
-    final SpanContext extractedContext =
-        GlobalTracer.get()
-            .extract(
-                Format.Builtin.HTTP_HEADERS,
-                new HttpServletRequestExtractAdapter(httpServletRequest));
+    final AgentSpan.Context extractedContext = propagate().extract(httpServletRequest, GETTER);
 
-    final Scope scope =
-        GlobalTracer.get()
-            .buildSpan("servlet.request")
-            .ignoreActiveSpan()
-            .asChildOf(extractedContext)
-            .withTag("span.origin.type", servlet.getClass().getName())
-            .startActive(false);
-
-    final Span span = scope.span();
+    final AgentSpan span =
+        startSpan("servlet.request", extractedContext)
+            .setTag("span.origin.type", servlet.getClass().getName());
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, httpServletRequest);
     DECORATE.onRequest(span, httpServletRequest);
 
-    if (scope instanceof TraceScope) {
-      ((TraceScope) scope).setAsyncPropagation(true);
-    }
-
     req.setAttribute(DD_SPAN_ATTRIBUTE, span);
+
+    final AgentScope scope = activateSpan(span, false);
+    scope.setAsyncPropagation(true);
     return scope;
   }
 
@@ -62,14 +51,14 @@ public class Servlet3Advice {
   public static void stopSpan(
       @Advice.Argument(0) final ServletRequest request,
       @Advice.Argument(1) final ServletResponse response,
-      @Advice.Enter final Scope scope,
+      @Advice.Enter final AgentScope scope,
       @Advice.Thrown final Throwable throwable) {
     // Set user.principal regardless of who created this span.
     final Object spanAttr = request.getAttribute(DD_SPAN_ATTRIBUTE);
-    if (spanAttr instanceof Span && request instanceof HttpServletRequest) {
+    if (spanAttr instanceof AgentSpan && request instanceof HttpServletRequest) {
       final Principal principal = ((HttpServletRequest) request).getUserPrincipal();
       if (principal != null) {
-        ((Span) spanAttr).setTag(DDTags.USER_NAME, principal.getName());
+        ((AgentSpan) spanAttr).setTag(DDTags.USER_NAME, principal.getName());
       }
     }
 
@@ -77,13 +66,13 @@ public class Servlet3Advice {
       if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
         final HttpServletRequest req = (HttpServletRequest) request;
         final HttpServletResponse resp = (HttpServletResponse) response;
-        final Span span = scope.span();
+        final AgentSpan span = scope.span();
 
         if (throwable != null) {
           DECORATE.onResponse(span, resp);
           if (resp.getStatus() == HttpServletResponse.SC_OK) {
             // exception is thrown in filter chain, but status code is incorrect
-            Tags.HTTP_STATUS.set(span, 500);
+            span.setTag(Tags.HTTP_STATUS.getKey(), 500);
           }
           DECORATE.onError(span, throwable);
           DECORATE.beforeFinish(span);

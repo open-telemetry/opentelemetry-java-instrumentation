@@ -1,12 +1,14 @@
 package datadog.trace.instrumentation.jaxrs;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.jaxrs.InjectAdapter.SETTER;
 import static datadog.trace.instrumentation.jaxrs.JaxRsClientDecorator.DECORATE;
 
 import datadog.trace.api.DDTags;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.propagation.Format;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.client.ClientRequestContext;
@@ -22,20 +24,14 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
 
   @Override
   public void filter(final ClientRequestContext requestContext) {
-    final Span span =
-        GlobalTracer.get()
-            .buildSpan("jax-rs.client.call")
-            .withTag(DDTags.RESOURCE_NAME, requestContext.getMethod() + " jax-rs.client.call")
-            .start();
-    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+    final AgentSpan span =
+        startSpan("jax-rs.client.call")
+            .setTag(DDTags.RESOURCE_NAME, requestContext.getMethod() + " jax-rs.client.call");
+    try (final AgentScope scope = activateSpan(span, false)) {
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, requestContext);
 
-      GlobalTracer.get()
-          .inject(
-              span.context(),
-              Format.Builtin.HTTP_HEADERS,
-              new InjectAdapter(requestContext.getHeaders()));
+      propagate().inject(span, requestContext.getHeaders(), SETTER);
 
       requestContext.setProperty(SPAN_PROPERTY_NAME, span);
     }
@@ -45,8 +41,8 @@ public class ClientTracingFilter implements ClientRequestFilter, ClientResponseF
   public void filter(
       final ClientRequestContext requestContext, final ClientResponseContext responseContext) {
     final Object spanObj = requestContext.getProperty(SPAN_PROPERTY_NAME);
-    if (spanObj instanceof Span) {
-      final Span span = (Span) spanObj;
+    if (spanObj instanceof AgentSpan) {
+      final AgentSpan span = (AgentSpan) spanObj;
       DECORATE.onResponse(span, responseContext);
       DECORATE.beforeFinish(span);
       span.finish();

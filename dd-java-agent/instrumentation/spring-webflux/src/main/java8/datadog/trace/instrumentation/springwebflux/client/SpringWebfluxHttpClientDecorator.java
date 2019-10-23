@@ -1,7 +1,7 @@
 package datadog.trace.instrumentation.springwebflux.client;
 
 import datadog.trace.agent.decorator.HttpClientDecorator;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -10,10 +10,11 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 @Slf4j
 public class SpringWebfluxHttpClientDecorator
     extends HttpClientDecorator<ClientRequest, ClientResponse> {
+
   public static final SpringWebfluxHttpClientDecorator DECORATE =
       new SpringWebfluxHttpClientDecorator();
 
-  public void onCancel(final Span span) {
+  public void onCancel(final AgentSpan span) {
     span.setTag("event", "cancelled");
     span.setTag("message", "The subscription was cancelled");
   }

@@ -2,15 +2,18 @@
 
 package datadog.trace.instrumentation.springdata;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.springdata.SpringDataDecorator.DECORATOR;
-import static net.bytebuddy.matcher.ElementMatchers.*;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isInterface;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
@@ -57,7 +60,7 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
   public static class RepositoryFactorySupportAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onConstruction(
-        @Advice.This RepositoryFactorySupport repositoryFactorySupport) {
+        @Advice.This final RepositoryFactorySupport repositoryFactorySupport) {
       repositoryFactorySupport.addRepositoryProxyPostProcessor(
           InterceptingRepositoryProxyPostProcessor.INSTANCE);
     }
@@ -92,26 +95,24 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
       final Method invokedMethod = methodInvocation.getMethod();
       final Class<?> clazz = invokedMethod.getDeclaringClass();
 
-      boolean isRepositoryOp = Repository.class.isAssignableFrom(clazz);
+      final boolean isRepositoryOp = Repository.class.isAssignableFrom(clazz);
       // Since this interceptor is the outer most interceptor, non-Repository methods
       // including Object methods will also flow through here.  Don't create spans for those.
       if (!isRepositoryOp) {
         return methodInvocation.proceed();
       }
 
-      final Scope scope = GlobalTracer.get().buildSpan("repository.operation").startActive(true);
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
-
-      final Span span = scope.span();
+      final AgentSpan span = startSpan("repository.operation");
       DECORATOR.afterStart(span);
       DECORATOR.onOperation(span, invokedMethod);
+
+      final AgentScope scope = activateSpan(span, true);
+      scope.setAsyncPropagation(true);
 
       Object result = null;
       try {
         result = methodInvocation.proceed();
-      } catch (Throwable t) {
+      } catch (final Throwable t) {
         DECORATOR.onError(scope, t);
         throw t;
       } finally {

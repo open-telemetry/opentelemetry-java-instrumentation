@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.aws.v2;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -9,8 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.Scope;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.context.TraceScope;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -57,7 +57,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static boolean methodEnter(@Advice.This final Object thiz) {
       if (thiz instanceof MakeAsyncHttpRequestStage) {
-        final Scope scope = GlobalTracer.get().scopeManager().active();
+        final TraceScope scope = activeScope();
         if (scope != null) {
           scope.close();
           return true;
@@ -69,7 +69,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(@Advice.Enter final boolean scopeAlreadyClosed) {
       if (!scopeAlreadyClosed) {
-        final Scope scope = GlobalTracer.get().scopeManager().active();
+        final TraceScope scope = activeScope();
         if (scope != null) {
           scope.close();
         }

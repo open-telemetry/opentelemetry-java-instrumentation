@@ -1,6 +1,8 @@
 package datadog.trace.instrumentation.twilio;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.twilio.TwilioClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
@@ -17,10 +19,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.twilio.Twilio;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -86,7 +86,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
 
     /** Method entry instrumentation. */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope methodEnter(
+    public static AgentScope methodEnter(
         @Advice.This final Object that, @Advice.Origin("#m") final String methodName) {
 
       // Ensure that we only create a span for the top-level Twilio client method; except in the
@@ -99,33 +99,28 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
       }
 
       // Don't automatically close the span with the scope if we're executing an async method
-      final Scope scope = GlobalTracer.get().buildSpan("twilio.sdk").startActive(false);
-      final Span span = scope.span();
-
+      final AgentSpan span = startSpan("twilio.sdk");
       DECORATE.afterStart(span);
       DECORATE.onServiceExecution(span, that, methodName);
 
-      // If an async operation was invoked and we have a TraceScope,
-      if (scope instanceof TraceScope) {
-        // Enable async propagation, so the newly spawned task will be associated back with this
-        // original trace.
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
-
+      final AgentScope scope = activateSpan(span, false);
+      // Enable async propagation, so the newly spawned task will be associated back with this
+      // original trace.
+      scope.setAsyncPropagation(true);
       return scope;
     }
 
     /** Method exit instrumentation. */
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Scope scope,
+        @Advice.Enter final AgentScope scope,
         @Advice.Thrown final Throwable throwable,
         @Advice.Return final ListenableFuture response) {
 
       // If we have a scope (i.e. we were the top-level Twilio SDK invocation),
       if (scope != null) {
         try {
-          final Span span = scope.span();
+          final AgentSpan span = scope.span();
 
           if (throwable != null) {
             // There was an synchronous error,
@@ -154,9 +149,9 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
   public static class SpanFinishingCallback implements FutureCallback {
 
     /** Span that we should finish and annotate when the future is complete. */
-    private final Span span;
+    private final AgentSpan span;
 
-    public SpanFinishingCallback(final Span span) {
+    public SpanFinishingCallback(final AgentSpan span) {
       this.span = span;
     }
 

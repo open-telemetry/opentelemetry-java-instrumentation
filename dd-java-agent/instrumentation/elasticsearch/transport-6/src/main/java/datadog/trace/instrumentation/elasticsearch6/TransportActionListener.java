@@ -3,7 +3,7 @@ package datadog.trace.instrumentation.elasticsearch6;
 import static datadog.trace.instrumentation.elasticsearch.ElasticsearchTransportClientDecorator.DECORATE;
 
 import com.google.common.base.Joiner;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
@@ -25,10 +25,10 @@ import org.elasticsearch.action.support.replication.ReplicationResponse;
 public class TransportActionListener<T extends ActionResponse> implements ActionListener<T> {
 
   private final ActionListener<T> listener;
-  private final Span span;
+  private final AgentSpan span;
 
   public TransportActionListener(
-      final ActionRequest actionRequest, final ActionListener<T> listener, final Span span) {
+      final ActionRequest actionRequest, final ActionListener<T> listener, final AgentSpan span) {
     this.listener = listener;
     this.span = span;
     onRequest(actionRequest);
@@ -56,9 +56,9 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   @Override
   public void onResponse(final T response) {
     if (response.remoteAddress() != null) {
-      Tags.PEER_HOSTNAME.set(span, response.remoteAddress().address().getHostName());
-      Tags.PEER_HOST_IPV4.set(span, response.remoteAddress().getAddress());
-      Tags.PEER_PORT.set(span, response.remoteAddress().getPort());
+      span.setTag(Tags.PEER_HOSTNAME.getKey(), response.remoteAddress().address().getHostName());
+      span.setTag(Tags.PEER_HOST_IPV4.getKey(), response.remoteAddress().getAddress());
+      span.setTag(Tags.PEER_PORT.getKey(), response.remoteAddress().getPort());
     }
 
     if (response instanceof GetResponse) {

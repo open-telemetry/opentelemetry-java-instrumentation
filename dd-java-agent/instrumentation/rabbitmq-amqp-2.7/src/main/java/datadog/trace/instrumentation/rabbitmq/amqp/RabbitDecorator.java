@@ -5,11 +5,11 @@ import com.rabbitmq.client.Envelope;
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import io.opentracing.Scope;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 
 public class RabbitDecorator extends ClientDecorator {
+
   public static final RabbitDecorator DECORATE = new RabbitDecorator();
 
   public static final RabbitDecorator PRODUCER_DECORATE =
@@ -63,7 +63,7 @@ public class RabbitDecorator extends ClientDecorator {
     return DDSpanTypes.MESSAGE_CLIENT;
   }
 
-  public void onPublish(final Span span, final String exchange, final String routingKey) {
+  public void onPublish(final AgentSpan span, final String exchange, final String routingKey) {
     final String exchangeName = exchange == null || exchange.isEmpty() ? "<default>" : exchange;
     final String routing =
         routingKey == null || routingKey.isEmpty()
@@ -77,7 +77,7 @@ public class RabbitDecorator extends ClientDecorator {
     span.setTag("amqp.routing_key", routingKey);
   }
 
-  public void onGet(final Span span, final String queue) {
+  public void onGet(final AgentSpan span, final String queue) {
     final String queueName = queue.startsWith("amq.gen-") ? "<generated>" : queue;
     span.setTag(DDTags.RESOURCE_NAME, "basic.get " + queueName);
 
@@ -85,9 +85,7 @@ public class RabbitDecorator extends ClientDecorator {
     span.setTag("amqp.queue", queue);
   }
 
-  public void onDeliver(final Scope scope, final String queue, final Envelope envelope) {
-    final Span span = scope.span();
-
+  public void onDeliver(final AgentSpan span, final String queue, final Envelope envelope) {
     String queueName = queue;
     if (queue == null || queue.isEmpty()) {
       queueName = "<default>";
@@ -103,7 +101,7 @@ public class RabbitDecorator extends ClientDecorator {
     }
   }
 
-  public void onCommand(final Span span, final Command command) {
+  public void onCommand(final AgentSpan span, final Command command) {
     final String name = command.getMethod().protocolMethodName();
 
     if (!name.equals("basic.publish")) {

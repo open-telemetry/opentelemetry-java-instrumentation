@@ -1,7 +1,7 @@
 package datadog.trace.agent.decorator;
 
 import datadog.trace.api.DDTags;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 
 public abstract class ClientDecorator extends BaseDecorator {
@@ -13,12 +13,12 @@ public abstract class ClientDecorator extends BaseDecorator {
   }
 
   @Override
-  public Span afterStart(final Span span) {
+  public AgentSpan afterStart(final AgentSpan span) {
     assert span != null;
     if (service() != null) {
       span.setTag(DDTags.SERVICE_NAME, service());
     }
-    Tags.SPAN_KIND.set(span, spanKind());
+    span.setTag(Tags.SPAN_KIND.getKey(), spanKind());
     return super.afterStart(span);
   }
 }

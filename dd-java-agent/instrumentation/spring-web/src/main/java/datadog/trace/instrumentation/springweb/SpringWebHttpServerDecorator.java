@@ -3,8 +3,7 @@ package datadog.trace.instrumentation.springweb;
 import datadog.trace.agent.decorator.HttpServerDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import io.opentracing.Scope;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.http.HttpServletRequest;
@@ -71,7 +70,7 @@ public class SpringWebHttpServerDecorator
   }
 
   @Override
-  public Span onRequest(final Span span, final HttpServletRequest request) {
+  public AgentSpan onRequest(final AgentSpan span, final HttpServletRequest request) {
     super.onRequest(span, request);
     if (request != null) {
       final String method = request.getMethod();
@@ -86,14 +85,13 @@ public class SpringWebHttpServerDecorator
     return span;
   }
 
-  public Scope onRender(final Scope scope, final ModelAndView mv) {
-    final Span span = scope.span();
+  public AgentSpan onRender(final AgentSpan span, final ModelAndView mv) {
     if (mv.getViewName() != null) {
       span.setTag("view.name", mv.getViewName());
     }
     if (mv.getView() != null) {
       span.setTag("view.type", mv.getView().getClass().getName());
     }
-    return scope;
+    return span;
   }
 }

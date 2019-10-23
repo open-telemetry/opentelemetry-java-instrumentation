@@ -1,6 +1,10 @@
 package datadog.trace.instrumentation.kafka_clients;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.kafka_clients.KafkaDecorator.PRODUCER_DECORATE;
+import static datadog.trace.instrumentation.kafka_clients.TextMapInjectAdapter.SETTER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -9,10 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.propagation.Format;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -63,26 +65,22 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
   public static class ProducerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(
+    public static AgentScope onEnter(
         @Advice.FieldValue("apiVersions") final ApiVersions apiVersions,
         @Advice.Argument(value = 0, readOnly = false) ProducerRecord record,
         @Advice.Argument(value = 1, readOnly = false) Callback callback) {
-      final Scope scope = GlobalTracer.get().buildSpan("kafka.produce").startActive(false);
-      PRODUCER_DECORATE.afterStart(scope);
-      PRODUCER_DECORATE.onProduce(scope, record);
+      final AgentSpan span = startSpan("kafka.produce");
+      PRODUCER_DECORATE.afterStart(span);
+      PRODUCER_DECORATE.onProduce(span, record);
 
-      callback = new ProducerCallback(callback, scope.span());
+      callback = new ProducerCallback(callback, span);
 
       // Do not inject headers for batch versions below 2
       // This is how similar check is being done in Kafka client itself:
       // https://github.com/apache/kafka/blob/05fcfde8f69b0349216553f711fdfc3f0259c601/clients/src/main/java/org/apache/kafka/common/record/MemoryRecordsBuilder.java#L411-L412
       if (apiVersions.maxUsableProduceMagic() >= RecordBatch.MAGIC_VALUE_V2) {
         try {
-          GlobalTracer.get()
-              .inject(
-                  scope.span().context(),
-                  Format.Builtin.TEXT_MAP,
-                  new TextMapInjectAdapter(record.headers()));
+          propagate().inject(span, record.headers(), SETTER);
         } catch (final IllegalStateException e) {
           // headers must be read-only from reused record. try again with new one.
           record =
@@ -94,20 +92,16 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
                   record.value(),
                   record.headers());
 
-          GlobalTracer.get()
-              .inject(
-                  scope.span().context(),
-                  Format.Builtin.TEXT_MAP,
-                  new TextMapInjectAdapter(record.headers()));
+          propagate().inject(span, record.headers(), SETTER);
         }
       }
 
-      return scope;
+      return activateSpan(span, false);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
       PRODUCER_DECORATE.onError(scope, throwable);
       PRODUCER_DECORATE.beforeFinish(scope);
       scope.close();
@@ -116,16 +110,16 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
 
   public static class ProducerCallback implements Callback {
     private final Callback callback;
-    private final Span span;
+    private final AgentSpan span;
 
-    public ProducerCallback(final Callback callback, final Span span) {
+    public ProducerCallback(final Callback callback, final AgentSpan span) {
       this.callback = callback;
       this.span = span;
     }
 
     @Override
     public void onCompletion(final RecordMetadata metadata, final Exception exception) {
-      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      try (final AgentScope scope = activateSpan(span, false)) {
         PRODUCER_DECORATE.onError(span, exception);
         try {
           if (callback != null) {

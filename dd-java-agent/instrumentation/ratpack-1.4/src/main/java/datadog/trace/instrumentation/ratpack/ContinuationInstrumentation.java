@@ -1,13 +1,13 @@
 package datadog.trace.instrumentation.ratpack;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.util.GlobalTracer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -46,7 +46,7 @@ public final class ContinuationInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrap(@Advice.Argument(value = 0, readOnly = false) Block block) {
-      block = BlockWrapper.wrapIfNeeded(block, GlobalTracer.get().activeSpan());
+      block = BlockWrapper.wrapIfNeeded(block, activeSpan());
     }
 
     public void muzzleCheck(final PathBinding binding) {

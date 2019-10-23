@@ -1,10 +1,10 @@
 package datadog.trace.instrumentation.lettuce.rx;
 
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
 import java.util.function.Consumer;
 import org.reactivestreams.Subscription;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ import reactor.core.publisher.SignalType;
 
 public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnable {
 
-  private Span span = null;
+  private AgentSpan span = null;
   private int numResults = 0;
   private FluxOnSubscribeConsumer onSubscribeConsumer = null;
 
@@ -83,7 +83,7 @@ public class LettuceFluxTerminationRunnable implements Consumer<Signal>, Runnabl
 
     @Override
     public void accept(final Subscription subscription) {
-      final Span span = GlobalTracer.get().buildSpan("redis.query").start();
+      final AgentSpan span = startSpan("redis.query");
       owner.span = span;
       DECORATE.afterStart(span);
       DECORATE.onCommand(span, command);

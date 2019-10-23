@@ -10,7 +10,7 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +29,8 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
 
   @Override
   public Map<String, String> contextStore() {
-    return Collections.singletonMap("javax.ws.rs.container.AsyncResponse", Span.class.getName());
+    return Collections.singletonMap(
+        "javax.ws.rs.container.AsyncResponse", AgentSpan.class.getName());
   }
 
   @Override
@@ -62,10 +63,10 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(@Advice.This final AsyncResponse asyncResponse) {
 
-      final ContextStore<AsyncResponse, Span> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, Span.class);
+      final ContextStore<AsyncResponse, AgentSpan> contextStore =
+          InstrumentationContext.get(AsyncResponse.class, AgentSpan.class);
 
-      final Span span = contextStore.get(asyncResponse);
+      final AgentSpan span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
         DECORATE.beforeFinish(span);
@@ -81,10 +82,10 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
         @Advice.This final AsyncResponse asyncResponse,
         @Advice.Argument(0) final Throwable throwable) {
 
-      final ContextStore<AsyncResponse, Span> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, Span.class);
+      final ContextStore<AsyncResponse, AgentSpan> contextStore =
+          InstrumentationContext.get(AsyncResponse.class, AgentSpan.class);
 
-      final Span span = contextStore.get(asyncResponse);
+      final AgentSpan span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
         DECORATE.onError(span, throwable);
@@ -99,10 +100,10 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void stopSpan(@Advice.This final AsyncResponse asyncResponse) {
 
-      final ContextStore<AsyncResponse, Span> contextStore =
-          InstrumentationContext.get(AsyncResponse.class, Span.class);
+      final ContextStore<AsyncResponse, AgentSpan> contextStore =
+          InstrumentationContext.get(AsyncResponse.class, AgentSpan.class);
 
-      final Span span = contextStore.get(asyncResponse);
+      final AgentSpan span = contextStore.get(asyncResponse);
       if (span != null) {
         contextStore.put(asyncResponse, null);
         span.setTag("canceled", true);

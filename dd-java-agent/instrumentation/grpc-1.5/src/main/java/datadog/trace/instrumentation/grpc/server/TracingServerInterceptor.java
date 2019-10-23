@@ -1,9 +1,15 @@
 package datadog.trace.instrumentation.grpc.server;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.grpc.server.GrpcExtractAdapter.GETTER;
 import static datadog.trace.instrumentation.grpc.server.GrpcServerDecorator.DECORATE;
 
 import datadog.trace.api.DDTags;
-import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentSpan.Context;
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Metadata;
@@ -11,22 +17,12 @@ import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 import io.grpc.Status;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMapExtractAdapter;
-import java.util.HashMap;
-import java.util.Map;
 
 public class TracingServerInterceptor implements ServerInterceptor {
 
-  private final Tracer tracer;
+  public static final TracingServerInterceptor INSTANCE = new TracingServerInterceptor();
 
-  public TracingServerInterceptor(final Tracer tracer) {
-    this.tracer = tracer;
-  }
+  private TracingServerInterceptor() {}
 
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
@@ -34,38 +30,20 @@ public class TracingServerInterceptor implements ServerInterceptor {
       final Metadata headers,
       final ServerCallHandler<ReqT, RespT> next) {
 
-    final Map<String, String> headerMap = new HashMap<>();
-    for (final String key : headers.keys()) {
-      if (!key.endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
-        final String value = headers.get(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER));
-        headerMap.put(key, value);
-      }
-    }
-    final SpanContext spanContext =
-        tracer.extract(Format.Builtin.TEXT_MAP_EXTRACT, new TextMapExtractAdapter(headerMap));
-
-    final Tracer.SpanBuilder spanBuilder =
-        tracer
-            .buildSpan("grpc.server")
-            .withTag(DDTags.RESOURCE_NAME, call.getMethodDescriptor().getFullMethodName());
-    if (spanContext != null) {
-      spanBuilder.asChildOf(spanContext);
-    }
-    final Scope scope = spanBuilder.startActive(false);
-
-    if (scope instanceof TraceScope) {
-      ((TraceScope) scope).setAsyncPropagation(true);
-    }
-
-    final Span span = scope.span();
+    final Context spanContext = propagate().extract(headers, GETTER);
+    final AgentSpan span =
+        startSpan("grpc.server", spanContext)
+            .setTag(DDTags.RESOURCE_NAME, call.getMethodDescriptor().getFullMethodName());
     DECORATE.afterStart(span);
+
+    final AgentScope scope = activateSpan(span, false);
+    scope.setAsyncPropagation(true);
 
     final ServerCall.Listener<ReqT> result;
     try {
       // Wrap the server call so that we can decorate the span
       // with the resulting status
-      TracingServerCall<ReqT, RespT> tracingServerCall =
-          new TracingServerCall<>(tracer, span, call);
+      final TracingServerCall<ReqT, RespT> tracingServerCall = new TracingServerCall<>(span, call);
 
       // call other interceptors
       result = next.startCall(tracingServerCall, headers);
@@ -75,39 +53,30 @@ public class TracingServerInterceptor implements ServerInterceptor {
       span.finish();
       throw e;
     } finally {
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(false);
-      }
+      scope.setAsyncPropagation(false);
       scope.close();
     }
 
     // This ensures the server implementation can see the span in scope
-    return new TracingServerCallListener<>(tracer, span, result);
+    return new TracingServerCallListener<>(span, result);
   }
 
   static final class TracingServerCall<ReqT, RespT>
       extends ForwardingServerCall.SimpleForwardingServerCall<ReqT, RespT> {
-    final Tracer tracer;
-    final Span span;
+    final AgentSpan span;
 
-    TracingServerCall(
-        final Tracer tracer, final Span span, final ServerCall<ReqT, RespT> delegate) {
+    TracingServerCall(final AgentSpan span, final ServerCall<ReqT, RespT> delegate) {
       super(delegate);
-      this.tracer = tracer;
       this.span = span;
     }
 
     @Override
     public void close(final Status status, final Metadata trailers) {
       DECORATE.onClose(span, status);
-      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
         delegate().close(status, trailers);
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(false);
-        }
+        scope.setAsyncPropagation(false);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         throw e;
@@ -117,55 +86,41 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
   static final class TracingServerCallListener<ReqT>
       extends ForwardingServerCallListener.SimpleForwardingServerCallListener<ReqT> {
-    final Tracer tracer;
-    final Span span;
+    private final AgentSpan span;
 
-    TracingServerCallListener(
-        final Tracer tracer, final Span span, final ServerCall.Listener<ReqT> delegate) {
+    TracingServerCallListener(final AgentSpan span, final ServerCall.Listener<ReqT> delegate) {
       super(delegate);
-      this.tracer = tracer;
       this.span = span;
     }
 
     @Override
     public void onMessage(final ReqT message) {
-      final Scope scope =
-          tracer
-              .buildSpan("grpc.message")
-              .asChildOf(span)
-              .withTag("message.type", message.getClass().getName())
-              .startActive(true);
-      DECORATE.afterStart(scope.span());
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
+      final AgentSpan span =
+          startSpan("grpc.message", this.span.context())
+              .setTag("message.type", message.getClass().getName());
+      DECORATE.afterStart(span);
+      final AgentScope scope = activateSpan(span, true);
+      scope.setAsyncPropagation(true);
       try {
         delegate().onMessage(message);
       } catch (final Throwable e) {
-        final Span span = scope.span();
         DECORATE.onError(span, e);
-        DECORATE.beforeFinish(span);
+        DECORATE.beforeFinish(this.span);
         this.span.finish();
         throw e;
       } finally {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(false);
-        }
-        DECORATE.afterStart(scope.span());
+        scope.setAsyncPropagation(false);
+        DECORATE.beforeFinish(span);
         scope.close();
       }
     }
 
     @Override
     public void onHalfClose() {
-      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
         delegate().onHalfClose();
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(false);
-        }
+        scope.setAsyncPropagation(false);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);
@@ -177,15 +132,11 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void onCancel() {
       // Finishes span.
-      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
         delegate().onCancel();
         span.setTag("canceled", true);
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(false);
-        }
+        scope.setAsyncPropagation(false);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         throw e;
@@ -198,14 +149,10 @@ public class TracingServerInterceptor implements ServerInterceptor {
     @Override
     public void onComplete() {
       // Finishes span.
-      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
         delegate().onComplete();
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(false);
-        }
+        scope.setAsyncPropagation(false);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         throw e;
@@ -217,14 +164,10 @@ public class TracingServerInterceptor implements ServerInterceptor {
 
     @Override
     public void onReady() {
-      try (final Scope scope = tracer.scopeManager().activate(span, false)) {
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(true);
-        }
+      try (final AgentScope scope = activateSpan(span, false)) {
+        scope.setAsyncPropagation(true);
         delegate().onReady();
-        if (scope instanceof TraceScope) {
-          ((TraceScope) scope).setAsyncPropagation(false);
-        }
+        scope.setAsyncPropagation(false);
       } catch (final Throwable e) {
         DECORATE.onError(span, e);
         DECORATE.beforeFinish(span);

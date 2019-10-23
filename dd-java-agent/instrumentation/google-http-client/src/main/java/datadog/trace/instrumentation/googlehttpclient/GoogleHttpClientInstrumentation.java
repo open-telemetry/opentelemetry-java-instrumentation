@@ -1,7 +1,10 @@
 package datadog.trace.instrumentation.googlehttpclient;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.googlehttpclient.GoogleHttpClientDecorator.DECORATE;
-import static java.util.Collections.singletonMap;
+import static datadog.trace.instrumentation.googlehttpclient.HeadersInjectAdapter.SETTER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,16 +17,10 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.log.Fields;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMap;
-import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -58,7 +55,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       packageName + ".RequestState",
       getClass().getName() + "$GoogleHttpClientAdvice",
       getClass().getName() + "$GoogleHttpClientAsyncAdvice",
-      getClass().getName() + "$HeadersInjectAdapter"
+      packageName + ".HeadersInjectAdapter"
     };
   }
 
@@ -90,17 +87,16 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       RequestState state = contextStore.get(request);
 
       if (state == null) {
-        state = new RequestState(GlobalTracer.get().buildSpan("http.request").start());
+        state = new RequestState(startSpan("http.request"));
         contextStore.put(request, state);
       }
 
-      final Span span = state.getSpan();
+      final AgentSpan span = state.getSpan();
 
-      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      try (final AgentScope scope = activateSpan(span, false)) {
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, request);
-        GlobalTracer.get()
-            .inject(span.context(), Format.Builtin.HTTP_HEADERS, new HeadersInjectAdapter(request));
+        propagate().inject(span, request, SETTER);
       }
     }
 
@@ -115,17 +111,17 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
       final RequestState state = contextStore.get(request);
 
       if (state != null) {
-        final Span span = state.getSpan();
+        final AgentSpan span = state.getSpan();
 
-        try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+        try (final AgentScope scope = activateSpan(span, false)) {
           DECORATE.onResponse(span, response);
           DECORATE.onError(span, throwable);
 
           // If HttpRequest.setThrowExceptionOnExecuteError is set to false, there are no exceptions
           // for a failed request.  Thus, check the response code
           if (response != null && !response.isSuccessStatusCode()) {
-            Tags.ERROR.set(span, true);
-            span.log(singletonMap(Fields.MESSAGE, response.getStatusMessage()));
+            span.setError(true);
+            span.setErrorMessage(response.getStatusMessage());
           }
 
           DECORATE.beforeFinish(span);
@@ -139,7 +135,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(@Advice.This final HttpRequest request) {
-      final Span span = GlobalTracer.get().buildSpan("http.request").start();
+      final AgentSpan span = startSpan("http.request");
 
       final ContextStore<HttpRequest, RequestState> contextStore =
           InstrumentationContext.get(HttpRequest.class, RequestState.class);
@@ -159,9 +155,9 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
         final RequestState state = contextStore.get(request);
 
         if (state != null) {
-          final Span span = state.getSpan();
+          final AgentSpan span = state.getSpan();
 
-          try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+          try (final AgentScope scope = activateSpan(span, false)) {
             DECORATE.onError(span, throwable);
 
             DECORATE.beforeFinish(span);
@@ -169,25 +165,6 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
           }
         }
       }
-    }
-  }
-
-  public static class HeadersInjectAdapter implements TextMap {
-    private final HttpRequest request;
-
-    public HeadersInjectAdapter(final HttpRequest request) {
-      this.request = request;
-    }
-
-    @Override
-    public Iterator<Map.Entry<String, String>> iterator() {
-      throw new UnsupportedOperationException(
-          "This class should be used only with tracer#inject()");
-    }
-
-    @Override
-    public void put(final String key, final String value) {
-      request.getHeaders().put(key, value);
     }
   }
 }

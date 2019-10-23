@@ -4,7 +4,7 @@ package datadog.trace.instrumentation.springdata;
 
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDTags;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 
 public final class SpringDataDecorator extends ClientDecorator {
@@ -32,7 +32,7 @@ public final class SpringDataDecorator extends ClientDecorator {
     return "spring-data";
   }
 
-  public Span onOperation(final Span span, final Method method) {
+  public AgentSpan onOperation(final AgentSpan span, final Method method) {
     assert span != null;
     assert method != null;
 

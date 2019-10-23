@@ -1,26 +1,15 @@
 package datadog.trace.instrumentation.jaxrs.v1;
 
-import io.opentracing.propagation.TextMap;
-import java.util.Iterator;
-import java.util.Map;
+import datadog.trace.instrumentation.api.AgentPropagation;
 import javax.ws.rs.core.MultivaluedMap;
 
-public final class InjectAdapter implements TextMap {
-  private final MultivaluedMap<String, Object> map;
+public final class InjectAdapter implements AgentPropagation.Setter<MultivaluedMap> {
 
-  public InjectAdapter(final MultivaluedMap<String, Object> map) {
-    this.map = map;
-  }
+  public static final InjectAdapter SETTER = new InjectAdapter();
 
   @Override
-  public Iterator<Map.Entry<String, String>> iterator() {
-    throw new UnsupportedOperationException(
-        "InjectAdapter should only be used with Tracer.inject()");
-  }
-
-  @Override
-  public void put(final String key, final String value) {
+  public void set(final MultivaluedMap headers, final String key, final String value) {
     // Don't allow duplicates.
-    map.putSingle(key, value);
+    headers.putSingle(key, value);
   }
 }

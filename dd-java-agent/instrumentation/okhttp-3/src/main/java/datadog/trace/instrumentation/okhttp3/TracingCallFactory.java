@@ -1,13 +1,15 @@
 package datadog.trace.instrumentation.okhttp3;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.okhttp3.OkHttpClientDecorator.DECORATE;
 import static datadog.trace.instrumentation.okhttp3.OkHttpClientDecorator.NETWORK_DECORATE;
+import static datadog.trace.instrumentation.okhttp3.RequestBuilderInjectAdapter.SETTER;
 
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentSpan.Context;
 import java.io.IOException;
 import okhttp3.Call;
 import okhttp3.Interceptor;
@@ -25,14 +27,14 @@ public class TracingCallFactory implements Call.Factory {
 
   @Override
   public Call newCall(final Request request) {
-    final Span span = GlobalTracer.get().buildSpan("okhttp.http").start();
-    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
-      DECORATE.afterStart(scope);
+    final AgentSpan span = startSpan("okhttp.http");
+    try (final AgentScope scope = activateSpan(span, false)) {
+      DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);
 
       /** In case of exception network interceptor is not called */
       final OkHttpClient.Builder okBuilder = okHttpClient.newBuilder();
-      okBuilder.networkInterceptors().add(0, new NetworkInterceptor(scope.span().context()));
+      okBuilder.networkInterceptors().add(0, new NetworkInterceptor(span.context()));
 
       okBuilder
           .interceptors()
@@ -41,8 +43,7 @@ public class TracingCallFactory implements Call.Factory {
               new Interceptor() {
                 @Override
                 public Response intercept(final Chain chain) throws IOException {
-                  try (final Scope interceptorScope =
-                      GlobalTracer.get().scopeManager().activate(span, false)) {
+                  try (final AgentScope interceptorScope = activateSpan(span, false)) {
                     return chain.proceed(chain.request());
                   } catch (final Exception ex) {
                     DECORATE.onError(scope, ex);
@@ -62,27 +63,23 @@ public class TracingCallFactory implements Call.Factory {
   }
 
   static class NetworkInterceptor implements Interceptor {
-    public SpanContext parentContext;
+    public Context parentContext;
 
-    NetworkInterceptor(final SpanContext spanContext) {
+    NetworkInterceptor(final Context spanContext) {
       parentContext = spanContext;
     }
 
     @Override
     public Response intercept(final Chain chain) throws IOException {
-      try (final Scope networkScope =
-          GlobalTracer.get().buildSpan("okhttp.http").asChildOf(parentContext).startActive(true)) {
-        NETWORK_DECORATE.afterStart(networkScope);
-        NETWORK_DECORATE.onRequest(networkScope.span(), chain.request());
+      final AgentSpan networkSpan = startSpan("okhttp.http", parentContext);
+      try (final AgentScope networkScope = activateSpan(networkSpan, true)) {
+        NETWORK_DECORATE.afterStart(networkSpan);
+        NETWORK_DECORATE.onRequest(networkSpan, chain.request());
         NETWORK_DECORATE.onPeerConnection(
-            networkScope.span(), chain.connection().socket().getInetAddress());
+            networkSpan, chain.connection().socket().getInetAddress());
 
         final Request.Builder requestBuilder = chain.request().newBuilder();
-        GlobalTracer.get()
-            .inject(
-                networkScope.span().context(),
-                Format.Builtin.HTTP_HEADERS,
-                new RequestBuilderInjectAdapter(requestBuilder));
+        propagate().inject(networkSpan, requestBuilder, SETTER);
 
         final Response response;
         try {
@@ -92,7 +89,7 @@ public class TracingCallFactory implements Call.Factory {
           throw e;
         }
 
-        NETWORK_DECORATE.onResponse(networkScope.span(), response);
+        NETWORK_DECORATE.onResponse(networkSpan, response);
         NETWORK_DECORATE.beforeFinish(networkScope);
         return response;
       }

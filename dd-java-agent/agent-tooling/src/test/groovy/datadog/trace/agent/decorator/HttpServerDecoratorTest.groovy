@@ -2,14 +2,14 @@ package datadog.trace.agent.decorator
 
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
-import io.opentracing.Span
+import datadog.trace.instrumentation.api.AgentSpan
 import io.opentracing.tag.Tags
 
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 
 class HttpServerDecoratorTest extends ServerDecoratorTest {
 
-  def span = Mock(Span)
+  def span = Mock(AgentSpan)
 
   def "test onRequest"() {
     setup:
@@ -115,7 +115,7 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
       1 * span.setTag(Tags.HTTP_STATUS.key, status)
     }
     if (error) {
-      1 * span.setTag(Tags.ERROR.key, true)
+      1 * span.setError(true)
     }
     0 * _
 

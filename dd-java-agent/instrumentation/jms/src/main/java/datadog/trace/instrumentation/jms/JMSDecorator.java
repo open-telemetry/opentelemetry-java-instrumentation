@@ -3,8 +3,7 @@ package datadog.trace.instrumentation.jms;
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import io.opentracing.Scope;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 import java.lang.reflect.Method;
 import javax.jms.Destination;
@@ -59,22 +58,21 @@ public abstract class JMSDecorator extends ClientDecorator {
   @Override
   protected abstract String spanKind();
 
-  public void onConsume(final Span span, final Message message) {
+  public void onConsume(final AgentSpan span, final Message message) {
     span.setTag(DDTags.RESOURCE_NAME, "Consumed from " + toResourceName(message, null));
   }
 
-  public void onReceive(final Span span, final Method method) {
+  public void onReceive(final AgentSpan span, final Method method) {
     span.setTag(DDTags.RESOURCE_NAME, "JMS " + method.getName());
   }
 
-  public void onReceive(final Scope scope, final Message message) {
-    scope.span().setTag(DDTags.RESOURCE_NAME, "Received from " + toResourceName(message, null));
+  public void onReceive(final AgentSpan span, final Message message) {
+    span.setTag(DDTags.RESOURCE_NAME, "Received from " + toResourceName(message, null));
   }
 
-  public void onProduce(final Scope scope, final Message message, final Destination destination) {
-    scope
-        .span()
-        .setTag(DDTags.RESOURCE_NAME, "Produced for " + toResourceName(message, destination));
+  public void onProduce(
+      final AgentSpan span, final Message message, final Destination destination) {
+    span.setTag(DDTags.RESOURCE_NAME, "Produced for " + toResourceName(message, destination));
   }
 
   private static final String TIBCO_TMP_PREFIX = "$TMP$";

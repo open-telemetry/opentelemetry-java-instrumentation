@@ -1,30 +1,31 @@
 package datadog.trace.instrumentation.kafka_clients;
 
-import io.opentracing.propagation.TextMap;
+import datadog.trace.instrumentation.api.AgentPropagation;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 
-public class TextMapExtractAdapter implements TextMap {
+public class TextMapExtractAdapter implements AgentPropagation.Getter<Headers> {
 
-  private final Map<String, String> map = new HashMap<>();
+  public static final TextMapExtractAdapter GETTER = new TextMapExtractAdapter();
 
-  public TextMapExtractAdapter(final Headers headers) {
+  @Override
+  public Iterable<String> keys(final Headers headers) {
+    final List<String> keys = new ArrayList<>();
     for (final Header header : headers) {
-      map.put(header.key(), new String(header.value(), StandardCharsets.UTF_8));
+      keys.add(header.key());
     }
+    return keys;
   }
 
   @Override
-  public Iterator<Map.Entry<String, String>> iterator() {
-    return map.entrySet().iterator();
-  }
-
-  @Override
-  public void put(final String key, final String value) {
-    throw new UnsupportedOperationException("Use inject adapter instead");
+  public String get(final Headers headers, final String key) {
+    final Header header = headers.lastHeader(key);
+    if (header == null) {
+      return null;
+    }
+    return new String(header.value(), StandardCharsets.UTF_8);
   }
 }

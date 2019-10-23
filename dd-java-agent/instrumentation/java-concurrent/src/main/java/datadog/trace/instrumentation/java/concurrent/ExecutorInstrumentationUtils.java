@@ -1,13 +1,13 @@
 package datadog.trace.instrumentation.java.concurrent;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
+
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.WeakMap;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper;
 import datadog.trace.bootstrap.instrumentation.java.concurrent.State;
 import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.util.GlobalTracer;
 import java.util.concurrent.Executor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,9 +26,9 @@ public class ExecutorInstrumentationUtils {
    * @return true iff given task object should be wrapped
    */
   public static boolean shouldAttachStateToTask(final Object task, final Executor executor) {
-    final Scope scope = GlobalTracer.get().scopeManager().active();
-    return (scope instanceof TraceScope
-        && ((TraceScope) scope).isAsyncPropagating()
+    final TraceScope scope = activeScope();
+    return (scope != null
+        && scope.isAsyncPropagating()
         && task != null
         && !ExecutorInstrumentationUtils.isExecutorDisabledForThisTask(executor, task));
   }

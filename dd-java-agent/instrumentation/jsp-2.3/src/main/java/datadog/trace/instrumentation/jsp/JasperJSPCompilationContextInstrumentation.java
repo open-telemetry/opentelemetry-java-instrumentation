@@ -1,5 +1,7 @@
 package datadog.trace.instrumentation.jsp;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jsp.JSPDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -8,8 +10,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.Scope;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -46,16 +48,16 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
   public static class JasperJspCompilationContext {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan() {
-      final Scope scope = GlobalTracer.get().buildSpan("jsp.compile").startActive(true);
-      DECORATE.afterStart(scope);
-      return scope;
+    public static AgentScope onEnter() {
+      final AgentSpan span = startSpan("jsp.compile");
+      DECORATE.afterStart(span);
+      return activateSpan(span, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.This final JspCompilationContext jspCompilationContext,
-        @Advice.Enter final Scope scope,
+        @Advice.Enter final AgentScope scope,
         @Advice.Thrown final Throwable throwable) {
       DECORATE.onCompile(scope, jspCompilationContext);
       // ^ Decorate on return because additional properties are available

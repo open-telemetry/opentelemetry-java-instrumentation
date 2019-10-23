@@ -3,8 +3,7 @@ package datadog.trace.instrumentation.kafka_clients;
 import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import io.opentracing.Scope;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -54,8 +53,7 @@ public abstract class KafkaDecorator extends ClientDecorator {
   @Override
   protected abstract String spanKind();
 
-  public void onConsume(final Scope scope, final ConsumerRecord record) {
-    final Span span = scope.span();
+  public void onConsume(final AgentSpan span, final ConsumerRecord record) {
     if (record != null) {
       final String topic = record.topic() == null ? "kafka" : record.topic();
       span.setTag(DDTags.RESOURCE_NAME, "Consume Topic " + topic);
@@ -64,9 +62,8 @@ public abstract class KafkaDecorator extends ClientDecorator {
     }
   }
 
-  public void onProduce(final Scope scope, final ProducerRecord record) {
+  public void onProduce(final AgentSpan span, final ProducerRecord record) {
     if (record != null) {
-      final Span span = scope.span();
 
       final String topic = record.topic() == null ? "kafka" : record.topic();
       if (record.partition() != null) {

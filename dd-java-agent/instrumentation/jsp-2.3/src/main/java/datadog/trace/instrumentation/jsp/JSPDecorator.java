@@ -2,8 +2,8 @@ package datadog.trace.instrumentation.jsp;
 
 import datadog.trace.agent.decorator.BaseDecorator;
 import datadog.trace.api.DDTags;
-import io.opentracing.Scope;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.servlet.RequestDispatcher;
@@ -30,9 +30,9 @@ public class JSPDecorator extends BaseDecorator {
     return "jsp-http-servlet";
   }
 
-  public void onCompile(final Scope scope, final JspCompilationContext jspCompilationContext) {
+  public void onCompile(final AgentScope scope, final JspCompilationContext jspCompilationContext) {
     if (jspCompilationContext != null) {
-      final Span span = scope.span();
+      final AgentSpan span = scope.span();
       span.setTag(DDTags.RESOURCE_NAME, jspCompilationContext.getJspFile());
 
       if (jspCompilationContext.getServletContext() != null) {
@@ -46,8 +46,7 @@ public class JSPDecorator extends BaseDecorator {
     }
   }
 
-  public void onRender(final Scope scope, final HttpServletRequest req) {
-    final Span span = scope.span();
+  public void onRender(final AgentSpan span, final HttpServletRequest req) {
     // get the JSP file name being rendered in an include action
     final Object includeServletPath = req.getAttribute(RequestDispatcher.INCLUDE_SERVLET_PATH);
     String resourceName = req.getServletPath();

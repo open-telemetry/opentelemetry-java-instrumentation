@@ -2,8 +2,8 @@ package datadog.trace.instrumentation.springwebflux.server;
 
 import static datadog.trace.instrumentation.springwebflux.server.SpringWebfluxHttpServerDecorator.DECORATE;
 
+import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.reactor.core.ReactorCoreAdviceUtils;
-import io.opentracing.Span;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -32,18 +32,18 @@ public class AdviceUtils {
   public static void finishSpanIfPresent(
       final ServerWebExchange exchange, final Throwable throwable) {
     ReactorCoreAdviceUtils.finishSpanIfPresent(
-        (Span) exchange.getAttributes().remove(SPAN_ATTRIBUTE), throwable);
+        (AgentSpan) exchange.getAttributes().remove(SPAN_ATTRIBUTE), throwable);
   }
 
   public static void finishSpanIfPresent(
       final ServerRequest serverRequest, final Throwable throwable) {
     ReactorCoreAdviceUtils.finishSpanIfPresent(
-        (Span) serverRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
+        (AgentSpan) serverRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
   }
 
   public static void finishSpanIfPresent(
       final ClientRequest clientRequest, final Throwable throwable) {
     ReactorCoreAdviceUtils.finishSpanIfPresent(
-        (Span) clientRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
+        (AgentSpan) clientRequest.attributes().remove(SPAN_ATTRIBUTE), throwable);
   }
 }

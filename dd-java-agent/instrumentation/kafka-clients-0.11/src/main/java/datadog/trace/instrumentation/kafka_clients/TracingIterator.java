@@ -1,9 +1,13 @@
 package datadog.trace.instrumentation.kafka_clients;
 
-import io.opentracing.Scope;
-import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
-import io.opentracing.util.GlobalTracer;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.kafka_clients.TextMapExtractAdapter.GETTER;
+
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentSpan.Context;
 import java.util.Iterator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -18,7 +22,7 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
    * Note: this may potentially create problems if this iterator is used from different threads. But
    * at the moment we cannot do much about this.
    */
-  private Scope currentScope;
+  private AgentScope currentScope;
 
   public TracingIterator(
       final Iterator<ConsumerRecord> delegateIterator,
@@ -50,13 +54,11 @@ public class TracingIterator implements Iterator<ConsumerRecord> {
 
     try {
       if (next != null) {
-        final SpanContext spanContext =
-            GlobalTracer.get()
-                .extract(Format.Builtin.TEXT_MAP, new TextMapExtractAdapter(next.headers()));
-        currentScope =
-            GlobalTracer.get().buildSpan(operationName).asChildOf(spanContext).startActive(true);
-        decorator.afterStart(currentScope);
-        decorator.onConsume(currentScope, next);
+        final Context spanContext = propagate().extract(next.headers(), GETTER);
+        final AgentSpan span = startSpan(operationName, spanContext);
+        decorator.afterStart(span);
+        decorator.onConsume(span, next);
+        currentScope = activateSpan(span, true);
       }
     } catch (final Exception e) {
       log.debug("Error during decoration", e);

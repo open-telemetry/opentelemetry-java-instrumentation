@@ -1,25 +1,14 @@
 package datadog.trace.instrumentation.springwebflux.client;
 
-import io.opentracing.propagation.TextMap;
-import java.util.Iterator;
-import java.util.Map;
+import datadog.trace.instrumentation.api.AgentPropagation;
 import org.springframework.http.HttpHeaders;
 
-public class HttpHeadersInjectAdapter implements TextMap {
+public class HttpHeadersInjectAdapter implements AgentPropagation.Setter<HttpHeaders> {
 
-  private final HttpHeaders headers;
-
-  public HttpHeadersInjectAdapter(final HttpHeaders headers) {
-    this.headers = headers;
-  }
+  public static final HttpHeadersInjectAdapter SETTER = new HttpHeadersInjectAdapter();
 
   @Override
-  public Iterator<Map.Entry<String, String>> iterator() {
-    throw new UnsupportedOperationException("This class should be used only with Tracer.inject()!");
-  }
-
-  @Override
-  public void put(final String key, final String value) {
-    headers.set(key, value);
+  public void set(final HttpHeaders carrier, final String key, final String value) {
+    carrier.set(key, value);
   }
 }

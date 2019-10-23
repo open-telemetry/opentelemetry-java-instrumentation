@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.play26;
 
 import datadog.trace.agent.decorator.HttpServerDecorator;
 import datadog.trace.api.DDTags;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
@@ -60,7 +60,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
   }
 
   @Override
-  public Span onRequest(final Span span, final Request request) {
+  public AgentSpan onRequest(final AgentSpan span, final Request request) {
     super.onRequest(span, request);
     if (request != null) {
       // more about routes here:
@@ -76,8 +76,8 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
   }
 
   @Override
-  public Span onError(final Span span, Throwable throwable) {
-    Tags.HTTP_STATUS.set(span, 500);
+  public AgentSpan onError(final AgentSpan span, Throwable throwable) {
+    span.setTag(Tags.HTTP_STATUS.getKey(), 500);
     if (throwable != null
         // This can be moved to instanceof check when using Java 8.
         && throwable.getClass().getName().equals("java.util.concurrent.CompletionException")

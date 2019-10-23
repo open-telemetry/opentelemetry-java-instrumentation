@@ -2,6 +2,10 @@ package datadog.trace.instrumentation.jaxrs.v1;
 
 import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.jaxrs.v1.InjectAdapter.SETTER;
 import static datadog.trace.instrumentation.jaxrs.v1.JaxRsClientV1Decorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,11 +18,8 @@ import com.sun.jersey.api.client.ClientRequest;
 import com.sun.jersey.api.client.ClientResponse;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.api.DDTags;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -62,37 +63,33 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter
-    public static Scope onEnter(
+    public static AgentScope onEnter(
         @Advice.Argument(value = 0) final ClientRequest request,
         @Advice.This final ClientHandler thisObj) {
 
       // WARNING: this might be a chain...so we only have to trace the first in the chain.
       final boolean isRootClientHandler = null == request.getProperties().get(DD_SPAN_ATTRIBUTE);
       if (isRootClientHandler) {
-        final Tracer tracer = GlobalTracer.get();
-        final Span span =
-            tracer
-                .buildSpan("jax-rs.client.call")
-                .withTag(DDTags.RESOURCE_NAME, request.getMethod() + " jax-rs.client.call")
-                .start();
+        final AgentSpan span =
+            startSpan("jax-rs.client.call")
+                .setTag(DDTags.RESOURCE_NAME, request.getMethod() + " jax-rs.client.call");
         DECORATE.afterStart(span);
         DECORATE.onRequest(span, request);
         request.getProperties().put(DD_SPAN_ATTRIBUTE, span);
 
-        tracer.inject(
-            span.context(), Format.Builtin.HTTP_HEADERS, new InjectAdapter(request.getHeaders()));
-        return tracer.scopeManager().activate(span, true);
+        propagate().inject(span, request.getHeaders(), SETTER);
+        return activateSpan(span, true);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Enter final Scope scope,
+        @Advice.Enter final AgentScope scope,
         @Advice.Return final ClientResponse response,
         @Advice.Thrown final Throwable throwable) {
       if (null != scope) {
-        final Span span = scope.span();
+        final AgentSpan span = scope.span();
         DECORATE.onResponse(span, response);
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);

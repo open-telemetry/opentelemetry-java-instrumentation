@@ -1,6 +1,9 @@
 package datadog.trace.instrumentation.java.concurrent;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.instrumentation.api.AgentTracer.noopSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -8,10 +11,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableMap;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.ScopeManager;
-import io.opentracing.noop.NoopSpan;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -85,17 +85,16 @@ public final class AsyncPropagatingDisableInstrumentation implements Instrumente
   public static class DisableAsyncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope enter() {
-      final ScopeManager scopeManager = GlobalTracer.get().scopeManager();
-      final Scope scope = scopeManager.active();
-      if (scope instanceof TraceScope && ((TraceScope) scope).isAsyncPropagating()) {
-        return scopeManager.activate(NoopSpan.INSTANCE, false);
+    public static AgentScope enter() {
+      final TraceScope scope = activeScope();
+      if (scope != null && scope.isAsyncPropagating()) {
+        return activateSpan(noopSpan(), false);
       }
       return null;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void exit(@Advice.Enter final Scope scope) {
+    public static void exit(@Advice.Enter final AgentScope scope) {
       if (scope != null) {
         scope.close();
       }

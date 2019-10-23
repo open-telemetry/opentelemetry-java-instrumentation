@@ -2,6 +2,10 @@ package datadog.trace.instrumentation.apachehttpasyncclient;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.apachehttpasyncclient.ApacheHttpAsyncClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.apachehttpasyncclient.HttpHeadersInjectAdapter.SETTER;
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -11,14 +15,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMap;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -48,13 +46,13 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      getClass().getName() + "$HttpHeadersInjectAdapter",
+      packageName + ".HttpHeadersInjectAdapter",
       getClass().getName() + "$DelegatingRequestProducer",
       getClass().getName() + "$TraceContinuedFutureCallback",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.HttpClientDecorator",
-      packageName + ".ApacheHttpAsyncClientDecorator",
+      packageName + ".ApacheHttpAsyncClientDecorator"
     };
   }
 
@@ -74,16 +72,15 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
   public static class ClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Span methodEnter(
+    public static AgentSpan methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpAsyncRequestProducer requestProducer,
         @Advice.Argument(2) final HttpContext context,
         @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> futureCallback) {
 
-      final Tracer tracer = GlobalTracer.get();
-      final Scope parentScope = tracer.scopeManager().active();
-      final Span clientSpan = tracer.buildSpan("http.request").start();
-
+      final TraceScope parentScope = activeScope();
+      final AgentSpan clientSpan = startSpan("http.request");
       DECORATE.afterStart(clientSpan);
+
       requestProducer = new DelegatingRequestProducer(clientSpan, requestProducer);
       futureCallback =
           new TraceContinuedFutureCallback(parentScope, clientSpan, context, futureCallback);
@@ -93,7 +90,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Span span,
+        @Advice.Enter final AgentSpan span,
         @Advice.Return final Object result,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
@@ -105,10 +102,11 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
   }
 
   public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
-    final Span span;
+    final AgentSpan span;
     final HttpAsyncRequestProducer delegate;
 
-    public DelegatingRequestProducer(final Span span, final HttpAsyncRequestProducer delegate) {
+    public DelegatingRequestProducer(
+        final AgentSpan span, final HttpAsyncRequestProducer delegate) {
       this.span = span;
       this.delegate = delegate;
     }
@@ -123,9 +121,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       final HttpRequest request = delegate.generateRequest();
       DECORATE.onRequest(span, request);
 
-      GlobalTracer.get()
-          .inject(
-              span.context(), Format.Builtin.HTTP_HEADERS, new HttpHeadersInjectAdapter(request));
+      propagate().inject(span, request, SETTER);
 
       return request;
     }
@@ -164,17 +160,17 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
 
   public static class TraceContinuedFutureCallback<T> implements FutureCallback<T> {
     private final TraceScope.Continuation parentContinuation;
-    private final Span clientSpan;
+    private final AgentSpan clientSpan;
     private final HttpContext context;
     private final FutureCallback<T> delegate;
 
     public TraceContinuedFutureCallback(
-        final Scope parentScope,
-        final Span clientSpan,
+        final TraceScope parentScope,
+        final AgentSpan clientSpan,
         final HttpContext context,
         final FutureCallback<T> delegate) {
-      if (parentScope instanceof TraceScope) {
-        parentContinuation = ((TraceScope) parentScope).capture();
+      if (parentScope != null) {
+        parentContinuation = parentScope.capture();
       } else {
         parentContinuation = null;
       }
@@ -249,26 +245,6 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
       if (delegate != null) {
         delegate.cancelled();
       }
-    }
-  }
-
-  public static class HttpHeadersInjectAdapter implements TextMap {
-
-    private final HttpRequest httpRequest;
-
-    public HttpHeadersInjectAdapter(final HttpRequest httpRequest) {
-      this.httpRequest = httpRequest;
-    }
-
-    @Override
-    public void put(final String key, final String value) {
-      httpRequest.addHeader(key, value);
-    }
-
-    @Override
-    public Iterator<Map.Entry<String, String>> iterator() {
-      throw new UnsupportedOperationException(
-          "This class should be used only with tracer#inject()");
     }
   }
 }

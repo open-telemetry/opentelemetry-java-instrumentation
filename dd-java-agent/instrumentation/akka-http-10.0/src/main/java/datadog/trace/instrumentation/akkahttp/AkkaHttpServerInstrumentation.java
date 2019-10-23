@@ -1,25 +1,24 @@
 package datadog.trace.instrumentation.akkahttp;
 
 import static datadog.trace.instrumentation.akkahttp.AkkaHttpServerDecorator.DECORATE;
+import static datadog.trace.instrumentation.akkahttp.AkkaHttpServerHeaders.GETTER;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.Materializer;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMap;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
@@ -51,7 +50,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
       AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper",
       AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper$1",
       AkkaHttpServerInstrumentation.class.getName() + "$DatadogAsyncWrapper$2",
-      AkkaHttpServerInstrumentation.class.getName() + "$AkkaHttpServerHeaders",
+      packageName + ".AkkaHttpServerHeaders",
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ServerDecorator",
       "datadog.trace.agent.decorator.HttpServerDecorator",
@@ -90,51 +89,45 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false)
-            Function1<HttpRequest, scala.concurrent.Future<HttpResponse>> handler,
+            Function1<HttpRequest, Future<HttpResponse>> handler,
         @Advice.Argument(value = 7) final Materializer materializer) {
       handler = new DatadogAsyncWrapper(handler, materializer.executionContext());
     }
   }
 
   public static class DatadogWrapperHelper {
-    public static Scope createSpan(final HttpRequest request) {
-      final SpanContext extractedContext =
-          GlobalTracer.get()
-              .extract(Format.Builtin.HTTP_HEADERS, new AkkaHttpServerHeaders(request));
-      final Scope scope =
-          GlobalTracer.get()
-              .buildSpan("akka-http.request")
-              .ignoreActiveSpan()
-              .asChildOf(extractedContext)
-              .startActive(false);
+    public static AgentScope createSpan(final HttpRequest request) {
+      final AgentSpan.Context extractedContext = propagate().extract(request, GETTER);
+      final AgentSpan span = startSpan("akka-http.request", extractedContext);
 
-      DECORATE.afterStart(scope.span());
-      DECORATE.onConnection(scope.span(), request);
-      DECORATE.onRequest(scope.span(), request);
+      DECORATE.afterStart(span);
+      DECORATE.onConnection(span, request);
+      DECORATE.onRequest(span, request);
 
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
+      final AgentScope scope = activateSpan(span, false);
+      scope.setAsyncPropagation(true);
       return scope;
     }
 
-    public static void finishSpan(final Span span, final HttpResponse response) {
+    public static void finishSpan(final AgentSpan span, final HttpResponse response) {
       DECORATE.onResponse(span, response);
       DECORATE.beforeFinish(span);
 
-      if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
-        ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(false);
+      final TraceScope scope = activeScope();
+      if (scope != null) {
+        scope.setAsyncPropagation(false);
       }
       span.finish();
     }
 
-    public static void finishSpan(final Span span, final Throwable t) {
+    public static void finishSpan(final AgentSpan span, final Throwable t) {
       DECORATE.onError(span, t);
-      Tags.HTTP_STATUS.set(span, 500);
+      span.setTag(Tags.HTTP_STATUS.getKey(), 500);
       DECORATE.beforeFinish(span);
 
-      if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
-        ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(false);
+      final TraceScope scope = activeScope();
+      if (scope != null) {
+        scope.setAsyncPropagation(false);
       }
       span.finish();
     }
@@ -149,7 +142,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public HttpResponse apply(final HttpRequest request) {
-      final Scope scope = DatadogWrapperHelper.createSpan(request);
+      final AgentScope scope = DatadogWrapperHelper.createSpan(request);
       try {
         final HttpResponse response = userHandler.apply(request);
         scope.close();
@@ -177,7 +170,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
 
     @Override
     public Future<HttpResponse> apply(final HttpRequest request) {
-      final Scope scope = DatadogWrapperHelper.createSpan(request);
+      final AgentScope scope = DatadogWrapperHelper.createSpan(request);
       Future<HttpResponse> futureResponse = null;
       try {
         futureResponse = userHandler.apply(request);
@@ -205,30 +198,6 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
               executionContext);
       scope.close();
       return wrapped;
-    }
-  }
-
-  public static class AkkaHttpServerHeaders implements TextMap {
-    private final HttpRequest request;
-
-    public AkkaHttpServerHeaders(final HttpRequest request) {
-      this.request = request;
-    }
-
-    @Override
-    public Iterator<Map.Entry<String, String>> iterator() {
-      final Map<String, String> javaMap = new HashMap<>(request.headers().size());
-
-      for (final HttpHeader header : request.getHeaders()) {
-        javaMap.put(header.name(), header.value());
-      }
-
-      return javaMap.entrySet().iterator();
-    }
-
-    @Override
-    public void put(final String name, final String value) {
-      throw new IllegalStateException("akka http server headers can only be extracted");
     }
   }
 }

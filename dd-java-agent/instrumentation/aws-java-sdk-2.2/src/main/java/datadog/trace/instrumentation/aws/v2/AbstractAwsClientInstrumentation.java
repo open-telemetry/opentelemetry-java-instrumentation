@@ -16,8 +16,7 @@ public abstract class AbstractAwsClientInstrumentation extends Instrumenter.Defa
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.HttpClientDecorator",
       packageName + ".AwsSdkClientDecorator",
-      packageName + ".TracingExecutionInterceptor",
-      packageName + ".TracingExecutionInterceptor$InjectAdapter"
+      packageName + ".TracingExecutionInterceptor"
     };
   }
 }

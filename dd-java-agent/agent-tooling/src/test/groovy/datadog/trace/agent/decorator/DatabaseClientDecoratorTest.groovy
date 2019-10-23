@@ -2,14 +2,14 @@ package datadog.trace.agent.decorator
 
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
-import io.opentracing.Span
+import datadog.trace.instrumentation.api.AgentSpan
 import io.opentracing.tag.Tags
 
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 
 class DatabaseClientDecoratorTest extends ClientDecoratorTest {
 
-  def span = Mock(Span)
+  def span = Mock(AgentSpan)
 
   def "test afterStart"() {
     setup:
@@ -83,7 +83,7 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     def decorator = newDecorator()
 
     when:
-    decorator.afterStart((Span) null)
+    decorator.afterStart((AgentSpan) null)
 
     then:
     thrown(AssertionError)

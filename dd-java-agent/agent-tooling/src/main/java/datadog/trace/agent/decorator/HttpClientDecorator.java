@@ -3,7 +3,7 @@ package datadog.trace.agent.decorator;
 import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,10 +32,10 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     return null;
   }
 
-  public Span onRequest(final Span span, final REQUEST request) {
+  public AgentSpan onRequest(final AgentSpan span, final REQUEST request) {
     assert span != null;
     if (request != null) {
-      Tags.HTTP_METHOD.set(span, method(request));
+      span.setTag(Tags.HTTP_METHOD.getKey(), method(request));
 
       // Copy of HttpServerDecorator url handling
       try {
@@ -60,7 +60,7 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
             urlNoParams.append(path);
           }
 
-          Tags.HTTP_URL.set(span, urlNoParams.toString());
+          span.setTag(Tags.HTTP_URL.getKey(), urlNoParams.toString());
 
           if (Config.get().isHttpClientTagQueryString()) {
             span.setTag(DDTags.HTTP_QUERY, url.getQuery());
@@ -71,10 +71,12 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
         log.debug("Error tagging url", e);
       }
 
-      Tags.PEER_HOSTNAME.set(span, hostname(request));
+      span.setTag(Tags.PEER_HOSTNAME.getKey(), hostname(request));
       final Integer port = port(request);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
-      Tags.PEER_PORT.set(span, port != null && port > 0 ? port : null);
+      if (port != null && port > 0) {
+        span.setTag(Tags.PEER_PORT.getKey(), port);
+      }
 
       if (Config.get().isHttpClientSplitByDomain()) {
         span.setTag(DDTags.SERVICE_NAME, hostname(request));
@@ -83,15 +85,15 @@ public abstract class HttpClientDecorator<REQUEST, RESPONSE> extends ClientDecor
     return span;
   }
 
-  public Span onResponse(final Span span, final RESPONSE response) {
+  public AgentSpan onResponse(final AgentSpan span, final RESPONSE response) {
     assert span != null;
     if (response != null) {
       final Integer status = status(response);
       if (status != null) {
-        Tags.HTTP_STATUS.set(span, status);
+        span.setTag(Tags.HTTP_STATUS.getKey(), status);
 
         if (Config.get().getHttpClientErrorStatuses().contains(status)) {
-          Tags.ERROR.set(span, true);
+          span.setError(true);
         }
       }
     }

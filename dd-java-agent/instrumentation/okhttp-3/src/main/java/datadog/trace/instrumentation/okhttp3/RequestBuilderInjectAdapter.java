@@ -1,8 +1,6 @@
 package datadog.trace.instrumentation.okhttp3;
 
-import io.opentracing.propagation.TextMap;
-import java.util.Iterator;
-import java.util.Map;
+import datadog.trace.instrumentation.api.AgentPropagation;
 import okhttp3.Request;
 
 /**
@@ -10,21 +8,12 @@ import okhttp3.Request;
  *
  * @author Pavol Loffay
  */
-public class RequestBuilderInjectAdapter implements TextMap {
+public class RequestBuilderInjectAdapter implements AgentPropagation.Setter<Request.Builder> {
 
-  private final Request.Builder requestBuilder;
-
-  public RequestBuilderInjectAdapter(final Request.Builder request) {
-    this.requestBuilder = request;
-  }
+  public static final RequestBuilderInjectAdapter SETTER = new RequestBuilderInjectAdapter();
 
   @Override
-  public Iterator<Map.Entry<String, String>> iterator() {
-    throw new UnsupportedOperationException("Should be used only with tracer#inject()");
-  }
-
-  @Override
-  public void put(final String key, final String value) {
-    requestBuilder.addHeader(key, value);
+  public void set(final Request.Builder carrier, final String key, final String value) {
+    carrier.addHeader(key, value);
   }
 }

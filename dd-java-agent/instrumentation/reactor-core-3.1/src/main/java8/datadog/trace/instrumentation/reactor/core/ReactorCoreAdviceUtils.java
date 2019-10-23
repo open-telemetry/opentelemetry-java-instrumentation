@@ -1,11 +1,8 @@
 package datadog.trace.instrumentation.reactor.core;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static reactor.core.publisher.Operators.lift;
 
-import io.opentracing.Span;
-import io.opentracing.tag.Tags;
-import java.util.Collections;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
@@ -21,12 +18,12 @@ public class ReactorCoreAdviceUtils {
   public static final String PUBLISHER_CONTEXT_KEY =
       "datadog.trace.instrumentation.reactor.core.Span";
 
-  public static <T> Mono<T> setPublisherSpan(final Mono<T> mono, final Span span) {
+  public static <T> Mono<T> setPublisherSpan(final Mono<T> mono, final AgentSpan span) {
     return mono.<T>transform(finishSpanNextOrError())
         .subscriberContext(Context.of(PUBLISHER_CONTEXT_KEY, span));
   }
 
-  public static <T> Flux<T> setPublisherSpan(final Flux<T> flux, final Span span) {
+  public static <T> Flux<T> setPublisherSpan(final Flux<T> flux, final AgentSpan span) {
     return flux.<T>transform(finishSpanNextOrError())
         .subscriberContext(Context.of(PUBLISHER_CONTEXT_KEY, span));
   }
@@ -42,14 +39,14 @@ public class ReactorCoreAdviceUtils {
   }
 
   public static void finishSpanIfPresent(final Context context, final Throwable throwable) {
-    finishSpanIfPresent(context.getOrDefault(PUBLISHER_CONTEXT_KEY, (Span) null), throwable);
+    finishSpanIfPresent(context.getOrDefault(PUBLISHER_CONTEXT_KEY, (AgentSpan) null), throwable);
   }
 
-  public static void finishSpanIfPresent(final Span span, final Throwable throwable) {
+  public static void finishSpanIfPresent(final AgentSpan span, final Throwable throwable) {
     if (span != null) {
       if (throwable != null) {
-        Tags.ERROR.set(span, true);
-        span.log(Collections.singletonMap(ERROR_OBJECT, throwable));
+        span.setError(true);
+        span.addThrowable(throwable);
       }
       span.finish();
     }

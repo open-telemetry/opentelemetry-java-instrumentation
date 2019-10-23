@@ -1,6 +1,7 @@
 package datadog.trace.instrumentation.hibernate.core.v3_3;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.hibernate.HibernateDecorator.DECORATOR;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -14,9 +15,8 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
+import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.hibernate.SessionState;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
 import java.util.HashMap;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -62,7 +62,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void openSession(@Advice.Return final Object session) {
 
-      final Span span = GlobalTracer.get().buildSpan("hibernate.session").start();
+      final AgentSpan span = startSpan("hibernate.session");
       DECORATOR.afterStart(span);
       DECORATOR.onConnection(span, session);
 

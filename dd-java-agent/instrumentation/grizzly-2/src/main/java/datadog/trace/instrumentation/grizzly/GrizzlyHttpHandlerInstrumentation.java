@@ -1,8 +1,11 @@
 package datadog.trace.instrumentation.grizzly;
 
 import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.grizzly.GrizzlyDecorator.DECORATE;
-import static io.opentracing.propagation.Format.Builtin.TEXT_MAP;
+import static datadog.trace.instrumentation.grizzly.GrizzlyRequestExtractAdapter.GETTER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -10,12 +13,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.Tracer;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentSpan.Context;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -49,7 +49,6 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
       "datadog.trace.agent.decorator.HttpServerDecorator",
       packageName + ".GrizzlyDecorator",
       packageName + ".GrizzlyRequestExtractAdapter",
-      packageName + ".GrizzlyRequestExtractAdapter$MultivaluedMapFlatIterator",
       getClass().getName() + "$SpanClosingListener"
     };
   }
@@ -67,24 +66,19 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
   public static class HandleAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope methodEnter(@Advice.Argument(0) final Request request) {
+    public static AgentScope methodEnter(@Advice.Argument(0) final Request request) {
       if (request.getAttribute(DD_SPAN_ATTRIBUTE) != null) {
         return null;
       }
 
-      final Tracer tracer = GlobalTracer.get();
-      final SpanContext parentContext =
-          tracer.extract(TEXT_MAP, new GrizzlyRequestExtractAdapter(request));
-      final Span span =
-          tracer.buildSpan("grizzly.request").ignoreActiveSpan().asChildOf(parentContext).start();
+      final Context parentContext = propagate().extract(request, GETTER);
+      final AgentSpan span = startSpan("grizzly.request", parentContext);
       DECORATE.afterStart(span);
       DECORATE.onConnection(span, request);
       DECORATE.onRequest(span, request);
 
-      final Scope scope = tracer.scopeManager().activate(span, false);
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
+      final AgentScope scope = activateSpan(span, false);
+      scope.setAsyncPropagation(true);
 
       request.setAttribute(DD_SPAN_ATTRIBUTE, span);
       request.addAfterServiceListener(SpanClosingListener.LISTENER);
@@ -94,13 +88,13 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void methodExit(
-        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
       if (scope == null) {
         return;
       }
 
       if (throwable != null) {
-        final Span span = scope.span();
+        final AgentSpan span = scope.span();
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.finish();
@@ -115,9 +109,9 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
     @Override
     public void onAfterService(final Request request) {
       final Object spanAttr = request.getAttribute(DD_SPAN_ATTRIBUTE);
-      if (spanAttr instanceof Span) {
+      if (spanAttr instanceof AgentSpan) {
         request.removeAttribute(DD_SPAN_ATTRIBUTE);
-        final Span span = (Span) spanAttr;
+        final AgentSpan span = (AgentSpan) spanAttr;
         DECORATE.onResponse(span, request.getResponse());
         DECORATE.beforeFinish(span);
         span.finish();

@@ -2,6 +2,9 @@ package datadog.trace.instrumentation.jaxrs1;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jaxrs1.JaxRsAnnotationsDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -11,10 +14,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Tracer;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -68,25 +69,25 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   public static class JaxRsAnnotationsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope nameSpan(@Advice.Origin final Method method) {
-      final Tracer tracer = GlobalTracer.get();
+    public static AgentScope nameSpan(@Advice.Origin final Method method) {
       // Rename the parent span according to the path represented by these annotations.
-      final Scope parent = tracer.scopeManager().active();
-      final Scope scope = tracer.buildSpan(JAX_ENDPOINT_OPERATION_NAME).startActive(true);
+      final AgentSpan parent = activeSpan();
 
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
+      final AgentSpan span = startSpan(JAX_ENDPOINT_OPERATION_NAME);
+      DECORATE.onControllerStart(span, parent, method);
+      DECORATE.afterStart(span);
 
-      DECORATE.onControllerStart(scope, parent, method);
-      return DECORATE.afterStart(scope);
+      final AgentScope scope = activateSpan(span, true);
+      scope.setAsyncPropagation(true);
+      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
-      DECORATE.onError(scope, throwable);
-      DECORATE.beforeFinish(scope);
+        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
+      final AgentSpan span = scope.span();
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
       scope.close();
     }
   }

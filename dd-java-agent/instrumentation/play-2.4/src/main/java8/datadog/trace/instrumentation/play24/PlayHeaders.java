@@ -1,33 +1,26 @@
 package datadog.trace.instrumentation.play24;
 
-import io.opentracing.propagation.TextMap;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import play.api.mvc.Request;
-import scala.Tuple2;
+import datadog.trace.instrumentation.api.AgentPropagation;
+import play.api.mvc.Headers;
+import scala.Option;
+import scala.collection.JavaConversions;
 
-public class PlayHeaders implements TextMap {
-  private final Request request;
+public class PlayHeaders implements AgentPropagation.Getter<Headers> {
 
-  public PlayHeaders(final Request request) {
-    this.request = request;
+  public static final PlayHeaders GETTER = new PlayHeaders();
+
+  @Override
+  public Iterable<String> keys(final Headers headers) {
+    return JavaConversions.asJavaIterable(headers.keys());
   }
 
   @Override
-  public Iterator<Map.Entry<String, String>> iterator() {
-    final scala.collection.Map scalaMap = request.headers().toSimpleMap();
-    final Map<String, String> javaMap = new HashMap<>(scalaMap.size());
-    final scala.collection.Iterator<Tuple2<String, String>> scalaIterator = scalaMap.iterator();
-    while (scalaIterator.hasNext()) {
-      final Tuple2<String, String> tuple = scalaIterator.next();
-      javaMap.put(tuple._1(), tuple._2());
+  public String get(final Headers headers, final String key) {
+    final Option<String> option = headers.get(key);
+    if (option.isDefined()) {
+      return option.get();
+    } else {
+      return null;
     }
-    return javaMap.entrySet().iterator();
-  }
-
-  @Override
-  public void put(final String s, final String s1) {
-    throw new IllegalStateException("play headers can only be extracted");
   }
 }

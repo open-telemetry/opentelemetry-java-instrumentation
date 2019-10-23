@@ -1,6 +1,12 @@
 package datadog.trace.instrumentation.kafka_streams;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.kafka_streams.KafkaStreamsDecorator.CONSUMER_DECORATE;
+import static datadog.trace.instrumentation.kafka_streams.TextMapExtractAdapter.GETTER;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
@@ -11,10 +17,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.Scope;
-import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.context.TraceScope;
+import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentSpan.Context;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -65,23 +70,18 @@ public class KafkaStreamsProcessorInstrumentation {
     public static class StartSpanAdvice {
 
       @Advice.OnMethodExit(suppress = Throwable.class)
-      public static void startSpan(@Advice.Return final StampedRecord record) {
+      public static void onExit(@Advice.Return final StampedRecord record) {
         if (record == null) {
           return;
         }
 
-        final SpanContext extractedContext =
-            GlobalTracer.get()
-                .extract(
-                    Format.Builtin.TEXT_MAP, new TextMapExtractAdapter(record.value.headers()));
+        final Context extractedContext = propagate().extract(record.value.headers(), GETTER);
 
-        final Scope scope =
-            GlobalTracer.get()
-                .buildSpan("kafka.consume")
-                .asChildOf(extractedContext)
-                .startActive(true);
-        CONSUMER_DECORATE.afterStart(scope);
-        CONSUMER_DECORATE.onConsume(scope, record);
+        final AgentSpan span = startSpan("kafka.consume", extractedContext);
+        CONSUMER_DECORATE.afterStart(span);
+        CONSUMER_DECORATE.onConsume(span, record);
+
+        activateSpan(span, true);
       }
     }
   }
@@ -119,10 +119,13 @@ public class KafkaStreamsProcessorInstrumentation {
 
       @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
       public static void stopSpan(@Advice.Thrown final Throwable throwable) {
-        final Scope scope = GlobalTracer.get().scopeManager().active();
+        final AgentSpan span = activeSpan();
+        if (span != null) {
+          CONSUMER_DECORATE.onError(span, throwable);
+          CONSUMER_DECORATE.beforeFinish(span);
+        }
+        final TraceScope scope = activeScope();
         if (scope != null) {
-          CONSUMER_DECORATE.onError(scope, throwable);
-          CONSUMER_DECORATE.beforeFinish(scope);
           scope.close();
         }
       }

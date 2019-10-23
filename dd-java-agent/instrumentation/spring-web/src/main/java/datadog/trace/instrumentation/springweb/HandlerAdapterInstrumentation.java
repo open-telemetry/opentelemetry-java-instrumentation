@@ -1,6 +1,9 @@
 package datadog.trace.instrumentation.springweb;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.springweb.SpringWebHttpServerDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -14,9 +17,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
 import java.util.Map;
 import javax.servlet.Servlet;
@@ -67,14 +69,14 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
   public static class ControllerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope nameResourceAndStartSpan(
+    public static AgentScope nameResourceAndStartSpan(
         @Advice.Argument(0) final HttpServletRequest request,
         @Advice.Argument(2) final Object handler) {
       // Name the parent span based on the matching pattern
       // This is likely the servlet.request span.
-      final Scope parentScope = GlobalTracer.get().scopeManager().active();
-      if (parentScope != null) {
-        DECORATE.onRequest(parentScope.span(), request);
+      final AgentSpan parentSpan = activeSpan();
+      if (parentSpan != null) {
+        DECORATE.onRequest(parentSpan, request);
       }
 
       // Now create a span for controller execution.
@@ -107,17 +109,17 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
 
       final String operationName = DECORATE.spanNameForClass(clazz) + "." + methodName;
 
-      final Scope scope = GlobalTracer.get().buildSpan(operationName).startActive(true);
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
-      DECORATE.afterStart(scope);
+      final AgentSpan span = startSpan(operationName);
+      DECORATE.afterStart(span);
+
+      final AgentScope scope = activateSpan(span, true);
+      scope.setAsyncPropagation(true);
       return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
       DECORATE.onError(scope, throwable);
       DECORATE.beforeFinish(scope);
       scope.close();

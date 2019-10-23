@@ -2,7 +2,7 @@ package datadog.trace.agent.decorator
 
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
-import io.opentracing.Span
+import datadog.trace.instrumentation.api.AgentSpan
 import io.opentracing.tag.Tags
 import spock.lang.Shared
 
@@ -13,7 +13,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
   @Shared
   def testUrl = new URI("http://myhost/somepath")
 
-  def span = Mock(Span)
+  def span = Mock(AgentSpan)
 
   def "test onRequest"() {
     setup:
@@ -63,7 +63,6 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
     }
     1 * span.setTag(Tags.HTTP_METHOD.key, null)
     1 * span.setTag(Tags.PEER_HOSTNAME.key, null)
-    1 * span.setTag(Tags.PEER_PORT.key, null)
     0 * _
 
     where:
@@ -98,7 +97,7 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       1 * span.setTag(Tags.HTTP_STATUS.key, status)
     }
     if (error) {
-      1 * span.setTag(Tags.ERROR.key, true)
+      1 * span.setError(true)
     }
     0 * _
 

@@ -1,9 +1,9 @@
 package datadog.trace.instrumentation.reactor.core;
 
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import net.bytebuddy.asm.Advice;
 import reactor.core.CoreSubscriber;
 
@@ -18,15 +18,15 @@ import reactor.core.CoreSubscriber;
 public class FluxAndMonoSubscribeAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static Scope methodEnter(
+  public static AgentScope methodEnter(
       @Advice.Argument(0) final CoreSubscriber subscriber, @Advice.This final Object thiz) {
-    final Span span =
+    final AgentSpan span =
         subscriber
             .currentContext()
             .getOrDefault(ReactorCoreAdviceUtils.PUBLISHER_CONTEXT_KEY, null);
     if (span != null) {
-      final Scope scope = GlobalTracer.get().scopeManager().activate(span, false);
-      ((TraceScope) scope).setAsyncPropagation(true);
+      final AgentScope scope = activateSpan(span, false);
+      scope.setAsyncPropagation(true);
       return scope;
     }
     return null;
@@ -34,7 +34,7 @@ public class FluxAndMonoSubscribeAdvice {
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void methodExit(
-      @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
+      @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
     if (throwable != null) {
       ReactorCoreAdviceUtils.finishSpanIfPresent(scope.span(), throwable);
     }

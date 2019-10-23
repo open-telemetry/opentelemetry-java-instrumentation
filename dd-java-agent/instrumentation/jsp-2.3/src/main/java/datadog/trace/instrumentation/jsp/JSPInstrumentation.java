@@ -1,6 +1,8 @@
 package datadog.trace.instrumentation.jsp;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jsp.JSPDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -11,8 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.Scope;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
@@ -52,22 +54,20 @@ public final class JSPInstrumentation extends Instrumenter.Default {
   public static class HttpJspPageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope startSpan(
+    public static AgentScope onEnter(
         @Advice.This final Object obj, @Advice.Argument(0) final HttpServletRequest req) {
-      final Scope scope =
-          GlobalTracer.get()
-              .buildSpan("jsp.render")
-              .withTag("span.origin.type", obj.getClass().getSimpleName())
-              .withTag("servlet.context", req.getContextPath())
-              .startActive(true);
-      DECORATE.afterStart(scope);
-      DECORATE.onRender(scope, req);
-      return scope;
+      final AgentSpan span =
+          startSpan("jsp.render")
+              .setTag("span.origin.type", obj.getClass().getSimpleName())
+              .setTag("servlet.context", req.getContextPath());
+      DECORATE.afterStart(span);
+      DECORATE.onRender(span, req);
+      return activateSpan(span, true);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Enter final Scope scope, @Advice.Thrown final Throwable throwable) {
+        @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
       DECORATE.onError(scope, throwable);
       DECORATE.beforeFinish(scope);
       scope.close();

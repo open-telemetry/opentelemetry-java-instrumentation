@@ -1,12 +1,14 @@
 package datadog.trace.instrumentation.springwebflux.client;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.springwebflux.client.HttpHeadersInjectAdapter.SETTER;
 import static datadog.trace.instrumentation.springwebflux.client.SpringWebfluxHttpClientDecorator.DECORATE;
 
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentTracer;
 import io.opentracing.tag.Tags;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -19,49 +21,41 @@ public class TracingClientResponseMono extends Mono<ClientResponse> {
 
   private final ClientRequest clientRequest;
   private final ExchangeFunction exchangeFunction;
-  private final Tracer tracer;
 
   public TracingClientResponseMono(
-      final ClientRequest clientRequest,
-      final ExchangeFunction exchangeFunction,
-      final Tracer tracer) {
+      final ClientRequest clientRequest, final ExchangeFunction exchangeFunction) {
     this.clientRequest = clientRequest;
     this.exchangeFunction = exchangeFunction;
-    this.tracer = tracer;
   }
 
   @Override
   public void subscribe(final CoreSubscriber<? super ClientResponse> subscriber) {
     final Context context = subscriber.currentContext();
-    final Span parentSpan = context.<Span>getOrEmpty(Span.class).orElseGet(tracer::activeSpan);
+    final AgentSpan parentSpan =
+        context.<AgentSpan>getOrEmpty(AgentSpan.class).orElseGet(AgentTracer::activeSpan);
 
-    final Span span =
-        tracer
-            .buildSpan("http.request")
-            .asChildOf(parentSpan)
-            .withTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
-            .start();
+    final AgentSpan span;
+    if (parentSpan != null) {
+      span = startSpan("http.request", parentSpan.context());
+    } else {
+      span = startSpan("http.request");
+    }
+    span.setTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT);
     DECORATE.afterStart(span);
 
-    try (final Scope scope = tracer.scopeManager().activate(span, false)) {
+    try (final AgentScope scope = activateSpan(span, false)) {
 
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
+      scope.setAsyncPropagation(true);
 
       final ClientRequest mutatedRequest =
           ClientRequest.from(clientRequest)
-              .headers(
-                  httpHeaders ->
-                      tracer.inject(
-                          span.context(),
-                          Format.Builtin.HTTP_HEADERS,
-                          new HttpHeadersInjectAdapter(httpHeaders)))
+              .headers(httpHeaders -> propagate().inject(span, httpHeaders, SETTER))
               .build();
       exchangeFunction
           .exchange(mutatedRequest)
           .subscribe(
-              new TracingClientResponseSubscriber(subscriber, mutatedRequest, context, span, parentSpan));
+              new TracingClientResponseSubscriber(
+                  subscriber, mutatedRequest, context, span, parentSpan));
     }
   }
 }

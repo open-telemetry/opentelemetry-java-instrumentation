@@ -1,14 +1,11 @@
 package datadog.trace.instrumentation.aws.v2;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.aws.v2.AwsSdkClientDecorator.DECORATE;
 
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.propagation.TextMap;
-import io.opentracing.util.GlobalTracer;
-import java.util.Iterator;
-import java.util.Map;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.function.Consumer;
 import software.amazon.awssdk.core.client.builder.SdkClientBuilder;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
@@ -16,7 +13,6 @@ import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttribute;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
-import software.amazon.awssdk.http.SdkHttpRequest;
 
 /** AWS request execution interceptor */
 public class TracingExecutionInterceptor implements ExecutionInterceptor {
@@ -27,14 +23,14 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
       OVERRIDE_CONFIGURATION_CONSUMER =
           builder -> builder.addExecutionInterceptor(new TracingExecutionInterceptor());
 
-  private static final ExecutionAttribute<Span> SPAN_ATTRIBUTE =
+  private static final ExecutionAttribute<AgentSpan> SPAN_ATTRIBUTE =
       new ExecutionAttribute<>("DatadogSpan");
 
   @Override
   public void beforeExecution(
       final Context.BeforeExecution context, final ExecutionAttributes executionAttributes) {
-    final Span span = GlobalTracer.get().buildSpan("aws.command").start();
-    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+    final AgentSpan span = startSpan("aws.command");
+    try (final AgentScope scope = activateSpan(span, false)) {
       DECORATE.afterStart(span);
       executionAttributes.putAttribute(SPAN_ATTRIBUTE, span);
     }
@@ -43,7 +39,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterMarshalling(
       final Context.AfterMarshalling context, final ExecutionAttributes executionAttributes) {
-    final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
+    final AgentSpan span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
 
     DECORATE.onRequest(span, context.httpRequest());
     DECORATE.onSdkRequest(span, context.request());
@@ -53,18 +49,18 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeTransmission(
       final Context.BeforeTransmission context, final ExecutionAttributes executionAttributes) {
-    final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
+    final AgentSpan span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
 
     // This scope will be closed by AwsHttpClientInstrumentation since ExecutionInterceptor API
     // doesn't provide a way to run code in the same thread after transmission has been scheduled.
-    final Scope scope = GlobalTracer.get().scopeManager().activate(span, false);
-    ((TraceScope) scope).setAsyncPropagation(true);
+    final AgentScope scope = activateSpan(span, false);
+    scope.setAsyncPropagation(true);
   }
 
   @Override
   public void afterExecution(
       final Context.AfterExecution context, final ExecutionAttributes executionAttributes) {
-    final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
+    final AgentSpan span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
     if (span != null) {
       executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
       // Call onResponse on both types of responses:
@@ -78,7 +74,7 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void onExecutionFailure(
       final Context.FailedExecution context, final ExecutionAttributes executionAttributes) {
-    final Span span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
+    final AgentSpan span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
     if (span != null) {
       executionAttributes.putAttribute(SPAN_ATTRIBUTE, null);
       DECORATE.onError(span, context.exception());
@@ -97,31 +93,5 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   public static void muzzleCheck() {
     // Noop
-  }
-
-  /**
-   * Inject headers into the request builder.
-   *
-   * <p>Note: we inject headers at aws-client level because aws requests may be signed and adding
-   * headers on http-client level may break signature.
-   */
-  public static class InjectAdapter implements TextMap {
-
-    private final SdkHttpRequest.Builder builder;
-
-    public InjectAdapter(final SdkHttpRequest.Builder builder) {
-      this.builder = builder;
-    }
-
-    @Override
-    public Iterator<Map.Entry<String, String>> iterator() {
-      throw new UnsupportedOperationException(
-          "This class should be used only with Tracer.extract()!");
-    }
-
-    @Override
-    public void put(final String key, final String value) {
-      builder.putHeader(key, value);
-    }
   }
 }

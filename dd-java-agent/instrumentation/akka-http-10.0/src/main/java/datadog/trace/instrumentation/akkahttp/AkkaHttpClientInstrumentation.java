@@ -1,6 +1,9 @@
 package datadog.trace.instrumentation.akkahttp;
 
 import static datadog.trace.instrumentation.akkahttp.AkkaHttpClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -11,13 +14,10 @@ import akka.http.scaladsl.model.HttpResponse;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.propagation.Format;
-import io.opentracing.propagation.TextMap;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentPropagation;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.asm.Advice;
@@ -69,7 +69,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
 
   public static class SingleRequestAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope methodEnter(
+    public static AgentScope methodEnter(
         @Advice.Argument(value = 0, readOnly = false) HttpRequest request) {
       /*
       Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
@@ -82,17 +82,17 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         return null;
       }
 
-      final Scope scope = GlobalTracer.get().buildSpan("akka-http.request").startActive(false);
-      DECORATE.afterStart(scope.span());
-      DECORATE.onRequest(scope.span(), request);
+      final AgentSpan span = startSpan("akka-http.request");
+      DECORATE.afterStart(span);
+      DECORATE.onRequest(span, request);
 
       if (request != null) {
         final AkkaHttpHeaders headers = new AkkaHttpHeaders(request);
-        GlobalTracer.get().inject(scope.span().context(), Format.Builtin.HTTP_HEADERS, headers);
+        propagate().inject(span, request, headers);
         // Request is immutable, so we have to assign new value once we update headers
         request = headers.getRequest();
       }
-      return scope;
+      return activateSpan(span, false);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -100,14 +100,14 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
         @Advice.Argument(value = 0) final HttpRequest request,
         @Advice.This final HttpExt thiz,
         @Advice.Return final Future<HttpResponse> responseFuture,
-        @Advice.Enter final Scope scope,
+        @Advice.Enter final AgentScope scope,
         @Advice.Thrown final Throwable throwable) {
       if (scope == null) {
         return;
       }
       CallDepthThreadLocalMap.reset(HttpExt.class);
 
-      final Span span = scope.span();
+      final AgentSpan span = scope.span();
 
       if (throwable == null) {
         responseFuture.onComplete(new OnCompleteHandler(span), thiz.system().dispatcher());
@@ -121,9 +121,9 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
   }
 
   public static class OnCompleteHandler extends AbstractFunction1<Try<HttpResponse>, Void> {
-    private final Span span;
+    private final AgentSpan span;
 
-    public OnCompleteHandler(final Span span) {
+    public OnCompleteHandler(final AgentSpan span) {
       this.span = span;
     }
 
@@ -140,7 +140,7 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     }
   }
 
-  public static class AkkaHttpHeaders implements TextMap {
+  public static class AkkaHttpHeaders implements AgentPropagation.Setter<HttpRequest> {
     private HttpRequest request;
 
     public AkkaHttpHeaders(final HttpRequest request) {
@@ -148,15 +148,9 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     }
 
     @Override
-    public Iterator<Map.Entry<String, String>> iterator() {
-      throw new UnsupportedOperationException(
-          "This class should be used only with Tracer.inject()!");
-    }
-
-    @Override
-    public void put(final String name, final String value) {
+    public void set(final HttpRequest carrier, final String key, final String value) {
       // It looks like this cast is only needed in Java, Scala would have figured it out
-      request = (HttpRequest) request.addHeader(RawHeader.create(name, value));
+      request = (HttpRequest) request.addHeader(RawHeader.create(key, value));
     }
 
     public HttpRequest getRequest() {

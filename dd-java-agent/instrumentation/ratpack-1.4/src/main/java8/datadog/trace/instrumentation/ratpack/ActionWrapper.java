@@ -1,18 +1,18 @@
 package datadog.trace.instrumentation.ratpack;
 
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.util.GlobalTracer;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import lombok.extern.slf4j.Slf4j;
 import ratpack.func.Action;
 
 @Slf4j
 public class ActionWrapper<T> implements Action<T> {
   private final Action<T> delegate;
-  private final Span span;
+  private final AgentSpan span;
 
-  private ActionWrapper(final Action<T> delegate, final Span span) {
+  private ActionWrapper(final Action<T> delegate, final AgentSpan span) {
     assert span != null;
     this.delegate = delegate;
     this.span = span;
@@ -20,15 +20,13 @@ public class ActionWrapper<T> implements Action<T> {
 
   @Override
   public void execute(final T t) throws Exception {
-    try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
-      if (scope instanceof TraceScope) {
-        ((TraceScope) scope).setAsyncPropagation(true);
-      }
+    try (final AgentScope scope = activateSpan(span, false)) {
+      scope.setAsyncPropagation(true);
       delegate.execute(t);
     }
   }
 
-  public static <T> Action<T> wrapIfNeeded(final Action<T> delegate, final Span span) {
+  public static <T> Action<T> wrapIfNeeded(final Action<T> delegate, final AgentSpan span) {
     if (delegate instanceof ActionWrapper || span == null) {
       return delegate;
     }

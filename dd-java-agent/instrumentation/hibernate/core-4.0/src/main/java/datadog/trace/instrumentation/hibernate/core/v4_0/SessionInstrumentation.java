@@ -15,9 +15,9 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
+import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.hibernate.SessionMethodUtils;
 import datadog.trace.instrumentation.hibernate.SessionState;
-import io.opentracing.Span;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -119,7 +119,7 @@ public class SessionInstrumentation extends AbstractHibernateInstrumentation {
         state.getMethodScope().close();
       }
 
-      final Span span = state.getSessionSpan();
+      final AgentSpan span = state.getSessionSpan();
       DECORATOR.onError(span, throwable);
       DECORATOR.beforeFinish(span);
       span.finish();

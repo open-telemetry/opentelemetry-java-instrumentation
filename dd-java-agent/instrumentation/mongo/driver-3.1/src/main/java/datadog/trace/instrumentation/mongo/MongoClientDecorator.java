@@ -8,7 +8,7 @@ import com.mongodb.event.CommandStartedEvent;
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -59,9 +59,9 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
       if (connectionId != null) {
         final ServerId serverId = connectionId.getServerId();
         if (serverId != null) {
-          ClusterId clusterId = serverId.getClusterId();
+          final ClusterId clusterId = serverId.getClusterId();
           if (clusterId != null) {
-            String description = clusterId.getDescription();
+            final String description = clusterId.getDescription();
             if (description != null) {
               return description;
             }
@@ -73,7 +73,7 @@ public class MongoClientDecorator extends DatabaseClientDecorator<CommandStarted
     return event.getDatabaseName();
   }
 
-  public Span onStatement(final Span span, final BsonDocument statement) {
+  public AgentSpan onStatement(final AgentSpan span, final BsonDocument statement) {
 
     // scrub the Mongo command so that parameters are removed from the string
     final BsonDocument scrubbed = scrub(statement);

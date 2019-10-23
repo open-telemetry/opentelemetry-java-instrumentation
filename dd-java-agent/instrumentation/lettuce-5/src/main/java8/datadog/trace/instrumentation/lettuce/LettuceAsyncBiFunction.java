@@ -2,7 +2,7 @@ package datadog.trace.instrumentation.lettuce;
 
 import static datadog.trace.instrumentation.lettuce.LettuceClientDecorator.DECORATE;
 
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.concurrent.CancellationException;
 import java.util.function.BiFunction;
 
@@ -18,9 +18,9 @@ import java.util.function.BiFunction;
 public class LettuceAsyncBiFunction<T extends Object, U extends Throwable, R extends Object>
     implements BiFunction<T, Throwable, R> {
 
-  private final Span span;
+  private final AgentSpan span;
 
-  public LettuceAsyncBiFunction(final Span span) {
+  public LettuceAsyncBiFunction(final AgentSpan span) {
     this.span = span;
   }
 

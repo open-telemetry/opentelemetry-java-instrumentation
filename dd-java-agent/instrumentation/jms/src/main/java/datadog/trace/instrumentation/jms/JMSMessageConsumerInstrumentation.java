@@ -1,7 +1,11 @@
 package datadog.trace.instrumentation.jms;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.jms.JMSDecorator.CONSUMER_DECORATE;
+import static datadog.trace.instrumentation.jms.MessageExtractAdapter.GETTER;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -10,12 +14,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentSpan.Context;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +48,8 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
       packageName + ".JMSDecorator",
       packageName + ".JMSDecorator$1",
       packageName + ".JMSDecorator$2",
-      packageName + ".MessagePropertyTextMap",
+      packageName + ".MessageExtractAdapter",
+      packageName + ".MessageInjectAdapter"
     };
   }
 
@@ -66,7 +68,7 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
   public static class ConsumerAdvice {
 
     @Advice.OnMethodEnter
-    public static long startSpan() {
+    public static long onEnter() {
       return System.currentTimeMillis();
     }
 
@@ -77,23 +79,17 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
         @Advice.Origin final Method method,
         @Advice.Return final Message message,
         @Advice.Thrown final Throwable throwable) {
-      Tracer.SpanBuilder spanBuilder =
-          GlobalTracer.get()
-              .buildSpan("jms.consume")
-              .withTag("span.origin.type", consumer.getClass().getName())
-              .withStartTimestamp(TimeUnit.MILLISECONDS.toMicros(startTime));
-
+      final AgentSpan span;
       if (message != null) {
-        final SpanContext extractedContext =
-            GlobalTracer.get()
-                .extract(Format.Builtin.TEXT_MAP, new MessagePropertyTextMap(message));
-        if (extractedContext != null) {
-          spanBuilder = spanBuilder.asChildOf(extractedContext);
-        }
+        final Context extractedContext = propagate().extract(message, GETTER);
+        span =
+            startSpan("jms.consume", extractedContext, TimeUnit.MILLISECONDS.toMicros(startTime));
+      } else {
+        span = startSpan("jms.consume", TimeUnit.MILLISECONDS.toMicros(startTime));
       }
+      span.setTag("span.origin.type", consumer.getClass().getName());
 
-      final Span span = spanBuilder.start();
-      try (final Scope scope = GlobalTracer.get().scopeManager().activate(span, false)) {
+      try (final AgentScope scope = activateSpan(span, false)) {
         CONSUMER_DECORATE.afterStart(span);
         if (message == null) {
           CONSUMER_DECORATE.onReceive(span, method);

@@ -1,14 +1,16 @@
 package datadog.trace.instrumentation.play26;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.propagate;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.play26.PlayHeaders.GETTER;
 import static datadog.trace.instrumentation.play26.PlayHttpServerDecorator.DECORATE;
 
-import datadog.trace.context.TraceScope;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.AgentSpan.Context;
 import io.opentracing.tag.Tags;
-import io.opentracing.util.GlobalTracer;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
 import play.api.mvc.Request;
@@ -17,43 +19,32 @@ import scala.concurrent.Future;
 
 public class PlayAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static Scope startSpan(@Advice.Argument(0) final Request req) {
-    final Scope scope;
-    if (GlobalTracer.get().activeSpan() == null) {
-      final SpanContext extractedContext;
-      if (GlobalTracer.get().scopeManager().active() == null) {
-        extractedContext =
-            GlobalTracer.get().extract(Format.Builtin.HTTP_HEADERS, new PlayHeaders(req));
-      } else {
-        extractedContext = null;
-      }
-      scope =
-          GlobalTracer.get()
-              .buildSpan("play.request")
-              .asChildOf(extractedContext)
-              .startActive(false);
+  public static AgentScope onEnter(@Advice.Argument(0) final Request req) {
+    final AgentSpan span;
+    if (activeSpan() == null) {
+      final Context extractedContext = propagate().extract(req.headers(), GETTER);
+      span = startSpan("play.request", extractedContext);
     } else {
       // An upstream framework (e.g. akka-http, netty) has already started the span.
       // Do not extract the context.
-      scope = GlobalTracer.get().buildSpan("play.request").startActive(false);
+      span = startSpan("play.request");
     }
-    DECORATE.afterStart(scope);
-    DECORATE.onConnection(scope.span(), req);
+    DECORATE.afterStart(span);
+    DECORATE.onConnection(span, req);
 
-    if (GlobalTracer.get().scopeManager().active() instanceof TraceScope) {
-      ((TraceScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true);
-    }
+    final AgentScope scope = activateSpan(span, false);
+    scope.setAsyncPropagation(true);
     return scope;
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopTraceOnResponse(
-      @Advice.Enter final Scope playControllerScope,
+      @Advice.Enter final AgentScope playControllerScope,
       @Advice.This final Object thisAction,
       @Advice.Thrown final Throwable throwable,
       @Advice.Argument(0) final Request req,
       @Advice.Return(readOnly = false) final Future<Result> responseFuture) {
-    final Span playControllerSpan = playControllerScope.span();
+    final AgentSpan playControllerSpan = playControllerScope.span();
 
     // Call onRequest on return after tags are populated.
     DECORATE.onRequest(playControllerSpan, req);
@@ -64,13 +55,13 @@ public class PlayAdvice {
           ((Action) thisAction).executionContext());
     } else {
       DECORATE.onError(playControllerSpan, throwable);
-      Tags.HTTP_STATUS.set(playControllerSpan, 500);
+      playControllerSpan.setTag(Tags.HTTP_STATUS.getKey(), 500);
       DECORATE.beforeFinish(playControllerSpan);
       playControllerSpan.finish();
     }
     playControllerScope.close();
 
-    final Span rootSpan = GlobalTracer.get().activeSpan();
+    final AgentSpan rootSpan = activeSpan();
     // set the resource name on the upstream akka/netty span
     DECORATE.onRequest(rootSpan, req);
   }

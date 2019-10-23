@@ -1,12 +1,9 @@
 package datadog.trace.agent.decorator;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static java.util.Collections.singletonMap;
-
 import datadog.trace.api.Config;
 import datadog.trace.api.DDTags;
-import io.opentracing.Scope;
-import io.opentracing.Span;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import io.opentracing.tag.Tags;
 import java.lang.reflect.Method;
 import java.net.Inet4Address;
@@ -23,7 +20,7 @@ public abstract class BaseDecorator {
   protected final float traceAnalyticsSampleRate;
 
   protected BaseDecorator() {
-    Config config = Config.get();
+    final Config config = Config.get();
     final String[] instrumentationNames = instrumentationNames();
     traceAnalyticsEnabled =
         instrumentationNames.length > 0
@@ -42,54 +39,52 @@ public abstract class BaseDecorator {
     return false;
   }
 
-  public Scope afterStart(final Scope scope) {
+  public AgentScope afterStart(final AgentScope scope) {
     assert scope != null;
     afterStart(scope.span());
     return scope;
   }
 
-  public Span afterStart(final Span span) {
+  public AgentSpan afterStart(final AgentSpan span) {
     assert span != null;
     if (spanType() != null) {
       span.setTag(DDTags.SPAN_TYPE, spanType());
     }
-    Tags.COMPONENT.set(span, component());
+    span.setTag(Tags.COMPONENT.getKey(), component());
     if (traceAnalyticsEnabled) {
       span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, traceAnalyticsSampleRate);
     }
     return span;
   }
 
-  public Scope beforeFinish(final Scope scope) {
+  public AgentScope beforeFinish(final AgentScope scope) {
     assert scope != null;
     beforeFinish(scope.span());
     return scope;
   }
 
-  public Span beforeFinish(final Span span) {
+  public AgentSpan beforeFinish(final AgentSpan span) {
     assert span != null;
     return span;
   }
 
-  public Scope onError(final Scope scope, final Throwable throwable) {
+  public AgentScope onError(final AgentScope scope, final Throwable throwable) {
     assert scope != null;
     onError(scope.span(), throwable);
     return scope;
   }
 
-  public Span onError(final Span span, final Throwable throwable) {
+  public AgentSpan onError(final AgentSpan span, final Throwable throwable) {
     assert span != null;
     if (throwable != null) {
-      Tags.ERROR.set(span, true);
-      span.log(
-          singletonMap(
-              ERROR_OBJECT,
-              throwable instanceof ExecutionException ? throwable.getCause() : throwable));
+      span.setError(true);
+      span.addThrowable(throwable instanceof ExecutionException ? throwable.getCause() : throwable);
     }
     return span;
   }
 
-  public Span onPeerConnection(final Span span, final InetSocketAddress remoteConnection) {
+  public AgentSpan onPeerConnection(
+      final AgentSpan span, final InetSocketAddress remoteConnection) {
     assert span != null;
     if (remoteConnection != null) {
       onPeerConnection(span, remoteConnection.getAddress());
@@ -100,14 +95,14 @@ public abstract class BaseDecorator {
     return span;
   }
 
-  public Span onPeerConnection(final Span span, final InetAddress remoteAddress) {
+  public AgentSpan onPeerConnection(final AgentSpan span, final InetAddress remoteAddress) {
     assert span != null;
     if (remoteAddress != null) {
       span.setTag(Tags.PEER_HOSTNAME.getKey(), remoteAddress.getHostName());
       if (remoteAddress instanceof Inet4Address) {
-        Tags.PEER_HOST_IPV4.set(span, remoteAddress.getHostAddress());
+        span.setTag(Tags.PEER_HOST_IPV4.getKey(), remoteAddress.getHostAddress());
       } else if (remoteAddress instanceof Inet6Address) {
-        Tags.PEER_HOST_IPV6.set(span, remoteAddress.getHostAddress());
+        span.setTag(Tags.PEER_HOST_IPV6.getKey(), remoteAddress.getHostAddress());
       }
     }
     return span;
