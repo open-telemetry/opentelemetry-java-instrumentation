@@ -14,9 +14,14 @@ muzzle {
   }
   pass {
     group = "io.netty"
-    module = "netty"
+    module = "netty-all"
     versions = "[4.1.0.Final,)"
     assertInverse = true
+  }
+  fail {
+    group = "io.netty"
+    module = "netty"
+    versions = "[,]"
   }
   pass {
     group = "io.vertx"

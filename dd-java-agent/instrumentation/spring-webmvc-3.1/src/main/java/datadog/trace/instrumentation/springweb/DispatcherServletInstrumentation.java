@@ -21,6 +21,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 @AutoService(Instrumenter.class)
@@ -80,6 +81,11 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
       DECORATE_RENDER.onError(scope, throwable);
       DECORATE_RENDER.beforeFinish(scope);
       scope.close();
+    }
+
+    // Make this advice match consistently with HandlerAdapterInstrumentation
+    private void muzzleCheck(final HandlerMethod method) {
+      method.getMethod();
     }
   }
 

@@ -11,17 +11,15 @@ muzzle {
     versions = '[2.4.0,2.6)'
     assertInverse = true
   }
-  pass {
+  fail {
     group = 'com.typesafe.play'
     module = 'play_2.12'
-    versions = '[2.4.0,2.6)'
-    assertInverse = true
+    versions = '[,]'
   }
-  pass {
+  fail {
     group = 'com.typesafe.play'
     module = 'play_2.13'
-    versions = '[2.4.0,2.6)'
-    assertInverse = true
+    versions = '[,]'
   }
 }
 
@@ -46,13 +44,13 @@ dependencies {
   // Before 2.5, play used netty 3.x which isn't supported, so for better test consistency, we test with just 2.5
   testCompile group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.5.0'
   testCompile group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.5.0'
-  testCompile (group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.5.0') {
+  testCompile(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.5.0') {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'
   }
 
   latestDepTestCompile group: 'com.typesafe.play', name: 'play-java_2.11', version: '2.5.+'
   latestDepTestCompile group: 'com.typesafe.play', name: 'play-java-ws_2.11', version: '2.5.+'
-  latestDepTestCompile (group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.5.+') {
+  latestDepTestCompile(group: 'com.typesafe.play', name: 'play-test_2.11', version: '2.5.+') {
     exclude group: 'org.eclipse.jetty.websocket', module: 'websocket-client'
   }
 }

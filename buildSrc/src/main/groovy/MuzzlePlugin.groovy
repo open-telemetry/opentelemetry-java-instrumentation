@@ -204,6 +204,10 @@ class MuzzlePlugin implements Plugin<Project> {
       new DefaultArtifact(muzzleDirective.group, muzzleDirective.module, "jar", version.toString())
     }
 
+    if (allVersionArtifacts.isEmpty()) {
+      throw new GradleException("No muzzle artifacts found for $muzzleDirective.group:$muzzleDirective.module $muzzleDirective.versions")
+    }
+
     return allVersionArtifacts
   }
 
