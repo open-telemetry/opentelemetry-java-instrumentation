@@ -94,12 +94,13 @@ public final class StatementInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope != null) {
-        DECORATE.onError(scope.span(), throwable);
-        DECORATE.beforeFinish(scope.span());
-        scope.close();
-        CallDepthThreadLocalMap.reset(Statement.class);
+      if (scope == null) {
+        return;
       }
+      DECORATE.onError(scope.span(), throwable);
+      DECORATE.beforeFinish(scope.span());
+      scope.close();
+      CallDepthThreadLocalMap.reset(Statement.class);
     }
   }
 }

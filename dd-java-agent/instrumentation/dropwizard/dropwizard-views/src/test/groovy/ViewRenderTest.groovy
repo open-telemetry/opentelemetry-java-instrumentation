@@ -6,6 +6,8 @@ import io.dropwizard.views.mustache.MustacheViewRenderer
 import java.nio.charset.StandardCharsets
 
 import static datadog.trace.agent.test.asserts.ListWriterAssert.assertTraces
+import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
+import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class ViewRenderTest extends AgentTestRunner {
 
@@ -14,19 +16,22 @@ class ViewRenderTest extends AgentTestRunner {
     def outputStream = new ByteArrayOutputStream()
 
     when:
-    renderer.render(view, Locale.ENGLISH, outputStream)
+    runUnderTrace("parent") {
+      renderer.render(view, Locale.ENGLISH, outputStream)
+    }
 
     then:
     outputStream.toString().contains("This is an example of a view")
     assertTraces(TEST_WRITER, 1) {
-      trace(0, 1) {
-        span(0) {
+      trace(0, 2) {
+        basicSpan(it, 0, "parent")
+        span(1) {
           resourceName "View $template"
           operationName "view.render"
+          childOf span(0)
           tags {
             "component" "dropwizard-view"
             "span.origin.type" renderer.class.simpleName
-            "span.kind" "server"
             defaultTags()
           }
         }

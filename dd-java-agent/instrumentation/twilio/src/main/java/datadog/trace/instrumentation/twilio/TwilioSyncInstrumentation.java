@@ -107,19 +107,20 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
         @Advice.Enter final AgentScope scope,
         @Advice.Thrown final Throwable throwable,
         @Advice.Return final Object response) {
+      if (scope == null) {
+        return;
+      }
 
       // If we have a scope (i.e. we were the top-level Twilio SDK invocation),
-      if (scope != null) {
-        try {
-          final AgentSpan span = scope.span();
+      try {
+        final AgentSpan span = scope.span();
 
-          DECORATE.onResult(span, response);
-          DECORATE.onError(span, throwable);
-          DECORATE.beforeFinish(span);
-        } finally {
-          scope.close();
-          CallDepthThreadLocalMap.reset(Twilio.class); // reset call depth count
-        }
+        DECORATE.onResult(span, response);
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
+      } finally {
+        scope.close();
+        CallDepthThreadLocalMap.reset(Twilio.class); // reset call depth count
       }
     }
   }

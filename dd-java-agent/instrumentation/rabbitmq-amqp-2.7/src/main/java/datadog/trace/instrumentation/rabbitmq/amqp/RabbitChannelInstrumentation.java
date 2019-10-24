@@ -132,12 +132,13 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope != null) {
-        DECORATE.onError(scope, throwable);
-        DECORATE.beforeFinish(scope);
-        scope.close();
-        CallDepthThreadLocalMap.reset(Channel.class);
+      if (scope == null) {
+        return;
       }
+      DECORATE.onError(scope, throwable);
+      DECORATE.beforeFinish(scope);
+      scope.close();
+      CallDepthThreadLocalMap.reset(Channel.class);
     }
   }
 

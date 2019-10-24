@@ -80,11 +80,12 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope != null) {
-        CONSUMER_DECORATE.onError(scope, throwable);
-        CONSUMER_DECORATE.beforeFinish(scope);
-        scope.close();
+      if (scope == null) {
+        return;
       }
+      CONSUMER_DECORATE.onError(scope, throwable);
+      CONSUMER_DECORATE.beforeFinish(scope);
+      scope.close();
     }
   }
 }
