@@ -130,6 +130,15 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
     }
     "POST /abstract/child/call" | new ChildClassWithPath()
 
+    /*
+     * should be "GET /child/call" with ChildClassOnInterface.call
+     */
+    // "GET /abstract/call" | new JavaInterfaces.ChildClassOnInterface()
+    /*
+     * should be "GET /child/invoke" with DefaultChildClassOnInterface.call
+     */
+    // "GET /interface/invoke" | new JavaInterfaces.DefaultChildClassOnInterface()
+
     className = getName(obj.class)
   }
 

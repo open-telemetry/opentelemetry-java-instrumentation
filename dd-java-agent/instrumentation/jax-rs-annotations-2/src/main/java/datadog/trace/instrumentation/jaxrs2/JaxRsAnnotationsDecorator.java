@@ -104,7 +104,7 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
   private LinkedList<Path> gatherPaths(final Method method) {
     Class<?> target = method.getDeclaringClass();
     final LinkedList<Path> paths = new LinkedList<>();
-    while (target != Object.class) {
+    while (target != null && target != Object.class) {
       final Path annotation = target.getAnnotation(Path.class);
       if (annotation != null) {
         paths.push(annotation);

@@ -11,6 +11,10 @@ muzzle {
   }
 }
 
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
 apply from: "${rootDir}/gradle/java.gradle"
 
 //apply plugin: 'org.unbroken-dome.test-sets'
@@ -34,4 +38,5 @@ dependencies {
 
   // Anything 1.0+ fails with a java.lang.NoClassDefFoundError: org/eclipse/jetty/server/RequestLog
 //  latestDepTestCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
+
 }
