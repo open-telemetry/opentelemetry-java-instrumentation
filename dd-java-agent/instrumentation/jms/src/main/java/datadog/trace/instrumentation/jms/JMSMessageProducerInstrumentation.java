@@ -98,13 +98,13 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-
-      if (scope != null) {
-        PRODUCER_DECORATE.onError(scope, throwable);
-        PRODUCER_DECORATE.beforeFinish(scope);
-        scope.close();
-        CallDepthThreadLocalMap.reset(MessageProducer.class);
+      if (scope == null) {
+        return;
       }
+      PRODUCER_DECORATE.onError(scope, throwable);
+      PRODUCER_DECORATE.beforeFinish(scope);
+      scope.close();
+      CallDepthThreadLocalMap.reset(MessageProducer.class);
     }
   }
 
@@ -133,12 +133,13 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
-      if (scope != null) {
-        PRODUCER_DECORATE.onError(scope, throwable);
-        PRODUCER_DECORATE.beforeFinish(scope);
-        scope.close();
-        CallDepthThreadLocalMap.reset(MessageProducer.class);
+      if (scope == null) {
+        return;
       }
+      PRODUCER_DECORATE.onError(scope, throwable);
+      PRODUCER_DECORATE.beforeFinish(scope);
+      scope.close();
+      CallDepthThreadLocalMap.reset(MessageProducer.class);
     }
   }
 }

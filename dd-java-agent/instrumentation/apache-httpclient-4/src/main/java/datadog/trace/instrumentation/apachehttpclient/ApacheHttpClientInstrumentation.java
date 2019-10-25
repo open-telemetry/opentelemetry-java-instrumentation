@@ -166,20 +166,21 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
 
     public static void doMethodExit(
         final AgentScope scope, final Object result, final Throwable throwable) {
-      if (scope != null) {
-        try {
-          final AgentSpan span = scope.span();
+      if (scope == null) {
+        return;
+      }
+      try {
+        final AgentSpan span = scope.span();
 
-          if (result instanceof HttpResponse) {
-            DECORATE.onResponse(span, (HttpResponse) result);
-          } // else they probably provided a ResponseHandler.
+        if (result instanceof HttpResponse) {
+          DECORATE.onResponse(span, (HttpResponse) result);
+        } // else they probably provided a ResponseHandler.
 
-          DECORATE.onError(span, throwable);
-          DECORATE.beforeFinish(span);
-        } finally {
-          scope.close();
-          CallDepthThreadLocalMap.reset(HttpClient.class);
-        }
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
+      } finally {
+        scope.close();
+        CallDepthThreadLocalMap.reset(HttpClient.class);
       }
     }
   }

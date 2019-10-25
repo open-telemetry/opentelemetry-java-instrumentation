@@ -88,13 +88,14 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
         @Advice.Enter final AgentScope scope,
         @Advice.Return final ClientResponse response,
         @Advice.Thrown final Throwable throwable) {
-      if (null != scope) {
-        final AgentSpan span = scope.span();
-        DECORATE.onResponse(span, response);
-        DECORATE.onError(span, throwable);
-        DECORATE.beforeFinish(span);
-        scope.close();
+      if (scope == null) {
+        return;
       }
+      final AgentSpan span = scope.span();
+      DECORATE.onResponse(span, response);
+      DECORATE.onError(span, throwable);
+      DECORATE.beforeFinish(span);
+      scope.close();
     }
   }
 }

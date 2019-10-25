@@ -116,28 +116,28 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
         @Advice.Enter final AgentScope scope,
         @Advice.Thrown final Throwable throwable,
         @Advice.Return final ListenableFuture response) {
-
+      if (scope == null) {
+        return;
+      }
       // If we have a scope (i.e. we were the top-level Twilio SDK invocation),
-      if (scope != null) {
-        try {
-          final AgentSpan span = scope.span();
+      try {
+        final AgentSpan span = scope.span();
 
-          if (throwable != null) {
-            // There was an synchronous error,
-            // which means we shouldn't wait for a callback to close the span.
-            DECORATE.onError(span, throwable);
-            DECORATE.beforeFinish(span);
-            span.finish();
-          } else {
-            // We're calling an async operation, we still need to finish the span when it's
-            // complete and report the results; set an appropriate callback
-            Futures.addCallback(
-                response, new SpanFinishingCallback(span), Twilio.getExecutorService());
-          }
-        } finally {
-          scope.close(); // won't finish the span.
-          CallDepthThreadLocalMap.reset(Twilio.class); // reset call depth count
+        if (throwable != null) {
+          // There was an synchronous error,
+          // which means we shouldn't wait for a callback to close the span.
+          DECORATE.onError(span, throwable);
+          DECORATE.beforeFinish(span);
+          span.finish();
+        } else {
+          // We're calling an async operation, we still need to finish the span when it's
+          // complete and report the results; set an appropriate callback
+          Futures.addCallback(
+              response, new SpanFinishingCallback(span), Twilio.getExecutorService());
         }
+      } finally {
+        scope.close(); // won't finish the span.
+        CallDepthThreadLocalMap.reset(Twilio.class); // reset call depth count
       }
     }
   }

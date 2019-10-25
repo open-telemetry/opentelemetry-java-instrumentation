@@ -74,22 +74,23 @@ public class Servlet2Advice {
       }
     }
 
-    if (scope != null) {
-      final AgentSpan span = scope.span();
-      DECORATE.onResponse(span, response);
-      if (throwable != null) {
-        if (response instanceof StatusSavingHttpServletResponseWrapper
-            && ((StatusSavingHttpServletResponseWrapper) response).status
-                == HttpServletResponse.SC_OK) {
-          // exception was thrown but status code wasn't set
-          span.setTag(Tags.HTTP_STATUS.getKey(), 500);
-        }
-        DECORATE.onError(span, throwable);
-      }
-      DECORATE.beforeFinish(span);
-
-      scope.setAsyncPropagation(false);
-      scope.close();
+    if (scope == null) {
+      return;
     }
+    final AgentSpan span = scope.span();
+    DECORATE.onResponse(span, response);
+    if (throwable != null) {
+      if (response instanceof StatusSavingHttpServletResponseWrapper
+          && ((StatusSavingHttpServletResponseWrapper) response).status
+              == HttpServletResponse.SC_OK) {
+        // exception was thrown but status code wasn't set
+        span.setTag(Tags.HTTP_STATUS.getKey(), 500);
+      }
+      DECORATE.onError(span, throwable);
+    }
+    DECORATE.beforeFinish(span);
+
+    scope.setAsyncPropagation(false);
+    scope.close();
   }
 }

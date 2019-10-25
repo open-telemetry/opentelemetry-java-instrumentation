@@ -156,10 +156,11 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
     public static void methodExit(
         @Advice.Enter final SyncCompletionListener listener,
         @Advice.Thrown final Throwable thrown) {
-      if (listener != null) {
-        CallDepthThreadLocalMap.reset(MemcachedClient.class);
-        listener.done(thrown);
+      if (listener == null) {
+        return;
       }
+      CallDepthThreadLocalMap.reset(MemcachedClient.class);
+      listener.done(thrown);
     }
   }
 }

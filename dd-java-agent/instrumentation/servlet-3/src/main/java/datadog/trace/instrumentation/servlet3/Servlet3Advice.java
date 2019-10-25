@@ -62,42 +62,44 @@ public class Servlet3Advice {
       }
     }
 
-    if (scope != null) {
-      if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
-        final HttpServletRequest req = (HttpServletRequest) request;
-        final HttpServletResponse resp = (HttpServletResponse) response;
-        final AgentSpan span = scope.span();
+    if (scope == null) {
+      return;
+    }
 
-        if (throwable != null) {
-          DECORATE.onResponse(span, resp);
-          if (resp.getStatus() == HttpServletResponse.SC_OK) {
-            // exception is thrown in filter chain, but status code is incorrect
-            span.setTag(Tags.HTTP_STATUS.getKey(), 500);
+    if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
+      final HttpServletRequest req = (HttpServletRequest) request;
+      final HttpServletResponse resp = (HttpServletResponse) response;
+      final AgentSpan span = scope.span();
+
+      if (throwable != null) {
+        DECORATE.onResponse(span, resp);
+        if (resp.getStatus() == HttpServletResponse.SC_OK) {
+          // exception is thrown in filter chain, but status code is incorrect
+          span.setTag(Tags.HTTP_STATUS.getKey(), 500);
+        }
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
+        req.removeAttribute(DD_SPAN_ATTRIBUTE);
+        span.finish(); // Finish the span manually since finishSpanOnClose was false
+      } else {
+        final AtomicBoolean activated = new AtomicBoolean(false);
+        if (req.isAsyncStarted()) {
+          try {
+            req.getAsyncContext().addListener(new TagSettingAsyncListener(activated, span));
+          } catch (final IllegalStateException e) {
+            // org.eclipse.jetty.server.Request may throw an exception here if request became
+            // finished after check above. We just ignore that exception and move on.
           }
-          DECORATE.onError(span, throwable);
+        }
+        // Check again in case the request finished before adding the listener.
+        if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
+          DECORATE.onResponse(span, resp);
           DECORATE.beforeFinish(span);
           req.removeAttribute(DD_SPAN_ATTRIBUTE);
           span.finish(); // Finish the span manually since finishSpanOnClose was false
-        } else {
-          final AtomicBoolean activated = new AtomicBoolean(false);
-          if (req.isAsyncStarted()) {
-            try {
-              req.getAsyncContext().addListener(new TagSettingAsyncListener(activated, span));
-            } catch (final IllegalStateException e) {
-              // org.eclipse.jetty.server.Request may throw an exception here if request became
-              // finished after check above. We just ignore that exception and move on.
-            }
-          }
-          // Check again in case the request finished before adding the listener.
-          if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
-            DECORATE.onResponse(span, resp);
-            DECORATE.beforeFinish(span);
-            req.removeAttribute(DD_SPAN_ATTRIBUTE);
-            span.finish(); // Finish the span manually since finishSpanOnClose was false
-          }
         }
-        scope.close();
       }
+      scope.close();
     }
   }
 }

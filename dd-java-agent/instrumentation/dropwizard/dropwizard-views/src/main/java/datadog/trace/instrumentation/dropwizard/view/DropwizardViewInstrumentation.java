@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.dropwizard.view;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
@@ -51,11 +52,13 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope onEnter(
         @Advice.This final Object obj, @Advice.Argument(0) final View view) {
+      if (activeSpan() == null) {
+        return null;
+      }
       final AgentSpan span =
           startSpan("view.render")
               .setTag(DDTags.RESOURCE_NAME, "View " + view.getTemplateName())
               .setTag(Tags.COMPONENT.getKey(), "dropwizard-view")
-              .setTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_SERVER)
               .setTag("span.origin.type", obj.getClass().getSimpleName());
       return activateSpan(span, true);
     }
@@ -63,6 +66,9 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
+      if (scope == null) {
+        return;
+      }
       final AgentSpan span = scope.span();
       if (throwable != null) {
         span.setError(true);

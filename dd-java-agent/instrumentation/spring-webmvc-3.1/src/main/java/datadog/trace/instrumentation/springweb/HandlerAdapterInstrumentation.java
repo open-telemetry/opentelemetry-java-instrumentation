@@ -79,6 +79,10 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
         DECORATE.onRequest(parentSpan, request);
       }
 
+      if (activeSpan() == null) {
+        return null;
+      }
+
       // Now create a span for controller execution.
 
       final Class<?> clazz;
@@ -120,6 +124,9 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Enter final AgentScope scope, @Advice.Thrown final Throwable throwable) {
+      if (scope == null) {
+        return;
+      }
       DECORATE.onError(scope, throwable);
       DECORATE.beforeFinish(scope);
       scope.close();
