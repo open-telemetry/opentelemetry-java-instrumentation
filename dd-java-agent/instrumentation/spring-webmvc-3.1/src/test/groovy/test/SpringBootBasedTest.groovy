@@ -94,7 +94,8 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
   void handlerSpan(TraceAssert trace, int index, Object parent, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       serviceName expectedServiceName()
-      operationName "TestController.${endpoint.name().toLowerCase()}"
+      operationName "spring.handler"
+      resourceName "TestController.${endpoint.name().toLowerCase()}"
       spanType DDSpanTypes.HTTP_SERVER
       errored endpoint == EXCEPTION
       childOf(parent as DDSpan)

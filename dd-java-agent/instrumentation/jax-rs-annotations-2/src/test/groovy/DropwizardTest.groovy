@@ -22,7 +22,7 @@ import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.REDIRE
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.SUCCESS
 
 class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decorator> {
-  
+
   @Override
   DropwizardTestSupport startServer(int port) {
     def testSupport = new DropwizardTestSupport(testApp(),

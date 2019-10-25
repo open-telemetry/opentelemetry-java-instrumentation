@@ -182,6 +182,18 @@ public final class OpenTracing32 implements TracerAPI {
     }
 
     @Override
+    public AgentSpan getLocalRootSpan() {
+      if (span instanceof MutableSpan) {
+        final MutableSpan root = ((MutableSpan) span).getLocalRootSpan();
+        if (root == span) {
+          return this;
+        }
+        return new OT32Span(root.getOperationName(), (Span) root);
+      }
+      return this;
+    }
+
+    @Override
     public OT32Context context() {
       final SpanContext context = span.context();
       return new OT32Context(context);

@@ -51,10 +51,11 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     }
   }
 
-  private void updateParent(final AgentSpan span, final String resourceName) {
+  private void updateParent(AgentSpan span, final String resourceName) {
     if (span == null) {
       return;
     }
+    span = span.getLocalRootSpan();
     span.setTag(Tags.COMPONENT.getKey(), "jax-rs");
 
     if (!resourceName.isEmpty()) {
