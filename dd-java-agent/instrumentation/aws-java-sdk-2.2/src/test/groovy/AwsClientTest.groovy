@@ -1,6 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.ResponseInputStream
@@ -81,13 +81,13 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$Tags.COMPONENT.key" "java-aws-sdk"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${server.address}${path}"
-            "$Tags.HTTP_METHOD.key" "$method"
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "java-aws-sdk"
+            "$Tags.HTTP_STATUS" 200
+            "$Tags.HTTP_URL" "${server.address}${path}"
+            "$Tags.HTTP_METHOD" "$method"
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "aws.service" "$service"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
@@ -113,13 +113,13 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           childOf(span(0))
           tags {
-            "$Tags.COMPONENT.key" "apache-httpclient"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${server.address}${path}"
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
-            "$Tags.HTTP_METHOD.key" "$method"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "apache-httpclient"
+            "$Tags.HTTP_STATUS" 200
+            "$Tags.HTTP_URL" "${server.address}${path}"
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
+            "$Tags.HTTP_METHOD" "$method"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -198,13 +198,13 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$Tags.COMPONENT.key" "java-aws-sdk"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${server.address}${path}"
-            "$Tags.HTTP_METHOD.key" "$method"
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "java-aws-sdk"
+            "$Tags.HTTP_STATUS" 200
+            "$Tags.HTTP_URL" "${server.address}${path}"
+            "$Tags.HTTP_METHOD" "$method"
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "aws.service" "$service"
             "aws.operation" "${operation}"
             "aws.agent" "java-aws-sdk"
@@ -233,14 +233,14 @@ class AwsClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "$Tags.COMPONENT.key" "netty-client"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${server.address}${path}"
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-            "$Tags.PEER_PORT.key" server.address.port
-            "$Tags.HTTP_METHOD.key" "$method"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "netty-client"
+            "$Tags.HTTP_STATUS" 200
+            "$Tags.HTTP_URL" "${server.address}${path}"
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
+            "$Tags.PEER_PORT" server.address.port
+            "$Tags.HTTP_METHOD" "$method"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -319,12 +319,12 @@ class AwsClientTest extends AgentTestRunner {
           errored true
           parent()
           tags {
-            "$Tags.COMPONENT.key" "java-aws-sdk"
-            "$Tags.HTTP_URL.key" "$server.address/somebucket/somekey"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "java-aws-sdk"
+            "$Tags.HTTP_URL" "$server.address/somebucket/somekey"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "aws.service" "S3"
             "aws.operation" "GetObject"
             "aws.agent" "java-aws-sdk"
@@ -341,12 +341,12 @@ class AwsClientTest extends AgentTestRunner {
             errored true
             childOf(span(0))
             tags {
-              "$Tags.COMPONENT.key" "apache-httpclient"
-              "$Tags.HTTP_URL.key" "$server.address/somebucket/somekey"
-              "$Tags.PEER_HOSTNAME.key" "localhost"
-              "$Tags.PEER_PORT.key" server.address.port
-              "$Tags.HTTP_METHOD.key" "GET"
-              "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+              "$Tags.COMPONENT" "apache-httpclient"
+              "$Tags.HTTP_URL" "$server.address/somebucket/somekey"
+              "$Tags.PEER_HOSTNAME" "localhost"
+              "$Tags.PEER_PORT" server.address.port
+              "$Tags.HTTP_METHOD" "GET"
+              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               errorTags SocketTimeoutException, "Read timed out"
               defaultTags()
             }

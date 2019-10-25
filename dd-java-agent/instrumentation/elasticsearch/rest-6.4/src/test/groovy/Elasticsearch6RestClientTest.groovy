@@ -2,8 +2,8 @@ import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import groovy.json.JsonSlurper
-import io.opentracing.tag.Tags
 import org.apache.http.HttpHost
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.util.EntityUtils
@@ -51,11 +51,11 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
     client = RestClient.builder(new HttpHost("localhost", httpPort))
       .setMaxRetryTimeoutMillis(Integer.MAX_VALUE)
       .setRequestConfigCallback(new RestClientBuilder.RequestConfigCallback() {
-      @Override
-      RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder builder) {
-        return builder.setConnectTimeout(Integer.MAX_VALUE).setSocketTimeout(Integer.MAX_VALUE)
-      }
-    })
+        @Override
+        RequestConfig.Builder customizeRequestConfig(RequestConfig.Builder builder) {
+          return builder.setConnectTimeout(Integer.MAX_VALUE).setSocketTimeout(Integer.MAX_VALUE)
+        }
+      })
       .build()
 
   }
@@ -86,13 +86,13 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           parent()
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_URL.key" "_cluster/health"
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" httpPort
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_URL" "_cluster/health"
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" httpPort
             defaultTags()
           }
         }
@@ -103,11 +103,11 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           tags {
-            "$Tags.COMPONENT.key" "apache-httpasyncclient"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_URL.key" "_cluster/health"
-            "$Tags.HTTP_STATUS.key" 200
+            "$Tags.COMPONENT" "apache-httpasyncclient"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_URL" "_cluster/health"
+            "$Tags.HTTP_STATUS" 200
             defaultTags()
           }
         }

@@ -8,7 +8,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import org.bson.BsonDocument
 import org.bson.BsonString
 import org.bson.Document
@@ -26,7 +26,7 @@ class MongoClientTest extends MongoBaseTest {
   def setup() throws Exception {
     client = new MongoClient(new ServerAddress("localhost", port),
       MongoClientOptions.builder()
-      .description("some-description")
+        .description("some-description")
         .build())
   }
 
@@ -248,16 +248,16 @@ class MongoClientTest extends MongoBaseTest {
         childOf((DDSpan) parentSpan)
       }
       tags {
-        "$Tags.COMPONENT.key" "java-mongo"
-        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-        "$Tags.DB_INSTANCE.key" instance
-        "$Tags.DB_STATEMENT.key" {
+        "$Tags.COMPONENT" "java-mongo"
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+        "$Tags.DB_INSTANCE" instance
+        "$Tags.DB_STATEMENT" {
           it.replace(" ", "") == statement
         }
-        "$Tags.DB_TYPE.key" "mongo"
-        "$Tags.PEER_HOSTNAME.key" "localhost"
-        "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-        "$Tags.PEER_PORT.key" port
+        "$Tags.DB_TYPE" "mongo"
+        "$Tags.PEER_HOSTNAME" "localhost"
+        "$Tags.PEER_HOST_IPV4" "127.0.0.1"
+        "$Tags.PEER_PORT" port
         defaultTags()
       }
     }

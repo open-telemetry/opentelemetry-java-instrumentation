@@ -4,9 +4,9 @@ import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.Tags;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.protocol.RedisCommand;
-import io.opentracing.tag.Tags;
 
 public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
   public static final LettuceClientDecorator DECORATE = new LettuceClientDecorator();
@@ -49,8 +49,8 @@ public class LettuceClientDecorator extends DatabaseClientDecorator<RedisURI> {
   @Override
   public AgentSpan onConnection(final AgentSpan span, final RedisURI connection) {
     if (connection != null) {
-      span.setTag(Tags.PEER_HOSTNAME.getKey(), connection.getHost());
-      span.setTag(Tags.PEER_PORT.getKey(), connection.getPort());
+      span.setTag(Tags.PEER_HOSTNAME, connection.getHost());
+      span.setTag(Tags.PEER_PORT, connection.getPort());
 
       span.setTag("db.redis.dbIndex", connection.getDatabase());
       span.setTag(

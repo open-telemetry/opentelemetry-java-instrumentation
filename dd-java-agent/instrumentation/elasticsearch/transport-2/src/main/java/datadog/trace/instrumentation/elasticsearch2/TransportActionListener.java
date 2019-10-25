@@ -4,7 +4,7 @@ import static datadog.trace.instrumentation.elasticsearch.ElasticsearchTransport
 
 import com.google.common.base.Joiner;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
@@ -49,9 +49,9 @@ public class TransportActionListener<T extends ActionResponse> implements Action
   @Override
   public void onResponse(final T response) {
     if (response.remoteAddress() != null) {
-      span.setTag(Tags.PEER_HOSTNAME.getKey(), response.remoteAddress().getHost());
-      span.setTag(Tags.PEER_HOST_IPV4.getKey(), response.remoteAddress().getAddress());
-      span.setTag(Tags.PEER_PORT.getKey(), response.remoteAddress().getPort());
+      span.setTag(Tags.PEER_HOSTNAME, response.remoteAddress().getHost());
+      span.setTag(Tags.PEER_HOST_IPV4, response.remoteAddress().getAddress());
+      span.setTag(Tags.PEER_PORT, response.remoteAddress().getPort());
     }
 
     if (response instanceof GetResponse) {

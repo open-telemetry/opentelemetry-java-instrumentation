@@ -1,8 +1,6 @@
 import datadog.opentracing.DDSpan
-import datadog.opentracing.scopemanager.ContinuableScope
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
-import io.opentracing.util.GlobalTracer
 
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CompletableFuture
@@ -10,6 +8,8 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.function.Function
 import java.util.function.Supplier
+
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope
 
 /**
  * Note: ideally this should live with the rest of ExecutorInstrumentationTest,
@@ -42,7 +42,7 @@ class CompletableFutureTest extends AgentTestRunner {
       @Override
       @Trace(operationName = "parent")
       CompletableFuture<String> get() {
-        ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
+        activeScope().setAsyncPropagation(true)
         return CompletableFuture.supplyAsync(supplier, pool)
           .thenCompose({ s -> CompletableFuture.supplyAsync(new AppendingSupplier(s), differentPool) })
           .thenApply(function)

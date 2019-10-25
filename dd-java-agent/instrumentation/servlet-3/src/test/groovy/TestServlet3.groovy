@@ -1,9 +1,9 @@
 import datadog.trace.agent.test.base.HttpServerTest
 import groovy.servlet.AbstractHttpServlet
+
 import javax.servlet.annotation.WebServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-
 import java.util.concurrent.Phaser
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR

@@ -1,15 +1,16 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentracing.tag.Tags
-import javax.servlet.Servlet
-import javax.servlet.http.HttpServletRequest
 import org.apache.catalina.core.ApplicationFilterChain
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
+
+import javax.servlet.Servlet
+import javax.servlet.http.HttpServletRequest
 
 import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
@@ -205,20 +206,20 @@ abstract class JettyDispatchTest extends JettyServlet3Test {
             }
 
             defaultTags(true)
-            "$Tags.COMPONENT.key" serverDecorator.component()
+            "$Tags.COMPONENT" serverDecorator.component()
             if (endpoint.errored) {
-              "$Tags.ERROR.key" endpoint.errored
+              "$Tags.ERROR" endpoint.errored
               "error.msg" { it == null || it == EXCEPTION.body }
               "error.type" { it == null || it == Exception.name }
               "error.stack" { it == null || it instanceof String }
             }
-            "$Tags.HTTP_STATUS.key" endpoint.status
-            "$Tags.HTTP_URL.key" "${endpoint.resolve(address)}"
-            "$Tags.PEER_HOSTNAME.key" { it == "localhost" || it == "127.0.0.1" }
-            "$Tags.PEER_PORT.key" Integer
-            "$Tags.PEER_HOST_IPV4.key" { it == null || it == "127.0.0.1" } // Optional
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_STATUS" endpoint.status
+            "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+            "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
+            "$Tags.PEER_PORT" Integer
+            "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
           }
         }
       }

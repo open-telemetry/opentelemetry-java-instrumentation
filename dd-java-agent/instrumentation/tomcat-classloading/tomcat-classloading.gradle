@@ -1,4 +1,3 @@
-
 muzzle {
   pass {
     group = "org.apache.tomcat"

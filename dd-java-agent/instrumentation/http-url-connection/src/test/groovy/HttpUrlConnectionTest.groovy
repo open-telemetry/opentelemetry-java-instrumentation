@@ -1,15 +1,15 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
-import io.opentracing.tag.Tags
-import io.opentracing.util.GlobalTracer
 import spock.lang.Ignore
 import spock.lang.Requires
 import sun.net.www.protocol.https.HttpsURLConnectionImpl
 
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope
 import static datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionInstrumentation.HttpUrlState.OPERATION_NAME
 
 class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
@@ -25,9 +25,9 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
       headers.each { connection.setRequestProperty(it.key, it.value) }
       connection.setRequestProperty("Connection", "close")
       connection.useCaches = true
-      def parentSpan = GlobalTracer.get().scopeManager().active()
+      def parentSpan = activeScope()
       def stream = connection.inputStream
-      assert GlobalTracer.get().scopeManager().active() == parentSpan
+      assert activeScope() == parentSpan
       stream.readLines()
       stream.close()
       callback?.call()
@@ -55,7 +55,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
       runUnderTrace("someTrace") {
         HttpURLConnection connection = url.openConnection()
         connection.useCaches = useCaches
-        assert GlobalTracer.get().scopeManager().active() != null
+        assert activeScope() != null
         def stream = connection.inputStream
         def lines = stream.readLines()
         stream.close()
@@ -65,7 +65,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         // call again to ensure the cycling is ok
         connection = url.openConnection()
         connection.useCaches = useCaches
-        assert GlobalTracer.get().scopeManager().active() != null
+        assert activeScope() != null
         assert connection.getResponseCode() == STATUS // call before input stream to test alternate behavior
         connection.inputStream
         stream = connection.inputStream // one more to ensure state is working
@@ -96,13 +96,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "http-url-connection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" STATUS
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.COMPONENT" "http-url-connection"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_URL" "$url"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" STATUS
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -114,13 +114,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "http-url-connection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" STATUS
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.COMPONENT" "http-url-connection"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_URL" "$url"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" STATUS
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -141,7 +141,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         HttpURLConnection connection = url.openConnection()
         connection.useCaches = useCaches
         connection.addRequestProperty("is-dd-server", "false")
-        assert GlobalTracer.get().scopeManager().active() != null
+        assert activeScope() != null
         def stream = connection.inputStream
         connection.inputStream // one more to ensure state is working
         def lines = stream.readLines()
@@ -153,7 +153,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         connection = url.openConnection()
         connection.useCaches = useCaches
         connection.addRequestProperty("is-dd-server", "false")
-        assert GlobalTracer.get().scopeManager().active() != null
+        assert activeScope() != null
         assert connection.getResponseCode() == STATUS // call before input stream to test alternate behavior
         stream = connection.inputStream
         lines = stream.readLines()
@@ -181,13 +181,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "http-url-connection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" STATUS
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.COMPONENT" "http-url-connection"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_URL" "$url"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" STATUS
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -199,13 +199,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "http-url-connection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" STATUS
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.COMPONENT" "http-url-connection"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_URL" "$url"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" STATUS
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -226,7 +226,7 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         HttpURLConnection connection = url.openConnection()
         connection.setRequestProperty("Connection", "close")
         connection.addRequestProperty("is-dd-server", "false")
-        assert GlobalTracer.get().scopeManager().active() != null
+        assert activeScope() != null
         assert connection.getResponseCode() == STATUS
         return connection
       }
@@ -251,13 +251,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "http-url-connection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" STATUS
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.COMPONENT" "http-url-connection"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_URL" "$url"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" STATUS
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -319,13 +319,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           childOf span(0)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "http-url-connection"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_URL.key" "$url"
-            "$Tags.HTTP_METHOD.key" "POST"
-            "$Tags.HTTP_STATUS.key" STATUS
-            "$Tags.PEER_HOSTNAME.key" "localhost"
-            "$Tags.PEER_PORT.key" server.address.port
+            "$Tags.COMPONENT" "http-url-connection"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_URL" "$url"
+            "$Tags.HTTP_METHOD" "POST"
+            "$Tags.HTTP_STATUS" STATUS
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }

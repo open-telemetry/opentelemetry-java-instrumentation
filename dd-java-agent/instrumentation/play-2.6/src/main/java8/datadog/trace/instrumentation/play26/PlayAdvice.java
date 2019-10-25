@@ -10,7 +10,7 @@ import static datadog.trace.instrumentation.play26.PlayHttpServerDecorator.DECOR
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.AgentSpan.Context;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import net.bytebuddy.asm.Advice;
 import play.api.mvc.Action;
 import play.api.mvc.Request;
@@ -55,7 +55,7 @@ public class PlayAdvice {
           ((Action) thisAction).executionContext());
     } else {
       DECORATE.onError(playControllerSpan, throwable);
-      playControllerSpan.setTag(Tags.HTTP_STATUS.getKey(), 500);
+      playControllerSpan.setTag(Tags.HTTP_STATUS, 500);
       DECORATE.beforeFinish(playControllerSpan);
       playControllerSpan.finish();
     }

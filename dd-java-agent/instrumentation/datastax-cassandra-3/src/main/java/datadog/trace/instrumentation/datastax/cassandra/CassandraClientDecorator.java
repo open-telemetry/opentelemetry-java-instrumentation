@@ -6,7 +6,7 @@ import com.datastax.driver.core.Session;
 import datadog.trace.agent.decorator.DatabaseClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 
 public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
   public static final CassandraClientDecorator DECORATE = new CassandraClientDecorator();
@@ -49,7 +49,7 @@ public class CassandraClientDecorator extends DatabaseClientDecorator<Session> {
   public AgentSpan onResponse(final AgentSpan span, final ResultSet result) {
     if (result != null) {
       final Host host = result.getExecutionInfo().getQueriedHost();
-      span.setTag(Tags.PEER_PORT.getKey(), host.getSocketAddress().getPort());
+      span.setTag(Tags.PEER_PORT, host.getSocketAddress().getPort());
       onPeerConnection(span, host.getSocketAddress().getAddress());
     }
     return span;

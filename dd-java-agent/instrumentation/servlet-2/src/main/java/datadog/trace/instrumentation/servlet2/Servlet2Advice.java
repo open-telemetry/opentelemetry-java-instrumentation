@@ -12,7 +12,7 @@ import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.AgentSpan.Context;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import java.security.Principal;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -84,7 +84,7 @@ public class Servlet2Advice {
           && ((StatusSavingHttpServletResponseWrapper) response).status
               == HttpServletResponse.SC_OK) {
         // exception was thrown but status code wasn't set
-        span.setTag(Tags.HTTP_STATUS.getKey(), 500);
+        span.setTag(Tags.HTTP_STATUS, 500);
       }
       DECORATE.onError(span, throwable);
     }

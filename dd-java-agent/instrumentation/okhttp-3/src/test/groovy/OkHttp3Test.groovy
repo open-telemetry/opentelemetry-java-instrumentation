@@ -3,8 +3,8 @@ import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
+import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.okhttp3.OkHttpClientDecorator
-import io.opentracing.tag.Tags
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -55,8 +55,8 @@ class OkHttp3Test extends HttpClientTest<OkHttpClientDecorator> {
         if (exception) {
           errorTags(exception.class, exception.message)
         }
-        "$Tags.COMPONENT.key" clientDecorator.component()
-        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+        "$Tags.COMPONENT" clientDecorator.component()
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
       }
     }
     if (!exception) {
@@ -72,20 +72,20 @@ class OkHttp3Test extends HttpClientTest<OkHttpClientDecorator> {
           if (exception) {
             errorTags(exception.class, exception.message)
           }
-          "$Tags.COMPONENT.key" NETWORK_DECORATE.component()
+          "$Tags.COMPONENT" NETWORK_DECORATE.component()
           if (status) {
-            "$Tags.HTTP_STATUS.key" status
+            "$Tags.HTTP_STATUS" status
           }
-          "$Tags.HTTP_URL.key" "${uri.resolve(uri.path)}"
+          "$Tags.HTTP_URL" "${uri.resolve(uri.path)}"
           if (tagQueryString) {
             "$DDTags.HTTP_QUERY" uri.query
             "$DDTags.HTTP_FRAGMENT" uri.fragment
           }
-          "$Tags.PEER_HOSTNAME.key" "localhost"
-          "$Tags.PEER_PORT.key" server.address.port
-          "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-          "$Tags.HTTP_METHOD.key" method
-          "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+          "$Tags.PEER_HOSTNAME" "localhost"
+          "$Tags.PEER_PORT" server.address.port
+          "$Tags.PEER_HOST_IPV4" "127.0.0.1"
+          "$Tags.HTTP_METHOD" method
+          "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         }
       }
     }

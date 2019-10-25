@@ -4,9 +4,9 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator
 import datadog.trace.instrumentation.play24.PlayHttpServerDecorator
-import io.opentracing.tag.Tags
 import play.mvc.Results
 import play.routing.RoutingDsl
 import play.server.Server
@@ -87,15 +87,15 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf(parent as DDSpan)
       tags {
-        "$Tags.COMPONENT.key" PlayHttpServerDecorator.DECORATE.component()
-        "$Tags.HTTP_STATUS.key" Integer
-        "$Tags.HTTP_URL.key" String
-        "$Tags.PEER_HOST_IPV4.key" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_METHOD.key" String
-        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+        "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.component()
+        "$Tags.HTTP_STATUS" Integer
+        "$Tags.HTTP_URL" String
+        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+        "$Tags.HTTP_METHOD" String
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         defaultTags()
         if (endpoint == ERROR) {
-          "$Tags.ERROR.key" true
+          "$Tags.ERROR" true
         } else if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }

@@ -3,13 +3,13 @@ package springdata
 import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
-import java.lang.reflect.Proxy
 
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
+import java.lang.reflect.Proxy
 
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
@@ -74,8 +74,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           operationName "repository.operation"
           resourceName "CrudRepository.findAll"
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -89,9 +89,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           childOf(span(0))
 
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName
@@ -120,8 +120,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           resourceName "ElasticsearchRepository.index"
           operationName "repository.operation"
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -132,9 +132,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           childOf(span(0))
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -151,9 +151,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           childOf(span(0))
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -180,8 +180,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           resourceName "CrudRepository.findById"
           operationName "repository.operation"
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -193,9 +193,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           childOf(span(0))
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -223,8 +223,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           resourceName "ElasticsearchRepository.index"
           operationName "repository.operation"
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -234,9 +234,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           childOf(span(0))
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -252,9 +252,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           childOf(span(0))
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -273,8 +273,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           resourceName "CrudRepository.findById"
           operationName "repository.operation"
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -286,9 +286,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           childOf(span(0))
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -315,8 +315,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           resourceName "CrudRepository.deleteById"
           operationName "repository.operation"
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -327,9 +327,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           childOf(span(0))
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "elasticsearch.action" "RefreshAction"
             "elasticsearch.request" "RefreshRequest"
             "elasticsearch.request.indices" indexName
@@ -345,9 +345,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           childOf(span(0))
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "elasticsearch.action" "DeleteAction"
             "elasticsearch.request" "DeleteRequest"
             "elasticsearch.request.indices" indexName
@@ -366,8 +366,8 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           resourceName "CrudRepository.findAll"
           operationName "repository.operation"
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -379,9 +379,9 @@ class Elasticsearch53SpringRepositoryTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           childOf(span(0))
           tags {
-            "$Tags.COMPONENT.key" "elasticsearch-java"
-            "$Tags.DB_TYPE.key" "elasticsearch"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "elasticsearch-java"
+            "$Tags.DB_TYPE" "elasticsearch"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "elasticsearch.action" "SearchAction"
             "elasticsearch.request" "SearchRequest"
             "elasticsearch.request.indices" indexName

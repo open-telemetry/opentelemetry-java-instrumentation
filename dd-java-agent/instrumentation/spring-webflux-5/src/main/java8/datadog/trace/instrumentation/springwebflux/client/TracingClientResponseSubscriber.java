@@ -49,22 +49,22 @@ public class TracingClientResponseSubscriber implements CoreSubscriber<ClientRes
       DECORATE.onRequest(span, clientRequest);
 
       subscriber.onSubscribe(
-        new Subscription() {
-          @Override
-          public void request(final long n) {
-            try (final AgentScope scope = activateSpan(span, false)) {
-              subscription.request(n);
+          new Subscription() {
+            @Override
+            public void request(final long n) {
+              try (final AgentScope scope = activateSpan(span, false)) {
+                subscription.request(n);
+              }
             }
-          }
 
-          @Override
-          public void cancel() {
-            DECORATE.onCancel(span);
-            DECORATE.beforeFinish(span);
-            subscription.cancel();
-            span.finish();
-          }
-        });
+            @Override
+            public void cancel() {
+              DECORATE.onCancel(span);
+              DECORATE.beforeFinish(span);
+              subscription.cancel();
+              span.finish();
+            }
+          });
     }
   }
 

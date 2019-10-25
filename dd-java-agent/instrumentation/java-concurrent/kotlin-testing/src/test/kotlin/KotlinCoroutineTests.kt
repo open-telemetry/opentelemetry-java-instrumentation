@@ -1,9 +1,11 @@
 import datadog.trace.api.Trace
-import datadog.trace.context.TraceScope
-import io.opentracing.Scope
-import io.opentracing.util.GlobalTracer
+import datadog.trace.instrumentation.api.AgentTracer.activeScope
+import datadog.trace.instrumentation.api.AgentTracer.activeSpan
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.*
+import kotlinx.coroutines.channels.actor
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.channels.toChannel
 import kotlinx.coroutines.selects.select
 import java.util.concurrent.TimeUnit
 
@@ -12,7 +14,7 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
   @Trace
   fun tracedAcrossChannels(): Int = runTest {
     val producer = produce {
-      repeat(3){
+      repeat(3) {
         tracedChild("produce_$it")
         send(it)
       }
@@ -92,7 +94,7 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
     5
   }
 
-   /**
+  /**
    * @return Number of expected spans in the trace
    */
   @Trace
@@ -121,20 +123,17 @@ class KotlinCoroutineTests(private val dispatcher: CoroutineDispatcher) {
       }
     }
 
-   4
+    4
   }
 
   @Trace
-  fun tracedChild(opName: String){
-    GlobalTracer.get().activeSpan().setOperationName(opName)
+  fun tracedChild(opName: String) {
+    activeSpan().setSpanName(opName)
   }
 
-  private fun <T> runTest(asyncPropagation: Boolean = true, block: suspend CoroutineScope.()->T ): T {
-    GlobalTracer.get().scopeManager().active().setAsyncPropagation(asyncPropagation)
-    return runBlocking(dispatcher,block = block)
+  private fun <T> runTest(asyncPropagation: Boolean = true, block: suspend CoroutineScope.() -> T): T {
+    activeScope().setAsyncPropagation(asyncPropagation)
+    return runBlocking(dispatcher, block = block)
   }
-
-  private fun Scope.setAsyncPropagation(value: Boolean): Unit =
-    (this as TraceScope).setAsyncPropagation(value)
 }
 

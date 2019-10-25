@@ -4,7 +4,7 @@ import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import org.apache.kafka.streams.processor.internals.StampedRecord;
 
 public class KafkaStreamsDecorator extends ClientDecorator {

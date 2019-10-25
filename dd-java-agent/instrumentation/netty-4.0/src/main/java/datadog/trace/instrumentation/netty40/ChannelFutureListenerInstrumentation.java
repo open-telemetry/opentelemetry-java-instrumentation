@@ -15,9 +15,9 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
+import datadog.trace.instrumentation.api.Tags;
 import datadog.trace.instrumentation.netty40.server.NettyHttpServerDecorator;
 import io.netty.channel.ChannelFuture;
-import io.opentracing.tag.Tags;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -95,8 +95,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
       }
       final TraceScope parentScope = continuation.activate();
 
-      final AgentSpan errorSpan =
-          startSpan("netty.connect").setTag(Tags.COMPONENT.getKey(), "netty");
+      final AgentSpan errorSpan = startSpan("netty.connect").setTag(Tags.COMPONENT, "netty");
       try (final AgentScope scope = activateSpan(errorSpan, false)) {
         NettyHttpServerDecorator.DECORATE.onError(errorSpan, cause);
         NettyHttpServerDecorator.DECORATE.beforeFinish(errorSpan);

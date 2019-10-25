@@ -2,11 +2,8 @@ package datadog.trace.agent.test.server.http
 
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.ListWriterAssert
-import io.opentracing.SpanContext
-import io.opentracing.Tracer
-import io.opentracing.propagation.Format
-import io.opentracing.tag.Tags
-import io.opentracing.util.GlobalTracer
+import datadog.trace.instrumentation.api.AgentSpan
+import datadog.trace.instrumentation.api.Tags
 import org.eclipse.jetty.http.HttpMethods
 import org.eclipse.jetty.server.Handler
 import org.eclipse.jetty.server.Request
@@ -18,6 +15,10 @@ import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.util.concurrent.atomic.AtomicReference
+
+import static datadog.trace.agent.test.server.http.HttpServletRequestExtractAdapter.GETTER
+import static datadog.trace.instrumentation.api.AgentTracer.propagate
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan
 
 class TestHttpServer implements AutoCloseable {
 
@@ -37,8 +38,6 @@ class TestHttpServer implements AutoCloseable {
 
   private final Server internalServer
   private HandlersSpec handlers
-
-  public Tracer tracer = GlobalTracer.get()
 
 
   private URI address
@@ -105,7 +104,7 @@ class TestHttpServer implements AutoCloseable {
           childOf(parentSpan)
         }
         tags {
-          "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
+          "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
           defaultTags(parentSpan != null)
         }
       }
@@ -233,15 +232,14 @@ class TestHttpServer implements AutoCloseable {
         isDDServer = Boolean.parseBoolean(request.getHeader("is-dd-server"))
       }
       if (isDDServer) {
-        final SpanContext extractedContext =
-          tracer.extract(Format.Builtin.HTTP_HEADERS, new HttpServletRequestExtractAdapter(req))
-        def builder = tracer
-          .buildSpan("test-http-server")
-          .withTag(Tags.SPAN_KIND.key, Tags.SPAN_KIND_SERVER)
+        final AgentSpan.Context extractedContext = propagate().extract(req, GETTER)
         if (extractedContext != null) {
-          builder.asChildOf(extractedContext)
+          startSpan("test-http-server", extractedContext)
+            .setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER).finish()
+        } else {
+          startSpan("test-http-server")
+            .setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_SERVER).finish()
         }
-        builder.start().finish()
       }
     }
 

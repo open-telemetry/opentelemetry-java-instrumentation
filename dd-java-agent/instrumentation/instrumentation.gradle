@@ -16,7 +16,7 @@ plugins {
 apply from: "${rootDir}/gradle/java.gradle"
 
 Project instr_project = project
-subprojects {Project subProj ->
+subprojects { Project subProj ->
   apply plugin: "net.bytebuddy.byte-buddy"
   apply plugin: 'muzzle'
 
@@ -48,12 +48,10 @@ subprojects {Project subProj ->
       compile project(':dd-trace-api')
       compile project(':dd-java-agent:agent-tooling')
       compile deps.bytebuddy
-      compile deps.opentracing
-      if(jdkCompile) {
+      if (jdkCompile) {
         "$jdkCompile" project(':dd-trace-api')
         "$jdkCompile" project(':dd-java-agent:agent-tooling')
         "$jdkCompile" deps.bytebuddy
-        "$jdkCompile" deps.opentracing
       }
       annotationProcessor deps.autoservice
       implementation deps.autoservice
@@ -80,10 +78,8 @@ dependencies {
 
 configurations {
   // exclude bootstrap dependencies from shadowJar
-  runtime.exclude module: deps.opentracing
   runtime.exclude module: deps.slf4j
   runtime.exclude group: 'org.slf4j'
-  runtime.exclude group: 'io.opentracing'
 }
 
 shadowJar {

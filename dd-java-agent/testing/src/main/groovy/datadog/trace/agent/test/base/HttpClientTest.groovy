@@ -7,7 +7,7 @@ import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Unroll
@@ -324,20 +324,20 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
         if (exception) {
           errorTags(exception.class, exception.message)
         }
-        "$Tags.COMPONENT.key" clientDecorator.component()
+        "$Tags.COMPONENT" clientDecorator.component()
         if (status) {
-          "$Tags.HTTP_STATUS.key" status
+          "$Tags.HTTP_STATUS" status
         }
-        "$Tags.HTTP_URL.key" "${uri.resolve(uri.path)}"
+        "$Tags.HTTP_URL" "${uri.resolve(uri.path)}"
         if (tagQueryString) {
           "$DDTags.HTTP_QUERY" uri.query
           "$DDTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
         }
-        "$Tags.PEER_HOSTNAME.key" "localhost"
-        "$Tags.PEER_PORT.key" uri.port
-        "$Tags.PEER_HOST_IPV4.key" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_METHOD.key" method
-        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+        "$Tags.PEER_HOSTNAME" "localhost"
+        "$Tags.PEER_PORT" uri.port
+        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+        "$Tags.HTTP_METHOD" method
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
       }
     }
   }

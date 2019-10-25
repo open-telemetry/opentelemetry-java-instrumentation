@@ -17,9 +17,9 @@ import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentracing.tag.Tags
 import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit
@@ -147,9 +147,9 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
         childOf((DDSpan) parentSpan)
       }
       tags {
-        "$Tags.COMPONENT.key" "couchbase-client"
-        "$Tags.DB_TYPE.key" "couchbase"
-        "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+        "$Tags.COMPONENT" "couchbase-client"
+        "$Tags.DB_TYPE" "couchbase"
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         if (bucketName != null) {
           "bucket" bucketName
         }

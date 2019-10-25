@@ -1,7 +1,7 @@
 import com.netflix.hystrix.HystrixObservableCommand
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import rx.Observable
 import rx.schedulers.Schedulers
 import spock.lang.Retry
@@ -93,7 +93,7 @@ class HystrixObservableChainTest extends AgentTestRunner {
             "hystrix.command" "HystrixObservableChainTest\$2"
             "hystrix.group" "OtherGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT.key" "hystrix"
+            "$Tags.COMPONENT" "hystrix"
             defaultTags()
           }
         }
@@ -105,7 +105,7 @@ class HystrixObservableChainTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
@@ -120,7 +120,7 @@ class HystrixObservableChainTest extends AgentTestRunner {
             "hystrix.command" "HystrixObservableChainTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT.key" "hystrix"
+            "$Tags.COMPONENT" "hystrix"
             defaultTags()
           }
         }
@@ -132,7 +132,7 @@ class HystrixObservableChainTest extends AgentTestRunner {
           childOf span(3)
           errored false
           tags {
-            "$Tags.COMPONENT.key" "trace"
+            "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }

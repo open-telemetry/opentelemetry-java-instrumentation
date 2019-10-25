@@ -4,7 +4,7 @@ import datadog.trace.agent.decorator.ClientDecorator;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import java.lang.reflect.Method;
 import javax.jms.Destination;
 import javax.jms.Message;

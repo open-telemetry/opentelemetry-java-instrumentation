@@ -2,8 +2,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import datadog.trace.api.Trace
-import datadog.trace.context.TraceScope
-import io.opentracing.util.GlobalTracer
+import datadog.trace.instrumentation.api.AgentTracer.{activeScope, activeSpan}
 
 import scala.concurrent.duration._
 
@@ -21,7 +20,7 @@ object AkkaActors {
 
   @Trace
   def tracedChild(opName: String): Unit = {
-    GlobalTracer.get().activeSpan().setOperationName(opName)
+    activeSpan().setSpanName(opName)
   }
 }
 
@@ -34,21 +33,21 @@ class AkkaActors {
 
   @Trace
   def basicTell(): Unit = {
-    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
+    activeScope().setAsyncPropagation(true)
     howdyGreeter ! WhoToGreet("Akka")
     howdyGreeter ! Greet
   }
 
   @Trace
   def basicAsk(): Unit = {
-    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
+    activeScope().setAsyncPropagation(true)
     howdyGreeter ! WhoToGreet("Akka")
     howdyGreeter ? Greet
   }
 
   @Trace
   def basicForward(): Unit = {
-    GlobalTracer.get().scopeManager().active().asInstanceOf[TraceScope].setAsyncPropagation(true)
+    activeScope().setAsyncPropagation(true)
     helloGreeter ! WhoToGreet("Akka")
     helloGreeter ? Greet
   }

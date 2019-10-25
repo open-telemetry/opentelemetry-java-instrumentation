@@ -14,7 +14,7 @@ import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.bootstrap.ContextStore;
 import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import java.util.Collections;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
@@ -66,13 +66,12 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
 
       final AgentSpan span = contextStore.get(request);
       if (span != null) {
-        span.setTag(Tags.PEER_HOSTNAME.getKey(), remoteHostname);
+        span.setTag(Tags.PEER_HOSTNAME, remoteHostname);
 
         if (remoteSocket != null) {
           final int splitIndex = remoteSocket.lastIndexOf(":");
           if (splitIndex != -1) {
-            span.setTag(
-                Tags.PEER_PORT.getKey(), Integer.parseInt(remoteSocket.substring(splitIndex + 1)));
+            span.setTag(Tags.PEER_PORT, Integer.parseInt(remoteSocket.substring(splitIndex + 1)));
           }
         }
 

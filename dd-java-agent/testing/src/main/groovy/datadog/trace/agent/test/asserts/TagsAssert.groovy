@@ -2,9 +2,9 @@ package datadog.trace.agent.test.asserts
 
 import datadog.opentracing.DDSpan
 import datadog.trace.api.Config
+import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import io.opentracing.tag.Tags
 
 import java.util.regex.Pattern
 
@@ -50,7 +50,7 @@ class TagsAssert {
       assert tags[Config.RUNTIME_ID_TAG] == null
     }
 
-    boolean isServer = (tags[Tags.SPAN_KIND.key] == Tags.SPAN_KIND_SERVER)
+    boolean isServer = (tags[Tags.SPAN_KIND] == Tags.SPAN_KIND_SERVER)
     if (isRoot || distributedRootSpan || isServer) {
       assert tags[Config.LANGUAGE_TAG_KEY] == Config.LANGUAGE_TAG_VALUE
     } else {

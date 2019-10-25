@@ -19,7 +19,7 @@ dependencies {
   testCompile group: 'org.apache.tomcat', name: 'tomcat-juli', version: '7.0.19'
   testCompile group: 'com.zaxxer', name: 'HikariCP', version: '2.4.0'
   testCompile group: 'com.mchange', name: 'c3p0', version: '0.9.5'
-  
+
   latestDepTestCompile group: 'com.h2database', name: 'h2', version: '+'
   latestDepTestCompile group: 'org.apache.derby', name: 'derby', version: '10.14.+'
   latestDepTestCompile group: 'org.hsqldb', name: 'hsqldb', version: '+'

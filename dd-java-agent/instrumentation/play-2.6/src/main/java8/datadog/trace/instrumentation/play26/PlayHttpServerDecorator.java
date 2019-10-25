@@ -3,7 +3,7 @@ package datadog.trace.instrumentation.play26;
 import datadog.trace.agent.decorator.HttpServerDecorator;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.URI;
@@ -77,7 +77,7 @@ public class PlayHttpServerDecorator extends HttpServerDecorator<Request, Reques
 
   @Override
   public AgentSpan onError(final AgentSpan span, Throwable throwable) {
-    span.setTag(Tags.HTTP_STATUS.getKey(), 500);
+    span.setTag(Tags.HTTP_STATUS, 500);
     if (throwable != null
         // This can be moved to instanceof check when using Java 8.
         && throwable.getClass().getName().equals("java.util.concurrent.CompletionException")

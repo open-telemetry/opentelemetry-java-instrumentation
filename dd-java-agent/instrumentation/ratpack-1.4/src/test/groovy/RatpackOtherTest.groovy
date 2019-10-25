@@ -1,21 +1,12 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.OkHttpUtils
 import datadog.trace.api.DDSpanTypes
-import datadog.trace.api.DDTags
-import datadog.trace.context.TraceScope
-import io.opentracing.Scope
-import io.opentracing.tag.Tags
-import io.opentracing.util.GlobalTracer
+import datadog.trace.instrumentation.api.Tags
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import ratpack.exec.Promise
-import ratpack.exec.util.ParallelBatch
 import ratpack.groovy.test.embed.GroovyEmbeddedApp
 import ratpack.path.PathBinding
-import ratpack.test.exec.ExecHarness
-
-import java.util.concurrent.CountDownLatch
 
 class RatpackOtherTest extends AgentTestRunner {
 
@@ -79,14 +70,14 @@ class RatpackOtherTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "$Tags.COMPONENT.key" "netty"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${app.address.resolve(path)}"
-            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
-            "$Tags.PEER_HOST_IPV4.key" "127.0.0.1"
-            "$Tags.PEER_PORT.key" Integer
+            "$Tags.COMPONENT" "netty"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" 200
+            "$Tags.HTTP_URL" "${app.address.resolve(path)}"
+            "$Tags.PEER_HOSTNAME" "$app.address.host"
+            "$Tags.PEER_HOST_IPV4" "127.0.0.1"
+            "$Tags.PEER_PORT" Integer
             defaultTags()
           }
         }
@@ -98,13 +89,13 @@ class RatpackOtherTest extends AgentTestRunner {
           childOf(span(0))
           errored false
           tags {
-            "$Tags.COMPONENT.key" "ratpack"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_SERVER
-            "$Tags.HTTP_METHOD.key" "GET"
-            "$Tags.HTTP_STATUS.key" 200
-            "$Tags.HTTP_URL.key" "${app.address.resolve(path)}"
-            "$Tags.PEER_HOSTNAME.key" "$app.address.host"
-            "$Tags.PEER_PORT.key" Integer
+            "$Tags.COMPONENT" "ratpack"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" 200
+            "$Tags.HTTP_URL" "${app.address.resolve(path)}"
+            "$Tags.PEER_HOSTNAME" "$app.address.host"
+            "$Tags.PEER_PORT" Integer
             defaultTags()
           }
         }
@@ -124,52 +115,5 @@ class RatpackOtherTest extends AgentTestRunner {
     "e/123" | "e/:val?:\\d+"
     "e/foo" | "e/:val?:\\d+"
     "f/123" | "f/:val:\\d+"
-  }
-
-  def "forked executions inherit parent scope"() {
-    when:
-    def result = ExecHarness.yieldSingle({}, {
-      final Scope scope =
-        GlobalTracer.get()
-          .buildSpan("ratpack.exec-test")
-          .withTag(DDTags.RESOURCE_NAME, "INSIDE-TEST")
-          .startActive(true)
-
-      ((TraceScope) scope).setAsyncPropagation(true)
-      scope.span().setBaggageItem("test-baggage", "foo")
-      ParallelBatch.of(testPromise(), testPromise())
-        .yield()
-        .map({ now ->
-          // close the scope now that we got the baggage inside the promises
-          scope.close()
-          return now
-        })
-    })
-
-    then:
-    result.valueOrThrow == ["foo", "foo"]
-    assertTraces(1) {
-      trace(0, 1) {
-        span(0) {
-          resourceName "INSIDE-TEST"
-          serviceName "unnamed-java-app"
-          operationName "ratpack.exec-test"
-          parent()
-          errored false
-          tags {
-            defaultTags()
-          }
-        }
-      }
-    }
-  }
-
-  // returns a promise that contains the active scope's "test-baggage" baggage
-  Promise<String> testPromise(CountDownLatch latch = null) {
-    Promise.sync {
-      latch?.await()
-      Scope tracerScope = GlobalTracer.get().scopeManager().active()
-      return tracerScope?.span()?.getBaggageItem("test-baggage")
-    }
   }
 }

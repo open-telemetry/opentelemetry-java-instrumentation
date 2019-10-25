@@ -3,7 +3,7 @@ package datadog.trace.instrumentation.jetty8;
 import static datadog.trace.instrumentation.jetty8.JettyDecorator.DECORATE;
 
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.AsyncEvent;
@@ -45,7 +45,7 @@ public class TagSettingAsyncListener implements AsyncListener {
       if (((HttpServletResponse) event.getSuppliedResponse()).getStatus()
           == HttpServletResponse.SC_OK) {
         // exception is thrown in filter chain, but status code is incorrect
-        span.setTag(Tags.HTTP_STATUS.getKey(), 500);
+        span.setTag(Tags.HTTP_STATUS, 500);
       }
       DECORATE.onError(span, event.getThrowable());
       DECORATE.beforeFinish(span);

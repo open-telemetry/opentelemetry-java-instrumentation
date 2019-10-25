@@ -1,11 +1,9 @@
 import datadog.opentracing.DDSpan
-import datadog.opentracing.scopemanager.ContinuableScope
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.Trace
 import datadog.trace.bootstrap.instrumentation.java.concurrent.CallableWrapper
 import datadog.trace.bootstrap.instrumentation.java.concurrent.RunnableWrapper
-import io.opentracing.util.GlobalTracer
 import spock.lang.Shared
 
 import java.lang.reflect.InvocationTargetException
@@ -25,6 +23,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope
 import static org.junit.Assume.assumeTrue
 
 class ExecutorInstrumentationTest extends AgentTestRunner {
@@ -70,7 +69,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
       @Override
       @Trace(operationName = "parent")
       void run() {
-        ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
+        activeScope().setAsyncPropagation(true)
         // this child will have a span
         m(pool, new JavaAsyncChild())
         // this child won't
@@ -151,7 +150,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
       @Override
       @Trace(operationName = "parent")
       void run() {
-        ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
+        activeScope().setAsyncPropagation(true)
         m(pool, w(child))
       }
     }.run()
@@ -195,7 +194,7 @@ class ExecutorInstrumentationTest extends AgentTestRunner {
       @Override
       @Trace(operationName = "parent")
       void run() {
-        ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
+        activeScope().setAsyncPropagation(true)
         try {
           for (int i = 0; i < 20; ++i) {
             // Our current instrumentation instrumentation does not behave very well

@@ -39,12 +39,6 @@ public abstract class BaseDecorator {
     return false;
   }
 
-  public AgentScope afterStart(final AgentScope scope) {
-    assert scope != null;
-    afterStart(scope.span());
-    return scope;
-  }
-
   public AgentSpan afterStart(final AgentSpan span) {
     assert span != null;
     if (spanType() != null) {

@@ -1,12 +1,11 @@
 package datadog.trace.instrumentation.ratpack;
 
-import java.util.Optional;
+import static datadog.trace.instrumentation.ratpack.RatpackServerDecorator.DECORATE;
 
 import datadog.trace.instrumentation.api.AgentSpan;
+import java.util.Optional;
 import net.bytebuddy.asm.Advice;
 import ratpack.handling.Context;
-
-import static datadog.trace.instrumentation.ratpack.RatpackServerDecorator.DECORATE;
 
 public class ErrorHandlerAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class)

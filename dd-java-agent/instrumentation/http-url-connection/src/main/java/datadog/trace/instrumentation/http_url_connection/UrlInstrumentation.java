@@ -16,7 +16,7 @@ import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.InternalJarURLHandler;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import java.net.URL;
 import java.net.URLStreamHandler;
 import java.util.Map;
@@ -66,14 +66,14 @@ public class UrlInstrumentation extends Instrumenter.Default {
 
         final AgentSpan span =
             startSpan(protocol + ".request")
-                .setTag(Tags.SPAN_KIND.getKey(), Tags.SPAN_KIND_CLIENT)
+                .setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_CLIENT)
                 .setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_CLIENT)
-                .setTag(Tags.COMPONENT.getKey(), COMPONENT);
+                .setTag(Tags.COMPONENT, COMPONENT);
 
         try (final AgentScope scope = activateSpan(span, false)) {
-          span.setTag(Tags.HTTP_URL.getKey(), url.toString());
-          span.setTag(Tags.PEER_PORT.getKey(), url.getPort() == -1 ? 80 : url.getPort());
-          span.setTag(Tags.PEER_HOSTNAME.getKey(), url.getHost());
+          span.setTag(Tags.HTTP_URL, url.toString());
+          span.setTag(Tags.PEER_PORT, url.getPort() == -1 ? 80 : url.getPort());
+          span.setTag(Tags.PEER_HOSTNAME, url.getHost());
           if (Config.get().isHttpClientSplitByDomain()) {
             span.setTag(DDTags.SERVICE_NAME, url.getHost());
           }

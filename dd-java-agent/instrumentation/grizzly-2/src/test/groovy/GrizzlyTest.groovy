@@ -1,13 +1,14 @@
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.instrumentation.grizzly.GrizzlyDecorator
+import org.glassfish.grizzly.http.server.HttpServer
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
+import org.glassfish.jersey.server.ResourceConfig
+
 import javax.ws.rs.GET
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.Path
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
-import org.glassfish.grizzly.http.server.HttpServer
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory
-import org.glassfish.jersey.server.ResourceConfig
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION

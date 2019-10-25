@@ -131,7 +131,7 @@ class KafkaClientTest extends AgentTestRunner {
     def kafkaPartition = 0
     def consumerProperties = KafkaTestUtils.consumerProps("sender", "false", embeddedKafka)
     consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-    def consumer = new KafkaConsumer<String,String>(consumerProperties)
+    def consumer = new KafkaConsumer<String, String>(consumerProperties)
 
     def senderProps = KafkaTestUtils.senderProps(embeddedKafka.getBrokersAsString())
     def producer = new KafkaProducer(senderProps)

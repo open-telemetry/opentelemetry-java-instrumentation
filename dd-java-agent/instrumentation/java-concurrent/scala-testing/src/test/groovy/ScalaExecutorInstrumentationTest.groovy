@@ -1,8 +1,6 @@
 import datadog.opentracing.DDSpan
-import datadog.opentracing.scopemanager.ContinuableScope
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Trace
-import io.opentracing.util.GlobalTracer
 import scala.concurrent.forkjoin.ForkJoinPool
 import scala.concurrent.forkjoin.ForkJoinTask
 import spock.lang.Shared
@@ -14,6 +12,8 @@ import java.util.concurrent.Future
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+
+import static datadog.trace.instrumentation.api.AgentTracer.activeScope
 
 /**
  * Test executor instrumentation for Scala specific classes.
@@ -43,7 +43,7 @@ class ScalaExecutorInstrumentationTest extends AgentTestRunner {
       @Override
       @Trace(operationName = "parent")
       void run() {
-        ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
+        activeScope().setAsyncPropagation(true)
         // this child will have a span
         m(pool, new ScalaAsyncChild())
         // this child won't
@@ -91,7 +91,7 @@ class ScalaExecutorInstrumentationTest extends AgentTestRunner {
       @Override
       @Trace(operationName = "parent")
       void run() {
-        ((ContinuableScope) GlobalTracer.get().scopeManager().active()).setAsyncPropagation(true)
+        activeScope().setAsyncPropagation(true)
         try {
           for (int i = 0; i < 20; ++i) {
             // Our current instrumentation instrumentation does not behave very well
