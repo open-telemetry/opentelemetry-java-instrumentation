@@ -62,9 +62,33 @@ public interface Writer extends Closeable {
     }
 
     private static Writer createAgentWriter(final Config config) {
-      return new DDAgentWriter(
-          new DDApi(
-              config.getAgentHost(), config.getAgentPort(), config.getAgentUnixDomainSocket()));
+      return new DDAgentWriter(createApi(config), createMonitor(config));
+    }
+
+    private static final DDApi createApi(final Config config) {
+      return new DDApi(
+          config.getAgentHost(), config.getAgentPort(), config.getAgentUnixDomainSocket());
+    }
+
+    private static final DDAgentWriter.Monitor createMonitor(final Config config) {
+      if (!config.isHealthMetricsEnabled()) {
+        return new DDAgentWriter.NoopMonitor();
+      } else {
+        String host = config.getHealthMetricsStatsdHost();
+        if (host == null) {
+          host = config.getJmxFetchStatsdHost();
+        }
+        if (host == null) {
+          host = config.getAgentHost();
+        }
+
+        Integer port = config.getHealthMetricsStatsdPort();
+        if (port == null) {
+          port = config.getJmxFetchStatsdPort();
+        }
+
+        return new DDAgentWriter.StatsDMonitor(host, port);
+      }
     }
 
     private Builder() {}
