@@ -4,13 +4,11 @@ import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
-import org.apache.catalina.core.ApplicationFilterChain
+import javax.servlet.Servlet
+import javax.servlet.http.HttpServletRequest
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.ErrorHandler
 import org.eclipse.jetty.servlet.ServletContextHandler
-
-import javax.servlet.Servlet
-import javax.servlet.http.HttpServletRequest
 
 import static datadog.trace.agent.test.asserts.TraceAssert.assertTrace
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.AUTH_REQUIRED
@@ -114,6 +112,52 @@ class JettyServlet3TestFakeAsync extends JettyServlet3Test {
   @Override
   Class<Servlet> servlet() {
     TestServlet3.FakeAsync
+  }
+}
+
+class JettyServlet3TestForward extends JettyServlet3Test {
+  @Override
+  Class<Servlet> servlet() {
+    TestServlet3.Sync // dispatch to sync servlet
+  }
+
+  @Override
+  boolean testNotFound() {
+    false
+  }
+
+  @Override
+  protected void setupServlets(ServletContextHandler context) {
+    super.setupServlets(context)
+
+    addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Forward)
+  }
+}
+
+class JettyServlet3TestInclude extends JettyServlet3Test {
+  @Override
+  Class<Servlet> servlet() {
+    TestServlet3.Sync // dispatch to sync servlet
+  }
+
+  @Override
+  boolean testNotFound() {
+    false
+  }
+
+  @Override
+  protected void setupServlets(ServletContextHandler context) {
+    super.setupServlets(context)
+
+    addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Include)
   }
 }
 

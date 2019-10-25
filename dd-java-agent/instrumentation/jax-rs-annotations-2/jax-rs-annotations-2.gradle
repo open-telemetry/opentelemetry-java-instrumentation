@@ -25,7 +25,7 @@ dependencies {
   compileOnly group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0'
 
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
-  testCompile project(':dd-java-agent:instrumentation:servlet-3')
+  testCompile project(':dd-java-agent:instrumentation:servlet:request-3')
 
   // First version with DropwizardTestSupport:
   testCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '0.8.0'

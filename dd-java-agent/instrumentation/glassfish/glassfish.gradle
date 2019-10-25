@@ -22,7 +22,7 @@ testSets {
 }
 
 dependencies {
-  testCompile project(':dd-java-agent:instrumentation:servlet-3')
+  testCompile project(':dd-java-agent:instrumentation:servlet:request-3')
   testCompile project(':dd-java-agent:instrumentation:grizzly-2')
 
   testCompile group: 'org.glassfish.main.extras', name: 'glassfish-embedded-all', version: '4.0'
