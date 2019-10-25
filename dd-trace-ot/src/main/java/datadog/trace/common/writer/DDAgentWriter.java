@@ -237,9 +237,10 @@ public class DDAgentWriter implements Writer {
               @Override
               public void run() {
                 try {
-                  final boolean sent =
+                  final DDApi.Response response =
                       api.sendSerializedTraces(representativeCount, sizeInBytes, toSend);
-                  if (sent) {
+
+                  if (response.success()) {
                     log.debug("Successfully sent {} traces to the API", toSend.size());
                   } else {
                     log.debug(

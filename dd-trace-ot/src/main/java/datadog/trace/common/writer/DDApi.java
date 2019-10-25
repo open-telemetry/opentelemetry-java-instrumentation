@@ -87,9 +87,10 @@ public class DDApi {
    * Send traces to the DD agent
    *
    * @param traces the traces to be sent
-   * @return the staus code returned
+   * @return a Response object -- encapsulating success of communication, sending, and result
+   *     parsing
    */
-  public boolean sendTraces(final List<List<DDSpan>> traces) {
+  public Response sendTraces(final List<List<DDSpan>> traces) {
     final List<byte[]> serializedTraces = new ArrayList<>(traces.size());
     int sizeInBytes = 0;
     for (final List<DDSpan> trace : traces) {
@@ -99,6 +100,8 @@ public class DDApi {
         serializedTraces.add(serializedTrace);
       } catch (final JsonProcessingException e) {
         log.warn("Error serializing trace", e);
+
+        // TODO: DQH - Incorporate the failed serialization into the Response object???
       }
     }
 
@@ -109,7 +112,7 @@ public class DDApi {
     return OBJECT_MAPPER.writeValueAsBytes(trace);
   }
 
-  boolean sendSerializedTraces(
+  Response sendSerializedTraces(
       final int representativeCount, final Integer sizeInBytes, final List<byte[]> traces) {
     try {
       final RequestBody body =
@@ -150,7 +153,7 @@ public class DDApi {
               .put(body)
               .build();
 
-      try (final Response response = httpClient.newCall(request).execute()) {
+      try (final okhttp3.Response response = httpClient.newCall(request).execute()) {
         if (response.code() != 200) {
           if (log.isDebugEnabled()) {
             log.debug(
@@ -170,7 +173,7 @@ public class DDApi {
                 response.message(),
                 TimeUnit.MILLISECONDS.toMinutes(MILLISECONDS_BETWEEN_ERROR_LOG));
           }
-          return false;
+          return Response.failed(response.code());
         }
 
         log.debug(
@@ -183,14 +186,19 @@ public class DDApi {
           if (!"".equals(responseString) && !"OK".equalsIgnoreCase(responseString)) {
             final JsonNode parsedResponse = OBJECT_MAPPER.readTree(responseString);
             final String endpoint = tracesUrl.toString();
+
             for (final ResponseListener listener : responseListeners) {
               listener.onResponse(endpoint, parsedResponse);
             }
+            return Response.success(response.code(), parsedResponse);
           }
+
+          return Response.success(response.code());
         } catch (final JsonParseException e) {
           log.debug("Failed to parse DD agent response: " + responseString, e);
+
+          return Response.success(response.code(), e);
         }
-        return true;
       }
     } catch (final IOException e) {
       if (log.isDebugEnabled()) {
@@ -211,7 +219,7 @@ public class DDApi {
             e.getMessage(),
             TimeUnit.MILLISECONDS.toMinutes(MILLISECONDS_BETWEEN_ERROR_LOG));
       }
-      return false;
+      return Response.failed(e);
     }
   }
 
@@ -230,7 +238,7 @@ public class DDApi {
       final RequestBody body = RequestBody.create(MSGPACK, OBJECT_MAPPER.writeValueAsBytes(data));
       final Request request = prepareRequest(url).put(body).build();
 
-      try (final Response response = client.newCall(request).execute()) {
+      try (final okhttp3.Response response = client.newCall(request).execute()) {
         return response.code() == 200;
       }
     } catch (final IOException e) {
@@ -283,6 +291,79 @@ public class DDApi {
   @Override
   public String toString() {
     return "DDApi { tracesUrl=" + tracesUrl + " }";
+  }
+
+  /**
+   * Encapsulates an attempted response from the Datadog agent.
+   *
+   * <p>If communication fails or times out, the Response will NOT be successful and will lack
+   * status code, but will have an exception.
+   *
+   * <p>If an communication occurs, the Response will have a status code and will be marked as
+   * success or fail in accordance with the code.
+   *
+   * <p>NOTE: A successful communication may still contain an exception if there was a problem
+   * parsing the response from the Datadog agent.
+   */
+  public static final class Response {
+    /** Factory method for a successful request with a trivial response body */
+    public static final Response success(final int status) {
+      return new Response(true, status, null, null);
+    }
+
+    /** Factory method for a successful request with a well-formed JSON response body */
+    public static final Response success(final int status, final JsonNode json) {
+      return new Response(true, status, json, null);
+    }
+
+    /** Factory method for a successful request will a malformed response body */
+    public static final Response success(final int status, final Throwable exception) {
+      return new Response(true, status, null, exception);
+    }
+
+    /** Factory method for a request that receive an error status in response */
+    public static final Response failed(final int status) {
+      return new Response(false, status, null, null);
+    }
+
+    /** Factory method for a failed communication attempt */
+    public static final Response failed(final Throwable exception) {
+      return new Response(false, null, null, exception);
+    }
+
+    private final boolean success;
+    private final Integer status;
+    private final JsonNode json;
+    private final Throwable exception;
+
+    private Response(
+        final boolean success,
+        final Integer status,
+        final JsonNode json,
+        final Throwable exception) {
+      this.success = success;
+      this.status = status;
+      this.json = json;
+      this.exception = exception;
+    }
+
+    public final boolean success() {
+      return this.success;
+    }
+
+    // TODO: DQH - In Java 8, switch to OptionalInteger
+    public final Integer status() {
+      return this.status;
+    }
+
+    public final JsonNode json() {
+      return this.json;
+    }
+
+    // TODO: DQH - In Java 8, switch to Optional<Throwable>?
+    public final Throwable exception() {
+      return this.exception;
+    }
   }
 
   public interface ResponseListener {
