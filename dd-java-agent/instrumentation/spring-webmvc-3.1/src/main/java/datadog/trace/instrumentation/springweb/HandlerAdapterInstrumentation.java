@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.springweb;
 
+import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
@@ -19,17 +20,12 @@ import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
-import java.lang.reflect.Method;
 import java.util.Map;
-import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.springframework.web.HttpRequestHandler;
-import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.mvc.Controller;
 
 @AutoService(Instrumenter.class)
 public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
@@ -73,48 +69,20 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
         @Advice.Argument(0) final HttpServletRequest request,
         @Advice.Argument(2) final Object handler) {
       // Name the parent span based on the matching pattern
-      // This is likely the servlet.request span.
-      final AgentSpan parentSpan = activeSpan();
-      if (parentSpan != null) {
-        DECORATE.onRequest(parentSpan, request);
+      final Object parentSpan = request.getAttribute(DD_SPAN_ATTRIBUTE);
+      if (parentSpan instanceof AgentSpan) {
+        DECORATE.onRequest((AgentSpan) parentSpan, request);
       }
 
       if (activeSpan() == null) {
         return null;
       }
 
-      // Now create a span for controller execution.
+      // Now create a span for handler/controller execution.
 
-      final Class<?> clazz;
-      final String methodName;
-
-      if (handler instanceof HandlerMethod) {
-        // name span based on the class and method name defined in the handler
-        final Method method = ((HandlerMethod) handler).getMethod();
-        clazz = method.getDeclaringClass();
-        methodName = method.getName();
-      } else if (handler instanceof HttpRequestHandler) {
-        // org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter
-        clazz = handler.getClass();
-        methodName = "handleRequest";
-      } else if (handler instanceof Controller) {
-        // org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter
-        clazz = handler.getClass();
-        methodName = "handleRequest";
-      } else if (handler instanceof Servlet) {
-        // org.springframework.web.servlet.handler.SimpleServletHandlerAdapter
-        clazz = handler.getClass();
-        methodName = "service";
-      } else {
-        // perhaps org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter
-        clazz = handler.getClass();
-        methodName = "<annotation>";
-      }
-
-      final String operationName = DECORATE.spanNameForClass(clazz) + "." + methodName;
-
-      final AgentSpan span = startSpan(operationName);
+      final AgentSpan span = startSpan("spring.handler");
       DECORATE.afterStart(span);
+      DECORATE.onHandle(span, handler);
 
       final AgentScope scope = activateSpan(span, true);
       scope.setAsyncPropagation(true);

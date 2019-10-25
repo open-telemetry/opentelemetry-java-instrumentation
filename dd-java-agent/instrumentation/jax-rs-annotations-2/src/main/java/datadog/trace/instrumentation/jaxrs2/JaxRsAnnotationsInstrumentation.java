@@ -4,6 +4,7 @@ import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperT
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.jaxrs2.JaxRsAnnotationsDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -15,7 +16,6 @@ import datadog.trace.bootstrap.InstrumentationContext;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.Map;
 import javax.ws.rs.container.AsyncResponse;
 import net.bytebuddy.asm.Advice;
@@ -34,8 +34,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
 
   @Override
   public Map<String, String> contextStore() {
-    return Collections.singletonMap(
-        "javax.ws.rs.container.AsyncResponse", AgentSpan.class.getName());
+    return singletonMap("javax.ws.rs.container.AsyncResponse", AgentSpan.class.getName());
   }
 
   @Override
@@ -89,8 +88,8 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
         @Advice.AllArguments final Object[] args) {
       final AgentSpan span = scope.span();
       if (throwable != null) {
-        JaxRsAnnotationsDecorator.DECORATE.onError(span, throwable);
-        JaxRsAnnotationsDecorator.DECORATE.beforeFinish(span);
+        DECORATE.onError(span, throwable);
+        DECORATE.beforeFinish(span);
         span.finish();
         scope.close();
         return;
@@ -106,7 +105,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
       if (asyncResponse != null && asyncResponse.isSuspended()) {
         InstrumentationContext.get(AsyncResponse.class, AgentSpan.class).put(asyncResponse, span);
       } else {
-        JaxRsAnnotationsDecorator.DECORATE.beforeFinish(span);
+        DECORATE.beforeFinish(span);
         span.finish();
       }
       scope.close();

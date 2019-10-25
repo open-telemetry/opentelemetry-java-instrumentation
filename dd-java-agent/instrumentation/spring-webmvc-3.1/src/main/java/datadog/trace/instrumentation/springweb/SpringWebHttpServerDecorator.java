@@ -1,16 +1,20 @@
 package datadog.trace.instrumentation.springweb;
 
 import datadog.trace.agent.decorator.HttpServerDecorator;
-import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
+import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.HttpRequestHandler;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.Controller;
 
 @Slf4j
 public class SpringWebHttpServerDecorator
@@ -79,15 +83,47 @@ public class SpringWebHttpServerDecorator
       if (method != null && bestMatchingPattern != null) {
         final String resourceName = method + " " + bestMatchingPattern;
         span.setTag(DDTags.RESOURCE_NAME, resourceName);
-        span.setTag(DDTags.SPAN_TYPE, DDSpanTypes.HTTP_SERVER);
       }
     }
     return span;
   }
 
+  public void onHandle(final AgentSpan span, final Object handler) {
+    final Class<?> clazz;
+    final String methodName;
+
+    if (handler instanceof HandlerMethod) {
+      // name span based on the class and method name defined in the handler
+      final Method method = ((HandlerMethod) handler).getMethod();
+      clazz = method.getDeclaringClass();
+      methodName = method.getName();
+    } else if (handler instanceof HttpRequestHandler) {
+      // org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter
+      clazz = handler.getClass();
+      methodName = "handleRequest";
+    } else if (handler instanceof Controller) {
+      // org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter
+      clazz = handler.getClass();
+      methodName = "handleRequest";
+    } else if (handler instanceof Servlet) {
+      // org.springframework.web.servlet.handler.SimpleServletHandlerAdapter
+      clazz = handler.getClass();
+      methodName = "service";
+    } else {
+      // perhaps org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter
+      clazz = handler.getClass();
+      methodName = "<annotation>";
+    }
+
+    final String resourceName = DECORATE.spanNameForClass(clazz) + "." + methodName;
+    span.setTag(DDTags.RESOURCE_NAME, resourceName);
+  }
+
   public AgentSpan onRender(final AgentSpan span, final ModelAndView mv) {
-    if (mv.getViewName() != null) {
-      span.setTag("view.name", mv.getViewName());
+    final String viewName = mv.getViewName();
+    if (viewName != null) {
+      span.setTag("view.name", viewName);
+      span.setTag(DDTags.RESOURCE_NAME, viewName);
     }
     if (mv.getView() != null) {
       span.setTag("view.type", mv.getView().getClass().getName());
