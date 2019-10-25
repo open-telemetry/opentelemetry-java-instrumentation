@@ -153,6 +153,52 @@ class TomcatServlet3TestFakeAsync extends TomcatServlet3Test {
   }
 }
 
+class TomcatServlet3TestForward extends TomcatServlet3Test {
+  @Override
+  Class<Servlet> servlet() {
+    TestServlet3.Sync // dispatch to sync servlet
+  }
+
+  @Override
+  boolean testNotFound() {
+    false
+  }
+
+  @Override
+  protected void setupServlets(Context context) {
+    super.setupServlets(context)
+
+    addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Forward)
+    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Forward)
+  }
+}
+
+class TomcatServlet3TestInclude extends TomcatServlet3Test {
+  @Override
+  Class<Servlet> servlet() {
+    TestServlet3.Sync // dispatch to sync servlet
+  }
+
+  @Override
+  boolean testNotFound() {
+    false
+  }
+
+  @Override
+  protected void setupServlets(Context context) {
+    super.setupServlets(context)
+
+    addServlet(context, "/dispatch" + SUCCESS.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + ERROR.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + EXCEPTION.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + REDIRECT.path, RequestDispatcherServlet.Include)
+    addServlet(context, "/dispatch" + AUTH_REQUIRED.path, RequestDispatcherServlet.Include)
+  }
+}
+
 class TomcatServlet3TestDispatchImmediate extends TomcatDispatchTest {
   @Override
   Class<Servlet> servlet() {

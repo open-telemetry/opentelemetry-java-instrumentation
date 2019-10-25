@@ -23,7 +23,7 @@ dependencies {
   compileOnly group: 'javax.servlet.jsp', name: 'javax.servlet.jsp-api', version: '2.3.0'
   compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 
-  testCompile project(':dd-java-agent:instrumentation:servlet-3')
+  testCompile project(':dd-java-agent:instrumentation:servlet:request-3')
   // using tomcat 7.0.37 because there seems to be some issues with Tomcat's jar scanning in versions < 7.0.37
   // https://stackoverflow.com/questions/23484098/org-apache-tomcat-util-bcel-classfile-classformatexception-invalid-byte-tag-in
   testCompile group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '7.0.37'
