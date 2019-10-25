@@ -237,10 +237,11 @@ public final class OpenTracing32 implements TracerAPI {
     }
 
     @Override
-    public void setAsyncPropagation(final boolean value) {
+    public AgentScope setAsyncPropagation(final boolean value) {
       if (scope instanceof TraceScope) {
         ((TraceScope) scope).setAsyncPropagation(value);
       }
+      return this;
     }
 
     @Override

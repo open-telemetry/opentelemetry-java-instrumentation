@@ -5,7 +5,7 @@ import java.io.Closeable;
 public interface AgentScope extends Closeable {
   AgentSpan span();
 
-  void setAsyncPropagation(boolean value);
+  AgentScope setAsyncPropagation(boolean value);
 
   @Override
   void close();
