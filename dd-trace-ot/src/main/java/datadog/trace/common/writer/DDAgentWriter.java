@@ -466,19 +466,21 @@ public class DDAgentWriter implements Writer {
     public static final String LANG_INTERPRETER_VENDOR_TAG = "lang_interpreter_vendor";
     public static final String TRACER_VERSION_TAG = "tracer_version";
 
-    private final String host;
-    private final int port;
+    private final String hostInfo;
     private final StatsDClient statsd;
 
     // DQH - Made a conscious choice to not take a Config object here.
     // Letting the creating of the Monitor take the Config,
     // so it can decide which Monitor variant to create.
-
     public StatsDMonitor(final String host, final int port) {
-      this.host = host;
-      this.port = port;
-
+      hostInfo = host + ":" + port;
       statsd = new NonBlockingStatsDClient(PREFIX, host, port, getDefaultTags());
+    }
+
+    // Currently, intended for testing
+    private StatsDMonitor(final StatsDClient statsd) {
+      hostInfo = null;
+      this.statsd = statsd;
     }
 
     protected static final String[] getDefaultTags() {
@@ -574,7 +576,11 @@ public class DDAgentWriter implements Writer {
     }
 
     public String toString() {
-      return "StatsD { host=" + host + ":" + port + " }";
+      if (hostInfo == null) {
+        return "StatsD";
+      } else {
+        return "StatsD { host=" + hostInfo + " }";
+      }
     }
   }
 }

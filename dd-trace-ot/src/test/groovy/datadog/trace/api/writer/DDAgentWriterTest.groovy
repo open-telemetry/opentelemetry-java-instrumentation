@@ -1,5 +1,6 @@
 package datadog.trace.api.writer
 
+import com.timgroup.statsd.StatsDClient
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
@@ -484,5 +485,100 @@ class DDAgentWriterTest extends DDSpecification {
     cleanup:
     writer.close()
     agent.close()
+  }
+
+  def "statsd success"() {
+    def numTracesAccepted = 0
+    def numRequests = 0
+    def numResponses = 0
+
+    setup:
+    def minimalTrace = createMinimalTrace()
+
+    // Need to set-up a dummy agent for the final send callback to work
+    def agent = httpServer {
+      handlers {
+        put("v0.4/traces") {
+          response.status(200).send()
+        }
+      }
+    }
+    def api = new DDApi("localhost", agent.address.port, null)
+
+    def statsd = Stub(StatsDClient)
+    statsd.incrementCounter("queue.accepted") >> { stat ->
+      numTracesAccepted += 1
+    }
+    statsd.incrementCounter("api.requests") >> { stat ->
+      numRequests += 1
+    }
+    statsd.incrementCounter("api.responses", _) >> { stat, tags ->
+      numResponses += 1
+    }
+
+    def monitor = new DDAgentWriter.StatsDMonitor(statsd)
+    def writer = new DDAgentWriter(api, monitor)
+    writer.start()
+
+    when:
+    writer.write(minimalTrace)
+    writer.flush()
+
+    then:
+    numTracesAccepted == 1
+    numRequests == 1
+    numResponses == 1
+
+    cleanup:
+    agent.close()
+    writer.close()
+  }
+
+  def "statsd comm failure"() {
+    def numRequests = 0
+    def numResponses = 0
+    def numErrors = 0
+
+    setup:
+    def minimalTrace = createMinimalTrace()
+
+    // DQH -- need to set-up a dummy agent for the final send callback to work
+    def api = new DDApi("localhost", 8192, null) {
+      DDApi.Response sendSerializedTraces(
+        int representativeCount,
+        Integer sizeInBytes,
+        List<byte[]> traces)
+      {
+        // simulating a communication failure to a server
+        return DDApi.Response.failed(new IOException("comm error"))
+      }
+    }
+
+    def statsd = Stub(StatsDClient)
+    statsd.incrementCounter("api.requests") >> { stat ->
+      numRequests += 1
+    }
+    statsd.incrementCounter("api.responses", _) >> { stat, tags ->
+      numResponses += 1
+    }
+    statsd.incrementCounter("api.errors", _) >> { stat ->
+      numErrors += 1
+    }
+
+    def monitor = new DDAgentWriter.StatsDMonitor(statsd)
+    def writer = new DDAgentWriter(api, monitor)
+    writer.start()
+
+    when:
+    writer.write(minimalTrace)
+    writer.flush()
+
+    then:
+    numRequests == 1
+    numResponses == 0
+    numErrors == 1
+
+    cleanup:
+    writer.close()
   }
 }
