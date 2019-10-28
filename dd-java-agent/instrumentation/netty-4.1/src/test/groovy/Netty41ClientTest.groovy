@@ -44,6 +44,7 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
         return response
       }
     }).get()
+    blockUntilChildSpansFinished(1)
     return response.statusCode
   }
 
@@ -219,24 +220,30 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
 
   class SimpleHandler implements ChannelHandler {
     @Override
-    void handlerAdded(ChannelHandlerContext ctx) throws Exception {}
+    void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+    }
 
     @Override
-    void handlerRemoved(ChannelHandlerContext ctx) throws Exception {}
+    void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+    }
 
     @Override
-    void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {}
+    void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    }
   }
 
   class OtherSimpleHandler implements ChannelHandler {
     @Override
-    void handlerAdded(ChannelHandlerContext ctx) throws Exception {}
+    void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+    }
 
     @Override
-    void handlerRemoved(ChannelHandlerContext ctx) throws Exception {}
+    void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+    }
 
     @Override
-    void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {}
+    void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    }
   }
 
   class TracedHandlerFromInitializerHandler extends ChannelInitializer<Channel> implements ChannelHandler {
