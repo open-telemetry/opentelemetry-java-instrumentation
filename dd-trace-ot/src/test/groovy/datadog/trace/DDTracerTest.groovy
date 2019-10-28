@@ -15,6 +15,7 @@ import org.junit.contrib.java.lang.system.RestoreSystemProperties
 
 import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 import static datadog.trace.api.Config.HEADER_TAGS
+import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
 import static datadog.trace.api.Config.PREFIX
 import static datadog.trace.api.Config.PRIORITY_SAMPLING
 import static datadog.trace.api.Config.SERVICE_MAPPING
@@ -46,11 +47,24 @@ class DDTracerTest extends DDSpecification {
     tracer.serviceName == "unnamed-java-app"
     tracer.sampler instanceof RateByServiceSampler
     tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces } }"
+    tracer.writer.monitor instanceof DDAgentWriter.NoopMonitor
 
     tracer.spanContextDecorators.size() == 15
 
     tracer.injector instanceof HttpCodec.CompoundInjector
     tracer.extractor instanceof HttpCodec.CompoundExtractor
+  }
+
+  def "verify enabling health monitor"() {
+    setup:
+    System.setProperty(PREFIX + HEALTH_METRICS_ENABLED, "true")
+
+    when:
+    def tracer = new DDTracer(new Config())
+
+    then:
+    tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces }, monitor=StatsD { host=localhost:8125 } }"
+    tracer.writer.monitor instanceof DDAgentWriter.StatsDMonitor
   }
 
 

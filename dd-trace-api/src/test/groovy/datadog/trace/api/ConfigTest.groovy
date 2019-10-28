@@ -40,6 +40,9 @@ import static datadog.trace.api.Config.TRACE_ENABLED
 import static datadog.trace.api.Config.TRACE_REPORT_HOSTNAME
 import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
 import static datadog.trace.api.Config.WRITER_TYPE
+import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
+import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_HOST
+import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_PORT
 
 class ConfigTest extends DDSpecification {
   @Rule
@@ -93,6 +96,9 @@ class ConfigTest extends DDSpecification {
     config.jmxFetchRefreshBeansPeriod == null
     config.jmxFetchStatsdHost == null
     config.jmxFetchStatsdPort == DEFAULT_JMX_FETCH_STATSD_PORT
+    config.healthMetricsEnabled == false
+    config.healthMetricsStatsdHost == null
+    config.healthMetricsStatsdPort == null
     config.toString().contains("unnamed-java-app")
 
     where:
@@ -136,6 +142,9 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
     prop.setProperty(JMX_FETCH_STATSD_HOST, "statsd host")
     prop.setProperty(JMX_FETCH_STATSD_PORT, "321")
+    prop.setProperty(HEALTH_METRICS_ENABLED, "true")
+    prop.setProperty(HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
+    prop.setProperty(HEALTH_METRICS_STATSD_PORT, "654")
 
     when:
     Config config = Config.get(prop)
@@ -169,6 +178,9 @@ class ConfigTest extends DDSpecification {
     config.jmxFetchRefreshBeansPeriod == 200
     config.jmxFetchStatsdHost == "statsd host"
     config.jmxFetchStatsdPort == 321
+    config.healthMetricsEnabled == true
+    config.healthMetricsStatsdHost == "metrics statsd host"
+    config.healthMetricsStatsdPort == 654
   }
 
   def "specify overrides via system properties"() {
@@ -203,6 +215,9 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + JMX_FETCH_REFRESH_BEANS_PERIOD, "200")
     System.setProperty(PREFIX + JMX_FETCH_STATSD_HOST, "statsd host")
     System.setProperty(PREFIX + JMX_FETCH_STATSD_PORT, "321")
+    System.setProperty(PREFIX + HEALTH_METRICS_ENABLED, "true")
+    System.setProperty(PREFIX + HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
+    System.setProperty(PREFIX + HEALTH_METRICS_STATSD_PORT, "654")
 
     when:
     Config config = new Config()
@@ -236,6 +251,9 @@ class ConfigTest extends DDSpecification {
     config.jmxFetchRefreshBeansPeriod == 200
     config.jmxFetchStatsdHost == "statsd host"
     config.jmxFetchStatsdPort == 321
+    config.healthMetricsEnabled == true
+    config.healthMetricsStatsdHost == "metrics statsd host"
+    config.healthMetricsStatsdPort == 654
   }
 
   def "specify overrides via env vars"() {
