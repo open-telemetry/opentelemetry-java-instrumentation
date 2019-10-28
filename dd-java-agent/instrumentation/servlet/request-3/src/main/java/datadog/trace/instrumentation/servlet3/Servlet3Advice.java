@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.servlet3;
 
 import static datadog.trace.agent.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.activeSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.servlet3.HttpServletRequestExtractAdapter.GETTER;
@@ -24,8 +25,10 @@ public class Servlet3Advice {
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static AgentScope onEnter(
       @Advice.This final Object servlet, @Advice.Argument(0) final ServletRequest request) {
-    final Object spanAttr = request.getAttribute(DD_SPAN_ATTRIBUTE);
-    if (!(request instanceof HttpServletRequest) || spanAttr != null) {
+    final boolean hasActiveTrace = activeSpan() != null;
+    final boolean hasServletTrace = request.getAttribute(DD_SPAN_ATTRIBUTE) instanceof AgentSpan;
+    final boolean invalidRequest = !(request instanceof HttpServletRequest);
+    if (invalidRequest || (hasActiveTrace && hasServletTrace)) {
       // Tracing might already be applied by the FilterChain.  If so ignore this.
       return null;
     }
