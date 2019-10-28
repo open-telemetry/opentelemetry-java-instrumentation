@@ -36,7 +36,7 @@ dependencies {
   compile deps.jackson
   compile deps.slf4j
   compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.11.0' // Last version to support Java7
-  compile group: 'com.github.jnr', name: 'jnr-unixsocket', version: '0.22'
+  compile group: 'com.github.jnr', name: 'jnr-unixsocket', version: '0.23'
   compile group: 'com.lmax', name: 'disruptor', version: '3.4.2'
 
   // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
