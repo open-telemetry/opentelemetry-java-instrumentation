@@ -208,7 +208,9 @@ public class AgentTracer {
     }
 
     @Override
-    public void setAsyncPropagation(final boolean value) {}
+    public AgentScope setAsyncPropagation(final boolean value) {
+      return this;
+    }
 
     @Override
     public void close() {}
