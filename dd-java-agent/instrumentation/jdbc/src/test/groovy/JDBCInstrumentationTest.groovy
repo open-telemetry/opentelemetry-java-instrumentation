@@ -5,13 +5,15 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.api.Tags
+import javax.sql.DataSource
+import org.apache.derby.jdbc.EmbeddedDataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
+import org.h2.jdbcx.JdbcDataSource
 import org.hsqldb.jdbc.JDBCDriver
 import spock.lang.Shared
 import spock.lang.Unroll
 
-import javax.sql.DataSource
 import java.sql.CallableStatement
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -19,9 +21,13 @@ import java.sql.ResultSet
 import java.sql.Statement
 
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
+import static datadog.trace.agent.test.utils.TraceUtils.basicSpan
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class JDBCInstrumentationTest extends AgentTestRunner {
+  static {
+    System.setProperty("dd.integration.jdbc.enabled", "true")
+  }
 
   @Shared
   def dbName = "jdbcUnitTest"
@@ -166,10 +172,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     resultSet.getInt(1) == 3
     assertTraces(1) {
       trace(0, 2) {
-        span(0) {
-          operationName "parent"
-          parent()
-        }
+        basicSpan(it, 0, "parent")
         span(1) {
           serviceName renameService ? dbName.toLowerCase() : driver
           operationName "${driver}.query"
@@ -229,10 +232,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     resultSet.getInt(1) == 3
     assertTraces(1) {
       trace(0, 2) {
-        span(0) {
-          operationName "parent"
-          parent()
-        }
+        basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
           serviceName driver
@@ -284,10 +284,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     resultSet.getInt(1) == 3
     assertTraces(1) {
       trace(0, 2) {
-        span(0) {
-          operationName "parent"
-          parent()
-        }
+        basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
           serviceName driver
@@ -339,10 +336,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     resultSet.getInt(1) == 3
     assertTraces(1) {
       trace(0, 2) {
-        span(0) {
-          operationName "parent"
-          parent()
-        }
+        basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
           serviceName driver
@@ -394,10 +388,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     statement.updateCount == 0
     assertTraces(1) {
       trace(0, 2) {
-        span(0) {
-          operationName "parent"
-          parent()
-        }
+        basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
           serviceName driver
@@ -452,10 +443,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     }
     assertTraces(1) {
       trace(0, 2) {
-        span(0) {
-          operationName "parent"
-          parent()
-        }
+        basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
           serviceName driver
@@ -523,10 +511,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     rs.getInt(1) == 3
     assertTraces(1) {
       trace(0, 2) {
-        span(0) {
-          operationName "parent"
-          parent()
-        }
+        basicSpan(it, 0, "parent")
         span(1) {
           operationName "${driver}.query"
           serviceName driver
@@ -567,6 +552,66 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     true             | "derby" | new EmbeddedDriver() | "jdbc:derby:memory:" + dbName + ";create=true" | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
     false            | "h2"    | new Driver()         | "jdbc:h2:mem:" + dbName                        | null     | "SELECT 3;"
     false            | "derby" | new EmbeddedDriver() | "jdbc:derby:memory:" + dbName + ";create=true" | "APP"    | "SELECT 3 FROM SYSIBM.SYSDUMMY1"
+  }
+
+  def "calling #datasource.class.simpleName getConnection generates a span when under existing trace"() {
+    setup:
+    assert datasource instanceof DataSource
+    init?.call(datasource)
+
+    when:
+    datasource.getConnection().close()
+
+    then:
+    !TEST_WRITER.any { it.any { it.operationName == "database.connection" } }
+    TEST_WRITER.clear()
+
+    when:
+    runUnderTrace("parent") {
+      datasource.getConnection().close()
+    }
+
+    then:
+    assertTraces(1) {
+      trace(0, recursive ? 3 : 2) {
+        basicSpan(it, 0, "parent")
+
+        span(1) {
+          operationName "database.connection"
+          resourceName "${datasource.class.simpleName}.getConnection"
+          childOf span(0)
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-connection"
+            defaultTags()
+          }
+        }
+        if (recursive) {
+          span(2) {
+            operationName "database.connection"
+            resourceName "${datasource.class.simpleName}.getConnection"
+            childOf span(1)
+            tags {
+              "$Tags.COMPONENT" "java-jdbc-connection"
+              defaultTags()
+            }
+          }
+        }
+      }
+    }
+
+    where:
+    datasource                               | init
+    new JdbcDataSource()                     | { ds -> ds.setURL(jdbcUrls.get("h2")) }
+    new EmbeddedDataSource()                 | { ds -> ds.jdbcurl = jdbcUrls.get("derby") }
+    cpDatasources.get("hikari").get("h2")    | null
+    cpDatasources.get("hikari").get("derby") | null
+    cpDatasources.get("c3p0").get("h2")      | null
+    cpDatasources.get("c3p0").get("derby")   | null
+
+    // Tomcat's pool doesn't work because the getConnection method is
+    // implemented in a parent class that doesn't implement DataSource
+
+    recursive = datasource instanceof EmbeddedDataSource
   }
 
   @Unroll
