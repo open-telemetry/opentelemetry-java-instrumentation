@@ -23,6 +23,7 @@ public class JavaInterfaces {
     @Path("call")
     @Override
     public void call() {
+      // do nothing
     }
 
     abstract void actual();
@@ -33,6 +34,7 @@ public class JavaInterfaces {
 
     @Override
     void actual() {
+      // do nothing
     }
   }
 
@@ -53,7 +55,7 @@ public class JavaInterfaces {
 
     @Override
     public void actual() {
+      // do nothing
     }
   }
-
 }

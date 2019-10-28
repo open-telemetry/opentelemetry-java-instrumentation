@@ -1,3 +1,7 @@
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
 muzzle {
   fail {
     group = "javax.ws.rs"
@@ -9,10 +13,6 @@ muzzle {
     module = "javax.ws.rs-api"
     versions = "[,]"
   }
-}
-
-ext {
-  minJavaVersionForTests = JavaVersion.VERSION_1_8
 }
 
 apply from: "${rootDir}/gradle/java.gradle"
@@ -39,4 +39,9 @@ dependencies {
   // Anything 1.0+ fails with a java.lang.NoClassDefFoundError: org/eclipse/jetty/server/RequestLog
 //  latestDepTestCompile group: 'io.dropwizard', name: 'dropwizard-testing', version: '1.+'
 
+}
+
+test {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
 }
