@@ -326,8 +326,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Override
   public Span activeSpan() {
-    final Scope active = scopeManager.active();
-    return active == null ? null : active.span();
+    return scopeManager.activeSpan();
   }
 
   @Override
@@ -630,9 +629,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       SpanContext parentContext = parent;
       if (parentContext == null && !ignoreScope) {
         // use the Scope as parent unless overridden or ignored.
-        final Scope scope = scopeManager.active();
-        if (scope != null) {
-          parentContext = scope.span().context();
+        final Span activeSpan = scopeManager.activeSpan();
+        if (activeSpan != null) {
+          parentContext = activeSpan.context();
         }
       }
 
