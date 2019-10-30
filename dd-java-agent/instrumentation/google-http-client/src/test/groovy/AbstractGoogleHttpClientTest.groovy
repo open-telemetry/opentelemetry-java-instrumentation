@@ -38,7 +38,7 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
   }
 
   @Override
-  boolean testRedirects() {
+  boolean testCircularRedirects() {
     // Circular redirects don't throw an exception with Google Http Client
     return false
   }

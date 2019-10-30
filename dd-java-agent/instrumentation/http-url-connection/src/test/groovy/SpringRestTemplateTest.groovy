@@ -28,7 +28,7 @@ class SpringRestTemplateTest extends HttpClientTest<HttpUrlConnectionDecorator> 
   }
 
   @Override
-  boolean testRedirects() {
+  boolean testCircularRedirects() {
     false
   }
 

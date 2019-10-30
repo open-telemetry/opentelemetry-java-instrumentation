@@ -23,7 +23,7 @@ class HttpUrlConnectionResponseCodeOnlyTest extends HttpClientTest<HttpUrlConnec
   }
 
   @Override
-  boolean testRedirects() {
+  boolean testCircularRedirects() {
     false
   }
 }

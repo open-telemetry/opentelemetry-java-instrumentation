@@ -38,10 +38,6 @@ abstract class JaxRsClientTest extends HttpClientTest<JaxRsClientDecorator> {
     return "jax-rs.client.call"
   }
 
-  boolean testRedirects() {
-    false
-  }
-
   abstract ClientBuilder builder()
 }
 
@@ -51,6 +47,10 @@ class JerseyClientTest extends JaxRsClientTest {
   ClientBuilder builder() {
     return new JerseyClientBuilder()
   }
+
+  boolean testCircularRedirects() {
+    false
+  }
 }
 
 class ResteasyClientTest extends JaxRsClientTest {
@@ -59,6 +59,11 @@ class ResteasyClientTest extends JaxRsClientTest {
   ClientBuilder builder() {
     return new ResteasyClientBuilder()
   }
+
+  boolean testRedirects() {
+    false
+  }
+
 }
 
 class CxfClientTest extends JaxRsClientTest {
@@ -66,6 +71,10 @@ class CxfClientTest extends JaxRsClientTest {
   @Override
   ClientBuilder builder() {
     return new ClientBuilderImpl()
+  }
+
+  boolean testRedirects() {
+    false
   }
 
   boolean testConnectionFailure() {
