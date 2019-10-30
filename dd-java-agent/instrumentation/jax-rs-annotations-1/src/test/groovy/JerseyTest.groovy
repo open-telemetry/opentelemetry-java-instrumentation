@@ -9,7 +9,7 @@ class JerseyTest extends AgentTestRunner {
 
   @Shared
   @ClassRule
-  ResourceTestRule resources = ResourceTestRule.builder().addResource(new TestResource()).build()
+  ResourceTestRule resources = ResourceTestRule.builder().addResource(new Resource.Test()).build()
 
   def "test resource"() {
     setup:

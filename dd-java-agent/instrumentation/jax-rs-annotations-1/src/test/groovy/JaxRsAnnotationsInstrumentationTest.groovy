@@ -1,6 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.bootstrap.WeakMap
 import datadog.trace.instrumentation.api.Tags
-
+import datadog.trace.instrumentation.jaxrs1.JaxRsAnnotationsDecorator
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HEAD
@@ -9,8 +10,9 @@ import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 
+import java.lang.reflect.Method
+
 import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
-import static datadog.trace.instrumentation.jaxrs1.JaxRsAnnotationsDecorator.DECORATE
 
 class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 
@@ -41,7 +43,7 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
 
   def "span named '#name' from annotations on class when is not root span"() {
     setup:
-    def startingCacheSize = DECORATE.resourceNames.size()
+    def startingCacheSize = resourceNames.size()
     runUnderTrace("test") {
       obj.call()
     }
@@ -70,8 +72,8 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
         }
       }
     }
-    DECORATE.resourceNames.size() == startingCacheSize + 1
-    DECORATE.resourceNames.get(obj.class).size() == 1
+    resourceNames.size() == startingCacheSize + 1
+    resourceNames.get(obj.class).size() == 1
 
     when: "multiple calls to the same method"
     runUnderTrace("test") {
@@ -80,58 +82,65 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
       }
     }
     then: "doesn't increase the cache size"
-    DECORATE.resourceNames.size() == startingCacheSize + 1
-    DECORATE.resourceNames.get(obj.class).size() == 1
+    resourceNames.size() == startingCacheSize + 1
+    resourceNames.get(obj.class).size() == 1
 
     where:
-    name                        | obj
-    "/a"                        | new Jax() {
+    name               | obj
+    "/a"               | new Jax() {
       @Path("/a")
       void call() {
       }
     }
-    "GET /b"                    | new Jax() {
+    "GET /b"           | new Jax() {
       @GET
       @Path("/b")
       void call() {
       }
     }
-    "POST /c"                   | new InterfaceWithPath() {
+    "POST /c"          | new InterfaceWithPath() {
       @POST
       @Path("/c")
       void call() {
       }
     }
-    "HEAD"                      | new InterfaceWithPath() {
+    "HEAD"             | new InterfaceWithPath() {
       @HEAD
       void call() {
       }
     }
-    "POST /abstract/d"          | new AbstractClassWithPath() {
+    "POST /abstract/d" | new AbstractClassWithPath() {
       @POST
       @Path("/d")
       void call() {
       }
     }
-    "PUT /abstract"             | new AbstractClassWithPath() {
+    "PUT /abstract"    | new AbstractClassWithPath() {
       @PUT
       void call() {
       }
     }
-    "OPTIONS /abstract/child/e" | new ChildClassWithPath() {
+    "OPTIONS /child/e" | new ChildClassWithPath() {
       @OPTIONS
       @Path("/e")
       void call() {
       }
     }
-    "DELETE /abstract/child"    | new ChildClassWithPath() {
+    "DELETE /child"    | new ChildClassWithPath() {
       @DELETE
       void call() {
       }
     }
-    "POST /abstract/child/call" | new ChildClassWithPath()
+    "POST /child/call" | new ChildClassWithPath()
+    "GET /child/call"  | new JavaInterfaces.ChildClassOnInterface()
+    // TODO: uncomment when we drop support for Java 7
+//    "GET /child/invoke"         | new JavaInterfaces.DefaultChildClassOnInterface()
 
     className = getName(obj.class)
+
+    // JavaInterfaces classes are loaded on a different classloader, so we need to find the right cache instance.
+    decorator = obj.class.classLoader.loadClass(JaxRsAnnotationsDecorator.name).getField("DECORATE").get(null)
+    resourceNames = (WeakMap<Class, Map<Method, String>>) decorator.resourceNames
   }
 
   def "no annotations has no effect"() {
