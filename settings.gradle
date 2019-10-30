@@ -99,6 +99,8 @@ include ':dd-java-agent:instrumentation:tomcat-classloading'
 include ':dd-java-agent:instrumentation:trace-annotation'
 include ':dd-java-agent:instrumentation:twilio'
 include ':dd-java-agent:instrumentation:vertx'
+include ':dd-java-agent:instrumentation:wsclient-1'
+include ':dd-java-agent:instrumentation:wsclient-2'
 
 // benchmark
 include ':dd-java-agent:benchmark'
