@@ -140,8 +140,11 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
     }
   }
 
-  @Path("/")
-  static class ServiceResource {
+  @Path("/ignored1")
+  static interface TestInterface {}
+
+  @Path("/ignored2")
+  static abstract class AbstractClass implements TestInterface {
 
     @GET
     @Path("success")
@@ -158,6 +161,10 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
         Response.status(REDIRECT.status).location(new URI(REDIRECT.body)).build()
       }
     }
+  }
+
+  @Path("/ignored3")
+  static class ParentClass extends AbstractClass {
 
     @GET
     @Path("error-status")
@@ -176,4 +183,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
       return null
     }
   }
+
+  @Path("/")
+  static class ServiceResource extends ParentClass {}
 }

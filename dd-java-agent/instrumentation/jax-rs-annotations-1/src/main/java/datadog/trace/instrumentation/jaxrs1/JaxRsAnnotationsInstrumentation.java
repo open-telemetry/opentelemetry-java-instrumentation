@@ -69,12 +69,13 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   public static class JaxRsAnnotationsAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AgentScope nameSpan(@Advice.Origin final Method method) {
+    public static AgentScope nameSpan(
+        @Advice.This final Object target, @Advice.Origin final Method method) {
       // Rename the parent span according to the path represented by these annotations.
       final AgentSpan parent = activeSpan();
 
       final AgentSpan span = startSpan(JAX_ENDPOINT_OPERATION_NAME);
-      DECORATE.onControllerStart(span, parent, method);
+      DECORATE.onControllerStart(span, parent, target.getClass(), method);
       DECORATE.afterStart(span);
 
       final AgentScope scope = activateSpan(span, true);
