@@ -211,6 +211,9 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   }
 
   def "basic #method request with 1 redirect"() {
+    // TODO quite a few clients create an extra span for the redirect
+    // This test should handle both types or we should unify how the clients work
+
     given:
     assumeTrue(testRedirects())
     def uri = server.address.resolve("/redirect")
@@ -258,6 +261,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   def "basic #method request with circular redirects"() {
     given:
     assumeTrue(testRedirects())
+    assumeTrue(testCircularRedirects())
     def uri = server.address.resolve("/circular-redirect")
 
     when:
@@ -351,6 +355,10 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
   }
 
   boolean testRedirects() {
+    true
+  }
+
+  boolean testCircularRedirects() {
     true
   }
 

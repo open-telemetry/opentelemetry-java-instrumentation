@@ -38,7 +38,7 @@ class JaxRsClientV1Test extends HttpClientTest<JaxRsClientV1Decorator> {
     return "jax-rs.client.call"
   }
 
-  boolean testRedirects() {
+  boolean testCircularRedirects() {
     false
   }
 }

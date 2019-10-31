@@ -31,7 +31,7 @@ class HttpUrlConnectionUseCachesFalseTest extends HttpClientTest<HttpUrlConnecti
   }
 
   @Override
-  boolean testRedirects() {
+  boolean testCircularRedirects() {
     false
   }
 }
