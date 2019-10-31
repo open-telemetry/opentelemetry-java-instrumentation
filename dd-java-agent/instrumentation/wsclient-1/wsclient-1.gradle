@@ -47,5 +47,5 @@ dependencies {
 
   testCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.0.2'
 
-  latestDepTestCompile group: 'com.typesafe.play', name: "play-ahc-ws_$scalaVersion", version: '1.+'
+  latestDepTestCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '1.+'
 }
