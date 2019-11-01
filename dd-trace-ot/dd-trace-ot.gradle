@@ -21,7 +21,8 @@ excludedClassesCoverage += [
 apply plugin: 'org.unbroken-dome.test-sets'
 
 testSets {
-  compatabilityTest
+  ot31CompatabilityTest
+  ot33CompatabilityTest
   traceAgentTest
 }
 
@@ -50,13 +51,33 @@ dependencies {
   testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.17.1'
 
   traceAgentTestCompile deps.testcontainers
+
+  ot31CompatabilityTestCompile group: 'io.opentracing', name: 'opentracing-api', version: '0.31.0'
+  ot31CompatabilityTestCompile group: 'io.opentracing', name: 'opentracing-util', version: '0.31.0'
+  ot31CompatabilityTestCompile group: 'io.opentracing', name: 'opentracing-noop', version: '0.31.0'
+
+  ot33CompatabilityTestCompile group: 'io.opentracing', name: 'opentracing-api', version: '0.33.0'
+  ot33CompatabilityTestCompile group: 'io.opentracing', name: 'opentracing-util', version: '0.33.0'
+  ot33CompatabilityTestCompile group: 'io.opentracing', name: 'opentracing-noop', version: '0.33.0'
 }
 
-[configurations.compatabilityTestCompile, configurations.compatabilityTestRuntime].each {
+[configurations.ot31CompatabilityTestCompile, configurations.ot31CompatabilityTestRuntime].each {
   it.resolutionStrategy {
     force group: 'io.opentracing', name: 'opentracing-api', version: '0.31.0'
+    force group: 'io.opentracing', name: 'opentracing-util', version: '0.31.0'
+    force group: 'io.opentracing', name: 'opentracing-noop', version: '0.31.0'
   }
 }
+[configurations.ot33CompatabilityTestCompile, configurations.ot33CompatabilityTestRuntime].each {
+  it.resolutionStrategy {
+    force group: 'io.opentracing', name: 'opentracing-api', version: '0.33.0'
+    force group: 'io.opentracing', name: 'opentracing-util', version: '0.33.0'
+    force group: 'io.opentracing', name: 'opentracing-noop', version: '0.33.0'
+  }
+}
+
+test.finalizedBy ot31CompatabilityTest
+test.finalizedBy ot33CompatabilityTest
 
 jmh {
 //  include = [".*URLAsResourceNameBenchmark"]

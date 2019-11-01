@@ -1,15 +1,14 @@
 package datadog.opentracing.scopemanager;
 
 import datadog.trace.context.ScopeListener;
-import io.opentracing.Scope;
 import io.opentracing.Span;
 
 /** Simple scope implementation which does not propagate across threads. */
-public class SimpleScope implements Scope {
+public class SimpleScope implements DDScope {
   private final ContextualScopeManager scopeManager;
   private final Span spanUnderScope;
   private final boolean finishOnClose;
-  private final Scope toRestore;
+  private final DDScope toRestore;
 
   public SimpleScope(
       final ContextualScopeManager scopeManager,
