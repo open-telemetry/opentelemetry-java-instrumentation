@@ -1,10 +1,10 @@
-package datadog.trace.instrumentation.wsclient;
+package datadog.trace.instrumentation.playws;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
-import static datadog.trace.instrumentation.wsclient.HeadersInjectAdapter.SETTER;
-import static datadog.trace.instrumentation.wsclient.WSClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.playws.HeadersInjectAdapter.SETTER;
+import static datadog.trace.instrumentation.playws.PlayWSClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -24,9 +24,9 @@ import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.Request;
 
 @AutoService(Instrumenter.class)
-public class WSClientInstrumentation extends Instrumenter.Default {
-  public WSClientInstrumentation() {
-    super("wsclient");
+public class PlayWSClientInstrumentation extends Instrumenter.Default {
+  public PlayWSClientInstrumentation() {
+    super("play-ws");
   }
 
   @Override
@@ -45,7 +45,7 @@ public class WSClientInstrumentation extends Instrumenter.Default {
             .and(takesArguments(2))
             .and(takesArgument(0, named("play.shaded.ahc.org.asynchttpclient.Request")))
             .and(takesArgument(1, named("play.shaded.ahc.org.asynchttpclient.AsyncHandler"))),
-        WSClientAdvice.class.getName());
+        ClientAdvice.class.getName());
   }
 
   @Override
@@ -54,19 +54,19 @@ public class WSClientInstrumentation extends Instrumenter.Default {
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.HttpClientDecorator",
-      packageName + ".WSClientDecorator",
+      packageName + ".PlayWSClientDecorator",
       packageName + ".HeadersInjectAdapter",
       packageName + ".AsyncHandlerWrapper"
     };
   }
 
-  public static class WSClientAdvice {
+  public static class ClientAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentSpan methodEnter(
         @Advice.Argument(0) final Request request,
         @Advice.Argument(value = 1, readOnly = false) AsyncHandler asyncHandler) {
 
-      final AgentSpan span = startSpan("wsclient.request");
+      final AgentSpan span = startSpan("play-ws.request");
 
       DECORATE.afterStart(span);
       DECORATE.onRequest(span, request);

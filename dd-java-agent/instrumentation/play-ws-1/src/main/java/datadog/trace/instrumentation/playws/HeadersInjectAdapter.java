@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.wsclient;
+package datadog.trace.instrumentation.playws;
 
 import datadog.trace.instrumentation.api.AgentPropagation;
 import play.shaded.ahc.org.asynchttpclient.Request;

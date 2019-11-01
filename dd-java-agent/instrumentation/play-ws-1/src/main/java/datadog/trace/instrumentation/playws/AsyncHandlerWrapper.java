@@ -1,7 +1,7 @@
-package datadog.trace.instrumentation.wsclient;
+package datadog.trace.instrumentation.playws;
 
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
-import static datadog.trace.instrumentation.wsclient.WSClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.playws.PlayWSClientDecorator.DECORATE;
 
 import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentSpan;

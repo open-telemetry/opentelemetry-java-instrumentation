@@ -2,7 +2,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.ActorMaterializerSettings
 import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.wsclient.WSClientDecorator
+import datadog.trace.instrumentation.playws.PlayWSClientDecorator
 import play.libs.ws.StandaloneWSClient
 import play.libs.ws.StandaloneWSRequest
 import play.libs.ws.StandaloneWSResponse
@@ -15,7 +15,7 @@ import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit
 
-class WSClientTest extends HttpClientTest<WSClientDecorator> {
+class PlayWSClientTest extends HttpClientTest<PlayWSClientDecorator> {
   @Shared
   ActorSystem system
 
@@ -23,7 +23,7 @@ class WSClientTest extends HttpClientTest<WSClientDecorator> {
   StandaloneWSClient wsClient
 
   def setupSpec() {
-    String name = "wsclient"
+    String name = "play-ws"
     system = ActorSystem.create(name)
     ActorMaterializerSettings settings = ActorMaterializerSettings.create(system)
     ActorMaterializer materializer = ActorMaterializer.create(settings, system, name)
@@ -59,12 +59,12 @@ class WSClientTest extends HttpClientTest<WSClientDecorator> {
   }
 
   @Override
-  WSClientDecorator decorator() {
-    return WSClientDecorator.DECORATE
+  PlayWSClientDecorator decorator() {
+    return PlayWSClientDecorator.DECORATE
   }
 
   String expectedOperationName() {
-    return "wsclient.request"
+    return "play-ws.request"
   }
 
   @Override

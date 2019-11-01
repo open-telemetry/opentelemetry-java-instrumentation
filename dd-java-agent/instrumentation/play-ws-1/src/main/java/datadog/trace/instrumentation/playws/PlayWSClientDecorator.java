@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.wsclient;
+package datadog.trace.instrumentation.playws;
 
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import java.net.URI;
@@ -6,8 +6,8 @@ import java.net.URISyntaxException;
 import play.shaded.ahc.org.asynchttpclient.Request;
 import play.shaded.ahc.org.asynchttpclient.Response;
 
-public class WSClientDecorator extends HttpClientDecorator<Request, Response> {
-  public static final WSClientDecorator DECORATE = new WSClientDecorator();
+public class PlayWSClientDecorator extends HttpClientDecorator<Request, Response> {
+  public static final PlayWSClientDecorator DECORATE = new PlayWSClientDecorator();
 
   @Override
   protected String method(final Request request) {
@@ -36,11 +36,11 @@ public class WSClientDecorator extends HttpClientDecorator<Request, Response> {
 
   @Override
   protected String[] instrumentationNames() {
-    return new String[] {"wsclient"};
+    return new String[] {"play-ws"};
   }
 
   @Override
   protected String component() {
-    return "wsclient";
+    return "play-ws";
   }
 }
