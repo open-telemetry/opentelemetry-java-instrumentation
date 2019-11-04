@@ -18,6 +18,8 @@ public class ForceManualKeepDecorator extends AbstractDecorator {
   public boolean shouldSetTag(final DDSpanContext context, final String tag, final Object value) {
     if (value instanceof Boolean && (boolean) value) {
       context.setSamplingPriority(PrioritySampling.USER_KEEP);
+    } else if (value instanceof String && Boolean.parseBoolean((String) value)) {
+      context.setSamplingPriority(PrioritySampling.USER_KEEP);
     }
     return false;
   }
