@@ -28,6 +28,7 @@ import io.opentracing.propagation.TextMapInject;
 import io.opentracing.tag.Tag;
 import java.io.Closeable;
 import java.lang.ref.WeakReference;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,6 +49,10 @@ import lombok.extern.slf4j.Slf4j;
 /** DDTracer makes it easy to send traces and span to DD using the OpenTracing API. */
 @Slf4j
 public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace.api.Tracer {
+  // UINT64 max value
+  public static final BigInteger TRACE_ID_MAX =
+      BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
+  public static final BigInteger TRACE_ID_MIN = BigInteger.ZERO;
 
   /** Default service name if none provided on the trace or span */
   final String serviceName;
@@ -400,7 +405,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   public String getTraceId() {
     final Span activeSpan = activeSpan();
     if (activeSpan instanceof DDSpan) {
-      return ((DDSpan) activeSpan).getTraceId();
+      return ((DDSpan) activeSpan).getTraceId().toString();
     }
     return "0";
   }
@@ -409,7 +414,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   public String getSpanId() {
     final Span activeSpan = activeSpan();
     if (activeSpan instanceof DDSpan) {
-      return ((DDSpan) activeSpan).getSpanId();
+      return ((DDSpan) activeSpan).getSpanId().toString();
     }
     return "0";
   }
@@ -604,10 +609,15 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       return this;
     }
 
-    private String generateNewId() {
-      // TODO: expand the range of numbers generated to be from 1 to uint 64 MAX
-      // Ensure the generated ID is in a valid range:
-      return String.valueOf(ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE));
+    private BigInteger generateNewId() {
+      // It is **extremely** unlikely to generate the value "0" but we still need to handle that
+      // case
+      BigInteger value;
+      do {
+        value = new BigInteger(63, ThreadLocalRandom.current());
+      } while (value.signum() == 0);
+
+      return value;
     }
 
     /**
@@ -617,9 +627,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
      * @return the context
      */
     private DDSpanContext buildSpanContext() {
-      final String traceId;
-      final String spanId = generateNewId();
-      final String parentSpanId;
+      final BigInteger traceId;
+      final BigInteger spanId = generateNewId();
+      final BigInteger parentSpanId;
       final Map<String, String> baggage;
       final PendingTrace parentTrace;
       final int samplingPriority;
@@ -661,7 +671,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         } else {
           // Start a new trace
           traceId = generateNewId();
-          parentSpanId = "0";
+          parentSpanId = BigInteger.ZERO;
           samplingPriority = PrioritySampling.UNSET;
           baggage = null;
         }

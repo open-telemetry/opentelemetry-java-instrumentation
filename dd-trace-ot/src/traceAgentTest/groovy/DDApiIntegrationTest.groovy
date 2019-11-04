@@ -24,9 +24,9 @@ class DDApiIntegrationTest {
     static final WRITER = new ListWriter()
     static final TRACER = new DDTracer(WRITER)
     static final CONTEXT = new DDSpanContext(
-      "1",
-      "1",
-      "0",
+      1G,
+      1G,
+      0G,
       "fakeService",
       "fakeOperation",
       "fakeResource",
@@ -36,7 +36,7 @@ class DDApiIntegrationTest {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new PendingTrace(TRACER, "1", [:]),
+      new PendingTrace(TRACER, 1G, [:]),
       TRACER)
 
     // Looks like okHttp needs to resolve this, even for connection over socket

@@ -199,11 +199,11 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   def "test success with parent"() {
     setup:
-    def traceId = "123"
-    def parentId = "456"
+    def traceId = 123G
+    def parentId = 456G
     def request = request(SUCCESS, method, body)
-      .header("x-datadog-trace-id", traceId)
-      .header("x-datadog-parent-id", parentId)
+      .header("x-datadog-trace-id", traceId.toString())
+      .header("x-datadog-parent-id", parentId.toString())
       .build()
     def response = client.newCall(request).execute()
 
@@ -425,7 +425,7 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   }
 
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       serviceName expectedServiceName()
       operationName expectedOperationName()

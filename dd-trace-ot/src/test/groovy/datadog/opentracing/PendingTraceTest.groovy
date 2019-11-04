@@ -25,11 +25,10 @@ class PendingTraceTest extends DDSpecification {
   }
   def tracer = new DDTracer(writer)
 
-  def traceId = System.identityHashCode(this)
-  String traceIdStr = String.valueOf(traceId)
+  BigInteger traceId = BigInteger.valueOf(System.identityHashCode(this))
 
   @Subject
-  PendingTrace trace = new PendingTrace(tracer, traceIdStr, [:])
+  PendingTrace trace = new PendingTrace(tracer, traceId, [:])
 
   DDSpan rootSpan = SpanFactory.newSpanOf(trace)
 
@@ -148,7 +147,7 @@ class PendingTraceTest extends DDSpecification {
 
   def "register span to wrong trace fails"() {
     setup:
-    def otherTrace = new PendingTrace(tracer, String.valueOf(traceId - 10), [:])
+    def otherTrace = new PendingTrace(tracer, traceId - 10, [:])
     otherTrace.registerSpan(new DDSpan(0, rootSpan.context()))
 
     expect:
@@ -159,7 +158,7 @@ class PendingTraceTest extends DDSpecification {
 
   def "add span to wrong trace fails"() {
     setup:
-    def otherTrace = new PendingTrace(tracer, String.valueOf(traceId - 10), [:])
+    def otherTrace = new PendingTrace(tracer, traceId - 10, [:])
     rootSpan.finish()
     otherTrace.addSpan(rootSpan)
 
@@ -197,7 +196,7 @@ class PendingTraceTest extends DDSpecification {
     properties.setProperty(PARTIAL_FLUSH_MIN_SPANS, "1")
     def config = Config.get(properties)
     def tracer = new DDTracer(config, writer)
-    def trace = new PendingTrace(tracer, traceIdStr, [:])
+    def trace = new PendingTrace(tracer, traceId, [:])
     def rootSpan = SpanFactory.newSpanOf(trace)
     def child1 = tracer.buildSpan("child1").asChildOf(rootSpan).start()
     def child2 = tracer.buildSpan("child2").asChildOf(rootSpan).start()
@@ -243,7 +242,7 @@ class PendingTraceTest extends DDSpecification {
     properties.setProperty(PARTIAL_FLUSH_MIN_SPANS, "1")
     def config = Config.get(properties)
     def tracer = new DDTracer(config, writer)
-    def trace = new PendingTrace(tracer, traceIdStr, [:])
+    def trace = new PendingTrace(tracer, traceId, [:])
     def rootSpan = SpanFactory.newSpanOf(trace)
     def child1 = tracer.buildSpan("child1").asChildOf(rootSpan).start()
     def child2 = tracer.buildSpan("child2").asChildOf(rootSpan).start()

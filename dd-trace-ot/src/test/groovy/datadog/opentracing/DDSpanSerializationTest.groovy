@@ -43,9 +43,9 @@ class DDSpanSerializationTest extends DDSpecification {
     def tracer = new DDTracer(writer)
     final DDSpanContext context =
       new DDSpanContext(
-        "1",
-        "2",
-        "0",
+        1G,
+        2G,
+        0G,
         "service",
         "operation",
         null,
@@ -55,7 +55,7 @@ class DDSpanSerializationTest extends DDSpecification {
         false,
         "type",
         tags,
-        new PendingTrace(tracer, "1", [:]),
+        new PendingTrace(tracer, 1G, [:]),
         tracer)
 
     baggage.put(DDTags.THREAD_NAME, Thread.currentThread().getName())
@@ -85,9 +85,9 @@ class DDSpanSerializationTest extends DDSpecification {
     def writer = new ListWriter()
     def tracer = new DDTracer(writer)
     def context = new DDSpanContext(
-      value.toString(),
-      value.toString(),
-      "0",
+      value,
+      value,
+      0G,
       "fakeService",
       "fakeOperation",
       "fakeResource",
@@ -97,7 +97,7 @@ class DDSpanSerializationTest extends DDSpecification {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new PendingTrace(tracer, "1", [:]),
+      new PendingTrace(tracer, 1G, [:]),
       tracer)
     def span = new DDSpan(0, context)
     byte[] bytes = objectMapper.writeValueAsBytes(span)
@@ -120,12 +120,12 @@ class DDSpanSerializationTest extends DDSpecification {
     }
 
     where:
-    value                                                       | _
-    BigInteger.ZERO                                             | _
-    BigInteger.ONE                                              | _
-    8223372036854775807G                                        | _
-    BigInteger.valueOf(Long.MAX_VALUE).subtract(BigInteger.ONE) | _
-    BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE)      | _
-    BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE)      | _
+    value                                           | _
+    0G                                              | _
+    1G                                              | _
+    8223372036854775807G                            | _
+    BigInteger.valueOf(Long.MAX_VALUE).subtract(1G) | _
+    BigInteger.valueOf(Long.MAX_VALUE).add(1G)      | _
+    2G.pow(64).subtract(1G)                         | _
   }
 }

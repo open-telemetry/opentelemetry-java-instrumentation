@@ -161,9 +161,9 @@ class DDAgentWriterTest extends DDSpecification {
 
     where:
     minimalContext = new DDSpanContext(
-      "1",
-      "1",
-      "0",
+      1G,
+      1G,
+      0G,
       "",
       "",
       "",
@@ -199,9 +199,9 @@ class DDAgentWriterTest extends DDSpecification {
 
   def createMinimalTrace() {
     def minimalContext = new DDSpanContext(
-      "1",
-      "1",
-      "0",
+      1G,
+      1G,
+      0G,
       "",
       "",
       "",
@@ -318,8 +318,7 @@ class DDAgentWriterTest extends DDSpecification {
       DDApi.Response sendSerializedTraces(
         int representativeCount,
         Integer sizeInBytes,
-        List<byte[]> traces)
-      {
+        List<byte[]> traces) {
         // simulating a communication failure to a server
         return DDApi.Response.failed(new IOException("comm error"))
       }
@@ -547,8 +546,7 @@ class DDAgentWriterTest extends DDSpecification {
       DDApi.Response sendSerializedTraces(
         int representativeCount,
         Integer sizeInBytes,
-        List<byte[]> traces)
-      {
+        List<byte[]> traces) {
         // simulating a communication failure to a server
         return DDApi.Response.failed(new IOException("comm error"))
       }

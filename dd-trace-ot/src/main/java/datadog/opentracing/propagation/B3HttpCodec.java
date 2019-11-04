@@ -1,6 +1,5 @@
 package datadog.opentracing.propagation;
 
-import static datadog.opentracing.propagation.HttpCodec.ZERO;
 import static datadog.opentracing.propagation.HttpCodec.validateUInt64BitsID;
 
 import datadog.opentracing.DDSpanContext;
@@ -40,12 +39,8 @@ class B3HttpCodec {
     @Override
     public void inject(final DDSpanContext context, final TextMapInject carrier) {
       try {
-        // TODO: should we better store ids as BigInteger in context to avoid parsing it twice.
-        final BigInteger traceId = new BigInteger(context.getTraceId());
-        final BigInteger spanId = new BigInteger(context.getSpanId());
-
-        carrier.put(TRACE_ID_KEY, traceId.toString(HEX_RADIX).toLowerCase());
-        carrier.put(SPAN_ID_KEY, spanId.toString(HEX_RADIX).toLowerCase());
+        carrier.put(TRACE_ID_KEY, context.getTraceId().toString(HEX_RADIX).toLowerCase());
+        carrier.put(SPAN_ID_KEY, context.getSpanId().toString(HEX_RADIX).toLowerCase());
 
         if (context.lockSamplingPriority()) {
           carrier.put(
@@ -78,8 +73,8 @@ class B3HttpCodec {
     public SpanContext extract(final TextMapExtract carrier) {
       try {
         Map<String, String> tags = Collections.emptyMap();
-        String traceId = ZERO;
-        String spanId = ZERO;
+        BigInteger traceId = BigInteger.ZERO;
+        BigInteger spanId = BigInteger.ZERO;
         int samplingPriority = PrioritySampling.UNSET;
 
         for (final Map.Entry<String, String> entry : carrier) {
@@ -95,7 +90,7 @@ class B3HttpCodec {
             final int length = value.length();
             if (length > 32) {
               log.debug("Header {} exceeded max length of 32: {}", TRACE_ID_KEY, value);
-              traceId = "0";
+              traceId = BigInteger.ZERO;
               continue;
             } else if (length > 16) {
               trimmedValue = value.substring(length - 16);
@@ -117,7 +112,7 @@ class B3HttpCodec {
           }
         }
 
-        if (!ZERO.equals(traceId)) {
+        if (!BigInteger.ZERO.equals(traceId)) {
           final ExtractedContext context =
               new ExtractedContext(
                   traceId,

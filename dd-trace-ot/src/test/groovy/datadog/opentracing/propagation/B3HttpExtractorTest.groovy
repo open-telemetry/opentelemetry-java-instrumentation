@@ -5,10 +5,10 @@ import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
 import io.opentracing.propagation.TextMapExtractAdapter
 
+import static datadog.opentracing.DDTracer.TRACE_ID_MAX
 import static datadog.opentracing.propagation.B3HttpCodec.SAMPLING_PRIORITY_KEY
 import static datadog.opentracing.propagation.B3HttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.B3HttpCodec.TRACE_ID_KEY
-import static datadog.opentracing.propagation.HttpCodec.UINT64_MAX
 
 class B3HttpExtractorTest extends DDSpecification {
 
@@ -30,20 +30,20 @@ class B3HttpExtractorTest extends DDSpecification {
     final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
     then:
-    context.traceId == traceId.toString()
-    context.spanId == spanId.toString()
+    context.traceId == traceId
+    context.spanId == spanId
     context.baggage == [:]
     context.tags == ["some-tag": "my-interesting-info"]
     context.samplingPriority == expectedSamplingPriority
     context.origin == null
 
     where:
-    traceId             | spanId              | samplingPriority | expectedSamplingPriority
-    1G                  | 2G                  | null             | PrioritySampling.UNSET
-    2G                  | 3G                  | 1                | PrioritySampling.SAMPLER_KEEP
-    3G                  | 4G                  | 0                | PrioritySampling.SAMPLER_DROP
-    UINT64_MAX          | UINT64_MAX.minus(1) | 0                | PrioritySampling.SAMPLER_DROP
-    UINT64_MAX.minus(1) | UINT64_MAX          | 1                | PrioritySampling.SAMPLER_KEEP
+    traceId          | spanId           | samplingPriority | expectedSamplingPriority
+    1G               | 2G               | null             | PrioritySampling.UNSET
+    2G               | 3G               | 1                | PrioritySampling.SAMPLER_KEEP
+    3G               | 4G               | 0                | PrioritySampling.SAMPLER_DROP
+    TRACE_ID_MAX     | TRACE_ID_MAX - 1 | 0                | PrioritySampling.SAMPLER_DROP
+    TRACE_ID_MAX - 1 | TRACE_ID_MAX     | 1                | PrioritySampling.SAMPLER_KEEP
   }
 
   def "extract 128 bit id truncates id to 64 bit"() {
@@ -65,20 +65,20 @@ class B3HttpExtractorTest extends DDSpecification {
     }
 
     where:
-    traceId                             | spanId                   | expectedTraceId       | expectedSpanId
-    "-1"                                | "1"                      | null                  | "0"
-    "1"                                 | "-1"                     | null                  | "0"
-    "0"                                 | "1"                      | null                  | "0"
-    "00001"                             | "00001"                  | "1"                   | "1"
-    "463ac35c9f6413ad"                  | "463ac35c9f6413ad"       | "5060571933882717101" | "5060571933882717101"
-    "463ac35c9f6413ad48485a3953bb6124"  | "1"                      | "5208512171318403364" | "1"
-    "f".multiply(16)                    | "1"                      | "$UINT64_MAX"         | "1"
-    "a".multiply(16) + "f".multiply(16) | "1"                      | "$UINT64_MAX"         | "1"
-    "1" + "f".multiply(32)              | "1"                      | null                  | "1"
-    "0" + "f".multiply(32)              | "1"                      | null                  | "1"
-    "1"                                 | "f".multiply(16)         | "1"                   | "$UINT64_MAX"
-    "1"                                 | "1" + "f".multiply(16)   | null                  | "0"
-    "1"                                 | "000" + "f".multiply(16) | "1"                   | "$UINT64_MAX"
+    traceId                            | spanId             | expectedTraceId      | expectedSpanId
+    "-1"                               | "1"                | null                 | 0G
+    "1"                                | "-1"               | null                 | 0G
+    "0"                                | "1"                | null                 | 0G
+    "00001"                            | "00001"            | 1G                   | 1G
+    "463ac35c9f6413ad"                 | "463ac35c9f6413ad" | 5060571933882717101G | 5060571933882717101G
+    "463ac35c9f6413ad48485a3953bb6124" | "1"                | 5208512171318403364G | 1G
+    "f" * 16                           | "1"                | TRACE_ID_MAX         | 1G
+    "a" * 16 + "f" * 16                | "1"                | TRACE_ID_MAX         | 1G
+    "1" + "f" * 32                     | "1"                | null                 | 1G
+    "0" + "f" * 32                     | "1"                | null                 | 1G
+    "1"                                | "f" * 16           | 1G                   | TRACE_ID_MAX
+    "1"                                | "1" + "f" * 16     | null                 | 0G
+    "1"                                | "000" + "f" * 16   | 1G                   | TRACE_ID_MAX
   }
 
   def "extract header tags with no propagation"() {

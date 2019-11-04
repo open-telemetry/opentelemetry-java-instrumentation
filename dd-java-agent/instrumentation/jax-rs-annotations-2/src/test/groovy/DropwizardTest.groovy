@@ -11,10 +11,11 @@ import io.dropwizard.setup.Environment
 import io.dropwizard.testing.ConfigOverride
 import io.dropwizard.testing.DropwizardTestSupport
 import io.opentracing.tag.Tags
+import org.eclipse.jetty.servlet.ServletHandler
+
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.core.Response
-import org.eclipse.jetty.servlet.ServletHandler
 
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.ERROR
 import static datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint.EXCEPTION
@@ -94,7 +95,7 @@ class DropwizardTest extends HttpServerTest<DropwizardTestSupport, Servlet3Decor
   }
 
   @Override
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       serviceName expectedServiceName()
       operationName expectedOperationName()

@@ -81,16 +81,16 @@ class SpanAssert {
   }
 
   def parent() {
-    assert span.parentId == "0"
+    assert span.parentId == 0G
     checked.parentId = true
   }
 
-  def parentId(String parentId) {
+  def parentId(BigInteger parentId) {
     assert span.parentId == parentId
     checked.parentId = true
   }
 
-  def traceId(String traceId) {
+  def traceId(BigInteger traceId) {
     assert span.traceId == traceId
     checked.traceId = true
   }

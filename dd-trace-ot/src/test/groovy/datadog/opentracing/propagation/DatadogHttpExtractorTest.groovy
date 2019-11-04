@@ -5,12 +5,12 @@ import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
 import io.opentracing.propagation.TextMapExtractAdapter
 
+import static datadog.opentracing.DDTracer.TRACE_ID_MAX
 import static datadog.opentracing.propagation.DatadogHttpCodec.ORIGIN_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.OT_BAGGAGE_PREFIX
 import static datadog.opentracing.propagation.DatadogHttpCodec.SAMPLING_PRIORITY_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.TRACE_ID_KEY
-import static datadog.opentracing.propagation.HttpCodec.UINT64_MAX
 
 class DatadogHttpExtractorTest extends DDSpecification {
 
@@ -19,8 +19,8 @@ class DatadogHttpExtractorTest extends DDSpecification {
   def "extract http headers"() {
     setup:
     def headers = [
-      (TRACE_ID_KEY.toUpperCase())            : traceId,
-      (SPAN_ID_KEY.toUpperCase())             : spanId,
+      (TRACE_ID_KEY.toUpperCase())            : traceId.toString(),
+      (SPAN_ID_KEY.toUpperCase())             : spanId.toString(),
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
       SOME_HEADER                             : "my-interesting-info",
@@ -38,19 +38,19 @@ class DatadogHttpExtractorTest extends DDSpecification {
     final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
     then:
-    context.traceId == traceId
-    context.spanId == spanId
+    context.traceId == new BigInteger(traceId)
+    context.spanId == new BigInteger(spanId)
     context.baggage == ["k1": "v1", "k2": "v2"]
     context.tags == ["some-tag": "my-interesting-info"]
     context.samplingPriority == samplingPriority
     context.origin == origin
 
     where:
-    traceId                        | spanId                         | samplingPriority              | origin
-    "1"                            | "2"                            | PrioritySampling.UNSET        | null
-    "2"                            | "3"                            | PrioritySampling.SAMPLER_KEEP | "saipan"
-    UINT64_MAX.toString()          | UINT64_MAX.minus(1).toString() | PrioritySampling.UNSET        | "saipan"
-    UINT64_MAX.minus(1).toString() | UINT64_MAX.toString()          | PrioritySampling.SAMPLER_KEEP | "saipan"
+    traceId                       | spanId                        | samplingPriority              | origin
+    "1"                           | "2"                           | PrioritySampling.UNSET        | null
+    "2"                           | "3"                           | PrioritySampling.SAMPLER_KEEP | "saipan"
+    TRACE_ID_MAX.toString()       | (TRACE_ID_MAX - 1).toString() | PrioritySampling.UNSET        | "saipan"
+    (TRACE_ID_MAX - 1).toString() | TRACE_ID_MAX.toString()       | PrioritySampling.SAMPLER_KEEP | "saipan"
   }
 
   def "extract header tags with no propagation"() {
@@ -94,7 +94,7 @@ class DatadogHttpExtractorTest extends DDSpecification {
 
   def "extract http headers with out of range trace ID"() {
     setup:
-    String outOfRangeTraceId = UINT64_MAX.add(BigInteger.ONE).toString()
+    String outOfRangeTraceId = (TRACE_ID_MAX + 1).toString()
     def headers = [
       (TRACE_ID_KEY.toUpperCase())            : outOfRangeTraceId,
       (SPAN_ID_KEY.toUpperCase())             : "0",
@@ -146,15 +146,15 @@ class DatadogHttpExtractorTest extends DDSpecification {
     }
 
     where:
-    gtTraceId               | gSpanId                 | expectedTraceId | expectedSpanId
-    "-1"                    | "1"                     | null            | "0"
-    "1"                     | "-1"                    | null            | "0"
-    "0"                     | "1"                     | null            | "0"
-    "1"                     | "0"                     | "1"             | "0"
-    "$UINT64_MAX"           | "1"                     | "$UINT64_MAX"   | "1"
-    "${UINT64_MAX.plus(1)}" | "1"                     | null            | "1"
-    "1"                     | "$UINT64_MAX"           | "1"             | "$UINT64_MAX"
-    "1"                     | "${UINT64_MAX.plus(1)}" | null            | "0"
+    gtTraceId             | gSpanId               | expectedTraceId | expectedSpanId
+    "-1"                  | "1"                   | null            | 0G
+    "1"                   | "-1"                  | null            | 0G
+    "0"                   | "1"                   | null            | 0G
+    "1"                   | "0"                   | 1G              | 0G
+    "$TRACE_ID_MAX"       | "1"                   | TRACE_ID_MAX    | 1G
+    "${TRACE_ID_MAX + 1}" | "1"                   | null            | 1G
+    "1"                   | "$TRACE_ID_MAX"       | 1G              | TRACE_ID_MAX
+    "1"                   | "${TRACE_ID_MAX + 1}" | null            | 0G
 
     traceId = gtTraceId.toString()
     spanId = gSpanId.toString()

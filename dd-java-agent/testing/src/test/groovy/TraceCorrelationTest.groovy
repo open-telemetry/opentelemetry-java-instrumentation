@@ -12,8 +12,8 @@ class TraceCorrelationTest extends AgentTestRunner {
     DDSpan span = (DDSpan) scope.span()
 
     then:
-    CorrelationIdentifier.traceId == span.traceId
-    CorrelationIdentifier.spanId == span.spanId
+    CorrelationIdentifier.traceId == span.traceId.toString()
+    CorrelationIdentifier.spanId == span.spanId.toString()
 
     when:
     scope.close()

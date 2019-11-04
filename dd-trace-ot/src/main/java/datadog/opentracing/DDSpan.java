@@ -4,17 +4,12 @@ import static io.opentracing.log.Fields.ERROR_OBJECT;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.util.Clock;
 import io.opentracing.Span;
 import io.opentracing.tag.Tag;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
@@ -126,7 +121,7 @@ public class DDSpan implements Span, MutableSpan {
    */
   @JsonIgnore
   public final boolean isRootSpan() {
-    return "0".equals(context.getParentId());
+    return BigInteger.ZERO.equals(context.getParentId());
   }
 
   @Override
@@ -346,20 +341,17 @@ public class DDSpan implements Span, MutableSpan {
   }
 
   @JsonGetter("trace_id")
-  @JsonSerialize(using = UInt64IDStringSerializer.class)
-  public String getTraceId() {
+  public BigInteger getTraceId() {
     return context.getTraceId();
   }
 
   @JsonGetter("span_id")
-  @JsonSerialize(using = UInt64IDStringSerializer.class)
-  public String getSpanId() {
+  public BigInteger getSpanId() {
     return context.getSpanId();
   }
 
   @JsonGetter("parent_id")
-  @JsonSerialize(using = UInt64IDStringSerializer.class)
-  public String getParentId() {
+  public BigInteger getParentId() {
     return context.getParentId();
   }
 
@@ -421,32 +413,5 @@ public class DDSpan implements Span, MutableSpan {
         .append(", duration_ns=")
         .append(durationNano)
         .toString();
-  }
-
-  protected static class UInt64IDStringSerializer extends StdSerializer<String> {
-    private static final int LONG_PARSE_LIMIT = String.valueOf(Long.MAX_VALUE).length();
-
-    public UInt64IDStringSerializer() {
-      this(null);
-    }
-
-    public UInt64IDStringSerializer(final Class<String> stringClass) {
-      super(stringClass);
-    }
-
-    @Override
-    public void serialize(
-        final String value, final JsonGenerator gen, final SerializerProvider provider)
-        throws IOException {
-      final int length = value.length();
-      // BigInteger's are expensive, so lets try to avoid using them if possible.
-      // This is a rough approximation for optimization.
-      // There are some values that would pass this test that could be parsed with Long.parseLong.
-      if (length > LONG_PARSE_LIMIT || (length == LONG_PARSE_LIMIT && value.startsWith("9"))) {
-        gen.writeNumber(new BigInteger(value));
-      } else {
-        gen.writeNumber(Long.parseLong(value));
-      }
-    }
   }
 }
