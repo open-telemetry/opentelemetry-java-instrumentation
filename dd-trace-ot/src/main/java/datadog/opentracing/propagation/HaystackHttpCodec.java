@@ -1,6 +1,5 @@
 package datadog.opentracing.propagation;
 
-import static datadog.opentracing.propagation.HttpCodec.ZERO;
 import static datadog.opentracing.propagation.HttpCodec.validateUInt64BitsID;
 
 import datadog.opentracing.DDSpanContext;
@@ -8,6 +7,7 @@ import datadog.trace.api.sampling.PrioritySampling;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,9 +34,9 @@ public class HaystackHttpCodec {
 
     @Override
     public void inject(final DDSpanContext context, final TextMapInject carrier) {
-      carrier.put(TRACE_ID_KEY, context.getTraceId());
-      carrier.put(SPAN_ID_KEY, context.getSpanId());
-      carrier.put(PARENT_ID_KEY, context.getParentId());
+      carrier.put(TRACE_ID_KEY, context.getTraceId().toString());
+      carrier.put(SPAN_ID_KEY, context.getSpanId().toString());
+      carrier.put(PARENT_ID_KEY, context.getParentId().toString());
 
       for (final Map.Entry<String, String> entry : context.baggageItems()) {
         carrier.put(OT_BAGGAGE_PREFIX + entry.getKey(), HttpCodec.encode(entry.getValue()));
@@ -61,8 +61,8 @@ public class HaystackHttpCodec {
       try {
         Map<String, String> baggage = Collections.emptyMap();
         Map<String, String> tags = Collections.emptyMap();
-        String traceId = ZERO;
-        String spanId = ZERO;
+        BigInteger traceId = BigInteger.ZERO;
+        BigInteger spanId = BigInteger.ZERO;
         final int samplingPriority = PrioritySampling.SAMPLER_KEEP;
         final String origin = null; // Always null
 
@@ -93,7 +93,7 @@ public class HaystackHttpCodec {
           }
         }
 
-        if (!ZERO.equals(traceId)) {
+        if (!BigInteger.ZERO.equals(traceId)) {
           final ExtractedContext context =
               new ExtractedContext(traceId, spanId, samplingPriority, origin, baggage, tags);
           context.lockSamplingPriority();

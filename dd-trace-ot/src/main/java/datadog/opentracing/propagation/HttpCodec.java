@@ -1,6 +1,7 @@
 package datadog.opentracing.propagation;
 
 import datadog.opentracing.DDSpanContext;
+import datadog.opentracing.DDTracer;
 import datadog.trace.api.Config;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMapExtract;
@@ -16,11 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class HttpCodec {
-
-  // uint 64 bits max value, 2^64 - 1
-  static final BigInteger UINT64_MAX = new BigInteger("2").pow(64).subtract(BigInteger.ONE);
-  static final String ZERO = "0";
-
   public interface Injector {
 
     void inject(final DDSpanContext context, final TextMapInject carrier);
@@ -111,24 +107,24 @@ public class HttpCodec {
   }
 
   /**
-   * Helper method to validate an ID String to verify that it is an unsigned 64 bits number and is
-   * within range.
+   * Helper method to validate an ID String to verify within range
    *
    * @param value the String that contains the ID
    * @param radix radix to use to parse the ID
-   * @return the ID in String format if it passes validations, "0" otherwise
+   * @return the parsed ID
    * @throws IllegalArgumentException if value cannot be converted to integer or doesn't conform to
    *     required boundaries
    */
-  static String validateUInt64BitsID(final String value, final int radix)
+  static BigInteger validateUInt64BitsID(final String value, final int radix)
       throws IllegalArgumentException {
     final BigInteger parsedValue = new BigInteger(value, radix);
-    if (parsedValue.compareTo(BigInteger.ZERO) == -1 || parsedValue.compareTo(UINT64_MAX) == 1) {
+    if (parsedValue.compareTo(DDTracer.TRACE_ID_MIN) < 0
+        || parsedValue.compareTo(DDTracer.TRACE_ID_MAX) > 0) {
       throw new IllegalArgumentException(
           "ID out of range, must be between 0 and 2^64-1, got: " + value);
     }
-    // We use decimals
-    return parsedValue.toString();
+
+    return parsedValue;
   }
 
   /** URL encode value */

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.trace.api.DDTags;
 import datadog.trace.api.sampling.PrioritySampling;
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -39,9 +40,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   private final Map<String, String> baggageItems;
 
   // Not Shared with other span contexts
-  private final String traceId;
-  private final String spanId;
-  private final String parentId;
+  private final BigInteger traceId;
+  private final BigInteger spanId;
+  private final BigInteger parentId;
 
   /** Tags are associated to the current span, they will not propagate to the children span */
   private final Map<String, Object> tags = new ConcurrentHashMap<>();
@@ -73,9 +74,9 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   private final long threadId = Thread.currentThread().getId();
 
   public DDSpanContext(
-      final String traceId,
-      final String spanId,
-      final String parentId,
+      final BigInteger traceId,
+      final BigInteger spanId,
+      final BigInteger parentId,
       final String serviceName,
       final String operationName,
       final String resourceName,
@@ -128,26 +129,26 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.tags.put(DDTags.THREAD_ID, threadId);
   }
 
-  public String getTraceId() {
+  public BigInteger getTraceId() {
     return traceId;
   }
 
   @Override
   public String toTraceId() {
-    return traceId;
+    return traceId.toString();
   }
 
-  public String getParentId() {
+  public BigInteger getParentId() {
     return parentId;
   }
 
-  public String getSpanId() {
+  public BigInteger getSpanId() {
     return spanId;
   }
 
   @Override
   public String toSpanId() {
-    return spanId;
+    return spanId.toString();
   }
 
   public String getServiceName() {

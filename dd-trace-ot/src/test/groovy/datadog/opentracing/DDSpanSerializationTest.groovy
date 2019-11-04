@@ -43,9 +43,9 @@ class DDSpanSerializationTest extends DDSpecification {
     def tracer = new DDTracer(writer)
     final DDSpanContext context =
       new DDSpanContext(
-        "1",
-        "2",
-        "0",
+        BigInteger.ONE,
+        BigInteger.valueOf(2),
+        BigInteger.ZERO,
         "service",
         "operation",
         null,
@@ -55,7 +55,7 @@ class DDSpanSerializationTest extends DDSpecification {
         false,
         "type",
         tags,
-        new PendingTrace(tracer, "1", [:]),
+        new PendingTrace(tracer, BigInteger.ONE, [:]),
         tracer)
 
     baggage.put(DDTags.THREAD_NAME, Thread.currentThread().getName())
@@ -85,9 +85,9 @@ class DDSpanSerializationTest extends DDSpecification {
     def writer = new ListWriter()
     def tracer = new DDTracer(writer)
     def context = new DDSpanContext(
-      value.toString(),
-      value.toString(),
-      "0",
+      value,
+      value,
+      BigInteger.ZERO,
       "fakeService",
       "fakeOperation",
       "fakeResource",
@@ -97,7 +97,7 @@ class DDSpanSerializationTest extends DDSpecification {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new PendingTrace(tracer, "1", [:]),
+      new PendingTrace(tracer, BigInteger.ONE, [:]),
       tracer)
     def span = new DDSpan(0, context)
     byte[] bytes = objectMapper.writeValueAsBytes(span)

@@ -28,7 +28,7 @@ class TraceCorrelationTest extends DDSpecification {
 
   def "get trace id with trace"() {
     expect:
-    ((DDSpan) scope.span()).traceId == tracer.getTraceId()
+    ((DDSpan) scope.span()).traceId.toString() == tracer.getTraceId()
   }
 
   def "get span id without span"() {
@@ -41,6 +41,6 @@ class TraceCorrelationTest extends DDSpecification {
 
   def "get span id with trace"() {
     expect:
-    ((DDSpan) scope.span()).spanId == tracer.getSpanId()
+    ((DDSpan) scope.span()).spanId.toString() == tracer.getSpanId()
   }
 }

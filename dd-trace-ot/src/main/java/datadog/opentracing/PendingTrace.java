@@ -6,6 +6,7 @@ import java.io.Closeable;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -28,7 +29,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   private static final AtomicReference<SpanCleaner> SPAN_CLEANER = new AtomicReference<>();
 
   private final DDTracer tracer;
-  private final String traceId;
+  private final BigInteger traceId;
   private final Map<String, String> serviceNameMappings;
 
   // TODO: consider moving these time fields into DDTracer to ensure that traces have precise
@@ -62,7 +63,9 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   private final AtomicBoolean isWritten = new AtomicBoolean(false);
 
   PendingTrace(
-      final DDTracer tracer, final String traceId, final Map<String, String> serviceNameMappings) {
+      final DDTracer tracer,
+      final BigInteger traceId,
+      final Map<String, String> serviceNameMappings) {
     this.tracer = tracer;
     this.traceId = traceId;
     this.serviceNameMappings = serviceNameMappings;

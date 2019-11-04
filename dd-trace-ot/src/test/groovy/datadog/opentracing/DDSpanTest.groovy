@@ -33,9 +33,9 @@ class DDSpanTest extends DDSpecification {
     setup:
     final DDSpanContext context =
       new DDSpanContext(
-        "1",
-        "1",
-        "0",
+        BigInteger.ONE,
+        BigInteger.ONE,
+        BigInteger.ZERO,
         "fakeService",
         "fakeOperation",
         "fakeResource",
@@ -45,7 +45,7 @@ class DDSpanTest extends DDSpecification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, "1", [:]),
+        new PendingTrace(tracer, BigInteger.ONE, [:]),
         tracer)
 
     final DDSpan span = new DDSpan(1L, context)
@@ -212,9 +212,9 @@ class DDSpanTest extends DDSpecification {
     child.@origin == null // Access field directly instead of getter.
 
     where:
-    extractedContext                                           | _
-    new TagContext("some-origin", [:])                         | _
-    new ExtractedContext("1", "2", 0, "some-origin", [:], [:]) | _
+    extractedContext                                                                        | _
+    new TagContext("some-origin", [:])                                                      | _
+    new ExtractedContext(BigInteger.ONE, BigInteger.valueOf(2), 0, "some-origin", [:], [:]) | _
   }
 
   def "isRootSpan() in and not in the context of distributed tracing"() {
@@ -231,9 +231,9 @@ class DDSpanTest extends DDSpecification {
     root.finish()
 
     where:
-    extractedContext                                       | isTraceRootSpan
-    null                                                   | true
-    new ExtractedContext("123", "456", 1, "789", [:], [:]) | false
+    extractedContext                                                                           | isTraceRootSpan
+    null                                                                                       | true
+    new ExtractedContext(BigInteger.valueOf(123), BigInteger.valueOf(456), 1, "789", [:], [:]) | false
   }
 
   def "getApplicationRootSpan() in and not in the context of distributed tracing"() {
@@ -253,9 +253,9 @@ class DDSpanTest extends DDSpecification {
     root.finish()
 
     where:
-    extractedContext                                       | isTraceRootSpan
-    null                                                   | true
-    new ExtractedContext("123", "456", 1, "789", [:], [:]) | false
+    extractedContext                                                                           | isTraceRootSpan
+    null                                                                                       | true
+    new ExtractedContext(BigInteger.valueOf(123), BigInteger.valueOf(456), 1, "789", [:], [:]) | false
   }
 
   def "sampling priority set on init"() {
