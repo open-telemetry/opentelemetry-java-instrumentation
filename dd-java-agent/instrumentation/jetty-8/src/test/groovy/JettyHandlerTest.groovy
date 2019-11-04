@@ -109,7 +109,7 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
   }
 
   @Override
-  void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+  void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     def handlerName = handler().class.name
     trace.span(index) {
       serviceName expectedServiceName()
