@@ -614,7 +614,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       // case
       BigInteger value;
       do {
-        value = new BigInteger(64, ThreadLocalRandom.current());
+        value = new BigInteger(63, ThreadLocalRandom.current());
       } while (value.signum() == 0);
 
       return value;
