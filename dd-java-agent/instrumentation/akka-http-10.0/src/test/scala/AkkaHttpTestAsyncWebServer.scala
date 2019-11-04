@@ -8,18 +8,18 @@ import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.agent.test.base.HttpServerTest.ServerEndpoint._
 import groovy.lang.Closure
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 object AkkaHttpTestAsyncWebServer {
-  implicit val system = ActorSystem("my-system")
-  implicit val materializer = ActorMaterializer()
+  implicit val system: ActorSystem = ActorSystem("my-system")
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
   // needed for the future flatMap/onComplete in the end
-  implicit val executionContext = system.dispatcher
+  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
   val asyncHandler: HttpRequest => Future[HttpResponse] = {
-    case HttpRequest(GET, uri: Uri, _, _, _) => {
+    case HttpRequest(GET, uri: Uri, _, _, _) =>
       Future {
         val endpoint = HttpServerTest.ServerEndpoint.forPath(uri.path.toString())
-        HttpServerTest.controller(endpoint, new Closure[HttpResponse]() {
+        HttpServerTest.controller(endpoint, new Closure[HttpResponse](()) {
           def doCall(): HttpResponse = {
             val resp = HttpResponse(status = endpoint.getStatus) //.withHeaders(headers.Type)resp.contentType = "text/plain"
             endpoint match {
@@ -32,10 +32,9 @@ object AkkaHttpTestAsyncWebServer {
           }
         })
       }
-    }
   }
 
-  private var binding: ServerBinding = null
+  private var binding: ServerBinding = _
 
   def start(port: Int): Unit = synchronized {
     if (null == binding) {
