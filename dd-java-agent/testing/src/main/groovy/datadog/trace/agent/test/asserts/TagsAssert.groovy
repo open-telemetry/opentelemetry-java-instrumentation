@@ -43,7 +43,7 @@ class TagsAssert {
 
     // FIXME: DQH - Too much conditional logic?  Maybe create specialized methods for client & server cases
 
-    boolean isRoot = (BigInteger.ZERO == spanParentId)
+    boolean isRoot = (0G == spanParentId)
     if (isRoot || distributedRootSpan) {
       assert tags[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
     } else {

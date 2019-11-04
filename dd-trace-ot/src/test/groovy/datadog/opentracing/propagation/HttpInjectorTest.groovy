@@ -21,8 +21,8 @@ class HttpInjectorTest extends DDSpecification {
     }
     HttpCodec.Injector injector = HttpCodec.createInjector(config)
 
-    def traceId = BigInteger.ONE
-    def spanId = BigInteger.valueOf(2)
+    def traceId = 1G
+    def spanId = 2G
 
     def writer = new ListWriter()
     def tracer = new DDTracer(writer)
@@ -30,7 +30,7 @@ class HttpInjectorTest extends DDSpecification {
       new DDSpanContext(
         traceId,
         spanId,
-        BigInteger.ZERO,
+        0G,
         "fakeService",
         "fakeOperation",
         "fakeResource",
@@ -45,7 +45,7 @@ class HttpInjectorTest extends DDSpecification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, BigInteger.ONE, [:]),
+        new PendingTrace(tracer, 1G, [:]),
         tracer)
 
     final Map<String, String> carrier = Mock()

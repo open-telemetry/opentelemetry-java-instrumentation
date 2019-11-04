@@ -94,7 +94,7 @@ class DatadogHttpExtractorTest extends DDSpecification {
 
   def "extract http headers with out of range trace ID"() {
     setup:
-    String outOfRangeTraceId = TRACE_ID_MAX.add(BigInteger.ONE).toString()
+    String outOfRangeTraceId = (TRACE_ID_MAX + 1).toString()
     def headers = [
       (TRACE_ID_KEY.toUpperCase())            : outOfRangeTraceId,
       (SPAN_ID_KEY.toUpperCase())             : "0",
@@ -147,14 +147,14 @@ class DatadogHttpExtractorTest extends DDSpecification {
 
     where:
     gtTraceId             | gSpanId               | expectedTraceId | expectedSpanId
-    "-1"                  | "1"                   | null            | BigInteger.ZERO
-    "1"                   | "-1"                  | null            | BigInteger.ZERO
-    "0"                   | "1"                   | null            | BigInteger.ZERO
-    "1"                   | "0"                   | BigInteger.ONE  | BigInteger.ZERO
-    "$TRACE_ID_MAX"       | "1"                   | TRACE_ID_MAX    | BigInteger.ONE
-    "${TRACE_ID_MAX + 1}" | "1"                   | null            | BigInteger.ONE
-    "1"                   | "$TRACE_ID_MAX"       | BigInteger.ONE  | TRACE_ID_MAX
-    "1"                   | "${TRACE_ID_MAX + 1}" | null            | BigInteger.ZERO
+    "-1"                  | "1"                   | null            | 0G
+    "1"                   | "-1"                  | null            | 0G
+    "0"                   | "1"                   | null            | 0G
+    "1"                   | "0"                   | 1G              | 0G
+    "$TRACE_ID_MAX"       | "1"                   | TRACE_ID_MAX    | 1G
+    "${TRACE_ID_MAX + 1}" | "1"                   | null            | 1G
+    "1"                   | "$TRACE_ID_MAX"       | 1G              | TRACE_ID_MAX
+    "1"                   | "${TRACE_ID_MAX + 1}" | null            | 0G
 
     traceId = gtTraceId.toString()
     spanId = gSpanId.toString()

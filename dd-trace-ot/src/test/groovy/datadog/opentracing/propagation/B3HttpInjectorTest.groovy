@@ -25,7 +25,7 @@ class B3HttpInjectorTest extends DDSpecification {
       new DDSpanContext(
         traceId,
         spanId,
-        BigInteger.ZERO,
+        0G,
         "fakeService",
         "fakeOperation",
         "fakeResource",
@@ -40,7 +40,7 @@ class B3HttpInjectorTest extends DDSpecification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, BigInteger.ONE, [:]),
+        new PendingTrace(tracer, 1G, [:]),
         tracer)
 
     final Map<String, String> carrier = Mock()
@@ -57,13 +57,13 @@ class B3HttpInjectorTest extends DDSpecification {
     0 * _
 
     where:
-    traceId               | spanId                | samplingPriority              | expectedSamplingPriority
-    BigInteger.valueOf(1) | BigInteger.valueOf(2) | PrioritySampling.UNSET        | null
-    BigInteger.valueOf(2) | BigInteger.valueOf(3) | PrioritySampling.SAMPLER_KEEP | 1
-    BigInteger.valueOf(4) | BigInteger.valueOf(5) | PrioritySampling.SAMPLER_DROP | 0
-    BigInteger.valueOf(5) | BigInteger.valueOf(6) | PrioritySampling.USER_KEEP    | 1
-    BigInteger.valueOf(6) | BigInteger.valueOf(7) | PrioritySampling.USER_DROP    | 0
-    TRACE_ID_MAX          | TRACE_ID_MAX - 1      | PrioritySampling.UNSET        | null
-    TRACE_ID_MAX - 1      | TRACE_ID_MAX          | PrioritySampling.SAMPLER_KEEP | 1
+    traceId          | spanId           | samplingPriority              | expectedSamplingPriority
+    1G               | 2G               | PrioritySampling.UNSET        | null
+    2G               | 3G               | PrioritySampling.SAMPLER_KEEP | 1
+    4G               | 5G               | PrioritySampling.SAMPLER_DROP | 0
+    5G               | 6G               | PrioritySampling.USER_KEEP    | 1
+    6G               | 7G               | PrioritySampling.USER_DROP    | 0
+    TRACE_ID_MAX     | TRACE_ID_MAX - 1 | PrioritySampling.UNSET        | null
+    TRACE_ID_MAX - 1 | TRACE_ID_MAX     | PrioritySampling.SAMPLER_KEEP | 1
   }
 }

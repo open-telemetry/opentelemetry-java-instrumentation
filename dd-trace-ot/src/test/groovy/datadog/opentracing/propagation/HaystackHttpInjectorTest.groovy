@@ -25,7 +25,7 @@ class HaystackHttpInjectorTest extends DDSpecification {
       new DDSpanContext(
         traceId,
         spanId,
-        BigInteger.ZERO,
+        0G,
         "fakeService",
         "fakeOperation",
         "fakeResource",
@@ -40,7 +40,7 @@ class HaystackHttpInjectorTest extends DDSpecification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, BigInteger.ONE, [:]),
+        new PendingTrace(tracer, 1G, [:]),
         tracer)
 
     final Map<String, String> carrier = Mock()
@@ -56,10 +56,10 @@ class HaystackHttpInjectorTest extends DDSpecification {
 
 
     where:
-    traceId          | spanId                | samplingPriority              | origin
-    BigInteger.ONE   | BigInteger.valueOf(2) | PrioritySampling.SAMPLER_KEEP | null
-    BigInteger.ONE   | BigInteger.valueOf(2) | PrioritySampling.SAMPLER_KEEP | null
-    TRACE_ID_MAX     | TRACE_ID_MAX - 1      | PrioritySampling.SAMPLER_KEEP | null
-    TRACE_ID_MAX - 1 | TRACE_ID_MAX          | PrioritySampling.SAMPLER_KEEP | null
+    traceId          | spanId           | samplingPriority              | origin
+    1G               | 2G               | PrioritySampling.SAMPLER_KEEP | null
+    1G               | 2G               | PrioritySampling.SAMPLER_KEEP | null
+    TRACE_ID_MAX     | TRACE_ID_MAX - 1 | PrioritySampling.SAMPLER_KEEP | null
+    TRACE_ID_MAX - 1 | TRACE_ID_MAX     | PrioritySampling.SAMPLER_KEEP | null
   }
 }

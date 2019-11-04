@@ -161,9 +161,9 @@ class DDAgentWriterTest extends DDSpecification {
 
     where:
     minimalContext = new DDSpanContext(
-      BigInteger.ONE,
-      BigInteger.ONE,
-      BigInteger.ZERO,
+      1G,
+      1G,
+      0G,
       "",
       "",
       "",
@@ -199,9 +199,9 @@ class DDAgentWriterTest extends DDSpecification {
 
   def createMinimalTrace() {
     def minimalContext = new DDSpanContext(
-      BigInteger.ONE,
-      BigInteger.ONE,
-      BigInteger.ZERO,
+      1G,
+      1G,
+      0G,
       "",
       "",
       "",

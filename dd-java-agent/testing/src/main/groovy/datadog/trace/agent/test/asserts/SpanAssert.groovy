@@ -81,7 +81,7 @@ class SpanAssert {
   }
 
   def parent() {
-    assert span.parentId == BigInteger.ZERO
+    assert span.parentId == 0G
     checked.parentId = true
   }
 

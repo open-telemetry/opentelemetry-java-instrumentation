@@ -199,8 +199,8 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   def "test success with parent"() {
     setup:
-    def traceId = BigInteger.valueOf(123)
-    def parentId = BigInteger.valueOf(456)
+    def traceId = 123G
+    def parentId = 456G
     def request = request(SUCCESS, method, body)
       .header("x-datadog-trace-id", traceId.toString())
       .header("x-datadog-parent-id", parentId.toString())

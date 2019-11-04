@@ -149,7 +149,7 @@ class DDSpanBuilderTest extends DDSpecification {
 
   def "should link to parent span"() {
     setup:
-    final BigInteger spanId = BigInteger.ONE
+    final BigInteger spanId = 1G
     final BigInteger expectedParentId = spanId
 
     final DDSpanContext mockedContext = Mock()
@@ -157,7 +157,7 @@ class DDSpanBuilderTest extends DDSpecification {
     1 * mockedContext.getSpanId() >> spanId
     _ * mockedContext.getServiceName() >> "foo"
     1 * mockedContext.getBaggageItems() >> [:]
-    1 * mockedContext.getTrace() >> new PendingTrace(tracer, BigInteger.ONE, [:])
+    1 * mockedContext.getTrace() >> new PendingTrace(tracer, 1G, [:])
 
     final String expectedName = "fakeName"
 
@@ -182,7 +182,7 @@ class DDSpanBuilderTest extends DDSpecification {
       tracer.buildSpan("parent")
         .startActive(false)
 
-    final BigInteger expectedParentId = noopParent ? BigInteger.ZERO : new BigInteger(parent.span().context().toSpanId())
+    final BigInteger expectedParentId = noopParent ? 0G : new BigInteger(parent.span().context().toSpanId())
 
     final String expectedName = "fakeName"
 
@@ -429,9 +429,9 @@ class DDSpanBuilderTest extends DDSpecification {
                                                      (DDTags.THREAD_NAME)     : thread.name, (DDTags.THREAD_ID): thread.id]
 
     where:
-    extractedContext                                                                                                                                      | _
-    new ExtractedContext(BigInteger.ONE, BigInteger.valueOf(2), 0, null, [:], [:])                                                                        | _
-    new ExtractedContext(BigInteger.valueOf(3), BigInteger.valueOf(4), 1, "some-origin", ["asdf": "qwer"], [(ORIGIN_KEY): "some-origin", "zxcv": "1234"]) | _
+    extractedContext                                                                                                | _
+    new ExtractedContext(1G, 2G, 0, null, [:], [:])                                                                 | _
+    new ExtractedContext(3G, 4G, 1, "some-origin", ["asdf": "qwer"], [(ORIGIN_KEY): "some-origin", "zxcv": "1234"]) | _
   }
 
   def "TagContext should populate default span details"() {
@@ -440,8 +440,8 @@ class DDSpanBuilderTest extends DDSpecification {
     final DDSpan span = tracer.buildSpan("op name").asChildOf(tagContext).start()
 
     expect:
-    span.traceId != BigInteger.ZERO
-    span.parentId == BigInteger.ZERO
+    span.traceId != 0G
+    span.parentId == 0G
     span.samplingPriority == PrioritySampling.SAMPLER_KEEP // Since we're using the RateByServiceSampler
     span.context().origin == tagContext.origin
     span.context().baggageItems == [:]

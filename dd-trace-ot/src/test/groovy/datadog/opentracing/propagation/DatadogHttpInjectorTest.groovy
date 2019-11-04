@@ -27,7 +27,7 @@ class DatadogHttpInjectorTest extends DDSpecification {
       new DDSpanContext(
         traceId,
         spanId,
-        BigInteger.ZERO,
+        0G,
         "fakeService",
         "fakeOperation",
         "fakeResource",
@@ -42,7 +42,7 @@ class DatadogHttpInjectorTest extends DDSpecification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, BigInteger.ONE, [:]),
+        new PendingTrace(tracer, 1G, [:]),
         tracer)
 
     final Map<String, String> carrier = Mock()
@@ -64,10 +64,10 @@ class DatadogHttpInjectorTest extends DDSpecification {
     0 * _
 
     where:
-    traceId          | spanId                | samplingPriority              | origin
-    BigInteger.ONE   | BigInteger.valueOf(2) | PrioritySampling.UNSET        | null
-    BigInteger.ONE   | BigInteger.valueOf(2) | PrioritySampling.SAMPLER_KEEP | "saipan"
-    TRACE_ID_MAX     | TRACE_ID_MAX - 1      | PrioritySampling.UNSET        | "saipan"
-    TRACE_ID_MAX - 1 | TRACE_ID_MAX          | PrioritySampling.SAMPLER_KEEP | null
+    traceId          | spanId           | samplingPriority              | origin
+    1G               | 2G               | PrioritySampling.UNSET        | null
+    1G               | 2G               | PrioritySampling.SAMPLER_KEEP | "saipan"
+    TRACE_ID_MAX     | TRACE_ID_MAX - 1 | PrioritySampling.UNSET        | "saipan"
+    TRACE_ID_MAX - 1 | TRACE_ID_MAX     | PrioritySampling.SAMPLER_KEEP | null
   }
 }
