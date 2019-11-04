@@ -26,7 +26,7 @@ import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class JDBCInstrumentationTest extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.jdbc.enabled", "true")
+    System.setProperty("dd.integration.jdbc-beta.enabled", "true")
   }
 
   @Shared

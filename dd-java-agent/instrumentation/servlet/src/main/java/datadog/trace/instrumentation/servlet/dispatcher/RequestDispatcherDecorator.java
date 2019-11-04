@@ -7,7 +7,7 @@ public class RequestDispatcherDecorator extends BaseDecorator {
 
   @Override
   protected String[] instrumentationNames() {
-    return new String[] {"servlet", "servlet-dispatcher"};
+    return new String[] {"servlet-beta", "servlet-dispatcher"};
   }
 
   @Override

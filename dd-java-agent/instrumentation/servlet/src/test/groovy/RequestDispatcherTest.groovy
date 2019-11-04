@@ -8,7 +8,7 @@ import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class RequestDispatcherTest extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.servlet.enabled", "true")
+    System.setProperty("dd.integration.servlet-beta.enabled", "true")
   }
 
   def dispatcher = new RequestDispatcherUtils(Mock(HttpServletRequest), Mock(HttpServletResponse))
