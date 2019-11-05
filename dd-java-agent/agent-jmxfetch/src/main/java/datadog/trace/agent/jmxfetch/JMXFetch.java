@@ -108,7 +108,7 @@ public class JMXFetch {
                   } catch (final InterruptedException e) {
                     // It looks like JMXFetch itself eats up InterruptedException, so we will do
                     // same here for consistency
-                    log.error("JMXFetch was interupted, ignoring", e);
+                    log.error("JMXFetch was interrupted, ignoring", e);
                   }
                 }
               }
