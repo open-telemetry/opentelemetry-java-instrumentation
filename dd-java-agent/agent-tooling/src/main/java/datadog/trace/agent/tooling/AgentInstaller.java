@@ -130,6 +130,7 @@ public class AgentInstaller {
             .or(nameContains("CGLIB$$"))
             .or(nameContains("javassist"))
             .or(nameContains(".asm."))
+            .or(nameContains("$__sisu"))
             .or(nameMatches("com\\.mchange\\.v2\\.c3p0\\..*Proxy"))
             .or(isAnnotatedWith(named("javax.decorator.Decorator")))
             .or(matchesConfiguredExcludes());
