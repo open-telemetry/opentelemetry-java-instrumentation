@@ -11,7 +11,7 @@ import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class FilterTest extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.servlet.enabled", "true")
+    System.setProperty("dd.integration.servlet-beta.enabled", "true")
   }
 
   def "test doFilter no-parent"() {

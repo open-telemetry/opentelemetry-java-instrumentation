@@ -7,7 +7,7 @@ public class DataSourceDecorator extends BaseDecorator {
 
   @Override
   protected String[] instrumentationNames() {
-    return new String[] {"jdbc", "jdbc-datasource"};
+    return new String[] {"jdbc-beta", "jdbc-datasource"};
   }
 
   @Override

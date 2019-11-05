@@ -27,7 +27,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class FilterInstrumentation extends Instrumenter.Default {
   public FilterInstrumentation() {
-    super("servlet", "servlet-filter");
+    super("servlet-beta", "servlet-filter");
   }
 
   @Override

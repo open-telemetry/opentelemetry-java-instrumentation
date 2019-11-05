@@ -8,7 +8,7 @@ import static datadog.trace.agent.test.utils.TraceUtils.runUnderTrace
 
 class HttpServletTest extends AgentTestRunner {
   static {
-    System.setProperty("dd.integration.servlet.enabled", "true")
+    System.setProperty("dd.integration.servlet-beta.enabled", "true")
   }
 
   def req = Mock(HttpServletRequest) {

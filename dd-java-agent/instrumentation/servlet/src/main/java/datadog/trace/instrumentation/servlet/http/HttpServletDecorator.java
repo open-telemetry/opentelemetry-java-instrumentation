@@ -7,7 +7,7 @@ public class HttpServletDecorator extends BaseDecorator {
 
   @Override
   protected String[] instrumentationNames() {
-    return new String[] {"servlet", "servlet-service"};
+    return new String[] {"servlet-beta", "servlet-service"};
   }
 
   @Override

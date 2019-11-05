@@ -32,7 +32,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(Instrumenter.class)
 public final class HttpServletInstrumentation extends Instrumenter.Default {
   public HttpServletInstrumentation() {
-    super("servlet", "servlet-service");
+    super("servlet-beta", "servlet-service");
   }
 
   @Override
