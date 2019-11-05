@@ -13,6 +13,12 @@ public class AnalyticsSampleRateDecorator extends AbstractDecorator {
   public boolean shouldSetTag(final DDSpanContext context, final String tag, final Object value) {
     if (value instanceof Number) {
       context.setMetric(DDTags.ANALYTICS_SAMPLE_RATE, (Number) value);
+    } else if (value instanceof String) {
+      try {
+        context.setMetric(DDTags.ANALYTICS_SAMPLE_RATE, Double.parseDouble((String) value));
+      } catch (final NumberFormatException ex) {
+        // ignore
+      }
     }
     return false;
   }

@@ -7,6 +7,7 @@ import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
+import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.writer.LoggingWriter
 import datadog.trace.util.test.DDSpecification
@@ -14,7 +15,7 @@ import io.opentracing.tag.StringTag
 import io.opentracing.tag.Tags
 
 import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
-import static datadog.trace.api.DDTags.EVENT_SAMPLE_RATE
+import static datadog.trace.api.DDTags.ANALYTICS_SAMPLE_RATE
 import static java.util.Collections.emptyMap
 
 class SpanDecoratorTest extends DDSpecification {
@@ -229,23 +230,51 @@ class SpanDecoratorTest extends DDSpecification {
     span.metrics == [:]
 
     when:
-    span.setTag(EVENT_SAMPLE_RATE, rate)
+    span.setTag(ANALYTICS_SAMPLE_RATE, rate)
 
     then:
     span.metrics == result
 
     where:
     rate  | result
-    00    | [(EVENT_SAMPLE_RATE): 0]
-    1     | [(EVENT_SAMPLE_RATE): 1]
-    0f    | [(EVENT_SAMPLE_RATE): 0]
-    1f    | [(EVENT_SAMPLE_RATE): 1]
-    0.1   | [(EVENT_SAMPLE_RATE): 0.1]
-    1.1   | [(EVENT_SAMPLE_RATE): 1.1]
-    -1    | [(EVENT_SAMPLE_RATE): -1]
-    10    | [(EVENT_SAMPLE_RATE): 10]
-    "00"  | [:]
+    00    | [(ANALYTICS_SAMPLE_RATE): 0]
+    1     | [(ANALYTICS_SAMPLE_RATE): 1]
+    0f    | [(ANALYTICS_SAMPLE_RATE): 0]
+    1f    | [(ANALYTICS_SAMPLE_RATE): 1]
+    0.1   | [(ANALYTICS_SAMPLE_RATE): 0.1]
+    1.1   | [(ANALYTICS_SAMPLE_RATE): 1.1]
+    -1    | [(ANALYTICS_SAMPLE_RATE): -1]
+    10    | [(ANALYTICS_SAMPLE_RATE): 10]
+    "00"  | [(ANALYTICS_SAMPLE_RATE): 0]
+    "1"   | [(ANALYTICS_SAMPLE_RATE): 1]
+    "1.0" | [(ANALYTICS_SAMPLE_RATE): 1]
+    "0"   | [(ANALYTICS_SAMPLE_RATE): 0]
+    "0.1" | [(ANALYTICS_SAMPLE_RATE): 0.1]
+    "1.1" | [(ANALYTICS_SAMPLE_RATE): 1.1]
+    "-1"  | [(ANALYTICS_SAMPLE_RATE): -1]
     "str" | [:]
+  }
+
+  def "set priority sampling via tag"() {
+    when:
+    span.setTag(tag, value)
+
+    then:
+    span.samplingPriority == expected
+
+    where:
+    tag                | value   | expected
+    DDTags.MANUAL_KEEP | true    | PrioritySampling.USER_KEEP
+    DDTags.MANUAL_KEEP | false   | null
+    DDTags.MANUAL_KEEP | "true"  | PrioritySampling.USER_KEEP
+    DDTags.MANUAL_KEEP | "false" | null
+    DDTags.MANUAL_KEEP | "asdf"  | null
+
+    DDTags.MANUAL_DROP | true    | PrioritySampling.USER_DROP
+    DDTags.MANUAL_DROP | false   | null
+    DDTags.MANUAL_DROP | "true"  | PrioritySampling.USER_DROP
+    DDTags.MANUAL_DROP | "false" | null
+    DDTags.MANUAL_DROP | "asdf"  | null
   }
 
   def "DBStatementAsResource should not interact on Mongo queries"() {
