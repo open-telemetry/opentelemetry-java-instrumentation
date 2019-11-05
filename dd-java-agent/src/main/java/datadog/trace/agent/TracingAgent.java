@@ -54,7 +54,7 @@ public class TracingAgent {
        *
        * JMXFetch uses jre bootstrap classes which touch this class. This means applications which require a custom log manager may not have a chance to set the global log manager if jmxfetch runs first. JMXFetch will incorrectly set the global log manager in cases where the app sets the log manager system property or when the log manager class is not on the system classpath.
        *
-       * Our solution is to delay the initilization of jmxfetch when we detect a custom log manager being used.
+       * Our solution is to delay the initialization of jmxfetch when we detect a custom log manager being used.
        *
        * Once we see the LogManager class loading, it's safe to start jmxfetch because the application is already setting the global log manager and jmxfetch won't be able to touch it due to classloader locking.
        */
