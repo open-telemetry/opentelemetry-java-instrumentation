@@ -268,8 +268,7 @@ public class TracingAgent {
   private static ClassLoader createDatadogClassLoader(
       final String innerJarFilename, final URL bootstrapURL) throws Exception {
     final ClassLoader agentParent;
-    final String javaVersion = System.getProperty("java.version");
-    if (javaVersion.startsWith("1.7") || javaVersion.startsWith("1.8")) {
+    if (isJavaBefore9()) {
       agentParent = null; // bootstrap
     } else {
       // platform classloader is parent of system in java 9+
@@ -373,6 +372,10 @@ public class TracingAgent {
     }
 
     return false;
+  }
+
+  private static boolean isJavaBefore9() {
+    return System.getProperty("java.version").startsWith("1.");
   }
 
   /**
