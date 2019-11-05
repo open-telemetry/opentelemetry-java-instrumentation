@@ -87,7 +87,6 @@ public class TracingAgent {
       try {
         startJmxFetch(inst, bootstrapURL);
       } catch (final Exception e) {
-        e.printStackTrace();
         throw new RuntimeException(e);
       }
     }
