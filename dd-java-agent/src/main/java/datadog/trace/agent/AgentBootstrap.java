@@ -51,7 +51,7 @@ public class AgentBootstrap {
     final URL bootstrapURL = installBootstrapJar(inst);
 
     final Class<?> agentClass =
-        ClassLoader.getSystemClassLoader().loadClass("datadog.trace.agent.Agent");
+        ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.Agent");
     final Method startMethod = agentClass.getMethod("start", Instrumentation.class, URL.class);
     startMethod.invoke(null, inst, bootstrapURL);
   }

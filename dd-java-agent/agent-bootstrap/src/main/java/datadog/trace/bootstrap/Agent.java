@@ -1,4 +1,4 @@
-package datadog.trace.agent;
+package datadog.trace.bootstrap;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;

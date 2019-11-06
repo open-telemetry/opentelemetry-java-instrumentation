@@ -40,7 +40,7 @@ public class IntegrationTestUtils {
     Field classloaderField = null;
     try {
       final Class<?> agentClass =
-          ClassLoader.getSystemClassLoader().loadClass("datadog.trace.agent.Agent");
+          ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.Agent");
       classloaderField = agentClass.getDeclaredField(fieldName);
       classloaderField.setAccessible(true);
       return (ClassLoader) classloaderField.get(null);
