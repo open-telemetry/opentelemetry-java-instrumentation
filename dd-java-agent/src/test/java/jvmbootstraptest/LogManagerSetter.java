@@ -31,9 +31,7 @@ public class LogManagerSetter {
       if (ClassLoader.getSystemResource(
               System.getProperty("java.util.logging.manager").replaceAll("\\.", "/") + ".class")
           == null) {
-        customAssert(
-            isTracerInstalled(false),
-            false,
+        assertTraceInstallationDelayed(
             "tracer install must be delayed when log manager system property is present.");
         customAssert(
             isJmxfetchStarted(false),
@@ -63,9 +61,7 @@ public class LogManagerSetter {
       }
     } else if (System.getenv("JBOSS_HOME") != null) {
       System.out.println("JBOSS_HOME != null");
-      customAssert(
-          isTracerInstalled(false),
-          false,
+      assertTraceInstallationDelayed(
           "tracer install must be delayed when JBOSS_HOME property is present.");
       customAssert(
           isJmxfetchStarted(false),
@@ -109,6 +105,17 @@ public class LogManagerSetter {
     }
   }
 
+  private static void assertTraceInstallationDelayed(final String message) {
+    if (isJavaBefore9()) {
+      customAssert(isTracerInstalled(false), false, message);
+    } else {
+      customAssert(
+          isTracerInstalled(false),
+          true,
+          "We can safely install tracer on java9+ since it doesn't indirectly trigger logger manager init");
+    }
+  }
+
   private static boolean isJmxfetchStarted(final boolean wait) {
     // Wait up to 10 seconds for jmxfetch thread to appear
     for (int i = 0; i < 20; i++) {
@@ -145,5 +152,9 @@ public class LogManagerSetter {
       }
     }
     return false;
+  }
+
+  private static boolean isJavaBefore9() {
+    return System.getProperty("java.version").startsWith("1.");
   }
 }
