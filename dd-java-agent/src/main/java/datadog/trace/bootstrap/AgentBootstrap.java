@@ -1,4 +1,4 @@
-package datadog.trace.agent;
+package datadog.trace.bootstrap;
 
 import java.io.BufferedReader;
 import java.io.File;
