@@ -62,9 +62,9 @@ jar {
 
   manifest {
     attributes(
-      "Main-Class": "datadog.trace.agent.TracingAgent",
-      "Agent-Class": "datadog.trace.agent.TracingAgent",
-      "Premain-Class": "datadog.trace.agent.TracingAgent",
+      "Main-Class": "datadog.trace.agent.AgentBootstrap",
+      "Agent-Class": "datadog.trace.agent.AgentBootstrap",
+      "Premain-Class": "datadog.trace.agent.AgentBootstrap",
       "Can-Redefine-Classes": true,
       "Can-Retransform-Classes": true,
     )

@@ -1,7 +1,5 @@
 package datadog.trace.agent.test;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import java.io.BufferedReader;
@@ -30,21 +28,20 @@ public class IntegrationTestUtils {
 
   /** Returns the classloader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
-    return getTracingAgentFieldClassloader("AGENT_CLASSLOADER");
+    return getAgentFieldClassloader("AGENT_CLASSLOADER");
   }
 
   /** Returns the classloader the jmxfetch is running on. */
   public static ClassLoader getJmxFetchClassLoader() {
-    return getTracingAgentFieldClassloader("JMXFETCH_CLASSLOADER");
+    return getAgentFieldClassloader("JMXFETCH_CLASSLOADER");
   }
 
-  private static ClassLoader getTracingAgentFieldClassloader(final String fieldName) {
+  private static ClassLoader getAgentFieldClassloader(final String fieldName) {
     Field classloaderField = null;
     try {
-      Class<?> tracingAgentClass =
-          tracingAgentClass =
-              ClassLoader.getSystemClassLoader().loadClass("datadog.trace.agent.TracingAgent");
-      classloaderField = tracingAgentClass.getDeclaredField(fieldName);
+      final Class<?> agentClass =
+          ClassLoader.getSystemClassLoader().loadClass("datadog.trace.agent.Agent");
+      classloaderField = agentClass.getDeclaredField(fieldName);
       classloaderField.setAccessible(true);
       return (ClassLoader) classloaderField.get(null);
     } catch (final Exception e) {
