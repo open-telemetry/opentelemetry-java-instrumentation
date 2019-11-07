@@ -9,6 +9,7 @@ include ':dd-java-agent'
 include ':dd-java-agent:agent-bootstrap'
 include ':dd-java-agent:agent-tooling'
 include ':dd-java-agent:agent-jmxfetch'
+include ':dd-java-agent:load-generator'
 
 // misc
 include ':dd-java-agent:testing'
