@@ -70,7 +70,7 @@ public class Agent {
      * events which in turn loads LogManager. This is not a problem on newer JDKs because there JFR uses different
      * logging facility.
      */
-    if (isJavaBefore9() && appUsingCustomLogManager) {
+    if (isJavaBefore9WithJFR() && appUsingCustomLogManager) {
       LOGGER.debug("Custom logger detected. Delaying Datadog Tracer initialization.");
       registerLogManagerCallback(new InstallDatadogTracerCallback(inst, bootstrapURL));
     } else {
@@ -340,5 +340,17 @@ public class Agent {
 
   private static boolean isJavaBefore9() {
     return System.getProperty("java.version").startsWith("1.");
+  }
+
+  private static boolean isJavaBefore9WithJFR() {
+    if (!isJavaBefore9()) {
+      return false;
+    }
+    // FIXME: this is quite a hack because there maybe jfr classes on classpath somehow that have
+    // nothing to do with JDK but this should be safe because only thing this does is to delay
+    // tracer install
+    final String jfrClassResourceName = "jdk.jfr.Recording".replace('.', '/') + ".class";
+    return Thread.currentThread().getContextClassLoader().getResourceAsStream(jfrClassResourceName)
+        != null;
   }
 }

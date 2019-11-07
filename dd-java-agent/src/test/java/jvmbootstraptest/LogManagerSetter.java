@@ -106,7 +106,7 @@ public class LogManagerSetter {
   }
 
   private static void assertTraceInstallationDelayed(final String message) {
-    if (isJavaBefore9()) {
+    if (isJavaBefore9WithJFR()) {
       customAssert(isTracerInstalled(false), false, message);
     } else {
       customAssert(
@@ -154,7 +154,13 @@ public class LogManagerSetter {
     return false;
   }
 
-  private static boolean isJavaBefore9() {
-    return System.getProperty("java.version").startsWith("1.");
+  private static boolean isJavaBefore9WithJFR() {
+    if (!System.getProperty("java.version").startsWith("1.")) {
+      return false;
+    }
+
+    final String jfrClassResourceName = "jdk.jfr.Recording".replace('.', '/') + ".class";
+    return Thread.currentThread().getContextClassLoader().getResourceAsStream(jfrClassResourceName)
+        != null;
   }
 }
