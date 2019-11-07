@@ -1,7 +1,5 @@
 package datadog.trace.agent.test;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import io.opentracing.Tracer;
 import io.opentracing.util.GlobalTracer;
 import java.io.BufferedReader;
@@ -30,21 +28,20 @@ public class IntegrationTestUtils {
 
   /** Returns the classloader the core agent is running on. */
   public static ClassLoader getAgentClassLoader() {
-    return getTracingAgentFieldClassloader("AGENT_CLASSLOADER");
+    return getAgentFieldClassloader("AGENT_CLASSLOADER");
   }
 
   /** Returns the classloader the jmxfetch is running on. */
   public static ClassLoader getJmxFetchClassLoader() {
-    return getTracingAgentFieldClassloader("JMXFETCH_CLASSLOADER");
+    return getAgentFieldClassloader("JMXFETCH_CLASSLOADER");
   }
 
-  private static ClassLoader getTracingAgentFieldClassloader(final String fieldName) {
+  private static ClassLoader getAgentFieldClassloader(final String fieldName) {
     Field classloaderField = null;
     try {
-      Class<?> tracingAgentClass =
-          tracingAgentClass =
-              ClassLoader.getSystemClassLoader().loadClass("datadog.trace.agent.TracingAgent");
-      classloaderField = tracingAgentClass.getDeclaredField(fieldName);
+      final Class<?> agentClass =
+          ClassLoader.getSystemClassLoader().loadClass("datadog.trace.bootstrap.Agent");
+      classloaderField = agentClass.getDeclaredField(fieldName);
       classloaderField.setAccessible(true);
       return (ClassLoader) classloaderField.get(null);
     } catch (final Exception e) {
@@ -220,28 +217,21 @@ public class IntegrationTestUtils {
     commands.addAll(Arrays.asList(mainMethodArgs));
     final ProcessBuilder processBuilder = new ProcessBuilder(commands.toArray(new String[0]));
     processBuilder.environment().putAll(envVars);
+
     final Process process = processBuilder.start();
+
+    final StreamGobbler errorGobbler =
+        new StreamGobbler(process.getErrorStream(), "ERROR", printOutputStreams);
+    final StreamGobbler outputGobbler =
+        new StreamGobbler(process.getInputStream(), "OUTPUT", printOutputStreams);
+    outputGobbler.start();
+    errorGobbler.start();
 
     waitFor(process, 30, TimeUnit.SECONDS);
 
-    if (printOutputStreams) {
-      final BufferedReader stdInput =
-          new BufferedReader(new InputStreamReader(process.getInputStream(), UTF_8));
+    outputGobbler.join();
+    errorGobbler.join();
 
-      final BufferedReader stdError =
-          new BufferedReader(new InputStreamReader(process.getErrorStream(), UTF_8));
-      System.out.println("--- " + mainClassName + " stdout ---");
-      String s = null;
-      while ((s = stdInput.readLine()) != null) {
-        System.out.println(s);
-      }
-      System.out.println("--- stdout end ---");
-      System.out.println("--- " + mainClassName + " stderr ---");
-      while ((s = stdError.readLine()) != null) {
-        System.out.println(s);
-      }
-      System.out.println("--- stderr end ---");
-    }
     return process.exitValue();
   }
 
@@ -262,5 +252,32 @@ public class IntegrationTestUtils {
       rem = unit.toNanos(timeout) - (System.nanoTime() - startTime);
     } while (rem > 0);
     throw new TimeoutException();
+  }
+
+  private static class StreamGobbler extends Thread {
+    InputStream stream;
+    String type;
+    boolean print;
+
+    private StreamGobbler(final InputStream stream, final String type, final boolean print) {
+      this.stream = stream;
+      this.type = type;
+      this.print = print;
+    }
+
+    @Override
+    public void run() {
+      try {
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+          if (print) {
+            System.out.println(type + "> " + line);
+          }
+        }
+      } catch (final IOException e) {
+        e.printStackTrace();
+      }
+    }
   }
 }

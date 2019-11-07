@@ -62,9 +62,9 @@ jar {
 
   manifest {
     attributes(
-      "Main-Class": "datadog.trace.agent.TracingAgent",
-      "Agent-Class": "datadog.trace.agent.TracingAgent",
-      "Premain-Class": "datadog.trace.agent.TracingAgent",
+      "Main-Class": "datadog.trace.bootstrap.AgentBootstrap",
+      "Agent-Class": "datadog.trace.bootstrap.AgentBootstrap",
+      "Premain-Class": "datadog.trace.bootstrap.AgentBootstrap",
       "Can-Redefine-Classes": true,
       "Can-Retransform-Classes": true,
     )
@@ -102,6 +102,7 @@ modifyPom {
 }
 
 dependencies {
+  testCompile project(':dd-java-agent:agent-bootstrap')
   testCompile project(':dd-trace-api')
   testCompile project(':dd-trace-ot')
   testCompile project(':utils:gc-utils')
