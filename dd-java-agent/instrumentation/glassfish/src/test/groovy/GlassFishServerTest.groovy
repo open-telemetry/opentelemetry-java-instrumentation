@@ -101,6 +101,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
       }
       tags {
         "servlet.context" "/$context"
+        "servlet.path" endpoint.path
         "span.origin.type" { it.startsWith("TestServlets\$") || it == DefaultServlet.name }
 
         defaultTags(true)
