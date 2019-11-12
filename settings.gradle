@@ -1,3 +1,21 @@
+plugins {
+  id 'com.gradle.enterprise' version '3.0'
+}
+
+def isCI = System.getenv("CI") != null
+def skipBuildscan = Boolean.valueOf(System.getenv("SKIP_BUILDSCAN"))
+gradleEnterprise {
+  buildScan {
+    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+    termsOfServiceAgree = 'yes'
+
+    if (isCI && !skipBuildscan) {
+      publishAlways()
+      tag 'CI'
+    }
+  }
+}
+
 rootProject.name = 'dd-trace-java'
 
 // external apis
