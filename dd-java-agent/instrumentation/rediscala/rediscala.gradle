@@ -1,0 +1,41 @@
+muzzle {
+  pass {
+    group = "com.github.Ma27"
+    module = "rediscala_2.11"
+    versions = "[1.8.1,)"
+    assertInverse = true
+  }
+
+  pass {
+    group = "com.github.Ma27"
+    module = "rediscala_2.12"
+    versions = "[1.8.1,)"
+    assertInverse = true
+  }
+
+  pass {
+    group = "com.github.Ma27"
+    module = "rediscala_2.13"
+    versions = "[1.9.0,)"
+    assertInverse = true
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'com.github.Ma27', name: 'rediscala_2.11', version: '1.8.1'
+
+  testCompile group: 'com.github.Ma27', name: 'rediscala_2.11', version: '1.8.1'
+  testCompile group: 'com.github.kstyrc', name: 'embedded-redis', version: '0.6'
+
+  latestDepTestCompile group: 'com.github.Ma27', name: 'rediscala_2.11', version: '+'
+}
