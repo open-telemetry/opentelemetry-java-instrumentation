@@ -48,7 +48,7 @@ public class OkHttp3Instrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isConstructor().and(takesArgument(0, named("okhttp3.OkHttpClient$Builder"))),
-        OkHttp3Advice.class.getName());
+        OkHttp3Instrumentation.class.getName() + "$OkHttp3Advice");
   }
 
   public static class OkHttp3Advice {

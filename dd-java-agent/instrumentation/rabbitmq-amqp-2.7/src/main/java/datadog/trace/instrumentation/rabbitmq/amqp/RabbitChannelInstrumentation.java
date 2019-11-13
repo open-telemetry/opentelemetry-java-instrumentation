@@ -93,19 +93,19 @@ public class RabbitChannelInstrumentation extends Instrumenter.Default {
                         .or(named("basicGet"))))
             .and(isPublic())
             .and(canThrow(IOException.class).or(canThrow(InterruptedException.class))),
-        ChannelMethodAdvice.class.getName());
+        RabbitChannelInstrumentation.class.getName() + "$ChannelMethodAdvice");
     transformers.put(
         isMethod().and(named("basicPublish")).and(takesArguments(6)),
-        ChannelPublishAdvice.class.getName());
+        RabbitChannelInstrumentation.class.getName() + "$ChannelPublishAdvice");
     transformers.put(
         isMethod().and(named("basicGet")).and(takesArgument(0, String.class)),
-        ChannelGetAdvice.class.getName());
+        RabbitChannelInstrumentation.class.getName() + "$ChannelGetAdvice");
     transformers.put(
         isMethod()
             .and(named("basicConsume"))
             .and(takesArgument(0, String.class))
             .and(takesArgument(6, named("com.rabbitmq.client.Consumer"))),
-        ChannelConsumeAdvice.class.getName());
+        RabbitChannelInstrumentation.class.getName() + "$ChannelConsumeAdvice");
     return transformers;
   }
 

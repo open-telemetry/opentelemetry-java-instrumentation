@@ -55,7 +55,7 @@ public final class OSGIClassloadingInstrumentation extends Instrumenter.Default 
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isPublic()).and(named("newFramework")).and(takesArgument(0, Map.class)),
-        FrameworkFactoryAdvice.class.getName());
+        OSGIClassloadingInstrumentation.class.getName() + "$FrameworkFactoryAdvice");
   }
 
   /**

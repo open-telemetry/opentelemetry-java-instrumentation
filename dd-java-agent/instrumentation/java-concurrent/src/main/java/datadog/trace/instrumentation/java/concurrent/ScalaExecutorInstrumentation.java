@@ -41,15 +41,15 @@ public final class ScalaExecutorInstrumentation extends AbstractExecutorInstrume
     transformers.put(
         named("execute")
             .and(takesArgument(0, named(ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        SetScalaForkJoinStateAdvice.class.getName());
+        ScalaExecutorInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
     transformers.put(
         named("submit")
             .and(takesArgument(0, named(ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        SetScalaForkJoinStateAdvice.class.getName());
+        ScalaExecutorInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
     transformers.put(
         nameMatches("invoke")
             .and(takesArgument(0, named(ScalaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        SetScalaForkJoinStateAdvice.class.getName());
+        ScalaExecutorInstrumentation.class.getName() + "$SetScalaForkJoinStateAdvice");
     return transformers;
   }
 

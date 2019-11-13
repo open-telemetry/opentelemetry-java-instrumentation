@@ -59,7 +59,7 @@ public final class KafkaProducerInstrumentation extends Instrumenter.Default {
             .and(named("send"))
             .and(takesArgument(0, named("org.apache.kafka.clients.producer.ProducerRecord")))
             .and(takesArgument(1, named("org.apache.kafka.clients.producer.Callback"))),
-        ProducerAdvice.class.getName());
+        KafkaProducerInstrumentation.class.getName() + "$ProducerAdvice");
   }
 
   public static class ProducerAdvice {

@@ -56,7 +56,7 @@ public final class MongoAsyncClientInstrumentation extends Instrumenter.Default 
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
-        MongoAsyncClientAdvice.class.getName());
+        MongoAsyncClientInstrumentation.class.getName() + "$MongoAsyncClientAdvice");
   }
 
   public static class MongoAsyncClientAdvice {

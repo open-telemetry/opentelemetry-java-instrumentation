@@ -56,7 +56,7 @@ public final class MongoClientInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isPublic()).and(named("build")).and(takesArguments(0)),
-        MongoClientAdvice.class.getName());
+        MongoClientInstrumentation.class.getName() + "$MongoClientAdvice");
   }
 
   public static class MongoClientAdvice {

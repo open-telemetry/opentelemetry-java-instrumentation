@@ -43,7 +43,7 @@ public final class JaxRsClientInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("build").and(returns(safeHasSuperType(named("javax.ws.rs.client.Client")))),
-        ClientBuilderAdvice.class.getName());
+        JaxRsClientInstrumentation.class.getName() + "$ClientBuilderAdvice");
   }
 
   public static class ClientBuilderAdvice {

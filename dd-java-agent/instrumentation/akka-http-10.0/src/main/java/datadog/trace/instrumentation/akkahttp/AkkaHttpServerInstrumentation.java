@@ -69,10 +69,10 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("bindAndHandleSync").and(takesArgument(0, named("scala.Function1"))),
-        AkkaHttpSyncAdvice.class.getName());
+        AkkaHttpServerInstrumentation.class.getName() + "$AkkaHttpSyncAdvice");
     transformers.put(
         named("bindAndHandleAsync").and(takesArgument(0, named("scala.Function1"))),
-        AkkaHttpAsyncAdvice.class.getName());
+        AkkaHttpServerInstrumentation.class.getName() + "$AkkaHttpAsyncAdvice");
     return transformers;
   }
 

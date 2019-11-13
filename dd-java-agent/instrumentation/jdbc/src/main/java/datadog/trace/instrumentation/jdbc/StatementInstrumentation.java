@@ -65,7 +65,7 @@ public final class StatementInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         nameStartsWith("execute").and(takesArgument(0, String.class)).and(isPublic()),
-        StatementAdvice.class.getName());
+        StatementInstrumentation.class.getName() + "$StatementAdvice");
   }
 
   public static class StatementAdvice {

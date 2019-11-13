@@ -3,10 +3,7 @@ package datadog.trace.instrumentation.http_url_connection;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static java.util.Collections.singletonMap;
-import static net.bytebuddy.matcher.ElementMatchers.is;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.*;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
@@ -43,7 +40,7 @@ public class UrlInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isPublic()).and(named("openConnection")),
-        ConnectionErrorAdvice.class.getName());
+        UrlInstrumentation.class.getName() + "$ConnectionErrorAdvice");
   }
 
   public static class ConnectionErrorAdvice {

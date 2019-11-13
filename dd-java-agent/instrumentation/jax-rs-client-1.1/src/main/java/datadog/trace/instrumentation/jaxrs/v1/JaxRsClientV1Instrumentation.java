@@ -57,7 +57,7 @@ public final class JaxRsClientV1Instrumentation extends Instrumenter.Default {
                 takesArgument(
                     0, safeHasSuperType(named("com.sun.jersey.api.client.ClientRequest"))))
             .and(returns(safeHasSuperType(named("com.sun.jersey.api.client.ClientResponse")))),
-        HandleAdvice.class.getName());
+        JaxRsClientV1Instrumentation.class.getName() + "$HandleAdvice");
   }
 
   public static class HandleAdvice {
