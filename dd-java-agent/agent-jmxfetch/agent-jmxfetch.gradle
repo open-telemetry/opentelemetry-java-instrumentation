@@ -27,10 +27,6 @@ shadowJar {
   }
 }
 
-jar {
-  classifier = 'unbundled'
-}
-
 tasks.register("submodulesUpdate", Exec) {
   group 'Build Setup'
   description 'Initializes and updates integrations-core git submodule'

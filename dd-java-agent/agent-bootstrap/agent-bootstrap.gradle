@@ -12,7 +12,3 @@ dependencies {
   compile group: 'org.slf4j', name: 'slf4j-simple', version: versions.slf4j
   // ^ Generally a bad idea for libraries, but we're shadowing.
 }
-
-jar {
-  classifier = 'unbundled'
-}
