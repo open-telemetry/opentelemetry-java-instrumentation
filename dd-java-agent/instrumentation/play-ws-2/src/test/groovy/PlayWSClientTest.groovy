@@ -2,7 +2,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.ActorMaterializerSettings
 import datadog.trace.agent.test.base.HttpClientTest
-import datadog.trace.instrumentation.playws.PlayWSClientDecorator
+import datadog.trace.instrumentation.playws2.PlayWSClientDecorator
 import play.libs.ws.StandaloneWSClient
 import play.libs.ws.StandaloneWSRequest
 import play.libs.ws.StandaloneWSResponse
