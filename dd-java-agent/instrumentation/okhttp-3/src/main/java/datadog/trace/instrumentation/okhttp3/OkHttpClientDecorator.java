@@ -7,13 +7,6 @@ import okhttp3.Response;
 
 public class OkHttpClientDecorator extends HttpClientDecorator<Request, Response> {
   public static final OkHttpClientDecorator DECORATE = new OkHttpClientDecorator();
-  public static final OkHttpClientDecorator NETWORK_DECORATE =
-      new OkHttpClientDecorator() {
-        @Override
-        protected String component() {
-          return "okhttp-network";
-        }
-      };
 
   @Override
   protected String[] instrumentationNames() {
@@ -22,7 +15,7 @@ public class OkHttpClientDecorator extends HttpClientDecorator<Request, Response
 
   @Override
   protected String service() {
-    return "okhttp";
+    return null;
   }
 
   @Override

@@ -33,14 +33,9 @@ public class OkHttp3Instrumentation extends Instrumenter.Default {
       "datadog.trace.agent.decorator.BaseDecorator",
       "datadog.trace.agent.decorator.ClientDecorator",
       "datadog.trace.agent.decorator.HttpClientDecorator",
-      packageName + ".OkHttpClientDecorator",
-      packageName + ".OkHttpClientDecorator$1",
       packageName + ".RequestBuilderInjectAdapter",
-      packageName + ".TagWrapper",
+      packageName + ".OkHttpClientDecorator",
       packageName + ".TracingInterceptor",
-      packageName + ".TracingCallFactory",
-      packageName + ".TracingCallFactory$NetworkInterceptor",
-      packageName + ".TracingCallFactory$1",
     };
   }
 
@@ -62,7 +57,6 @@ public class OkHttp3Instrumentation extends Instrumenter.Default {
       }
       final TracingInterceptor interceptor = new TracingInterceptor();
       builder.addInterceptor(interceptor);
-      builder.addNetworkInterceptor(interceptor);
     }
   }
 }
