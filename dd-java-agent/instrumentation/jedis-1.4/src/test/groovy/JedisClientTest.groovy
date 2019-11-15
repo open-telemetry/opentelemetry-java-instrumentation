@@ -54,8 +54,8 @@ class JedisClientTest extends AgentTestRunner {
           spanType DDSpanTypes.REDIS
           tags {
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.DB_TYPE" "redis"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
           }
         }
@@ -80,8 +80,8 @@ class JedisClientTest extends AgentTestRunner {
           spanType DDSpanTypes.REDIS
           tags {
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.DB_TYPE" "redis"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
           }
         }
@@ -94,8 +94,8 @@ class JedisClientTest extends AgentTestRunner {
           spanType DDSpanTypes.REDIS
           tags {
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.DB_TYPE" "redis"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
           }
         }
@@ -120,8 +120,8 @@ class JedisClientTest extends AgentTestRunner {
           spanType DDSpanTypes.REDIS
           tags {
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.DB_TYPE" "redis"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
           }
         }
@@ -134,8 +134,8 @@ class JedisClientTest extends AgentTestRunner {
           spanType DDSpanTypes.REDIS
           tags {
             "$Tags.COMPONENT" "redis-command"
-            "$Tags.DB_TYPE" "redis"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
           }
         }

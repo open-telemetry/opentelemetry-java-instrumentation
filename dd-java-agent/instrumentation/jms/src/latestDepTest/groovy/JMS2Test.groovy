@@ -163,10 +163,10 @@ class JMS2Test extends AgentTestRunner {
           errored false
 
           tags {
-            defaultTags()
-            "${Tags.COMPONENT}" "jms"
-            "${Tags.SPAN_KIND}" "consumer"
+            "$Tags.COMPONENT" "jms"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" HornetQMessageConsumer.name
+            defaultTags()
           }
         }
       }
@@ -201,10 +201,10 @@ class JMS2Test extends AgentTestRunner {
           errored false
 
           tags {
-            defaultTags()
-            "${Tags.COMPONENT}" "jms"
-            "${Tags.SPAN_KIND}" "consumer"
+            "$Tags.COMPONENT" "jms"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" HornetQMessageConsumer.name
+            defaultTags()
           }
         }
       }
@@ -230,10 +230,10 @@ class JMS2Test extends AgentTestRunner {
         errored false
 
         tags {
-          defaultTags()
-          "${Tags.COMPONENT}" "jms"
-          "${Tags.SPAN_KIND}" "producer"
+          "$Tags.COMPONENT" "jms"
+          "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           "span.origin.type" HornetQMessageProducer.name
+          defaultTags()
         }
       }
     }
@@ -255,10 +255,10 @@ class JMS2Test extends AgentTestRunner {
         errored false
 
         tags {
-          defaultTags(true)
           "${Tags.COMPONENT}" "jms"
           "${Tags.SPAN_KIND}" "consumer"
           "span.origin.type" origin.name
+          defaultTags(true)
         }
       }
     }

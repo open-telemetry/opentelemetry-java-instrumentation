@@ -73,11 +73,11 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
           tags {
-            defaultTags()
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.COMPONENT" "akka-http-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.ERROR" true
             errorTags(NullPointerException)
+            defaultTags()
           }
         }
       }

@@ -57,24 +57,24 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
         spanType DDSpanTypes.HTTP_CLIENT
         errored exception != null
         tags {
-          defaultTags()
-          if (exception) {
-            errorTags(exception.class, exception.message)
-          }
           "$Tags.COMPONENT" NettyHttpClientDecorator.DECORATE.component()
+          "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+          "$Tags.PEER_HOSTNAME" "localhost"
+          "$Tags.PEER_PORT" uri.port
+          "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+          "$Tags.HTTP_URL" "${uri.resolve(uri.path)}"
+          "$Tags.HTTP_METHOD" method
           if (status) {
             "$Tags.HTTP_STATUS" status
           }
-          "$Tags.HTTP_URL" "${uri.resolve(uri.path)}"
           if (tagQueryString) {
             "$DDTags.HTTP_QUERY" uri.query
             "$DDTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
           }
-          "$Tags.PEER_HOSTNAME" "localhost"
-          "$Tags.PEER_PORT" uri.port
-          "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-          "$Tags.HTTP_METHOD" method
-          "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+          if (exception) {
+            errorTags(exception.class, exception.message)
+          }
+          defaultTags()
         }
       }
     }

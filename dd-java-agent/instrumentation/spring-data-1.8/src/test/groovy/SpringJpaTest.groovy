@@ -1,6 +1,6 @@
 // This file includes software developed at SignalFx
 import datadog.trace.agent.test.AgentTestRunner
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spring.jpa.JpaCustomer
 import spring.jpa.JpaCustomerRepository
@@ -55,8 +55,8 @@ class SpringJpaTest extends AgentTestRunner {
           resourceName "JpaRepository.findAll"
           errored false
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -82,8 +82,8 @@ class SpringJpaTest extends AgentTestRunner {
           resourceName "CrudRepository.save"
           errored false
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -109,8 +109,8 @@ class SpringJpaTest extends AgentTestRunner {
           resourceName "CrudRepository.save"
           errored false
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -139,8 +139,8 @@ class SpringJpaTest extends AgentTestRunner {
           resourceName "JpaCustomerRepository.findByLastName"
           errored false
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -164,8 +164,8 @@ class SpringJpaTest extends AgentTestRunner {
           resourceName "CrudRepository.delete"
           errored false
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }

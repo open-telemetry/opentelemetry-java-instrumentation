@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.instrumentation.api.Tags
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
@@ -133,8 +134,8 @@ class KafkaStreamsTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "component" "java-kafka"
-            "span.kind" "producer"
+            "$Tags.COMPONENT" "java-kafka"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             defaultTags()
           }
         }
@@ -149,8 +150,8 @@ class KafkaStreamsTest extends AgentTestRunner {
           errored false
           childOf TEST_WRITER[0][0]
           tags {
-            "component" "java-kafka"
-            "span.kind" "consumer"
+            "$Tags.COMPONENT" "java-kafka"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
             defaultTags(true)
@@ -169,8 +170,8 @@ class KafkaStreamsTest extends AgentTestRunner {
           childOf span(1)
 
           tags {
-            "component" "java-kafka"
-            "span.kind" "producer"
+            "$Tags.COMPONENT" "java-kafka"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             defaultTags()
           }
         }
@@ -185,12 +186,12 @@ class KafkaStreamsTest extends AgentTestRunner {
           childOf TEST_WRITER[0][0]
 
           tags {
-            "component" "java-kafka"
-            "span.kind" "consumer"
+            "$Tags.COMPONENT" "java-kafka"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
-            defaultTags(true)
             "asdf" "testing"
+            defaultTags(true)
           }
         }
       }
@@ -204,12 +205,12 @@ class KafkaStreamsTest extends AgentTestRunner {
           errored false
           childOf TEST_WRITER[2][0]
           tags {
-            "component" "java-kafka"
-            "span.kind" "consumer"
+            "$Tags.COMPONENT" "java-kafka"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
-            defaultTags(true)
             "testing" 123
+            defaultTags(true)
           }
         }
       }

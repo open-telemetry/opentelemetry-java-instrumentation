@@ -123,11 +123,11 @@ class CassandraClientTest extends AgentTestRunner {
       tags {
         "$Tags.COMPONENT" "java-cassandra"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-        "$Tags.DB_INSTANCE" keyspace
-        "$Tags.DB_TYPE" "cassandra"
         "$Tags.PEER_HOSTNAME" "localhost"
         "$Tags.PEER_HOST_IPV4" "127.0.0.1"
         "$Tags.PEER_PORT" port
+        "$Tags.DB_TYPE" "cassandra"
+        "$Tags.DB_INSTANCE" keyspace
         defaultTags()
       }
     }

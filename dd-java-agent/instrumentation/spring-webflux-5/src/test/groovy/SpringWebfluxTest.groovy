@@ -87,9 +87,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
+            "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
-            "$Tags.HTTP_URL" url
             defaultTags()
           }
         }
@@ -161,9 +161,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
+            "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
-            "$Tags.HTTP_URL" url
             defaultTags()
           }
         }
@@ -222,9 +222,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
+            "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 404
-            "$Tags.HTTP_URL" url
             defaultTags()
           }
         }
@@ -287,9 +287,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
+            "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "POST"
             "$Tags.HTTP_STATUS" 202
-            "$Tags.HTTP_URL" url
             defaultTags()
           }
         }
@@ -330,9 +330,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
+            "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 500
-            "$Tags.HTTP_URL" url
             "error" true
             defaultTags()
           }
@@ -404,9 +404,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
+            "$Tags.HTTP_URL" url
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 307
-            "$Tags.HTTP_URL" url
             defaultTags()
           }
         }
@@ -454,9 +454,9 @@ class SpringWebfluxTest extends AgentTestRunner {
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
+            "$Tags.HTTP_URL" finalUrl
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
-            "$Tags.HTTP_URL" finalUrl
             defaultTags()
           }
         }
@@ -517,9 +517,9 @@ class SpringWebfluxTest extends AgentTestRunner {
               "$Tags.PEER_HOSTNAME" "localhost"
               "$Tags.PEER_HOST_IPV4" "127.0.0.1"
               "$Tags.PEER_PORT" Integer
+              "$Tags.HTTP_URL" url
               "$Tags.HTTP_METHOD" "GET"
               "$Tags.HTTP_STATUS" 200
-              "$Tags.HTTP_URL" url
               defaultTags()
             }
           }

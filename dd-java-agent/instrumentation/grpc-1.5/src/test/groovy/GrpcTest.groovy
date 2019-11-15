@@ -47,9 +47,9 @@ class GrpcTest extends AgentTestRunner {
           childOf trace(1).get(0)
           errored false
           tags {
-            "status.code" "OK"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT" "grpc-server"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+            "status.code" "OK"
             defaultTags(true)
           }
         }
@@ -61,8 +61,8 @@ class GrpcTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT" "grpc-server"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
             defaultTags()
           }
@@ -77,9 +77,9 @@ class GrpcTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "status.code" "OK"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.COMPONENT" "grpc-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "status.code" "OK"
             defaultTags()
           }
         }
@@ -91,8 +91,8 @@ class GrpcTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.COMPONENT" "grpc-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "message.type" "example.Helloworld\$Response"
             defaultTags()
           }
@@ -139,10 +139,10 @@ class GrpcTest extends AgentTestRunner {
           childOf trace(1).get(0)
           errored true
           tags {
+            "$Tags.COMPONENT" "grpc-server"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "status.code" "${status.code.name()}"
             "status.description" description
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.COMPONENT" "grpc-server"
             if (status.cause != null) {
               errorTags status.cause.class, status.cause.message
             } else {
@@ -159,8 +159,8 @@ class GrpcTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT" "grpc-server"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
             defaultTags()
           }
@@ -175,10 +175,10 @@ class GrpcTest extends AgentTestRunner {
           parent()
           errored true
           tags {
+            "$Tags.COMPONENT" "grpc-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "${status.code.name()}"
             "status.description" description
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "$Tags.COMPONENT" "grpc-client"
             tag "error", true
             defaultTags()
           }
@@ -231,8 +231,8 @@ class GrpcTest extends AgentTestRunner {
           childOf trace(1).get(0)
           errored true
           tags {
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT" "grpc-server"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             errorTags error.class, error.message
             defaultTags(true)
           }
@@ -245,8 +245,8 @@ class GrpcTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT" "grpc-server"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "message.type" "example.Helloworld\$Request"
             defaultTags()
           }
@@ -261,9 +261,9 @@ class GrpcTest extends AgentTestRunner {
           parent()
           errored true
           tags {
-            "status.code" "UNKNOWN"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.COMPONENT" "grpc-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "status.code" "UNKNOWN"
             tag "error", true
             defaultTags()
           }

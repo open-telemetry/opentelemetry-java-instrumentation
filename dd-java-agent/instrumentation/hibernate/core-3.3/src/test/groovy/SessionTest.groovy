@@ -314,10 +314,9 @@ class SessionTest extends AbstractHibernateTest {
           childOf span(0)
           errored(true)
           tags {
-            errorTags(MappingException, "Unknown entity: java.lang.Long")
-
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            errorTags(MappingException, "Unknown entity: java.lang.Long")
             defaultTags()
           }
         }
