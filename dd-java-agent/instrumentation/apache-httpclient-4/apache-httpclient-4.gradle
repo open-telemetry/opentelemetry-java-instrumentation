@@ -1,0 +1,37 @@
+muzzle {
+  fail {
+    group = "commons-httpclient"
+    module = "commons-httpclient"
+    versions = "[,4.0)"
+  }
+  pass {
+    group = "org.apache.httpcomponents"
+    module = "httpclient"
+    versions = "[4.0,)"
+    assertInverse = true
+  }
+  pass {
+    // We want to support the dropwizard clients too.
+    group = 'io.dropwizard'
+    module = 'dropwizard-client'
+    versions = "(,)"
+    assertInverse = true
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  compileOnly group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
+
+  testCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.0'
+
+  latestDepTestCompile group: 'org.apache.httpcomponents', name: 'httpclient', version: '+'
+}

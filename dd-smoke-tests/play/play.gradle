@@ -1,0 +1,60 @@
+plugins {
+  id 'play'
+}
+
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+def playVersion = "2.6.20"
+def scalaVersion = System.getProperty("scala.binary.version", /* default = */ "2.12")
+
+model {
+  components {
+    play {
+      platform play: playVersion, scala: scalaVersion, java: '1.8'
+      injectedRoutesGenerator = true
+    }
+  }
+  distributions {
+    playBinary {
+      contents {
+        from("conf") {
+          into "conf"
+        }
+      }
+    }
+  }
+}
+
+repositories {
+  jcenter()
+  maven {
+    name "lightbend-maven-releases"
+    url "https://repo.lightbend.com/lightbend/maven-release"
+  }
+  ivy {
+    name "lightbend-ivy-release"
+    url "https://repo.lightbend.com/lightbend/ivy-releases"
+    layout "ivy"
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+description = 'Play Integration Tests.'
+
+dependencies {
+  play "com.typesafe.play:play-guice_$scalaVersion:$playVersion"
+  play "com.typesafe.play:play-logback_$scalaVersion:$playVersion"
+  play "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
+
+  play project(':dd-trace-api')
+  play deps.opentracing
+
+  testCompile project(':dd-smoke-tests')
+}
+
+tasks.withType(Test).configureEach {
+  dependsOn 'stage'
+}

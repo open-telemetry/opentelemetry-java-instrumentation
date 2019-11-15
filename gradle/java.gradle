@@ -1,0 +1,348 @@
+import java.time.Duration
+
+apply plugin: 'java'
+apply plugin: 'groovy'
+
+apply from: "$rootDir/gradle/checkstyle.gradle"
+apply from: "$rootDir/gradle/codenarc.gradle"
+
+def applyCodeCoverage = !(project.plugins.hasPlugin('com.github.johnrengelman.shadow')
+  || project.path.startsWith(":dd-java-agent:instrumentation:"))
+
+if (applyCodeCoverage) {
+  apply from: "$rootDir/gradle/jacoco.gradle"
+}
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
+if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests') != JavaVersion.VERSION_1_7) {
+  def version = JavaVersion.toVersion(project.getProperty('minJavaVersionForTests'))
+  def name = "java$version.majorVersion"
+  sourceSets {
+    "main_$name" {
+      java.srcDirs "${project.projectDir}/src/main/$name"
+    }
+  }
+
+  "compileMain_${name}Java" {
+    sourceCompatibility = version
+    targetCompatibility = version
+  }
+
+  // Note: ideally lombok plugin would do this for us, but currently it doesn't support custom
+  // source sets. See https://github.com/franzbecker/gradle-lombok/issues/17.
+  dependencies {
+    compileOnly sourceSets."main_$name".compileClasspath
+    compile sourceSets."main_$name".output
+
+    "main_${name}CompileOnly" "org.projectlombok:lombok:${project.lombok.version}" transitive false
+    "main_${name}AnnotationProcessor" "org.projectlombok:lombok:${project.lombok.version}" transitive false
+  }
+
+  jar {
+    from sourceSets."main_$name".output
+  }
+
+  tasks.withType(JavaCompile).configureEach {
+    if (it.name.toLowerCase().contains("test")) {
+      sourceCompatibility = version
+      targetCompatibility = version
+    }
+  }
+}
+
+java {
+  // See https://docs.gradle.org/current/userguide/upgrading_version_5.html, Automatic target JVM version
+  disableAutoTargetJvm()
+}
+
+[JavaCompile, ScalaCompile].each { type ->
+  tasks.withType(type) {
+    doFirst {
+      // We do this specifically for Java7 bytecode generation because we would like to be able to compile
+      // with Java8+ compiler. This likely would require some modifications when we switch to java11 compiler.
+      // Using proper Java7 bootstrap and extensions allows to be sure our code will run on real Java7.
+      if (JavaVersion.toVersion(sourceCompatibility) == JavaVersion.VERSION_1_7
+        && JavaVersion.current() != JavaVersion.VERSION_1_7
+        && System.env.JAVA_7_HOME != null) {
+        options.fork = true
+        options.bootstrapClasspath = fileTree(include: ['*.jar'], dir: "${System.env.JAVA_7_HOME}/jre/lib/")
+        options.extensionDirs = "${System.env.JAVA_7_HOME}/jre/lib/ext/"
+      }
+    }
+  }
+}
+
+apply plugin: "io.franzbecker.gradle-lombok"
+
+lombok { // optional: values below are the defaults
+  version = versions.lombok
+  sha256 = ""
+}
+
+apply plugin: "eclipse"
+eclipse {
+  classpath {
+    downloadSources = true
+    downloadJavadoc = true
+  }
+}
+if (configurations.find { it.name == 'jmh' }) {
+  eclipse.classpath.plusConfigurations += [configurations.jmh]
+}
+
+jar {
+  /*
+  Make Jar build fail on duplicate files
+
+  By default Gradle Jar task can put multiple files with the same name
+  into a Jar. This may lead to confusion. For example if auto-service
+  annotation processing creates files with same name in `scala` and
+  `java` directory this would result in Jar having two files with the
+  same name in it. Which in turn would result in only one of those
+  files being actually considered when that Jar is used leading to very
+  confusing failures.
+
+  Instead we should 'fail early' and avoid building such Jars.
+  */
+  duplicatesStrategy = 'fail'
+}
+
+tasks.register("packageSources", Jar) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+artifacts.archives packageSources
+
+repositories {
+  mavenLocal()
+  jcenter()
+  mavenCentral()
+}
+
+dependencies {
+  testCompile deps.spock
+  testCompile deps.groovy
+  testCompile deps.testLogging
+  testCompile group: 'info.solidsoft.spock', name: 'spock-global-unroll', version: '0.5.1'
+  testCompile group: 'com.anotherchrisberry', name: 'spock-retry', version: '0.6.4'
+  testCompile group: 'com.github.stefanbirkner', name: 'system-rules', version: '1.19.0'
+}
+
+jar {
+  manifest {
+    attributes(
+      "Implementation-Title": project.name,
+      "Implementation-Version": project.version,
+      "Implementation-Vendor": "Datadog",
+      "Implementation-URL": "https://github.com/datadog/dd-trace-java",
+    )
+  }
+}
+
+tasks.withType(Javadoc).configureEach {
+  options.encoding = "utf-8"
+  options.docEncoding = "utf-8"
+  options.charSet = "utf-8"
+
+  options.addStringOption('Xdoclint:none', '-quiet')
+
+  doFirst {
+    if (project.ext.has("apiLinks")) {
+      options.links(*project.apiLinks)
+    }
+  }
+}
+
+javadoc {
+  source = sourceSets.main.allJava
+  classpath = configurations.compileClasspath
+
+  options {
+    setMemberLevel JavadocMemberLevel.PUBLIC
+    setAuthor true
+
+    links "https://docs.oracle.com/javase/8/docs/api/"
+  }
+}
+
+tasks.register("sourceJar", Jar) {
+  from sourceSets.main.allJava
+  classifier = 'sources'
+}
+
+tasks.register("javaDocJar", Jar) {
+  from javadoc.destinationDir
+  classifier = 'javadoc'
+  dependsOn javadoc
+}
+
+artifacts {
+  archives sourceJar
+  archives javaDocJar
+}
+
+project.afterEvaluate {
+  if (project.plugins.hasPlugin('org.unbroken-dome.test-sets') && configurations.hasProperty("latestDepTestRuntime")) {
+    tasks.withType(Test).configureEach {
+      doFirst {
+        def testArtifacts = configurations.testRuntime.resolvedConfiguration.resolvedArtifacts
+        def latestTestArtifacts = configurations.latestDepTestRuntime.resolvedConfiguration.resolvedArtifacts
+        assert testArtifacts != latestTestArtifacts: "latestDepTest dependencies are identical to test"
+      }
+    }
+  }
+}
+
+if (project.plugins.hasPlugin('com.github.johnrengelman.shadow')) {
+  // Remove the no-deps jar from the archives to prevent publication
+  configurations.archives.with {
+    artifacts.remove artifacts.find {
+      if (it.hasProperty("delegate")) {
+        it.delegate.archiveTask.is jar
+      } else {
+        it.archiveTask.is jar
+      }
+    }
+  }
+  artifacts {
+    archives shadowJar
+  }
+}
+
+if (project.hasProperty("removeJarVersionNumbers") && removeJarVersionNumbers) {
+  tasks.withType(AbstractArchiveTask).configureEach {
+    version = null
+  }
+}
+
+if (project.parent && project.parent.hasProperty("javaExecutableVersionCache")) {
+  project.ext.javaExecutableVersionCache = project.parent.ext.javaExecutableVersionCache
+} else {
+  project.ext.javaExecutableVersionCache = [:]
+}
+
+JavaVersion getJavaExecutableVersion(String path) {
+  def cache = project.ext.javaExecutableVersionCache
+
+  if (cache.containsKey(path)) {
+    return cache.get(path)
+  }
+  new ByteArrayOutputStream().withStream { stream ->
+    exec {
+      commandLine = [path, "-version"]
+      errorOutput = stream
+    }
+    def matcher = stream.toString() =~ /^(?:java|openjdk) version "([^"]+)"/
+    if (matcher) {
+      def version = JavaVersion.toVersion(matcher.group(1))
+      cache.put(path, version)
+      return version
+    } else {
+      throw new GradleScriptException("Cannot determine java version: ${stream.toString}")
+    }
+  }
+}
+
+ext {
+  getJavaExecutableVersion = this.&getJavaExecutableVersion
+}
+
+def isJavaVersionAllowed(JavaVersion version) {
+  if (project.hasProperty('minJavaVersionForTests') && project.getProperty('minJavaVersionForTests').compareTo(version) > 0) {
+    return false
+  }
+  if (project.hasProperty('maxJavaVersionForTests') && project.getProperty('maxJavaVersionForTests').compareTo(version) < 0) {
+    return false
+  }
+  return true
+}
+
+def isJdkForced(String javaName) {
+  return (project.hasProperty('forceJdk') && project.getProperty('forceJdk').contains(javaName))
+}
+
+// Disable default test tasks if current JVM doesn't match version requirements
+tasks.withType(Test).configureEach {
+  if (name.endsWith("Generated")) {
+    return
+  }
+
+  // Always run all tests that are runnable on JVM used for compilation
+  onlyIf { isJavaVersionAllowed(JavaVersion.current()) }
+}
+
+// Generate tests tasks for all provided JVMs
+for (def env : System.getenv().entrySet()) {
+  def matcher = env.key =~ /JAVA_([^_]+)_HOME/
+  if (!matcher) {
+    continue
+  }
+  def javaName = matcher.group(1)
+  def javaHome = env.value
+  def javaPath = "$javaHome/bin/java"
+  def javaVersion = getJavaExecutableVersion(javaPath)
+
+  // This is slightly complicated because we need to dereference symlinks to make sure
+  // we are considering same JVM implementation
+  def currentJavaHome = new File(System.getProperty("java.home")).toPath().toRealPath()
+  if (currentJavaHome.endsWith("jre")) {
+    currentJavaHome = currentJavaHome.parent
+  }
+  if (currentJavaHome == new File(javaHome).toPath().toRealPath()) {
+    // Skip JVM implementation we are running gradle on
+    continue
+  }
+
+  def parentTask = task "testJava${javaName}"() {
+    group = 'Verification'
+    description = "Run tests for Java ${javaName}"
+  }
+  tasks.check.dependsOn parentTask
+
+  tasks.withType(Test).all {
+    //if (name.endsWith("Generated")) {
+    if (!name.equals("test")) {
+      // The way we're copying the test doesn't currently work with "test-sets" generated tests.
+      return
+    }
+
+    def clonedTask = it
+    def newTask = task "${clonedTask.name}Java${javaName}Generated"(type: clonedTask.class) {
+      description "Runs $clonedTask.name under java ${javaName}"
+      executable = javaPath
+
+      if (javaName == "7") {
+        // Disable JIT for this method. Sometimes Java7 JVM crashes trying to compile it.
+        jvmArgs '-XX:CompileCommand=exclude,net.bytebuddy.description.type.TypeDescription$Generic$Visitor$Substitutor::onParameterizedType'
+      }
+
+      onlyIf { isJavaVersionAllowed(javaVersion) || isJdkForced(javaName) }
+      if (applyCodeCoverage) {
+        jacoco {
+          // Disable jacoco for additional JVM tests to speed things up a bit
+          enabled = false
+        }
+      }
+    }
+
+    parentTask.dependsOn newTask
+  }
+}
+
+tasks.withType(Test).configureEach {
+  // All tests must complete within 2 minutes.
+  timeout = Duration.ofMinutes(2)
+
+  // Disable all tests if skipTests property was specified
+  onlyIf { !project.rootProject.hasProperty("skipTests") }
+}
+
+plugins.withType(BasePlugin) {
+  project.afterEvaluate {
+    def deleteTasks = tasks.withType(Delete) + project.tasks.findByPath('clean')
+    def otherTasks = tasks - deleteTasks
+    otherTasks*.mustRunAfter deleteTasks
+  }
+}

@@ -1,0 +1,1 @@
+enableCustomAnnotationTracingOver: ["datadog.benchmark"]

@@ -1,0 +1,8 @@
+# Metric Configs
+
+Files from [integrations-core](https://github.com/DataDog/integrations-core/search?q=jmx_metrics&unscoped_q=jmx_metrics)
+are copied here at build time by the `copy-metric-configs.sh` script which is called by gradle after initializing the submodule.
+
+These are then bundled in `dd-java-agent.jar`. Due to limitations in Java, it is non-trivial
+to get all these files from within the jar without knowing their names.
+Consequently, we list out each integration in `metricconfigs.txt` so the agent can reference them.

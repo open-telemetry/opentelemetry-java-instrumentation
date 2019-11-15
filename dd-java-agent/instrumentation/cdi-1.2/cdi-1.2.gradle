@@ -1,0 +1,22 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+apply plugin: 'org.unbroken-dome.test-sets'
+
+testSets {
+  latestDepTest {
+    dirName = 'test'
+  }
+}
+
+dependencies {
+  testCompile project(':dd-java-agent:instrumentation:java-concurrent')
+  
+  testCompile group: 'org.jboss.weld', name: 'weld-core', version: '2.3.0.Final'
+  testCompile group: 'org.jboss.weld.se', name: 'weld-se', version: '2.3.0.Final'
+  testCompile group: 'org.jboss.weld.se', name: 'weld-se-core', version: '2.3.0.Final'
+
+  // Beyond 2.x is CDI 2+ and requires Java 8
+  latestDepTestCompile group: 'org.jboss.weld', name: 'weld-core', version: '2.+'
+  latestDepTestCompile group: 'org.jboss.weld.se', name: 'weld-se', version: '2.+'
+  latestDepTestCompile group: 'org.jboss.weld.se', name: 'weld-se-core', version: '2.+'
+}

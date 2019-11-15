@@ -1,0 +1,3 @@
+[submodule "dd-java-agent/agent-jmxfetch/integrations-core"]
+	path = dd-java-agent/agent-jmxfetch/integrations-core
+	url = https://github.com/DataDog/integrations-core.git

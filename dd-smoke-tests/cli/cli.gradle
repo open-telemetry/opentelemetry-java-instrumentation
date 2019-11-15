@@ -1,0 +1,25 @@
+plugins {
+  id "com.github.johnrengelman.shadow" version "4.0.4"
+}
+apply from: "${rootDir}/gradle/java.gradle"
+description = 'Command Line Application Smoke Tests.'
+
+jar {
+  manifest {
+    attributes(
+      'Main-Class': 'datadog.smoketest.cli.CliApplication'
+    )
+  }
+}
+
+dependencies {
+  compile project(':dd-trace-api')
+
+  testCompile project(':dd-smoke-tests')
+}
+
+tasks.withType(Test).configureEach {
+  dependsOn shadowJar
+
+  jvmArgs "-Ddatadog.smoketest.cli.shadowJar.path=${tasks.shadowJar.archivePath}"
+}

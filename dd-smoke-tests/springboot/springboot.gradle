@@ -1,0 +1,27 @@
+plugins {
+  id "com.github.johnrengelman.shadow" version "4.0.4"
+}
+apply from: "${rootDir}/gradle/java.gradle"
+description = 'SpringBoot Smoke Tests.'
+
+// The standard spring-boot plugin doesn't play nice with our project
+// so we'll build a fat jar instead
+jar {
+  manifest {
+    attributes(
+      'Main-Class': 'datadog.smoketest.springboot.SpringbootApplication'
+    )
+  }
+}
+
+dependencies {
+  compile group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.5.18.RELEASE'
+
+  testCompile project(':dd-smoke-tests')
+}
+
+tasks.withType(Test).configureEach {
+  dependsOn shadowJar
+
+  jvmArgs "-Ddatadog.smoketest.springboot.shadowJar.path=${tasks.shadowJar.archivePath}"
+}

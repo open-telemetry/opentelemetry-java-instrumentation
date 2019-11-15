@@ -1,0 +1,5 @@
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  testCompile group: 'com.newrelic.agent.java', name: 'newrelic-api', version: '+'
+}

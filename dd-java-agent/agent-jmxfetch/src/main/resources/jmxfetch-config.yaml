@@ -1,0 +1,8 @@
+init_config:
+  is_jmx: true
+  new_gc_metrics: true
+
+instances:
+  - jvm_direct: true
+    name: dd-java-agent default
+    conf: [] # Intentionally left empty for now

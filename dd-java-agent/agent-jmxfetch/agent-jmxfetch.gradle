@@ -1,0 +1,65 @@
+plugins {
+  id "com.github.johnrengelman.shadow"
+}
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+  compile('com.datadoghq:jmxfetch:0.32.1') {
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    exclude group: 'log4j', module: 'log4j'
+  }
+  compile deps.slf4j
+  compile project(':dd-trace-api')
+}
+
+configurations {
+  // exclude bootstrap dependencies from shadowJar
+  runtime.exclude module: deps.opentracing
+  runtime.exclude module: deps.slf4j
+  runtime.exclude group: 'org.slf4j'
+  runtime.exclude group: 'io.opentracing'
+}
+
+shadowJar {
+  dependencies {
+    exclude(project(':dd-java-agent:agent-bootstrap'))
+    exclude(project(':dd-trace-api'))
+  }
+}
+
+jar {
+  classifier = 'unbundled'
+}
+
+tasks.register("submodulesUpdate", Exec) {
+  group 'Build Setup'
+  description 'Initializes and updates integrations-core git submodule'
+  commandLine 'git', 'submodule', 'update', '--init', 'integrations-core'
+  def submoduleHead = file("${project.rootDir}/.git/modules/dd-java-agent/agent-jmxfetch/integrations-core/HEAD")
+  if (submoduleHead.exists()) {
+    inputs.file "${project.rootDir}/.git/modules/dd-java-agent/agent-jmxfetch/integrations-core/HEAD"
+  }
+  def integrationsCore = file("$projectDir/integrations-core")
+  outputs.dir integrationsCore
+  if (integrationsCore.list().length == 0) {
+    outputs.upToDateWhen { false }
+  }
+}
+
+tasks.register("copyMetricConfigs", Exec) {
+  group 'Build Setup'
+  description 'Copy metrics.yaml files from integrations-core into resources'
+  commandLine './copy-metric-configs.sh', 'integrations-core', sourceSets.main.output.resourcesDir
+  inputs.dir file("$projectDir/integrations-core")
+  outputs.dir sourceSets.main.output.resourcesDir
+  doFirst {
+    // Ensure the resources directory is available.
+    file(sourceSets.main.output.resourcesDir).mkdirs()
+  }
+}
+
+copyMetricConfigs.dependsOn submodulesUpdate
+processResources.finalizedBy copyMetricConfigs
+copyMetricConfigs.mustRunAfter processResources
+// In CI, there seems to be a race condition where processResources overwrites the copied metric config files.
+// Ensure that task runs last to avoid this problem.

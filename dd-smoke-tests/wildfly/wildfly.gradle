@@ -1,0 +1,54 @@
+ext {
+  serverName = 'wildfly'
+  serverModule = 'servlet'
+  serverVersion = '15.0.0.Final'
+  serverExtension = 'zip'
+
+  minJavaVersionForTests = JavaVersion.VERSION_1_8
+}
+
+repositories {
+  ivy {
+    url 'https://download.jboss.org/'
+    layout 'pattern', {
+      artifact '/[organisation]/[revision]/[module]/[organisation]-[module]-[revision].[ext]'
+    }
+  }
+}
+
+apply from: "${rootDir}/gradle/java.gradle"
+
+description = 'Wildfly Smoke Tests.'
+
+dependencies {
+  // uses the ivy repository url to download the wildfly servlet zip
+  // organisation = serverName, revision = serverVersion, module = serverModule, ext = serverExtension
+  compile "${serverName}:${serverModule}:${serverVersion}@${serverExtension}"
+
+  testCompile project(':dd-smoke-tests')
+}
+
+tasks.register("unzip", Copy) {
+  def zipFileNamePrefix = "servlet"
+  def zipPath = project.configurations.compile.find {
+    it.name.startsWith(zipFileNamePrefix)
+  }
+  if (zipPath != null) {
+    def zipFile = file(zipPath)
+    def outputDir = file("${buildDir}")
+
+    from zipTree(zipFile)
+    into outputDir
+  } else {
+    throw new GradleException("Can't find server zip file that starts with: " + zipFileNamePrefix)
+  }
+
+  // When tests are disabled this would still be run, so disable this manually
+  onlyIf { !project.rootProject.hasProperty("skipTests") }
+}
+
+tasks.withType(Test).configureEach {
+  dependsOn unzip
+
+  jvmArgs "-Ddatadog.smoketest.wildflyDir=${buildDir}/${serverName}-${serverModule}-${serverVersion}"
+}
