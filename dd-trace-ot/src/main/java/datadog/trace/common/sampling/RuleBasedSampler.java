@@ -32,6 +32,47 @@ public class RuleBasedSampler implements Sampler, PrioritySampler {
     this.rateLimit = rateLimit;
   }
 
+  public static RuleBasedSampler build(
+      final Map<String, String> serviceRules,
+      final Map<String, String> operationRules,
+      final Double defaultRate,
+      final double rateLimit) {
+
+    final List<SamplingRule> samplingRules = new ArrayList<>();
+
+    if (serviceRules != null) {
+      for (final Entry<String, String> entry : serviceRules.entrySet()) {
+        try {
+          final double rateForEntry = Double.parseDouble(entry.getValue());
+          final SamplingRule samplingRule =
+              new ServiceSamplingRule(entry.getKey(), new KnuthSampler(rateForEntry));
+          samplingRules.add(samplingRule);
+        } catch (final NumberFormatException e) {
+          log.error("Unable to parse rate for service: {}", entry, e);
+        }
+      }
+    }
+
+    if (operationRules != null) {
+      for (final Entry<String, String> entry : operationRules.entrySet()) {
+        try {
+          final double rateForEntry = Double.parseDouble(entry.getValue());
+          final SamplingRule samplingRule =
+              new OperationSamplingRule(entry.getKey(), new KnuthSampler(rateForEntry));
+          samplingRules.add(samplingRule);
+        } catch (final NumberFormatException e) {
+          log.error("Unable to parse rate for operation: {}", entry, e);
+        }
+      }
+    }
+
+    if (defaultRate != null) {
+      final SamplingRule samplingRule = new AlwaysMatchesSamplingRule(new KnuthSampler(defaultRate));
+      samplingRules.add(samplingRule);
+    }
+
+    return new RuleBasedSampler(samplingRules, rateLimit, new RateByServiceSampler());
+  }
 
   @Override
   public boolean sample(final DDSpan span) {
