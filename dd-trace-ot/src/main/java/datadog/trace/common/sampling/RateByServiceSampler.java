@@ -19,7 +19,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>The configuration of (serviceName,env)->rate is configured by the core agent.
  */
 @Slf4j
-public class RateByServiceSampler implements Sampler, ResponseListener {
+public class RateByServiceSampler implements Sampler, PrioritySampler, ResponseListener {
+  public static final String SAMPLING_AGENT_RATE = "_dd.agent_psr";
+
   /** Key for setting the default/baseline rate */
   private static final String DEFAULT_KEY = "service:,env:";
 
@@ -36,18 +38,8 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
   }
 
   /** If span is a root span, set the span context samplingPriority to keep or drop */
-  public void initializeSamplingPriority(final DDSpan span) {
-    if (span.isRootSpan()) {
-      // Run the priority sampler on the new span
-      setSamplingPriorityOnSpanContext(span);
-    } else if (span.getSamplingPriority() == null) {
-      // Edge case: If the parent context did not set the priority, run the priority sampler.
-      // Happens when extracted http context did not send the priority header.
-      setSamplingPriorityOnSpanContext(span);
-    }
-  }
-
-  private void setSamplingPriorityOnSpanContext(final DDSpan span) {
+  @Override
+  public void setSamplingPriority(final DDSpan span) {
     final String serviceName = span.getServiceName();
     final String env = getSpanEnv(span);
     final String key = "service:" + serviceName + ",env:" + env;
@@ -58,10 +50,18 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
       sampler = rates.get(DEFAULT_KEY);
     }
 
+    final boolean priorityWasSet;
+
     if (sampler.sample(span)) {
-      span.setSamplingPriority(PrioritySampling.SAMPLER_KEEP);
+      priorityWasSet = span.context().setSamplingPriority(PrioritySampling.SAMPLER_KEEP);
     } else {
-      span.setSamplingPriority(PrioritySampling.SAMPLER_DROP);
+      priorityWasSet = span.context().setSamplingPriority(PrioritySampling.SAMPLER_DROP);
+    }
+
+    // Only set metrics if we actually set the sampling priority
+    // We don't know until the call is completed because the lock is internal to DDSpanContext
+    if (priorityWasSet) {
+      span.context().setMetric(SAMPLING_AGENT_RATE, sampler.getSampleRate());
     }
   }
 

@@ -191,18 +191,20 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.spanType = spanType;
   }
 
-  public void setSamplingPriority(final int newPriority) {
+  /** @return if sampling priority was set by this method invocation */
+  public boolean setSamplingPriority(final int newPriority) {
+    if (newPriority == PrioritySampling.UNSET) {
+      log.debug("{}: Refusing to set samplingPriority to UNSET", this);
+      return false;
+    }
+
     if (trace != null) {
       final DDSpan rootSpan = trace.getRootSpan();
       if (null != rootSpan && rootSpan.context() != this) {
-        rootSpan.context().setSamplingPriority(newPriority);
-        return;
+        return rootSpan.context().setSamplingPriority(newPriority);
       }
     }
-    if (newPriority == PrioritySampling.UNSET) {
-      log.debug("{}: Refusing to set samplingPriority to UNSET", this);
-      return;
-    }
+
     // sync with lockSamplingPriority
     synchronized (this) {
       if (samplingPriorityLocked) {
@@ -210,21 +212,22 @@ public class DDSpanContext implements io.opentracing.SpanContext {
             "samplingPriority locked at {}. Refusing to set to {}",
             getMetrics().get(PRIORITY_SAMPLING_KEY),
             newPriority);
+        return false;
       } else {
         setMetric(PRIORITY_SAMPLING_KEY, newPriority);
         log.debug("Set sampling priority to {}", getMetrics().get(PRIORITY_SAMPLING_KEY));
+        return true;
       }
     }
   }
 
   /** @return the sampling priority of this span's trace, or null if no priority has been set */
   public int getSamplingPriority() {
-    if (trace != null) {
-      final DDSpan rootSpan = trace.getRootSpan();
-      if (null != rootSpan && rootSpan.context() != this) {
-        return rootSpan.context().getSamplingPriority();
-      }
+    final DDSpan rootSpan = trace.getRootSpan();
+    if (null != rootSpan && rootSpan.context() != this) {
+      return rootSpan.context().getSamplingPriority();
     }
+
     final Number val = getMetrics().get(PRIORITY_SAMPLING_KEY);
     return null == val ? PrioritySampling.UNSET : val.intValue();
   }
@@ -239,12 +242,11 @@ public class DDSpanContext implements io.opentracing.SpanContext {
    * @return true if the sampling priority was locked.
    */
   public boolean lockSamplingPriority() {
-    if (trace != null) {
-      final DDSpan rootSpan = trace.getRootSpan();
-      if (null != rootSpan && rootSpan.context() != this) {
-        return rootSpan.context().lockSamplingPriority();
-      }
+    final DDSpan rootSpan = trace.getRootSpan();
+    if (null != rootSpan && rootSpan.context() != this) {
+      return rootSpan.context().lockSamplingPriority();
     }
+
     // sync with setSamplingPriority
     synchronized (this) {
       if (getMetrics().get(PRIORITY_SAMPLING_KEY) == null) {
@@ -367,13 +369,12 @@ public class DDSpanContext implements io.opentracing.SpanContext {
             .append("/")
             .append(getResourceName())
             .append(" metrics=")
-            .append(new TreeMap(getMetrics()));
+            .append(new TreeMap<>(getMetrics()));
     if (errorFlag) {
       s.append(" *errored*");
     }
-    if (tags != null) {
-      s.append(" tags=").append(new TreeMap(tags));
-    }
+
+    s.append(" tags=").append(new TreeMap<>(tags));
     return s.toString();
   }
 }
