@@ -98,11 +98,11 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           tags {
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -116,11 +116,11 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           tags {
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -183,11 +183,11 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           tags {
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -201,11 +201,11 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           tags {
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -253,11 +253,11 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           tags {
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" STATUS
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }
@@ -321,11 +321,11 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           tags {
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" server.address.port
             "$Tags.HTTP_URL" "$url"
             "$Tags.HTTP_METHOD" "POST"
             "$Tags.HTTP_STATUS" STATUS
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" server.address.port
             defaultTags()
           }
         }

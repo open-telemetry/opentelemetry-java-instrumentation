@@ -637,13 +637,20 @@ class SpymemcachedTest extends AgentTestRunner {
       errored(error != null && error != "canceled")
 
       tags {
-        defaultTags()
-        "${Tags.COMPONENT}" COMPONENT_NAME
-        "${Tags.SPAN_KIND}" Tags.SPAN_KIND_CLIENT
-        "${Tags.DB_TYPE}" CompletionListener.DB_TYPE
+        "$Tags.COMPONENT" COMPONENT_NAME
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+        "$Tags.DB_TYPE" CompletionListener.DB_TYPE
 
         if (error == "canceled") {
           "${CompletionListener.DB_COMMAND_CANCELLED}" true
+        }
+
+        if (result == "hit") {
+          "${CompletionListener.MEMCACHED_RESULT}" CompletionListener.HIT
+        }
+
+        if (result == "miss") {
+          "${CompletionListener.MEMCACHED_RESULT}" CompletionListener.MISS
         }
 
         if (error == "timeout") {
@@ -658,13 +665,7 @@ class SpymemcachedTest extends AgentTestRunner {
             "Key is too long (maxlen = 250)")
         }
 
-        if (result == "hit") {
-          "${CompletionListener.MEMCACHED_RESULT}" CompletionListener.HIT
-        }
-
-        if (result == "miss") {
-          "${CompletionListener.MEMCACHED_RESULT}" CompletionListener.MISS
-        }
+        defaultTags()
       }
     }
   }

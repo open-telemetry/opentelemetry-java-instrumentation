@@ -91,9 +91,9 @@ class GrpcStreamingTest extends AgentTestRunner {
           childOf trace(1).get(0)
           errored false
           tags {
-            "status.code" "OK"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.COMPONENT" "grpc-server"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+            "status.code" "OK"
             defaultTags(true)
           }
         }
@@ -106,8 +106,8 @@ class GrpcStreamingTest extends AgentTestRunner {
             childOf span(0)
             errored false
             tags {
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
               "$Tags.COMPONENT" "grpc-server"
+              "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
               "message.type" "example.Helloworld\$Response"
               defaultTags()
             }
@@ -123,9 +123,9 @@ class GrpcStreamingTest extends AgentTestRunner {
           parent()
           errored false
           tags {
-            "status.code" "OK"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.COMPONENT" "grpc-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "status.code" "OK"
             defaultTags()
           }
         }
@@ -138,8 +138,8 @@ class GrpcStreamingTest extends AgentTestRunner {
             childOf span(0)
             errored false
             tags {
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.COMPONENT" "grpc-client"
+              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "message.type" "example.Helloworld\$Response"
               defaultTags()
             }

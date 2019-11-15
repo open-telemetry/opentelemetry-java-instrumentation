@@ -365,9 +365,6 @@ class RabbitMQTest extends AgentTestRunner {
       errored exception != null
 
       tags {
-        if (exception) {
-          errorTags(exception.class, errorMsg)
-        }
         "$Tags.COMPONENT" "rabbitmq-amqp"
         "$Tags.PEER_HOSTNAME" { it == null || it instanceof String }
         "$Tags.PEER_HOST_IPV4" { "127.0.0.1" }
@@ -400,6 +397,9 @@ class RabbitMQTest extends AgentTestRunner {
           default:
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "amqp.command" { it == null || it == resource }
+        }
+        if (exception) {
+          errorTags(exception.class, errorMsg)
         }
         defaultTags(distributedRootSpan)
       }

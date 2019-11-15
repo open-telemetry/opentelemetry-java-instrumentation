@@ -79,8 +79,8 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
             defaultTags()
@@ -108,8 +108,8 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           errored true
           tags {
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -180,8 +180,8 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "CreateIndexAction"
             "elasticsearch.request" "CreateIndexRequest"
             "elasticsearch.request.indices" indexName
@@ -197,8 +197,8 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "ClusterHealthAction"
             "elasticsearch.request" "ClusterHealthRequest"
             defaultTags()
@@ -213,11 +213,11 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
             "$Tags.PEER_HOST_IPV4" "0.0.0.0"
             "$Tags.PEER_PORT" 0
+            "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName
@@ -236,8 +236,8 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "PutMappingAction"
             "elasticsearch.request" "PutMappingRequest"
             "elasticsearch.request.indices" indexName
@@ -253,11 +253,11 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
             "$Tags.PEER_HOST_IPV4" "0.0.0.0"
             "$Tags.PEER_PORT" 0
+            "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "IndexAction"
             "elasticsearch.request" "IndexRequest"
             "elasticsearch.request.indices" indexName
@@ -274,11 +274,11 @@ class Elasticsearch2NodeClientTest extends AgentTestRunner {
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
             "$Tags.PEER_HOST_IPV4" "0.0.0.0"
             "$Tags.PEER_PORT" 0
+            "$Tags.DB_TYPE" "elasticsearch"
             "elasticsearch.action" "GetAction"
             "elasticsearch.request" "GetRequest"
             "elasticsearch.request.indices" indexName

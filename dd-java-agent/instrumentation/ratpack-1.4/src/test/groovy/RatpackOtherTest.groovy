@@ -72,12 +72,12 @@ class RatpackOtherTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "netty"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 200
-            "$Tags.HTTP_URL" "${app.address.resolve(path)}"
             "$Tags.PEER_HOSTNAME" "$app.address.host"
             "$Tags.PEER_HOST_IPV4" "127.0.0.1"
             "$Tags.PEER_PORT" Integer
+            "$Tags.HTTP_URL" "${app.address.resolve(path)}"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" 200
             defaultTags()
           }
         }
@@ -91,11 +91,11 @@ class RatpackOtherTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "ratpack"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_STATUS" 200
-            "$Tags.HTTP_URL" "${app.address.resolve(path)}"
             "$Tags.PEER_HOSTNAME" "$app.address.host"
             "$Tags.PEER_PORT" Integer
+            "$Tags.HTTP_URL" "${app.address.resolve(path)}"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" 200
             defaultTags()
           }
         }

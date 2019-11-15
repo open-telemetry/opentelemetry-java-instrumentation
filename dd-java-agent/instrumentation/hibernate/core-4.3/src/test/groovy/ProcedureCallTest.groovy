@@ -162,9 +162,9 @@ class ProcedureCallTest extends AgentTestRunner {
           childOf span(0)
           errored(true)
           tags {
-            errorTags(SQLGrammarException, "could not prepare statement")
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            errorTags(SQLGrammarException, "could not prepare statement")
             defaultTags()
           }
         }

@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.instrumentation.api.Tags
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -88,8 +89,8 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "component" "java-kafka"
-            "span.kind" "producer"
+            "$Tags.COMPONENT" "java-kafka"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             defaultTags()
           }
         }
@@ -104,8 +105,8 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           childOf TEST_WRITER[0][0]
           tags {
-            "component" "java-kafka"
-            "span.kind" "consumer"
+            "$Tags.COMPONENT" "java-kafka"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
             defaultTags(true)
@@ -170,8 +171,8 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           parent()
           tags {
-            "component" "java-kafka"
-            "span.kind" "producer"
+            "$Tags.COMPONENT" "java-kafka"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             "kafka.partition" { it >= 0 }
             defaultTags(true)
           }
@@ -187,8 +188,8 @@ class KafkaClientTest extends AgentTestRunner {
           errored false
           childOf TEST_WRITER[0][0]
           tags {
-            "component" "java-kafka"
-            "span.kind" "consumer"
+            "$Tags.COMPONENT" "java-kafka"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
             "offset" 0
             defaultTags(true)
