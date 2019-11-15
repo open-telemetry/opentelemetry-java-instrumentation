@@ -9,7 +9,11 @@ class JerseyTest extends AgentTestRunner {
 
   @Shared
   @ClassRule
-  ResourceTestRule resources = ResourceTestRule.builder().addResource(new Resource.Test()).build()
+  ResourceTestRule resources = ResourceTestRule.builder()
+    .addResource(new Resource.Test1())
+    .addResource(new Resource.Test2())
+    .addResource(new Resource.Test3())
+    .build()
 
   def "test resource"() {
     setup:
@@ -19,11 +23,12 @@ class JerseyTest extends AgentTestRunner {
     }
 
     expect:
-    response == "Hello bob!"
+    response == "Test1 bob!"
     TEST_WRITER.waitForTraces(1)
     TEST_WRITER.size() == 1
 
     def trace = TEST_WRITER.firstTrace()
+    assert trace.size() == 2
     def span = trace[0]
     span.resourceName == "POST /test/hello/{name}"
     span.tags["component"] == "jax-rs"

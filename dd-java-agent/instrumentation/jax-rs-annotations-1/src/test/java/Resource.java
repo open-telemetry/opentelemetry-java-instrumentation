@@ -5,13 +5,32 @@ import javax.ws.rs.PathParam;
 // Originally had this as a groovy class but was getting some weird errors.
 @Path("/ignored")
 public interface Resource {
+  @Path("ignored")
+  String hello(final String name);
 
   @Path("/test")
-  class Test implements Resource {
+  interface SubResource {
     @POST
     @Path("/hello/{name}")
-    public String addBook(@PathParam("name") final String name) {
-      return "Hello " + name + "!";
+    String hello(@PathParam("name") final String name);
+  }
+
+  class Test1 implements SubResource {
+    public String hello(final String name) {
+      return "Test1 " + name + "!";
+    }
+  }
+
+  @Path("/test2")
+  class Test2 implements SubResource {
+    public String hello(final String name) {
+      return "Test2 " + name + "!";
+    }
+  }
+
+  class Test3 extends Test1 {
+    public String hello(final String name) {
+      return "Test3 " + name + "!";
     }
   }
 }
