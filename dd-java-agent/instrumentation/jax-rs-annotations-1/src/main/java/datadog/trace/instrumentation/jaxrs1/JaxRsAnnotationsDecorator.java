@@ -10,8 +10,6 @@ import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.HttpMethod;
@@ -83,9 +81,22 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
     String resourceName = classMap.get(method);
     if (resourceName == null) {
-      final String httpMethod = locateHttpMethod(method);
-      final List<Path> paths = gatherPaths(target, method);
-      resourceName = buildResourceName(httpMethod, paths);
+      String httpMethod = null;
+      Path methodPath = null;
+      final Path classPath = findClassPath(target);
+      for (final Method current : new OverriddenMethodIterable(target, method)) {
+        if (httpMethod == null) {
+          httpMethod = locateHttpMethod(method);
+        }
+        if (methodPath == null) {
+          methodPath = findMethodPath(method);
+        }
+        // TODO figure out if these will ever be on different methods.
+        if (method != null && methodPath != null) {
+          break;
+        }
+      }
+      resourceName = buildResourceName(httpMethod, classPath, methodPath);
       classMap.put(method, resourceName);
     }
 
@@ -102,40 +113,51 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return httpMethod;
   }
 
-  private List<Path> gatherPaths(Class<Object> target, final Method method) {
-    final List<Path> paths = new ArrayList();
+  private Path findMethodPath(final Method method) {
+    return method.getAnnotation(Path.class);
+  }
+
+  private Path findClassPath(Class<Object> target) {
     while (target != null && target != Object.class) {
       final Path annotation = target.getAnnotation(Path.class);
       if (annotation != null) {
-        paths.add(annotation);
-        break; // Annotation overridden, no need to continue.
+        // Annotation overridden, no need to continue.
+        return annotation;
       }
       target = target.getSuperclass();
     }
-    final Path methodPath = method.getAnnotation(Path.class);
-    if (methodPath != null) {
-      paths.add(methodPath);
-    }
-    return paths;
+    return null;
   }
 
-  private String buildResourceName(final String httpMethod, final List<Path> paths) {
+  private String buildResourceName(
+      final String httpMethod, final Path classPath, final Path methodPath) {
     final String resourceName;
     final StringBuilder resourceNameBuilder = new StringBuilder();
     if (httpMethod != null) {
       resourceNameBuilder.append(httpMethod);
       resourceNameBuilder.append(" ");
     }
-    Path last = null;
-    for (final Path path : paths) {
-      if (path.value().startsWith("/") || (last != null && last.value().endsWith("/"))) {
-        resourceNameBuilder.append(path.value());
-      } else {
+    boolean skipSlash = false;
+    if (classPath != null) {
+      if (!classPath.value().startsWith("/")) {
         resourceNameBuilder.append("/");
-        resourceNameBuilder.append(path.value());
       }
-      last = path;
+      resourceNameBuilder.append(classPath.value());
+      skipSlash = classPath.value().endsWith("/");
     }
+
+    if (methodPath != null) {
+      String path = methodPath.value();
+      if (skipSlash) {
+        if (path.startsWith("/")) {
+          path = path.length() == 1 ? "" : path.substring(1);
+        }
+      } else if (!path.startsWith("/")) {
+        resourceNameBuilder.append("/");
+      }
+      resourceNameBuilder.append(path);
+    }
+
     resourceName = resourceNameBuilder.toString().trim();
     return resourceName;
   }

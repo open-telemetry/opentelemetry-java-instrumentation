@@ -9,13 +9,15 @@ public interface Resource {
   String hello(final String name);
 
   @Path("/test")
-  interface SubResource {
+  interface SubResource extends Cloneable, Resource {
+    @Override
     @POST
     @Path("/hello/{name}")
     String hello(@PathParam("name") final String name);
   }
 
   class Test1 implements SubResource {
+    @Override
     public String hello(final String name) {
       return "Test1 " + name + "!";
     }
@@ -23,12 +25,14 @@ public interface Resource {
 
   @Path("/test2")
   class Test2 implements SubResource {
+    @Override
     public String hello(final String name) {
       return "Test2 " + name + "!";
     }
   }
 
   class Test3 extends Test1 {
+    @Override
     public String hello(final String name) {
       return "Test3 " + name + "!";
     }

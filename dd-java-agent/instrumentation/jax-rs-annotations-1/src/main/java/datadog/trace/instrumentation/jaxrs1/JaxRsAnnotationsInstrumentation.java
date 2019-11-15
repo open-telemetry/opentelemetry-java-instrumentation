@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.jaxrs1;
 
+import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.hasSuperMethod;
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.agent.tooling.ClassLoaderMatcher.classLoaderHasClasses;
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
@@ -9,6 +10,7 @@ import static datadog.trace.instrumentation.jaxrs1.JaxRsAnnotationsDecorator.DEC
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -55,14 +57,17 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isAnnotatedWith(
-            named("javax.ws.rs.Path")
-                .or(named("javax.ws.rs.DELETE"))
-                .or(named("javax.ws.rs.GET"))
-                .or(named("javax.ws.rs.HEAD"))
-                .or(named("javax.ws.rs.OPTIONS"))
-                .or(named("javax.ws.rs.POST"))
-                .or(named("javax.ws.rs.PUT"))),
+        isMethod()
+            .and(
+                hasSuperMethod(
+                    isAnnotatedWith(
+                        named("javax.ws.rs.Path")
+                            .or(named("javax.ws.rs.DELETE"))
+                            .or(named("javax.ws.rs.GET"))
+                            .or(named("javax.ws.rs.HEAD"))
+                            .or(named("javax.ws.rs.OPTIONS"))
+                            .or(named("javax.ws.rs.POST"))
+                            .or(named("javax.ws.rs.PUT"))))),
         JaxRsAnnotationsAdvice.class.getName());
   }
 
