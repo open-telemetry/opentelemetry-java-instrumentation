@@ -5,7 +5,6 @@ import static io.opentracing.log.Fields.ERROR_OBJECT;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.trace.api.DDTags;
-import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.common.util.Clock;
 import io.opentracing.Span;
 import io.opentracing.tag.Tag;
@@ -26,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  * according to the DD agent.
  */
 @Slf4j
-public class DDSpan implements Span, MutableSpan {
+public class DDSpan implements Span {
 
   /** The context attached to the span */
   private final DDSpanContext context;
@@ -105,7 +104,6 @@ public class DDSpan implements Span, MutableSpan {
     finishAndAddToTrace(TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - startTimeMicro));
   }
 
-  @Override
   public DDSpan setError(final boolean error) {
     context.setErrorFlag(true);
     return this;
@@ -123,16 +121,14 @@ public class DDSpan implements Span, MutableSpan {
     return BigInteger.ZERO.equals(context.getParentId());
   }
 
-  @Override
   @Deprecated
   @JsonIgnore
-  public MutableSpan getRootSpan() {
+  public DDSpan getRootSpan() {
     return getLocalRootSpan();
   }
 
-  @Override
   @JsonIgnore
-  public MutableSpan getLocalRootSpan() {
+  public DDSpan getLocalRootSpan() {
     return context().getTrace().getRootSpan();
   }
 
@@ -263,19 +259,16 @@ public class DDSpan implements Span, MutableSpan {
     return this;
   }
 
-  @Override
   public final DDSpan setServiceName(final String serviceName) {
     context().setServiceName(serviceName);
     return this;
   }
 
-  @Override
   public final DDSpan setResourceName(final String resourceName) {
     context().setResourceName(resourceName);
     return this;
   }
 
-  @Override
   public final DDSpan setSpanType(final String type) {
     context().setSpanType(type);
     return this;
@@ -310,19 +303,16 @@ public class DDSpan implements Span, MutableSpan {
     return context.getMetrics();
   }
 
-  @Override
   @JsonGetter("start")
   public long getStartTime() {
     return startTimeNano > 0 ? startTimeNano : TimeUnit.MICROSECONDS.toNanos(startTimeMicro);
   }
 
-  @Override
   @JsonGetter("duration")
   public long getDurationNano() {
     return durationNano.get();
   }
 
-  @Override
   @JsonGetter("service")
   public String getServiceName() {
     return context.getServiceName();
@@ -343,25 +333,21 @@ public class DDSpan implements Span, MutableSpan {
     return context.getParentId();
   }
 
-  @Override
   @JsonGetter("resource")
   public String getResourceName() {
     return context.getResourceName();
   }
 
-  @Override
   @JsonGetter("name")
   public String getOperationName() {
     return context.getOperationName();
   }
 
-  @Override
   @JsonIgnore
   public String getSpanType() {
     return context.getSpanType();
   }
 
-  @Override
   @JsonIgnore
   public Map<String, Object> getTags() {
     return context().getTags();
@@ -372,7 +358,6 @@ public class DDSpan implements Span, MutableSpan {
     return context.getSpanType();
   }
 
-  @Override
   @JsonIgnore
   public Boolean isError() {
     return context.getErrorFlag();
