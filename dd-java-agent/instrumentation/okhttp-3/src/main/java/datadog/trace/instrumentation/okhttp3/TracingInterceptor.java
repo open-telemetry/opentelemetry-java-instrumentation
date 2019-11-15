@@ -1,19 +1,18 @@
 package datadog.trace.instrumentation.okhttp3;
 
-import datadog.trace.instrumentation.api.AgentScope;
-import datadog.trace.instrumentation.api.AgentSpan;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.Interceptor;
-import okhttp3.Request;
-import okhttp3.Response;
-
-import java.io.IOException;
-
 import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
 import static datadog.trace.instrumentation.okhttp3.OkHttpClientDecorator.DECORATE;
 import static datadog.trace.instrumentation.okhttp3.RequestBuilderInjectAdapter.SETTER;
+
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
+import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.Interceptor;
+import okhttp3.Request;
+import okhttp3.Response;
 
 @Slf4j
 public class TracingInterceptor implements Interceptor {
