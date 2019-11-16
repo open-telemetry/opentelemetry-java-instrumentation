@@ -2,6 +2,7 @@ import com.anotherchrisberry.spock.extensions.retry.RetryOnFailure
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import groovy.json.JsonSlurper
 import org.apache.http.HttpHost
@@ -80,12 +81,12 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          serviceName "elasticsearch"
           resourceName "GET _cluster/health"
           operationName "elasticsearch.rest.query"
           spanType DDSpanTypes.ELASTICSEARCH
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "elasticsearch"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -97,7 +98,6 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           }
         }
         span(1) {
-          serviceName "elasticsearch"
           resourceName "GET _cluster/health"
           operationName "http.request"
           spanType DDSpanTypes.HTTP_CLIENT

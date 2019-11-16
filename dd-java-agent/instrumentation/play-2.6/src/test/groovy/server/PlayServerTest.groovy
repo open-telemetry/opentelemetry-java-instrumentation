@@ -83,7 +83,6 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
   @Override
   void handlerSpan(TraceAssert trace, int index, Object parent, ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      serviceName expectedServiceName()
       operationName "play.request"
       spanType DDSpanTypes.HTTP_SERVER
       errored endpoint == ERROR || endpoint == EXCEPTION
@@ -107,7 +106,6 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
 
   void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      serviceName expectedServiceName()
       operationName expectedOperationName()
       resourceName endpoint.status == 404 ? "404" : "$method ${endpoint.resolve(address).path}"
       spanType DDSpanTypes.HTTP_SERVER

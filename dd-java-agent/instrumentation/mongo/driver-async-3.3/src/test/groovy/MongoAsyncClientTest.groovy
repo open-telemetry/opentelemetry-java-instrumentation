@@ -11,6 +11,7 @@ import com.mongodb.connection.ClusterSettings
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.bson.BsonDocument
 import org.bson.BsonString
@@ -273,7 +274,6 @@ class MongoAsyncClientTest extends MongoBaseTest {
 
   def mongoSpan(TraceAssert trace, int index, Closure<Boolean> statementEval, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      serviceName "mongo"
       operationName "mongo.query"
       resourceName statementEval
       spanType DDSpanTypes.MONGO
@@ -283,6 +283,7 @@ class MongoAsyncClientTest extends MongoBaseTest {
         childOf((DDSpan) parentSpan)
       }
       tags {
+        "$DDTags.SERVICE_NAME" "mongo"
         "$Tags.COMPONENT" "java-mongo"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"

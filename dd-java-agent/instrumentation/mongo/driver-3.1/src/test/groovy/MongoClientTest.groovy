@@ -8,6 +8,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.bson.BsonDocument
 import org.bson.BsonString
@@ -235,7 +236,6 @@ class MongoClientTest extends MongoBaseTest {
 
   def mongoSpan(TraceAssert trace, int index, String statement, boolean renameService = false, String instance = "some-description", Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      serviceName renameService ? instance : "mongo"
       operationName "mongo.query"
       resourceName {
         assert it.replace(" ", "") == statement
@@ -248,6 +248,7 @@ class MongoClientTest extends MongoBaseTest {
         childOf((DDSpan) parentSpan)
       }
       tags {
+        "$DDTags.SERVICE_NAME" renameService ? instance : "mongo"
         "$Tags.COMPONENT" "java-mongo"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"

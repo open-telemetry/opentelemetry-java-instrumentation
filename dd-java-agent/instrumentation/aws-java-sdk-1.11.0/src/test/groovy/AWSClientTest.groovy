@@ -23,6 +23,7 @@ import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.apache.http.conn.HttpHostConnectException
 import org.apache.http.impl.execchain.RequestAbortedException
@@ -127,13 +128,13 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          serviceName "java-aws-sdk"
           operationName "aws.http"
           resourceName "$service.$operation"
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "$server.address/"
@@ -201,13 +202,13 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          serviceName "java-aws-sdk"
           operationName "aws.http"
           resourceName "$service.$operation"
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/"
@@ -264,13 +265,13 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "java-aws-sdk"
           operationName "aws.http"
           resourceName "S3.HeadBucket"
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "https://s3.amazonaws.com/"
@@ -310,13 +311,13 @@ class AWSClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          serviceName "java-aws-sdk"
           operationName "aws.http"
           resourceName "S3.GetObject"
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "$server.address/"

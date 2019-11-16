@@ -1,6 +1,7 @@
 import datadog.opentracing.decorators.ErrorFlag
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ConfigUtils
+import datadog.trace.api.DDTags
 import datadog.trace.api.Trace
 import datadog.trace.instrumentation.api.Tags
 import dd.test.trace.annotation.SayTracedHello
@@ -24,12 +25,12 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "test"
           resourceName "SayTracedHello.sayHello"
           operationName "trace.annotation"
           parent()
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -47,13 +48,13 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "test"
           resourceName "SayTracedHello.sayHA"
           operationName "SAY_HA"
           spanType "DB"
           parent()
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -71,12 +72,12 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "test"
           resourceName "WORLD"
           operationName "trace.annotation"
           parent()
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -94,13 +95,13 @@ class TraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "test"
           resourceName "EARTH"
           operationName "SAY_HA"
           spanType "DB"
           parent()
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -123,6 +124,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test2"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -134,17 +136,18 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
         span(2) {
-          serviceName "test"
           resourceName "SayTracedHello.sayHello"
           operationName "trace.annotation"
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -167,6 +170,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test2"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -178,17 +182,18 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
         span(2) {
-          serviceName "test"
           resourceName "SayTracedHello.sayHello"
           operationName "trace.annotation"
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -211,6 +216,7 @@ class TraceAnnotationsTest extends AgentTestRunner {
           parent()
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test2"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -222,17 +228,18 @@ class TraceAnnotationsTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
         span(2) {
-          serviceName "test"
           resourceName "SayTracedHello.sayHello"
           operationName "trace.annotation"
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" "test"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }

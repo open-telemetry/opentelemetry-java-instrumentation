@@ -72,10 +72,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   abstract DECORATOR decorator()
 
-  String expectedServiceName() {
-    "unnamed-java-app"
-  }
-
   abstract String expectedOperationName()
 
   boolean hasHandlerSpan() {
@@ -406,7 +402,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 
   void controllerSpan(TraceAssert trace, int index, Object parent, String errorMessage = null) {
     trace.span(index) {
-      serviceName expectedServiceName()
       operationName "controller"
       resourceName "controller"
       errored errorMessage != null
@@ -427,7 +422,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
   // parent span must be cast otherwise it breaks debugging classloading (junit loads it early)
   void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
-      serviceName expectedServiceName()
       operationName expectedOperationName()
       resourceName endpoint.status == 404 ? "404" : "$method ${endpoint.resolve(address).path}"
       spanType DDSpanTypes.HTTP_SERVER

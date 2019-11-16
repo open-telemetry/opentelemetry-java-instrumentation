@@ -1,6 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import redis.clients.jedis.Jedis
 import redis.embedded.RedisServer
@@ -48,11 +49,11 @@ class JedisClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           resourceName "SET"
           spanType DDSpanTypes.REDIS
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -74,11 +75,11 @@ class JedisClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           resourceName "SET"
           spanType DDSpanTypes.REDIS
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -88,11 +89,11 @@ class JedisClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           resourceName "GET"
           spanType DDSpanTypes.REDIS
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -114,11 +115,11 @@ class JedisClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           resourceName "SET"
           spanType DDSpanTypes.REDIS
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -128,11 +129,11 @@ class JedisClientTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           resourceName "RANDOMKEY"
           spanType DDSpanTypes.REDIS
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"

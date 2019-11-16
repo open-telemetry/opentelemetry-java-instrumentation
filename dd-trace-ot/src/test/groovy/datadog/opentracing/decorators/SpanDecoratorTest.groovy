@@ -10,8 +10,6 @@ import datadog.trace.util.test.DDSpecification
 import io.opentracing.tag.StringTag
 import io.opentracing.tag.Tags
 
-import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
-
 class SpanDecoratorTest extends DDSpecification {
 
   def tracer = new DDTracer(new LoggingWriter())
@@ -35,76 +33,6 @@ class SpanDecoratorTest extends DDSpecification {
     expect:
     span.getTags().containsKey("newFoo")
     span.getTags().get("newFoo") == "newBar"
-  }
-
-  def "set service name"() {
-    setup:
-    tracer = new DDTracer(
-      "wrong-service",
-      new LoggingWriter()
-    )
-
-    when:
-    def span = tracer.buildSpan("some span").withTag(tag, name).start()
-    span.finish()
-
-    then:
-    span.getServiceName() == expected
-
-    where:
-    tag                   | name           | expected
-    DDTags.SERVICE_NAME   | "some-service" | "some-service"
-    "service"             | "some-service" | "some-service"
-    Tags.PEER_SERVICE.key | "some-service" | "some-service"
-  }
-
-  def "set service name from servlet.context with context '#context'"() {
-    when:
-    span.setTag(DDTags.SERVICE_NAME, serviceName)
-    span.setTag("servlet.context", context)
-
-    then:
-    span.serviceName == expected
-
-    where:
-    context         | serviceName          | expected
-    "/"             | DEFAULT_SERVICE_NAME | DEFAULT_SERVICE_NAME
-    ""              | DEFAULT_SERVICE_NAME | DEFAULT_SERVICE_NAME
-    "/some-context" | DEFAULT_SERVICE_NAME | "some-context"
-    "other-context" | DEFAULT_SERVICE_NAME | "other-context"
-    "/"             | "my-service"         | "my-service"
-    ""              | "my-service"         | "my-service"
-    "/some-context" | "my-service"         | "my-service"
-    "other-context" | "my-service"         | "my-service"
-  }
-
-  def "set service name from servlet.context with context '#context' for service #serviceName"() {
-    setup:
-    tracer = new DDTracer(
-      serviceName,
-      new LoggingWriter()
-    )
-
-    when:
-    def span = tracer.buildSpan("some span").start()
-    span.setTag("servlet.context", context)
-    span.finish()
-
-    then:
-    span.serviceName == expected
-
-    where:
-    context         | serviceName          | expected
-    "/"             | DEFAULT_SERVICE_NAME | DEFAULT_SERVICE_NAME
-    ""              | DEFAULT_SERVICE_NAME | DEFAULT_SERVICE_NAME
-    "/some-context" | DEFAULT_SERVICE_NAME | "some-context"
-    "other-context" | DEFAULT_SERVICE_NAME | "other-context"
-    "/"             | "my-service"         | "my-service"
-    ""              | "my-service"         | "my-service"
-    "/some-context" | "my-service"         | "my-service"
-    "other-context" | "my-service"         | "my-service"
-
-    mapping = [(serviceName): "new-service"]
   }
 
   def "set operation name"() {
@@ -231,18 +159,11 @@ class SpanDecoratorTest extends DDSpecification {
 
     where:
     attribute      | name                 | value
-    "serviceName"  | DDTags.SERVICE_NAME  | "my-service"
     "resourceName" | DDTags.RESOURCE_NAME | "my-resource"
     "spanType"     | DDTags.SPAN_TYPE     | "my-span-type"
   }
 
   def "decorators apply to builder too"() {
-    when:
-    span = tracer.buildSpan("decorator.test").withTag("servlet.context", "/my-servlet").start()
-
-    then:
-    span.serviceName == "my-servlet"
-
     when:
     span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_STATUS.key, 404).start()
 

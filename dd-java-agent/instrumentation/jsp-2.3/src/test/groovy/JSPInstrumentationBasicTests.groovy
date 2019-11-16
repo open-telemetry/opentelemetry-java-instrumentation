@@ -88,7 +88,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          serviceName jspWebappContext
           operationName "servlet.request"
           resourceName "GET /$jspWebappContext/$jspFileName"
           spanType DDSpanTypes.HTTP_SERVER
@@ -110,7 +109,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/$jspFileName"
           errored false
@@ -124,7 +122,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/$jspFileName"
           errored false
@@ -164,7 +161,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          serviceName jspWebappContext
           operationName "servlet.request"
           resourceName "GET /$jspWebappContext/getQuery.jsp"
           spanType DDSpanTypes.HTTP_SERVER
@@ -186,7 +182,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/getQuery.jsp"
           errored false
@@ -200,7 +195,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/getQuery.jsp"
           errored false
@@ -237,7 +231,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          serviceName jspWebappContext
           operationName "servlet.request"
           resourceName "POST /$jspWebappContext/post.jsp"
           spanType DDSpanTypes.HTTP_SERVER
@@ -259,7 +252,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/post.jsp"
           errored false
@@ -273,7 +265,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/post.jsp"
           errored false
@@ -307,7 +298,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          serviceName jspWebappContext
           operationName "servlet.request"
           resourceName "GET /$jspWebappContext/$jspFileName"
           spanType DDSpanTypes.HTTP_SERVER
@@ -337,7 +327,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/$jspFileName"
           errored true
@@ -359,7 +348,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/$jspFileName"
           errored false
@@ -398,7 +386,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           parent()
-          serviceName jspWebappContext
           operationName "servlet.request"
           resourceName "GET /$jspWebappContext/includes/includeHtml.jsp"
           spanType DDSpanTypes.HTTP_SERVER
@@ -420,7 +407,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/includes/includeHtml.jsp"
           errored false
@@ -434,7 +420,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/includes/includeHtml.jsp"
           errored false
@@ -467,7 +452,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 7) {
         span(0) {
           parent()
-          serviceName jspWebappContext
           operationName "servlet.request"
           resourceName "GET /$jspWebappContext/includes/includeMulti.jsp"
           spanType DDSpanTypes.HTTP_SERVER
@@ -489,7 +473,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/includes/includeMulti.jsp"
           errored false
@@ -503,7 +486,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(2) {
           childOf span(1)
-          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/common/javaLoopH2.jsp"
           errored false
@@ -517,7 +499,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(3) {
           childOf span(1)
-          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/common/javaLoopH2.jsp"
           errored false
@@ -531,7 +512,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(4) {
           childOf span(1)
-          serviceName jspWebappContext
           operationName "jsp.render"
           resourceName "/common/javaLoopH2.jsp"
           errored false
@@ -545,7 +525,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(5) {
           childOf span(1)
-          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/common/javaLoopH2.jsp"
           errored false
@@ -559,7 +538,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(6) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/includes/includeMulti.jsp"
           errored false
@@ -592,7 +570,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           parent()
-          serviceName jspWebappContext
           operationName "servlet.request"
           resourceName "GET /$jspWebappContext/$jspFileName"
           spanType DDSpanTypes.HTTP_SERVER
@@ -615,7 +592,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
         }
         span(1) {
           childOf span(0)
-          serviceName jspWebappContext
           operationName "jsp.compile"
           resourceName "/$jspFileName"
           errored true

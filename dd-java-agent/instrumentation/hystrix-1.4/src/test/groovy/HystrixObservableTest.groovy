@@ -64,7 +64,6 @@ class HystrixObservableTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          serviceName "unnamed-java-app"
           operationName "parent"
           resourceName "parent"
           spanType null
@@ -75,7 +74,6 @@ class HystrixObservableTest extends AgentTestRunner {
           }
         }
         span(1) {
-          serviceName "unnamed-java-app"
           operationName "hystrix.cmd"
           resourceName "ExampleGroup.HystrixObservableTest\$1.execute"
           spanType null
@@ -90,7 +88,6 @@ class HystrixObservableTest extends AgentTestRunner {
           }
         }
         span(2) {
-          serviceName "unnamed-java-app"
           operationName "trace.annotation"
           resourceName "HystrixObservableTest\$1.tracedMethod"
           spanType null
@@ -174,7 +171,6 @@ class HystrixObservableTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          serviceName "unnamed-java-app"
           operationName "parent"
           resourceName "parent"
           spanType null
@@ -185,7 +181,6 @@ class HystrixObservableTest extends AgentTestRunner {
           }
         }
         span(1) {
-          serviceName "unnamed-java-app"
           operationName "hystrix.cmd"
           resourceName "ExampleGroup.HystrixObservableTest\$2.execute"
           spanType null
@@ -201,7 +196,6 @@ class HystrixObservableTest extends AgentTestRunner {
           }
         }
         span(2) {
-          serviceName "unnamed-java-app"
           operationName "hystrix.cmd"
           resourceName "ExampleGroup.HystrixObservableTest\$2.fallback"
           spanType null
@@ -293,7 +287,6 @@ class HystrixObservableTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          serviceName "unnamed-java-app"
           operationName "parent"
           resourceName "parent"
           spanType null
@@ -305,7 +298,6 @@ class HystrixObservableTest extends AgentTestRunner {
           }
         }
         span(1) {
-          serviceName "unnamed-java-app"
           operationName "hystrix.cmd"
           resourceName "FailingGroup.HystrixObservableTest\$3.execute"
           spanType null
@@ -321,7 +313,6 @@ class HystrixObservableTest extends AgentTestRunner {
           }
         }
         span(2) {
-          serviceName "unnamed-java-app"
           operationName "hystrix.cmd"
           resourceName "FailingGroup.HystrixObservableTest\$3.fallback"
           spanType null

@@ -1,6 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.bootstrap.DatadogClassLoader
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.http_url_connection.UrlInstrumentation
@@ -41,13 +42,13 @@ class UrlConnectionTest extends AgentTestRunner {
           }
         }
         span(1) {
-          serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName OPERATION_NAME
           resourceName "GET /"
           spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored true
           tags {
+            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -96,7 +97,6 @@ class UrlConnectionTest extends AgentTestRunner {
           }
         }
         span(1) {
-          serviceName "unnamed-java-app"
           operationName "file.request"
           resourceName "file:$url.path"
           spanType DDSpanTypes.HTTP_CLIENT

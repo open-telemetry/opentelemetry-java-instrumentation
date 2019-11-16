@@ -18,7 +18,7 @@ class DDSpanBuilderTest extends DDSpecification {
 
   def "build simple span"() {
     setup:
-    final DDSpan span = tracer.buildSpan("op name").withServiceName("foo").start()
+    final DDSpan span = tracer.buildSpan("op name").start()
 
     expect:
     span.operationName == "op name"
@@ -35,7 +35,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
     DDTracer.DDSpanBuilder builder = tracer
       .buildSpan(expectedName)
-      .withServiceName("foo")
     tags.each {
       builder = builder.withTag(it.key, it.value)
     }
@@ -49,7 +48,7 @@ class DDSpanBuilderTest extends DDSpecification {
 
 
     when:
-    span = tracer.buildSpan(expectedName).withServiceName("foo").start()
+    span = tracer.buildSpan(expectedName).start()
 
     then:
     span.getTags() == [
@@ -60,15 +59,12 @@ class DDSpanBuilderTest extends DDSpecification {
     when:
     // with all custom fields provided
     final String expectedResource = "fakeResource"
-    final String expectedService = "fakeService"
     final String expectedType = "fakeType"
 
     span =
       tracer
         .buildSpan(expectedName)
-        .withServiceName("foo")
         .withResourceName(expectedResource)
-        .withServiceName(expectedService)
         .withErrorFlag()
         .withSpanType(expectedType)
         .start()
@@ -78,7 +74,6 @@ class DDSpanBuilderTest extends DDSpecification {
     then:
     context.getResourceName() == expectedResource
     context.getErrorFlag()
-    context.getServiceName() == expectedService
     context.getSpanType() == expectedType
 
     context.tags[DDTags.THREAD_NAME] == Thread.currentThread().getName()
@@ -122,7 +117,6 @@ class DDSpanBuilderTest extends DDSpecification {
     DDSpan span =
       tracer
         .buildSpan(expectedName)
-        .withServiceName("foo")
         .withStartTimestamp(expectedTimestamp)
         .start()
 
@@ -133,7 +127,7 @@ class DDSpanBuilderTest extends DDSpecification {
     when:
     // auto-timestamp in nanoseconds
     def start = System.currentTimeMillis()
-    span = tracer.buildSpan(expectedName).withServiceName("foo").start()
+    span = tracer.buildSpan(expectedName).start()
     def stop = System.currentTimeMillis()
 
     then:
@@ -150,7 +144,6 @@ class DDSpanBuilderTest extends DDSpecification {
     final DDSpanContext mockedContext = Mock()
     1 * mockedContext.getTraceId() >> spanId
     1 * mockedContext.getSpanId() >> spanId
-    _ * mockedContext.getServiceName() >> "foo"
     1 * mockedContext.getTrace() >> new PendingTrace(tracer, 1G)
 
     final String expectedName = "fakeName"
@@ -158,7 +151,6 @@ class DDSpanBuilderTest extends DDSpecification {
     final DDSpan span =
       tracer
         .buildSpan(expectedName)
-        .withServiceName("foo")
         .asChildOf(mockedContext)
         .start()
 
@@ -199,41 +191,35 @@ class DDSpanBuilderTest extends DDSpecification {
   def "should inherit the DD parent attributes"() {
     setup:
     def expectedName = "fakeName"
-    def expectedParentServiceName = "fakeServiceName"
     def expectedParentResourceName = "fakeResourceName"
     def expectedParentType = "fakeType"
-    def expectedChildServiceName = "fakeServiceName-child"
     def expectedChildResourceName = "fakeResourceName-child"
     def expectedChildType = "fakeType-child"
 
     final DDSpan parent =
       tracer
         .buildSpan(expectedName)
-        .withServiceName("foo")
         .withResourceName(expectedParentResourceName)
         .withSpanType(expectedParentType)
         .start()
 
-    // ServiceName and SpanType are always set by the parent  if they are not present in the child
+    // SpanType is always set by the parent  if it is not present in the child
     DDSpan span =
       tracer
         .buildSpan(expectedName)
-        .withServiceName(expectedParentServiceName)
         .asChildOf(parent)
         .start()
 
     expect:
     span.getOperationName() == expectedName
-    span.context().getServiceName() == expectedParentServiceName
     span.context().getResourceName() == expectedName
     span.context().getSpanType() == null
 
     when:
-    // ServiceName and SpanType are always overwritten by the child  if they are present
+    // SpanType is always overwritten by the child  if they are present
     span =
       tracer
         .buildSpan(expectedName)
-        .withServiceName(expectedChildServiceName)
         .withResourceName(expectedChildResourceName)
         .withSpanType(expectedChildType)
         .asChildOf(parent)
@@ -241,7 +227,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
     then:
     span.getOperationName() == expectedName
-    span.context().getServiceName() == expectedChildServiceName
     span.context().getResourceName() == expectedChildResourceName
     span.context().getSpanType() == expectedChildType
   }
@@ -250,26 +235,22 @@ class DDSpanBuilderTest extends DDSpecification {
   def "should inherit the DD parent attributes addReference CHILD_OF"() {
     setup:
     def expectedName = "fakeName"
-    def expectedParentServiceName = "fakeServiceName"
     def expectedParentResourceName = "fakeResourceName"
     def expectedParentType = "fakeType"
-    def expectedChildServiceName = "fakeServiceName-child"
     def expectedChildResourceName = "fakeResourceName-child"
     def expectedChildType = "fakeType-child"
 
     final DDSpan parent =
       tracer
         .buildSpan(expectedName)
-        .withServiceName("foo")
         .withResourceName(expectedParentResourceName)
         .withSpanType(expectedParentType)
         .start()
 
-    // ServiceName and SpanType are always set by the parent  if they are not present in the child
+    // SpanType is always set by the parent  if it is not present in the child
     DDSpan span =
       tracer
         .buildSpan(expectedName)
-        .withServiceName(expectedParentServiceName)
         .addReference("child_of", parent.context())
         .start()
 
@@ -278,16 +259,14 @@ class DDSpanBuilderTest extends DDSpecification {
 
     expect:
     span.getOperationName() == expectedName
-    span.context().getServiceName() == expectedParentServiceName
     span.context().getResourceName() == expectedName
     span.context().getSpanType() == null
 
     when:
-    // ServiceName and SpanType are always overwritten by the child  if they are present
+    // SpanType is always overwritten by the child  if they are present
     span =
       tracer
         .buildSpan(expectedName)
-        .withServiceName(expectedChildServiceName)
         .withResourceName(expectedChildResourceName)
         .withSpanType(expectedChildType)
         .addReference("child_of", parent.context())
@@ -295,7 +274,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
     then:
     span.getOperationName() == expectedName
-    span.context().getServiceName() == expectedChildServiceName
     span.context().getResourceName() == expectedChildResourceName
     span.context().getSpanType() == expectedChildType
   }
@@ -304,26 +282,22 @@ class DDSpanBuilderTest extends DDSpecification {
   def "should inherit the DD parent attributes add reference FOLLOWS_FROM"() {
     setup:
     def expectedName = "fakeName"
-    def expectedParentServiceName = "fakeServiceName"
     def expectedParentResourceName = "fakeResourceName"
     def expectedParentType = "fakeType"
-    def expectedChildServiceName = "fakeServiceName-child"
     def expectedChildResourceName = "fakeResourceName-child"
     def expectedChildType = "fakeType-child"
 
     final DDSpan parent =
       tracer
         .buildSpan(expectedName)
-        .withServiceName("foo")
         .withResourceName(expectedParentResourceName)
         .withSpanType(expectedParentType)
         .start()
 
-    // ServiceName and SpanType are always set by the parent  if they are not present in the child
+    // SpanType is always set by the parent  if it is not present in the child
     DDSpan span =
       tracer
         .buildSpan(expectedName)
-        .withServiceName(expectedParentServiceName)
         .addReference("follows_from", parent.context())
         .start()
 
@@ -332,16 +306,14 @@ class DDSpanBuilderTest extends DDSpecification {
 
     expect:
     span.getOperationName() == expectedName
-    span.context().getServiceName() == expectedParentServiceName
     span.context().getResourceName() == expectedName
     span.context().getSpanType() == null
 
     when:
-    // ServiceName and SpanType are always overwritten by the child  if they are present
+    // SpanType is always overwritten by the child  if they are present
     span =
       tracer
         .buildSpan(expectedName)
-        .withServiceName(expectedChildServiceName)
         .withResourceName(expectedChildResourceName)
         .withSpanType(expectedChildType)
         .addReference("follows_from", parent.context())
@@ -349,7 +321,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
     then:
     span.getOperationName() == expectedName
-    span.context().getServiceName() == expectedChildServiceName
     span.context().getResourceName() == expectedChildResourceName
     span.context().getSpanType() == expectedChildType
   }
@@ -362,7 +333,7 @@ class DDSpanBuilderTest extends DDSpecification {
     // root (aka spans[0]) is the parent
     // others are just for fun
 
-    def root = tracer.buildSpan("fake_O").withServiceName("foo").start()
+    def root = tracer.buildSpan("fake_O").start()
     spans.add(root)
 
     final long tickEnd = System.currentTimeMillis()
@@ -370,7 +341,6 @@ class DDSpanBuilderTest extends DDSpecification {
     for (int i = 1; i <= 10; i++) {
       def span = tracer
         .buildSpan("fake_" + i)
-        .withServiceName("foo")
         .asChildOf(spans.get(i - 1))
         .start()
       spans.add(span)

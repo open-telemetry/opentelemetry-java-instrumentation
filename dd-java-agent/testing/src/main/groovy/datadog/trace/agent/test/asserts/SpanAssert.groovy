@@ -39,11 +39,6 @@ class SpanAssert {
     }
   }
 
-  def serviceName(String name) {
-    assert span.serviceName == name
-    checked.serviceName = true
-  }
-
   def operationName(String name) {
     assert span.operationName == name
     checked.operationName = true

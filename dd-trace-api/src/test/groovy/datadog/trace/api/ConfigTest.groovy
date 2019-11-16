@@ -13,7 +13,6 @@ import static datadog.trace.api.Config.HTTP_SERVER_ERROR_STATUSES
 import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
 import static datadog.trace.api.Config.PREFIX
 import static datadog.trace.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
-import static datadog.trace.api.Config.SERVICE_NAME
 import static datadog.trace.api.Config.TRACE_ENABLED
 import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
 import static datadog.trace.api.Config.WRITER_TYPE
@@ -24,7 +23,6 @@ class ConfigTest extends DDSpecification {
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
-  private static final DD_SERVICE_NAME_ENV = "DD_SERVICE_NAME"
   private static final DD_TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
   private static final DD_WRITER_TYPE_ENV = "DD_WRITER_TYPE"
 
@@ -33,7 +31,6 @@ class ConfigTest extends DDSpecification {
     Config config = provider()
 
     then:
-    config.serviceName == "unnamed-java-app"
     config.traceEnabled == true
     config.writerType == "LoggingWriter"
     config.traceResolverEnabled == true
@@ -43,7 +40,7 @@ class ConfigTest extends DDSpecification {
     config.dbClientSplitByInstance == false
     config.partialFlushMinSpans == 1000
     config.runtimeContextFieldInjection == true
-    config.toString().contains("unnamed-java-app")
+    config.toString().contains("LoggingWriter")
 
     where:
     provider << [{ new Config() }, { Config.get() }, {
@@ -56,7 +53,6 @@ class ConfigTest extends DDSpecification {
   def "specify overrides via properties"() {
     setup:
     def prop = new Properties()
-    prop.setProperty(SERVICE_NAME, "something else")
     prop.setProperty(TRACE_ENABLED, "false")
     prop.setProperty(WRITER_TYPE, "LoggingWriter")
     prop.setProperty(TRACE_RESOLVER_ENABLED, "false")
@@ -71,7 +67,6 @@ class ConfigTest extends DDSpecification {
     Config config = Config.get(prop)
 
     then:
-    config.serviceName == "something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
     config.traceResolverEnabled == false
@@ -85,7 +80,6 @@ class ConfigTest extends DDSpecification {
 
   def "specify overrides via system properties"() {
     setup:
-    System.setProperty(PREFIX + SERVICE_NAME, "something else")
     System.setProperty(PREFIX + TRACE_ENABLED, "false")
     System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, "false")
@@ -100,7 +94,6 @@ class ConfigTest extends DDSpecification {
     Config config = new Config()
 
     then:
-    config.serviceName == "something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
     config.traceResolverEnabled == false
@@ -114,7 +107,6 @@ class ConfigTest extends DDSpecification {
 
   def "specify overrides via env vars"() {
     setup:
-    environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
     environmentVariables.set(DD_TRACE_ENABLED_ENV, "false")
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
 
@@ -122,30 +114,25 @@ class ConfigTest extends DDSpecification {
     def config = new Config()
 
     then:
-    config.serviceName == "still something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
   }
 
   def "sys props override env vars"() {
     setup:
-    environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
 
-    System.setProperty(PREFIX + SERVICE_NAME, "what we actually want")
     System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
 
     when:
     def config = new Config()
 
     then:
-    config.serviceName == "what we actually want"
     config.writerType == "LoggingWriter"
   }
 
   def "default when configured incorrectly"() {
     setup:
-    System.setProperty(PREFIX + SERVICE_NAME, " ")
     System.setProperty(PREFIX + TRACE_ENABLED, " ")
     System.setProperty(PREFIX + WRITER_TYPE, " ")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, " ")
@@ -158,7 +145,6 @@ class ConfigTest extends DDSpecification {
     def config = new Config()
 
     then:
-    config.serviceName == " "
     config.traceEnabled == true
     config.writerType == " "
     config.traceResolverEnabled == true
@@ -171,7 +157,6 @@ class ConfigTest extends DDSpecification {
   def "sys props override properties"() {
     setup:
     Properties properties = new Properties()
-    properties.setProperty(SERVICE_NAME, "something else")
     properties.setProperty(TRACE_ENABLED, "false")
     properties.setProperty(WRITER_TYPE, "LoggingWriter")
     properties.setProperty(TRACE_RESOLVER_ENABLED, "false")
@@ -185,7 +170,6 @@ class ConfigTest extends DDSpecification {
     def config = Config.get(properties)
 
     then:
-    config.serviceName == "something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
     config.traceResolverEnabled == false
@@ -201,7 +185,6 @@ class ConfigTest extends DDSpecification {
     def config = Config.get(null)
 
     then:
-    config.serviceName == "unnamed-java-app"
     config.writerType == "LoggingWriter"
   }
 
@@ -213,7 +196,6 @@ class ConfigTest extends DDSpecification {
     def config = Config.get(properties)
 
     then:
-    config.serviceName == "unnamed-java-app"
     config.writerType == "LoggingWriter"
   }
 
@@ -226,7 +208,6 @@ class ConfigTest extends DDSpecification {
     def config = Config.get(properties)
 
     then:
-    config.serviceName == "unnamed-java-app"
     config.writerType == "LoggingWriter"
   }
 
@@ -340,7 +321,7 @@ class ConfigTest extends DDSpecification {
     def config = new Config()
 
     then:
-    config.serviceName == "set-in-properties"
+    config.writerType == "set-in-properties"
 
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)
@@ -349,34 +330,34 @@ class ConfigTest extends DDSpecification {
   def "verify fallback to properties file has lower priority than system property"() {
     setup:
     System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
-    System.setProperty(PREFIX + SERVICE_NAME, "set-in-system")
+    System.setProperty(PREFIX + WRITER_TYPE, "set-in-system")
 
     when:
     def config = new Config()
 
     then:
-    config.serviceName == "set-in-system"
+    config.writerType == "set-in-system"
 
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)
-    System.clearProperty(PREFIX + SERVICE_NAME)
+    System.clearProperty(PREFIX + WRITER_TYPE)
   }
 
   def "verify fallback to properties file has lower priority than env var"() {
     setup:
     System.setProperty(PREFIX + CONFIGURATION_FILE, "src/test/resources/dd-java-tracer.properties")
-    environmentVariables.set("DD_SERVICE_NAME", "set-in-env")
+    environmentVariables.set("DD_WRITER_TYPE", "set-in-env")
 
     when:
     def config = new Config()
 
     then:
-    config.serviceName == "set-in-env"
+    config.writerType == "set-in-env"
 
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)
-    System.clearProperty(PREFIX + SERVICE_NAME)
-    environmentVariables.clear("DD_SERVICE_NAME")
+    System.clearProperty(PREFIX + WRITER_TYPE)
+    environmentVariables.clear("DD_WRITER_TYPE")
   }
 
   def "verify fallback to properties file that does not exist does not crash app"() {
@@ -387,7 +368,7 @@ class ConfigTest extends DDSpecification {
     def config = new Config()
 
     then:
-    config.serviceName == 'unnamed-java-app'
+    config.writerType == 'LoggingWriter'
 
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)

@@ -38,8 +38,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   /** Tags are associated to the current span, they will not propagate to the children span */
   private final Map<String, Object> tags = new ConcurrentHashMap<>();
 
-  /** The service name is required, otherwise the span are dropped by the agent */
-  private volatile String serviceName;
   /** The resource associated to the service (server_web, database, etc.) */
   private volatile String resourceName;
   /** Each span have an operation name describing the current span */
@@ -59,7 +57,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final BigInteger traceId,
       final BigInteger spanId,
       final BigInteger parentId,
-      final String serviceName,
       final String operationName,
       final String resourceName,
       final boolean errorFlag,
@@ -84,7 +81,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       this.tags.putAll(tags);
     }
 
-    this.serviceName = serviceName;
     this.operationName = operationName;
     this.resourceName = resourceName;
     this.errorFlag = errorFlag;
@@ -114,14 +110,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   @Override
   public String toSpanId() {
     return spanId.toString();
-  }
-
-  public String getServiceName() {
-    return serviceName;
-  }
-
-  public void setServiceName(final String serviceName) {
-    this.serviceName = serviceName;
   }
 
   public String getResourceName() {
@@ -236,8 +224,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
             .append(", p_id=")
             .append(parentId)
             .append("] trace=")
-            .append(getServiceName())
-            .append("/")
             .append(getOperationName())
             .append("/")
             .append(getResourceName())

@@ -58,7 +58,6 @@ class TraceUtils {
       } else {
         childOf((DDSpan) parentSpan)
       }
-      serviceName "unnamed-java-app"
       operationName operation
       resourceName resource
       errored exception != null

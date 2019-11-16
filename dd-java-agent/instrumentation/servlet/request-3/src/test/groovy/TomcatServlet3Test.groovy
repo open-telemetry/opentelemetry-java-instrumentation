@@ -288,7 +288,6 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
       assertTrace(dispatchTrace, 1) {
         def endpoint = lastRequest
         span(0) {
-          serviceName expectedServiceName()
           operationName expectedOperationName()
           resourceName endpoint.status == 404 ? "404" : "GET ${endpoint.resolve(address).path}"
           spanType DDSpanTypes.HTTP_SERVER

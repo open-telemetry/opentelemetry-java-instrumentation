@@ -11,6 +11,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.AmqpTemplate
@@ -344,7 +345,6 @@ class RabbitMQTest extends AgentTestRunner {
     String errorMsg = null
   ) {
     trace.span(index) {
-      serviceName "rabbitmq"
       operationName "amqp.command"
       resourceName resource
       switch (span.tags["amqp.command"]) {
@@ -368,6 +368,7 @@ class RabbitMQTest extends AgentTestRunner {
       errored exception != null
 
       tags {
+        "$DDTags.SERVICE_NAME" "rabbitmq"
         "$Tags.COMPONENT" "rabbitmq-amqp"
         "$Tags.PEER_HOSTNAME" { it == null || it instanceof String }
         "$Tags.PEER_HOST_IPV4" { "127.0.0.1" }

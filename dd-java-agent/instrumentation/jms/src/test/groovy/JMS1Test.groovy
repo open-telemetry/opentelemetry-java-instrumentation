@@ -2,6 +2,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.ActiveMQMessageConsumer
@@ -119,13 +120,13 @@ class JMS1Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          serviceName "jms"
           operationName "jms.consume"
           resourceName "JMS receiveNoWait"
           spanType DDSpanTypes.MESSAGE_CONSUMER
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "jms"
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -157,13 +158,13 @@ class JMS1Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          serviceName "jms"
           operationName "jms.consume"
           resourceName "JMS receive"
           spanType DDSpanTypes.MESSAGE_CONSUMER
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "jms"
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -208,13 +209,13 @@ class JMS1Test extends AgentTestRunner {
       trace(1, 1) { // Consumer trace
         span(0) {
           parent()
-          serviceName "jms"
           operationName "jms.consume"
           resourceName "Consumed from $jmsResourceName"
           spanType DDSpanTypes.MESSAGE_CONSUMER
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "jms"
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
@@ -239,7 +240,6 @@ class JMS1Test extends AgentTestRunner {
   static producerTrace(ListWriterAssert writer, int index, String jmsResourceName) {
     writer.trace(index, 1) {
       span(0) {
-        serviceName "jms"
         operationName "jms.produce"
         resourceName "Produced for $jmsResourceName"
         spanType DDSpanTypes.MESSAGE_PRODUCER
@@ -247,6 +247,7 @@ class JMS1Test extends AgentTestRunner {
         parent()
 
         tags {
+          "$DDTags.SERVICE_NAME" "jms"
           "$Tags.COMPONENT" "jms"
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           "span.origin.type" ActiveMQMessageProducer.name
@@ -259,7 +260,6 @@ class JMS1Test extends AgentTestRunner {
   static consumerTrace(ListWriterAssert writer, int index, String jmsResourceName, boolean messageListener, Class origin, DDSpan parentSpan = TEST_WRITER[0][0]) {
     writer.trace(index, 1) {
       span(0) {
-        serviceName "jms"
         if (messageListener) {
           operationName "jms.onMessage"
           resourceName "Received from $jmsResourceName"
@@ -272,6 +272,7 @@ class JMS1Test extends AgentTestRunner {
         childOf parentSpan
 
         tags {
+          "$DDTags.SERVICE_NAME" "jms"
           "$Tags.COMPONENT" "jms"
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
           "span.origin.type" origin.name

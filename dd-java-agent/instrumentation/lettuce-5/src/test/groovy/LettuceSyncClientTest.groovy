@@ -1,6 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.RedisClient
@@ -95,13 +96,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
           resourceName "CONNECT:" + dbAddr
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" HOST
@@ -131,13 +132,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
           resourceName "CONNECT:" + dbAddrNonExistent
           errored true
 
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" HOST
@@ -161,13 +162,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
           resourceName "SET"
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -187,13 +188,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
           resourceName "GET"
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -213,13 +214,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
           resourceName "GET"
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -239,13 +240,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
           resourceName "RANDOMKEY"
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -265,13 +266,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
           resourceName "LPUSH"
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -291,13 +292,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
           resourceName "HMSET"
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -317,13 +318,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
           resourceName "HGETALL"
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -342,13 +343,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
           resourceName AGENT_CRASHING_COMMAND_PREFIX + "DEBUG"
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -367,13 +368,13 @@ class LettuceSyncClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "redis"
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
           resourceName "SHUTDOWN"
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "redis"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"

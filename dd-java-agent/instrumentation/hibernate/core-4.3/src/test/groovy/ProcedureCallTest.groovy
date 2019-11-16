@@ -1,5 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.hibernate.Session
 import org.hibernate.SessionFactory
@@ -65,46 +66,46 @@ class ProcedureCallTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          serviceName "hibernate"
           resourceName "hibernate.session"
           operationName "hibernate.session"
           spanType DDSpanTypes.HIBERNATE
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "hibernate"
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
         span(1) {
-          serviceName "hibernate"
           resourceName "hibernate.transaction.commit"
           operationName "hibernate.transaction.commit"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
+            "$DDTags.SERVICE_NAME" "hibernate"
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
         span(2) {
-          serviceName "hibernate"
           resourceName "TEST_PROC"
           operationName "hibernate.procedure.getOutputs"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
+            "$DDTags.SERVICE_NAME" "hibernate"
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
         span(3) {
-          serviceName "hsqldb"
           spanType "sql"
           childOf span(2)
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -140,37 +141,37 @@ class ProcedureCallTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 3) {
         span(0) {
-          serviceName "hibernate"
           resourceName "hibernate.session"
           operationName "hibernate.session"
           spanType DDSpanTypes.HIBERNATE
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "hibernate"
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
         span(1) {
-          serviceName "hibernate"
           resourceName "hibernate.transaction.commit"
           operationName "hibernate.transaction.commit"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
+            "$DDTags.SERVICE_NAME" "hibernate"
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
         span(2) {
-          serviceName "hibernate"
           resourceName "TEST_PROC"
           operationName "hibernate.procedure.getOutputs"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           errored(true)
           tags {
+            "$DDTags.SERVICE_NAME" "hibernate"
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags(SQLGrammarException, "could not prepare statement")
