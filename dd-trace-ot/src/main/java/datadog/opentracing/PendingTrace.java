@@ -48,8 +48,7 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   // We must maintain a separate count because ConcurrentLinkedDeque.size() is a linear operation.
   private final AtomicInteger completedSpanCount = new AtomicInteger(0);
   /**
-   * During a trace there are cases where the root span must be accessed (e.g. priority sampling and
-   * trace-search tags).
+   * During a trace there are cases where the root span must be accessed (e.g. trace-search tags).
    *
    * <p>Use a weak ref because we still need to handle buggy cases where the root span is not
    * correctly closed (see SpanCleaner).

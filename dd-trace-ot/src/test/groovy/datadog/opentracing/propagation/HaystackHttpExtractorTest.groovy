@@ -1,6 +1,5 @@
 package datadog.opentracing.propagation
 
-import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
 import io.opentracing.propagation.TextMapExtractAdapter
@@ -32,15 +31,13 @@ class HaystackHttpExtractorTest extends DDSpecification {
     context.spanId == new BigInteger(spanId)
     context.baggage == ["k1": "v1", "k2": "v2"]
     context.tags == ["some-tag": "my-interesting-info"]
-    context.samplingPriority == samplingPriority
     context.origin == origin
 
     where:
-    traceId                       | spanId                        | samplingPriority              | origin
-    "1"                           | "2"                           | PrioritySampling.SAMPLER_KEEP | null
-    "2"                           | "3"                           | PrioritySampling.SAMPLER_KEEP | null
-    TRACE_ID_MAX.toString()       | (TRACE_ID_MAX - 1).toString() | PrioritySampling.SAMPLER_KEEP | null
-    (TRACE_ID_MAX - 1).toString() | TRACE_ID_MAX.toString()       | PrioritySampling.SAMPLER_KEEP | null
+    traceId                       | spanId                        | origin
+    "1"                           | "2"                           | null
+    TRACE_ID_MAX.toString()       | (TRACE_ID_MAX - 1).toString() | null
+    (TRACE_ID_MAX - 1).toString() | TRACE_ID_MAX.toString()       | null
   }
 
   def "extract header tags with no propagation"() {

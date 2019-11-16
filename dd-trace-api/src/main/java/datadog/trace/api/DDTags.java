@@ -16,9 +16,4 @@ public class DDTags {
   public static final String ERROR_MSG = "error.msg"; // string representing the error message
   public static final String ERROR_TYPE = "error.type"; // string representing the type of the error
   public static final String ERROR_STACK = "error.stack"; // human readable version of the stack
-
-  /** Manually force tracer to be keep the trace */
-  public static final String MANUAL_KEEP = "manual.keep";
-  /** Manually force tracer to be drop the trace */
-  public static final String MANUAL_DROP = "manual.drop";
 }

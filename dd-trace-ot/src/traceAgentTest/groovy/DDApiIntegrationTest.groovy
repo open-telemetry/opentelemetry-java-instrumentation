@@ -3,7 +3,6 @@ import datadog.opentracing.DDSpan
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
-import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.DDApi
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
@@ -30,7 +29,6 @@ class DDApiIntegrationTest {
       "fakeService",
       "fakeOperation",
       "fakeResource",
-      PrioritySampling.UNSET,
       null,
       Collections.emptyMap(),
       false,

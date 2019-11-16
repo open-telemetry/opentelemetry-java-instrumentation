@@ -21,7 +21,6 @@ import static datadog.trace.api.Config.HTTP_SERVER_ERROR_STATUSES
 import static datadog.trace.api.Config.JMX_TAGS
 import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
 import static datadog.trace.api.Config.PREFIX
-import static datadog.trace.api.Config.PRIORITY_SAMPLING
 import static datadog.trace.api.Config.PROPAGATION_STYLE_EXTRACT
 import static datadog.trace.api.Config.PROPAGATION_STYLE_INJECT
 import static datadog.trace.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
@@ -66,7 +65,6 @@ class ConfigTest extends DDSpecification {
     config.agentHost == "localhost"
     config.agentPort == 8126
     config.agentUnixDomainSocket == null
-    config.prioritySamplingEnabled == true
     config.traceResolverEnabled == true
     config.serviceMapping == [:]
     config.mergedSpanTags == [:]
@@ -105,7 +103,6 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(TRACE_AGENT_PORT, "123")
     prop.setProperty(AGENT_UNIX_DOMAIN_SOCKET, "somepath")
     prop.setProperty(AGENT_PORT_LEGACY, "456")
-    prop.setProperty(PRIORITY_SAMPLING, "false")
     prop.setProperty(TRACE_RESOLVER_ENABLED, "false")
     prop.setProperty(SERVICE_MAPPING, "a:1")
     prop.setProperty(GLOBAL_TAGS, "b:2")
@@ -136,7 +133,6 @@ class ConfigTest extends DDSpecification {
     config.agentHost == "somehost"
     config.agentPort == 123
     config.agentUnixDomainSocket == "somepath"
-    config.prioritySamplingEnabled == false
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]
@@ -166,7 +162,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + TRACE_AGENT_PORT, "123")
     System.setProperty(PREFIX + AGENT_UNIX_DOMAIN_SOCKET, "somepath")
     System.setProperty(PREFIX + AGENT_PORT_LEGACY, "456")
-    System.setProperty(PREFIX + PRIORITY_SAMPLING, "false")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, "false")
     System.setProperty(PREFIX + SERVICE_MAPPING, "a:1")
     System.setProperty(PREFIX + GLOBAL_TAGS, "b:2")
@@ -197,7 +192,6 @@ class ConfigTest extends DDSpecification {
     config.agentHost == "somehost"
     config.agentPort == 123
     config.agentUnixDomainSocket == "somepath"
-    config.prioritySamplingEnabled == false
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]
@@ -268,7 +262,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + AGENT_HOST, " ")
     System.setProperty(PREFIX + TRACE_AGENT_PORT, " ")
     System.setProperty(PREFIX + AGENT_PORT_LEGACY, "invalid")
-    System.setProperty(PREFIX + PRIORITY_SAMPLING, "3")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, " ")
     System.setProperty(PREFIX + SERVICE_MAPPING, " ")
     System.setProperty(PREFIX + HEADER_TAGS, "1")
@@ -289,7 +282,6 @@ class ConfigTest extends DDSpecification {
     config.writerType == " "
     config.agentHost == " "
     config.agentPort == 8126
-    config.prioritySamplingEnabled == false
     config.traceResolverEnabled == true
     config.serviceMapping == [:]
     config.mergedSpanTags == [:]
@@ -354,7 +346,6 @@ class ConfigTest extends DDSpecification {
     properties.setProperty(AGENT_HOST, "somehost")
     properties.setProperty(TRACE_AGENT_PORT, "123")
     properties.setProperty(AGENT_UNIX_DOMAIN_SOCKET, "somepath")
-    properties.setProperty(PRIORITY_SAMPLING, "false")
     properties.setProperty(TRACE_RESOLVER_ENABLED, "false")
     properties.setProperty(SERVICE_MAPPING, "a:1")
     properties.setProperty(GLOBAL_TAGS, "b:2")
@@ -379,7 +370,6 @@ class ConfigTest extends DDSpecification {
     config.agentHost == "somehost"
     config.agentPort == 123
     config.agentUnixDomainSocket == "somepath"
-    config.prioritySamplingEnabled == false
     config.traceResolverEnabled == false
     config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]

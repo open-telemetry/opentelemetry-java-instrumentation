@@ -3,15 +3,12 @@ package datadog.opentracing.propagation
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
-import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.propagation.TextMapInjectAdapter
 
 import static datadog.opentracing.DDTracer.TRACE_ID_MAX
-import static datadog.opentracing.propagation.HaystackHttpCodec.OT_BAGGAGE_PREFIX
-import static datadog.opentracing.propagation.HaystackHttpCodec.SPAN_ID_KEY
-import static datadog.opentracing.propagation.HaystackHttpCodec.TRACE_ID_KEY
+import static datadog.opentracing.propagation.HaystackHttpCodec.*
 
 class HaystackHttpInjectorTest extends DDSpecification {
 
@@ -29,7 +26,6 @@ class HaystackHttpInjectorTest extends DDSpecification {
         "fakeService",
         "fakeOperation",
         "fakeResource",
-        samplingPriority,
         origin,
         new HashMap<String, String>() {
           {
@@ -56,10 +52,9 @@ class HaystackHttpInjectorTest extends DDSpecification {
 
 
     where:
-    traceId          | spanId           | samplingPriority              | origin
-    1G               | 2G               | PrioritySampling.SAMPLER_KEEP | null
-    1G               | 2G               | PrioritySampling.SAMPLER_KEEP | null
-    TRACE_ID_MAX     | TRACE_ID_MAX - 1 | PrioritySampling.SAMPLER_KEEP | null
-    TRACE_ID_MAX - 1 | TRACE_ID_MAX     | PrioritySampling.SAMPLER_KEEP | null
+    traceId          | spanId           | origin
+    1G               | 2G               | null
+    TRACE_ID_MAX     | TRACE_ID_MAX - 1 | null
+    TRACE_ID_MAX - 1 | TRACE_ID_MAX     | null
   }
 }

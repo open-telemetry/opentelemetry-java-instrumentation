@@ -4,7 +4,6 @@ import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
 import datadog.trace.api.Config
-import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.propagation.TextMapInjectAdapter
@@ -34,7 +33,6 @@ class HttpInjectorTest extends DDSpecification {
         "fakeService",
         "fakeOperation",
         "fakeResource",
-        samplingPriority,
         origin,
         new HashMap<String, String>() {
           {
@@ -59,9 +57,6 @@ class HttpInjectorTest extends DDSpecification {
       1 * carrier.put(DatadogHttpCodec.SPAN_ID_KEY, spanId.toString())
       1 * carrier.put(DatadogHttpCodec.OT_BAGGAGE_PREFIX + "k1", "v1")
       1 * carrier.put(DatadogHttpCodec.OT_BAGGAGE_PREFIX + "k2", "v2")
-      if (samplingPriority != PrioritySampling.UNSET) {
-        1 * carrier.put(DatadogHttpCodec.SAMPLING_PRIORITY_KEY, "$samplingPriority")
-      }
       if (origin) {
         1 * carrier.put(DatadogHttpCodec.ORIGIN_KEY, origin)
       }
@@ -69,20 +64,17 @@ class HttpInjectorTest extends DDSpecification {
     if (styles.contains(B3)) {
       1 * carrier.put(B3HttpCodec.TRACE_ID_KEY, traceId.toString())
       1 * carrier.put(B3HttpCodec.SPAN_ID_KEY, spanId.toString())
-      if (samplingPriority != PrioritySampling.UNSET) {
-        1 * carrier.put(B3HttpCodec.SAMPLING_PRIORITY_KEY, "1")
-      }
     }
     0 * _
 
     where:
-    styles        | samplingPriority              | origin
-    [DATADOG, B3] | PrioritySampling.UNSET        | null
-    [DATADOG, B3] | PrioritySampling.SAMPLER_KEEP | "saipan"
-    [DATADOG]     | PrioritySampling.UNSET        | null
-    [DATADOG]     | PrioritySampling.SAMPLER_KEEP | "saipan"
-    [B3]          | PrioritySampling.UNSET        | null
-    [B3]          | PrioritySampling.SAMPLER_KEEP | "saipan"
-    [B3, DATADOG] | PrioritySampling.SAMPLER_KEEP | "saipan"
+    styles        | origin
+    [DATADOG, B3] | null
+    [DATADOG, B3] | "saipan"
+    [DATADOG]     | null
+    [DATADOG]     | "saipan"
+    [B3]          | null
+    [B3]          | "saipan"
+    [B3, DATADOG] | "saipan"
   }
 }

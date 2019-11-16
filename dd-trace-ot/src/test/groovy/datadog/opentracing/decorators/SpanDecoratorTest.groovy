@@ -7,8 +7,6 @@ import datadog.trace.agent.test.utils.ConfigUtils
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
-import datadog.trace.api.sampling.PrioritySampling
-import datadog.trace.common.sampling.AllSampler
 import datadog.trace.common.writer.LoggingWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.tag.StringTag
@@ -57,7 +55,6 @@ class SpanDecoratorTest extends DDSpecification {
     tracer = new DDTracer(
       "wrong-service",
       new LoggingWriter(),
-      new AllSampler(),
       "some-runtime-id",
       emptyMap(),
       emptyMap(),
@@ -93,7 +90,6 @@ class SpanDecoratorTest extends DDSpecification {
     tracer = new DDTracer(
       serviceName,
       new LoggingWriter(),
-      new AllSampler(),
       "some-runtime-id",
       emptyMap(),
       emptyMap(),
@@ -140,7 +136,6 @@ class SpanDecoratorTest extends DDSpecification {
     tracer = new DDTracer(
       serviceName,
       new LoggingWriter(),
-      new AllSampler(),
       "some-runtime-id",
       emptyMap(),
       emptyMap(),
@@ -222,28 +217,6 @@ class SpanDecoratorTest extends DDSpecification {
 
     where:
     type = "foo"
-  }
-
-  def "set priority sampling via tag"() {
-    when:
-    span.setTag(tag, value)
-
-    then:
-    span.samplingPriority == expected
-
-    where:
-    tag                | value   | expected
-    DDTags.MANUAL_KEEP | true    | PrioritySampling.USER_KEEP
-    DDTags.MANUAL_KEEP | false   | null
-    DDTags.MANUAL_KEEP | "true"  | PrioritySampling.USER_KEEP
-    DDTags.MANUAL_KEEP | "false" | null
-    DDTags.MANUAL_KEEP | "asdf"  | null
-
-    DDTags.MANUAL_DROP | true    | PrioritySampling.USER_DROP
-    DDTags.MANUAL_DROP | false   | null
-    DDTags.MANUAL_DROP | "true"  | PrioritySampling.USER_DROP
-    DDTags.MANUAL_DROP | "false" | null
-    DDTags.MANUAL_DROP | "asdf"  | null
   }
 
   def "DBStatementAsResource should not interact on Mongo queries"() {

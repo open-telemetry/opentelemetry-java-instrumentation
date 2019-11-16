@@ -8,11 +8,10 @@ apply from: "${rootDir}/gradle/java.gradle"
 apply from: "${rootDir}/gradle/publish.gradle"
 
 minimumBranchCoverage = 0.5
-minimumInstructionCoverage = 0.6
+minimumInstructionCoverage = 0.5
 excludedClassesCoverage += [
   'datadog.trace.common.writer.ListWriter',
   'datadog.trace.common.writer.LoggingWriter',
-  'datadog.trace.common.sampling.PrioritySampling',
   // This code is copied from okHttp samples and we have integration tests to verify that it works.
   'datadog.trace.common.writer.unixdomainsockets.TunnelingUnixSocket',
   'datadog.trace.common.writer.unixdomainsockets.UnixDomainSocketFactory'
