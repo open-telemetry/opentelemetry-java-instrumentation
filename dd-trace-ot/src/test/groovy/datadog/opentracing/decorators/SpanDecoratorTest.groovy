@@ -15,7 +15,6 @@ import io.opentracing.tag.StringTag
 import io.opentracing.tag.Tags
 
 import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
-import static datadog.trace.api.DDTags.ANALYTICS_SAMPLE_RATE
 import static java.util.Collections.emptyMap
 
 class SpanDecoratorTest extends DDSpecification {
@@ -223,36 +222,6 @@ class SpanDecoratorTest extends DDSpecification {
 
     where:
     type = "foo"
-  }
-
-  def "span metrics starts empty but added with rate limiting value of #rate"() {
-    expect:
-    span.metrics == [:]
-
-    when:
-    span.setTag(ANALYTICS_SAMPLE_RATE, rate)
-
-    then:
-    span.metrics == result
-
-    where:
-    rate  | result
-    00    | [(ANALYTICS_SAMPLE_RATE): 0]
-    1     | [(ANALYTICS_SAMPLE_RATE): 1]
-    0f    | [(ANALYTICS_SAMPLE_RATE): 0]
-    1f    | [(ANALYTICS_SAMPLE_RATE): 1]
-    0.1   | [(ANALYTICS_SAMPLE_RATE): 0.1]
-    1.1   | [(ANALYTICS_SAMPLE_RATE): 1.1]
-    -1    | [(ANALYTICS_SAMPLE_RATE): -1]
-    10    | [(ANALYTICS_SAMPLE_RATE): 10]
-    "00"  | [(ANALYTICS_SAMPLE_RATE): 0]
-    "1"   | [(ANALYTICS_SAMPLE_RATE): 1]
-    "1.0" | [(ANALYTICS_SAMPLE_RATE): 1]
-    "0"   | [(ANALYTICS_SAMPLE_RATE): 0]
-    "0.1" | [(ANALYTICS_SAMPLE_RATE): 0.1]
-    "1.1" | [(ANALYTICS_SAMPLE_RATE): 1.1]
-    "-1"  | [(ANALYTICS_SAMPLE_RATE): -1]
-    "str" | [:]
   }
 
   def "set priority sampling via tag"() {

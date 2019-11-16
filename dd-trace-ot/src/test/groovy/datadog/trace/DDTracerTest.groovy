@@ -50,7 +50,7 @@ class DDTracerTest extends DDSpecification {
     tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces } }"
     tracer.writer.monitor instanceof DDAgentWriter.NoopMonitor
 
-    tracer.spanContextDecorators.size() == 15
+    tracer.spanContextDecorators.size() == 14
 
     tracer.injector instanceof HttpCodec.CompoundInjector
     tracer.extractor instanceof HttpCodec.CompoundExtractor

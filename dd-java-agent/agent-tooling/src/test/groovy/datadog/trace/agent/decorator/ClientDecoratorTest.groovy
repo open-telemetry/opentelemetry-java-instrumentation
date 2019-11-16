@@ -22,7 +22,6 @@ class ClientDecoratorTest extends BaseDecoratorTest {
     1 * span.setTag(Tags.COMPONENT.key, "test-component")
     1 * span.setTag(Tags.SPAN_KIND.key, "client")
     1 * span.setTag(DDTags.SPAN_TYPE, decorator.spanType())
-    1 * span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, 1.0)
     _ * span.setTag(_, _) // Want to allow other calls from child implementations.
     0 * _
 
@@ -63,10 +62,6 @@ class ClientDecoratorTest extends BaseDecoratorTest {
       @Override
       protected String component() {
         return "test-component"
-      }
-
-      protected boolean traceAnalyticsDefault() {
-        return true
       }
     }
   }
