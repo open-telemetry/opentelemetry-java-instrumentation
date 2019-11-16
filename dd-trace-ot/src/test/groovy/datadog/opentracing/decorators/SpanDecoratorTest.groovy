@@ -3,8 +3,6 @@ package datadog.opentracing.decorators
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.SpanFactory
-import datadog.trace.agent.test.utils.ConfigUtils
-import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.api.DDTags
 import datadog.trace.common.writer.LoggingWriter
@@ -16,17 +14,7 @@ import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 import static java.util.Collections.emptyMap
 
 class SpanDecoratorTest extends DDSpecification {
-  static {
-    ConfigUtils.updateConfig {
-      System.setProperty("dd.$Config.SPLIT_BY_TAGS", "sn.tag1,sn.tag2")
-    }
-  }
 
-  def cleanupSpec() {
-    ConfigUtils.updateConfig {
-      System.clearProperty("dd.$Config.SPLIT_BY_TAGS")
-    }
-  }
   def tracer = new DDTracer(new LoggingWriter())
   def span = SpanFactory.newSpanOf(tracer)
 
@@ -77,10 +65,6 @@ class SpanDecoratorTest extends DDSpecification {
     "service"             | "other-service" | "other-service"
     Tags.PEER_SERVICE.key | "some-service"  | "new-service"
     Tags.PEER_SERVICE.key | "other-service" | "other-service"
-    "sn.tag1"             | "some-service"  | "new-service"
-    "sn.tag1"             | "other-service" | "other-service"
-    "sn.tag2"             | "some-service"  | "new-service"
-    "sn.tag2"             | "other-service" | "other-service"
 
     mapping = ["some-service": "new-service"]
   }
@@ -295,12 +279,6 @@ class SpanDecoratorTest extends DDSpecification {
   }
 
   def "decorators apply to builder too"() {
-    when:
-    def span = tracer.buildSpan("decorator.test").withTag("sn.tag1", "some val").start()
-
-    then:
-    span.serviceName == "some val"
-
     when:
     span = tracer.buildSpan("decorator.test").withTag("servlet.context", "/my-servlet").start()
 
