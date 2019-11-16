@@ -25,7 +25,6 @@ import static datadog.trace.api.Config.PROPAGATION_STYLE_EXTRACT
 import static datadog.trace.api.Config.PROPAGATION_STYLE_INJECT
 import static datadog.trace.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
 import static datadog.trace.api.Config.RUNTIME_ID_TAG
-import static datadog.trace.api.Config.SERVICE_MAPPING
 import static datadog.trace.api.Config.SERVICE_NAME
 import static datadog.trace.api.Config.SERVICE_TAG
 import static datadog.trace.api.Config.SPAN_TAGS
@@ -44,7 +43,6 @@ class ConfigTest extends DDSpecification {
   private static final DD_SERVICE_NAME_ENV = "DD_SERVICE_NAME"
   private static final DD_TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
   private static final DD_WRITER_TYPE_ENV = "DD_WRITER_TYPE"
-  private static final DD_SERVICE_MAPPING_ENV = "DD_SERVICE_MAPPING"
   private static final DD_SPAN_TAGS_ENV = "DD_SPAN_TAGS"
   private static final DD_HEADER_TAGS_ENV = "DD_HEADER_TAGS"
   private static final DD_PROPAGATION_STYLE_EXTRACT = "DD_PROPAGATION_STYLE_EXTRACT"
@@ -65,7 +63,6 @@ class ConfigTest extends DDSpecification {
     config.agentPort == 8126
     config.agentUnixDomainSocket == null
     config.traceResolverEnabled == true
-    config.serviceMapping == [:]
     config.mergedSpanTags == [:]
     config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
     config.headerTags == [:]
@@ -102,7 +99,6 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(AGENT_UNIX_DOMAIN_SOCKET, "somepath")
     prop.setProperty(AGENT_PORT_LEGACY, "456")
     prop.setProperty(TRACE_RESOLVER_ENABLED, "false")
-    prop.setProperty(SERVICE_MAPPING, "a:1")
     prop.setProperty(GLOBAL_TAGS, "b:2")
     prop.setProperty(SPAN_TAGS, "c:3")
     prop.setProperty(JMX_TAGS, "d:4")
@@ -131,7 +127,6 @@ class ConfigTest extends DDSpecification {
     config.agentPort == 123
     config.agentUnixDomainSocket == "somepath"
     config.traceResolverEnabled == false
-    config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
     config.headerTags == [e: "5"]
@@ -159,7 +154,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + AGENT_UNIX_DOMAIN_SOCKET, "somepath")
     System.setProperty(PREFIX + AGENT_PORT_LEGACY, "456")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, "false")
-    System.setProperty(PREFIX + SERVICE_MAPPING, "a:1")
     System.setProperty(PREFIX + GLOBAL_TAGS, "b:2")
     System.setProperty(PREFIX + SPAN_TAGS, "c:3")
     System.setProperty(PREFIX + JMX_TAGS, "d:4")
@@ -188,7 +182,6 @@ class ConfigTest extends DDSpecification {
     config.agentPort == 123
     config.agentUnixDomainSocket == "somepath"
     config.traceResolverEnabled == false
-    config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
     config.headerTags == [e: "5"]
@@ -257,7 +250,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + TRACE_AGENT_PORT, " ")
     System.setProperty(PREFIX + AGENT_PORT_LEGACY, "invalid")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, " ")
-    System.setProperty(PREFIX + SERVICE_MAPPING, " ")
     System.setProperty(PREFIX + HEADER_TAGS, "1")
     System.setProperty(PREFIX + SPAN_TAGS, "invalid")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "1111")
@@ -277,7 +269,6 @@ class ConfigTest extends DDSpecification {
     config.agentHost == " "
     config.agentPort == 8126
     config.traceResolverEnabled == true
-    config.serviceMapping == [:]
     config.mergedSpanTags == [:]
     config.headerTags == [:]
     config.httpServerErrorStatuses == (500..599).toSet()
@@ -340,7 +331,6 @@ class ConfigTest extends DDSpecification {
     properties.setProperty(TRACE_AGENT_PORT, "123")
     properties.setProperty(AGENT_UNIX_DOMAIN_SOCKET, "somepath")
     properties.setProperty(TRACE_RESOLVER_ENABLED, "false")
-    properties.setProperty(SERVICE_MAPPING, "a:1")
     properties.setProperty(GLOBAL_TAGS, "b:2")
     properties.setProperty(SPAN_TAGS, "c:3")
     properties.setProperty(JMX_TAGS, "d:4")
@@ -364,7 +354,6 @@ class ConfigTest extends DDSpecification {
     config.agentPort == 123
     config.agentUnixDomainSocket == "somepath"
     config.traceResolverEnabled == false
-    config.serviceMapping == [a: "1"]
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
     config.headerTags == [e: "5"]
@@ -476,11 +465,9 @@ class ConfigTest extends DDSpecification {
 
   def "verify mapping configs on tracer"() {
     setup:
-    System.setProperty(PREFIX + SERVICE_MAPPING, mapString)
     System.setProperty(PREFIX + SPAN_TAGS, mapString)
     System.setProperty(PREFIX + HEADER_TAGS, mapString)
     def props = new Properties()
-    props.setProperty(SERVICE_MAPPING, mapString)
     props.setProperty(SPAN_TAGS, mapString)
     props.setProperty(HEADER_TAGS, mapString)
 
@@ -489,10 +476,8 @@ class ConfigTest extends DDSpecification {
     def propConfig = Config.get(props)
 
     then:
-    config.serviceMapping == map
     config.spanTags == map
     config.headerTags == map
-    propConfig.serviceMapping == map
     propConfig.spanTags == map
     propConfig.headerTags == map
 
@@ -559,7 +544,6 @@ class ConfigTest extends DDSpecification {
 
   def "verify null value mapping configs on tracer"() {
     setup:
-    environmentVariables.set(DD_SERVICE_MAPPING_ENV, mapString)
     environmentVariables.set(DD_SPAN_TAGS_ENV, mapString)
     environmentVariables.set(DD_HEADER_TAGS_ENV, mapString)
 
@@ -567,7 +551,6 @@ class ConfigTest extends DDSpecification {
     def config = new Config()
 
     then:
-    config.serviceMapping == map
     config.spanTags == map
     config.headerTags == map
 

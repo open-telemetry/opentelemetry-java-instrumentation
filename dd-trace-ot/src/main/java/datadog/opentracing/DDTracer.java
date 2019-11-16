@@ -53,8 +53,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   private final Map<String, String> localRootSpanTags;
   /** A set of tags that are added to every span */
   private final Map<String, String> defaultSpanTags;
-  /** A configured mapping of service names to update with new values */
-  private final Map<String, String> serviceNameMappings;
 
   /** number of spans in a pending trace before they get flushed */
   @Getter private final int partialFlushMinSpans;
@@ -100,7 +98,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         Writer.Builder.forConfig(config),
         config.getLocalRootSpanTags(),
         config.getMergedSpanTags(),
-        config.getServiceMapping(),
         config.getHeaderTags(),
         config.getPartialFlushMinSpans());
     log.debug("Using config: {}", config);
@@ -112,7 +109,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         serviceName,
         writer,
         runtimeTags,
-        Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap(),
         0);
@@ -128,12 +124,11 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         writer,
         config.getLocalRootSpanTags(),
         config.getMergedSpanTags(),
-        config.getServiceMapping(),
         config.getHeaderTags(),
         config.getPartialFlushMinSpans());
   }
 
-  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, Map, Map, int)} instead. */
+  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, Map, int)} instead. */
   @Deprecated
   public DDTracer(
       final String serviceName,
@@ -141,33 +136,29 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final String runtimeId,
       final Map<String, String> localRootSpanTags,
       final Map<String, String> defaultSpanTags,
-      final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders) {
     this(
         serviceName,
         writer,
         customRuntimeTags(runtimeId, localRootSpanTags),
         defaultSpanTags,
-        serviceNameMappings,
         taggedHeaders,
         Config.get().getPartialFlushMinSpans());
   }
 
-  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, Map, Map, int)} instead. */
+  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, Map, int)} instead. */
   @Deprecated
   public DDTracer(
       final String serviceName,
       final Writer writer,
       final Map<String, String> localRootSpanTags,
       final Map<String, String> defaultSpanTags,
-      final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders) {
     this(
         serviceName,
         writer,
         localRootSpanTags,
         defaultSpanTags,
-        serviceNameMappings,
         taggedHeaders,
         Config.get().getPartialFlushMinSpans());
   }
@@ -177,12 +168,10 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Writer writer,
       final Map<String, String> localRootSpanTags,
       final Map<String, String> defaultSpanTags,
-      final Map<String, String> serviceNameMappings,
       final Map<String, String> taggedHeaders,
       final int partialFlushMinSpans) {
     assert localRootSpanTags != null;
     assert defaultSpanTags != null;
-    assert serviceNameMappings != null;
     assert taggedHeaders != null;
 
     this.serviceName = serviceName;
@@ -190,7 +179,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this.writer.start();
     this.localRootSpanTags = localRootSpanTags;
     this.defaultSpanTags = defaultSpanTags;
-    this.serviceNameMappings = serviceNameMappings;
     this.partialFlushMinSpans = partialFlushMinSpans;
 
     shutdownCallback = new ShutdownHook(this);
@@ -586,7 +574,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
         tags.putAll(localRootSpanTags);
 
-        parentTrace = new PendingTrace(DDTracer.this, traceId, serviceNameMappings);
+        parentTrace = new PendingTrace(DDTracer.this, traceId);
       }
 
       if (serviceName == null) {

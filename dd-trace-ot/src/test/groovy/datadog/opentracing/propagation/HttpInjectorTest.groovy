@@ -43,7 +43,7 @@ class HttpInjectorTest extends DDSpecification {
         false,
         "fakeType",
         null,
-        new PendingTrace(tracer, 1G, [:]),
+        new PendingTrace(tracer, 1G),
         tracer)
 
     final Map<String, String> carrier = Mock()

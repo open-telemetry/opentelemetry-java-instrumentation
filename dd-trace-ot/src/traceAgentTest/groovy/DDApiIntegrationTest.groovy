@@ -34,7 +34,7 @@ class DDApiIntegrationTest {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new PendingTrace(TRACER, 1G, [:]),
+      new PendingTrace(TRACER, 1G),
       TRACER)
 
     // Looks like okHttp needs to resolve this, even for connection over socket

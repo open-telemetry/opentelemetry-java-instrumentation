@@ -51,7 +51,6 @@ public class Config {
   public static final String AGENT_PORT_LEGACY = "agent.port";
   public static final String AGENT_UNIX_DOMAIN_SOCKET = "trace.agent.unix.domain.socket";
   public static final String TRACE_RESOLVER_ENABLED = "trace.resolver.enabled";
-  public static final String SERVICE_MAPPING = "service.mapping";
   public static final String GLOBAL_TAGS = "trace.global.tags";
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String JMX_TAGS = "trace.jmx.tags";
@@ -149,7 +148,6 @@ public class Config {
   @Getter private final int agentPort;
   @Getter private final String agentUnixDomainSocket;
   @Getter private final boolean traceResolverEnabled;
-  @Getter private final Map<String, String> serviceMapping;
   private final Map<String, String> globalTags;
   private final Map<String, String> spanTags;
   private final Map<String, String> jmxTags;
@@ -206,7 +204,6 @@ public class Config {
         getSettingFromEnvironment(AGENT_UNIX_DOMAIN_SOCKET, DEFAULT_AGENT_UNIX_DOMAIN_SOCKET);
     traceResolverEnabled =
         getBooleanSettingFromEnvironment(TRACE_RESOLVER_ENABLED, DEFAULT_TRACE_RESOLVER_ENABLED);
-    serviceMapping = getMapSettingFromEnvironment(SERVICE_MAPPING, null);
 
     globalTags = getMapSettingFromEnvironment(GLOBAL_TAGS, null);
     spanTags = getMapSettingFromEnvironment(SPAN_TAGS, null);
@@ -303,7 +300,6 @@ public class Config {
         properties.getProperty(AGENT_UNIX_DOMAIN_SOCKET, parent.agentUnixDomainSocket);
     traceResolverEnabled =
         getPropertyBooleanValue(properties, TRACE_RESOLVER_ENABLED, parent.traceResolverEnabled);
-    serviceMapping = getPropertyMapValue(properties, SERVICE_MAPPING, parent.serviceMapping);
 
     globalTags = getPropertyMapValue(properties, GLOBAL_TAGS, parent.globalTags);
     spanTags = getPropertyMapValue(properties, SPAN_TAGS, parent.spanTags);
