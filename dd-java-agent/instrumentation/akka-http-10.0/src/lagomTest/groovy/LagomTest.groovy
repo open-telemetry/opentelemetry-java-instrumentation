@@ -77,6 +77,10 @@ class LagomTest extends AgentTestRunner {
           childOf span(0)
           operationName 'trace.annotation'
           resourceName 'EchoServiceImpl.tracedMethod'
+          tags {
+            "$Tags.COMPONENT" "trace"
+            defaultTags()
+          }
         }
       }
     }

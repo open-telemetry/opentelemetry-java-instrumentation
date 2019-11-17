@@ -107,6 +107,9 @@ class RabbitMQTest extends AgentTestRunner {
       trace(1, 5) {
         span(0) {
           operationName "parent"
+          tags {
+            defaultTags()
+          }
         }
         // reverse order
         rabbitSpan(it, 1, "basic.publish $exchangeName -> $routingKey", false, span(0))
