@@ -128,7 +128,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
             return -1
           }
 
-          return a.resourceName.compareTo(b.resourceName)
+          return a.tags[DDTags.RESOURCE_NAME].compareTo(b.tags[DDTags.RESOURCE_NAME])
       })
     }
 
@@ -137,7 +137,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
 
   void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
-      resourceName name
       operationName "couchbase.call"
       spanType DDSpanTypes.COUCHBASE
       errored false
@@ -148,6 +147,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
       }
       tags {
         "$DDTags.SERVICE_NAME" "couchbase"
+        "$DDTags.RESOURCE_NAME" name
         "$Tags.COMPONENT" "couchbase-client"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.DB_TYPE" "couchbase"

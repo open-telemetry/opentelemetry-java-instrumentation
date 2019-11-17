@@ -281,7 +281,7 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
 
     // Validate dispatch trace
     def dispatchTraces = TEST_WRITER.findAll {
-      it.size() == 1 && it.get(0).resourceName.contains("/dispatch/")
+      it.size() == 1 && it.get(0).tags[Tags.HTTP_URL].contains("/dispatch/")
     }
     assert dispatchTraces.size() == size
     dispatchTraces.each { List<DDSpan> dispatchTrace ->
@@ -289,7 +289,6 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
         def endpoint = lastRequest
         span(0) {
           operationName expectedOperationName()
-          resourceName endpoint.status == 404 ? "404" : "GET ${endpoint.resolve(address).path}"
           spanType DDSpanTypes.HTTP_SERVER
           errored endpoint.errored
           // we can't reliably assert parent or child relationship here since both are tested.

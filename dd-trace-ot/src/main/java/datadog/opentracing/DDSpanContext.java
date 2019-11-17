@@ -38,8 +38,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   /** Tags are associated to the current span, they will not propagate to the children span */
   private final Map<String, Object> tags = new ConcurrentHashMap<>();
 
-  /** The resource associated to the service (server_web, database, etc.) */
-  private volatile String resourceName;
   /** Each span have an operation name describing the current span */
   private volatile String operationName;
   /** The type of the span. If null, the Datadog Agent will report as a custom */
@@ -58,7 +56,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final BigInteger spanId,
       final BigInteger parentId,
       final String operationName,
-      final String resourceName,
       final boolean errorFlag,
       final String spanType,
       final Map<String, Object> tags,
@@ -82,7 +79,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     }
 
     this.operationName = operationName;
-    this.resourceName = resourceName;
     this.errorFlag = errorFlag;
     this.spanType = spanType;
 
@@ -110,14 +106,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   @Override
   public String toSpanId() {
     return spanId.toString();
-  }
-
-  public String getResourceName() {
-    return resourceName == null || resourceName.isEmpty() ? operationName : resourceName;
-  }
-
-  public void setResourceName(final String resourceName) {
-    this.resourceName = resourceName;
   }
 
   public String getOperationName() {
@@ -225,8 +213,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
             .append(parentId)
             .append("] trace=")
             .append(getOperationName())
-            .append("/")
-            .append(getResourceName())
             .append(" metrics=")
             .append(new TreeMap(getMetrics()));
     if (errorFlag) {

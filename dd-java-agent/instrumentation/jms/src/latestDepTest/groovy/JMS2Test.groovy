@@ -158,12 +158,12 @@ class JMS2Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
-          resourceName "JMS receiveNoWait"
           spanType DDSpanTypes.MESSAGE_PRODUCER
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "jms"
+            "$DDTags.RESOURCE_NAME" "JMS receiveNoWait"
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" HornetQMessageConsumer.name
@@ -196,12 +196,12 @@ class JMS2Test extends AgentTestRunner {
         span(0) {
           parent()
           operationName "jms.consume"
-          resourceName "JMS receive"
           spanType DDSpanTypes.MESSAGE_PRODUCER
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "jms"
+            "$DDTags.RESOURCE_NAME" "JMS receive"
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" HornetQMessageConsumer.name
@@ -225,12 +225,12 @@ class JMS2Test extends AgentTestRunner {
       span(0) {
         parent()
         operationName "jms.produce"
-        resourceName "Produced for $jmsResourceName"
         spanType DDSpanTypes.MESSAGE_PRODUCER
         errored false
 
         tags {
           "$DDTags.SERVICE_NAME" "jms"
+          "$DDTags.RESOURCE_NAME" "Produced for $jmsResourceName"
           "$Tags.COMPONENT" "jms"
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           "span.origin.type" HornetQMessageProducer.name
@@ -246,16 +246,15 @@ class JMS2Test extends AgentTestRunner {
         childOf parentSpan
         if (messageListener) {
           operationName "jms.onMessage"
-          resourceName "Received from $jmsResourceName"
         } else {
           operationName "jms.consume"
-          resourceName "Consumed from $jmsResourceName"
         }
         spanType DDSpanTypes.MESSAGE_CONSUMER
         errored false
 
         tags {
           "$DDTags.SERVICE_NAME" "jms"
+          "$DDTags.RESOURCE_NAME" messageListener ? "Received from $jmsResourceName" : "Consumed from $jmsResourceName"
           "${Tags.COMPONENT}" "jms"
           "${Tags.SPAN_KIND}" "consumer"
           "span.origin.type" origin.name

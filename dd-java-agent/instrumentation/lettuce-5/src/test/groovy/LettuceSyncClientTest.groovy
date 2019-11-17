@@ -98,11 +98,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
         span(0) {
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
-          resourceName "CONNECT:" + dbAddr
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.RESOURCE_NAME" "CONNECT:" + dbAddr
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" HOST
@@ -134,11 +134,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
         span(0) {
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
-          resourceName "CONNECT:" + dbAddrNonExistent
           errored true
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.RESOURCE_NAME" "CONNECT:" + dbAddrNonExistent
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" HOST
@@ -164,11 +164,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
         span(0) {
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
-          resourceName "SET"
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.RESOURCE_NAME" "SET"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -190,11 +190,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
         span(0) {
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
-          resourceName "GET"
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.RESOURCE_NAME" "GET"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -216,11 +216,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
         span(0) {
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
-          resourceName "GET"
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.RESOURCE_NAME" "GET"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -242,11 +242,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
         span(0) {
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
-          resourceName "RANDOMKEY"
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.RESOURCE_NAME" "RANDOMKEY"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -268,11 +268,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
         span(0) {
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
-          resourceName "LPUSH"
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.RESOURCE_NAME" "LPUSH"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -294,11 +294,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
         span(0) {
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
-          resourceName "HMSET"
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.RESOURCE_NAME" "HMSET"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -320,11 +320,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
         span(0) {
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
-          resourceName "HGETALL"
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.RESOURCE_NAME" "HGETALL"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -345,11 +345,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
         span(0) {
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
-          resourceName AGENT_CRASHING_COMMAND_PREFIX + "DEBUG"
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.RESOURCE_NAME" AGENT_CRASHING_COMMAND_PREFIX + "DEBUG"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -370,11 +370,11 @@ class LettuceSyncClientTest extends AgentTestRunner {
         span(0) {
           operationName "redis.query"
           spanType DDSpanTypes.REDIS
-          resourceName "SHUTDOWN"
           errored false
 
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.RESOURCE_NAME" "SHUTDOWN"
             "$Tags.COMPONENT" "redis-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"

@@ -39,12 +39,12 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          resourceName "SearchAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           errored false
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "SearchAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -73,11 +73,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          resourceName "IndexAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "IndexAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
@@ -94,11 +94,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          resourceName "RefreshAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "RefreshAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -122,11 +122,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          resourceName "GetAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
@@ -157,11 +157,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     assertTraces(3) {
       trace(0, 1) {
         span(0) {
-          resourceName "IndexAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "IndexAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
@@ -178,11 +178,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          resourceName "RefreshAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "RefreshAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -198,11 +198,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       }
       trace(2, 1) {
         span(0) {
-          resourceName "GetAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "GetAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
@@ -232,11 +232,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
     assertTraces(3) {
       trace(0, 1) {
         span(0) {
-          resourceName "DeleteAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "DeleteAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "local"
@@ -253,11 +253,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          resourceName "RefreshAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "RefreshAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -273,11 +273,11 @@ class Elasticsearch2SpringRepositoryTest extends AgentTestRunner {
       }
       trace(2, 1) {
         span(0) {
-          resourceName "SearchAction"
           operationName "elasticsearch.query"
           spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.RESOURCE_NAME" "SearchAction"
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"

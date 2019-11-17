@@ -1,5 +1,6 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDTags
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ThreadPoolDispatcherKt
 
@@ -22,7 +23,7 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
 
     expect:
     trace.size() == expectedNumberOfSpans
-    trace[0].resourceName == "KotlinCoroutineTests.tracedAcrossChannels"
+    trace[0].tags[DDTags.RESOURCE_NAME] == "KotlinCoroutineTests.tracedAcrossChannels"
     findSpan(trace, "produce_2").context().getParentId() == trace[0].context().getSpanId()
     findSpan(trace, "consume_2").context().getParentId() == trace[0].context().getSpanId()
 
@@ -39,7 +40,7 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
 
     expect:
     trace.size() == expectedNumberOfSpans
-    trace[0].resourceName == "KotlinCoroutineTests.tracePreventedByCancellation"
+    trace[0].tags[DDTags.RESOURCE_NAME] == "KotlinCoroutineTests.tracePreventedByCancellation"
     findSpan(trace, "preLaunch").context().getParentId() == trace[0].context().getSpanId()
     findSpan(trace, "postLaunch") == null
 
@@ -56,7 +57,7 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
 
     expect:
     trace.size() == expectedNumberOfSpans
-    trace[0].resourceName == "KotlinCoroutineTests.tracedAcrossThreadsWithNested"
+    trace[0].tags[DDTags.RESOURCE_NAME] == "KotlinCoroutineTests.tracedAcrossThreadsWithNested"
     findSpan(trace, "nested").context().getParentId() == trace[0].context().getSpanId()
 
     where:
@@ -73,7 +74,7 @@ class KotlinCoroutineInstrumentationTest extends AgentTestRunner {
     expect:
     TEST_WRITER.size() == 1
     trace.size() == expectedNumberOfSpans
-    trace[0].resourceName == "KotlinCoroutineTests.traceWithDeferred"
+    trace[0].tags[DDTags.RESOURCE_NAME] == "KotlinCoroutineTests.traceWithDeferred"
     findSpan(trace, "keptPromise").context().getParentId() == trace[0].context().getSpanId()
     findSpan(trace, "keptPromise2").context().getParentId() == trace[0].context().getSpanId()
     findSpan(trace, "brokenPromise").context().getParentId() == trace[0].context().getSpanId()

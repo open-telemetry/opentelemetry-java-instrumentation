@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDTags
 import datadog.trace.api.Trace
 import datadog.trace.instrumentation.api.AgentSpan
 import datadog.trace.instrumentation.api.Tags
@@ -33,27 +34,26 @@ class ReactorCoreTest extends AgentTestRunner {
       def publisherParentSpanIndex = workSpans + 1
       trace(0, workSpans + 2) {
         span(0) {
-          resourceName "trace-parent"
           operationName "trace-parent"
           parent()
           tags {
+            "$DDTags.RESOURCE_NAME" "trace-parent"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
         for (int i = 0; i < workSpans; i++) {
           span(i + 1) {
-            resourceName "addOne"
             operationName "addOne"
             childOf(span(publisherParentSpanIndex))
             tags {
+              "$DDTags.RESOURCE_NAME" "addOne"
               "$Tags.COMPONENT" "trace"
               defaultTags()
             }
           }
         }
         span(publisherParentSpanIndex) {
-          resourceName "publisher-parent"
           operationName "publisher-parent"
           childOf(span(0))
           tags {
@@ -88,18 +88,17 @@ class ReactorCoreTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          resourceName "trace-parent"
           operationName "trace-parent"
           parent()
           errored true
           tags {
+            "$DDTags.RESOURCE_NAME" "trace-parent"
             "$Tags.COMPONENT" "trace"
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
             defaultTags()
           }
         }
         span(1) {
-          resourceName "publisher-parent"
           operationName "publisher-parent"
           childOf(span(0))
           errored true
@@ -129,11 +128,11 @@ class ReactorCoreTest extends AgentTestRunner {
       trace(0, workSpans + 2) {
         def publisherParentSpanIndex = workSpans + 1
         span(0) {
-          resourceName "trace-parent"
           operationName "trace-parent"
           parent()
           errored true
           tags {
+            "$DDTags.RESOURCE_NAME" "trace-parent"
             "$Tags.COMPONENT" "trace"
             errorTags(RuntimeException, EXCEPTION_MESSAGE)
             defaultTags()
@@ -141,17 +140,16 @@ class ReactorCoreTest extends AgentTestRunner {
         }
         for (int i = 0; i < workSpans; i++) {
           span(i + 1) {
-            resourceName "addOne"
             operationName "addOne"
             childOf(span(publisherParentSpanIndex))
             tags {
+              "$DDTags.RESOURCE_NAME" "addOne"
               "$Tags.COMPONENT" "trace"
               defaultTags()
             }
           }
         }
         span(publisherParentSpanIndex) {
-          resourceName "publisher-parent"
           operationName "publisher-parent"
           childOf(span(0))
           errored true
@@ -177,16 +175,15 @@ class ReactorCoreTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          resourceName "trace-parent"
           operationName "trace-parent"
           parent()
           tags {
+            "$DDTags.RESOURCE_NAME" "trace-parent"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
         span(1) {
-          resourceName "publisher-parent"
           operationName "publisher-parent"
           childOf(span(0))
           tags {

@@ -76,11 +76,10 @@ class Netty40ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent", null, thrownException)
+        basicSpan(it, 0, "parent", null, null, thrownException)
 
         span(1) {
           operationName "netty.connect"
-          resourceName "netty.connect"
           childOf span(0)
           errored true
           tags {

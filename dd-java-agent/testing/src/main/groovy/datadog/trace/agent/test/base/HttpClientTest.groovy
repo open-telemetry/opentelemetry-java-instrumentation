@@ -176,7 +176,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     assertTraces(1) {
       trace(0, size(3)) {
         basicSpan(it, 0, "parent")
-        basicSpan(it, 1, "child", span(0))
+        basicSpan(it, 1, "child", null, span(0))
         clientSpan(it, 2, span(0), method, false)
       }
     }
@@ -301,7 +301,7 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
     and:
     assertTraces(1) {
       trace(0, 2) {
-        basicSpan(it, 0, "parent", null, thrownException)
+        basicSpan(it, 0, "parent", null, null, thrownException)
         clientSpan(it, 1, span(0), method, false, false, uri, null, thrownException)
       }
     }
@@ -319,7 +319,6 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
         childOf((DDSpan) parentSpan)
       }
       operationName expectedOperationName()
-      resourceName "$method $uri.path"
       spanType DDSpanTypes.HTTP_CLIENT
       errored exception != null
       tags {

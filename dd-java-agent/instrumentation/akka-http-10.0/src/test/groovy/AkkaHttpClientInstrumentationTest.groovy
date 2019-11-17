@@ -68,7 +68,6 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
         span(0) {
           parent()
           operationName "akka-http.request"
-          resourceName "akka-http.request"
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
           tags {

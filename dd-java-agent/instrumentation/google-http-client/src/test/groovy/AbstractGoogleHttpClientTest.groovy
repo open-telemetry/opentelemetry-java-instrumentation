@@ -57,7 +57,6 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
       server.distributedRequestTrace(it, 0, trace(1).last())
       trace(1, size(1)) {
         span(0) {
-          resourceName "$method $uri.path"
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
           tags {
@@ -65,9 +64,9 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" Integer
-            "$Tags.HTTP_URL" String
-            "$Tags.HTTP_METHOD" String
-            "$Tags.HTTP_STATUS" Integer
+            "$Tags.HTTP_URL" "${uri.resolve(uri.path)}"
+            "$Tags.HTTP_METHOD" method
+            "$Tags.HTTP_STATUS" 500
             "$Tags.ERROR" true
             defaultTags()
           }

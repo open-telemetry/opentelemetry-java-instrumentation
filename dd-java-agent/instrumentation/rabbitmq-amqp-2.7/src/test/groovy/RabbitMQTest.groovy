@@ -346,7 +346,6 @@ class RabbitMQTest extends AgentTestRunner {
   ) {
     trace.span(index) {
       operationName "amqp.command"
-      resourceName resource
       switch (span.tags["amqp.command"]) {
         case "basic.publish":
           spanType DDSpanTypes.MESSAGE_PRODUCER
@@ -369,6 +368,7 @@ class RabbitMQTest extends AgentTestRunner {
 
       tags {
         "$DDTags.SERVICE_NAME" "rabbitmq"
+        "$DDTags.RESOURCE_NAME" resource
         "$Tags.COMPONENT" "rabbitmq-amqp"
         "$Tags.PEER_HOSTNAME" { it == null || it instanceof String }
         "$Tags.PEER_HOST_IPV4" { "127.0.0.1" }

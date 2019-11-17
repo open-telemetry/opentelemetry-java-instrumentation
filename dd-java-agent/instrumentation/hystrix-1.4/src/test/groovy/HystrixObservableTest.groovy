@@ -2,6 +2,7 @@ import com.netflix.hystrix.HystrixObservable
 import com.netflix.hystrix.HystrixObservableCommand
 import com.netflix.hystrix.exception.HystrixRuntimeException
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDTags
 import datadog.trace.api.Trace
 import datadog.trace.instrumentation.api.Tags
 import rx.Observable
@@ -65,7 +66,6 @@ class HystrixObservableTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "parent"
-          resourceName "parent"
           spanType null
           parent()
           errored false
@@ -75,11 +75,11 @@ class HystrixObservableTest extends AgentTestRunner {
         }
         span(1) {
           operationName "hystrix.cmd"
-          resourceName "ExampleGroup.HystrixObservableTest\$1.execute"
           spanType null
           childOf span(0)
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$1.execute"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -89,11 +89,11 @@ class HystrixObservableTest extends AgentTestRunner {
         }
         span(2) {
           operationName "trace.annotation"
-          resourceName "HystrixObservableTest\$1.tracedMethod"
           spanType null
           childOf span(1)
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "HystrixObservableTest\$1.tracedMethod"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -172,7 +172,6 @@ class HystrixObservableTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "parent"
-          resourceName "parent"
           spanType null
           parent()
           errored false
@@ -182,11 +181,11 @@ class HystrixObservableTest extends AgentTestRunner {
         }
         span(1) {
           operationName "hystrix.cmd"
-          resourceName "ExampleGroup.HystrixObservableTest\$2.execute"
           spanType null
           childOf span(0)
           errored true
           tags {
+            "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$2.execute"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
@@ -197,11 +196,11 @@ class HystrixObservableTest extends AgentTestRunner {
         }
         span(2) {
           operationName "hystrix.cmd"
-          resourceName "ExampleGroup.HystrixObservableTest\$2.fallback"
           spanType null
           childOf span(1)
           errored false
           tags {
+            "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableTest\$2.fallback"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
@@ -288,7 +287,6 @@ class HystrixObservableTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "parent"
-          resourceName "parent"
           spanType null
           parent()
           errored true
@@ -299,11 +297,11 @@ class HystrixObservableTest extends AgentTestRunner {
         }
         span(1) {
           operationName "hystrix.cmd"
-          resourceName "FailingGroup.HystrixObservableTest\$3.execute"
           spanType null
           childOf span(0)
           errored true
           tags {
+            "$DDTags.RESOURCE_NAME" "FailingGroup.HystrixObservableTest\$3.execute"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
@@ -314,11 +312,11 @@ class HystrixObservableTest extends AgentTestRunner {
         }
         span(2) {
           operationName "hystrix.cmd"
-          resourceName "FailingGroup.HystrixObservableTest\$3.fallback"
           spanType null
           childOf span(1)
           errored true
           tags {
+            "$DDTags.RESOURCE_NAME" "FailingGroup.HystrixObservableTest\$3.fallback"
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"

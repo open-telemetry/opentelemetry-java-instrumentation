@@ -28,7 +28,6 @@ class QueryTest extends AbstractHibernateTest {
       // With Transaction
       trace(0, 4) {
         span(0) {
-          resourceName "hibernate.session"
           operationName "hibernate.session"
           spanType DDSpanTypes.HIBERNATE
           parent()
@@ -40,7 +39,6 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          resourceName "hibernate.transaction.commit"
           operationName "hibernate.transaction.commit"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
@@ -52,14 +50,15 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(2) {
-          resourceName "$resource"
           operationName "hibernate.$queryMethodName"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
+            "$DDTags.RESOURCE_NAME" resource
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_STATEMENT" queryMethodName == "iterate" ? null : String
             defaultTags()
           }
         }
@@ -68,11 +67,13 @@ class QueryTest extends AbstractHibernateTest {
           childOf span(2)
           tags {
             "$DDTags.SERVICE_NAME" "h2"
+            "$DDTags.RESOURCE_NAME" String
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "h2"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
+            "$Tags.DB_STATEMENT" String
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
             defaultTags()
           }
@@ -82,7 +83,6 @@ class QueryTest extends AbstractHibernateTest {
         // Without Transaction
         trace(1, 3) {
           span(0) {
-            resourceName "hibernate.session"
             operationName "hibernate.session"
             spanType DDSpanTypes.HIBERNATE
             parent()
@@ -94,14 +94,15 @@ class QueryTest extends AbstractHibernateTest {
             }
           }
           span(1) {
-            resourceName "$resource"
             operationName "hibernate.$queryMethodName"
             spanType DDSpanTypes.HIBERNATE
             childOf span(0)
             tags {
               "$DDTags.SERVICE_NAME" "hibernate"
+              "$DDTags.RESOURCE_NAME" resource
               "$Tags.COMPONENT" "java-hibernate"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+              "$Tags.DB_STATEMENT" queryMethodName == "iterate" ? null : String
               defaultTags()
             }
           }
@@ -110,11 +111,13 @@ class QueryTest extends AbstractHibernateTest {
             childOf span(1)
             tags {
               "$DDTags.SERVICE_NAME" "h2"
+              "$DDTags.RESOURCE_NAME" ~/^select /
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.DB_TYPE" "h2"
               "$Tags.DB_INSTANCE" "db1"
               "$Tags.DB_USER" "sa"
+              "$Tags.DB_STATEMENT" ~/^select /
               "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
               defaultTags()
             }
@@ -124,24 +127,24 @@ class QueryTest extends AbstractHibernateTest {
     }
 
     where:
-    queryMethodName       | resource                         | requiresTransaction | queryInteraction
-    "query.list"          | "Value"                          | false               | { sess ->
+    queryMethodName       | resource     | requiresTransaction | queryInteraction
+    "query.list"          | "Value"      | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.list()
     }
-    "query.executeUpdate" | "update Value set name = 'alyx'" | true                | { sess ->
+    "query.executeUpdate" | null         | true                | { sess ->
       Query q = sess.createQuery("update Value set name = 'alyx'")
       q.executeUpdate()
     }
-    "query.uniqueResult"  | "Value"                          | false               | { sess ->
+    "query.uniqueResult"  | "Value"      | false               | { sess ->
       Query q = sess.createQuery("from Value where id = 1")
       q.uniqueResult()
     }
-    "iterate"             | "from Value"                     | false               | { sess ->
+    "iterate"             | "from Value" | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.iterate()
     }
-    "query.scroll"        | "from Value"                     | false               | { sess ->
+    "query.scroll"        | null         | false               | { sess ->
       Query q = sess.createQuery("from Value")
       q.scroll()
     }
@@ -164,7 +167,6 @@ class QueryTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          resourceName "hibernate.session"
           operationName "hibernate.session"
           spanType DDSpanTypes.HIBERNATE
           parent()
@@ -176,7 +178,6 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(1) {
-          resourceName "hibernate.transaction.commit"
           operationName "hibernate.transaction.commit"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
@@ -188,12 +189,12 @@ class QueryTest extends AbstractHibernateTest {
           }
         }
         span(2) {
-          resourceName "from Value"
           operationName "hibernate.iterate"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
+            "$DDTags.RESOURCE_NAME" "from Value"
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
@@ -204,11 +205,13 @@ class QueryTest extends AbstractHibernateTest {
           childOf span(2)
           tags {
             "$DDTags.SERVICE_NAME" "h2"
+            "$DDTags.RESOURCE_NAME" ~/^select /
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "h2"
             "$Tags.DB_INSTANCE" "db1"
             "$Tags.DB_USER" "sa"
+            "$Tags.DB_STATEMENT" ~/^select /
             "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
             defaultTags()
           }

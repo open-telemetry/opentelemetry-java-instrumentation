@@ -4,6 +4,7 @@ import akka.stream.testkit.TestSubscriber.Probe
 import akka.stream.testkit.javadsl.TestSink
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import play.inject.guice.GuiceApplicationBuilder
 import spock.lang.Shared
@@ -60,7 +61,6 @@ class LagomTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "akka-http.request"
-          resourceName "GET /echo"
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
@@ -75,8 +75,8 @@ class LagomTest extends AgentTestRunner {
         span(1) {
           childOf span(0)
           operationName 'trace.annotation'
-          resourceName 'EchoServiceImpl.tracedMethod'
           tags {
+            "$DDTags.RESOURCE_NAME" 'EchoServiceImpl.tracedMethod'
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -102,7 +102,6 @@ class LagomTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "akka-http.request"
-          resourceName "GET /error"
           spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {

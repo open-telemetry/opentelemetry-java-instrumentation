@@ -3,6 +3,7 @@ package datadog.trace.agent.test.utils
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.decorator.BaseDecorator
 import datadog.trace.agent.test.asserts.TraceAssert
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.AgentScope
 import datadog.trace.instrumentation.api.AgentSpan
 import lombok.SneakyThrows
@@ -47,11 +48,7 @@ class TraceUtils {
     }
   }
 
-  static basicSpan(TraceAssert trace, int index, String spanName, Object parentSpan = null, Throwable exception = null) {
-    basicSpan(trace, index, spanName, spanName, parentSpan, exception)
-  }
-
-  static basicSpan(TraceAssert trace, int index, String operation, String resource, Object parentSpan = null, Throwable exception = null) {
+  static basicSpan(TraceAssert trace, int index, String operation, String resource = null, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       if (parentSpan == null) {
         parent()
@@ -59,9 +56,9 @@ class TraceUtils {
         childOf((DDSpan) parentSpan)
       }
       operationName operation
-      resourceName resource
       errored exception != null
       tags {
+        "$DDTags.RESOURCE_NAME" resource
         if (exception) {
           errorTags(exception.class, exception.message)
         }

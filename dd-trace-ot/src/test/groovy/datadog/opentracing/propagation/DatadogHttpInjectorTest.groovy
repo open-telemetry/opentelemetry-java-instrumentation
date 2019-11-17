@@ -25,7 +25,6 @@ class DatadogHttpInjectorTest extends DDSpecification {
         spanId,
         0G,
         "fakeOperation",
-        "fakeResource",
         false,
         "fakeType",
         null,

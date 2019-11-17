@@ -4,6 +4,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.netty41.server.NettyHttpServerDecorator
 import datadog.trace.instrumentation.ratpack.RatpackServerDecorator
@@ -98,13 +99,14 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
   }
 
   @Override
-  void handlerSpan(TraceAssert trace, int index, Object parent, ServerEndpoint endpoint = SUCCESS) {
+  void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "ratpack.handler"
       spanType DDSpanTypes.HTTP_SERVER
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf(parent as DDSpan)
       tags {
+        "$DDTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint.path}"
         "$Tags.COMPONENT" RatpackServerDecorator.DECORATE.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" "localhost"
@@ -119,6 +121,35 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
           errorTags(Exception, EXCEPTION.body)
         }
         defaultTags()
+      }
+    }
+  }
+
+  void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
+    trace.span(index) {
+      operationName expectedOperationName()
+      spanType DDSpanTypes.HTTP_SERVER
+      errored endpoint.errored
+      if (parentID != null) {
+        traceId traceID
+        parentId parentID
+      } else {
+        parent()
+      }
+      tags {
+        "$DDTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint.path}"
+        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
+        "$Tags.PEER_PORT" Integer
+        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_METHOD" method
+        "$Tags.HTTP_STATUS" endpoint.status
+        if (endpoint.errored) {
+          "$Tags.ERROR" endpoint.errored
+        }
+        defaultTags(true)
       }
     }
   }

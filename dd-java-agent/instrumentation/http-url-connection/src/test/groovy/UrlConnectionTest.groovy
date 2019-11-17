@@ -43,7 +43,6 @@ class UrlConnectionTest extends AgentTestRunner {
         }
         span(1) {
           operationName OPERATION_NAME
-          resourceName "GET /"
           spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored true
@@ -98,7 +97,6 @@ class UrlConnectionTest extends AgentTestRunner {
         }
         span(1) {
           operationName "file.request"
-          resourceName "file:$url.path"
           spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored true

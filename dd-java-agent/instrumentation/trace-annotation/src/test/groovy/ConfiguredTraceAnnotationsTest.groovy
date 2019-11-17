@@ -1,5 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ConfigUtils
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.trace_annotation.TraceAnnotationsInstrumentation
 import dd.test.trace.annotation.SayTracedHello
@@ -39,9 +40,9 @@ class ConfiguredTraceAnnotationsTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          resourceName "AnnotationTracedCallable.call"
           operationName "trace.annotation"
           tags {
+            "$DDTags.RESOURCE_NAME" "AnnotationTracedCallable.call"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
