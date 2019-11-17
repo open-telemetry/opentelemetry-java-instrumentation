@@ -310,6 +310,10 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(0) {
           resourceName "SayTracedHello\$1.call"
           operationName "trace.annotation"
+          tags {
+            "$Tags.COMPONENT" "trace"
+            defaultTags()
+          }
         }
       }
     }
@@ -331,11 +335,19 @@ class TraceAnnotationsTest extends AgentTestRunner {
         span(0) {
           resourceName "SayTracedHello\$1.call"
           operationName "trace.annotation"
+          tags {
+            "$Tags.COMPONENT" "trace"
+            defaultTags()
+          }
         }
         trace(1, 1) {
           span(0) {
             resourceName "TraceAnnotationsTest\$1.call"
             operationName "trace.annotation"
+            tags {
+              "$Tags.COMPONENT" "trace"
+              defaultTags()
+            }
           }
         }
       }

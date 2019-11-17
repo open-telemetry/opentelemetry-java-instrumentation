@@ -61,6 +61,15 @@ class CriteriaTest extends AbstractHibernateTest {
           serviceName "h2"
           spanType "sql"
           childOf span(2)
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_INSTANCE" "db1"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
+            defaultTags()
+          }
         }
       }
     }
