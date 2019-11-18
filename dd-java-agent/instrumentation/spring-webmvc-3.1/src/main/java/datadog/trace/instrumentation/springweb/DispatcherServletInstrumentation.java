@@ -55,13 +55,13 @@ public final class DispatcherServletInstrumentation extends Instrumenter.Default
             .and(isProtected())
             .and(named("render"))
             .and(takesArgument(0, named("org.springframework.web.servlet.ModelAndView"))),
-        DispatcherAdvice.class.getName());
+        DispatcherServletInstrumentation.class.getName() + "$DispatcherAdvice");
     transformers.put(
         isMethod()
             .and(isProtected())
             .and(nameStartsWith("processHandlerException"))
             .and(takesArgument(3, Exception.class)),
-        ErrorHandlerAdvice.class.getName());
+        DispatcherServletInstrumentation.class.getName() + "$ErrorHandlerAdvice");
     return transformers;
   }
 

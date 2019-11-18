@@ -54,7 +54,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
                     named("org.hibernate.Session")
                         .or(named("org.hibernate.StatelessSession"))
                         .or(safeHasSuperType(named("org.hibernate.Session"))))),
-        SessionFactoryAdvice.class.getName());
+        SessionFactoryInstrumentation.class.getName() + "$SessionFactoryAdvice");
   }
 
   public static class SessionFactoryAdvice extends V3Advice {

@@ -40,7 +40,7 @@ public class ApacheHttpClientRedirectInstrumentation extends Instrumenter.Defaul
         isMethod()
             .and(named("getRedirect"))
             .and(takesArgument(0, named("org.apache.http.HttpRequest"))),
-        ClientRedirectAdvice.class.getName());
+        ApacheHttpClientRedirectInstrumentation.class.getName() + "$ClientRedirectAdvice");
   }
 
   public static class ClientRedirectAdvice {

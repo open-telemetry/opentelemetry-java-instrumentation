@@ -70,7 +70,7 @@ public class ChannelFutureListenerInstrumentation extends Instrumenter.Default {
         isMethod()
             .and(named("operationComplete"))
             .and(takesArgument(0, named("io.netty.channel.ChannelFuture"))),
-        OperationCompleteAdvice.class.getName());
+        ChannelFutureListenerInstrumentation.class.getName() + "$OperationCompleteAdvice");
   }
 
   public static class OperationCompleteAdvice {

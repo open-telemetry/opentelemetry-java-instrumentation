@@ -62,6 +62,6 @@ public final class Servlet2Instrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse")))
             .and(isPublic()),
-        Servlet2Advice.class.getName());
+        packageName + ".Servlet2Advice");
   }
 }

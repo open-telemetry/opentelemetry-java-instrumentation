@@ -51,7 +51,7 @@ public class CouchbaseNetworkInstrumentation extends Instrumenter.Default {
                 takesArgument(
                     0, named("com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext")))
             .and(takesArgument(2, named("java.util.List"))),
-        CouchbaseNetworkAdvice.class.getName());
+        CouchbaseNetworkInstrumentation.class.getName() + "$CouchbaseNetworkAdvice");
   }
 
   public static class CouchbaseNetworkAdvice {

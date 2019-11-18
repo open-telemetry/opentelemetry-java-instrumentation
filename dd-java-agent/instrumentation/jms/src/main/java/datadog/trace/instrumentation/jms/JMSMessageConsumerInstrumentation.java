@@ -58,10 +58,10 @@ public final class JMSMessageConsumerInstrumentation extends Instrumenter.Defaul
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("receive").and(takesArguments(0).or(takesArguments(1))).and(isPublic()),
-        ConsumerAdvice.class.getName());
+        JMSMessageConsumerInstrumentation.class.getName() + "$ConsumerAdvice");
     transformers.put(
         named("receiveNoWait").and(takesArguments(0)).and(isPublic()),
-        ConsumerAdvice.class.getName());
+        JMSMessageConsumerInstrumentation.class.getName() + "$ConsumerAdvice");
     return transformers;
   }
 

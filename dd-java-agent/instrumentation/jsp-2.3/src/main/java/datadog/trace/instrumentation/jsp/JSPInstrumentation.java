@@ -48,7 +48,7 @@ public final class JSPInstrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArgument(1, named("javax.servlet.http.HttpServletResponse")))
             .and(isPublic()),
-        HttpJspPageAdvice.class.getName());
+        JSPInstrumentation.class.getName() + "$HttpJspPageAdvice");
   }
 
   public static class HttpJspPageAdvice {

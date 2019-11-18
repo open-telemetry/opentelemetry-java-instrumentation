@@ -54,7 +54,7 @@ public class CouchbaseBucketInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isPublic()).and(returns(named("rx.Observable"))),
-        CouchbaseClientAdvice.class.getName());
+        CouchbaseBucketInstrumentation.class.getName() + "$CouchbaseClientAdvice");
   }
 
   public static class CouchbaseClientAdvice {

@@ -50,7 +50,7 @@ public class ThreadPoolExecutorInstrumentation extends Instrumenter.Default {
         isConstructor()
             .and(takesArgument(4, named("java.util.concurrent.BlockingQueue")))
             .and(takesArguments(7)),
-        ThreadPoolExecutorAdvice.class.getName());
+        ThreadPoolExecutorInstrumentation.class.getName() + "$ThreadPoolExecutorAdvice");
   }
 
   public static class ThreadPoolExecutorAdvice {

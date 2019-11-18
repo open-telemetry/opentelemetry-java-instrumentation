@@ -55,7 +55,7 @@ public final class DriverInstrumentation extends Instrumenter.Default {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, Properties.class))
             .and(returns(named("java.sql.Connection"))),
-        DriverAdvice.class.getName());
+        DriverInstrumentation.class.getName() + "$DriverAdvice");
   }
 
   public static class DriverAdvice {

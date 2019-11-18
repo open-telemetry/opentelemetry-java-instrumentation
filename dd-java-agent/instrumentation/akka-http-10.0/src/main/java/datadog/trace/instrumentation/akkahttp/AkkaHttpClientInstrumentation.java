@@ -58,12 +58,12 @@ public final class AkkaHttpClientInstrumentation extends Instrumenter.Default {
     // This is mainly for compatibility with 10.0
     transformers.put(
         named("singleRequest").and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
-        SingleRequestAdvice.class.getName());
+        AkkaHttpClientInstrumentation.class.getName() + "$SingleRequestAdvice");
     // This is for 10.1+
     transformers.put(
         named("singleRequestImpl")
             .and(takesArgument(0, named("akka.http.scaladsl.model.HttpRequest"))),
-        SingleRequestAdvice.class.getName());
+        AkkaHttpClientInstrumentation.class.getName() + "$SingleRequestAdvice");
     return transformers;
   }
 

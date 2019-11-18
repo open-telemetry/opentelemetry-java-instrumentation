@@ -78,7 +78,7 @@ public class TwilioAsyncInstrumentation extends Instrumenter.Default {
                     .or(named("fetchAsync"))
                     .or(named("updateAsync")))
             .and(returns(named("com.google.common.util.concurrent.ListenableFuture"))),
-        TwilioClientAsyncAdvice.class.getName());
+        TwilioAsyncInstrumentation.class.getName() + "$TwilioClientAsyncAdvice");
   }
 
   /** Advice for instrumenting Twilio service classes. */
