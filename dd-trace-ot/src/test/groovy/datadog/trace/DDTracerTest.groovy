@@ -1,5 +1,6 @@
 package datadog.trace
 
+
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
 import datadog.opentracing.propagation.DatadogHttpCodec
@@ -220,7 +221,7 @@ class DDTracerTest extends DDSpecification {
 
     when:
     def root = tracer.buildSpan("operation").start()
-    def child = tracer.buildSpan('my_child').asChildOf(root).start();
+    def child = tracer.buildSpan('my_child').asChildOf(root).start()
     root.finish()
 
     then:
@@ -243,7 +244,7 @@ class DDTracerTest extends DDSpecification {
 
     when:
     def root = tracer.buildSpan("operation").start()
-    def child = tracer.buildSpan('my_child').asChildOf(root).start();
+    def child = tracer.buildSpan('my_child').asChildOf(root).start()
     tracer.inject(child.context(), TEXT_MAP_INJECT, injector)
 
     then:
@@ -264,7 +265,7 @@ class DDTracerTest extends DDSpecification {
 
     when:
     def root = tracer.buildSpan("operation").start()
-    def child = tracer.buildSpan('my_child').asChildOf(root).start();
+    def child = tracer.buildSpan('my_child').asChildOf(root).start()
     tracer.inject(child.context(), TEXT_MAP_INJECT, injector)
 
     then:
@@ -274,7 +275,7 @@ class DDTracerTest extends DDSpecification {
 
     when:
     sampler.nextSamplingPriority = PrioritySampling.SAMPLER_DROP
-    def child2 = tracer.buildSpan('my_child2').asChildOf(root).start();
+    def child2 = tracer.buildSpan('my_child2').asChildOf(root).start()
     tracer.inject(child2.context(), TEXT_MAP_INJECT, injector)
 
     then:
@@ -297,7 +298,7 @@ class DDTracerTest extends DDSpecification {
 
     when:
     def root = tracer.buildSpan("operation").start()
-    def child = tracer.buildSpan('my_child').asChildOf(root).start();
+    def child = tracer.buildSpan('my_child').asChildOf(root).start()
     child.setSamplingPriority(PrioritySampling.USER_DROP)
     tracer.inject(child.context(), TEXT_MAP_INJECT, injector)
 

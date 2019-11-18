@@ -67,7 +67,8 @@ public class RuleBasedSampler implements Sampler, PrioritySampler {
     }
 
     if (defaultRate != null) {
-      final SamplingRule samplingRule = new AlwaysMatchesSamplingRule(new KnuthSampler(defaultRate));
+      final SamplingRule samplingRule =
+          new AlwaysMatchesSamplingRule(new KnuthSampler(defaultRate));
       samplingRules.add(samplingRule);
     }
 

@@ -13,6 +13,9 @@ import static datadog.trace.api.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
 import static datadog.trace.api.Config.DEFAULT_JMX_FETCH_STATSD_PORT
 import static datadog.trace.api.Config.GLOBAL_TAGS
 import static datadog.trace.api.Config.HEADER_TAGS
+import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
+import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_HOST
+import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_PORT
 import static datadog.trace.api.Config.HTTP_CLIENT_ERROR_STATUSES
 import static datadog.trace.api.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
 import static datadog.trace.api.Config.HTTP_SERVER_ERROR_STATUSES
@@ -39,10 +42,11 @@ import static datadog.trace.api.Config.TRACE_AGENT_PORT
 import static datadog.trace.api.Config.TRACE_ENABLED
 import static datadog.trace.api.Config.TRACE_REPORT_HOSTNAME
 import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
+import static datadog.trace.api.Config.TRACE_SAMPLING_DEFAULT_RATE
+import static datadog.trace.api.Config.TRACE_SAMPLING_OPERATION_RULES
+import static datadog.trace.api.Config.TRACE_SAMPLING_RATE_LIMIT
+import static datadog.trace.api.Config.TRACE_SAMPLING_SERVICE_RULES
 import static datadog.trace.api.Config.WRITER_TYPE
-import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
-import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_HOST
-import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_PORT
 
 class ConfigTest extends DDSpecification {
   @Rule
@@ -145,6 +149,10 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(HEALTH_METRICS_ENABLED, "true")
     prop.setProperty(HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
     prop.setProperty(HEALTH_METRICS_STATSD_PORT, "654")
+    prop.setProperty(TRACE_SAMPLING_SERVICE_RULES, "a:1")
+    prop.setProperty(TRACE_SAMPLING_OPERATION_RULES, "b:1")
+    prop.setProperty(TRACE_SAMPLING_DEFAULT_RATE, ".5")
+    prop.setProperty(TRACE_SAMPLING_RATE_LIMIT, "200")
 
     when:
     Config config = Config.get(prop)
@@ -181,6 +189,10 @@ class ConfigTest extends DDSpecification {
     config.healthMetricsEnabled == true
     config.healthMetricsStatsdHost == "metrics statsd host"
     config.healthMetricsStatsdPort == 654
+    config.traceSamplingServiceRules == [a: "1"]
+    config.traceSamplingOperationRules == [b: "1"]
+    config.traceSamplingDefaultRate == 0.5
+    config.traceSamplingRateLimit == 200
   }
 
   def "specify overrides via system properties"() {
@@ -218,6 +230,10 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + HEALTH_METRICS_ENABLED, "true")
     System.setProperty(PREFIX + HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
     System.setProperty(PREFIX + HEALTH_METRICS_STATSD_PORT, "654")
+    System.setProperty(PREFIX + TRACE_SAMPLING_SERVICE_RULES, "a:1")
+    System.setProperty(PREFIX + TRACE_SAMPLING_OPERATION_RULES, "b:1")
+    System.setProperty(PREFIX + TRACE_SAMPLING_DEFAULT_RATE, ".5")
+    System.setProperty(PREFIX + TRACE_SAMPLING_RATE_LIMIT, "200")
 
     when:
     Config config = new Config()
@@ -254,6 +270,10 @@ class ConfigTest extends DDSpecification {
     config.healthMetricsEnabled == true
     config.healthMetricsStatsdHost == "metrics statsd host"
     config.healthMetricsStatsdPort == 654
+    config.traceSamplingServiceRules == [a: "1"]
+    config.traceSamplingOperationRules == [b: "1"]
+    config.traceSamplingDefaultRate == 0.5
+    config.traceSamplingRateLimit == 200
   }
 
   def "specify overrides via env vars"() {
@@ -595,6 +615,35 @@ class ConfigTest extends DDSpecification {
 
     expect:
     Config.getFloatSettingFromEnvironment(name, defaultValue) == (float) expected
+
+    where:
+    name              | expected
+    "env.zero.test"   | 0.0
+    "prop.zero.test"  | 0
+    "env.float.test"  | 1.0
+    "prop.float.test" | 0.3
+    "float.test"      | 0.4
+    "negative.test"   | -1.0
+    "garbage.test"    | 10.0
+    "default.test"    | 10.0
+
+    defaultValue = 10.0
+  }
+
+  def "test getDoubleSettingFromEnvironment(#name)"() {
+    setup:
+    environmentVariables.set("DD_ENV_ZERO_TEST", "0.0")
+    environmentVariables.set("DD_ENV_FLOAT_TEST", "1.0")
+    environmentVariables.set("DD_FLOAT_TEST", "0.2")
+
+    System.setProperty("dd.prop.zero.test", "0")
+    System.setProperty("dd.prop.float.test", "0.3")
+    System.setProperty("dd.float.test", "0.4")
+    System.setProperty("dd.garbage.test", "garbage")
+    System.setProperty("dd.negative.test", "-1")
+
+    expect:
+    Config.getDoubleSettingFromEnvironment(name, defaultValue) == (double) expected
 
     where:
     name              | expected

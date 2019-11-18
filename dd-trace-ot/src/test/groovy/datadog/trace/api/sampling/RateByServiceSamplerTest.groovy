@@ -2,8 +2,11 @@ package datadog.trace.api.sampling
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import datadog.opentracing.DDSpan
+import datadog.opentracing.DDTracer
 import datadog.opentracing.SpanFactory
+import datadog.trace.api.DDTags
 import datadog.trace.common.sampling.RateByServiceSampler
+import datadog.trace.common.writer.LoggingWriter
 import datadog.trace.util.test.DDSpecification
 
 import static datadog.trace.common.sampling.RateByServiceSampler.DEFAULT_KEY
@@ -67,5 +70,78 @@ class RateByServiceSamplerTest extends DDSpecification {
     span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
     // RateByServiceSamler must not set the sample rate
     span.getMetrics().get("_sample_rate") == null
+  }
+
+  def "sampling priority set when service later"() {
+    def sampler = new RateByServiceSampler()
+    def tracer = new DDTracer("serviceName", new LoggingWriter(), sampler)
+
+    sampler.onResponse("test", new ObjectMapper()
+      .readTree('{"rate_by_service":{"service:,env:":1.0,"service:spock,env:":0.0}}'))
+
+    when:
+    def span = tracer.buildSpan("test").start()
+
+    then:
+    span.getSamplingPriority() == null
+
+    when:
+    span.setTag(DDTags.SERVICE_NAME, "spock")
+
+    then:
+    span.finish()
+    span.getSamplingPriority() == PrioritySampling.SAMPLER_DROP
+
+    when:
+    span = tracer.buildSpan("test").withTag(DDTags.SERVICE_NAME, "spock").start()
+    span.finish()
+
+    then:
+    span.getSamplingPriority() == PrioritySampling.SAMPLER_DROP
+  }
+
+  def "setting forced tracing via tag"() {
+    when:
+    def sampler = new RateByServiceSampler()
+    def tracer = new DDTracer("serviceName", new LoggingWriter(), sampler)
+    def span = tracer.buildSpan("root").start()
+    if (tagName) {
+      span.setTag(tagName, tagValue)
+    }
+    span.finish()
+
+    then:
+    span.getSamplingPriority() == expectedPriority
+
+    where:
+    tagName       | tagValue | expectedPriority
+    'manual.drop' | true     | PrioritySampling.USER_DROP
+    'manual.keep' | true     | PrioritySampling.USER_KEEP
+  }
+
+  def "not setting forced tracing via tag or setting it wrong value not causing exception"() {
+    setup:
+    def sampler = new RateByServiceSampler()
+    def tracer = new DDTracer("serviceName", new LoggingWriter(), sampler)
+    def span = tracer.buildSpan("root").start()
+    if (tagName) {
+      span.setTag(tagName, tagValue)
+    }
+
+    expect:
+    span.getSamplingPriority() == null
+
+    cleanup:
+    span.finish()
+
+    where:
+    tagName       | tagValue
+    // When no tag is set default to
+    null          | null
+    // Setting to not known value
+    'manual.drop' | false
+    'manual.keep' | false
+    'manual.drop' | 1
+    'manual.keep' | 1
   }
 }
