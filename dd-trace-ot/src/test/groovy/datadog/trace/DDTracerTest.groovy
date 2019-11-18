@@ -29,16 +29,6 @@ class DDTracerTest extends DDSpecification {
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
-  def setupSpec() {
-    // assert that a trace agent isn't running locally as that messes up the test.
-    try {
-      (new Socket("localhost", 8126)).close()
-      throw new IllegalStateException("An agent is already running locally on port 8126. Please stop it if you want to run tests locally.")
-    } catch (final ConnectException ioe) {
-      // trace agent is not running locally.
-    }
-  }
-
   def "verify defaults on tracer"() {
     when:
     def tracer = new DDTracer()
@@ -46,7 +36,11 @@ class DDTracerTest extends DDSpecification {
     then:
     tracer.serviceName == "unnamed-java-app"
     tracer.sampler instanceof RateByServiceSampler
-    tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces } }"
+    tracer.writer instanceof DDAgentWriter
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.host() == "localhost"
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.port() == 8126
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.encodedPath() == "/v0.3/traces" ||
+      ((DDAgentWriter) tracer.writer).api.tracesUrl.encodedPath() == "/v0.4/traces"
     tracer.writer.monitor instanceof DDAgentWriter.NoopMonitor
 
     tracer.spanContextDecorators.size() == 15
@@ -63,8 +57,8 @@ class DDTracerTest extends DDSpecification {
     def tracer = new DDTracer(new Config())
 
     then:
-    tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces }, monitor=StatsD { host=localhost:8125 } }"
     tracer.writer.monitor instanceof DDAgentWriter.StatsDMonitor
+    tracer.writer.monitor.hostInfo == "localhost:8125"
   }
 
 
@@ -111,22 +105,44 @@ class DDTracerTest extends DDSpecification {
     "a:b,c:d,e:"    | [a: "b", c: "d"]
   }
 
-  def "verify single override on #source for #key"() {
+  def "verify overriding host"() {
     when:
     System.setProperty(PREFIX + key, value)
     def tracer = new DDTracer(new Config())
 
     then:
-    tracer."$source".toString() == expected
+    tracer.writer instanceof DDAgentWriter
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.host() == value
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.port() == 8126
 
     where:
+    key          | value
+    "agent.host" | "somethingelse"
+  }
 
-    source   | key                | value           | expected
-    "writer" | "default"          | "default"       | "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces } }"
-    "writer" | "writer.type"      | "LoggingWriter" | "LoggingWriter { }"
-    "writer" | "agent.host"       | "somethingelse" | "DDAgentWriter { api=DDApi { tracesUrl=http://somethingelse:8126/v0.3/traces } }"
-    "writer" | "agent.port"       | "777"           | "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:777/v0.3/traces } }"
-    "writer" | "trace.agent.port" | "9999"          | "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:9999/v0.3/traces } }"
+  def "verify overriding port"() {
+    when:
+    System.setProperty(PREFIX + key, value)
+    def tracer = new DDTracer(new Config())
+
+    then:
+    tracer.writer instanceof DDAgentWriter
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.host() == "localhost"
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.port() == Integer.valueOf(value)
+
+    where:
+    key                | value
+    "agent.port"       | "777"
+    "trace.agent.port" | "9999"
+  }
+
+  def "Writer is instance of LoggingWriter when property set"() {
+    when:
+    System.setProperty(PREFIX + "writer.type", "LoggingWriter")
+    def tracer = new DDTracer(new Config())
+
+    then:
+    tracer.writer instanceof LoggingWriter
   }
 
   def "verify sampler/writer constructor"() {
