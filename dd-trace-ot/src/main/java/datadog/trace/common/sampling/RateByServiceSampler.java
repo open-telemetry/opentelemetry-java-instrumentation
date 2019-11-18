@@ -11,7 +11,6 @@ import datadog.trace.common.writer.DDApi.ResponseListener;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -27,7 +26,7 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
   private static final double DEFAULT_RATE = 1.0;
 
   private volatile Map<String, RateSampler> serviceRates =
-      unmodifiableMap(singletonMap(DEFAULT_KEY, new RateSampler(DEFAULT_RATE)));
+      unmodifiableMap(singletonMap(DEFAULT_KEY, createRateSampler(DEFAULT_RATE)));
 
   @Override
   public boolean sample(final DDSpan span) {
@@ -82,7 +81,7 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
         final JsonNode value = newServiceRates.get(key);
         try {
           if (value instanceof NumericNode) {
-            updatedServiceRates.put(key, new RateSampler(value.doubleValue()));
+            updatedServiceRates.put(key, createRateSampler(value.doubleValue()));
           } else {
             log.debug("Unable to parse new service rate {} -> {}", key, value);
           }
@@ -91,55 +90,23 @@ public class RateByServiceSampler implements Sampler, ResponseListener {
         }
       }
       if (!updatedServiceRates.containsKey(DEFAULT_KEY)) {
-        updatedServiceRates.put(DEFAULT_KEY, new RateSampler(DEFAULT_RATE));
+        updatedServiceRates.put(DEFAULT_KEY, createRateSampler(DEFAULT_RATE));
       }
       serviceRates = unmodifiableMap(updatedServiceRates);
     }
   }
 
-  /**
-   * This sampler sample the traces at a predefined rate.
-   *
-   * <p>Keep (100 * `sample_rate`)% of the traces. It samples randomly, its main purpose is to
-   * reduce the integration footprint.
-   */
-  private static class RateSampler extends AbstractSampler {
-
-    /** The sample rate used */
-    private final double sampleRate;
-
-    /**
-     * Build an instance of the sampler. The Sample rate is fixed for each instance.
-     *
-     * @param sampleRate a number [0,1] representing the rate ratio.
-     */
-    private RateSampler(double sampleRate) {
-
-      if (sampleRate < 0) {
-        sampleRate = 1;
-        log.error("SampleRate is negative or null, disabling the sampler");
-      } else if (sampleRate > 1) {
-        sampleRate = 1;
-      }
-
-      this.sampleRate = sampleRate;
-      log.debug("Initializing the RateSampler, sampleRate: {} %", this.sampleRate * 100);
+  private RateSampler createRateSampler(final double sampleRate) {
+    final double sanitizedRate;
+    if (sampleRate < 0) {
+      log.error("SampleRate is negative or null, disabling the sampler");
+      sanitizedRate = 1;
+    } else if (sampleRate > 1) {
+      sanitizedRate = 1;
+    } else {
+      sanitizedRate = sampleRate;
     }
 
-    @Override
-    public boolean doSample(final DDSpan span) {
-      final boolean sample = ThreadLocalRandom.current().nextFloat() <= sampleRate;
-      log.debug("{} - Span is sampled: {}", span, sample);
-      return sample;
-    }
-
-    public double getSampleRate() {
-      return sampleRate;
-    }
-
-    @Override
-    public String toString() {
-      return "RateSampler { sampleRate=" + sampleRate + " }";
-    }
+    return new KnuthSampler(sanitizedRate);
   }
 }
