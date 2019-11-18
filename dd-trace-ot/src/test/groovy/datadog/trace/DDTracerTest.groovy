@@ -1,14 +1,20 @@
 package datadog.trace
 
+import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
+import datadog.opentracing.propagation.DatadogHttpCodec
 import datadog.opentracing.propagation.HttpCodec
 import datadog.trace.api.Config
+import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.sampling.AllSampler
+import datadog.trace.common.sampling.PrioritySampler
 import datadog.trace.common.sampling.RateByServiceSampler
+import datadog.trace.common.sampling.Sampler
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.common.writer.LoggingWriter
 import datadog.trace.util.test.DDSpecification
+import io.opentracing.propagation.TextMapInject
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
@@ -21,6 +27,7 @@ import static datadog.trace.api.Config.PRIORITY_SAMPLING
 import static datadog.trace.api.Config.SERVICE_MAPPING
 import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.WRITER_TYPE
+import static io.opentracing.propagation.Format.Builtin.TEXT_MAP_INJECT
 
 class DDTracerTest extends DDSpecification {
 
@@ -189,5 +196,132 @@ class DDTracerTest extends DDSpecification {
     cleanup:
     child.finish()
     root.finish()
+  }
+
+  def "priority sampling when span finishes"() {
+    given:
+    Properties properties = new Properties()
+    properties.setProperty("writer.type", "LoggingWriter")
+    def tracer = new DDTracer(new Config(properties, Config.get()))
+
+    when:
+    def span = tracer.buildSpan("operation").start()
+    span.finish()
+
+    then:
+    span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+  }
+
+  def "priority sampling set when child span complete"() {
+    given:
+    Properties properties = new Properties()
+    properties.setProperty("writer.type", "LoggingWriter")
+    def tracer = new DDTracer(new Config(properties, Config.get()))
+
+    when:
+    def root = tracer.buildSpan("operation").start()
+    def child = tracer.buildSpan('my_child').asChildOf(root).start();
+    root.finish()
+
+    then:
+    root.getSamplingPriority() == null
+
+    when:
+    child.finish()
+
+    then:
+    root.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+    child.getSamplingPriority() == root.getSamplingPriority()
+  }
+
+  def "span priority set when injecting"() {
+    given:
+    Properties properties = new Properties()
+    properties.setProperty("writer.type", "LoggingWriter")
+    def tracer = new DDTracer(new Config(properties, Config.get()))
+    def injector = Mock(TextMapInject)
+
+    when:
+    def root = tracer.buildSpan("operation").start()
+    def child = tracer.buildSpan('my_child').asChildOf(root).start();
+    tracer.inject(child.context(), TEXT_MAP_INJECT, injector)
+
+    then:
+    root.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+    child.getSamplingPriority() == root.getSamplingPriority()
+    1 * injector.put(DatadogHttpCodec.SAMPLING_PRIORITY_KEY, String.valueOf(PrioritySampling.SAMPLER_KEEP))
+
+    cleanup:
+    child.finish()
+    root.finish()
+  }
+
+  def "span priority only set after first injection"() {
+    given:
+    def sampler = new ControllableSampler()
+    def tracer = new DDTracer("serviceName", new LoggingWriter(), sampler)
+    def injector = Mock(TextMapInject)
+
+    when:
+    def root = tracer.buildSpan("operation").start()
+    def child = tracer.buildSpan('my_child').asChildOf(root).start();
+    tracer.inject(child.context(), TEXT_MAP_INJECT, injector)
+
+    then:
+    root.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+    child.getSamplingPriority() == root.getSamplingPriority()
+    1 * injector.put(DatadogHttpCodec.SAMPLING_PRIORITY_KEY, String.valueOf(PrioritySampling.SAMPLER_KEEP))
+
+    when:
+    sampler.nextSamplingPriority = PrioritySampling.SAMPLER_DROP
+    def child2 = tracer.buildSpan('my_child2').asChildOf(root).start();
+    tracer.inject(child2.context(), TEXT_MAP_INJECT, injector)
+
+    then:
+    root.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+    child.getSamplingPriority() == root.getSamplingPriority()
+    child2.getSamplingPriority() == root.getSamplingPriority()
+    1 * injector.put(DatadogHttpCodec.SAMPLING_PRIORITY_KEY, String.valueOf(PrioritySampling.SAMPLER_KEEP))
+
+    cleanup:
+    child.finish()
+    child2.finish()
+    root.finish()
+  }
+
+  def "injection doesn't override set priority"() {
+    given:
+    def sampler = new ControllableSampler()
+    def tracer = new DDTracer("serviceName", new LoggingWriter(), sampler)
+    def injector = Mock(TextMapInject)
+
+    when:
+    def root = tracer.buildSpan("operation").start()
+    def child = tracer.buildSpan('my_child').asChildOf(root).start();
+    child.setSamplingPriority(PrioritySampling.USER_DROP)
+    tracer.inject(child.context(), TEXT_MAP_INJECT, injector)
+
+    then:
+    root.getSamplingPriority() == PrioritySampling.USER_DROP
+    child.getSamplingPriority() == root.getSamplingPriority()
+    1 * injector.put(DatadogHttpCodec.SAMPLING_PRIORITY_KEY, String.valueOf(PrioritySampling.USER_DROP))
+
+    cleanup:
+    child.finish()
+    root.finish()
+  }
+}
+
+class ControllableSampler implements Sampler, PrioritySampler {
+  protected int nextSamplingPriority = PrioritySampling.SAMPLER_KEEP
+
+  @Override
+  void setSamplingPriority(DDSpan span) {
+    span.setSamplingPriority(nextSamplingPriority)
+  }
+
+  @Override
+  boolean sample(DDSpan span) {
+    return true
   }
 }
