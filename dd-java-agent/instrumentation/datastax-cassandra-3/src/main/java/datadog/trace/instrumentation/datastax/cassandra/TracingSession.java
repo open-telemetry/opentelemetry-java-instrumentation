@@ -234,7 +234,7 @@ public class TracingSession implements Session {
   }
 
   private AgentScope startSpanWithScope(final String query) {
-    final AgentSpan span = startSpan("cassandra.execute");
+    final AgentSpan span = startSpan("cassandra.query");
     DECORATE.afterStart(span);
     DECORATE.onConnection(span, session);
     DECORATE.onStatement(span, query);

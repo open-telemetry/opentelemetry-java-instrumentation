@@ -60,7 +60,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope onEnter(@Advice.Argument(1) final Command command) {
-      final AgentSpan span = startSpan("redis.command");
+      final AgentSpan span = startSpan("redis.query");
       DECORATE.afterStart(span);
       DECORATE.onStatement(span, command.name());
       return activateSpan(span, true);

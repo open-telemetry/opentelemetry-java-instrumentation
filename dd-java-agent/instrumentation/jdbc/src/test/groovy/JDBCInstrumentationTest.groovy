@@ -170,7 +170,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "${driver}.query"
+          operationName "database.query"
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
@@ -231,7 +231,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "${driver}.query"
+          operationName "database.query"
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
@@ -284,7 +284,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "${driver}.query"
+          operationName "database.query"
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
@@ -337,7 +337,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "${driver}.query"
+          operationName "database.query"
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
@@ -390,7 +390,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "${driver}.query"
+          operationName "database.query"
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
@@ -446,7 +446,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "${driver}.query"
+          operationName "database.query"
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
@@ -515,7 +515,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       trace(0, 2) {
         basicSpan(it, 0, "parent")
         span(1) {
-          operationName "${driver}.query"
+          operationName "database.query"
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
@@ -592,7 +592,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     assertTraces(5) {
       trace(0, 1) {
         span(0) {
-          operationName "${dbType}.query"
+          operationName "database.query"
           spanType DDSpanTypes.SQL
           errored false
           tags {
@@ -612,7 +612,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
       for (int i = 1; i < numQueries; ++i) {
         trace(i, 1) {
           span(0) {
-            operationName "${dbType}.query"
+            operationName "database.query"
             spanType DDSpanTypes.SQL
             errored false
             tags {

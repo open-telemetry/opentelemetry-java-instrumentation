@@ -8,10 +8,6 @@ public class DDDecoratorsFactory {
   public static List<AbstractDecorator> createBuiltinDecorators() {
 
     return Arrays.asList(
-        new DBTypeDecorator(),
-        new ErrorFlag(),
-        new OperationDecorator(),
-        new SpanTypeDecorator(),
-        new Status5XXDecorator());
+        new DBTypeDecorator(), new ErrorFlag(), new SpanTypeDecorator(), new Status5XXDecorator());
   }
 }
