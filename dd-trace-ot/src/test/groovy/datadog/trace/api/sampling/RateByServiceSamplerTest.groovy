@@ -38,7 +38,7 @@ class RateByServiceSamplerTest extends DDSpecification {
     String response = '{"rate_by_service": {"service:spock,env:test":0.0}}'
     serviceSampler.onResponse("traces", serializer.readTree(response))
     DDSpan span1 = SpanFactory.newSpanOf("foo", "bar")
-    serviceSampler.initializeSamplingPriority(span1)
+    serviceSampler.setSamplingPriority(span1)
     then:
     span1.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
     serviceSampler.sample(span1)
@@ -47,7 +47,7 @@ class RateByServiceSamplerTest extends DDSpecification {
     response = '{"rate_by_service": {"service:spock,env:test":1.0}}'
     serviceSampler.onResponse("traces", serializer.readTree(response))
     DDSpan span2 = SpanFactory.newSpanOf("spock", "test")
-    serviceSampler.initializeSamplingPriority(span2)
+    serviceSampler.setSamplingPriority(span2)
     then:
     span2.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
     serviceSampler.sample(span2)
@@ -61,7 +61,7 @@ class RateByServiceSamplerTest extends DDSpecification {
     serviceSampler.onResponse("traces", serializer.readTree(response))
 
     DDSpan span = SpanFactory.newSpanOf("foo", "bar")
-    serviceSampler.initializeSamplingPriority(span)
+    serviceSampler.setSamplingPriority(span)
     expect:
     // sets correctly on root span
     span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
