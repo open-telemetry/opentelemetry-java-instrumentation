@@ -860,4 +860,34 @@ class ConfigTest extends DDSpecification {
     cleanup:
     System.clearProperty(PREFIX + CONFIGURATION_FILE)
   }
+
+  def "get analytics sample rate"() {
+    setup:
+    environmentVariables.set("DD_FOO_ANALYTICS_SAMPLE_RATE", "0.5")
+    environmentVariables.set("DD_BAR_ANALYTICS_SAMPLE_RATE", "0.9")
+
+    System.setProperty("dd.baz.analytics.sample-rate", "0.7")
+    System.setProperty("dd.buzz.analytics.sample-rate", "0.3")
+
+    when:
+    String[] array = services.toArray(new String[0])
+    def value = Config.get().getInstrumentationAnalyticsSampleRate(array)
+
+    then:
+    value == expected
+
+    where:
+    services                | expected
+    ["foo"]                 | 0.5f
+    ["baz"]                 | 0.7f
+    ["doesnotexist"]        | 1.0f
+    ["doesnotexist", "foo"] | 0.5f
+    ["doesnotexist", "baz"] | 0.7f
+    ["foo", "bar"]          | 0.5f
+    ["bar", "foo"]          | 0.9f
+    ["baz", "buzz"]         | 0.7f
+    ["buzz", "baz"]         | 0.3f
+    ["foo", "baz"]          | 0.5f
+    ["baz", "foo"]          | 0.7f
+  }
 }

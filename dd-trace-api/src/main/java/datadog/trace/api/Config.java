@@ -842,12 +842,6 @@ public class Config {
     return value == null || value.trim().isEmpty() ? defaultValue : Integer.valueOf(value);
   }
 
-  private static Float getPropertyFloatValue(
-      final Properties properties, final String name, final Float defaultValue) {
-    final String value = properties.getProperty(name);
-    return value == null || value.trim().isEmpty() ? defaultValue : Float.valueOf(value);
-  }
-
   private static Double getPropertyDoubleValue(
       final Properties properties, final String name, final Double defaultValue) {
     final String value = properties.getProperty(name);
