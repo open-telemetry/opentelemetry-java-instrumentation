@@ -3,21 +3,14 @@ package datadog.opentracing.propagation
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
-import datadog.trace.api.Config
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.propagation.TextMapInjectAdapter
 
-import static datadog.trace.api.Config.PropagationStyle.DATADOG
-
 class HttpInjectorTest extends DDSpecification {
 
   def "inject http headers"() {
-    setup:
-    Config config = Mock(Config) {
-      getPropagationStylesToInject() >> [DATADOG]
-    }
-    HttpCodec.Injector injector = HttpCodec.createInjector(config)
+    HttpCodec.Injector injector = HttpCodec.createInjector()
 
     def traceId = 1G
     def spanId = 2G

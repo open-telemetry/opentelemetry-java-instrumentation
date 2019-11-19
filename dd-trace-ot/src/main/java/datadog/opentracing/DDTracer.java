@@ -174,8 +174,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     }
 
     // TODO: we have too many constructors, we should move to some sort of builder approach
-    injector = HttpCodec.createInjector(Config.get());
-    extractor = HttpCodec.createExtractor(Config.get());
+    injector = HttpCodec.createInjector();
+    extractor = HttpCodec.createExtractor();
 
     log.info("New instance: {}", this);
 

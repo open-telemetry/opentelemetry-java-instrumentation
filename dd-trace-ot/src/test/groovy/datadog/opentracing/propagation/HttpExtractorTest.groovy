@@ -1,13 +1,12 @@
 package datadog.opentracing.propagation
 
-import datadog.trace.api.Config
+
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
 import io.opentracing.propagation.TextMapExtractAdapter
 import spock.lang.Shared
 
 import static datadog.opentracing.DDTracer.TRACE_ID_MAX
-import static datadog.trace.api.Config.PropagationStyle.DATADOG
 
 class HttpExtractorTest extends DDSpecification {
 
@@ -16,10 +15,7 @@ class HttpExtractorTest extends DDSpecification {
 
   def "extract http headers"() {
     setup:
-    Config config = Mock(Config) {
-      getPropagationStylesToExtract() >> styles
-    }
-    HttpCodec.Extractor extractor = HttpCodec.createExtractor(config)
+    HttpCodec.Extractor extractor = HttpCodec.createExtractor()
 
     final Map<String, String> actual = [:]
     if (datadogTraceId != null) {
@@ -41,13 +37,11 @@ class HttpExtractorTest extends DDSpecification {
     }
 
     where:
-    styles    | datadogTraceId    | datadogSpanId     | expectedTraceId | expectedSpanId
-    [DATADOG] | "1"               | "2"               | 1G              | 2G
-    []        | "1"               | "2"               | null            | null
-    [DATADOG] | "abc"             | "2"               | null            | null
-    [DATADOG] | outOfRangeTraceId | "2"               | null            | null
-    [DATADOG] | "1"               | outOfRangeTraceId | null            | null
-    [DATADOG] | "1"               | "2"               | 1G              | 2G
+    datadogTraceId    | datadogSpanId     | expectedTraceId | expectedSpanId
+    "1"               | "2"               | 1G              | 2G
+    "abc"             | "2"               | null            | null
+    outOfRangeTraceId | "2"               | null            | null
+    "1"               | outOfRangeTraceId | null            | null
   }
 
 }

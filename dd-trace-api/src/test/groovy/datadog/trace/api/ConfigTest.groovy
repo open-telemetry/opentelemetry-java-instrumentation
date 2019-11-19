@@ -20,8 +20,6 @@ import static datadog.trace.api.Config.HTTP_SERVER_ERROR_STATUSES
 import static datadog.trace.api.Config.JMX_TAGS
 import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
 import static datadog.trace.api.Config.PREFIX
-import static datadog.trace.api.Config.PROPAGATION_STYLE_EXTRACT
-import static datadog.trace.api.Config.PROPAGATION_STYLE_INJECT
 import static datadog.trace.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
 import static datadog.trace.api.Config.RUNTIME_ID_TAG
 import static datadog.trace.api.Config.SERVICE_NAME
@@ -43,8 +41,6 @@ class ConfigTest extends DDSpecification {
   private static final DD_TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
   private static final DD_WRITER_TYPE_ENV = "DD_WRITER_TYPE"
   private static final DD_SPAN_TAGS_ENV = "DD_SPAN_TAGS"
-  private static final DD_PROPAGATION_STYLE_EXTRACT = "DD_PROPAGATION_STYLE_EXTRACT"
-  private static final DD_PROPAGATION_STYLE_INJECT = "DD_PROPAGATION_STYLE_INJECT"
   private static final DD_TRACE_AGENT_PORT_ENV = "DD_TRACE_AGENT_PORT"
   private static final DD_AGENT_PORT_LEGACY_ENV = "DD_AGENT_PORT"
   private static final DD_TRACE_REPORT_HOSTNAME = "DD_TRACE_REPORT_HOSTNAME"
@@ -70,8 +66,6 @@ class ConfigTest extends DDSpecification {
     config.partialFlushMinSpans == 1000
     config.reportHostName == false
     config.runtimeContextFieldInjection == true
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
     config.healthMetricsEnabled == false
     config.healthMetricsStatsdHost == null
     config.healthMetricsStatsdPort == null
@@ -106,8 +100,6 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
     prop.setProperty(TRACE_REPORT_HOSTNAME, "true")
     prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
-    prop.setProperty(PROPAGATION_STYLE_EXTRACT, "Datadog")
-    prop.setProperty(PROPAGATION_STYLE_INJECT, "Datadog")
     prop.setProperty(HEALTH_METRICS_ENABLED, "true")
     prop.setProperty(HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
     prop.setProperty(HEALTH_METRICS_STATSD_PORT, "654")
@@ -132,8 +124,6 @@ class ConfigTest extends DDSpecification {
     config.partialFlushMinSpans == 15
     config.reportHostName == true
     config.runtimeContextFieldInjection == false
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
     config.healthMetricsEnabled == true
     config.healthMetricsStatsdHost == "metrics statsd host"
     config.healthMetricsStatsdPort == 654
@@ -159,8 +149,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "25")
     System.setProperty(PREFIX + TRACE_REPORT_HOSTNAME, "true")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
-    System.setProperty(PREFIX + PROPAGATION_STYLE_EXTRACT, "Datadog")
-    System.setProperty(PREFIX + PROPAGATION_STYLE_INJECT, "Datadog")
     System.setProperty(PREFIX + HEALTH_METRICS_ENABLED, "true")
     System.setProperty(PREFIX + HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
     System.setProperty(PREFIX + HEALTH_METRICS_STATSD_PORT, "654")
@@ -185,8 +173,6 @@ class ConfigTest extends DDSpecification {
     config.partialFlushMinSpans == 25
     config.reportHostName == true
     config.runtimeContextFieldInjection == false
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
     config.healthMetricsEnabled == true
     config.healthMetricsStatsdHost == "metrics statsd host"
     config.healthMetricsStatsdPort == 654
@@ -197,8 +183,6 @@ class ConfigTest extends DDSpecification {
     environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
     environmentVariables.set(DD_TRACE_ENABLED_ENV, "false")
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
-    environmentVariables.set(DD_PROPAGATION_STYLE_EXTRACT, "Datadog")
-    environmentVariables.set(DD_PROPAGATION_STYLE_INJECT, "Datadog")
     environmentVariables.set(DD_TRACE_REPORT_HOSTNAME, "true")
 
     when:
@@ -208,8 +192,6 @@ class ConfigTest extends DDSpecification {
     config.serviceName == "still something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
     config.reportHostName == true
   }
 
@@ -248,8 +230,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "1:1")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "invalid")
     System.setProperty(PREFIX + DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "invalid")
-    System.setProperty(PREFIX + PROPAGATION_STYLE_EXTRACT, "some garbage")
-    System.setProperty(PREFIX + PROPAGATION_STYLE_INJECT, " ")
 
     when:
     def config = new Config()
@@ -266,8 +246,6 @@ class ConfigTest extends DDSpecification {
     config.httpClientErrorStatuses == (400..499).toSet()
     config.httpClientSplitByDomain == false
     config.dbClientSplitByInstance == false
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
   }
 
   def "sys props and env vars overrides for trace_agent_port and agent_port_legacy as expected"() {
@@ -330,8 +308,6 @@ class ConfigTest extends DDSpecification {
     properties.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     properties.setProperty(DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
     properties.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
-    properties.setProperty(PROPAGATION_STYLE_EXTRACT, "Datadog")
-    properties.setProperty(PROPAGATION_STYLE_INJECT, "Datadog")
 
     when:
     def config = Config.get(properties)
@@ -351,8 +327,6 @@ class ConfigTest extends DDSpecification {
     config.httpClientSplitByDomain == true
     config.dbClientSplitByInstance == true
     config.partialFlushMinSpans == 15
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
   }
 
   def "override null properties"() {

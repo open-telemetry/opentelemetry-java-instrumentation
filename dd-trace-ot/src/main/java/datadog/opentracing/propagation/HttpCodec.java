@@ -2,15 +2,9 @@ package datadog.opentracing.propagation;
 
 import datadog.opentracing.DDSpanContext;
 import datadog.opentracing.DDTracer;
-import datadog.trace.api.Config;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -25,64 +19,12 @@ public class HttpCodec {
     ExtractedContext extract(final TextMapExtract carrier);
   }
 
-  public static Injector createInjector(final Config config) {
-    final List<Injector> injectors = new ArrayList<>();
-    for (final Config.PropagationStyle style : config.getPropagationStylesToInject()) {
-      if (style == Config.PropagationStyle.DATADOG) {
-        injectors.add(new DatadogHttpCodec.Injector());
-        continue;
-      }
-      log.debug("No implementation found to inject propagation style: {}", style);
-    }
-    return new CompoundInjector(injectors);
+  public static Injector createInjector() {
+    return new DatadogHttpCodec.Injector();
   }
 
-  public static Extractor createExtractor(final Config config) {
-    final List<Extractor> extractors = new ArrayList<>();
-    for (final Config.PropagationStyle style : config.getPropagationStylesToExtract()) {
-      if (style == Config.PropagationStyle.DATADOG) {
-        extractors.add(new DatadogHttpCodec.Extractor());
-        continue;
-      }
-      log.debug("No implementation found to extract propagation style: {}", style);
-    }
-    return new CompoundExtractor(extractors);
-  }
-
-  public static class CompoundInjector implements Injector {
-
-    private final List<Injector> injectors;
-
-    public CompoundInjector(final List<Injector> injectors) {
-      this.injectors = injectors;
-    }
-
-    @Override
-    public void inject(final DDSpanContext context, final TextMapInject carrier) {
-      for (final Injector injector : injectors) {
-        injector.inject(context, carrier);
-      }
-    }
-  }
-
-  public static class CompoundExtractor implements Extractor {
-
-    private final List<Extractor> extractors;
-
-    public CompoundExtractor(final List<Extractor> extractors) {
-      this.extractors = extractors;
-    }
-
-    @Override
-    public ExtractedContext extract(final TextMapExtract carrier) {
-      for (final Extractor extractor : extractors) {
-        final ExtractedContext context = extractor.extract(carrier);
-        if (context != null) {
-          return context;
-        }
-      }
-      return null;
-    }
+  public static Extractor createExtractor() {
+    return new DatadogHttpCodec.Extractor();
   }
 
   /**
@@ -104,27 +46,5 @@ public class HttpCodec {
     }
 
     return parsedValue;
-  }
-
-  /** URL encode value */
-  static String encode(final String value) {
-    String encoded = value;
-    try {
-      encoded = URLEncoder.encode(value, "UTF-8");
-    } catch (final UnsupportedEncodingException e) {
-      log.info("Failed to encode value - {}", value);
-    }
-    return encoded;
-  }
-
-  /** URL decode value */
-  static String decode(final String value) {
-    String decoded = value;
-    try {
-      decoded = URLDecoder.decode(value, "UTF-8");
-    } catch (final UnsupportedEncodingException e) {
-      log.info("Failed to decode value - {}", value);
-    }
-    return decoded;
   }
 }
