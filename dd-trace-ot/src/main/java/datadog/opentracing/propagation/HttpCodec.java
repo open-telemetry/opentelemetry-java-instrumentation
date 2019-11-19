@@ -34,10 +34,6 @@ public class HttpCodec {
         injectors.add(new DatadogHttpCodec.Injector());
         continue;
       }
-      if (style == Config.PropagationStyle.B3) {
-        injectors.add(new B3HttpCodec.Injector());
-        continue;
-      }
       log.debug("No implementation found to inject propagation style: {}", style);
     }
     return new CompoundInjector(injectors);
@@ -49,10 +45,6 @@ public class HttpCodec {
     for (final Config.PropagationStyle style : config.getPropagationStylesToExtract()) {
       if (style == Config.PropagationStyle.DATADOG) {
         extractors.add(new DatadogHttpCodec.Extractor(taggedHeaders));
-        continue;
-      }
-      if (style == Config.PropagationStyle.B3) {
-        extractors.add(new B3HttpCodec.Extractor(taggedHeaders));
         continue;
       }
       log.debug("No implementation found to extract propagation style: {}", style);

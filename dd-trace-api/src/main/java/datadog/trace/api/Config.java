@@ -126,8 +126,7 @@ public class Config {
   private static final String DEFAULT_TRACE_METHODS = null;
 
   public enum PropagationStyle {
-    DATADOG,
-    B3
+    DATADOG
   }
 
   /** A tag intended for internal use only, hence not added to the public api DDTags class. */

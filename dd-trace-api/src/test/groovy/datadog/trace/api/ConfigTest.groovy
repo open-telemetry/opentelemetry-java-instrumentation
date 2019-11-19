@@ -110,8 +110,8 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
     prop.setProperty(TRACE_REPORT_HOSTNAME, "true")
     prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
-    prop.setProperty(PROPAGATION_STYLE_EXTRACT, "Datadog, B3")
-    prop.setProperty(PROPAGATION_STYLE_INJECT, "B3, Datadog")
+    prop.setProperty(PROPAGATION_STYLE_EXTRACT, "Datadog")
+    prop.setProperty(PROPAGATION_STYLE_INJECT, "Datadog")
     prop.setProperty(HEALTH_METRICS_ENABLED, "true")
     prop.setProperty(HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
     prop.setProperty(HEALTH_METRICS_STATSD_PORT, "654")
@@ -137,8 +137,8 @@ class ConfigTest extends DDSpecification {
     config.partialFlushMinSpans == 15
     config.reportHostName == true
     config.runtimeContextFieldInjection == false
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
+    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
+    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
     config.healthMetricsEnabled == true
     config.healthMetricsStatsdHost == "metrics statsd host"
     config.healthMetricsStatsdPort == 654
@@ -165,8 +165,8 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "25")
     System.setProperty(PREFIX + TRACE_REPORT_HOSTNAME, "true")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
-    System.setProperty(PREFIX + PROPAGATION_STYLE_EXTRACT, "Datadog, B3")
-    System.setProperty(PREFIX + PROPAGATION_STYLE_INJECT, "B3, Datadog")
+    System.setProperty(PREFIX + PROPAGATION_STYLE_EXTRACT, "Datadog")
+    System.setProperty(PREFIX + PROPAGATION_STYLE_INJECT, "Datadog")
     System.setProperty(PREFIX + HEALTH_METRICS_ENABLED, "true")
     System.setProperty(PREFIX + HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
     System.setProperty(PREFIX + HEALTH_METRICS_STATSD_PORT, "654")
@@ -192,8 +192,8 @@ class ConfigTest extends DDSpecification {
     config.partialFlushMinSpans == 25
     config.reportHostName == true
     config.runtimeContextFieldInjection == false
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
+    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
+    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
     config.healthMetricsEnabled == true
     config.healthMetricsStatsdHost == "metrics statsd host"
     config.healthMetricsStatsdPort == 654
@@ -204,8 +204,8 @@ class ConfigTest extends DDSpecification {
     environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
     environmentVariables.set(DD_TRACE_ENABLED_ENV, "false")
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
-    environmentVariables.set(DD_PROPAGATION_STYLE_EXTRACT, "B3 Datadog")
-    environmentVariables.set(DD_PROPAGATION_STYLE_INJECT, "Datadog B3")
+    environmentVariables.set(DD_PROPAGATION_STYLE_EXTRACT, "Datadog")
+    environmentVariables.set(DD_PROPAGATION_STYLE_INJECT, "Datadog")
     environmentVariables.set(DD_TRACE_REPORT_HOSTNAME, "true")
 
     when:
@@ -215,8 +215,8 @@ class ConfigTest extends DDSpecification {
     config.serviceName == "still something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
+    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
+    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
     config.reportHostName == true
   }
 
@@ -340,8 +340,8 @@ class ConfigTest extends DDSpecification {
     properties.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     properties.setProperty(DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
     properties.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
-    properties.setProperty(PROPAGATION_STYLE_EXTRACT, "B3 Datadog")
-    properties.setProperty(PROPAGATION_STYLE_INJECT, "Datadog B3")
+    properties.setProperty(PROPAGATION_STYLE_EXTRACT, "Datadog")
+    properties.setProperty(PROPAGATION_STYLE_INJECT, "Datadog")
 
     when:
     def config = Config.get(properties)
@@ -362,8 +362,8 @@ class ConfigTest extends DDSpecification {
     config.httpClientSplitByDomain == true
     config.dbClientSplitByInstance == true
     config.partialFlushMinSpans == 15
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
+    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
+    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
   }
 
   def "override null properties"() {
