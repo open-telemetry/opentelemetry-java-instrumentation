@@ -11,7 +11,7 @@ import datadog.trace.api.Config;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.interceptor.TraceInterceptor;
 import datadog.trace.api.sampling.PrioritySampling;
-import datadog.trace.common.sampling.RateByServiceSampler;
+import datadog.trace.common.sampling.PrioritySampler;
 import datadog.trace.common.sampling.Sampler;
 import datadog.trace.common.writer.DDAgentWriter;
 import datadog.trace.common.writer.DDApi;
@@ -347,7 +347,12 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   @Override
   public <T> void inject(final SpanContext spanContext, final Format<T> format, final T carrier) {
     if (carrier instanceof TextMapInject) {
-      injector.inject((DDSpanContext) spanContext, (TextMapInject) carrier);
+      final DDSpanContext ddSpanContext = (DDSpanContext) spanContext;
+
+      final DDSpan rootSpan = ddSpanContext.getTrace().getRootSpan();
+      setSamplingPriorityIfNecessary(rootSpan);
+
+      injector.inject(ddSpanContext, (TextMapInject) carrier);
     } else {
       log.debug("Unsupported format for propagation - {}", format.getClass().getName());
     }
@@ -389,10 +394,28 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       }
     }
     incrementTraceCount();
-    // TODO: current trace implementation doesn't guarantee that first span is the root span
-    // We may want to reconsider way this check is done.
-    if (!writtenTrace.isEmpty() && sampler.sample(writtenTrace.get(0))) {
-      writer.write(writtenTrace);
+
+    if (!writtenTrace.isEmpty()) {
+      final DDSpan rootSpan = (DDSpan) writtenTrace.get(0).getLocalRootSpan();
+      setSamplingPriorityIfNecessary(rootSpan);
+
+      final DDSpan spanToSample = rootSpan == null ? writtenTrace.get(0) : rootSpan;
+      if (sampler.sample(spanToSample)) {
+        writer.write(writtenTrace);
+      }
+    }
+  }
+
+  void setSamplingPriorityIfNecessary(final DDSpan rootSpan) {
+    // There's a race where multiple threads can see PrioritySampling.UNSET here
+    // This check skips potential complex sampling priority logic when we know its redundant
+    // Locks inside DDSpanContext ensure the correct behavior in the race case
+
+    if (sampler instanceof PrioritySampler
+        && rootSpan != null
+        && rootSpan.context().getSamplingPriority() == PrioritySampling.UNSET) {
+
+      ((PrioritySampler) sampler).setSamplingPriority(rootSpan);
     }
   }
 
@@ -487,11 +510,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     }
 
     private DDSpan startSpan() {
-      final DDSpan span = new DDSpan(timestampMicro, buildSpanContext());
-      if (sampler instanceof RateByServiceSampler) {
-        ((RateByServiceSampler) sampler).initializeSamplingPriority(span);
-      }
-      return span;
+      return new DDSpan(timestampMicro, buildSpanContext());
     }
 
     @Override

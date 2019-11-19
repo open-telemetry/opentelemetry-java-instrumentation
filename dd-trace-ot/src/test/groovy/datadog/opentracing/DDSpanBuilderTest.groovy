@@ -4,7 +4,6 @@ import datadog.opentracing.propagation.ExtractedContext
 import datadog.opentracing.propagation.TagContext
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
-import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.Scope
@@ -442,7 +441,7 @@ class DDSpanBuilderTest extends DDSpecification {
     expect:
     span.traceId != 0G
     span.parentId == 0G
-    span.samplingPriority == PrioritySampling.SAMPLER_KEEP // Since we're using the RateByServiceSampler
+    span.samplingPriority == null
     span.context().origin == tagContext.origin
     span.context().baggageItems == [:]
     span.context().@tags == tagContext.tags + [(Config.RUNTIME_ID_TAG)  : config.getRuntimeId(),

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
+@Deprecated
 public abstract class AbstractSampler implements Sampler {
 
   /** Sample tags */
@@ -35,6 +36,7 @@ public abstract class AbstractSampler implements Sampler {
    * @param tag
    * @param skipPattern
    */
+  @Deprecated
   public void addSkipTagPattern(final String tag, final Pattern skipPattern) {
     skipTagsPatterns.put(tag, skipPattern);
   }
