@@ -1,3 +1,2 @@
-# Datadog Java APM
-
-To use and configure Datadog Java APM, see [https://docs.datadoghq.com/tracing/languages/java](https://docs.datadoghq.com/tracing/languages/java)
+# opentelemetry-auto-instr-java
+Auto-Instrumentation for Java (per OTEP 0001)
