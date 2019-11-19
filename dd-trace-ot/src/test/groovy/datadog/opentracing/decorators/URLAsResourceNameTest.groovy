@@ -3,7 +3,6 @@ package datadog.opentracing.decorators
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
-import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.tag.Tags
@@ -113,7 +112,6 @@ class URLAsResourceNameTest extends DDSpecification {
         "fakeService",
         "fakeOperation",
         "fakeResource",
-        PrioritySampling.UNSET,
         null,
         Collections.<String, String> emptyMap(),
         false,

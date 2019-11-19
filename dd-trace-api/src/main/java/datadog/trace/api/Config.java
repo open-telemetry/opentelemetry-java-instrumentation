@@ -51,13 +51,11 @@ public class Config {
   public static final String TRACE_AGENT_PORT = "trace.agent.port";
   public static final String AGENT_PORT_LEGACY = "agent.port";
   public static final String AGENT_UNIX_DOMAIN_SOCKET = "trace.agent.unix.domain.socket";
-  public static final String PRIORITY_SAMPLING = "priority.sampling";
   public static final String TRACE_RESOLVER_ENABLED = "trace.resolver.enabled";
   public static final String SERVICE_MAPPING = "service.mapping";
   public static final String GLOBAL_TAGS = "trace.global.tags";
   public static final String SPAN_TAGS = "trace.span.tags";
   public static final String JMX_TAGS = "trace.jmx.tags";
-  public static final String TRACE_ANALYTICS_ENABLED = "trace.analytics.enabled";
   public static final String TRACE_ANNOTATIONS = "trace.annotations";
   public static final String TRACE_EXECUTORS_ALL = "trace.executors.all";
   public static final String TRACE_EXECUTORS = "trace.executors";
@@ -104,7 +102,6 @@ public class Config {
 
   private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
 
-  private static final boolean DEFAULT_PRIORITY_SAMPLING_ENABLED = true;
   private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
   private static final Set<Integer> DEFAULT_HTTP_SERVER_ERROR_STATUSES =
       parseIntegerRangeSet("500-599", "default");
@@ -131,8 +128,6 @@ public class Config {
   private static final boolean DEFAULT_TRACE_EXECUTORS_ALL = false;
   private static final String DEFAULT_TRACE_EXECUTORS = "";
   private static final String DEFAULT_TRACE_METHODS = null;
-  public static final boolean DEFAULT_TRACE_ANALYTICS_ENABLED = false;
-  public static final float DEFAULT_ANALYTICS_SAMPLE_RATE = 1.0f;
 
   public enum PropagationStyle {
     DATADOG,
@@ -156,7 +151,6 @@ public class Config {
   @Getter private final String agentHost;
   @Getter private final int agentPort;
   @Getter private final String agentUnixDomainSocket;
-  @Getter private final boolean prioritySamplingEnabled;
   @Getter private final boolean traceResolverEnabled;
   @Getter private final Map<String, String> serviceMapping;
   private final Map<String, String> globalTags;
@@ -191,8 +185,6 @@ public class Config {
   @Getter private final boolean traceExecutorsAll;
   @Getter private final List<String> traceExecutors;
 
-  @Getter private final boolean traceAnalyticsEnabled;
-
   // Values from an optionally provided properties file
   private static Properties propertiesFromConfigFile;
 
@@ -216,8 +208,6 @@ public class Config {
             getIntegerSettingFromEnvironment(AGENT_PORT_LEGACY, DEFAULT_TRACE_AGENT_PORT));
     agentUnixDomainSocket =
         getSettingFromEnvironment(AGENT_UNIX_DOMAIN_SOCKET, DEFAULT_AGENT_UNIX_DOMAIN_SOCKET);
-    prioritySamplingEnabled =
-        getBooleanSettingFromEnvironment(PRIORITY_SAMPLING, DEFAULT_PRIORITY_SAMPLING_ENABLED);
     traceResolverEnabled =
         getBooleanSettingFromEnvironment(TRACE_RESOLVER_ENABLED, DEFAULT_TRACE_RESOLVER_ENABLED);
     serviceMapping = getMapSettingFromEnvironment(SERVICE_MAPPING, null);
@@ -299,9 +289,6 @@ public class Config {
 
     traceExecutors = getListSettingFromEnvironment(TRACE_EXECUTORS, DEFAULT_TRACE_EXECUTORS);
 
-    traceAnalyticsEnabled =
-        getBooleanSettingFromEnvironment(TRACE_ANALYTICS_ENABLED, DEFAULT_TRACE_ANALYTICS_ENABLED);
-
     log.debug("New instance: {}", this);
   }
 
@@ -323,8 +310,6 @@ public class Config {
             getPropertyIntegerValue(properties, AGENT_PORT_LEGACY, parent.agentPort));
     agentUnixDomainSocket =
         properties.getProperty(AGENT_UNIX_DOMAIN_SOCKET, parent.agentUnixDomainSocket);
-    prioritySamplingEnabled =
-        getPropertyBooleanValue(properties, PRIORITY_SAMPLING, parent.prioritySamplingEnabled);
     traceResolverEnabled =
         getPropertyBooleanValue(properties, TRACE_RESOLVER_ENABLED, parent.traceResolverEnabled);
     serviceMapping = getPropertyMapValue(properties, SERVICE_MAPPING, parent.serviceMapping);
@@ -408,9 +393,6 @@ public class Config {
         getPropertyBooleanValue(properties, TRACE_EXECUTORS_ALL, parent.traceExecutorsAll);
     traceExecutors = getPropertyListValue(properties, TRACE_EXECUTORS, parent.traceExecutors);
 
-    traceAnalyticsEnabled =
-        getPropertyBooleanValue(properties, TRACE_ANALYTICS_ENABLED, parent.traceAnalyticsEnabled);
-
     log.debug("New instance: {}", this);
   }
 
@@ -454,20 +436,6 @@ public class Config {
   }
 
   /**
-   * Returns the sample rate for the specified instrumentation or {@link
-   * #DEFAULT_ANALYTICS_SAMPLE_RATE} if none specified.
-   */
-  public float getInstrumentationAnalyticsSampleRate(final String... aliases) {
-    for (final String alias : aliases) {
-      final Float rate = getFloatSettingFromEnvironment(alias + ".analytics.sample-rate", null);
-      if (null != rate) {
-        return rate;
-      }
-    }
-    return DEFAULT_ANALYTICS_SAMPLE_RATE;
-  }
-
-  /**
    * Return a map of tags required by the datadog backend to link runtime metrics (i.e. jmx) and
    * traces.
    *
@@ -502,35 +470,6 @@ public class Config {
     for (final String name : integrationNames) {
       final boolean configEnabled =
           getBooleanSettingFromEnvironment("integration." + name + ".enabled", defaultEnabled);
-      if (defaultEnabled) {
-        anyEnabled &= configEnabled;
-      } else {
-        anyEnabled |= configEnabled;
-      }
-    }
-    return anyEnabled;
-  }
-
-  public boolean isTraceAnalyticsIntegrationEnabled(
-      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
-    return traceAnalyticsIntegrationEnabled(integrationNames, defaultEnabled);
-  }
-
-  /**
-   * @deprecated This method should only be used internally. Use the instance getter instead {@link
-   *     #isTraceAnalyticsIntegrationEnabled(SortedSet, boolean)}.
-   * @param integrationNames
-   * @param defaultEnabled
-   * @return
-   */
-  public static boolean traceAnalyticsIntegrationEnabled(
-      final SortedSet<String> integrationNames, final boolean defaultEnabled) {
-    // If default is enabled, we want to enable individually,
-    // if default is disabled, we want to disable individually.
-    boolean anyEnabled = defaultEnabled;
-    for (final String name : integrationNames) {
-      final boolean configEnabled =
-          getBooleanSettingFromEnvironment(name + ".analytics.enabled", defaultEnabled);
       if (defaultEnabled) {
         anyEnabled &= configEnabled;
       } else {

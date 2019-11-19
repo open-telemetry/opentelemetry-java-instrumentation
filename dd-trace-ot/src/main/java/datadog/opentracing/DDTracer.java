@@ -10,11 +10,6 @@ import datadog.opentracing.scopemanager.ScopeContext;
 import datadog.trace.api.Config;
 import datadog.trace.api.interceptor.MutableSpan;
 import datadog.trace.api.interceptor.TraceInterceptor;
-import datadog.trace.api.sampling.PrioritySampling;
-import datadog.trace.common.sampling.RateByServiceSampler;
-import datadog.trace.common.sampling.Sampler;
-import datadog.trace.common.writer.DDAgentWriter;
-import datadog.trace.common.writer.DDApi;
 import datadog.trace.common.writer.Writer;
 import datadog.trace.context.ScopeListener;
 import io.opentracing.References;
@@ -58,8 +53,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   final String serviceName;
   /** Writer is an charge of reporting traces and spans to the desired endpoint */
   final Writer writer;
-  /** Sampler defines the sampling policy in order to reduce the number of traces for instance */
-  final Sampler sampler;
   /** Scope manager is in charge of managing the scopes from which spans are created */
   final ContextualScopeManager scopeManager = new ContextualScopeManager();
 
@@ -113,15 +106,14 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   // This constructor is already used in the wild, so we have to keep it inside this API for now.
-  public DDTracer(final String serviceName, final Writer writer, final Sampler sampler) {
-    this(serviceName, writer, sampler, Config.get().getLocalRootSpanTags());
+  public DDTracer(final String serviceName, final Writer writer) {
+    this(serviceName, writer, Config.get().getLocalRootSpanTags());
   }
 
   private DDTracer(final String serviceName, final Config config) {
     this(
         serviceName,
         Writer.Builder.forConfig(config),
-        Sampler.Builder.forConfig(config),
         config.getLocalRootSpanTags(),
         config.getMergedSpanTags(),
         config.getServiceMapping(),
@@ -131,15 +123,10 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   /** Visible for testing */
-  DDTracer(
-      final String serviceName,
-      final Writer writer,
-      final Sampler sampler,
-      final Map<String, String> runtimeTags) {
+  DDTracer(final String serviceName, final Writer writer, final Map<String, String> runtimeTags) {
     this(
         serviceName,
         writer,
-        sampler,
         runtimeTags,
         Collections.<String, String>emptyMap(),
         Collections.<String, String>emptyMap(),
@@ -155,7 +142,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this(
         config.getServiceName(),
         writer,
-        Sampler.Builder.forConfig(config),
         config.getLocalRootSpanTags(),
         config.getMergedSpanTags(),
         config.getServiceMapping(),
@@ -163,14 +149,11 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         config.getPartialFlushMinSpans());
   }
 
-  /**
-   * @deprecated Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
-   */
+  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, Map, Map, int)} instead. */
   @Deprecated
   public DDTracer(
       final String serviceName,
       final Writer writer,
-      final Sampler sampler,
       final String runtimeId,
       final Map<String, String> localRootSpanTags,
       final Map<String, String> defaultSpanTags,
@@ -179,7 +162,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this(
         serviceName,
         writer,
-        sampler,
         customRuntimeTags(runtimeId, localRootSpanTags),
         defaultSpanTags,
         serviceNameMappings,
@@ -187,14 +169,11 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         Config.get().getPartialFlushMinSpans());
   }
 
-  /**
-   * @deprecated Use {@link #DDTracer(String, Writer, Sampler, Map, Map, Map, Map, int)} instead.
-   */
+  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, Map, Map, int)} instead. */
   @Deprecated
   public DDTracer(
       final String serviceName,
       final Writer writer,
-      final Sampler sampler,
       final Map<String, String> localRootSpanTags,
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
@@ -202,7 +181,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this(
         serviceName,
         writer,
-        sampler,
         localRootSpanTags,
         defaultSpanTags,
         serviceNameMappings,
@@ -213,7 +191,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   public DDTracer(
       final String serviceName,
       final Writer writer,
-      final Sampler sampler,
       final Map<String, String> localRootSpanTags,
       final Map<String, String> defaultSpanTags,
       final Map<String, String> serviceNameMappings,
@@ -227,7 +204,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this.serviceName = serviceName;
     this.writer = writer;
     this.writer.start();
-    this.sampler = sampler;
     this.localRootSpanTags = localRootSpanTags;
     this.defaultSpanTags = defaultSpanTags;
     this.serviceNameMappings = serviceNameMappings;
@@ -243,13 +219,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     // TODO: we have too many constructors, we should move to some sort of builder approach
     injector = HttpCodec.createInjector(Config.get());
     extractor = HttpCodec.createExtractor(Config.get(), taggedHeaders);
-
-    if (this.writer instanceof DDAgentWriter) {
-      final DDApi api = ((DDAgentWriter) this.writer).getApi();
-      if (sampler instanceof DDApi.ResponseListener) {
-        api.addResponseListener((DDApi.ResponseListener) this.sampler);
-      }
-    }
 
     log.info("New instance: {}", this);
 
@@ -363,12 +332,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     }
   }
 
-  /**
-   * We use the sampler to know if the trace has to be reported/written. The sampler is called on
-   * the first span (root span) of the trace. If the trace is marked as a sample, we report it.
-   *
-   * @param trace a list of the spans related to the same trace
-   */
+  /** @param trace a list of the spans related to the same trace */
   void write(final Collection<DDSpan> trace) {
     if (trace.isEmpty()) {
       return;
@@ -391,7 +355,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     incrementTraceCount();
     // TODO: current trace implementation doesn't guarantee that first span is the root span
     // We may want to reconsider way this check is done.
-    if (!writtenTrace.isEmpty() && sampler.sample(writtenTrace.get(0))) {
+    if (!writtenTrace.isEmpty()) {
       writer.write(writtenTrace);
     }
   }
@@ -443,8 +407,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         + serviceName
         + ", writer="
         + writer
-        + ", sampler="
-        + sampler
         + ", defaultSpanTags="
         + defaultSpanTags
         + '}';
@@ -487,11 +449,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     }
 
     private DDSpan startSpan() {
-      final DDSpan span = new DDSpan(timestampMicro, buildSpanContext());
-      if (sampler instanceof RateByServiceSampler) {
-        ((RateByServiceSampler) sampler).initializeSamplingPriority(span);
-      }
-      return span;
+      return new DDSpan(timestampMicro, buildSpanContext());
     }
 
     @Override
@@ -632,7 +590,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final BigInteger parentSpanId;
       final Map<String, String> baggage;
       final PendingTrace parentTrace;
-      final int samplingPriority;
       final String origin;
 
       final DDSpanContext context;
@@ -654,7 +611,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         parentSpanId = ddsc.getSpanId();
         baggage = ddsc.getBaggageItems();
         parentTrace = ddsc.getTrace();
-        samplingPriority = PrioritySampling.UNSET;
         origin = null;
         if (serviceName == null) {
           serviceName = ddsc.getServiceName();
@@ -666,13 +622,11 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           final ExtractedContext extractedContext = (ExtractedContext) parentContext;
           traceId = extractedContext.getTraceId();
           parentSpanId = extractedContext.getSpanId();
-          samplingPriority = extractedContext.getSamplingPriority();
           baggage = extractedContext.getBaggage();
         } else {
           // Start a new trace
           traceId = generateNewId();
           parentSpanId = BigInteger.ZERO;
-          samplingPriority = PrioritySampling.UNSET;
           baggage = null;
         }
 
@@ -704,7 +658,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
               serviceName,
               operationName,
               resourceName,
-              samplingPriority,
               origin,
               baggage,
               errorFlag,

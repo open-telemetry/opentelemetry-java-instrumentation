@@ -39,11 +39,6 @@ public class SpringWebHttpServerDecorator
   }
 
   @Override
-  protected boolean traceAnalyticsDefault() {
-    return false;
-  }
-
-  @Override
   protected String method(final HttpServletRequest httpServletRequest) {
     return httpServletRequest.getMethod();
   }

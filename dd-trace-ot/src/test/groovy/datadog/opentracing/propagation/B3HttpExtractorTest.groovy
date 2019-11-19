@@ -1,12 +1,10 @@
 package datadog.opentracing.propagation
 
-import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
 import io.opentracing.propagation.TextMapExtractAdapter
 
 import static datadog.opentracing.DDTracer.TRACE_ID_MAX
-import static datadog.opentracing.propagation.B3HttpCodec.SAMPLING_PRIORITY_KEY
 import static datadog.opentracing.propagation.B3HttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.B3HttpCodec.TRACE_ID_KEY
 
@@ -22,10 +20,6 @@ class B3HttpExtractorTest extends DDSpecification {
       SOME_HEADER                 : "my-interesting-info",
     ]
 
-    if (samplingPriority != null) {
-      headers.put(SAMPLING_PRIORITY_KEY, "$samplingPriority".toString())
-    }
-
     when:
     final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
@@ -34,16 +28,13 @@ class B3HttpExtractorTest extends DDSpecification {
     context.spanId == spanId
     context.baggage == [:]
     context.tags == ["some-tag": "my-interesting-info"]
-    context.samplingPriority == expectedSamplingPriority
     context.origin == null
 
     where:
-    traceId          | spanId           | samplingPriority | expectedSamplingPriority
-    1G               | 2G               | null             | PrioritySampling.UNSET
-    2G               | 3G               | 1                | PrioritySampling.SAMPLER_KEEP
-    3G               | 4G               | 0                | PrioritySampling.SAMPLER_DROP
-    TRACE_ID_MAX     | TRACE_ID_MAX - 1 | 0                | PrioritySampling.SAMPLER_DROP
-    TRACE_ID_MAX - 1 | TRACE_ID_MAX     | 1                | PrioritySampling.SAMPLER_KEEP
+    traceId          | spanId
+    1G               | 2G
+    TRACE_ID_MAX     | TRACE_ID_MAX - 1
+    TRACE_ID_MAX - 1 | TRACE_ID_MAX
   }
 
   def "extract 128 bit id truncates id to 64 bit"() {

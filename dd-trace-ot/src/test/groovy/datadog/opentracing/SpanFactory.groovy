@@ -1,7 +1,6 @@
 package datadog.opentracing
 
 
-import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 
 class SpanFactory {
@@ -18,7 +17,6 @@ class SpanFactory {
       "fakeService",
       "fakeOperation",
       "fakeResource",
-      PrioritySampling.UNSET,
       null,
       Collections.emptyMap(),
       false,
@@ -38,7 +36,6 @@ class SpanFactory {
       "fakeService",
       "fakeOperation",
       "fakeResource",
-      PrioritySampling.UNSET,
       null,
       Collections.emptyMap(),
       false,
@@ -57,7 +54,6 @@ class SpanFactory {
       "fakeService",
       "fakeOperation",
       "fakeResource",
-      PrioritySampling.UNSET,
       null,
       Collections.emptyMap(),
       false,
@@ -78,7 +74,6 @@ class SpanFactory {
       serviceName,
       "fakeOperation",
       "fakeResource",
-      PrioritySampling.UNSET,
       null,
       Collections.emptyMap(),
       false,

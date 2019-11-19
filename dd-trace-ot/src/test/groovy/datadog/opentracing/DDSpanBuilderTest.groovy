@@ -4,7 +4,6 @@ import datadog.opentracing.propagation.ExtractedContext
 import datadog.opentracing.propagation.TagContext
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
-import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.Scope
@@ -421,7 +420,6 @@ class DDSpanBuilderTest extends DDSpecification {
     expect:
     span.traceId == extractedContext.traceId
     span.parentId == extractedContext.spanId
-    span.samplingPriority == extractedContext.samplingPriority
     span.context().origin == extractedContext.origin
     span.context().baggageItems == extractedContext.baggage
     span.context().@tags == extractedContext.tags + [(Config.RUNTIME_ID_TAG)  : config.getRuntimeId(),
@@ -430,8 +428,8 @@ class DDSpanBuilderTest extends DDSpecification {
 
     where:
     extractedContext                                                                                                | _
-    new ExtractedContext(1G, 2G, 0, null, [:], [:])                                                                 | _
-    new ExtractedContext(3G, 4G, 1, "some-origin", ["asdf": "qwer"], [(ORIGIN_KEY): "some-origin", "zxcv": "1234"]) | _
+    new ExtractedContext(1G, 2G, null, [:], [:])                                                                 | _
+    new ExtractedContext(3G, 4G, "some-origin", ["asdf": "qwer"], [(ORIGIN_KEY): "some-origin", "zxcv": "1234"]) | _
   }
 
   def "TagContext should populate default span details"() {
@@ -442,7 +440,6 @@ class DDSpanBuilderTest extends DDSpecification {
     expect:
     span.traceId != 0G
     span.parentId == 0G
-    span.samplingPriority == PrioritySampling.SAMPLER_KEEP // Since we're using the RateByServiceSampler
     span.context().origin == tagContext.origin
     span.context().baggageItems == [:]
     span.context().@tags == tagContext.tags + [(Config.RUNTIME_ID_TAG)  : config.getRuntimeId(),

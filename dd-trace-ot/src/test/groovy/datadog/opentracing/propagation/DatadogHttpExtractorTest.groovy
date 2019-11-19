@@ -1,6 +1,5 @@
 package datadog.opentracing.propagation
 
-import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
 import io.opentracing.propagation.TextMapExtractAdapter
@@ -8,7 +7,6 @@ import io.opentracing.propagation.TextMapExtractAdapter
 import static datadog.opentracing.DDTracer.TRACE_ID_MAX
 import static datadog.opentracing.propagation.DatadogHttpCodec.ORIGIN_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.OT_BAGGAGE_PREFIX
-import static datadog.opentracing.propagation.DatadogHttpCodec.SAMPLING_PRIORITY_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.TRACE_ID_KEY
 
@@ -26,10 +24,6 @@ class DatadogHttpExtractorTest extends DDSpecification {
       SOME_HEADER                             : "my-interesting-info",
     ]
 
-    if (samplingPriority != PrioritySampling.UNSET) {
-      headers.put(SAMPLING_PRIORITY_KEY, "$samplingPriority".toString())
-    }
-
     if (origin) {
       headers.put(ORIGIN_KEY, origin)
     }
@@ -42,15 +36,14 @@ class DatadogHttpExtractorTest extends DDSpecification {
     context.spanId == new BigInteger(spanId)
     context.baggage == ["k1": "v1", "k2": "v2"]
     context.tags == ["some-tag": "my-interesting-info"]
-    context.samplingPriority == samplingPriority
     context.origin == origin
 
     where:
-    traceId                       | spanId                        | samplingPriority              | origin
-    "1"                           | "2"                           | PrioritySampling.UNSET        | null
-    "2"                           | "3"                           | PrioritySampling.SAMPLER_KEEP | "saipan"
-    TRACE_ID_MAX.toString()       | (TRACE_ID_MAX - 1).toString() | PrioritySampling.UNSET        | "saipan"
-    (TRACE_ID_MAX - 1).toString() | TRACE_ID_MAX.toString()       | PrioritySampling.SAMPLER_KEEP | "saipan"
+    traceId                       | spanId                        | origin
+    "1"                           | "2"                           | null
+    "2"                           | "3"                           | "saipan"
+    TRACE_ID_MAX.toString()       | (TRACE_ID_MAX - 1).toString() | "saipan"
+    (TRACE_ID_MAX - 1).toString() | TRACE_ID_MAX.toString()       | "saipan"
   }
 
   def "extract header tags with no propagation"() {

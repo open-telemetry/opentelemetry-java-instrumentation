@@ -1,6 +1,6 @@
 package datadog.trace.agent.decorator
 
-import datadog.trace.agent.test.utils.ConfigUtils
+
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.AgentScope
 import datadog.trace.instrumentation.api.AgentSpan
@@ -139,51 +139,6 @@ class BaseDecoratorTest extends DDSpecification {
     1 * scope.span() >> span
   }
 
-  def "test analytics rate default disabled"() {
-    when:
-    BaseDecorator dec = newDecorator(defaultEnabled, hasConfigNames)
-
-    then:
-    dec.traceAnalyticsEnabled == defaultEnabled
-    dec.traceAnalyticsSampleRate == sampleRate.floatValue()
-
-    where:
-    defaultEnabled | hasConfigNames | sampleRate
-    true           | false          | 1.0
-    false          | false          | 1.0
-    false          | true           | 1.0
-  }
-
-  def "test analytics rate enabled:#enabled, integration:#integName, sampleRate:#sampleRate"() {
-    setup:
-    ConfigUtils.updateConfig {
-      System.properties.setProperty("dd.${integName}.analytics.enabled", "true")
-      System.properties.setProperty("dd.${integName}.analytics.sample-rate", "$sampleRate")
-    }
-
-    when:
-    BaseDecorator dec = newDecorator(enabled)
-
-    then:
-    dec.traceAnalyticsEnabled == expectedEnabled
-    dec.traceAnalyticsSampleRate == (Float) expectedRate
-
-    cleanup:
-    System.clearProperty("dd.${integName}.analytics.enabled")
-    System.clearProperty("dd.${integName}.analytics.sample-rate")
-
-    where:
-    enabled | integName | sampleRate | expectedEnabled | expectedRate
-    false   | ""        | ""         | false           | 1.0
-    true    | ""        | ""         | true            | 1.0
-    false   | "test1"   | 0.5        | true            | 0.5
-    false   | "test2"   | 0.75       | true            | 0.75
-    true    | "test1"   | 0.2        | true            | 0.2
-    true    | "test2"   | 0.4        | true            | 0.4
-    true    | "test1"   | ""         | true            | 1.0
-    true    | "test2"   | ""         | true            | 1.0
-  }
-
   def "test spanNameForMethod"() {
     when:
     def result = decorator.spanNameForMethod(method)
@@ -201,68 +156,22 @@ class BaseDecoratorTest extends DDSpecification {
   }
 
   def newDecorator() {
-    return newDecorator(false)
-  }
+    return new BaseDecorator() {
+      @Override
+      protected String[] instrumentationNames() {
+        return []
+      }
 
-  def newDecorator(boolean analyticsEnabledDefault, boolean emptyInstrumentationNames = false) {
-    return emptyInstrumentationNames ?
-      new BaseDecorator() {
-        @Override
-        protected String[] instrumentationNames() {
-          return []
-        }
+      @Override
+      protected String spanType() {
+        return "test-type"
+      }
 
-        @Override
-        protected String spanType() {
-          return "test-type"
-        }
-
-        @Override
-        protected String component() {
-          return "test-component"
-        }
-
-        protected boolean traceAnalyticsDefault() {
-          return true
-        }
-      } :
-      analyticsEnabledDefault ?
-        new BaseDecorator() {
-          @Override
-          protected String[] instrumentationNames() {
-            return ["test1", "test2"]
-          }
-
-          @Override
-          protected String spanType() {
-            return "test-type"
-          }
-
-          @Override
-          protected String component() {
-            return "test-component"
-          }
-
-          protected boolean traceAnalyticsDefault() {
-            return true
-          }
-        } :
-        new BaseDecorator() {
-          @Override
-          protected String[] instrumentationNames() {
-            return ["test1", "test2"]
-          }
-
-          @Override
-          protected String spanType() {
-            return "test-type"
-          }
-
-          @Override
-          protected String component() {
-            return "test-component"
-          }
-        }
+      @Override
+      protected String component() {
+        return "test-component"
+      }
+    }
   }
 
   class SomeInnerClass implements Runnable {

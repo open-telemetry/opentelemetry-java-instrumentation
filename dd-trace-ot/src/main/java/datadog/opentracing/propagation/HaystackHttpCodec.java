@@ -3,7 +3,6 @@ package datadog.opentracing.propagation;
 import static datadog.opentracing.propagation.HttpCodec.validateUInt64BitsID;
 
 import datadog.opentracing.DDSpanContext;
-import datadog.trace.api.sampling.PrioritySampling;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
@@ -63,7 +62,6 @@ public class HaystackHttpCodec {
         Map<String, String> tags = Collections.emptyMap();
         BigInteger traceId = BigInteger.ZERO;
         BigInteger spanId = BigInteger.ZERO;
-        final int samplingPriority = PrioritySampling.SAMPLER_KEEP;
         final String origin = null; // Always null
 
         for (final Map.Entry<String, String> entry : carrier) {
@@ -95,8 +93,7 @@ public class HaystackHttpCodec {
 
         if (!BigInteger.ZERO.equals(traceId)) {
           final ExtractedContext context =
-              new ExtractedContext(traceId, spanId, samplingPriority, origin, baggage, tags);
-          context.lockSamplingPriority();
+              new ExtractedContext(traceId, spanId, origin, baggage, tags);
 
           log.debug("{} - Parent context extracted", context.getTraceId());
           return context;

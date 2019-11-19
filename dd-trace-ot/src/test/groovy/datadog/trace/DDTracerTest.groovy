@@ -3,8 +3,6 @@ package datadog.trace
 import datadog.opentracing.DDTracer
 import datadog.opentracing.propagation.HttpCodec
 import datadog.trace.api.Config
-import datadog.trace.common.sampling.AllSampler
-import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.common.writer.LoggingWriter
@@ -18,7 +16,6 @@ import static datadog.trace.api.Config.HEADER_TAGS
 import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
 import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_PORT
 import static datadog.trace.api.Config.PREFIX
-import static datadog.trace.api.Config.PRIORITY_SAMPLING
 import static datadog.trace.api.Config.SERVICE_MAPPING
 import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.WRITER_TYPE
@@ -46,11 +43,10 @@ class DDTracerTest extends DDSpecification {
 
     then:
     tracer.serviceName == "unnamed-java-app"
-    tracer.sampler instanceof RateByServiceSampler
     tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces } }"
     tracer.writer.monitor instanceof DDAgentWriter.NoopMonitor
 
-    tracer.spanContextDecorators.size() == 15
+    tracer.spanContextDecorators.size() == 12
 
     tracer.injector instanceof HttpCodec.CompoundInjector
     tracer.extractor instanceof HttpCodec.CompoundExtractor
@@ -69,15 +65,6 @@ class DDTracerTest extends DDSpecification {
     tracer.writer.monitor instanceof DDAgentWriter.StatsDMonitor
   }
 
-
-  def "verify overriding sampler"() {
-    setup:
-    System.setProperty(PREFIX + PRIORITY_SAMPLING, "false")
-    when:
-    def tracer = new DDTracer(new Config())
-    then:
-    tracer.sampler instanceof AllSampler
-  }
 
   def "verify overriding writer"() {
     setup:
@@ -131,40 +118,23 @@ class DDTracerTest extends DDSpecification {
     "writer" | "trace.agent.port" | "9999"          | "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:9999/v0.3/traces } }"
   }
 
-  def "verify sampler/writer constructor"() {
+  def "verify writer constructor"() {
     setup:
     def writer = new ListWriter()
-    def sampler = new RateByServiceSampler()
 
     when:
-    def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer, sampler)
+    def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer)
 
     then:
     tracer.serviceName == DEFAULT_SERVICE_NAME
-    tracer.sampler == sampler
     tracer.writer == writer
     tracer.localRootSpanTags[Config.RUNTIME_ID_TAG].size() > 0 // not null or empty
     tracer.localRootSpanTags[Config.LANGUAGE_TAG_KEY] == Config.LANGUAGE_TAG_VALUE
   }
 
-  def "Shares TraceCount with DDApi with #key = #value"() {
-    setup:
-    System.setProperty(PREFIX + key, value)
-    final DDTracer tracer = new DDTracer(new Config())
-
-    expect:
-    tracer.writer instanceof DDAgentWriter
-    tracer.writer.traceCount.is(((DDAgentWriter) tracer.writer).traceCount)
-
-    where:
-    key               | value
-    PRIORITY_SAMPLING | "true"
-    PRIORITY_SAMPLING | "false"
-  }
-
   def "root tags are applied only to root spans"() {
     setup:
-    def tracer = new DDTracer('my_service', new ListWriter(), new AllSampler(), '', ['only_root': 'value'], [:], [:], [:])
+    def tracer = new DDTracer('my_service', new ListWriter(), '', ['only_root': 'value'], [:], [:], [:])
     def root = tracer.buildSpan('my_root').start()
     def child = tracer.buildSpan('my_child').asChildOf(root).start()
 
