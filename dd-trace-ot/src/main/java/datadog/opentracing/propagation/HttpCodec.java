@@ -3,7 +3,6 @@ package datadog.opentracing.propagation;
 import datadog.opentracing.DDSpanContext;
 import datadog.opentracing.DDTracer;
 import datadog.trace.api.Config;
-import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
 import java.io.UnsupportedEncodingException;
@@ -23,7 +22,7 @@ public class HttpCodec {
 
   public interface Extractor {
 
-    SpanContext extract(final TextMapExtract carrier);
+    ExtractedContext extract(final TextMapExtract carrier);
   }
 
   public static Injector createInjector(final Config config) {
@@ -75,16 +74,14 @@ public class HttpCodec {
     }
 
     @Override
-    public SpanContext extract(final TextMapExtract carrier) {
-      SpanContext context = null;
+    public ExtractedContext extract(final TextMapExtract carrier) {
       for (final Extractor extractor : extractors) {
-        context = extractor.extract(carrier);
-        // Use incomplete TagContext only as last resort
-        if (context != null && (context instanceof ExtractedContext)) {
+        final ExtractedContext context = extractor.extract(carrier);
+        if (context != null) {
           return context;
         }
       }
-      return context;
+      return null;
     }
   }
 

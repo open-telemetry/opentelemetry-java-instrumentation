@@ -3,7 +3,6 @@ package datadog.opentracing.propagation;
 import static datadog.opentracing.propagation.HttpCodec.validateUInt64BitsID;
 
 import datadog.opentracing.DDSpanContext;
-import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
 import java.math.BigInteger;
@@ -43,7 +42,7 @@ class DatadogHttpCodec {
     public Extractor() {}
 
     @Override
-    public SpanContext extract(final TextMapExtract carrier) {
+    public ExtractedContext extract(final TextMapExtract carrier) {
       try {
         Map<String, String> baggage = Collections.emptyMap();
         BigInteger traceId = BigInteger.ZERO;
