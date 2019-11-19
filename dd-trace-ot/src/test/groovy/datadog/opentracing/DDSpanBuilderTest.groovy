@@ -153,7 +153,6 @@ class DDSpanBuilderTest extends DDSpecification {
     1 * mockedContext.getTraceId() >> spanId
     1 * mockedContext.getSpanId() >> spanId
     _ * mockedContext.getServiceName() >> "foo"
-    1 * mockedContext.getBaggageItems() >> [:]
     1 * mockedContext.getTrace() >> new PendingTrace(tracer, 1G)
 
     final String expectedName = "fakeName"
@@ -208,8 +207,6 @@ class DDSpanBuilderTest extends DDSpecification {
     def expectedChildServiceName = "fakeServiceName-child"
     def expectedChildResourceName = "fakeResourceName-child"
     def expectedChildType = "fakeType-child"
-    def expectedBaggageItemKey = "fakeKey"
-    def expectedBaggageItemValue = "fakeValue"
 
     final DDSpan parent =
       tracer
@@ -218,8 +215,6 @@ class DDSpanBuilderTest extends DDSpecification {
         .withResourceName(expectedParentResourceName)
         .withSpanType(expectedParentType)
         .start()
-
-    parent.setBaggageItem(expectedBaggageItemKey, expectedBaggageItemValue)
 
     // ServiceName and SpanType are always set by the parent  if they are not present in the child
     DDSpan span =
@@ -231,7 +226,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
     expect:
     span.getOperationName() == expectedName
-    span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
     span.context().getServiceName() == expectedParentServiceName
     span.context().getResourceName() == expectedName
     span.context().getSpanType() == null
@@ -249,7 +243,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
     then:
     span.getOperationName() == expectedName
-    span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
     span.context().getServiceName() == expectedChildServiceName
     span.context().getResourceName() == expectedChildResourceName
     span.context().getSpanType() == expectedChildType
@@ -265,8 +258,6 @@ class DDSpanBuilderTest extends DDSpecification {
     def expectedChildServiceName = "fakeServiceName-child"
     def expectedChildResourceName = "fakeResourceName-child"
     def expectedChildType = "fakeType-child"
-    def expectedBaggageItemKey = "fakeKey"
-    def expectedBaggageItemValue = "fakeValue"
 
     final DDSpan parent =
       tracer
@@ -276,8 +267,6 @@ class DDSpanBuilderTest extends DDSpecification {
         .withSpanType(expectedParentType)
         .start()
 
-    parent.setBaggageItem(expectedBaggageItemKey, expectedBaggageItemValue)
-
     // ServiceName and SpanType are always set by the parent  if they are not present in the child
     DDSpan span =
       tracer
@@ -286,14 +275,11 @@ class DDSpanBuilderTest extends DDSpecification {
         .addReference("child_of", parent.context())
         .start()
 
-    println span.getBaggageItem(expectedBaggageItemKey)
-    println expectedBaggageItemValue
     println span.context().getSpanType()
     println expectedParentType
 
     expect:
     span.getOperationName() == expectedName
-    span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
     span.context().getServiceName() == expectedParentServiceName
     span.context().getResourceName() == expectedName
     span.context().getSpanType() == null
@@ -311,7 +297,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
     then:
     span.getOperationName() == expectedName
-    span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
     span.context().getServiceName() == expectedChildServiceName
     span.context().getResourceName() == expectedChildResourceName
     span.context().getSpanType() == expectedChildType
@@ -327,8 +312,6 @@ class DDSpanBuilderTest extends DDSpecification {
     def expectedChildServiceName = "fakeServiceName-child"
     def expectedChildResourceName = "fakeResourceName-child"
     def expectedChildType = "fakeType-child"
-    def expectedBaggageItemKey = "fakeKey"
-    def expectedBaggageItemValue = "fakeValue"
 
     final DDSpan parent =
       tracer
@@ -338,8 +321,6 @@ class DDSpanBuilderTest extends DDSpecification {
         .withSpanType(expectedParentType)
         .start()
 
-    parent.setBaggageItem(expectedBaggageItemKey, expectedBaggageItemValue)
-
     // ServiceName and SpanType are always set by the parent  if they are not present in the child
     DDSpan span =
       tracer
@@ -348,14 +329,11 @@ class DDSpanBuilderTest extends DDSpecification {
         .addReference("follows_from", parent.context())
         .start()
 
-    println span.getBaggageItem(expectedBaggageItemKey)
-    println expectedBaggageItemValue
     println span.context().getSpanType()
     println expectedParentType
 
     expect:
     span.getOperationName() == expectedName
-    span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
     span.context().getServiceName() == expectedParentServiceName
     span.context().getResourceName() == expectedName
     span.context().getSpanType() == null
@@ -373,7 +351,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
     then:
     span.getOperationName() == expectedName
-    span.getBaggageItem(expectedBaggageItemKey) == expectedBaggageItemValue
     span.context().getServiceName() == expectedChildServiceName
     span.context().getResourceName() == expectedChildResourceName
     span.context().getSpanType() == expectedChildType
@@ -417,12 +394,11 @@ class DDSpanBuilderTest extends DDSpecification {
     expect:
     span.traceId == extractedContext.traceId
     span.parentId == extractedContext.spanId
-    span.context().baggageItems == extractedContext.baggage
 
     where:
-    extractedContext                               | _
-    new ExtractedContext(1G, 2G, [:])              | _
-    new ExtractedContext(3G, 4G, ["asdf": "qwer"]) | _
+    extractedContext             | _
+    new ExtractedContext(1G, 2G) | _
+    new ExtractedContext(3G, 4G) | _
   }
 
   def "global span tags populated on each span"() {

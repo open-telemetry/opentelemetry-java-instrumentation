@@ -438,13 +438,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       return this;
     }
 
-    public Iterable<Map.Entry<String, String>> baggageItems() {
-      if (parent == null) {
-        return Collections.emptyList();
-      }
-      return parent.baggageItems();
-    }
-
     @Override
     public DDSpanBuilder asChildOf(final Span span) {
       return asChildOf(span == null ? null : span.context());
@@ -499,7 +492,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
     /**
      * Build the SpanContext, if the actual span has a parent, the following attributes must be
-     * propagated: - ServiceName - Baggage - Trace (a list of all spans related) - SpanType
+     * propagated: - ServiceName - Trace (a list of all spans related) - SpanType
      *
      * @return the context
      */
@@ -507,7 +500,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final BigInteger traceId;
       final BigInteger spanId = generateNewId();
       final BigInteger parentSpanId;
-      final Map<String, String> baggage;
       final PendingTrace parentTrace;
 
       final DDSpanContext context;
@@ -527,7 +519,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         final DDSpanContext ddsc = (DDSpanContext) parentContext;
         traceId = ddsc.getTraceId();
         parentSpanId = ddsc.getSpanId();
-        baggage = ddsc.getBaggageItems();
         parentTrace = ddsc.getTrace();
         if (serviceName == null) {
           serviceName = ddsc.getServiceName();
@@ -539,12 +530,10 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           final ExtractedContext extractedContext = (ExtractedContext) parentContext;
           traceId = extractedContext.getTraceId();
           parentSpanId = extractedContext.getSpanId();
-          baggage = extractedContext.getBaggage();
         } else {
           // Start a new trace
           traceId = generateNewId();
           parentSpanId = BigInteger.ZERO;
-          baggage = null;
         }
 
         tags.putAll(localRootSpanTags);
@@ -567,7 +556,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
               serviceName,
               operationName,
               resourceName,
-              baggage,
               errorFlag,
               spanType,
               tags,

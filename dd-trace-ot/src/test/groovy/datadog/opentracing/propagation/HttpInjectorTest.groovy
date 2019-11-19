@@ -32,12 +32,6 @@ class HttpInjectorTest extends DDSpecification {
         "fakeService",
         "fakeOperation",
         "fakeResource",
-        new HashMap<String, String>() {
-          {
-            put("k1", "v1")
-            put("k2", "v2")
-          }
-        },
         false,
         "fakeType",
         null,
@@ -52,8 +46,6 @@ class HttpInjectorTest extends DDSpecification {
     then:
     1 * carrier.put(DatadogHttpCodec.TRACE_ID_KEY, traceId.toString())
     1 * carrier.put(DatadogHttpCodec.SPAN_ID_KEY, spanId.toString())
-    1 * carrier.put(DatadogHttpCodec.OT_BAGGAGE_PREFIX + "k1", "v1")
-    1 * carrier.put(DatadogHttpCodec.OT_BAGGAGE_PREFIX + "k2", "v2")
     0 * _
   }
 }

@@ -8,7 +8,6 @@ import datadog.trace.util.test.DDSpecification
 import io.opentracing.propagation.TextMapInjectAdapter
 
 import static datadog.opentracing.DDTracer.TRACE_ID_MAX
-import static datadog.opentracing.propagation.DatadogHttpCodec.OT_BAGGAGE_PREFIX
 import static datadog.opentracing.propagation.DatadogHttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.TRACE_ID_KEY
 
@@ -28,12 +27,6 @@ class DatadogHttpInjectorTest extends DDSpecification {
         "fakeService",
         "fakeOperation",
         "fakeResource",
-        new HashMap<String, String>() {
-          {
-            put("k1", "v1")
-            put("k2", "v2")
-          }
-        },
         false,
         "fakeType",
         null,
@@ -48,8 +41,6 @@ class DatadogHttpInjectorTest extends DDSpecification {
     then:
     1 * carrier.put(TRACE_ID_KEY, traceId.toString())
     1 * carrier.put(SPAN_ID_KEY, spanId.toString())
-    1 * carrier.put(OT_BAGGAGE_PREFIX + "k1", "v1")
-    1 * carrier.put(OT_BAGGAGE_PREFIX + "k2", "v2")
     0 * _
 
     where:

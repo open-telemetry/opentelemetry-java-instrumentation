@@ -16,9 +16,8 @@ import lombok.extern.slf4j.Slf4j;
  * SpanContext represents Span state that must propagate to descendant Spans and across process
  * boundaries.
  *
- * <p>SpanContext is logically divided into two pieces: (1) the user-level "Baggage" that propagates
- * across Span boundaries and (2) any Datadog fields that are needed to identify or contextualize
- * the associated Span instance
+ * <p>SpanContext includes Datadog fields that are needed to identify or contextualize the
+ * associated Span instance
  */
 @Slf4j
 public class DDSpanContext implements io.opentracing.SpanContext {
@@ -31,9 +30,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   /** The collection of all span related to this one */
   private final PendingTrace trace;
-
-  /** Baggage is associated with the whole trace and shared with other spans */
-  private final Map<String, String> baggageItems;
 
   // Not Shared with other span contexts
   private final BigInteger traceId;
@@ -67,7 +63,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final String serviceName,
       final String operationName,
       final String resourceName,
-      final Map<String, String> baggageItems,
       final boolean errorFlag,
       final String spanType,
       final Map<String, Object> tags,
@@ -85,12 +80,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.traceId = traceId;
     this.spanId = spanId;
     this.parentId = parentId;
-
-    if (baggageItems == null) {
-      this.baggageItems = new ConcurrentHashMap<>(0);
-    } else {
-      this.baggageItems = new ConcurrentHashMap<>(baggageItems);
-    }
 
     if (tags != null) {
       this.tags.putAll(tags);
@@ -168,24 +157,12 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.spanType = spanType;
   }
 
-  public void setBaggageItem(final String key, final String value) {
-    baggageItems.put(key, value);
-  }
-
-  public String getBaggageItem(final String key) {
-    return baggageItems.get(key);
-  }
-
-  public Map<String, String> getBaggageItems() {
-    return baggageItems;
-  }
-
   /* (non-Javadoc)
    * @see io.opentracing.SpanContext#baggageItems()
    */
   @Override
   public Iterable<Map.Entry<String, String>> baggageItems() {
-    return baggageItems.entrySet();
+    return Collections.emptyList();
   }
 
   @JsonIgnore

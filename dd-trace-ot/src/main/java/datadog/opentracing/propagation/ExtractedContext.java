@@ -2,6 +2,7 @@ package datadog.opentracing.propagation;
 
 import io.opentracing.SpanContext;
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -10,13 +11,10 @@ import java.util.Map;
 public class ExtractedContext implements SpanContext {
   private final BigInteger traceId;
   private final BigInteger spanId;
-  private final Map<String, String> baggage;
 
-  public ExtractedContext(
-      final BigInteger traceId, final BigInteger spanId, final Map<String, String> baggage) {
+  public ExtractedContext(final BigInteger traceId, final BigInteger spanId) {
     this.traceId = traceId;
     this.spanId = spanId;
-    this.baggage = baggage;
   }
 
   @Override
@@ -31,7 +29,7 @@ public class ExtractedContext implements SpanContext {
 
   @Override
   public Iterable<Map.Entry<String, String>> baggageItems() {
-    return baggage.entrySet();
+    return Collections.emptyList();
   }
 
   public BigInteger getTraceId() {
@@ -40,9 +38,5 @@ public class ExtractedContext implements SpanContext {
 
   public BigInteger getSpanId() {
     return spanId;
-  }
-
-  public Map<String, String> getBaggage() {
-    return baggage;
   }
 }

@@ -22,7 +22,6 @@ class DDSpanSerializationTest extends DDSpecification {
       "fakeService",
       "fakeOperation",
       "fakeResource",
-      Collections.emptyMap(),
       false,
       "fakeType",
       Collections.emptyMap(),

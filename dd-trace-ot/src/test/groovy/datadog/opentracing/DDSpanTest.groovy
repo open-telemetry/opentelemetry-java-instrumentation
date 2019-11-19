@@ -24,7 +24,6 @@ class DDSpanTest extends DDSpecification {
         "fakeService",
         "fakeOperation",
         "fakeResource",
-        Collections.<String, String> emptyMap(),
         false,
         "fakeType",
         null,
@@ -159,9 +158,9 @@ class DDSpanTest extends DDSpecification {
     root.finish()
 
     where:
-    extractedContext                      | isTraceRootSpan
-    null                                  | true
-    new ExtractedContext(123G, 456G, [:]) | false
+    extractedContext                 | isTraceRootSpan
+    null                             | true
+    new ExtractedContext(123G, 456G) | false
   }
 
   def "getApplicationRootSpan() in and not in the context of distributed tracing"() {
@@ -181,8 +180,8 @@ class DDSpanTest extends DDSpecification {
     root.finish()
 
     where:
-    extractedContext                      | isTraceRootSpan
-    null                                  | true
-    new ExtractedContext(123G, 456G, [:]) | false
+    extractedContext                 | isTraceRootSpan
+    null                             | true
+    new ExtractedContext(123G, 456G) | false
   }
 }
