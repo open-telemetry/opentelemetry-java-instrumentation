@@ -26,7 +26,6 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
     1 * span.setTag(Tags.SPAN_KIND.key, "client")
     1 * span.setTag(Tags.DB_TYPE.key, "test-db")
     1 * span.setTag(DDTags.SPAN_TYPE, "test-type")
-    1 * span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, 1.0)
     0 * _
 
     where:
@@ -137,10 +136,6 @@ class DatabaseClientDecoratorTest extends ClientDecoratorTest {
       @Override
       protected String dbInstance(Map map) {
         return map.instance
-      }
-
-      protected boolean traceAnalyticsDefault() {
-        return true
       }
     }
   }

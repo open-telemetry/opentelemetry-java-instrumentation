@@ -215,7 +215,6 @@ class FieldBackedProviderFieldInjectionDisabledTest extends AgentTestRunner {
     }
 
     expect:
-    Config.get().isPrioritySamplingEnabled() == false
     hasField == false
     hasMarkerInterface == false
     hasAccessorInterface == false

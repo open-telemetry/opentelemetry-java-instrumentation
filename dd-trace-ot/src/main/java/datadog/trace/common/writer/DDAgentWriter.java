@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>Written traces are passed off to a disruptor so as to avoid blocking the application's thread.
  * If a flood of traces arrives that exceeds the disruptor ring size, the traces exceeding the
- * threshold will be counted and sampled.
+ * threshold will be counted.
  */
 @Slf4j
 public class DDAgentWriter implements Writer {

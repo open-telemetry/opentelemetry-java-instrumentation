@@ -70,9 +70,8 @@ class OT31ApiTest extends DDSpecification {
 
     then:
     textMap == [
-      "x-datadog-trace-id"         : context.toTraceId(),
-      "x-datadog-parent-id"        : context.toSpanId(),
-      "x-datadog-sampling-priority": "$context.samplingPriority",
+      "x-datadog-trace-id" : context.toTraceId(),
+      "x-datadog-parent-id": context.toSpanId(),
     ]
 
     when:
@@ -81,7 +80,6 @@ class OT31ApiTest extends DDSpecification {
     then:
     extract.traceId == context.traceId
     extract.spanId == context.spanId
-    extract.samplingPriority == context.samplingPriority
   }
 
   static class TextMapAdapter implements TextMap {

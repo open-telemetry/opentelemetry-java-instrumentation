@@ -3,7 +3,6 @@ package datadog.opentracing.propagation
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
-import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.propagation.TextMapInjectAdapter
@@ -11,7 +10,6 @@ import io.opentracing.propagation.TextMapInjectAdapter
 import static datadog.opentracing.DDTracer.TRACE_ID_MAX
 import static datadog.opentracing.propagation.DatadogHttpCodec.ORIGIN_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.OT_BAGGAGE_PREFIX
-import static datadog.opentracing.propagation.DatadogHttpCodec.SAMPLING_PRIORITY_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.TRACE_ID_KEY
 
@@ -31,7 +29,6 @@ class DatadogHttpInjectorTest extends DDSpecification {
         "fakeService",
         "fakeOperation",
         "fakeResource",
-        samplingPriority,
         origin,
         new HashMap<String, String>() {
           {
@@ -55,19 +52,16 @@ class DatadogHttpInjectorTest extends DDSpecification {
     1 * carrier.put(SPAN_ID_KEY, spanId.toString())
     1 * carrier.put(OT_BAGGAGE_PREFIX + "k1", "v1")
     1 * carrier.put(OT_BAGGAGE_PREFIX + "k2", "v2")
-    if (samplingPriority != PrioritySampling.UNSET) {
-      1 * carrier.put(SAMPLING_PRIORITY_KEY, "$samplingPriority")
-    }
     if (origin) {
       1 * carrier.put(ORIGIN_KEY, origin)
     }
     0 * _
 
     where:
-    traceId          | spanId           | samplingPriority              | origin
-    1G               | 2G               | PrioritySampling.UNSET        | null
-    1G               | 2G               | PrioritySampling.SAMPLER_KEEP | "saipan"
-    TRACE_ID_MAX     | TRACE_ID_MAX - 1 | PrioritySampling.UNSET        | "saipan"
-    TRACE_ID_MAX - 1 | TRACE_ID_MAX     | PrioritySampling.SAMPLER_KEEP | null
+    traceId          | spanId           | origin
+    1G               | 2G               | null
+    1G               | 2G               | "saipan"
+    TRACE_ID_MAX     | TRACE_ID_MAX - 1 | "saipan"
+    TRACE_ID_MAX - 1 | TRACE_ID_MAX     | null
   }
 }

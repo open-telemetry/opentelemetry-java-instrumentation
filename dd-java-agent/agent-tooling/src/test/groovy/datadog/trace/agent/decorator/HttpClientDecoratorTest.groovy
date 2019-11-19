@@ -174,10 +174,6 @@ class HttpClientDecoratorTest extends ClientDecoratorTest {
       protected Integer status(Map m) {
         return m.status
       }
-
-      protected boolean traceAnalyticsDefault() {
-        return true
-      }
     }
   }
 }
