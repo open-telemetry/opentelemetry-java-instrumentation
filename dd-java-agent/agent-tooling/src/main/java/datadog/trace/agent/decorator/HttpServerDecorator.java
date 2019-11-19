@@ -36,11 +36,6 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     return DDSpanTypes.HTTP_SERVER;
   }
 
-  @Override
-  protected boolean traceAnalyticsDefault() {
-    return Config.get().isTraceAnalyticsEnabled();
-  }
-
   public AgentSpan onRequest(final AgentSpan span, final REQUEST request) {
     assert span != null;
     if (request != null) {

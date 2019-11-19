@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.trace.api.DDTags;
 import datadog.trace.api.interceptor.MutableSpan;
-import datadog.trace.api.sampling.PrioritySampling;
 import datadog.trace.common.util.Clock;
 import io.opentracing.Span;
 import io.opentracing.tag.Tag;
@@ -276,17 +275,6 @@ public class DDSpan implements Span, MutableSpan {
     return this;
   }
 
-  /**
-   * Set the sampling priority of the root span of this span's trace
-   *
-   * <p>Has no effect if the span priority has been propagated (injected or extracted).
-   */
-  @Override
-  public final DDSpan setSamplingPriority(final int newPriority) {
-    context().setSamplingPriority(newPriority);
-    return this;
-  }
-
   @Override
   public final DDSpan setSpanType(final String type) {
     context().setSpanType(type);
@@ -365,17 +353,6 @@ public class DDSpan implements Span, MutableSpan {
   @JsonGetter("name")
   public String getOperationName() {
     return context.getOperationName();
-  }
-
-  @Override
-  @JsonIgnore
-  public Integer getSamplingPriority() {
-    final int samplingPriority = context.getSamplingPriority();
-    if (samplingPriority == PrioritySampling.UNSET) {
-      return null;
-    } else {
-      return samplingPriority;
-    }
   }
 
   @Override

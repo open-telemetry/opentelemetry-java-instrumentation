@@ -6,7 +6,7 @@ public interface TraceInterceptor {
 
   /**
    * After a trace is "complete" but before it is written, it is provided to the interceptors to
-   * modify. The result following all interceptors is sampled then sent to the trace writer.
+   * modify. The result following all interceptors is then sent to the trace writer.
    *
    * @param trace - The collection of spans that represent a trace. Can be modified in place. Order
    *     of spans should not be relied upon.

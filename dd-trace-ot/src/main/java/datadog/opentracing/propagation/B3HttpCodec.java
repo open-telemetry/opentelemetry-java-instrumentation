@@ -3,7 +3,6 @@ package datadog.opentracing.propagation;
 import static datadog.opentracing.propagation.HttpCodec.validateUInt64BitsID;
 
 import datadog.opentracing.DDSpanContext;
-import datadog.trace.api.sampling.PrioritySampling;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
@@ -25,9 +24,6 @@ class B3HttpCodec {
 
   private static final String TRACE_ID_KEY = "X-B3-TraceId";
   private static final String SPAN_ID_KEY = "X-B3-SpanId";
-  private static final String SAMPLING_PRIORITY_KEY = "X-B3-Sampled";
-  private static final String SAMPLING_PRIORITY_ACCEPT = String.valueOf(1);
-  private static final String SAMPLING_PRIORITY_DROP = String.valueOf(0);
   private static final int HEX_RADIX = 16;
 
   private B3HttpCodec() {
@@ -41,20 +37,11 @@ class B3HttpCodec {
       try {
         carrier.put(TRACE_ID_KEY, context.getTraceId().toString(HEX_RADIX).toLowerCase());
         carrier.put(SPAN_ID_KEY, context.getSpanId().toString(HEX_RADIX).toLowerCase());
-
-        if (context.lockSamplingPriority()) {
-          carrier.put(
-              SAMPLING_PRIORITY_KEY, convertSamplingPriority(context.getSamplingPriority()));
-        }
         log.debug("{} - B3 parent context injected", context.getTraceId());
       } catch (final NumberFormatException e) {
         log.debug(
             "Cannot parse context id(s): {} {}", context.getTraceId(), context.getSpanId(), e);
       }
-    }
-
-    private String convertSamplingPriority(final int samplingPriority) {
-      return samplingPriority > 0 ? SAMPLING_PRIORITY_ACCEPT : SAMPLING_PRIORITY_DROP;
     }
   }
 
@@ -75,7 +62,6 @@ class B3HttpCodec {
         Map<String, String> tags = Collections.emptyMap();
         BigInteger traceId = BigInteger.ZERO;
         BigInteger spanId = BigInteger.ZERO;
-        int samplingPriority = PrioritySampling.UNSET;
 
         for (final Map.Entry<String, String> entry : carrier) {
           final String key = entry.getKey().toLowerCase();
@@ -100,8 +86,6 @@ class B3HttpCodec {
             traceId = validateUInt64BitsID(trimmedValue, HEX_RADIX);
           } else if (SPAN_ID_KEY.equalsIgnoreCase(key)) {
             spanId = validateUInt64BitsID(value, HEX_RADIX);
-          } else if (SAMPLING_PRIORITY_KEY.equalsIgnoreCase(key)) {
-            samplingPriority = convertSamplingPriority(value);
           }
 
           if (taggedHeaders.containsKey(key)) {
@@ -115,13 +99,7 @@ class B3HttpCodec {
         if (!BigInteger.ZERO.equals(traceId)) {
           final ExtractedContext context =
               new ExtractedContext(
-                  traceId,
-                  spanId,
-                  samplingPriority,
-                  null,
-                  Collections.<String, String>emptyMap(),
-                  tags);
-          context.lockSamplingPriority();
+                  traceId, spanId, null, Collections.<String, String>emptyMap(), tags);
 
           log.debug("{} - Parent context extracted", context.getTraceId());
           return context;
@@ -134,12 +112,6 @@ class B3HttpCodec {
       }
 
       return null;
-    }
-
-    private int convertSamplingPriority(final String samplingPriority) {
-      return Integer.parseInt(samplingPriority) == 1
-          ? PrioritySampling.SAMPLER_KEEP
-          : PrioritySampling.SAMPLER_DROP;
     }
   }
 }

@@ -27,11 +27,6 @@ public class RatpackServerDecorator extends HttpServerDecorator<Request, Request
   }
 
   @Override
-  protected boolean traceAnalyticsDefault() {
-    return false;
-  }
-
-  @Override
   protected String method(final Request request) {
     return request.getMethod().getName();
   }

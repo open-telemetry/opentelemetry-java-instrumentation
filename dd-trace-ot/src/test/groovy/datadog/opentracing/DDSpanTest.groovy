@@ -1,15 +1,11 @@
 package datadog.opentracing
 
-import com.fasterxml.jackson.databind.ObjectMapper
+
 import datadog.opentracing.propagation.ExtractedContext
 import datadog.opentracing.propagation.TagContext
-import datadog.trace.api.DDTags
-import datadog.trace.api.sampling.PrioritySampling
-import datadog.trace.common.sampling.RateByServiceSampler
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
-import spock.lang.Shared
 
 import java.util.concurrent.TimeUnit
 
@@ -18,16 +14,7 @@ import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 class DDSpanTest extends DDSpecification {
 
   def writer = new ListWriter()
-  def sampler = new RateByServiceSampler()
-  def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer, sampler, [:])
-
-  @Shared
-  def defaultSamplingPriority = PrioritySampling.SAMPLER_KEEP
-
-  def setup() {
-    sampler.onResponse("test", new ObjectMapper()
-      .readTree('{"rate_by_service":{"service:,env:":1.0,"service:spock,env:":0.0}}'))
-  }
+  def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer, [:])
 
   def "getters and setters"() {
     setup:
@@ -39,7 +26,6 @@ class DDSpanTest extends DDSpecification {
         "fakeService",
         "fakeOperation",
         "fakeResource",
-        PrioritySampling.UNSET,
         null,
         Collections.<String, String> emptyMap(),
         false,
@@ -69,22 +55,6 @@ class DDSpanTest extends DDSpecification {
     span.setSpanType("type")
     then:
     span.getType() == "type"
-
-    when:
-    span.setSamplingPriority(PrioritySampling.UNSET)
-    then:
-    span.getSamplingPriority() == null
-
-    when:
-    span.setSamplingPriority(PrioritySampling.SAMPLER_KEEP)
-    then:
-    span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
-
-    when:
-    context.lockSamplingPriority()
-    span.setSamplingPriority(PrioritySampling.USER_KEEP)
-    then:
-    span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
   }
 
   def "resource name equals operation name if null"() {
@@ -178,28 +148,6 @@ class DDSpanTest extends DDSpecification {
     span.durationNano == 1
   }
 
-  def "priority sampling metric set only on root span"() {
-    setup:
-    def parent = tracer.buildSpan("testParent").start()
-    def child1 = tracer.buildSpan("testChild1").asChildOf(parent).start()
-
-    child1.setSamplingPriority(PrioritySampling.SAMPLER_KEEP)
-    child1.context().lockSamplingPriority()
-    parent.setSamplingPriority(PrioritySampling.SAMPLER_DROP)
-    child1.finish()
-    def child2 = tracer.buildSpan("testChild2").asChildOf(parent).start()
-    child2.finish()
-    parent.finish()
-
-    expect:
-    parent.context().samplingPriority == PrioritySampling.SAMPLER_KEEP
-    parent.getMetrics().get(DDSpanContext.PRIORITY_SAMPLING_KEY) == PrioritySampling.SAMPLER_KEEP
-    child1.getSamplingPriority() == parent.getSamplingPriority()
-    child1.getMetrics().get(DDSpanContext.PRIORITY_SAMPLING_KEY) == null
-    child2.getSamplingPriority() == parent.getSamplingPriority()
-    child2.getMetrics().get(DDSpanContext.PRIORITY_SAMPLING_KEY) == null
-  }
-
   def "origin set only on root span"() {
     setup:
     def parent = tracer.buildSpan("testParent").asChildOf(extractedContext).start().context()
@@ -212,9 +160,9 @@ class DDSpanTest extends DDSpecification {
     child.@origin == null // Access field directly instead of getter.
 
     where:
-    extractedContext                                         | _
-    new TagContext("some-origin", [:])                       | _
-    new ExtractedContext(1G, 2G, 0, "some-origin", [:], [:]) | _
+    extractedContext                                      | _
+    new TagContext("some-origin", [:])                    | _
+    new ExtractedContext(1G, 2G, "some-origin", [:], [:]) | _
   }
 
   def "isRootSpan() in and not in the context of distributed tracing"() {
@@ -231,9 +179,9 @@ class DDSpanTest extends DDSpecification {
     root.finish()
 
     where:
-    extractedContext                                     | isTraceRootSpan
-    null                                                 | true
-    new ExtractedContext(123G, 456G, 1, "789", [:], [:]) | false
+    extractedContext                                  | isTraceRootSpan
+    null                                              | true
+    new ExtractedContext(123G, 456G, "789", [:], [:]) | false
   }
 
   def "getApplicationRootSpan() in and not in the context of distributed tracing"() {
@@ -253,74 +201,8 @@ class DDSpanTest extends DDSpecification {
     root.finish()
 
     where:
-    extractedContext                                     | isTraceRootSpan
-    null                                                 | true
-    new ExtractedContext(123G, 456G, 1, "789", [:], [:]) | false
-  }
-
-  def "sampling priority set on init"() {
-    setup:
-    def span = tracer.buildSpan("test").start()
-
-    expect:
-    span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
-
-    when:
-    span.setTag(DDTags.SERVICE_NAME, "spock")
-
-    then:
-    // FIXME: priority currently only applies if service name set before span started.
-    span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
-//    span.getSamplingPriority() == PrioritySampling.SAMPLER_DROP
-
-    when:
-    span = tracer.buildSpan("test").withTag(DDTags.SERVICE_NAME, "spock").start()
-
-    then:
-    span.getSamplingPriority() == PrioritySampling.SAMPLER_DROP
-  }
-
-  def "setting forced tracing via tag"() {
-    setup:
-    def span = tracer.buildSpan("root").start()
-    if (tagName) {
-      span.setTag(tagName, tagValue)
-    }
-
-    expect:
-    span.getSamplingPriority() == expectedPriority
-
-    cleanup:
-    span.finish()
-
-    where:
-    tagName       | tagValue | expectedPriority
-    'manual.drop' | true     | PrioritySampling.USER_DROP
-    'manual.keep' | true     | PrioritySampling.USER_KEEP
-  }
-
-  def "not setting forced tracing via tag or setting it wrong value not causing exception"() {
-
-    setup:
-    def span = tracer.buildSpan("root").start()
-    if (tagName) {
-      span.setTag(tagName, tagValue)
-    }
-
-    expect:
-    span.getSamplingPriority() == defaultSamplingPriority
-
-    cleanup:
-    span.finish()
-
-    where:
-    tagName       | tagValue
-    // When no tag is set default to
-    null          | null
-    // Setting to not known value
-    'manual.drop' | false
-    'manual.keep' | false
-    'manual.drop' | 1
-    'manual.keep' | 1
+    extractedContext                                  | isTraceRootSpan
+    null                                              | true
+    new ExtractedContext(123G, 456G, "789", [:], [:]) | false
   }
 }

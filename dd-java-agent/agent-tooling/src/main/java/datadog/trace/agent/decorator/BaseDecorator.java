@@ -1,6 +1,5 @@
 package datadog.trace.agent.decorator;
 
-import datadog.trace.api.Config;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
@@ -10,24 +9,11 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.Arrays;
-import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 
 public abstract class BaseDecorator {
 
-  protected final boolean traceAnalyticsEnabled;
-  protected final float traceAnalyticsSampleRate;
-
-  protected BaseDecorator() {
-    final Config config = Config.get();
-    final String[] instrumentationNames = instrumentationNames();
-    traceAnalyticsEnabled =
-        instrumentationNames.length > 0
-            && config.isTraceAnalyticsIntegrationEnabled(
-                new TreeSet<>(Arrays.asList(instrumentationNames)), traceAnalyticsDefault());
-    traceAnalyticsSampleRate = config.getInstrumentationAnalyticsSampleRate(instrumentationNames);
-  }
+  protected BaseDecorator() {}
 
   protected abstract String[] instrumentationNames();
 
@@ -35,19 +21,12 @@ public abstract class BaseDecorator {
 
   protected abstract String component();
 
-  protected boolean traceAnalyticsDefault() {
-    return false;
-  }
-
   public AgentSpan afterStart(final AgentSpan span) {
     assert span != null;
     if (spanType() != null) {
       span.setTag(DDTags.SPAN_TYPE, spanType());
     }
     span.setTag(Tags.COMPONENT.getKey(), component());
-    if (traceAnalyticsEnabled) {
-      span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, traceAnalyticsSampleRate);
-    }
     return span;
   }
 

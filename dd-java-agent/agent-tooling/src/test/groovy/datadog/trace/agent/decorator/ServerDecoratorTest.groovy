@@ -19,9 +19,6 @@ class ServerDecoratorTest extends BaseDecoratorTest {
     1 * span.setTag(Tags.COMPONENT.key, "test-component")
     1 * span.setTag(Tags.SPAN_KIND.key, "server")
     1 * span.setTag(DDTags.SPAN_TYPE, decorator.spanType())
-    if (decorator.traceAnalyticsEnabled) {
-      1 * span.setTag(DDTags.ANALYTICS_SAMPLE_RATE, 1.0)
-    }
     0 * _
   }
 
@@ -49,10 +46,6 @@ class ServerDecoratorTest extends BaseDecoratorTest {
       @Override
       protected String component() {
         return "test-component"
-      }
-
-      protected boolean traceAnalyticsDefault() {
-        return true
       }
     }
   }

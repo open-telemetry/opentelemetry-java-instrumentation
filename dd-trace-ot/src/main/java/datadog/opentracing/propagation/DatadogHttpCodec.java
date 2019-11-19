@@ -3,7 +3,6 @@ package datadog.opentracing.propagation;
 import static datadog.opentracing.propagation.HttpCodec.validateUInt64BitsID;
 
 import datadog.opentracing.DDSpanContext;
-import datadog.trace.api.sampling.PrioritySampling;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
@@ -20,7 +19,6 @@ class DatadogHttpCodec {
   private static final String OT_BAGGAGE_PREFIX = "ot-baggage-";
   private static final String TRACE_ID_KEY = "x-datadog-trace-id";
   private static final String SPAN_ID_KEY = "x-datadog-parent-id";
-  private static final String SAMPLING_PRIORITY_KEY = "x-datadog-sampling-priority";
   private static final String ORIGIN_KEY = "x-datadog-origin";
 
   private DatadogHttpCodec() {
@@ -33,9 +31,6 @@ class DatadogHttpCodec {
     public void inject(final DDSpanContext context, final TextMapInject carrier) {
       carrier.put(TRACE_ID_KEY, context.getTraceId().toString());
       carrier.put(SPAN_ID_KEY, context.getSpanId().toString());
-      if (context.lockSamplingPriority()) {
-        carrier.put(SAMPLING_PRIORITY_KEY, String.valueOf(context.getSamplingPriority()));
-      }
       final String origin = context.getOrigin();
       if (origin != null) {
         carrier.put(ORIGIN_KEY, origin);
@@ -65,7 +60,6 @@ class DatadogHttpCodec {
         Map<String, String> tags = Collections.emptyMap();
         BigInteger traceId = BigInteger.ZERO;
         BigInteger spanId = BigInteger.ZERO;
-        int samplingPriority = PrioritySampling.UNSET;
         String origin = null;
 
         for (final Map.Entry<String, String> entry : carrier) {
@@ -80,8 +74,6 @@ class DatadogHttpCodec {
             traceId = validateUInt64BitsID(value, 10);
           } else if (SPAN_ID_KEY.equalsIgnoreCase(key)) {
             spanId = validateUInt64BitsID(value, 10);
-          } else if (SAMPLING_PRIORITY_KEY.equalsIgnoreCase(key)) {
-            samplingPriority = Integer.parseInt(value);
           } else if (ORIGIN_KEY.equalsIgnoreCase(key)) {
             origin = value;
           } else if (key.startsWith(OT_BAGGAGE_PREFIX)) {
@@ -101,8 +93,7 @@ class DatadogHttpCodec {
 
         if (!BigInteger.ZERO.equals(traceId)) {
           final ExtractedContext context =
-              new ExtractedContext(traceId, spanId, samplingPriority, origin, baggage, tags);
-          context.lockSamplingPriority();
+              new ExtractedContext(traceId, spanId, origin, baggage, tags);
 
           log.debug("{} - Parent context extracted", context.getTraceId());
           return context;

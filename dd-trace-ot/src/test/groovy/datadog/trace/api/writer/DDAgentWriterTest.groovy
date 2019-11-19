@@ -5,7 +5,6 @@ import datadog.opentracing.DDSpan
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
 import datadog.opentracing.PendingTrace
-import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.DDApi
 import datadog.trace.util.test.DDSpecification
@@ -167,7 +166,6 @@ class DDAgentWriterTest extends DDSpecification {
       "",
       "",
       "",
-      PrioritySampling.UNSET,
       "",
       Collections.emptyMap(),
       false,
@@ -205,7 +203,6 @@ class DDAgentWriterTest extends DDSpecification {
       "",
       "",
       "",
-      PrioritySampling.UNSET,
       "",
       Collections.emptyMap(),
       false,
