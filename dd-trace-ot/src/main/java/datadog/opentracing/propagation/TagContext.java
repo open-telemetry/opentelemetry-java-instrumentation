@@ -5,15 +5,8 @@ import java.util.Collections;
 import java.util.Map;
 
 public class TagContext implements SpanContext {
-  private final String origin;
 
-  public TagContext(final String origin) {
-    this.origin = origin;
-  }
-
-  public String getOrigin() {
-    return origin;
-  }
+  public TagContext() {}
 
   @Override
   public String toTraceId() {

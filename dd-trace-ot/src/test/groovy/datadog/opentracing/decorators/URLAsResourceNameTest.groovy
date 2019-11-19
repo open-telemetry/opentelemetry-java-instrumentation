@@ -112,7 +112,6 @@ class URLAsResourceNameTest extends DDSpecification {
         "fakeService",
         "fakeOperation",
         "fakeResource",
-        null,
         Collections.<String, String> emptyMap(),
         false,
         "fakeType",

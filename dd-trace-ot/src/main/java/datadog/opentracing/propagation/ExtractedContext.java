@@ -12,11 +12,7 @@ public class ExtractedContext extends TagContext {
   private final Map<String, String> baggage;
 
   public ExtractedContext(
-      final BigInteger traceId,
-      final BigInteger spanId,
-      final String origin,
-      final Map<String, String> baggage) {
-    super(origin);
+      final BigInteger traceId, final BigInteger spanId, final Map<String, String> baggage) {
     this.traceId = traceId;
     this.spanId = spanId;
     this.baggage = baggage;

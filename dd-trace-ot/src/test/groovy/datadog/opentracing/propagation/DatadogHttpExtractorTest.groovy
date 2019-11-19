@@ -5,7 +5,6 @@ import io.opentracing.SpanContext
 import io.opentracing.propagation.TextMapExtractAdapter
 
 import static datadog.opentracing.DDTracer.TRACE_ID_MAX
-import static datadog.opentracing.propagation.DatadogHttpCodec.ORIGIN_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.OT_BAGGAGE_PREFIX
 import static datadog.opentracing.propagation.DatadogHttpCodec.SPAN_ID_KEY
 import static datadog.opentracing.propagation.DatadogHttpCodec.TRACE_ID_KEY
@@ -23,10 +22,6 @@ class DatadogHttpExtractorTest extends DDSpecification {
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2"
     ]
 
-    if (origin) {
-      headers.put(ORIGIN_KEY, origin)
-    }
-
     when:
     final ExtractedContext context = extractor.extract(new TextMapExtractAdapter(headers))
 
@@ -34,29 +29,12 @@ class DatadogHttpExtractorTest extends DDSpecification {
     context.traceId == new BigInteger(traceId)
     context.spanId == new BigInteger(spanId)
     context.baggage == ["k1": "v1", "k2": "v2"]
-    context.origin == origin
 
     where:
-    traceId                       | spanId                        | origin
-    "1"                           | "2"                           | null
-    "2"                           | "3"                           | "saipan"
-    TRACE_ID_MAX.toString()       | (TRACE_ID_MAX - 1).toString() | "saipan"
-    (TRACE_ID_MAX - 1).toString() | TRACE_ID_MAX.toString()       | "saipan"
-  }
-
-  def "extract header tags with no propagation"() {
-    when:
-    TagContext context = extractor.extract(new TextMapExtractAdapter(headers))
-
-    then:
-    !(context instanceof ExtractedContext)
-    if (headers.containsKey(ORIGIN_KEY)) {
-      assert ((TagContext) context).origin == "my-origin"
-    }
-
-    where:
-    headers                     | _
-    [(ORIGIN_KEY): "my-origin"] | _
+    traceId                       | spanId
+    "1"                           | "2"
+    TRACE_ID_MAX.toString()       | (TRACE_ID_MAX - 1).toString()
+    (TRACE_ID_MAX - 1).toString() | TRACE_ID_MAX.toString()
   }
 
   def "extract empty headers returns null"() {

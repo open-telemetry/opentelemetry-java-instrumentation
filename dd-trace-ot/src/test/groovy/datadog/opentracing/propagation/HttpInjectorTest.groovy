@@ -15,7 +15,7 @@ class HttpInjectorTest extends DDSpecification {
   def "inject http headers"() {
     setup:
     Config config = Mock(Config) {
-      getPropagationStylesToInject() >> styles
+      getPropagationStylesToInject() >> [DATADOG]
     }
     HttpCodec.Injector injector = HttpCodec.createInjector(config)
 
@@ -32,7 +32,6 @@ class HttpInjectorTest extends DDSpecification {
         "fakeService",
         "fakeOperation",
         "fakeResource",
-        origin,
         new HashMap<String, String>() {
           {
             put("k1", "v1")
@@ -51,20 +50,10 @@ class HttpInjectorTest extends DDSpecification {
     injector.inject(mockedContext, new TextMapInjectAdapter(carrier))
 
     then:
-    if (styles.contains(DATADOG)) {
-      1 * carrier.put(DatadogHttpCodec.TRACE_ID_KEY, traceId.toString())
-      1 * carrier.put(DatadogHttpCodec.SPAN_ID_KEY, spanId.toString())
-      1 * carrier.put(DatadogHttpCodec.OT_BAGGAGE_PREFIX + "k1", "v1")
-      1 * carrier.put(DatadogHttpCodec.OT_BAGGAGE_PREFIX + "k2", "v2")
-      if (origin) {
-        1 * carrier.put(DatadogHttpCodec.ORIGIN_KEY, origin)
-      }
-    }
+    1 * carrier.put(DatadogHttpCodec.TRACE_ID_KEY, traceId.toString())
+    1 * carrier.put(DatadogHttpCodec.SPAN_ID_KEY, spanId.toString())
+    1 * carrier.put(DatadogHttpCodec.OT_BAGGAGE_PREFIX + "k1", "v1")
+    1 * carrier.put(DatadogHttpCodec.OT_BAGGAGE_PREFIX + "k2", "v2")
     0 * _
-
-    where:
-    styles    | origin
-    [DATADOG] | null
-    [DATADOG] | "saipan"
   }
 }

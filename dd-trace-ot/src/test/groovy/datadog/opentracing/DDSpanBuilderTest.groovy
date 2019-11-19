@@ -417,13 +417,12 @@ class DDSpanBuilderTest extends DDSpecification {
     expect:
     span.traceId == extractedContext.traceId
     span.parentId == extractedContext.spanId
-    span.context().origin == extractedContext.origin
     span.context().baggageItems == extractedContext.baggage
 
     where:
-    extractedContext                                              | _
-    new ExtractedContext(1G, 2G, null, [:])                       | _
-    new ExtractedContext(3G, 4G, "some-origin", ["asdf": "qwer"]) | _
+    extractedContext                               | _
+    new ExtractedContext(1G, 2G, [:])              | _
+    new ExtractedContext(3G, 4G, ["asdf": "qwer"]) | _
   }
 
   def "global span tags populated on each span"() {

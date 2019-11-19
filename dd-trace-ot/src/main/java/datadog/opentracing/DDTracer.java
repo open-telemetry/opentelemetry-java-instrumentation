@@ -4,7 +4,6 @@ import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
 import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HttpCodec;
-import datadog.opentracing.propagation.TagContext;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
 import datadog.trace.api.Config;
@@ -510,7 +509,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final BigInteger parentSpanId;
       final Map<String, String> baggage;
       final PendingTrace parentTrace;
-      final String origin;
 
       final DDSpanContext context;
       SpanContext parentContext = parent;
@@ -531,7 +529,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         parentSpanId = ddsc.getSpanId();
         baggage = ddsc.getBaggageItems();
         parentTrace = ddsc.getTrace();
-        origin = null;
         if (serviceName == null) {
           serviceName = ddsc.getServiceName();
         }
@@ -548,13 +545,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           traceId = generateNewId();
           parentSpanId = BigInteger.ZERO;
           baggage = null;
-        }
-
-        // Set origin whether propagating or not.
-        if (parentContext instanceof TagContext) {
-          origin = ((TagContext) parentContext).getOrigin();
-        } else {
-          origin = null;
         }
 
         tags.putAll(localRootSpanTags);
@@ -577,7 +567,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
               serviceName,
               operationName,
               resourceName,
-              origin,
               baggage,
               errorFlag,
               spanType,

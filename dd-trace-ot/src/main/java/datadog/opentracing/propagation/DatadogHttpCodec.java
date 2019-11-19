@@ -19,7 +19,6 @@ class DatadogHttpCodec {
   private static final String OT_BAGGAGE_PREFIX = "ot-baggage-";
   private static final String TRACE_ID_KEY = "x-datadog-trace-id";
   private static final String SPAN_ID_KEY = "x-datadog-parent-id";
-  private static final String ORIGIN_KEY = "x-datadog-origin";
 
   private DatadogHttpCodec() {
     // This class should not be created. This also makes code coverage checks happy.
@@ -31,10 +30,6 @@ class DatadogHttpCodec {
     public void inject(final DDSpanContext context, final TextMapInject carrier) {
       carrier.put(TRACE_ID_KEY, context.getTraceId().toString());
       carrier.put(SPAN_ID_KEY, context.getSpanId().toString());
-      final String origin = context.getOrigin();
-      if (origin != null) {
-        carrier.put(ORIGIN_KEY, origin);
-      }
 
       for (final Map.Entry<String, String> entry : context.baggageItems()) {
         carrier.put(OT_BAGGAGE_PREFIX + entry.getKey(), HttpCodec.encode(entry.getValue()));
@@ -53,7 +48,6 @@ class DatadogHttpCodec {
         Map<String, String> baggage = Collections.emptyMap();
         BigInteger traceId = BigInteger.ZERO;
         BigInteger spanId = BigInteger.ZERO;
-        String origin = null;
 
         for (final Map.Entry<String, String> entry : carrier) {
           final String key = entry.getKey().toLowerCase();
@@ -67,8 +61,6 @@ class DatadogHttpCodec {
             traceId = validateUInt64BitsID(value, 10);
           } else if (SPAN_ID_KEY.equalsIgnoreCase(key)) {
             spanId = validateUInt64BitsID(value, 10);
-          } else if (ORIGIN_KEY.equalsIgnoreCase(key)) {
-            origin = value;
           } else if (key.startsWith(OT_BAGGAGE_PREFIX)) {
             if (baggage.isEmpty()) {
               baggage = new HashMap<>();
@@ -78,13 +70,10 @@ class DatadogHttpCodec {
         }
 
         if (!BigInteger.ZERO.equals(traceId)) {
-          final ExtractedContext context = new ExtractedContext(traceId, spanId, origin, baggage);
+          final ExtractedContext context = new ExtractedContext(traceId, spanId, baggage);
 
           log.debug("{} - Parent context extracted", context.getTraceId());
           return context;
-        } else if (origin != null) {
-          log.debug("Tags context extracted");
-          return new TagContext(origin);
         }
       } catch (final RuntimeException e) {
         log.debug("Exception when extracting context", e);

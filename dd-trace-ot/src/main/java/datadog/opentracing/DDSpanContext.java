@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DDSpanContext implements io.opentracing.SpanContext {
-  public static final String ORIGIN_KEY = "_dd.origin";
 
   private static final Map<String, Number> EMPTY_METRICS = Collections.emptyMap();
 
@@ -54,8 +53,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
   private volatile String spanType;
   /** True indicates that the span reports an error */
   private volatile boolean errorFlag;
-  /** The origin of the trace. (eg. Synthetics) */
-  private final String origin;
   /** Metrics on the span */
   private final AtomicReference<Map<String, Number>> metrics = new AtomicReference<>();
 
@@ -70,7 +67,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       final String serviceName,
       final String operationName,
       final String resourceName,
-      final String origin,
       final Map<String, String> baggageItems,
       final boolean errorFlag,
       final String spanType,
@@ -105,11 +101,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     this.resourceName = resourceName;
     this.errorFlag = errorFlag;
     this.spanType = spanType;
-    this.origin = origin;
 
-    if (origin != null) {
-      this.tags.put(ORIGIN_KEY, origin);
-    }
     this.tags.put(DDTags.THREAD_NAME, threadName);
     this.tags.put(DDTags.THREAD_ID, threadId);
   }
@@ -174,15 +166,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   public void setSpanType(final String spanType) {
     this.spanType = spanType;
-  }
-
-  public String getOrigin() {
-    final DDSpan rootSpan = trace.getRootSpan();
-    if (null != rootSpan) {
-      return rootSpan.context().origin;
-    } else {
-      return origin;
-    }
   }
 
   public void setBaggageItem(final String key, final String value) {
