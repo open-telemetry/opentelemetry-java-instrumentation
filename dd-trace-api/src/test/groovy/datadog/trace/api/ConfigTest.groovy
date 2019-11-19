@@ -5,15 +5,9 @@ import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 
-import static datadog.trace.api.Config.AGENT_HOST
-import static datadog.trace.api.Config.AGENT_PORT_LEGACY
-import static datadog.trace.api.Config.AGENT_UNIX_DOMAIN_SOCKET
 import static datadog.trace.api.Config.CONFIGURATION_FILE
 import static datadog.trace.api.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
 import static datadog.trace.api.Config.GLOBAL_TAGS
-import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
-import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_HOST
-import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_PORT
 import static datadog.trace.api.Config.HTTP_CLIENT_ERROR_STATUSES
 import static datadog.trace.api.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
 import static datadog.trace.api.Config.HTTP_SERVER_ERROR_STATUSES
@@ -25,7 +19,6 @@ import static datadog.trace.api.Config.RUNTIME_ID_TAG
 import static datadog.trace.api.Config.SERVICE_NAME
 import static datadog.trace.api.Config.SERVICE_TAG
 import static datadog.trace.api.Config.SPAN_TAGS
-import static datadog.trace.api.Config.TRACE_AGENT_PORT
 import static datadog.trace.api.Config.TRACE_ENABLED
 import static datadog.trace.api.Config.TRACE_REPORT_HOSTNAME
 import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
@@ -41,8 +34,6 @@ class ConfigTest extends DDSpecification {
   private static final DD_TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
   private static final DD_WRITER_TYPE_ENV = "DD_WRITER_TYPE"
   private static final DD_SPAN_TAGS_ENV = "DD_SPAN_TAGS"
-  private static final DD_TRACE_AGENT_PORT_ENV = "DD_TRACE_AGENT_PORT"
-  private static final DD_AGENT_PORT_LEGACY_ENV = "DD_AGENT_PORT"
   private static final DD_TRACE_REPORT_HOSTNAME = "DD_TRACE_REPORT_HOSTNAME"
 
   def "verify defaults"() {
@@ -52,10 +43,7 @@ class ConfigTest extends DDSpecification {
     then:
     config.serviceName == "unnamed-java-app"
     config.traceEnabled == true
-    config.writerType == "DDAgentWriter"
-    config.agentHost == "localhost"
-    config.agentPort == 8126
-    config.agentUnixDomainSocket == null
+    config.writerType == "LoggingWriter"
     config.traceResolverEnabled == true
     config.mergedSpanTags == [:]
     config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
@@ -66,9 +54,6 @@ class ConfigTest extends DDSpecification {
     config.partialFlushMinSpans == 1000
     config.reportHostName == false
     config.runtimeContextFieldInjection == true
-    config.healthMetricsEnabled == false
-    config.healthMetricsStatsdHost == null
-    config.healthMetricsStatsdPort == null
     config.toString().contains("unnamed-java-app")
 
     where:
@@ -85,10 +70,6 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(SERVICE_NAME, "something else")
     prop.setProperty(TRACE_ENABLED, "false")
     prop.setProperty(WRITER_TYPE, "LoggingWriter")
-    prop.setProperty(AGENT_HOST, "somehost")
-    prop.setProperty(TRACE_AGENT_PORT, "123")
-    prop.setProperty(AGENT_UNIX_DOMAIN_SOCKET, "somepath")
-    prop.setProperty(AGENT_PORT_LEGACY, "456")
     prop.setProperty(TRACE_RESOLVER_ENABLED, "false")
     prop.setProperty(GLOBAL_TAGS, "b:2")
     prop.setProperty(SPAN_TAGS, "c:3")
@@ -100,9 +81,6 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
     prop.setProperty(TRACE_REPORT_HOSTNAME, "true")
     prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
-    prop.setProperty(HEALTH_METRICS_ENABLED, "true")
-    prop.setProperty(HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
-    prop.setProperty(HEALTH_METRICS_STATSD_PORT, "654")
 
     when:
     Config config = Config.get(prop)
@@ -111,9 +89,6 @@ class ConfigTest extends DDSpecification {
     config.serviceName == "something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
-    config.agentHost == "somehost"
-    config.agentPort == 123
-    config.agentUnixDomainSocket == "somepath"
     config.traceResolverEnabled == false
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
@@ -124,9 +99,6 @@ class ConfigTest extends DDSpecification {
     config.partialFlushMinSpans == 15
     config.reportHostName == true
     config.runtimeContextFieldInjection == false
-    config.healthMetricsEnabled == true
-    config.healthMetricsStatsdHost == "metrics statsd host"
-    config.healthMetricsStatsdPort == 654
   }
 
   def "specify overrides via system properties"() {
@@ -134,10 +106,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + SERVICE_NAME, "something else")
     System.setProperty(PREFIX + TRACE_ENABLED, "false")
     System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
-    System.setProperty(PREFIX + AGENT_HOST, "somehost")
-    System.setProperty(PREFIX + TRACE_AGENT_PORT, "123")
-    System.setProperty(PREFIX + AGENT_UNIX_DOMAIN_SOCKET, "somepath")
-    System.setProperty(PREFIX + AGENT_PORT_LEGACY, "456")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, "false")
     System.setProperty(PREFIX + GLOBAL_TAGS, "b:2")
     System.setProperty(PREFIX + SPAN_TAGS, "c:3")
@@ -149,9 +117,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "25")
     System.setProperty(PREFIX + TRACE_REPORT_HOSTNAME, "true")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
-    System.setProperty(PREFIX + HEALTH_METRICS_ENABLED, "true")
-    System.setProperty(PREFIX + HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
-    System.setProperty(PREFIX + HEALTH_METRICS_STATSD_PORT, "654")
 
     when:
     Config config = new Config()
@@ -160,9 +125,6 @@ class ConfigTest extends DDSpecification {
     config.serviceName == "something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
-    config.agentHost == "somehost"
-    config.agentPort == 123
-    config.agentUnixDomainSocket == "somepath"
     config.traceResolverEnabled == false
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
@@ -173,9 +135,6 @@ class ConfigTest extends DDSpecification {
     config.partialFlushMinSpans == 25
     config.reportHostName == true
     config.runtimeContextFieldInjection == false
-    config.healthMetricsEnabled == true
-    config.healthMetricsStatsdHost == "metrics statsd host"
-    config.healthMetricsStatsdPort == 654
   }
 
   def "specify overrides via env vars"() {
@@ -199,21 +158,16 @@ class ConfigTest extends DDSpecification {
     setup:
     environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
-    environmentVariables.set(DD_TRACE_AGENT_PORT_ENV, "777")
 
     System.setProperty(PREFIX + SERVICE_NAME, "what we actually want")
-    System.setProperty(PREFIX + WRITER_TYPE, "DDAgentWriter")
-    System.setProperty(PREFIX + AGENT_HOST, "somewhere")
-    System.setProperty(PREFIX + TRACE_AGENT_PORT, "123")
+    System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
 
     when:
     def config = new Config()
 
     then:
     config.serviceName == "what we actually want"
-    config.writerType == "DDAgentWriter"
-    config.agentHost == "somewhere"
-    config.agentPort == 123
+    config.writerType == "LoggingWriter"
   }
 
   def "default when configured incorrectly"() {
@@ -221,9 +175,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + SERVICE_NAME, " ")
     System.setProperty(PREFIX + TRACE_ENABLED, " ")
     System.setProperty(PREFIX + WRITER_TYPE, " ")
-    System.setProperty(PREFIX + AGENT_HOST, " ")
-    System.setProperty(PREFIX + TRACE_AGENT_PORT, " ")
-    System.setProperty(PREFIX + AGENT_PORT_LEGACY, "invalid")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, " ")
     System.setProperty(PREFIX + SPAN_TAGS, "invalid")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "1111")
@@ -238,8 +189,6 @@ class ConfigTest extends DDSpecification {
     config.serviceName == " "
     config.traceEnabled == true
     config.writerType == " "
-    config.agentHost == " "
-    config.agentPort == 8126
     config.traceResolverEnabled == true
     config.mergedSpanTags == [:]
     config.httpServerErrorStatuses == (500..599).toSet()
@@ -248,57 +197,12 @@ class ConfigTest extends DDSpecification {
     config.dbClientSplitByInstance == false
   }
 
-  def "sys props and env vars overrides for trace_agent_port and agent_port_legacy as expected"() {
-    setup:
-    if (overridePortEnvVar) {
-      environmentVariables.set(DD_TRACE_AGENT_PORT_ENV, "777")
-    }
-    if (overrideLegacyPortEnvVar) {
-      environmentVariables.set(DD_AGENT_PORT_LEGACY_ENV, "888")
-    }
-
-    if (overridePort) {
-      System.setProperty(PREFIX + TRACE_AGENT_PORT, "123")
-    }
-    if (overrideLegacyPort) {
-      System.setProperty(PREFIX + AGENT_PORT_LEGACY, "456")
-    }
-
-    when:
-    def config = new Config()
-
-    then:
-    config.agentPort == expectedPort
-
-    where:
-    overridePort | overrideLegacyPort | overridePortEnvVar | overrideLegacyPortEnvVar | expectedPort
-    true         | true               | false              | false                    | 123
-    true         | false              | false              | false                    | 123
-    false        | true               | false              | false                    | 456
-    false        | false              | false              | false                    | 8126
-    true         | true               | true               | false                    | 123
-    true         | false              | true               | false                    | 123
-    false        | true               | true               | false                    | 777 // env var gets picked up instead.
-    false        | false              | true               | false                    | 777 // env var gets picked up instead.
-    true         | true               | false              | true                     | 123
-    true         | false              | false              | true                     | 123
-    false        | true               | false              | true                     | 456
-    false        | false              | false              | true                     | 888 // legacy env var gets picked up instead.
-    true         | true               | true               | true                     | 123
-    true         | false              | true               | true                     | 123
-    false        | true               | true               | true                     | 777 // env var gets picked up instead.
-    false        | false              | true               | true                     | 777 // env var gets picked up instead.
-  }
-
   def "sys props override properties"() {
     setup:
     Properties properties = new Properties()
     properties.setProperty(SERVICE_NAME, "something else")
     properties.setProperty(TRACE_ENABLED, "false")
     properties.setProperty(WRITER_TYPE, "LoggingWriter")
-    properties.setProperty(AGENT_HOST, "somehost")
-    properties.setProperty(TRACE_AGENT_PORT, "123")
-    properties.setProperty(AGENT_UNIX_DOMAIN_SOCKET, "somepath")
     properties.setProperty(TRACE_RESOLVER_ENABLED, "false")
     properties.setProperty(GLOBAL_TAGS, "b:2")
     properties.setProperty(SPAN_TAGS, "c:3")
@@ -316,9 +220,6 @@ class ConfigTest extends DDSpecification {
     config.serviceName == "something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
-    config.agentHost == "somehost"
-    config.agentPort == 123
-    config.agentUnixDomainSocket == "somepath"
     config.traceResolverEnabled == false
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
@@ -335,7 +236,7 @@ class ConfigTest extends DDSpecification {
 
     then:
     config.serviceName == "unnamed-java-app"
-    config.writerType == "DDAgentWriter"
+    config.writerType == "LoggingWriter"
   }
 
   def "override empty properties"() {
@@ -347,7 +248,7 @@ class ConfigTest extends DDSpecification {
 
     then:
     config.serviceName == "unnamed-java-app"
-    config.writerType == "DDAgentWriter"
+    config.writerType == "LoggingWriter"
   }
 
   def "override non empty properties"() {
@@ -360,7 +261,7 @@ class ConfigTest extends DDSpecification {
 
     then:
     config.serviceName == "unnamed-java-app"
-    config.writerType == "DDAgentWriter"
+    config.writerType == "LoggingWriter"
   }
 
   def "verify integration config"() {
