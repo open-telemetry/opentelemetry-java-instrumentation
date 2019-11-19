@@ -12,7 +12,6 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -39,12 +38,11 @@ public class HttpCodec {
     return new CompoundInjector(injectors);
   }
 
-  public static Extractor createExtractor(
-      final Config config, final Map<String, String> taggedHeaders) {
+  public static Extractor createExtractor(final Config config) {
     final List<Extractor> extractors = new ArrayList<>();
     for (final Config.PropagationStyle style : config.getPropagationStylesToExtract()) {
       if (style == Config.PropagationStyle.DATADOG) {
-        extractors.add(new DatadogHttpCodec.Extractor(taggedHeaders));
+        extractors.add(new DatadogHttpCodec.Extractor());
         continue;
       }
       log.debug("No implementation found to extract propagation style: {}", style);

@@ -1,8 +1,6 @@
 package datadog.opentracing
 
-
 import datadog.opentracing.propagation.ExtractedContext
-import datadog.opentracing.propagation.TagContext
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
@@ -160,9 +158,8 @@ class DDSpanTest extends DDSpecification {
     child.@origin == null // Access field directly instead of getter.
 
     where:
-    extractedContext                                      | _
-    new TagContext("some-origin", [:])                    | _
-    new ExtractedContext(1G, 2G, "some-origin", [:], [:]) | _
+    extractedContext                                 | _
+    new ExtractedContext(1G, 2G, "some-origin", [:]) | _
   }
 
   def "isRootSpan() in and not in the context of distributed tracing"() {
@@ -179,9 +176,9 @@ class DDSpanTest extends DDSpecification {
     root.finish()
 
     where:
-    extractedContext                                  | isTraceRootSpan
-    null                                              | true
-    new ExtractedContext(123G, 456G, "789", [:], [:]) | false
+    extractedContext                             | isTraceRootSpan
+    null                                         | true
+    new ExtractedContext(123G, 456G, "789", [:]) | false
   }
 
   def "getApplicationRootSpan() in and not in the context of distributed tracing"() {
@@ -201,8 +198,8 @@ class DDSpanTest extends DDSpecification {
     root.finish()
 
     where:
-    extractedContext                                  | isTraceRootSpan
-    null                                              | true
-    new ExtractedContext(123G, 456G, "789", [:], [:]) | false
+    extractedContext                             | isTraceRootSpan
+    null                                         | true
+    new ExtractedContext(123G, 456G, "789", [:]) | false
   }
 }

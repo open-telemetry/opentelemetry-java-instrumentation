@@ -60,7 +60,6 @@ public class Config {
   public static final String TRACE_METHODS = "trace.methods";
   public static final String TRACE_CLASSES_EXCLUDE = "trace.classes.exclude";
   public static final String TRACE_REPORT_HOSTNAME = "trace.report-hostname";
-  public static final String HEADER_TAGS = "trace.header.tags";
   public static final String HTTP_SERVER_ERROR_STATUSES = "http.server.error.statuses";
   public static final String HTTP_CLIENT_ERROR_STATUSES = "http.client.error.statuses";
   public static final String HTTP_SERVER_TAG_QUERY_STRING = "http.server.tag.query-string";
@@ -150,7 +149,6 @@ public class Config {
   private final Map<String, String> spanTags;
   private final Map<String, String> jmxTags;
   @Getter private final List<String> excludedClasses;
-  @Getter private final Map<String, String> headerTags;
   @Getter private final Set<Integer> httpServerErrorStatuses;
   @Getter private final Set<Integer> httpClientErrorStatuses;
   @Getter private final boolean httpServerTagQueryString;
@@ -208,7 +206,6 @@ public class Config {
     jmxTags = getMapSettingFromEnvironment(JMX_TAGS, null);
 
     excludedClasses = getListSettingFromEnvironment(TRACE_CLASSES_EXCLUDE, null);
-    headerTags = getMapSettingFromEnvironment(HEADER_TAGS, null);
 
     httpServerErrorStatuses =
         getIntegerRangeSettingFromEnvironment(
@@ -304,7 +301,6 @@ public class Config {
     jmxTags = getPropertyMapValue(properties, JMX_TAGS, parent.jmxTags);
     excludedClasses =
         getPropertyListValue(properties, TRACE_CLASSES_EXCLUDE, parent.excludedClasses);
-    headerTags = getPropertyMapValue(properties, HEADER_TAGS, parent.headerTags);
 
     httpServerErrorStatuses =
         getPropertyIntegerRangeValue(

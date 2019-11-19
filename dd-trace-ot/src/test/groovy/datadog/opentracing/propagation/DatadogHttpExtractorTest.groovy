@@ -12,7 +12,7 @@ import static datadog.opentracing.propagation.DatadogHttpCodec.TRACE_ID_KEY
 
 class DatadogHttpExtractorTest extends DDSpecification {
 
-  HttpCodec.Extractor extractor = new DatadogHttpCodec.Extractor(["SOME_HEADER": "some-tag"])
+  HttpCodec.Extractor extractor = new DatadogHttpCodec.Extractor()
 
   def "extract http headers"() {
     setup:
@@ -20,8 +20,7 @@ class DatadogHttpExtractorTest extends DDSpecification {
       (TRACE_ID_KEY.toUpperCase())            : traceId.toString(),
       (SPAN_ID_KEY.toUpperCase())             : spanId.toString(),
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
-      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
-      SOME_HEADER                             : "my-interesting-info",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2"
     ]
 
     if (origin) {
@@ -35,7 +34,6 @@ class DatadogHttpExtractorTest extends DDSpecification {
     context.traceId == new BigInteger(traceId)
     context.spanId == new BigInteger(spanId)
     context.baggage == ["k1": "v1", "k2": "v2"]
-    context.tags == ["some-tag": "my-interesting-info"]
     context.origin == origin
 
     where:
@@ -52,15 +50,13 @@ class DatadogHttpExtractorTest extends DDSpecification {
 
     then:
     !(context instanceof ExtractedContext)
-    context.getTags() == ["some-tag": "my-interesting-info"]
     if (headers.containsKey(ORIGIN_KEY)) {
       assert ((TagContext) context).origin == "my-origin"
     }
 
     where:
-    headers                                                         | _
-    [SOME_HEADER: "my-interesting-info"]                            | _
-    [(ORIGIN_KEY): "my-origin", SOME_HEADER: "my-interesting-info"] | _
+    headers                     | _
+    [(ORIGIN_KEY): "my-origin"] | _
   }
 
   def "extract empty headers returns null"() {
@@ -74,8 +70,7 @@ class DatadogHttpExtractorTest extends DDSpecification {
       (TRACE_ID_KEY.toUpperCase())            : "traceId",
       (SPAN_ID_KEY.toUpperCase())             : "spanId",
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
-      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
-      SOME_HEADER                             : "my-interesting-info",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2"
     ]
 
     when:
@@ -92,8 +87,7 @@ class DatadogHttpExtractorTest extends DDSpecification {
       (TRACE_ID_KEY.toUpperCase())            : outOfRangeTraceId,
       (SPAN_ID_KEY.toUpperCase())             : "0",
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
-      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
-      SOME_HEADER                             : "my-interesting-info",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2"
     ]
 
     when:
@@ -109,8 +103,7 @@ class DatadogHttpExtractorTest extends DDSpecification {
       (TRACE_ID_KEY.toUpperCase())            : "0",
       (SPAN_ID_KEY.toUpperCase())             : "-1",
       (OT_BAGGAGE_PREFIX.toUpperCase() + "k1"): "v1",
-      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2",
-      SOME_HEADER                             : "my-interesting-info",
+      (OT_BAGGAGE_PREFIX.toUpperCase() + "k2"): "v2"
     ]
 
     when:

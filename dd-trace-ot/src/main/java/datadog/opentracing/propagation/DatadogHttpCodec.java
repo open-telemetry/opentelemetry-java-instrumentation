@@ -44,20 +44,13 @@ class DatadogHttpCodec {
   }
 
   public static class Extractor implements HttpCodec.Extractor {
-    private final Map<String, String> taggedHeaders;
 
-    public Extractor(final Map<String, String> taggedHeaders) {
-      this.taggedHeaders = new HashMap<>();
-      for (final Map.Entry<String, String> mapping : taggedHeaders.entrySet()) {
-        this.taggedHeaders.put(mapping.getKey().trim().toLowerCase(), mapping.getValue());
-      }
-    }
+    public Extractor() {}
 
     @Override
     public SpanContext extract(final TextMapExtract carrier) {
       try {
         Map<String, String> baggage = Collections.emptyMap();
-        Map<String, String> tags = Collections.emptyMap();
         BigInteger traceId = BigInteger.ZERO;
         BigInteger spanId = BigInteger.ZERO;
         String origin = null;
@@ -82,24 +75,16 @@ class DatadogHttpCodec {
             }
             baggage.put(key.replace(OT_BAGGAGE_PREFIX, ""), HttpCodec.decode(value));
           }
-
-          if (taggedHeaders.containsKey(key)) {
-            if (tags.isEmpty()) {
-              tags = new HashMap<>();
-            }
-            tags.put(taggedHeaders.get(key), HttpCodec.decode(value));
-          }
         }
 
         if (!BigInteger.ZERO.equals(traceId)) {
-          final ExtractedContext context =
-              new ExtractedContext(traceId, spanId, origin, baggage, tags);
+          final ExtractedContext context = new ExtractedContext(traceId, spanId, origin, baggage);
 
           log.debug("{} - Parent context extracted", context.getTraceId());
           return context;
-        } else if (origin != null || !tags.isEmpty()) {
+        } else if (origin != null) {
           log.debug("Tags context extracted");
-          return new TagContext(origin, tags);
+          return new TagContext(origin);
         }
       } catch (final RuntimeException e) {
         log.debug("Exception when extracting context", e);

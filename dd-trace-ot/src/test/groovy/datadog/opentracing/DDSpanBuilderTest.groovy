@@ -1,7 +1,6 @@
 package datadog.opentracing
 
 import datadog.opentracing.propagation.ExtractedContext
-import datadog.opentracing.propagation.TagContext
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
 import datadog.trace.common.writer.ListWriter
@@ -9,7 +8,6 @@ import datadog.trace.util.test.DDSpecification
 import io.opentracing.Scope
 import io.opentracing.noop.NoopSpan
 
-import static datadog.opentracing.DDSpanContext.ORIGIN_KEY
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 
 class DDSpanBuilderTest extends DDSpecification {
@@ -413,7 +411,6 @@ class DDSpanBuilderTest extends DDSpecification {
 
   def "ExtractedContext should populate new span details"() {
     setup:
-    def thread = Thread.currentThread()
     final DDSpan span = tracer.buildSpan("op name")
       .asChildOf(extractedContext).start()
 
@@ -422,34 +419,11 @@ class DDSpanBuilderTest extends DDSpecification {
     span.parentId == extractedContext.spanId
     span.context().origin == extractedContext.origin
     span.context().baggageItems == extractedContext.baggage
-    span.context().@tags == extractedContext.tags + [(Config.RUNTIME_ID_TAG)  : config.getRuntimeId(),
-                                                     (Config.LANGUAGE_TAG_KEY): Config.LANGUAGE_TAG_VALUE,
-                                                     (DDTags.THREAD_NAME)     : thread.name, (DDTags.THREAD_ID): thread.id]
 
     where:
-    extractedContext                                                                                                | _
-    new ExtractedContext(1G, 2G, null, [:], [:])                                                                 | _
-    new ExtractedContext(3G, 4G, "some-origin", ["asdf": "qwer"], [(ORIGIN_KEY): "some-origin", "zxcv": "1234"]) | _
-  }
-
-  def "TagContext should populate default span details"() {
-    setup:
-    def thread = Thread.currentThread()
-    final DDSpan span = tracer.buildSpan("op name").asChildOf(tagContext).start()
-
-    expect:
-    span.traceId != 0G
-    span.parentId == 0G
-    span.context().origin == tagContext.origin
-    span.context().baggageItems == [:]
-    span.context().@tags == tagContext.tags + [(Config.RUNTIME_ID_TAG)  : config.getRuntimeId(),
-                                               (Config.LANGUAGE_TAG_KEY): Config.LANGUAGE_TAG_VALUE,
-                                               (DDTags.THREAD_NAME)     : thread.name, (DDTags.THREAD_ID): thread.id]
-
-    where:
-    tagContext                                                                   | _
-    new TagContext(null, [:])                                                    | _
-    new TagContext("some-origin", [(ORIGIN_KEY): "some-origin", "asdf": "qwer"]) | _
+    extractedContext                                              | _
+    new ExtractedContext(1G, 2G, null, [:])                       | _
+    new ExtractedContext(3G, 4G, "some-origin", ["asdf": "qwer"]) | _
   }
 
   def "global span tags populated on each span"() {

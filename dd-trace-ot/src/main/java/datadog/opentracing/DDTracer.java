@@ -98,20 +98,13 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         Writer.Builder.forConfig(config),
         config.getLocalRootSpanTags(),
         config.getMergedSpanTags(),
-        config.getHeaderTags(),
         config.getPartialFlushMinSpans());
     log.debug("Using config: {}", config);
   }
 
   /** Visible for testing */
   DDTracer(final String serviceName, final Writer writer, final Map<String, String> runtimeTags) {
-    this(
-        serviceName,
-        writer,
-        runtimeTags,
-        Collections.<String, String>emptyMap(),
-        Collections.<String, String>emptyMap(),
-        0);
+    this(serviceName, writer, runtimeTags, Collections.<String, String>emptyMap(), 0);
   }
 
   public DDTracer(final Writer writer) {
@@ -124,42 +117,37 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         writer,
         config.getLocalRootSpanTags(),
         config.getMergedSpanTags(),
-        config.getHeaderTags(),
         config.getPartialFlushMinSpans());
   }
 
-  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, Map, int)} instead. */
+  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, int)} instead. */
   @Deprecated
   public DDTracer(
       final String serviceName,
       final Writer writer,
       final String runtimeId,
       final Map<String, String> localRootSpanTags,
-      final Map<String, String> defaultSpanTags,
-      final Map<String, String> taggedHeaders) {
+      final Map<String, String> defaultSpanTags) {
     this(
         serviceName,
         writer,
         customRuntimeTags(runtimeId, localRootSpanTags),
         defaultSpanTags,
-        taggedHeaders,
         Config.get().getPartialFlushMinSpans());
   }
 
-  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, Map, int)} instead. */
+  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map,int)} instead. */
   @Deprecated
   public DDTracer(
       final String serviceName,
       final Writer writer,
       final Map<String, String> localRootSpanTags,
-      final Map<String, String> defaultSpanTags,
-      final Map<String, String> taggedHeaders) {
+      final Map<String, String> defaultSpanTags) {
     this(
         serviceName,
         writer,
         localRootSpanTags,
         defaultSpanTags,
-        taggedHeaders,
         Config.get().getPartialFlushMinSpans());
   }
 
@@ -168,11 +156,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Writer writer,
       final Map<String, String> localRootSpanTags,
       final Map<String, String> defaultSpanTags,
-      final Map<String, String> taggedHeaders,
       final int partialFlushMinSpans) {
     assert localRootSpanTags != null;
     assert defaultSpanTags != null;
-    assert taggedHeaders != null;
 
     this.serviceName = serviceName;
     this.writer = writer;
@@ -190,7 +176,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
     // TODO: we have too many constructors, we should move to some sort of builder approach
     injector = HttpCodec.createInjector(Config.get());
-    extractor = HttpCodec.createExtractor(Config.get(), taggedHeaders);
+    extractor = HttpCodec.createExtractor(Config.get());
 
     log.info("New instance: {}", this);
 
@@ -564,9 +550,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           baggage = null;
         }
 
-        // Get header tags and set origin whether propagating or not.
+        // Set origin whether propagating or not.
         if (parentContext instanceof TagContext) {
-          tags.putAll(((TagContext) parentContext).getTags());
           origin = ((TagContext) parentContext).getOrigin();
         } else {
           origin = null;
