@@ -76,15 +76,12 @@ public interface Writer extends Closeable {
       } else {
         String host = config.getHealthMetricsStatsdHost();
         if (host == null) {
-          host = config.getJmxFetchStatsdHost();
-        }
-        if (host == null) {
           host = config.getAgentHost();
         }
 
         Integer port = config.getHealthMetricsStatsdPort();
         if (port == null) {
-          port = config.getJmxFetchStatsdPort();
+          return new DDAgentWriter.NoopMonitor();
         }
 
         return new DDAgentWriter.StatsDMonitor(host, port);

@@ -33,11 +33,6 @@ public class IntegrationTestUtils {
     return getTracingAgentFieldClassloader("AGENT_CLASSLOADER");
   }
 
-  /** Returns the classloader the jmxfetch is running on. */
-  public static ClassLoader getJmxFetchClassLoader() {
-    return getTracingAgentFieldClassloader("JMXFETCH_CLASSLOADER");
-  }
-
   private static ClassLoader getTracingAgentFieldClassloader(final String fieldName) {
     Field classloaderField = null;
     try {
