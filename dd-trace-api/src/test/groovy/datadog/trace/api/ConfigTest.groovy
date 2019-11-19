@@ -7,18 +7,13 @@ import org.junit.contrib.java.lang.system.RestoreSystemProperties
 
 import static datadog.trace.api.Config.CONFIGURATION_FILE
 import static datadog.trace.api.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
-import static datadog.trace.api.Config.GLOBAL_TAGS
 import static datadog.trace.api.Config.HTTP_CLIENT_ERROR_STATUSES
 import static datadog.trace.api.Config.HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN
 import static datadog.trace.api.Config.HTTP_SERVER_ERROR_STATUSES
-import static datadog.trace.api.Config.JMX_TAGS
 import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
 import static datadog.trace.api.Config.PREFIX
 import static datadog.trace.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
-import static datadog.trace.api.Config.RUNTIME_ID_TAG
 import static datadog.trace.api.Config.SERVICE_NAME
-import static datadog.trace.api.Config.SERVICE_TAG
-import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.TRACE_ENABLED
 import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
 import static datadog.trace.api.Config.WRITER_TYPE
@@ -32,7 +27,6 @@ class ConfigTest extends DDSpecification {
   private static final DD_SERVICE_NAME_ENV = "DD_SERVICE_NAME"
   private static final DD_TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
   private static final DD_WRITER_TYPE_ENV = "DD_WRITER_TYPE"
-  private static final DD_SPAN_TAGS_ENV = "DD_SPAN_TAGS"
 
   def "verify defaults"() {
     when:
@@ -43,8 +37,6 @@ class ConfigTest extends DDSpecification {
     config.traceEnabled == true
     config.writerType == "LoggingWriter"
     config.traceResolverEnabled == true
-    config.mergedSpanTags == [:]
-    config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..499).toSet()
     config.httpClientSplitByDomain == false
@@ -68,9 +60,6 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(TRACE_ENABLED, "false")
     prop.setProperty(WRITER_TYPE, "LoggingWriter")
     prop.setProperty(TRACE_RESOLVER_ENABLED, "false")
-    prop.setProperty(GLOBAL_TAGS, "b:2")
-    prop.setProperty(SPAN_TAGS, "c:3")
-    prop.setProperty(JMX_TAGS, "d:4")
     prop.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     prop.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     prop.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
@@ -86,8 +75,6 @@ class ConfigTest extends DDSpecification {
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
     config.traceResolverEnabled == false
-    config.mergedSpanTags == [b: "2", c: "3"]
-    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
@@ -102,9 +89,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + TRACE_ENABLED, "false")
     System.setProperty(PREFIX + WRITER_TYPE, "LoggingWriter")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, "false")
-    System.setProperty(PREFIX + GLOBAL_TAGS, "b:2")
-    System.setProperty(PREFIX + SPAN_TAGS, "c:3")
-    System.setProperty(PREFIX + JMX_TAGS, "d:4")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "111")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
@@ -120,8 +104,6 @@ class ConfigTest extends DDSpecification {
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
     config.traceResolverEnabled == false
-    config.mergedSpanTags == [b: "2", c: "3"]
-    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
@@ -167,7 +149,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + TRACE_ENABLED, " ")
     System.setProperty(PREFIX + WRITER_TYPE, " ")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, " ")
-    System.setProperty(PREFIX + SPAN_TAGS, "invalid")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "1111")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "1:1")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "invalid")
@@ -181,7 +162,6 @@ class ConfigTest extends DDSpecification {
     config.traceEnabled == true
     config.writerType == " "
     config.traceResolverEnabled == true
-    config.mergedSpanTags == [:]
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..499).toSet()
     config.httpClientSplitByDomain == false
@@ -195,9 +175,6 @@ class ConfigTest extends DDSpecification {
     properties.setProperty(TRACE_ENABLED, "false")
     properties.setProperty(WRITER_TYPE, "LoggingWriter")
     properties.setProperty(TRACE_RESOLVER_ENABLED, "false")
-    properties.setProperty(GLOBAL_TAGS, "b:2")
-    properties.setProperty(SPAN_TAGS, "c:3")
-    properties.setProperty(JMX_TAGS, "d:4")
     properties.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     properties.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     properties.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
@@ -212,8 +189,6 @@ class ConfigTest extends DDSpecification {
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
     config.traceResolverEnabled == false
-    config.mergedSpanTags == [b: "2", c: "3"]
-    config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
@@ -318,42 +293,6 @@ class ConfigTest extends DDSpecification {
     defaultValue = 10.0
   }
 
-  def "verify mapping configs on tracer"() {
-    setup:
-    System.setProperty(PREFIX + SPAN_TAGS, mapString)
-    def props = new Properties()
-    props.setProperty(SPAN_TAGS, mapString)
-
-    when:
-    def config = new Config()
-    def propConfig = Config.get(props)
-
-    then:
-    config.spanTags == map
-    propConfig.spanTags == map
-
-    where:
-    mapString                         | map
-    "a:1, a:2, a:3"                   | [a: "3"]
-    "a:b,c:d,e:"                      | [a: "b", c: "d"]
-    // More different string variants:
-    "a:"                              | [:]
-    "a:a;"                            | [a: "a;"]
-    "a:1, a:2, a:3"                   | [a: "3"]
-    "a:b,c:d,e:"                      | [a: "b", c: "d"]
-    "key 1!:va|ue_1,"                 | ["key 1!": "va|ue_1"]
-    " key1 :value1 ,\t key2:  value2" | [key1: "value1", key2: "value2"]
-    // Invalid strings:
-    ""                                | [:]
-    "1"                               | [:]
-    "a"                               | [:]
-    "a,1"                             | [:]
-    "in:val:id"                       | [:]
-    "a:b:c:d"                         | [:]
-    "a:b,c,d"                         | [:]
-    "!a"                              | [:]
-  }
-
   def "verify integer range configs on tracer"() {
     setup:
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, value)
@@ -391,33 +330,6 @@ class ConfigTest extends DDSpecification {
     "999-888"           | 888..999
     "400-403,405-407"   | [400, 401, 402, 403, 405, 406, 407]
     " 400 - 403 , 405 " | [400, 401, 402, 403, 405]
-  }
-
-  def "verify null value mapping configs on tracer"() {
-    setup:
-    environmentVariables.set(DD_SPAN_TAGS_ENV, mapString)
-
-    when:
-    def config = new Config()
-
-    then:
-    config.spanTags == map
-
-    where:
-    mapString | map
-    null      | [:]
-    ""        | [:]
-  }
-
-  def "verify hostname not added to root span tags by default"() {
-    setup:
-    Properties properties = new Properties()
-
-    when:
-    def config = Config.get(properties)
-
-    then:
-    !config.localRootSpanTags.containsKey('_dd.hostname')
   }
 
   def "verify fallback to properties file"() {

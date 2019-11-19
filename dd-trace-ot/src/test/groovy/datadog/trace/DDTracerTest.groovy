@@ -12,7 +12,6 @@ import org.junit.contrib.java.lang.system.RestoreSystemProperties
 
 import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 import static datadog.trace.api.Config.PREFIX
-import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.WRITER_TYPE
 
 class DDTracerTest extends DDSpecification {
@@ -56,23 +55,6 @@ class DDTracerTest extends DDSpecification {
     tracer.writer instanceof LoggingWriter
   }
 
-  def "verify mapping configs on tracer"() {
-    setup:
-    System.setProperty(PREFIX + SPAN_TAGS, mapString)
-
-    when:
-    def config = new Config()
-    def tracer = new DDTracer(config)
-
-    then:
-    tracer.defaultSpanTags == map
-
-    where:
-    mapString       | map
-    "a:1, a:2, a:3" | [a: "3"]
-    "a:b,c:d,e:"    | [a: "b", c: "d"]
-  }
-
   def "verify writer constructor"() {
     setup:
     def writer = new ListWriter()
@@ -83,22 +65,5 @@ class DDTracerTest extends DDSpecification {
     then:
     tracer.serviceName == DEFAULT_SERVICE_NAME
     tracer.writer == writer
-    tracer.localRootSpanTags[Config.RUNTIME_ID_TAG].size() > 0 // not null or empty
-    tracer.localRootSpanTags[Config.LANGUAGE_TAG_KEY] == Config.LANGUAGE_TAG_VALUE
-  }
-
-  def "root tags are applied only to root spans"() {
-    setup:
-    def tracer = new DDTracer('my_service', new ListWriter(), '', ['only_root': 'value'], [:])
-    def root = tracer.buildSpan('my_root').start()
-    def child = tracer.buildSpan('my_child').asChildOf(root).start()
-
-    expect:
-    root.context().tags.containsKey('only_root')
-    !child.context().tags.containsKey('only_root')
-
-    cleanup:
-    child.finish()
-    root.finish()
   }
 }

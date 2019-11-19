@@ -11,7 +11,6 @@ import io.opentracing.tag.StringTag
 import io.opentracing.tag.Tags
 
 import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
-import static java.util.Collections.emptyMap
 
 class SpanDecoratorTest extends DDSpecification {
 
@@ -42,10 +41,7 @@ class SpanDecoratorTest extends DDSpecification {
     setup:
     tracer = new DDTracer(
       "wrong-service",
-      new LoggingWriter(),
-      "some-runtime-id",
-      emptyMap(),
-      emptyMap()
+      new LoggingWriter()
     )
 
     when:
@@ -86,10 +82,7 @@ class SpanDecoratorTest extends DDSpecification {
     setup:
     tracer = new DDTracer(
       serviceName,
-      new LoggingWriter(),
-      "some-runtime-id",
-      emptyMap(),
-      emptyMap()
+      new LoggingWriter()
     )
 
     when:

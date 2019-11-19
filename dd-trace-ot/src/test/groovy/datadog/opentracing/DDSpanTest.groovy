@@ -12,7 +12,7 @@ import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 class DDSpanTest extends DDSpecification {
 
   def writer = new ListWriter()
-  def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer, [:])
+  def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer)
 
   def "getters and setters"() {
     setup:

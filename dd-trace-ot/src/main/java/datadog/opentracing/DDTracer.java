@@ -23,7 +23,6 @@ import java.lang.ref.WeakReference;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,11 +46,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   final Writer writer;
   /** Scope manager is in charge of managing the scopes from which spans are created */
   final ContextualScopeManager scopeManager = new ContextualScopeManager();
-
-  /** A set of tags that are added only to the application's root span */
-  private final Map<String, String> localRootSpanTags;
-  /** A set of tags that are added to every span */
-  private final Map<String, String> defaultSpanTags;
 
   /** number of spans in a pending trace before they get flushed */
   @Getter private final int partialFlushMinSpans;
@@ -86,24 +80,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this(config.getServiceName(), config);
   }
 
-  // This constructor is already used in the wild, so we have to keep it inside this API for now.
-  public DDTracer(final String serviceName, final Writer writer) {
-    this(serviceName, writer, Config.get().getLocalRootSpanTags());
-  }
-
   private DDTracer(final String serviceName, final Config config) {
-    this(
-        serviceName,
-        Writer.Builder.forConfig(config),
-        config.getLocalRootSpanTags(),
-        config.getMergedSpanTags(),
-        config.getPartialFlushMinSpans());
+    this(serviceName, Writer.Builder.forConfig(config), config.getPartialFlushMinSpans());
     log.debug("Using config: {}", config);
-  }
-
-  /** Visible for testing */
-  DDTracer(final String serviceName, final Writer writer, final Map<String, String> runtimeTags) {
-    this(serviceName, writer, runtimeTags, Collections.<String, String>emptyMap(), 0);
   }
 
   public DDTracer(final Writer writer) {
@@ -111,59 +90,18 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   }
 
   public DDTracer(final Config config, final Writer writer) {
-    this(
-        config.getServiceName(),
-        writer,
-        config.getLocalRootSpanTags(),
-        config.getMergedSpanTags(),
-        config.getPartialFlushMinSpans());
+    this(config.getServiceName(), writer, config.getPartialFlushMinSpans());
   }
 
-  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, int)} instead. */
-  @Deprecated
-  public DDTracer(
-      final String serviceName,
-      final Writer writer,
-      final String runtimeId,
-      final Map<String, String> localRootSpanTags,
-      final Map<String, String> defaultSpanTags) {
-    this(
-        serviceName,
-        writer,
-        customRuntimeTags(runtimeId, localRootSpanTags),
-        defaultSpanTags,
-        Config.get().getPartialFlushMinSpans());
+  public DDTracer(final String serviceName, final Writer writer) {
+    this(serviceName, writer, Config.get().getPartialFlushMinSpans());
   }
 
-  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map,int)} instead. */
-  @Deprecated
-  public DDTracer(
-      final String serviceName,
-      final Writer writer,
-      final Map<String, String> localRootSpanTags,
-      final Map<String, String> defaultSpanTags) {
-    this(
-        serviceName,
-        writer,
-        localRootSpanTags,
-        defaultSpanTags,
-        Config.get().getPartialFlushMinSpans());
-  }
-
-  public DDTracer(
-      final String serviceName,
-      final Writer writer,
-      final Map<String, String> localRootSpanTags,
-      final Map<String, String> defaultSpanTags,
-      final int partialFlushMinSpans) {
-    assert localRootSpanTags != null;
-    assert defaultSpanTags != null;
+  public DDTracer(final String serviceName, final Writer writer, final int partialFlushMinSpans) {
 
     this.serviceName = serviceName;
     this.writer = writer;
     this.writer.start();
-    this.localRootSpanTags = localRootSpanTags;
-    this.defaultSpanTags = defaultSpanTags;
     this.partialFlushMinSpans = partialFlushMinSpans;
 
     shutdownCallback = new ShutdownHook(this);
@@ -326,17 +264,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         + serviceName
         + ", writer="
         + writer
-        + ", defaultSpanTags="
-        + defaultSpanTags
         + '}';
-  }
-
-  @Deprecated
-  private static Map<String, String> customRuntimeTags(
-      final String runtimeId, final Map<String, String> applicationRootSpanTags) {
-    final Map<String, String> runtimeTags = new HashMap<>(applicationRootSpanTags);
-    runtimeTags.put(Config.RUNTIME_ID_TAG, runtimeId);
-    return Collections.unmodifiableMap(runtimeTags);
   }
 
   /** Spans are built using this builder */
@@ -347,7 +275,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     private final String operationName;
 
     // Builder attributes
-    private final Map<String, Object> tags = new HashMap<String, Object>(defaultSpanTags);
+    private final Map<String, Object> tags = new HashMap<>();
     private long timestampMicro;
     private SpanContext parent;
     private String serviceName;
@@ -535,8 +463,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           traceId = generateNewId();
           parentSpanId = BigInteger.ZERO;
         }
-
-        tags.putAll(localRootSpanTags);
 
         parentTrace = new PendingTrace(DDTracer.this, traceId);
       }
