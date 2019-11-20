@@ -1,4 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import io.dropwizard.testing.junit.ResourceTestRule
 import org.junit.ClassRule
 import spock.lang.Shared
@@ -15,22 +17,44 @@ class JerseyTest extends AgentTestRunner {
     .addResource(new Resource.Test3())
     .build()
 
-  def "test resource"() {
-    setup:
+  def "test #resource"() {
+    when:
     // start a trace because the test doesn't go through any servlet or other instrumentation.
     def response = runUnderTrace("test.span") {
-      resources.client().resource("/test/hello/bob").post(String)
+      resources.client().resource(resource).post(String)
     }
 
-    expect:
-    response == "Test1 bob!"
-    TEST_WRITER.waitForTraces(1)
-    TEST_WRITER.size() == 1
+    then:
+    response == expectedResponse
 
-    def trace = TEST_WRITER.firstTrace()
-    assert trace.size() == 2
-    def span = trace[0]
-    span.resourceName == "POST /test/hello/{name}"
-    span.tags["component"] == "jax-rs"
+    assertTraces(1) {
+      trace(0, 2) {
+        span(0) {
+          operationName "test.span"
+          resourceName expectedResourceName
+          tags {
+            "$Tags.COMPONENT" "jax-rs"
+            defaultTags()
+          }
+        }
+
+        span(1) {
+          childOf span(0)
+          operationName "jax-rs.request"
+          resourceName controllerName
+          spanType DDSpanTypes.HTTP_SERVER
+          tags {
+            "$Tags.COMPONENT" "jax-rs-controller"
+            defaultTags()
+          }
+        }
+      }
+    }
+
+    where:
+    resource           | expectedResourceName       | controllerName | expectedResponse
+    "/test/hello/bob"  | "POST /test/hello/{name}"  | "Test1.hello"  | "Test1 bob!"
+    "/test2/hello/bob" | "POST /test2/hello/{name}" | "Test2.hello"  | "Test2 bob!"
+    "/test3/hi/bob"    | "POST /test3/hi/{name}"    | "Test3.hello"  | "Test3 bob!"
   }
 }
