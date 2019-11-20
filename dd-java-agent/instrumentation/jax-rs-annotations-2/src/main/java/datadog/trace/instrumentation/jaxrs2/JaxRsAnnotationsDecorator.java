@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.jaxrs2;
 import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 
 import datadog.trace.agent.decorator.BaseDecorator;
+import datadog.trace.agent.tooling.ClassHierarchyIterable;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.WeakMap;
@@ -10,8 +11,6 @@ import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.Tags;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.HttpMethod;
@@ -83,9 +82,31 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
 
     String resourceName = classMap.get(method);
     if (resourceName == null) {
-      final String httpMethod = locateHttpMethod(method);
-      final List<Path> paths = gatherPaths(target, method);
-      resourceName = buildResourceName(httpMethod, paths);
+      String httpMethod = null;
+      Path methodPath = null;
+      final Path classPath = findClassPath(target);
+      for (final Class currentClass : new ClassHierarchyIterable(target)) {
+        final Method currentMethod;
+        if (currentClass.equals(target)) {
+          currentMethod = method;
+        } else {
+          currentMethod = findMatchingMethod(method, currentClass.getDeclaredMethods());
+        }
+
+        if (currentMethod != null) {
+          if (httpMethod == null) {
+            httpMethod = locateHttpMethod(currentMethod);
+          }
+          if (methodPath == null) {
+            methodPath = findMethodPath(currentMethod);
+          }
+
+          if (httpMethod != null && methodPath != null) {
+            break;
+          }
+        }
+      }
+      resourceName = buildResourceName(httpMethod, classPath, methodPath);
       classMap.put(method, resourceName);
     }
 
@@ -102,40 +123,77 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return httpMethod;
   }
 
-  private List<Path> gatherPaths(Class<Object> target, final Method method) {
-    final List<Path> paths = new ArrayList();
-    while (target != null && target != Object.class) {
-      final Path annotation = target.getAnnotation(Path.class);
-      if (annotation != null) {
-        paths.add(annotation);
-        break; // Annotation overridden, no need to continue.
-      }
-      target = target.getSuperclass();
-    }
-    final Path methodPath = method.getAnnotation(Path.class);
-    if (methodPath != null) {
-      paths.add(methodPath);
-    }
-    return paths;
+  private Path findMethodPath(final Method method) {
+    return method.getAnnotation(Path.class);
   }
 
-  private String buildResourceName(final String httpMethod, final List<Path> paths) {
+  private Path findClassPath(final Class<Object> target) {
+    for (final Class<?> currentClass : new ClassHierarchyIterable(target)) {
+      final Path annotation = currentClass.getAnnotation(Path.class);
+      if (annotation != null) {
+        // Annotation overridden, no need to continue.
+        return annotation;
+      }
+    }
+
+    return null;
+  }
+
+  private Method findMatchingMethod(final Method baseMethod, final Method[] methods) {
+    nextMethod:
+    for (final Method method : methods) {
+      if (!baseMethod.getReturnType().equals(method.getReturnType())) {
+        continue;
+      }
+
+      if (!baseMethod.getName().equals(method.getName())) {
+        continue;
+      }
+
+      final Class<?>[] baseParameterTypes = baseMethod.getParameterTypes();
+      final Class<?>[] parameterTypes = method.getParameterTypes();
+      if (baseParameterTypes.length != parameterTypes.length) {
+        continue;
+      }
+      for (int i = 0; i < baseParameterTypes.length; i++) {
+        if (!baseParameterTypes[i].equals(parameterTypes[i])) {
+          continue nextMethod;
+        }
+      }
+      return method;
+    }
+    return null;
+  }
+
+  private String buildResourceName(
+      final String httpMethod, final Path classPath, final Path methodPath) {
     final String resourceName;
     final StringBuilder resourceNameBuilder = new StringBuilder();
     if (httpMethod != null) {
       resourceNameBuilder.append(httpMethod);
       resourceNameBuilder.append(" ");
     }
-    Path last = null;
-    for (final Path path : paths) {
-      if (path.value().startsWith("/") || (last != null && last.value().endsWith("/"))) {
-        resourceNameBuilder.append(path.value());
-      } else {
+    boolean skipSlash = false;
+    if (classPath != null) {
+      if (!classPath.value().startsWith("/")) {
         resourceNameBuilder.append("/");
-        resourceNameBuilder.append(path.value());
       }
-      last = path;
+      resourceNameBuilder.append(classPath.value());
+      skipSlash = classPath.value().endsWith("/");
     }
+
+    if (methodPath != null) {
+      String path = methodPath.value();
+      if (skipSlash) {
+        if (path.startsWith("/")) {
+          path = path.length() == 1 ? "" : path.substring(1);
+        }
+      } else if (!path.startsWith("/")) {
+        resourceNameBuilder.append("/");
+      }
+      resourceNameBuilder.append(path);
+    }
+
     resourceName = resourceNameBuilder.toString().trim();
     return resourceName;
   }
