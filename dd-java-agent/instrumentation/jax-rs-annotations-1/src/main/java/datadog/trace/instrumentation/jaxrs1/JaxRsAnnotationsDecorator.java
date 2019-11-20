@@ -3,6 +3,7 @@ package datadog.trace.instrumentation.jaxrs1;
 import static datadog.trace.bootstrap.WeakMap.Provider.newWeakMap;
 
 import datadog.trace.agent.decorator.BaseDecorator;
+import datadog.trace.agent.tooling.ClassHierarchyIterable;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.bootstrap.WeakMap;
@@ -84,16 +85,25 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
       String httpMethod = null;
       Path methodPath = null;
       final Path classPath = findClassPath(target);
-      for (final Method current : new OverriddenMethodIterable(target, method)) {
-        if (httpMethod == null) {
-          httpMethod = locateHttpMethod(current);
+      for (final Class currentClass : new ClassHierarchyIterable(target)) {
+        final Method currentMethod;
+        if (currentClass.equals(target)) {
+          currentMethod = method;
+        } else {
+          currentMethod = findMatchingMethod(method, currentClass.getDeclaredMethods());
         }
-        if (methodPath == null) {
-          methodPath = findMethodPath(current);
-        }
-        // TODO figure out if these will ever be on different methods.
-        if (httpMethod != null && methodPath != null) {
-          break;
+
+        if (currentMethod != null) {
+          if (httpMethod == null) {
+            httpMethod = locateHttpMethod(currentMethod);
+          }
+          if (methodPath == null) {
+            methodPath = findMethodPath(currentMethod);
+          }
+
+          if (httpMethod != null && methodPath != null) {
+            break;
+          }
         }
       }
       resourceName = buildResourceName(httpMethod, classPath, methodPath);
@@ -117,14 +127,40 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
     return method.getAnnotation(Path.class);
   }
 
-  private Path findClassPath(Class<Object> target) {
-    while (target != null && target != Object.class) {
-      final Path annotation = target.getAnnotation(Path.class);
+  private Path findClassPath(final Class<Object> target) {
+    for (final Class<?> currentClass : new ClassHierarchyIterable(target)) {
+      final Path annotation = currentClass.getAnnotation(Path.class);
       if (annotation != null) {
         // Annotation overridden, no need to continue.
         return annotation;
       }
-      target = target.getSuperclass();
+    }
+
+    return null;
+  }
+
+  private Method findMatchingMethod(final Method baseMethod, final Method[] methods) {
+    nextMethod:
+    for (final Method method : methods) {
+      if (!baseMethod.getReturnType().equals(method.getReturnType())) {
+        continue;
+      }
+
+      if (!baseMethod.getName().equals(method.getName())) {
+        continue;
+      }
+
+      final Class<?>[] baseParameterTypes = baseMethod.getParameterTypes();
+      final Class<?>[] parameterTypes = method.getParameterTypes();
+      if (baseParameterTypes.length != parameterTypes.length) {
+        continue;
+      }
+      for (int i = 0; i < baseParameterTypes.length; i++) {
+        if (!baseParameterTypes[i].equals(parameterTypes[i])) {
+          continue nextMethod;
+        }
+      }
+      return method;
     }
     return null;
   }

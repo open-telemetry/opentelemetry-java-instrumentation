@@ -31,9 +31,12 @@ public interface Resource {
     }
   }
 
-  class Test3 extends Test1 {
+  @Path("/test3")
+  class Test3 implements SubResource {
     @Override
-    public String hello(final String name) {
+    @POST
+    @Path("/hi/{name}")
+    public String hello(@PathParam("name") final String name) {
       return "Test3 " + name + "!";
     }
   }

@@ -51,9 +51,9 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   public String[] helperClassNames() {
     return new String[] {
       "datadog.trace.agent.decorator.BaseDecorator",
+      "datadog.trace.agent.tooling.ClassHierarchyIterable",
+      "datadog.trace.agent.tooling.ClassHierarchyIterable$ClassIterator",
       packageName + ".JaxRsAnnotationsDecorator",
-      packageName + ".OverriddenMethodIterable",
-      packageName + ".OverriddenMethodIterable$MethodIterator",
     };
   }
 
