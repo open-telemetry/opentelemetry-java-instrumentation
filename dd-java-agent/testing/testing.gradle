@@ -16,7 +16,6 @@ dependencies {
   compile deps.bytebuddy
   compile deps.bytebuddyagent
   compile deps.slf4j
-  compile deps.opentracing
   compile deps.spock
   compile deps.testLogging
   compile deps.guava

@@ -23,7 +23,6 @@ dependencies {
   play project(':dd-trace-api')
   play project(':dd-java-agent:agent-bootstrap')
   play project(':dd-java-agent:benchmark-integration')
-  play deps.opentracing
 }
 
 repositories {

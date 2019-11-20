@@ -104,7 +104,6 @@ dependencies {
   testCompile project(':dd-trace-ot')
   testCompile project(':utils:gc-utils')
 
-  testCompile deps.opentracingMock
   testCompile deps.testLogging
   testCompile deps.guava
 
