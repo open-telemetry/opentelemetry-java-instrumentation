@@ -9,7 +9,6 @@ import datadog.trace.context.ScopeListener;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
-import io.opentracing.propagation.Format;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
 import io.opentracing.tag.Tag;
@@ -122,19 +121,19 @@ public class DDTracer implements Closeable, datadog.trace.api.Tracer {
     return new DDSpanBuilder(operationName, scopeManager);
   }
 
-  public <T> void inject(final SpanContext spanContext, final Format<T> format, final T carrier) {
+  public <T> void inject(final SpanContext spanContext, final T carrier) {
     if (carrier instanceof TextMapInject) {
       injector.inject((DDSpanContext) spanContext, (TextMapInject) carrier);
     } else {
-      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
+      log.debug("Unsupported carrier for propagation - {}", carrier.getClass().getName());
     }
   }
 
-  public <T> SpanContext extract(final Format<T> format, final T carrier) {
+  public <T> SpanContext extract(final T carrier) {
     if (carrier instanceof TextMapExtract) {
       return extractor.extract((TextMapExtract) carrier);
     } else {
-      log.debug("Unsupported format for propagation - {}", format.getClass().getName());
+      log.debug("Unsupported carrier for propagation - {}", carrier.getClass().getName());
       return null;
     }
   }

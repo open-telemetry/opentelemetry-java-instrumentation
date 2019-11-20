@@ -1,8 +1,6 @@
 package datadog.trace.agent.tooling;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
-import static io.opentracing.propagation.Format.Builtin.TEXT_MAP_EXTRACT;
-import static io.opentracing.propagation.Format.Builtin.TEXT_MAP_INJECT;
 import static java.util.Collections.singletonMap;
 
 import datadog.opentracing.DDSpan;
@@ -273,7 +271,6 @@ public final class OpenTracing32 implements TracerAPI {
       assert span instanceof OT32Span;
       tracer.inject(
           ((OT32Span) span).getSpan().context(),
-          TEXT_MAP_INJECT,
           new OT32AgentPropagation.Injector<>(carrier, setter));
     }
 
@@ -294,7 +291,7 @@ public final class OpenTracing32 implements TracerAPI {
 
     @Override
     public <C> AgentSpan.Context extract(final C carrier, final Getter<C> getter) {
-      return new OT32Context(tracer.extract(TEXT_MAP_EXTRACT, new Extractor(carrier, getter)));
+      return new OT32Context(tracer.extract(new Extractor(carrier, getter)));
     }
   }
 
