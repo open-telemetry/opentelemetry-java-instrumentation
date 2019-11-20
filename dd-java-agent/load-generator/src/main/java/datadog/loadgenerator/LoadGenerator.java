@@ -1,10 +1,11 @@
 package datadog.loadgenerator;
 
+import static datadog.trace.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
+
 import com.google.common.util.concurrent.RateLimiter;
-import io.opentracing.Scope;
-import io.opentracing.Span;
-import io.opentracing.Tracer;
-import io.opentracing.util.GlobalTracer;
+import datadog.trace.instrumentation.api.AgentScope;
+import datadog.trace.instrumentation.api.AgentSpan;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -90,19 +91,18 @@ public class LoadGenerator implements Callable<Integer> {
 
     @Override
     public void run() {
-      final Tracer tracer = GlobalTracer.get();
 
       while (true) {
         rateLimiter.acquire();
-        final Span parent = tracer.buildSpan("parentSpan").start();
+        final AgentSpan parent = startSpan("parentSpan");
 
-        try (final Scope scope = tracer.activateSpan(parent)) {
+        try (final AgentScope scope = activateSpan(parent, true)) {
           for (int i = 0; i < width; i++) {
-            final Span widthSpan = tracer.buildSpan("span-" + i).start();
-            try (final Scope widthScope = tracer.activateSpan(widthSpan)) {
+            final AgentSpan widthSpan = startSpan("span-" + i);
+            try (final AgentScope widthScope = activateSpan(widthSpan, true)) {
               for (int j = 0; j < depth - 2; j++) {
-                final Span depthSpan = tracer.buildSpan("span-" + i + "-" + j).start();
-                try (final Scope depthScope = tracer.activateSpan(depthSpan)) {
+                final AgentSpan depthSpan = startSpan("span-" + i + "-" + j);
+                try (final AgentScope depthScope = activateSpan(depthSpan, true)) {
                   // do nothing.  Maybe sleep? but that will mean we need more threads to keep the
                   // effective rate
                 } finally {

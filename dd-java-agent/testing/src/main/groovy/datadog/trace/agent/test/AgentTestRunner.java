@@ -19,7 +19,6 @@ import groovy.lang.DelegatesTo;
 import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.SimpleType;
 import io.opentracing.Span;
-import io.opentracing.Tracer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.List;
@@ -69,10 +68,7 @@ public abstract class AgentTestRunner extends DDSpecification {
    */
   public static final ListWriter TEST_WRITER;
 
-  // having a reference to io.opentracing.Tracer in test field
-  // loads opentracing before bootstrap classpath is setup
-  // so we declare tracer as an object and cast when needed.
-  protected static final Object TEST_TRACER;
+  protected static final DDTracer TEST_TRACER;
 
   protected static final Set<String> TRANSFORMED_CLASSES = Sets.newConcurrentHashSet();
   private static final AtomicInteger INSTRUMENTATION_ERROR_COUNT = new AtomicInteger();
@@ -96,12 +92,12 @@ public abstract class AgentTestRunner extends DDSpecification {
           }
         };
     TEST_TRACER = new DDTracer(TEST_WRITER);
-    GlobalTracerUtils.registerOrReplaceGlobalTracer((Tracer) TEST_TRACER);
-    GlobalTracer.registerIfAbsent((datadog.trace.api.Tracer) TEST_TRACER);
+    GlobalTracerUtils.registerOrReplaceGlobalTracer(TEST_TRACER);
+    GlobalTracer.registerIfAbsent(TEST_TRACER);
   }
 
-  protected static Tracer getTestTracer() {
-    return (Tracer) TEST_TRACER;
+  protected static DDTracer getTestTracer() {
+    return TEST_TRACER;
   }
 
   protected static Writer getTestWriter() {
@@ -204,7 +200,7 @@ public abstract class AgentTestRunner extends DDSpecification {
 
   @SneakyThrows
   public static void blockUntilChildSpansFinished(final int numberOfSpans) {
-    final Span span = io.opentracing.util.GlobalTracer.get().activeSpan();
+    final Span span = ((DDTracer) GlobalTracer.get()).activeSpan();
     final long deadline = System.currentTimeMillis() + TIMEOUT_MILLIS;
     if (span instanceof DDSpan) {
       final PendingTrace pendingTrace = ((DDSpan) span).context().getTrace();

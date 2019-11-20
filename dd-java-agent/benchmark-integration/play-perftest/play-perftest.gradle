@@ -21,6 +21,7 @@ dependencies {
   play "com.typesafe.play:filters-helpers_$scalaVersion:$playVersion"
 
   play project(':dd-trace-api')
+  play project(':dd-java-agent:agent-bootstrap')
   play project(':dd-java-agent:benchmark-integration')
   play deps.opentracing
 }

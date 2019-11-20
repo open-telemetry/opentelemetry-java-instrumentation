@@ -6,6 +6,7 @@ import static io.opentracing.propagation.Format.Builtin.TEXT_MAP_INJECT;
 import static java.util.Collections.singletonMap;
 
 import datadog.opentracing.DDSpan;
+import datadog.opentracing.DDTracer;
 import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentPropagation;
 import datadog.trace.instrumentation.api.AgentPropagation.Getter;
@@ -15,12 +16,10 @@ import datadog.trace.instrumentation.api.AgentTracer.TracerAPI;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
-import io.opentracing.Tracer;
 import io.opentracing.log.Fields;
 import io.opentracing.noop.NoopSpan;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
-import io.opentracing.util.GlobalTracer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -28,10 +27,14 @@ import java.util.Map.Entry;
 
 public final class OpenTracing32 implements TracerAPI {
 
-  private final Tracer tracer = GlobalTracer.get();
+  private final DDTracer tracer;
   private final OT32AgentPropagation propagation = new OT32AgentPropagation();
 
   private final OT32Span NOOP_SPAN = new OT32Span("", NoopSpan.INSTANCE);
+
+  public OpenTracing32(final DDTracer tracer) {
+    this.tracer = tracer;
+  }
 
   @Override
   public AgentSpan startSpan(final String spanName) {

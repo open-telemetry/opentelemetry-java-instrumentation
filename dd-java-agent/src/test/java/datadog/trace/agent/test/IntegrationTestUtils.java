@@ -1,7 +1,5 @@
 package datadog.trace.agent.test;
 
-import io.opentracing.Tracer;
-import io.opentracing.util.GlobalTracer;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -126,30 +124,6 @@ public class IntegrationTestUtils {
       if (inputStream != null) {
         inputStream.close();
       }
-    }
-  }
-
-  public static void registerOrReplaceGlobalTracer(final Tracer tracer) {
-    try {
-      GlobalTracer.register(tracer);
-    } catch (final Exception e) {
-      // Force it anyway using reflection
-      Field field = null;
-      try {
-        field = GlobalTracer.class.getDeclaredField("tracer");
-        field.setAccessible(true);
-        field.set(null, tracer);
-      } catch (final Exception e2) {
-        throw new IllegalStateException(e2);
-      } finally {
-        if (null != field) {
-          field.setAccessible(false);
-        }
-      }
-    }
-
-    if (!GlobalTracer.isRegistered()) {
-      throw new RuntimeException("Unable to register the global tracer.");
     }
   }
 
