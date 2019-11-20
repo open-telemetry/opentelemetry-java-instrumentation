@@ -187,46 +187,6 @@ class DDSpanBuilderTest extends DDSpecification {
     span.getOperationName() == expectedName
   }
 
-
-  def "should inherit the DD parent attributes addReference CHILD_OF"() {
-    setup:
-    def expectedName = "fakeName"
-
-    final DDSpan parent =
-      tracer
-        .buildSpan(expectedName)
-        .start()
-
-    DDSpan span =
-      tracer
-        .buildSpan(expectedName)
-        .addReference("child_of", parent.context())
-        .start()
-
-    expect:
-    span.getOperationName() == expectedName
-  }
-
-
-  def "should inherit the DD parent attributes add reference FOLLOWS_FROM"() {
-    setup:
-    def expectedName = "fakeName"
-
-    final DDSpan parent =
-      tracer
-        .buildSpan(expectedName)
-        .start()
-
-    DDSpan span =
-      tracer
-        .buildSpan(expectedName)
-        .addReference("follows_from", parent.context())
-        .start()
-
-    expect:
-    span.getOperationName() == expectedName
-  }
-
   def "should track all spans in trace"() {
     setup:
     List<DDSpan> spans = []

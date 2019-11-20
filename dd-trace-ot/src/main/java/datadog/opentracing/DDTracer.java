@@ -6,7 +6,6 @@ import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.trace.api.Config;
 import datadog.trace.common.writer.Writer;
 import datadog.trace.context.ScopeListener;
-import io.opentracing.References;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -271,25 +270,6 @@ public class DDTracer implements Closeable, datadog.trace.api.Tracer {
 
     public DDSpanBuilder asChildOf(final SpanContext spanContext) {
       parent = spanContext;
-      return this;
-    }
-
-    public DDSpanBuilder addReference(final String referenceType, final SpanContext spanContext) {
-      if (spanContext == null) {
-        return this;
-      }
-      if (!(spanContext instanceof ExtractedContext) && !(spanContext instanceof DDSpanContext)) {
-        log.debug(
-            "Expected to have a DDSpanContext or ExtractedContext but got "
-                + spanContext.getClass().getName());
-        return this;
-      }
-      if (References.CHILD_OF.equals(referenceType)
-          || References.FOLLOWS_FROM.equals(referenceType)) {
-        return asChildOf(spanContext);
-      } else {
-        log.debug("Only support reference type of CHILD_OF and FOLLOWS_FROM");
-      }
       return this;
     }
 
