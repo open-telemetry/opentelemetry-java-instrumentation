@@ -8,8 +8,6 @@ import datadog.opentracing.propagation.TagContext;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
 import datadog.trace.api.Config;
-import datadog.trace.api.interceptor.MutableSpan;
-import datadog.trace.api.interceptor.TraceInterceptor;
 import datadog.trace.common.writer.Writer;
 import datadog.trace.context.ScopeListener;
 import io.opentracing.References;
@@ -27,16 +25,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.ServiceConfigurationError;
-import java.util.ServiceLoader;
-import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -75,15 +68,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
   /** Span context decorators */
   private final Map<String, List<AbstractDecorator>> spanContextDecorators =
       new ConcurrentHashMap<>();
-
-  private final SortedSet<TraceInterceptor> interceptors =
-      new ConcurrentSkipListSet<>(
-          new Comparator<TraceInterceptor>() {
-            @Override
-            public int compare(final TraceInterceptor o1, final TraceInterceptor o2) {
-              return Integer.compare(o1.priority(), o2.priority());
-            }
-          });
 
   private final HttpCodec.Injector injector;
   private final HttpCodec.Extractor extractor;
@@ -227,8 +211,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       addDecorator(decorator);
     }
 
-    registerClassLoader(ClassLoader.getSystemClassLoader());
-
     // Ensure that PendingTrace.SPAN_CLEANER is initialized in this thread:
     // FIXME: add test to verify the span cleaner thread is started with this call.
     PendingTrace.initialize();
@@ -276,23 +258,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     scopeManager.addScopeContext(context);
   }
 
-  /**
-   * If an application is using a non-system classloader, that classloader should be registered
-   * here. Due to the way Spring Boot structures its' executable jar, this might log some warnings.
-   *
-   * @param classLoader to register.
-   */
-  public void registerClassLoader(final ClassLoader classLoader) {
-    try {
-      for (final TraceInterceptor interceptor :
-          ServiceLoader.load(TraceInterceptor.class, classLoader)) {
-        addTraceInterceptor(interceptor);
-      }
-    } catch (final ServiceConfigurationError e) {
-      log.warn("Problem loading TraceInterceptor for classLoader: " + classLoader, e);
-    }
-  }
-
   @Override
   public ContextualScopeManager scopeManager() {
     return scopeManager;
@@ -337,21 +302,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     if (trace.isEmpty()) {
       return;
     }
-    final ArrayList<DDSpan> writtenTrace;
-    if (interceptors.isEmpty()) {
-      writtenTrace = new ArrayList<>(trace);
-    } else {
-      Collection<? extends MutableSpan> interceptedTrace = new ArrayList<>(trace);
-      for (final TraceInterceptor interceptor : interceptors) {
-        interceptedTrace = interceptor.onTraceComplete(interceptedTrace);
-      }
-      writtenTrace = new ArrayList<>(interceptedTrace.size());
-      for (final MutableSpan span : interceptedTrace) {
-        if (span instanceof DDSpan) {
-          writtenTrace.add((DDSpan) span);
-        }
-      }
-    }
+    final ArrayList<DDSpan> writtenTrace = new ArrayList<>(trace);
     incrementTraceCount();
     // TODO: current trace implementation doesn't guarantee that first span is the root span
     // We may want to reconsider way this check is done.
@@ -381,11 +332,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       return ((DDSpan) activeSpan).getSpanId().toString();
     }
     return "0";
-  }
-
-  @Override
-  public boolean addTraceInterceptor(final TraceInterceptor interceptor) {
-    return interceptors.add(interceptor);
   }
 
   @Override

@@ -1,6 +1,5 @@
 package datadog.trace.api;
 
-import datadog.trace.api.interceptor.TraceInterceptor;
 import datadog.trace.context.ScopeListener;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -21,11 +20,6 @@ public class GlobalTracer {
         @Override
         public String getSpanId() {
           return "0";
-        }
-
-        @Override
-        public boolean addTraceInterceptor(TraceInterceptor traceInterceptor) {
-          return false;
         }
 
         @Override
