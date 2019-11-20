@@ -5,21 +5,17 @@ import datadog.trace.api.DDTags;
 
 public class ServiceNameDecorator extends AbstractDecorator {
 
-  private final boolean setTag;
-
   public ServiceNameDecorator() {
-    this(DDTags.SERVICE_NAME, false);
+    this(DDTags.SERVICE_NAME);
   }
 
-  public ServiceNameDecorator(final String splitByTag, final boolean setTag) {
-    super();
-    this.setTag = setTag;
-    setMatchingTag(splitByTag);
+  public ServiceNameDecorator(final String tagName) {
+    setMatchingTag(tagName);
   }
 
   @Override
   public boolean shouldSetTag(final DDSpanContext context, final String tag, final Object value) {
     context.setServiceName(String.valueOf(value));
-    return setTag;
+    return false;
   }
 }
