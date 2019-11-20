@@ -5,7 +5,7 @@ import static io.opentracing.propagation.Format.Builtin.TEXT_MAP_EXTRACT;
 import static io.opentracing.propagation.Format.Builtin.TEXT_MAP_INJECT;
 import static java.util.Collections.singletonMap;
 
-import datadog.trace.api.interceptor.MutableSpan;
+import datadog.opentracing.DDSpan;
 import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentPropagation;
 import datadog.trace.instrumentation.api.AgentPropagation.Getter;
@@ -70,8 +70,8 @@ public final class OpenTracing32 implements TracerAPI {
     }
 
     final String spanName;
-    if (span instanceof MutableSpan) {
-      spanName = ((MutableSpan) span).getOperationName();
+    if (span instanceof DDSpan) {
+      spanName = ((DDSpan) span).getOperationName();
     } else {
       spanName = "";
     }
@@ -183,8 +183,8 @@ public final class OpenTracing32 implements TracerAPI {
 
     @Override
     public AgentSpan getLocalRootSpan() {
-      if (span instanceof MutableSpan) {
-        final MutableSpan root = ((MutableSpan) span).getLocalRootSpan();
+      if (span instanceof DDSpan) {
+        final DDSpan root = ((DDSpan) span).getLocalRootSpan();
         if (root == span) {
           return this;
         }
