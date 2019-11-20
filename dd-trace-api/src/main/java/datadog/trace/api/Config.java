@@ -40,7 +40,6 @@ public class Config {
   public static final String TRACE_ENABLED = "trace.enabled";
   public static final String INTEGRATIONS_ENABLED = "integrations.enabled";
   public static final String WRITER_TYPE = "writer.type";
-  public static final String TRACE_RESOLVER_ENABLED = "trace.resolver.enabled";
   public static final String TRACE_ANNOTATIONS = "trace.annotations";
   public static final String TRACE_EXECUTORS_ALL = "trace.executors.all";
   public static final String TRACE_EXECUTORS = "trace.executors";
@@ -65,7 +64,6 @@ public class Config {
 
   private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
 
-  private static final boolean DEFAULT_TRACE_RESOLVER_ENABLED = true;
   private static final Set<Integer> DEFAULT_HTTP_SERVER_ERROR_STATUSES =
       parseIntegerRangeSet("500-599", "default");
   private static final Set<Integer> DEFAULT_HTTP_CLIENT_ERROR_STATUSES =
@@ -88,7 +86,6 @@ public class Config {
   @Getter private final boolean traceEnabled;
   @Getter private final boolean integrationsEnabled;
   @Getter private final String writerType;
-  @Getter private final boolean traceResolverEnabled;
   @Getter private final List<String> excludedClasses;
   @Getter private final Set<Integer> httpServerErrorStatuses;
   @Getter private final Set<Integer> httpClientErrorStatuses;
@@ -120,8 +117,6 @@ public class Config {
     integrationsEnabled =
         getBooleanSettingFromEnvironment(INTEGRATIONS_ENABLED, DEFAULT_INTEGRATIONS_ENABLED);
     writerType = getSettingFromEnvironment(WRITER_TYPE, DEFAULT_WRITER_TYPE);
-    traceResolverEnabled =
-        getBooleanSettingFromEnvironment(TRACE_RESOLVER_ENABLED, DEFAULT_TRACE_RESOLVER_ENABLED);
 
     excludedClasses = getListSettingFromEnvironment(TRACE_CLASSES_EXCLUDE, null);
 
@@ -178,8 +173,6 @@ public class Config {
     integrationsEnabled =
         getPropertyBooleanValue(properties, INTEGRATIONS_ENABLED, parent.integrationsEnabled);
     writerType = properties.getProperty(WRITER_TYPE, parent.writerType);
-    traceResolverEnabled =
-        getPropertyBooleanValue(properties, TRACE_RESOLVER_ENABLED, parent.traceResolverEnabled);
 
     excludedClasses =
         getPropertyListValue(properties, TRACE_CLASSES_EXCLUDE, parent.excludedClasses);

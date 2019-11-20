@@ -27,7 +27,6 @@ dependencies {
 
   compile project(':dd-trace-api')
   compile deps.opentracing
-  compile group: 'io.opentracing.contrib', name: 'opentracing-tracerresolver', version: '0.1.0'
 
   compile deps.slf4j
   compile group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.11.0' // Last version to support Java7
