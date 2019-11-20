@@ -2,7 +2,6 @@ package datadog.opentracing.propagation
 
 
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.propagation.TextMapExtractAdapter
 import spock.lang.Shared
 
 import static datadog.opentracing.DDTracer.TRACE_ID_MAX

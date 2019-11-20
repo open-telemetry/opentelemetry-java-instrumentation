@@ -1,7 +1,6 @@
 package datadog.opentracing.propagation
 
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.propagation.TextMapExtractAdapter
 
 import static datadog.opentracing.DDTracer.TRACE_ID_MAX
 import static datadog.opentracing.propagation.DatadogHttpCodec.SPAN_ID_KEY

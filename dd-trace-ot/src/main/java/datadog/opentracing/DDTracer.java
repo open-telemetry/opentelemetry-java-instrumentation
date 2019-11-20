@@ -2,13 +2,13 @@ package datadog.opentracing;
 
 import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HttpCodec;
+import datadog.opentracing.propagation.TextMapExtract;
+import datadog.opentracing.propagation.TextMapInject;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.DDScope;
 import datadog.trace.api.Config;
 import datadog.trace.common.writer.Writer;
 import datadog.trace.context.ScopeListener;
-import io.opentracing.propagation.TextMapExtract;
-import io.opentracing.propagation.TextMapInject;
 import java.io.Closeable;
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
@@ -118,21 +118,12 @@ public class DDTracer implements Closeable, datadog.trace.api.Tracer {
     return new DDSpanBuilder(operationName, scopeManager);
   }
 
-  public <T> void inject(final SpanContext spanContext, final T carrier) {
-    if (carrier instanceof TextMapInject) {
-      injector.inject((DDSpanContext) spanContext, (TextMapInject) carrier);
-    } else {
-      log.debug("Unsupported carrier for propagation - {}", carrier.getClass().getName());
-    }
+  public void inject(final SpanContext spanContext, final TextMapInject carrier) {
+    injector.inject((DDSpanContext) spanContext, carrier);
   }
 
-  public <T> SpanContext extract(final T carrier) {
-    if (carrier instanceof TextMapExtract) {
-      return extractor.extract((TextMapExtract) carrier);
-    } else {
-      log.debug("Unsupported carrier for propagation - {}", carrier.getClass().getName());
-      return null;
-    }
+  public SpanContext extract(final TextMapExtract carrier) {
+    return extractor.extract(carrier);
   }
 
   /** @param trace a list of the spans related to the same trace */

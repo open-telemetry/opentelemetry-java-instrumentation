@@ -3,8 +3,6 @@ package datadog.opentracing.propagation;
 import static datadog.opentracing.propagation.HttpCodec.validateUInt64BitsID;
 
 import datadog.opentracing.DDSpanContext;
-import io.opentracing.propagation.TextMapExtract;
-import io.opentracing.propagation.TextMapInject;
 import java.math.BigInteger;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;

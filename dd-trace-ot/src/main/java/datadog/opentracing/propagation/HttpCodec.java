@@ -2,8 +2,6 @@ package datadog.opentracing.propagation;
 
 import datadog.opentracing.DDSpanContext;
 import datadog.opentracing.DDTracer;
-import io.opentracing.propagation.TextMapExtract;
-import io.opentracing.propagation.TextMapInject;
 import java.math.BigInteger;
 import lombok.extern.slf4j.Slf4j;
 
