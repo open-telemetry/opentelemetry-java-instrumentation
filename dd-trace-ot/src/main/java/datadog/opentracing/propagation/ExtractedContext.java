@@ -1,9 +1,7 @@
 package datadog.opentracing.propagation;
 
-import io.opentracing.SpanContext;
+import datadog.opentracing.SpanContext;
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.Map;
 
 /**
  * Propagated data resulting from calling tracer.extract with header data from an incoming request.
@@ -25,11 +23,6 @@ public class ExtractedContext implements SpanContext {
   @Override
   public String toSpanId() {
     return "";
-  }
-
-  @Override
-  public Iterable<Map.Entry<String, String>> baggageItems() {
-    return Collections.emptyList();
   }
 
   public BigInteger getTraceId() {

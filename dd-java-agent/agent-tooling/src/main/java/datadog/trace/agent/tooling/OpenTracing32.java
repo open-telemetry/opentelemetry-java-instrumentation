@@ -7,6 +7,7 @@ import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
 import datadog.opentracing.NoopSpan;
 import datadog.opentracing.Span;
+import datadog.opentracing.SpanContext;
 import datadog.opentracing.scopemanager.DDScope;
 import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentPropagation;
@@ -14,7 +15,6 @@ import datadog.trace.instrumentation.api.AgentPropagation.Getter;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.AgentTracer.TracerAPI;
-import io.opentracing.SpanContext;
 import io.opentracing.log.Fields;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
@@ -326,11 +326,6 @@ public final class OpenTracing32 implements TracerAPI {
     @Override
     public String toSpanId() {
       return context.toSpanId();
-    }
-
-    @Override
-    public Iterable<Entry<String, String>> baggageItems() {
-      return context.baggageItems();
     }
   }
 }

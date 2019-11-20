@@ -7,7 +7,6 @@ import datadog.opentracing.scopemanager.DDScope;
 import datadog.trace.api.Config;
 import datadog.trace.common.writer.Writer;
 import datadog.trace.context.ScopeListener;
-import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
 import java.io.Closeable;

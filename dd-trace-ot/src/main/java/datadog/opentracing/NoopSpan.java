@@ -1,7 +1,5 @@
 package datadog.opentracing;
 
-import io.opentracing.SpanContext;
-import java.util.Collections;
 import java.util.Map;
 
 public class NoopSpan implements Span {
@@ -69,11 +67,6 @@ public class NoopSpan implements Span {
     @Override
     public String toSpanId() {
       return "";
-    }
-
-    @Override
-    public Iterable<Map.Entry<String, String>> baggageItems() {
-      return Collections.emptyList();
     }
   }
 }

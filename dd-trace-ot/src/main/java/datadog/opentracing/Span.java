@@ -1,6 +1,5 @@
 package datadog.opentracing;
 
-import io.opentracing.SpanContext;
 import java.util.Map;
 
 // temporary replacement for io.opentracing.Span

@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * associated Span instance
  */
 @Slf4j
-public class DDSpanContext implements io.opentracing.SpanContext {
+public class DDSpanContext implements SpanContext {
 
   private static final Map<String, Number> EMPTY_METRICS = Collections.emptyMap();
 
@@ -108,14 +108,6 @@ public class DDSpanContext implements io.opentracing.SpanContext {
 
   public void setErrorFlag(final boolean errorFlag) {
     this.errorFlag = errorFlag;
-  }
-
-  /* (non-Javadoc)
-   * @see io.opentracing.SpanContext#baggageItems()
-   */
-  @Override
-  public Iterable<Map.Entry<String, String>> baggageItems() {
-    return Collections.emptyList();
   }
 
   public PendingTrace getTrace() {
