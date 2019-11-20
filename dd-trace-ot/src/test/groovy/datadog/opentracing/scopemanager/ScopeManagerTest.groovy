@@ -3,12 +3,11 @@ package datadog.opentracing.scopemanager
 import datadog.opentracing.DDSpan
 import datadog.opentracing.DDSpanContext
 import datadog.opentracing.DDTracer
+import datadog.opentracing.NoopSpan
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.context.ScopeListener
 import datadog.trace.util.gc.GCUtils
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.Span
-import io.opentracing.noop.NoopSpan
 import spock.lang.Subject
 import spock.lang.Timeout
 
@@ -469,7 +468,7 @@ class ScopeManagerTest extends DDSpecification {
     closedCount.get() == 4
   }
 
-  boolean spanFinished(Span span) {
-    return ((DDSpan) span)?.isFinished()
+  boolean spanFinished(DDSpan span) {
+    return span?.isFinished()
   }
 }

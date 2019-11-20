@@ -1,6 +1,6 @@
 package datadog.opentracing.scopemanager;
 
-import io.opentracing.Span;
+import datadog.opentracing.Span;
 import java.io.Closeable;
 
 public interface DDScope extends Closeable {

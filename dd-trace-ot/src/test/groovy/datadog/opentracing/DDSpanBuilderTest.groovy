@@ -5,7 +5,6 @@ import datadog.opentracing.scopemanager.DDScope
 import datadog.trace.api.Config
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.noop.NoopSpan
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS
 

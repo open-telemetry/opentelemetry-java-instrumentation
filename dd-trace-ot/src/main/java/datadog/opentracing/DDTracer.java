@@ -7,11 +7,9 @@ import datadog.opentracing.scopemanager.DDScope;
 import datadog.trace.api.Config;
 import datadog.trace.common.writer.Writer;
 import datadog.trace.context.ScopeListener;
-import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
-import io.opentracing.tag.Tag;
 import java.io.Closeable;
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
@@ -247,10 +245,6 @@ public class DDTracer implements Closeable, datadog.trace.api.Tracer {
 
     public DDSpanBuilder withTag(final String tag, final boolean bool) {
       return withTag(tag, (Object) bool);
-    }
-
-    public <T> DDSpanBuilder withTag(final Tag<T> tag, final T value) {
-      return withTag(tag.getKey(), value);
     }
 
     public DDSpanBuilder withStartTimestamp(final long timestampMicroseconds) {

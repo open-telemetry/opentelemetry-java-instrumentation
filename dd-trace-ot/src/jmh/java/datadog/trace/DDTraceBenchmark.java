@@ -1,9 +1,9 @@
 package datadog.trace;
 
 import datadog.opentracing.DDTracer;
+import datadog.opentracing.Span;
 import datadog.opentracing.scopemanager.DDScope;
 import datadog.trace.common.writer.ListWriter;
-import io.opentracing.Span;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.State;
 

@@ -1,8 +1,8 @@
 package datadog.opentracing.scopemanager;
 
 import datadog.opentracing.DDSpan;
+import datadog.opentracing.Span;
 import datadog.trace.context.ScopeListener;
-import io.opentracing.Span;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -14,6 +14,7 @@ public class ContextualScopeManager {
     if (span instanceof DDSpan) {
       return new ContinuableScope(this, (DDSpan) span, finishOnClose);
     } else {
+      // NoopSpan
       return new SimpleScope(this, span, finishOnClose);
     }
   }
