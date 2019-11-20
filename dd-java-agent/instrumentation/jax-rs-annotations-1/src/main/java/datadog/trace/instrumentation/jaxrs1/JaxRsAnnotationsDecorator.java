@@ -86,13 +86,13 @@ public class JaxRsAnnotationsDecorator extends BaseDecorator {
       final Path classPath = findClassPath(target);
       for (final Method current : new OverriddenMethodIterable(target, method)) {
         if (httpMethod == null) {
-          httpMethod = locateHttpMethod(method);
+          httpMethod = locateHttpMethod(current);
         }
         if (methodPath == null) {
-          methodPath = findMethodPath(method);
+          methodPath = findMethodPath(current);
         }
         // TODO figure out if these will ever be on different methods.
-        if (method != null && methodPath != null) {
+        if (httpMethod != null && methodPath != null) {
           break;
         }
       }

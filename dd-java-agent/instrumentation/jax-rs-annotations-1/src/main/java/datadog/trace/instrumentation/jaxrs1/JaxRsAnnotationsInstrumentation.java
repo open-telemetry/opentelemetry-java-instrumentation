@@ -50,7 +50,10 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
   @Override
   public String[] helperClassNames() {
     return new String[] {
-      "datadog.trace.agent.decorator.BaseDecorator", packageName + ".JaxRsAnnotationsDecorator",
+      "datadog.trace.agent.decorator.BaseDecorator",
+      packageName + ".JaxRsAnnotationsDecorator",
+      packageName + ".OverriddenMethodIterable",
+      packageName + ".OverriddenMethodIterable$MethodIterator",
     };
   }
 
