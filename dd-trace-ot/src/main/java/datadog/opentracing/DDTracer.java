@@ -3,13 +3,11 @@ package datadog.opentracing;
 import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HttpCodec;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
-import datadog.opentracing.scopemanager.ScopeContext;
 import datadog.trace.api.Config;
 import datadog.trace.common.writer.Writer;
 import datadog.trace.context.ScopeListener;
 import io.opentracing.References;
 import io.opentracing.Scope;
-import io.opentracing.ScopeManager;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.Format;
@@ -109,11 +107,6 @@ public class DDTracer implements Closeable, datadog.trace.api.Tracer {
     }
   }
 
-  @Deprecated
-  public void addScopeContext(final ScopeContext context) {
-    scopeManager.addScopeContext(context);
-  }
-
   public ContextualScopeManager scopeManager() {
     return scopeManager;
   }
@@ -202,7 +195,7 @@ public class DDTracer implements Closeable, datadog.trace.api.Tracer {
 
   /** Spans are built using this builder */
   public class DDSpanBuilder {
-    private final ScopeManager scopeManager;
+    private final ContextualScopeManager scopeManager;
 
     /** Each span must have an operationName according to the opentracing specification */
     private final String operationName;
@@ -214,7 +207,7 @@ public class DDTracer implements Closeable, datadog.trace.api.Tracer {
     private boolean errorFlag;
     private boolean ignoreScope = false;
 
-    public DDSpanBuilder(final String operationName, final ScopeManager scopeManager) {
+    public DDSpanBuilder(final String operationName, final ContextualScopeManager scopeManager) {
       this.operationName = operationName;
       this.scopeManager = scopeManager;
     }
