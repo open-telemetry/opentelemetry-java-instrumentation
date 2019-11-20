@@ -3,7 +3,7 @@ package datadog.trace.agent.decorator
 import datadog.trace.api.Config
 import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.AgentSpan
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 
 import static datadog.trace.agent.test.utils.ConfigUtils.withConfigOverride
 
@@ -20,8 +20,8 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
 
     then:
     if (req) {
-      1 * span.setTag(Tags.HTTP_METHOD.key, "test-method")
-      1 * span.setTag(Tags.HTTP_URL.key, url)
+      1 * span.setTag(Tags.HTTP_METHOD, "test-method")
+      1 * span.setTag(Tags.HTTP_URL, url)
     }
     0 * _
 
@@ -46,13 +46,13 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
 
     then:
     if (expectedUrl) {
-      1 * span.setTag(Tags.HTTP_URL.key, expectedUrl)
+      1 * span.setTag(Tags.HTTP_URL, expectedUrl)
     }
     if (expectedUrl && tagQueryString) {
       1 * span.setTag(DDTags.HTTP_QUERY, expectedQuery)
       1 * span.setTag(DDTags.HTTP_FRAGMENT, expectedFragment)
     }
-    1 * span.setTag(Tags.HTTP_METHOD.key, null)
+    1 * span.setTag(Tags.HTTP_METHOD, null)
     0 * _
 
     where:
@@ -83,12 +83,12 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
 
     then:
     if (conn) {
-      1 * span.setTag(Tags.PEER_HOSTNAME.key, "test-host")
-      1 * span.setTag(Tags.PEER_PORT.key, 555)
+      1 * span.setTag(Tags.PEER_HOSTNAME, "test-host")
+      1 * span.setTag(Tags.PEER_PORT, 555)
       if (ipv4) {
-        1 * span.setTag(Tags.PEER_HOST_IPV4.key, "10.0.0.1")
+        1 * span.setTag(Tags.PEER_HOST_IPV4, "10.0.0.1")
       } else if (ipv4 != null) {
-        1 * span.setTag(Tags.PEER_HOST_IPV6.key, "3ffe:1900:4545:3:200:f8ff:fe21:67cf")
+        1 * span.setTag(Tags.PEER_HOST_IPV6, "3ffe:1900:4545:3:200:f8ff:fe21:67cf")
       }
     }
     0 * _
@@ -112,7 +112,7 @@ class HttpServerDecoratorTest extends ServerDecoratorTest {
 
     then:
     if (status) {
-      1 * span.setTag(Tags.HTTP_STATUS.key, status)
+      1 * span.setTag(Tags.HTTP_STATUS, status)
     }
     if (error) {
       1 * span.setError(true)

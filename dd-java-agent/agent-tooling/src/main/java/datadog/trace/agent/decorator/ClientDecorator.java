@@ -2,7 +2,7 @@ package datadog.trace.agent.decorator;
 
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 
 public abstract class ClientDecorator extends BaseDecorator {
 
@@ -18,7 +18,7 @@ public abstract class ClientDecorator extends BaseDecorator {
     if (service() != null) {
       span.setTag(DDTags.SERVICE_NAME, service());
     }
-    span.setTag(Tags.SPAN_KIND.getKey(), spanKind());
+    span.setTag(Tags.SPAN_KIND, spanKind());
     return super.afterStart(span);
   }
 }

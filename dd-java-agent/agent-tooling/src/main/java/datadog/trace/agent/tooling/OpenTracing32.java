@@ -20,7 +20,6 @@ import io.opentracing.log.Fields;
 import io.opentracing.noop.NoopSpan;
 import io.opentracing.propagation.TextMapExtract;
 import io.opentracing.propagation.TextMapInject;
-import io.opentracing.tag.Tags;
 import io.opentracing.util.GlobalTracer;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -168,7 +167,7 @@ public final class OpenTracing32 implements TracerAPI {
       if (span instanceof DDSpan) {
         ((DDSpan) span).setError(error);
       } else {
-        Tags.ERROR.set(span, error);
+        span.setTag("error", error);
       }
       return this;
     }

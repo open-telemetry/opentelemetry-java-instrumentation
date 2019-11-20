@@ -4,7 +4,7 @@ import datadog.trace.api.Config;
 import datadog.trace.api.DDSpanTypes;
 import datadog.trace.api.DDTags;
 import datadog.trace.instrumentation.api.AgentSpan;
-import io.opentracing.tag.Tags;
+import datadog.trace.instrumentation.api.Tags;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.regex.Pattern;
@@ -39,7 +39,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   public AgentSpan onRequest(final AgentSpan span, final REQUEST request) {
     assert span != null;
     if (request != null) {
-      span.setTag(Tags.HTTP_METHOD.getKey(), method(request));
+      span.setTag(Tags.HTTP_METHOD, method(request));
 
       // Copy of HttpClientDecorator url handling
       try {
@@ -64,7 +64,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
             urlNoParams.append(path);
           }
 
-          span.setTag(Tags.HTTP_URL.getKey(), urlNoParams.toString());
+          span.setTag(Tags.HTTP_URL, urlNoParams.toString());
 
           if (Config.get().isHttpServerTagQueryString()) {
             span.setTag(DDTags.HTTP_QUERY, url.getQuery());
@@ -82,19 +82,19 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
   public AgentSpan onConnection(final AgentSpan span, final CONNECTION connection) {
     assert span != null;
     if (connection != null) {
-      span.setTag(Tags.PEER_HOSTNAME.getKey(), peerHostname(connection));
+      span.setTag(Tags.PEER_HOSTNAME, peerHostname(connection));
       final String ip = peerHostIP(connection);
       if (ip != null) {
         if (VALID_IPV4_ADDRESS.matcher(ip).matches()) {
-          span.setTag(Tags.PEER_HOST_IPV4.getKey(), ip);
+          span.setTag(Tags.PEER_HOST_IPV4, ip);
         } else if (ip.contains(":")) {
-          span.setTag(Tags.PEER_HOST_IPV6.getKey(), ip);
+          span.setTag(Tags.PEER_HOST_IPV6, ip);
         }
       }
       final Integer port = peerPort(connection);
       // Negative or Zero ports might represent an unset/null value for an int type.  Skip setting.
       if (port != null && port > 0) {
-        span.setTag(Tags.PEER_PORT.getKey(), port);
+        span.setTag(Tags.PEER_PORT, port);
       }
     }
     return span;
@@ -105,7 +105,7 @@ public abstract class HttpServerDecorator<REQUEST, CONNECTION, RESPONSE> extends
     if (response != null) {
       final Integer status = status(response);
       if (status != null) {
-        span.setTag(Tags.HTTP_STATUS.getKey(), status);
+        span.setTag(Tags.HTTP_STATUS, status);
 
         if (Config.get().getHttpServerErrorStatuses().contains(status)) {
           span.setError(true);
