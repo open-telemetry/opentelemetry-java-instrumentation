@@ -3,10 +3,10 @@ package datadog.opentracing;
 import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HttpCodec;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
+import datadog.opentracing.scopemanager.DDScope;
 import datadog.trace.api.Config;
 import datadog.trace.common.writer.Writer;
 import datadog.trace.context.ScopeListener;
-import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.propagation.TextMapExtract;
@@ -113,7 +113,7 @@ public class DDTracer implements Closeable, datadog.trace.api.Tracer {
     return scopeManager.activeSpan();
   }
 
-  public Scope activateSpan(final Span span) {
+  public DDScope activateSpan(final Span span) {
     return scopeManager.activate(span);
   }
 
@@ -219,9 +219,9 @@ public class DDTracer implements Closeable, datadog.trace.api.Tracer {
       return new DDSpan(timestampMicro, buildSpanContext());
     }
 
-    public Scope startActive(final boolean finishSpanOnClose) {
+    public DDScope startActive(final boolean finishSpanOnClose) {
       final DDSpan span = startSpan();
-      final Scope scope = scopeManager.activate(span, finishSpanOnClose);
+      final DDScope scope = scopeManager.activate(span, finishSpanOnClose);
       log.debug("Starting a new active span: {}", span);
       return scope;
     }

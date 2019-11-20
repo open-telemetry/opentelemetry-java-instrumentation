@@ -1,10 +1,10 @@
 package datadog.opentracing
 
 import datadog.opentracing.propagation.ExtractedContext
+import datadog.opentracing.scopemanager.DDScope
 import datadog.trace.api.Config
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.Scope
 import io.opentracing.noop.NoopSpan
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS
@@ -143,7 +143,7 @@ class DDSpanBuilderTest extends DDSpecification {
 
   def "should link to parent span implicitly"() {
     setup:
-    final Scope parent = noopParent ?
+    final DDScope parent = noopParent ?
       tracer.scopeManager().activate(NoopSpan.INSTANCE, false) :
       tracer.buildSpan("parent")
         .startActive(false)

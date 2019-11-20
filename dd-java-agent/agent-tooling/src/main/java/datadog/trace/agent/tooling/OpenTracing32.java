@@ -5,13 +5,13 @@ import static java.util.Collections.singletonMap;
 
 import datadog.opentracing.DDSpan;
 import datadog.opentracing.DDTracer;
+import datadog.opentracing.scopemanager.DDScope;
 import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentPropagation;
 import datadog.trace.instrumentation.api.AgentPropagation.Getter;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.AgentTracer.TracerAPI;
-import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.log.Fields;
@@ -58,7 +58,7 @@ public final class OpenTracing32 implements TracerAPI {
   @Override
   public AgentScope activateSpan(final AgentSpan span, final boolean finishSpanOnClose) {
     // when span is noopSpan(), the scope returned is not a TracerScope
-    final Scope scope = tracer.scopeManager().activate(((OT32Span) span).span, finishSpanOnClose);
+    final DDScope scope = tracer.scopeManager().activate(((OT32Span) span).span, finishSpanOnClose);
     return new OT32Scope(span, scope);
   }
 
@@ -80,7 +80,7 @@ public final class OpenTracing32 implements TracerAPI {
 
   @Override
   public TraceScope activeScope() {
-    final Scope scope = tracer.scopeManager().active();
+    final DDScope scope = tracer.scopeManager().active();
     if (scope instanceof TraceScope) {
       return (TraceScope) scope;
     } else {
@@ -227,9 +227,9 @@ public final class OpenTracing32 implements TracerAPI {
   private final class OT32Scope implements AgentScope {
 
     private final OT32Span span;
-    private final Scope scope;
+    private final DDScope scope;
 
-    private OT32Scope(final AgentSpan span, final Scope scope) {
+    private OT32Scope(final AgentSpan span, final DDScope scope) {
       assert span instanceof OT32Span;
       this.span = (OT32Span) span;
       this.scope = scope;
@@ -258,7 +258,7 @@ public final class OpenTracing32 implements TracerAPI {
 
     @Override
     public TraceScope.Continuation capture() {
-      final Scope active = tracer.scopeManager().active();
+      final DDScope active = tracer.scopeManager().active();
       if (active instanceof TraceScope) {
         return ((TraceScope) active).capture();
       } else {

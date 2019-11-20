@@ -7,7 +7,6 @@ import datadog.trace.common.writer.ListWriter
 import datadog.trace.context.ScopeListener
 import datadog.trace.util.gc.GCUtils
 import datadog.trace.util.test.DDSpecification
-import io.opentracing.Scope
 import io.opentracing.Span
 import io.opentracing.noop.NoopSpan
 import spock.lang.Subject
@@ -413,14 +412,14 @@ class ScopeManagerTest extends DDSpecification {
     })
 
     when:
-    Scope scope1 = scopeManager.activate(NoopSpan.INSTANCE, true)
+    DDScope scope1 = scopeManager.activate(NoopSpan.INSTANCE, true)
 
     then:
     activatedCount.get() == 1
     closedCount.get() == 0
 
     when:
-    Scope scope2 = scopeManager.activate(NoopSpan.INSTANCE, true)
+    DDScope scope2 = scopeManager.activate(NoopSpan.INSTANCE, true)
 
     then:
     activatedCount.get() == 2
@@ -441,14 +440,14 @@ class ScopeManagerTest extends DDSpecification {
     closedCount.get() == 2
 
     when:
-    Scope continuableScope = tracer.buildSpan("foo").startActive(true)
+    DDScope continuableScope = tracer.buildSpan("foo").startActive(true)
 
     then:
     continuableScope instanceof ContinuableScope
     activatedCount.get() == 4
 
     when:
-    Scope childContinuableScope = tracer.buildSpan("child").startActive(true)
+    DDScope childContinuableScope = tracer.buildSpan("child").startActive(true)
 
     then:
     childContinuableScope instanceof ContinuableScope
