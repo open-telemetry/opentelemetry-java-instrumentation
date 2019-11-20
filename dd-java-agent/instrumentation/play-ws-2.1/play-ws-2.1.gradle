@@ -7,11 +7,12 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 apply plugin: 'org.unbroken-dome.test-sets'
 
-testSets {
-  latestDepTest {
-    dirName = 'test'
-  }
-}
+// TODO: Uncomment when there are more releases, right now 2.1.0 is the latest release
+//testSets {
+//  latestDepTest {
+//    dirName = 'test'
+//  }
+//}
 
 muzzle {
   // 2.0.5 was a bad release
@@ -19,47 +20,47 @@ muzzle {
   fail {
     group = 'com.typesafe.play'
     module = 'play-ahc-ws-standalone_2.11'
-    versions = '[,2.0.0)'
+    versions = '[,2.0.4]'
   }
-  pass {
+  fail {
     group = 'com.typesafe.play'
     module = 'play-ahc-ws-standalone_2.11'
-    versions = '[2.0.0,2.0.4]'
-  }
-  pass {
-    group = 'com.typesafe.play'
-    module = 'play-ahc-ws-standalone_2.11'
-    versions = '[2.0.6,]'
+    versions = '[2.0.6,)'
   }
 
   fail {
     group = 'com.typesafe.play'
     module = 'play-ahc-ws-standalone_2.12'
-    versions = '[,2.0.0)'
+    versions = '[,2.0.4]'
   }
-  pass {
-    group = 'com.typesafe.play'
-    module = 'play-ahc-ws-standalone_2.12'
-    versions = '[2.0.0,2.0.4]'
-  }
-  pass {
+  fail {
     group = 'com.typesafe.play'
     module = 'play-ahc-ws-standalone_2.12'
     versions = '[2.0.6,2.1.0)'
+  }
+  pass {
+    group = 'com.typesafe.play'
+    module = 'play-ahc-ws-standalone_2.12'
+    versions = '[2.1.0,]'
   }
 
   // No Scala 2.13 versions below 2.0.6 exist
-  pass {
+  fail {
     group = 'com.typesafe.play'
     module = 'play-ahc-ws-standalone_2.13'
     versions = '[2.0.6,2.1.0)'
+  }
+  pass {
+    group = 'com.typesafe.play'
+    module = 'play-ahc-ws-standalone_2.13'
+    versions = '[2.1.0,]'
   }
 }
 
 def scalaVersion = '2.12'
 
 dependencies {
-  compileOnly group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.0.0'
+  compileOnly group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.1.0'
 
   testCompile project(':dd-java-agent:instrumentation:java-concurrent')
 
@@ -68,7 +69,9 @@ dependencies {
   testCompile project(':dd-java-agent:instrumentation:netty-4.1')
   testCompile project(':dd-java-agent:instrumentation:akka-http-10.0')
 
-  testCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.0.0'
-  
-  latestDepTestCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.0.+'
+  testCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '2.1.0'
+
+  // TODO: Uncomment when there are more releases, right now 2.1.0 is the latest release
+
+  // latestDepTestCompile group: 'com.typesafe.play', name: "play-ahc-ws-standalone_$scalaVersion", version: '+'
 }
