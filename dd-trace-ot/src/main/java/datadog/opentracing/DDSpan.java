@@ -1,8 +1,7 @@
 package datadog.opentracing;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
-
 import datadog.trace.api.DDTags;
+import datadog.trace.api.LogFields;
 import datadog.trace.common.util.Clock;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -135,8 +134,8 @@ public class DDSpan implements Span {
   }
 
   private boolean extractError(final Map<String, ?> map) {
-    if (map.get(ERROR_OBJECT) instanceof Throwable) {
-      final Throwable error = (Throwable) map.get(ERROR_OBJECT);
+    if (map.get(LogFields.ERROR_OBJECT) instanceof Throwable) {
+      final Throwable error = (Throwable) map.get(LogFields.ERROR_OBJECT);
       setErrorMeta(error);
       return true;
     }

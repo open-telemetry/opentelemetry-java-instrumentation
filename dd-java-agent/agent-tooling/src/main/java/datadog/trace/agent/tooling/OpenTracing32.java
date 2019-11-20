@@ -1,6 +1,5 @@
 package datadog.trace.agent.tooling;
 
-import static io.opentracing.log.Fields.ERROR_OBJECT;
 import static java.util.Collections.singletonMap;
 
 import datadog.opentracing.DDSpan;
@@ -11,13 +10,13 @@ import datadog.opentracing.SpanContext;
 import datadog.opentracing.propagation.TextMapExtract;
 import datadog.opentracing.propagation.TextMapInject;
 import datadog.opentracing.scopemanager.DDScope;
+import datadog.trace.api.LogFields;
 import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentPropagation;
 import datadog.trace.instrumentation.api.AgentPropagation.Getter;
 import datadog.trace.instrumentation.api.AgentScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import datadog.trace.instrumentation.api.AgentTracer.TracerAPI;
-import io.opentracing.log.Fields;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -175,13 +174,13 @@ public final class OpenTracing32 implements TracerAPI {
 
     @Override
     public AgentSpan setErrorMessage(final String errorMessage) {
-      span.log(singletonMap(Fields.MESSAGE, errorMessage));
+      span.log(singletonMap(LogFields.MESSAGE, errorMessage));
       return this;
     }
 
     @Override
     public AgentSpan addThrowable(final Throwable throwable) {
-      span.log(singletonMap(ERROR_OBJECT, throwable));
+      span.log(singletonMap(LogFields.ERROR_OBJECT, throwable));
       return this;
     }
 

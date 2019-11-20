@@ -9,6 +9,7 @@ excludedClassesCoverage += [
   'datadog.trace.api.GlobalTracer*',
   'datadog.trace.api.CorrelationIdentifier',
   'datadog.trace.api.DDTags',
+  'datadog.trace.api.LogFields',
   'datadog.trace.api.Config'
 ]
 
