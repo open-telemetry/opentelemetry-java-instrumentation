@@ -22,43 +22,44 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public final class OpenTracing32 implements TracerAPI {
+public final class AgentTracerImpl implements TracerAPI {
 
   private final DDTracer tracer;
-  private final OT32AgentPropagation propagation = new OT32AgentPropagation();
+  private final AgentPropagationImpl propagation = new AgentPropagationImpl();
 
-  private final OT32Span NOOP_SPAN = new OT32Span("", NoopSpan.INSTANCE);
+  private final AgentSpanImpl NOOP_SPAN = new AgentSpanImpl("", NoopSpan.INSTANCE);
 
-  public OpenTracing32(final DDTracer tracer) {
+  public AgentTracerImpl(final DDTracer tracer) {
     this.tracer = tracer;
   }
 
   @Override
   public AgentSpan startSpan(final String spanName) {
-    return new OT32Span(spanName);
+    return new AgentSpanImpl(spanName);
   }
 
   @Override
   public AgentSpan startSpan(final String spanName, final long startTimeMicros) {
-    return new OT32Span(spanName, startTimeMicros);
+    return new AgentSpanImpl(spanName, startTimeMicros);
   }
 
   @Override
   public AgentSpan startSpan(final String spanName, final AgentSpan.Context parent) {
-    return new OT32Span(spanName, (OT32Context) parent);
+    return new AgentSpanImpl(spanName, (AgentContextImpl) parent);
   }
 
   @Override
   public AgentSpan startSpan(
       final String spanName, final AgentSpan.Context parent, final long startTimeMicros) {
-    return new OT32Span(spanName, parent, startTimeMicros);
+    return new AgentSpanImpl(spanName, parent, startTimeMicros);
   }
 
   @Override
   public AgentScope activateSpan(final AgentSpan span, final boolean finishSpanOnClose) {
     // when span is noopSpan(), the scope returned is not a TracerScope
-    final DDScope scope = tracer.scopeManager().activate(((OT32Span) span).span, finishSpanOnClose);
-    return new OT32Scope(span, scope);
+    final DDScope scope =
+        tracer.scopeManager().activate(((AgentSpanImpl) span).span, finishSpanOnClose);
+    return new AgentScopeImpl(span, scope);
   }
 
   @Override
@@ -74,7 +75,7 @@ public final class OpenTracing32 implements TracerAPI {
     } else {
       spanName = "";
     }
-    return new OT32Span(spanName, span);
+    return new AgentSpanImpl(spanName, span);
   }
 
   @Override
@@ -97,37 +98,37 @@ public final class OpenTracing32 implements TracerAPI {
     return NOOP_SPAN;
   }
 
-  private final class OT32Span implements AgentSpan {
+  private final class AgentSpanImpl implements AgentSpan {
 
     private final Span span;
     private volatile String spanName;
 
-    private OT32Span(final String spanName) {
+    private AgentSpanImpl(final String spanName) {
       this(spanName, tracer.buildSpan(spanName).start());
     }
 
-    private OT32Span(final String spanName, final long startTimeMicros) {
+    private AgentSpanImpl(final String spanName, final long startTimeMicros) {
       this(spanName, tracer.buildSpan(spanName).withStartTimestamp(startTimeMicros).start());
     }
 
-    private OT32Span(final String spanName, final OT32Context parent) {
+    private AgentSpanImpl(final String spanName, final AgentContextImpl parent) {
       this(
           spanName,
           tracer.buildSpan(spanName).ignoreActiveSpan().asChildOf(parent.context).start());
     }
 
-    private OT32Span(final String spanName, final Context parent, final long startTimeMicros) {
+    private AgentSpanImpl(final String spanName, final Context parent, final long startTimeMicros) {
       this(
           spanName,
           tracer
               .buildSpan(spanName)
               .ignoreActiveSpan()
-              .asChildOf(((OT32Context) parent).context)
+              .asChildOf(((AgentContextImpl) parent).context)
               .withStartTimestamp(startTimeMicros)
               .start());
     }
 
-    private OT32Span(final String spanName, final Span span) {
+    private AgentSpanImpl(final String spanName, final Span span) {
       this.spanName = spanName;
       this.span = span;
     }
@@ -191,15 +192,15 @@ public final class OpenTracing32 implements TracerAPI {
         if (root == span) {
           return this;
         }
-        return new OT32Span(root.getOperationName(), (Span) root);
+        return new AgentSpanImpl(root.getOperationName(), (Span) root);
       }
       return this;
     }
 
     @Override
-    public OT32Context context() {
+    public AgentContextImpl context() {
       final SpanContext context = span.context();
-      return new OT32Context(context);
+      return new AgentContextImpl(context);
     }
 
     @Override
@@ -223,14 +224,14 @@ public final class OpenTracing32 implements TracerAPI {
     }
   }
 
-  private final class OT32Scope implements AgentScope {
+  private final class AgentScopeImpl implements AgentScope {
 
-    private final OT32Span span;
+    private final AgentSpanImpl span;
     private final DDScope scope;
 
-    private OT32Scope(final AgentSpan span, final DDScope scope) {
-      assert span instanceof OT32Span;
-      this.span = (OT32Span) span;
+    private AgentScopeImpl(final AgentSpan span, final DDScope scope) {
+      assert span instanceof AgentSpanImpl;
+      this.span = (AgentSpanImpl) span;
       this.scope = scope;
     }
 
@@ -253,7 +254,7 @@ public final class OpenTracing32 implements TracerAPI {
     }
   }
 
-  private final class OT32AgentPropagation implements AgentPropagation {
+  private final class AgentPropagationImpl implements AgentPropagation {
 
     @Override
     public TraceScope.Continuation capture() {
@@ -267,10 +268,10 @@ public final class OpenTracing32 implements TracerAPI {
 
     @Override
     public <C> void inject(final AgentSpan span, final C carrier, final Setter<C> setter) {
-      assert span instanceof OT32Span;
+      assert span instanceof AgentSpanImpl;
       tracer.inject(
-          ((OT32Span) span).getSpan().context(),
-          new OT32AgentPropagation.Injector<>(carrier, setter));
+          ((AgentSpanImpl) span).getSpan().context(),
+          new AgentPropagationImpl.Injector<>(carrier, setter));
     }
 
     private final class Injector<C> implements TextMapInject {
@@ -290,7 +291,7 @@ public final class OpenTracing32 implements TracerAPI {
 
     @Override
     public <C> AgentSpan.Context extract(final C carrier, final Getter<C> getter) {
-      return new OT32Context(tracer.extract(new Extractor(carrier, getter)));
+      return new AgentContextImpl(tracer.extract(new Extractor(carrier, getter)));
     }
   }
 
@@ -310,10 +311,10 @@ public final class OpenTracing32 implements TracerAPI {
     }
   }
 
-  private static final class OT32Context implements AgentSpan.Context, SpanContext {
+  private static final class AgentContextImpl implements AgentSpan.Context, SpanContext {
     private final SpanContext context;
 
-    private OT32Context(final SpanContext context) {
+    private AgentContextImpl(final SpanContext context) {
       this.context = context;
     }
 

@@ -13,7 +13,7 @@ public class TracerInstaller {
       final DDTracer tracer = new DDTracer();
       try {
         datadog.trace.api.GlobalTracer.registerIfAbsent(tracer);
-        AgentTracer.registerIfAbsent(new OpenTracing32(tracer));
+        AgentTracer.registerIfAbsent(new AgentTracerImpl(tracer));
       } catch (final RuntimeException re) {
         log.warn("Failed to register tracer '" + tracer + "'", re);
       }
