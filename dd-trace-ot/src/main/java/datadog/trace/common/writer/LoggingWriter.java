@@ -1,19 +1,17 @@
 package datadog.trace.common.writer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import datadog.opentracing.DDSpan;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class LoggingWriter implements Writer {
-  private final ObjectMapper serializer = new ObjectMapper();
 
   @Override
   public void write(final List<DDSpan> trace) {
-    if (log.isInfoEnabled()) {
+    if (log.isInfoEnabled() && !trace.isEmpty()) {
       try {
-        log.info("write(trace): {}", serializer.writeValueAsString(trace));
+        log.info("write(trace): {}", trace.get(0).getTraceId());
       } catch (final Exception e) {
         log.error("error writing(trace): {}", trace);
       }

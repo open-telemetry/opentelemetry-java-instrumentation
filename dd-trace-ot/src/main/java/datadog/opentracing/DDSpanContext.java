@@ -1,6 +1,5 @@
 package datadog.opentracing;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.trace.api.DDTags;
 import java.math.BigInteger;
@@ -165,12 +164,10 @@ public class DDSpanContext implements io.opentracing.SpanContext {
     return Collections.emptyList();
   }
 
-  @JsonIgnore
   public PendingTrace getTrace() {
     return trace;
   }
 
-  @JsonIgnore
   public DDTracer getTracer() {
     return tracer;
   }

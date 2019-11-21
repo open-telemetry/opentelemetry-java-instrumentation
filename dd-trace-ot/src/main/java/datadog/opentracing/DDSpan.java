@@ -2,8 +2,6 @@ package datadog.opentracing;
 
 import static io.opentracing.log.Fields.ERROR_OBJECT;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import datadog.trace.api.DDTags;
 import datadog.trace.common.util.Clock;
 import io.opentracing.Span;
@@ -12,7 +10,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -74,7 +71,6 @@ public class DDSpan implements Span {
     context.getTrace().registerSpan(this);
   }
 
-  @JsonIgnore
   public boolean isFinished() {
     return durationNano.get() != 0;
   }
@@ -116,18 +112,15 @@ public class DDSpan implements Span {
    *
    * @return true if root, false otherwise
    */
-  @JsonIgnore
   public final boolean isRootSpan() {
     return BigInteger.ZERO.equals(context.getParentId());
   }
 
   @Deprecated
-  @JsonIgnore
   public DDSpan getRootSpan() {
     return getLocalRootSpan();
   }
 
-  @JsonIgnore
   public DDSpan getLocalRootSpan() {
     return context().getTrace().getRootSpan();
   }
@@ -273,93 +266,61 @@ public class DDSpan implements Span {
     return this;
   }
 
-  // Getters and JSON serialisation instructions
-
-  /**
-   * Stringified tags
-   *
-   * @return stringified tags
-   */
-  @JsonGetter
-  public Map<String, String> getMeta() {
-    final Map<String, String> meta = new HashMap<>();
-    for (final Map.Entry<String, Object> entry : getTags().entrySet()) {
-      meta.put(entry.getKey(), String.valueOf(entry.getValue()));
-    }
-    return meta;
-  }
+  // Getters
 
   /**
    * Span metrics.
    *
    * @return metrics for this span
    */
-  @JsonGetter
   public Map<String, Number> getMetrics() {
     return context.getMetrics();
   }
 
-  @JsonGetter("start")
   public long getStartTime() {
     return startTimeNano > 0 ? startTimeNano : TimeUnit.MICROSECONDS.toNanos(startTimeMicro);
   }
 
-  @JsonGetter("duration")
   public long getDurationNano() {
     return durationNano.get();
   }
 
-  @JsonGetter("service")
   public String getServiceName() {
     return context.getServiceName();
   }
 
-  @JsonGetter("trace_id")
   public BigInteger getTraceId() {
     return context.getTraceId();
   }
 
-  @JsonGetter("span_id")
   public BigInteger getSpanId() {
     return context.getSpanId();
   }
 
-  @JsonGetter("parent_id")
   public BigInteger getParentId() {
     return context.getParentId();
   }
 
-  @JsonGetter("resource")
   public String getResourceName() {
     return context.getResourceName();
   }
 
-  @JsonGetter("name")
   public String getOperationName() {
     return context.getOperationName();
   }
 
-  @JsonIgnore
   public String getSpanType() {
     return context.getSpanType();
   }
 
-  @JsonIgnore
   public Map<String, Object> getTags() {
     return context().getTags();
   }
 
-  @JsonGetter
-  public String getType() {
-    return context.getSpanType();
-  }
-
-  @JsonIgnore
   public Boolean isError() {
     return context.getErrorFlag();
   }
 
-  @JsonGetter
   public int getError() {
     return context.getErrorFlag() ? 1 : 0;
   }
