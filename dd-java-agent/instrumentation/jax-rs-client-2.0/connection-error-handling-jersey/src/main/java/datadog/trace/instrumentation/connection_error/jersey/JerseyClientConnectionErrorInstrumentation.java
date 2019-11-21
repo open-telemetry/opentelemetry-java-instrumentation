@@ -47,10 +47,15 @@ public final class JerseyClientConnectionErrorInstrumentation extends Instrument
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-    transformers.put(isMethod().and(isPublic()).and(named("invoke")), InvokeAdvice.class.getName());
+
+    transformers.put(
+        isMethod().and(isPublic()).and(named("invoke")),
+        JerseyClientConnectionErrorInstrumentation.class.getName() + "$InvokeAdvice");
+
     transformers.put(
         isMethod().and(isPublic()).and(named("submit")).and(returns(Future.class)),
-        SubmitAdvice.class.getName());
+        JerseyClientConnectionErrorInstrumentation.class.getName() + "$SubmitAdvice");
+
     return transformers;
   }
 

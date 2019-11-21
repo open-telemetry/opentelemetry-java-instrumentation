@@ -47,7 +47,9 @@ public class RabbitCommandInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(isConstructor(), CommandConstructorAdvice.class.getName());
+    return singletonMap(
+        isConstructor(),
+        RabbitCommandInstrumentation.class.getName() + "$CommandConstructorAdvice");
   }
 
   public static class CommandConstructorAdvice {

@@ -59,7 +59,7 @@ public final class HandlerAdapterInstrumentation extends Instrumenter.Default {
             .and(nameStartsWith("handle"))
             .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArguments(3)),
-        ControllerAdvice.class.getName());
+        HandlerAdapterInstrumentation.class.getName() + "$ControllerAdvice");
   }
 
   public static class ControllerAdvice {

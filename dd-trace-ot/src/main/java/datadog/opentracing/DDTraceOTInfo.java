@@ -15,13 +15,12 @@ public class DDTraceOTInfo {
 
   static {
     String v;
-    try {
+    try (final BufferedReader br =
+        new BufferedReader(
+            new InputStreamReader(
+                DDTraceOTInfo.class.getResourceAsStream("/dd-trace-ot.version"), "UTF-8"))) {
       final StringBuilder sb = new StringBuilder();
 
-      final BufferedReader br =
-          new BufferedReader(
-              new InputStreamReader(
-                  DDTraceOTInfo.class.getResourceAsStream("/dd-trace-ot.version"), "UTF-8"));
       for (int c = br.read(); c != -1; c = br.read()) sb.append((char) c);
 
       v = sb.toString().trim();

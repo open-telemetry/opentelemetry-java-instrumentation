@@ -47,7 +47,7 @@ public class CouchbaseCoreInstrumentation extends Instrumenter.Default {
             .and(isPublic())
             .and(takesArgument(0, named("com.couchbase.client.core.message.CouchbaseRequest")))
             .and(named("send")),
-        CouchbaseCoreAdvice.class.getName());
+        CouchbaseCoreInstrumentation.class.getName() + "$CouchbaseCoreAdvice");
   }
 
   public static class CouchbaseCoreAdvice {

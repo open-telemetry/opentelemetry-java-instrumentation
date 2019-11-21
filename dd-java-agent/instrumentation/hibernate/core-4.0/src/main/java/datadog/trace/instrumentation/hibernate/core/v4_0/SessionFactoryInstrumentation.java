@@ -46,7 +46,7 @@ public class SessionFactoryInstrumentation extends AbstractHibernateInstrumentat
             .and(
                 returns(
                     named("org.hibernate.Session").or(named("org.hibernate.StatelessSession")))),
-        SessionFactoryAdvice.class.getName());
+        SessionFactoryInstrumentation.class.getName() + "$SessionFactoryAdvice");
   }
 
   public static class SessionFactoryAdvice extends V4Advice {

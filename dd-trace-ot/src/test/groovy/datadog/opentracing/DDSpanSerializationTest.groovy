@@ -29,9 +29,9 @@ class DDSpanSerializationTest extends DDSpecification {
     expected.put("duration", 33000)
     expected.put("resource", "operation")
     final Map<String, Number> metrics = new HashMap<>()
-    if (samplingPriority != PrioritySampling.UNSET) {
-      metrics.put("_sampling_priority_v1", Integer.valueOf(samplingPriority))
-      metrics.put("_sample_rate", Double.valueOf(1.0))
+    metrics.put("_sampling_priority_v1", 1)
+    if (samplingPriority == PrioritySampling.UNSET) {  // RateByServiceSampler sets priority
+      metrics.put("_dd.agent_psr", 1.0d)
     }
     expected.put("metrics", metrics)
     expected.put("start", 100000)
@@ -62,9 +62,7 @@ class DDSpanSerializationTest extends DDSpecification {
     baggage.put(DDTags.THREAD_ID, String.valueOf(Thread.currentThread().getId()))
 
     DDSpan span = new DDSpan(100L, context)
-    if (samplingPriority != PrioritySampling.UNSET) {
-      span.context().setMetric("_sample_rate", Double.valueOf(1.0))
-    }
+
     span.finish(133L)
     ObjectMapper serializer = new ObjectMapper()
 

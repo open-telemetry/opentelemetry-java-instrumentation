@@ -67,7 +67,7 @@ public final class AkkaForkJoinTaskInstrumentation extends Instrumenter.Default 
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("exec").and(takesArguments(0)).and(not(isAbstract())),
-        ForkJoinTaskAdvice.class.getName());
+        AkkaForkJoinTaskInstrumentation.class.getName() + "$ForkJoinTaskAdvice");
   }
 
   public static class ForkJoinTaskAdvice {

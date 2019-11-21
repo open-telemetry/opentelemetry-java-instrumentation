@@ -53,7 +53,8 @@ public class ProcedureCallInstrumentation extends Instrumenter.Default {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod().and(named("getOutputs")), ProcedureCallMethodAdvice.class.getName());
+        isMethod().and(named("getOutputs")),
+        ProcedureCallInstrumentation.class.getName() + "$ProcedureCallMethodAdvice");
   }
 
   public static class ProcedureCallMethodAdvice {

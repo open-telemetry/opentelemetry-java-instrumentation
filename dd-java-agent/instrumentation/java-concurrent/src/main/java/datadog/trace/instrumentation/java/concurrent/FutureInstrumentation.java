@@ -103,7 +103,8 @@ public final class FutureInstrumentation extends Instrumenter.Default {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        named("cancel").and(returns(boolean.class)), CanceledFutureAdvice.class.getName());
+        named("cancel").and(returns(boolean.class)),
+        FutureInstrumentation.class.getName() + "$CanceledFutureAdvice");
   }
 
   public static class CanceledFutureAdvice {

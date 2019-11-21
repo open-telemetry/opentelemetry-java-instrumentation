@@ -139,7 +139,7 @@ public class TraceConfigInstrumentation implements Instrumenter {
       }
 
       final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
-      transformers.put(methodMatchers, TraceAdvice.class.getName());
+      transformers.put(methodMatchers, packageName + ".TraceAdvice");
       return transformers;
     }
   }

@@ -52,7 +52,7 @@ public final class JedisInstrumentation extends Instrumenter.Default {
             .and(isPublic())
             .and(named("sendCommand"))
             .and(takesArgument(1, named("redis.clients.jedis.Protocol$Command"))),
-        JedisAdvice.class.getName());
+        JedisInstrumentation.class.getName() + "$JedisAdvice");
     // FIXME: This instrumentation only incorporates sending the command, not processing the result.
   }
 

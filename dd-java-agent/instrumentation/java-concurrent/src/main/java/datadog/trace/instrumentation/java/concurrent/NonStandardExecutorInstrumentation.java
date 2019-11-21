@@ -32,10 +32,11 @@ public final class NonStandardExecutorInstrumentation extends AbstractExecutorIn
         named("dispatch")
             .and(takesArgument(0, Runnable.class))
             .and(takesArgument(1, named("kotlinx.coroutines.scheduling.TaskContext"))),
-        JavaExecutorInstrumentation.SetExecuteRunnableStateAdvice.class.getName());
+        JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
+
     transformers.put( // org.eclipse.jetty.util.thread.QueuedThreadPool
         named("dispatch").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),
-        JavaExecutorInstrumentation.SetExecuteRunnableStateAdvice.class.getName());
+        JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
     return transformers;
   }
 }

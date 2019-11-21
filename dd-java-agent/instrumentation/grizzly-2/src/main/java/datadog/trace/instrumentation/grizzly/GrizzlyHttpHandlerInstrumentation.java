@@ -60,7 +60,7 @@ public class GrizzlyHttpHandlerInstrumentation extends Instrumenter.Default {
             .and(named("doHandle"))
             .and(takesArgument(0, named("org.glassfish.grizzly.http.server.Request")))
             .and(takesArgument(1, named("org.glassfish.grizzly.http.server.Response"))),
-        HandleAdvice.class.getName());
+        GrizzlyHttpHandlerInstrumentation.class.getName() + "$HandleAdvice");
   }
 
   public static class HandleAdvice {

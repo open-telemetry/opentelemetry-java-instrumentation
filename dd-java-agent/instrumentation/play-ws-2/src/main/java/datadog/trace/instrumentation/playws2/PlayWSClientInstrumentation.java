@@ -45,7 +45,7 @@ public class PlayWSClientInstrumentation extends Instrumenter.Default {
             .and(takesArguments(2))
             .and(takesArgument(0, named("play.shaded.ahc.org.asynchttpclient.Request")))
             .and(takesArgument(1, named("play.shaded.ahc.org.asynchttpclient.AsyncHandler"))),
-        ClientAdvice.class.getName());
+        PlayWSClientInstrumentation.class.getName() + "$ClientAdvice");
   }
 
   @Override

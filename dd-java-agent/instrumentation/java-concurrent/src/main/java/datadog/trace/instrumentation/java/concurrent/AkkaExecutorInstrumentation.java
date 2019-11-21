@@ -41,15 +41,15 @@ public final class AkkaExecutorInstrumentation extends AbstractExecutorInstrumen
     transformers.put(
         named("execute")
             .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        SetAkkaForkJoinStateAdvice.class.getName());
+        AkkaExecutorInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
     transformers.put(
         named("submit")
             .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        SetAkkaForkJoinStateAdvice.class.getName());
+        AkkaExecutorInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
     transformers.put(
         nameMatches("invoke")
             .and(takesArgument(0, named(AkkaForkJoinTaskInstrumentation.TASK_CLASS_NAME))),
-        SetAkkaForkJoinStateAdvice.class.getName());
+        AkkaExecutorInstrumentation.class.getName() + "$SetAkkaForkJoinStateAdvice");
     return transformers;
   }
 

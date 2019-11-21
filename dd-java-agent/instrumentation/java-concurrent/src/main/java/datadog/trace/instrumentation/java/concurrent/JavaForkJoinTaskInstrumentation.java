@@ -65,7 +65,7 @@ public final class JavaForkJoinTaskInstrumentation extends Instrumenter.Default 
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("exec").and(takesArguments(0)).and(not(isAbstract())),
-        ForkJoinTaskAdvice.class.getName());
+        JavaForkJoinTaskInstrumentation.class.getName() + "$ForkJoinTaskAdvice");
     return transformers;
   }
 

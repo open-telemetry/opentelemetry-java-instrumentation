@@ -1,14 +1,21 @@
 package datadog.trace
 
+
+import datadog.opentracing.DDSpan
 import datadog.opentracing.DDTracer
+import datadog.opentracing.propagation.DatadogHttpCodec
 import datadog.opentracing.propagation.HttpCodec
 import datadog.trace.api.Config
+import datadog.trace.api.sampling.PrioritySampling
 import datadog.trace.common.sampling.AllSampler
+import datadog.trace.common.sampling.PrioritySampler
 import datadog.trace.common.sampling.RateByServiceSampler
+import datadog.trace.common.sampling.Sampler
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.common.writer.LoggingWriter
 import datadog.trace.util.test.DDSpecification
+import io.opentracing.propagation.TextMapInject
 import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
@@ -21,6 +28,7 @@ import static datadog.trace.api.Config.PRIORITY_SAMPLING
 import static datadog.trace.api.Config.SERVICE_MAPPING
 import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.WRITER_TYPE
+import static io.opentracing.propagation.Format.Builtin.TEXT_MAP_INJECT
 
 class DDTracerTest extends DDSpecification {
 
@@ -29,16 +37,6 @@ class DDTracerTest extends DDSpecification {
   @Rule
   public final EnvironmentVariables environmentVariables = new EnvironmentVariables()
 
-  def setupSpec() {
-    // assert that a trace agent isn't running locally as that messes up the test.
-    try {
-      (new Socket("localhost", 8126)).close()
-      throw new IllegalStateException("An agent is already running locally on port 8126. Please stop it if you want to run tests locally.")
-    } catch (final ConnectException ioe) {
-      // trace agent is not running locally.
-    }
-  }
-
   def "verify defaults on tracer"() {
     when:
     def tracer = new DDTracer()
@@ -46,7 +44,11 @@ class DDTracerTest extends DDSpecification {
     then:
     tracer.serviceName == "unnamed-java-app"
     tracer.sampler instanceof RateByServiceSampler
-    tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces } }"
+    tracer.writer instanceof DDAgentWriter
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.host() == "localhost"
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.port() == 8126
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.encodedPath() == "/v0.3/traces" ||
+      ((DDAgentWriter) tracer.writer).api.tracesUrl.encodedPath() == "/v0.4/traces"
     tracer.writer.monitor instanceof DDAgentWriter.NoopMonitor
 
     tracer.spanContextDecorators.size() == 15
@@ -63,8 +65,8 @@ class DDTracerTest extends DDSpecification {
     def tracer = new DDTracer(new Config())
 
     then:
-    tracer.writer.toString() == "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces }, monitor=StatsD { host=localhost:8125 } }"
     tracer.writer.monitor instanceof DDAgentWriter.StatsDMonitor
+    tracer.writer.monitor.hostInfo == "localhost:8125"
   }
 
 
@@ -111,22 +113,44 @@ class DDTracerTest extends DDSpecification {
     "a:b,c:d,e:"    | [a: "b", c: "d"]
   }
 
-  def "verify single override on #source for #key"() {
+  def "verify overriding host"() {
     when:
     System.setProperty(PREFIX + key, value)
     def tracer = new DDTracer(new Config())
 
     then:
-    tracer."$source".toString() == expected
+    tracer.writer instanceof DDAgentWriter
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.host() == value
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.port() == 8126
 
     where:
+    key          | value
+    "agent.host" | "somethingelse"
+  }
 
-    source   | key                | value           | expected
-    "writer" | "default"          | "default"       | "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:8126/v0.3/traces } }"
-    "writer" | "writer.type"      | "LoggingWriter" | "LoggingWriter { }"
-    "writer" | "agent.host"       | "somethingelse" | "DDAgentWriter { api=DDApi { tracesUrl=http://somethingelse:8126/v0.3/traces } }"
-    "writer" | "agent.port"       | "777"           | "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:777/v0.3/traces } }"
-    "writer" | "trace.agent.port" | "9999"          | "DDAgentWriter { api=DDApi { tracesUrl=http://localhost:9999/v0.3/traces } }"
+  def "verify overriding port"() {
+    when:
+    System.setProperty(PREFIX + key, value)
+    def tracer = new DDTracer(new Config())
+
+    then:
+    tracer.writer instanceof DDAgentWriter
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.host() == "localhost"
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.port() == Integer.valueOf(value)
+
+    where:
+    key                | value
+    "agent.port"       | "777"
+    "trace.agent.port" | "9999"
+  }
+
+  def "Writer is instance of LoggingWriter when property set"() {
+    when:
+    System.setProperty(PREFIX + "writer.type", "LoggingWriter")
+    def tracer = new DDTracer(new Config())
+
+    then:
+    tracer.writer instanceof LoggingWriter
   }
 
   def "verify sampler/writer constructor"() {
@@ -173,5 +197,132 @@ class DDTracerTest extends DDSpecification {
     cleanup:
     child.finish()
     root.finish()
+  }
+
+  def "priority sampling when span finishes"() {
+    given:
+    Properties properties = new Properties()
+    properties.setProperty("writer.type", "LoggingWriter")
+    def tracer = new DDTracer(new Config(properties, Config.get()))
+
+    when:
+    def span = tracer.buildSpan("operation").start()
+    span.finish()
+
+    then:
+    span.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+  }
+
+  def "priority sampling set when child span complete"() {
+    given:
+    Properties properties = new Properties()
+    properties.setProperty("writer.type", "LoggingWriter")
+    def tracer = new DDTracer(new Config(properties, Config.get()))
+
+    when:
+    def root = tracer.buildSpan("operation").start()
+    def child = tracer.buildSpan('my_child').asChildOf(root).start()
+    root.finish()
+
+    then:
+    root.getSamplingPriority() == null
+
+    when:
+    child.finish()
+
+    then:
+    root.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+    child.getSamplingPriority() == root.getSamplingPriority()
+  }
+
+  def "span priority set when injecting"() {
+    given:
+    Properties properties = new Properties()
+    properties.setProperty("writer.type", "LoggingWriter")
+    def tracer = new DDTracer(new Config(properties, Config.get()))
+    def injector = Mock(TextMapInject)
+
+    when:
+    def root = tracer.buildSpan("operation").start()
+    def child = tracer.buildSpan('my_child').asChildOf(root).start()
+    tracer.inject(child.context(), TEXT_MAP_INJECT, injector)
+
+    then:
+    root.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+    child.getSamplingPriority() == root.getSamplingPriority()
+    1 * injector.put(DatadogHttpCodec.SAMPLING_PRIORITY_KEY, String.valueOf(PrioritySampling.SAMPLER_KEEP))
+
+    cleanup:
+    child.finish()
+    root.finish()
+  }
+
+  def "span priority only set after first injection"() {
+    given:
+    def sampler = new ControllableSampler()
+    def tracer = new DDTracer("serviceName", new LoggingWriter(), sampler)
+    def injector = Mock(TextMapInject)
+
+    when:
+    def root = tracer.buildSpan("operation").start()
+    def child = tracer.buildSpan('my_child').asChildOf(root).start()
+    tracer.inject(child.context(), TEXT_MAP_INJECT, injector)
+
+    then:
+    root.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+    child.getSamplingPriority() == root.getSamplingPriority()
+    1 * injector.put(DatadogHttpCodec.SAMPLING_PRIORITY_KEY, String.valueOf(PrioritySampling.SAMPLER_KEEP))
+
+    when:
+    sampler.nextSamplingPriority = PrioritySampling.SAMPLER_DROP
+    def child2 = tracer.buildSpan('my_child2').asChildOf(root).start()
+    tracer.inject(child2.context(), TEXT_MAP_INJECT, injector)
+
+    then:
+    root.getSamplingPriority() == PrioritySampling.SAMPLER_KEEP
+    child.getSamplingPriority() == root.getSamplingPriority()
+    child2.getSamplingPriority() == root.getSamplingPriority()
+    1 * injector.put(DatadogHttpCodec.SAMPLING_PRIORITY_KEY, String.valueOf(PrioritySampling.SAMPLER_KEEP))
+
+    cleanup:
+    child.finish()
+    child2.finish()
+    root.finish()
+  }
+
+  def "injection doesn't override set priority"() {
+    given:
+    def sampler = new ControllableSampler()
+    def tracer = new DDTracer("serviceName", new LoggingWriter(), sampler)
+    def injector = Mock(TextMapInject)
+
+    when:
+    def root = tracer.buildSpan("operation").start()
+    def child = tracer.buildSpan('my_child').asChildOf(root).start()
+    child.setSamplingPriority(PrioritySampling.USER_DROP)
+    tracer.inject(child.context(), TEXT_MAP_INJECT, injector)
+
+    then:
+    root.getSamplingPriority() == PrioritySampling.USER_DROP
+    child.getSamplingPriority() == root.getSamplingPriority()
+    1 * injector.put(DatadogHttpCodec.SAMPLING_PRIORITY_KEY, String.valueOf(PrioritySampling.USER_DROP))
+
+    cleanup:
+    child.finish()
+    root.finish()
+  }
+}
+
+class ControllableSampler implements Sampler, PrioritySampler {
+  protected int nextSamplingPriority = PrioritySampling.SAMPLER_KEEP
+
+  @Override
+  void setSamplingPriority(DDSpan span) {
+    span.setSamplingPriority(nextSamplingPriority)
+  }
+
+  @Override
+  boolean sample(DDSpan span) {
+    return true
   }
 }

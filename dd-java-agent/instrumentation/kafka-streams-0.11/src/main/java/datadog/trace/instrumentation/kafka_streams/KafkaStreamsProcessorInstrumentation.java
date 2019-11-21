@@ -64,7 +64,7 @@ public class KafkaStreamsProcessorInstrumentation {
               .and(isPackagePrivate())
               .and(named("nextRecord"))
               .and(returns(named("org.apache.kafka.streams.processor.internals.StampedRecord"))),
-          StartSpanAdvice.class.getName());
+          StartInstrumentation.class.getName() + "$StartSpanAdvice");
     }
 
     public static class StartSpanAdvice {
@@ -112,7 +112,7 @@ public class KafkaStreamsProcessorInstrumentation {
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       return singletonMap(
           isMethod().and(isPublic()).and(named("process")).and(takesArguments(0)),
-          StopSpanAdvice.class.getName());
+          StopInstrumentation.class.getName() + "$StopSpanAdvice");
     }
 
     public static class StopSpanAdvice {

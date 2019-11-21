@@ -44,31 +44,32 @@ public final class JavaExecutorInstrumentation extends AbstractExecutorInstrumen
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("execute").and(takesArgument(0, Runnable.class)),
-        SetExecuteRunnableStateAdvice.class.getName());
+        JavaExecutorInstrumentation.class.getName() + "$SetExecuteRunnableStateAdvice");
     transformers.put(
         named("execute").and(takesArgument(0, ForkJoinTask.class)),
-        SetJavaForkJoinStateAdvice.class.getName());
+        JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
     transformers.put(
         named("submit").and(takesArgument(0, Runnable.class)),
-        SetSubmitRunnableStateAdvice.class.getName());
+        JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
     transformers.put(
         named("submit").and(takesArgument(0, Callable.class)),
-        SetCallableStateAdvice.class.getName());
+        JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
     transformers.put(
         named("submit").and(takesArgument(0, ForkJoinTask.class)),
-        SetJavaForkJoinStateAdvice.class.getName());
+        JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
     transformers.put(
         nameMatches("invoke(Any|All)$").and(takesArgument(0, Collection.class)),
-        SetCallableStateForCallableCollectionAdvice.class.getName());
+        JavaExecutorInstrumentation.class.getName()
+            + "$SetCallableStateForCallableCollectionAdvice");
     transformers.put(
         nameMatches("invoke").and(takesArgument(0, ForkJoinTask.class)),
-        SetJavaForkJoinStateAdvice.class.getName());
+        JavaExecutorInstrumentation.class.getName() + "$SetJavaForkJoinStateAdvice");
     transformers.put(
         named("schedule").and(takesArgument(0, Runnable.class)),
-        SetSubmitRunnableStateAdvice.class.getName());
+        JavaExecutorInstrumentation.class.getName() + "$SetSubmitRunnableStateAdvice");
     transformers.put(
         named("schedule").and(takesArgument(0, Callable.class)),
-        SetCallableStateAdvice.class.getName());
+        JavaExecutorInstrumentation.class.getName() + "$SetCallableStateAdvice");
     return transformers;
   }
 

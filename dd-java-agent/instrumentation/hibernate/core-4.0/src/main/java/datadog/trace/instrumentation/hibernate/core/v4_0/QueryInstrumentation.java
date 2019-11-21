@@ -45,7 +45,7 @@ public class QueryInstrumentation extends AbstractHibernateInstrumentation {
                     .or(named("executeUpdate"))
                     .or(named("uniqueResult"))
                     .or(named("scroll"))),
-        QueryMethodAdvice.class.getName());
+        QueryInstrumentation.class.getName() + "$QueryMethodAdvice");
   }
 
   public static class QueryMethodAdvice extends V4Advice {
