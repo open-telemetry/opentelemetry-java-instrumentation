@@ -1,14 +1,14 @@
 package datadog.trace.api.sampling
 
 import datadog.opentracing.DDSpan
-import datadog.trace.common.sampling.KnuthSampler
+import datadog.trace.common.sampling.DeterministicSampler
 import datadog.trace.util.test.DDSpecification
 
-class KnuthSamplerTest extends DDSpecification {
+class DeterministicSamplerTest extends DDSpecification {
 
   def "test known values: #traceId"() {
     given:
-    KnuthSampler sampler = new KnuthSampler(0.5)
+    DeterministicSampler sampler = new DeterministicSampler(0.5)
     DDSpan span = Mock(DDSpan) {
       getTraceId() >> traceId
     }
@@ -125,7 +125,7 @@ class KnuthSamplerTest extends DDSpecification {
 
   def "test sampling none: #traceId"() {
     given:
-    KnuthSampler sampler = new KnuthSampler(0)
+    DeterministicSampler sampler = new DeterministicSampler(0)
     DDSpan span = Mock(DDSpan) {
       getTraceId() >> traceId
     }
@@ -244,7 +244,7 @@ class KnuthSamplerTest extends DDSpecification {
 
   def "test sampling all: #traceId"() {
     given:
-    KnuthSampler sampler = new KnuthSampler(1)
+    DeterministicSampler sampler = new DeterministicSampler(1)
     DDSpan span = Mock(DDSpan) {
       getTraceId() >> traceId
     }

@@ -45,7 +45,7 @@ public class RuleBasedSampler implements Sampler, PrioritySampler {
         try {
           final double rateForEntry = Double.parseDouble(entry.getValue());
           final SamplingRule samplingRule =
-              new ServiceSamplingRule(entry.getKey(), new KnuthSampler(rateForEntry));
+              new ServiceSamplingRule(entry.getKey(), new DeterministicSampler(rateForEntry));
           samplingRules.add(samplingRule);
         } catch (final NumberFormatException e) {
           log.error("Unable to parse rate for service: {}", entry, e);
@@ -58,7 +58,7 @@ public class RuleBasedSampler implements Sampler, PrioritySampler {
         try {
           final double rateForEntry = Double.parseDouble(entry.getValue());
           final SamplingRule samplingRule =
-              new OperationSamplingRule(entry.getKey(), new KnuthSampler(rateForEntry));
+              new OperationSamplingRule(entry.getKey(), new DeterministicSampler(rateForEntry));
           samplingRules.add(samplingRule);
         } catch (final NumberFormatException e) {
           log.error("Unable to parse rate for operation: {}", entry, e);
@@ -68,7 +68,7 @@ public class RuleBasedSampler implements Sampler, PrioritySampler {
 
     if (defaultRate != null) {
       final SamplingRule samplingRule =
-          new AlwaysMatchesSamplingRule(new KnuthSampler(defaultRate));
+          new AlwaysMatchesSamplingRule(new DeterministicSampler(defaultRate));
       samplingRules.add(samplingRule);
     }
 
