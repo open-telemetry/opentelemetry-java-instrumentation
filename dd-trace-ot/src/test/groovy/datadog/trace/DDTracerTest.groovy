@@ -16,7 +16,6 @@ import static datadog.trace.api.Config.HEADER_TAGS
 import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
 import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_PORT
 import static datadog.trace.api.Config.PREFIX
-import static datadog.trace.api.Config.SERVICE_MAPPING
 import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.WRITER_TYPE
 
@@ -79,7 +78,6 @@ class DDTracerTest extends DDSpecification {
 
   def "verify mapping configs on tracer"() {
     setup:
-    System.setProperty(PREFIX + SERVICE_MAPPING, mapString)
     System.setProperty(PREFIX + SPAN_TAGS, mapString)
     System.setProperty(PREFIX + HEADER_TAGS, mapString)
 
@@ -91,7 +89,6 @@ class DDTracerTest extends DDSpecification {
 
     then:
     tracer.defaultSpanTags == map
-    tracer.serviceNameMappings == map
     taggedHeaders == map
 
     where:
@@ -134,7 +131,7 @@ class DDTracerTest extends DDSpecification {
 
   def "root tags are applied only to root spans"() {
     setup:
-    def tracer = new DDTracer('my_service', new ListWriter(), '', ['only_root': 'value'], [:], [:], [:])
+    def tracer = new DDTracer('my_service', new ListWriter(), '', ['only_root': 'value'], [:], [:])
     def root = tracer.buildSpan('my_root').start()
     def child = tracer.buildSpan('my_child').asChildOf(root).start()
 

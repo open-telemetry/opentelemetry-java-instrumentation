@@ -27,7 +27,7 @@ class DDSpanSerializationTest extends DDSpecification {
       false,
       "fakeType",
       Collections.emptyMap(),
-      new PendingTrace(tracer, 1G, [:]),
+      new PendingTrace(tracer, 1G),
       tracer)
     def span = new DDSpan(0, context)
     byte[] bytes = objectMapper.writeValueAsBytes(span)

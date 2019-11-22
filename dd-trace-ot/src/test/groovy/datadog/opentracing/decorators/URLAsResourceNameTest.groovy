@@ -117,7 +117,7 @@ class URLAsResourceNameTest extends DDSpecification {
         false,
         "fakeType",
         tags,
-        new PendingTrace(tracer, 1G, [:]),
+        new PendingTrace(tracer, 1G),
         tracer)
 
     then:

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -30,7 +29,6 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
 
   private final DDTracer tracer;
   private final BigInteger traceId;
-  private final Map<String, String> serviceNameMappings;
 
   // TODO: consider moving these time fields into DDTracer to ensure that traces have precise
   // relative time
@@ -61,13 +59,9 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
   /** Ensure a trace is never written multiple times */
   private final AtomicBoolean isWritten = new AtomicBoolean(false);
 
-  PendingTrace(
-      final DDTracer tracer,
-      final BigInteger traceId,
-      final Map<String, String> serviceNameMappings) {
+  PendingTrace(final DDTracer tracer, final BigInteger traceId) {
     this.tracer = tracer;
     this.traceId = traceId;
-    this.serviceNameMappings = serviceNameMappings;
 
     startTimeNano = Clock.currentNanoTime();
     startNanoTicks = Clock.currentNanoTicks();
@@ -151,10 +145,6 @@ public class PendingTrace extends ConcurrentLinkedDeque<DDSpan> {
     }
 
     if (!isWritten.get()) {
-      if (serviceNameMappings.containsKey(span.getServiceName())) {
-        span.setServiceName(serviceNameMappings.get(span.getServiceName()));
-      }
-
       addFirst(span);
     } else {
       log.debug("{} - finished after trace reported.", span);

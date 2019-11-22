@@ -46,7 +46,6 @@ class SpanDecoratorTest extends DDSpecification {
       "some-runtime-id",
       emptyMap(),
       emptyMap(),
-      mapping,
       emptyMap()
     )
 
@@ -59,40 +58,9 @@ class SpanDecoratorTest extends DDSpecification {
 
     where:
     tag                   | name            | expected
-    DDTags.SERVICE_NAME   | "some-service"  | "new-service"
-    DDTags.SERVICE_NAME   | "other-service" | "other-service"
-    "service"             | "some-service"  | "new-service"
-    "service"             | "other-service" | "other-service"
-    Tags.PEER_SERVICE.key | "some-service"  | "new-service"
-    Tags.PEER_SERVICE.key | "other-service" | "other-service"
-
-    mapping = ["some-service": "new-service"]
-  }
-
-  def "default or configured service name can be remapped without setting tag"() {
-    setup:
-    tracer = new DDTracer(
-      serviceName,
-      new LoggingWriter(),
-      "some-runtime-id",
-      emptyMap(),
-      emptyMap(),
-      mapping,
-      emptyMap()
-    )
-
-    when:
-    def span = tracer.buildSpan("some span").start()
-    span.finish()
-
-    then:
-    span.serviceName == expected
-
-    where:
-    serviceName          | expected             | mapping
-    DEFAULT_SERVICE_NAME | DEFAULT_SERVICE_NAME | ["other-service-name": "other-service"]
-    DEFAULT_SERVICE_NAME | "new-service"        | [(DEFAULT_SERVICE_NAME): "new-service"]
-    "other-service-name" | "other-service"      | ["other-service-name": "other-service"]
+    DDTags.SERVICE_NAME   | "some-service"  | "some-service"
+    "service"             | "some-service"  | "some-service"
+    Tags.PEER_SERVICE.key | "some-service"  | "some-service"
   }
 
   def "set service name from servlet.context with context '#context'"() {
@@ -123,7 +91,6 @@ class SpanDecoratorTest extends DDSpecification {
       "some-runtime-id",
       emptyMap(),
       emptyMap(),
-      mapping,
       emptyMap()
     )
 
@@ -137,14 +104,14 @@ class SpanDecoratorTest extends DDSpecification {
 
     where:
     context         | serviceName          | expected
-    "/"             | DEFAULT_SERVICE_NAME | "new-service"
-    ""              | DEFAULT_SERVICE_NAME | "new-service"
+    "/"             | DEFAULT_SERVICE_NAME | DEFAULT_SERVICE_NAME
+    ""              | DEFAULT_SERVICE_NAME | DEFAULT_SERVICE_NAME
     "/some-context" | DEFAULT_SERVICE_NAME | "some-context"
     "other-context" | DEFAULT_SERVICE_NAME | "other-context"
-    "/"             | "my-service"         | "new-service"
-    ""              | "my-service"         | "new-service"
-    "/some-context" | "my-service"         | "new-service"
-    "other-context" | "my-service"         | "new-service"
+    "/"             | "my-service"         | "my-service"
+    ""              | "my-service"         | "my-service"
+    "/some-context" | "my-service"         | "my-service"
+    "other-context" | "my-service"         | "my-service"
 
     mapping = [(serviceName): "new-service"]
   }
