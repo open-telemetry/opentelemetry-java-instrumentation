@@ -107,6 +107,6 @@ public class RateByServiceSampler implements Sampler, PrioritySampler, ResponseL
       sanitizedRate = sampleRate;
     }
 
-    return new KnuthSampler(sanitizedRate);
+    return new DeterministicSampler(sanitizedRate);
   }
 }
