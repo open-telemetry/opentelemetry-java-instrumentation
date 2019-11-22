@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -49,10 +48,6 @@ public class DDTracer implements Closeable, datadog.trace.api.Tracer {
   /** By default, report to local agent and collect all traces. */
   public DDTracer() {
     this(Config.get());
-  }
-
-  public DDTracer(final Properties config) {
-    this(Config.get(config));
   }
 
   private DDTracer(final Config config) {
@@ -108,10 +103,6 @@ public class DDTracer implements Closeable, datadog.trace.api.Tracer {
 
   public Span activeSpan() {
     return scopeManager.activeSpan();
-  }
-
-  public DDScope activateSpan(final Span span) {
-    return scopeManager.activate(span);
   }
 
   public DDSpanBuilder buildSpan(final String operationName) {
@@ -231,10 +222,6 @@ public class DDTracer implements Closeable, datadog.trace.api.Tracer {
 
     public DDSpanBuilder withTag(final String tag, final String string) {
       return withTag(tag, (Object) string);
-    }
-
-    public DDSpanBuilder withTag(final String tag, final boolean bool) {
-      return withTag(tag, (Object) bool);
     }
 
     public DDSpanBuilder withStartTimestamp(final long timestampMicroseconds) {

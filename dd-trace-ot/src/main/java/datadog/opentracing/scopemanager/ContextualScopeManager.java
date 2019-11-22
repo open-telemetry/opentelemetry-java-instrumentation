@@ -19,10 +19,6 @@ public class ContextualScopeManager {
     }
   }
 
-  public DDScope activate(final Span span) {
-    return activate(span, false);
-  }
-
   public DDScope active() {
     return tlsScope.get();
   }

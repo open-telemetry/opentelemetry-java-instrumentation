@@ -92,7 +92,6 @@ public class DDSpan implements Span {
     }
   }
 
-  @Override
   public final void finish(final long stoptimeMicros) {
     finishAndAddToTrace(TimeUnit.MICROSECONDS.toNanos(stoptimeMicros - startTimeMicro));
   }
@@ -144,19 +143,19 @@ public class DDSpan implements Span {
 
   @Override
   public final DDSpan setTag(final String tag, final String value) {
-    context().setTag(tag, (Object) value);
+    context().setTag(tag, value);
     return this;
   }
 
   @Override
   public final DDSpan setTag(final String tag, final boolean value) {
-    context().setTag(tag, (Object) value);
+    context().setTag(tag, value);
     return this;
   }
 
   @Override
   public final DDSpan setTag(final String tag, final Number value) {
-    context().setTag(tag, (Object) value);
+    context().setTag(tag, value);
     return this;
   }
 
@@ -179,36 +178,7 @@ public class DDSpan implements Span {
     return this;
   }
 
-  @Override
-  public final DDSpan log(final long l, final Map<String, ?> map) {
-    if (!extractError(map)) {
-      log.debug("`log` method is not implemented. Doing nothing");
-    }
-    return this;
-  }
-
-  @Override
-  public final DDSpan log(final String s) {
-    log.debug("`log` method is not implemented. Provided log: {}", s);
-    return this;
-  }
-
-  @Override
-  public final DDSpan log(final long l, final String s) {
-    log.debug("`log` method is not implemented. Provided log: {}", s);
-    return this;
-  }
-
   // Getters
-
-  /**
-   * Span metrics.
-   *
-   * @return metrics for this span
-   */
-  public Map<String, Number> getMetrics() {
-    return context.getMetrics();
-  }
 
   public long getStartTime() {
     return startTimeNano > 0 ? startTimeNano : TimeUnit.MICROSECONDS.toNanos(startTimeMicro);

@@ -76,22 +76,12 @@ public class DDSpanContext implements SpanContext {
     return traceId;
   }
 
-  @Override
-  public String toTraceId() {
-    return traceId.toString();
-  }
-
   public BigInteger getParentId() {
     return parentId;
   }
 
   public BigInteger getSpanId() {
     return spanId;
-  }
-
-  @Override
-  public String toSpanId() {
-    return spanId.toString();
   }
 
   public String getOperationName() {
@@ -112,10 +102,6 @@ public class DDSpanContext implements SpanContext {
 
   public PendingTrace getTrace() {
     return trace;
-  }
-
-  public DDTracer getTracer() {
-    return tracer;
   }
 
   public Map<String, Number> getMetrics() {

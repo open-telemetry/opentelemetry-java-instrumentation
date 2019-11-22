@@ -317,15 +317,5 @@ public final class AgentTracerImpl implements TracerAPI {
     private AgentContextImpl(final SpanContext context) {
       this.context = context;
     }
-
-    @Override
-    public String toTraceId() {
-      return context.toTraceId();
-    }
-
-    @Override
-    public String toSpanId() {
-      return context.toSpanId();
-    }
   }
 }

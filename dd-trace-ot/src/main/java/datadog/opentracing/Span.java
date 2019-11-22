@@ -16,15 +16,7 @@ public interface Span {
 
   Span log(Map<String, ?> fields);
 
-  Span log(long timestampMicroseconds, Map<String, ?> fields);
-
-  Span log(String event);
-
-  Span log(long timestampMicroseconds, String event);
-
   Span setOperationName(String operationName);
 
   void finish();
-
-  void finish(long finishMicros);
 }

@@ -14,9 +14,6 @@ public class NoopSpan implements Span {
   public void finish() {}
 
   @Override
-  public void finish(final long finishMicros) {}
-
-  @Override
   public NoopSpan setTag(final String key, final String value) {
     return this;
   }
@@ -37,36 +34,11 @@ public class NoopSpan implements Span {
   }
 
   @Override
-  public NoopSpan log(final long timestampMicroseconds, final Map<String, ?> fields) {
-    return this;
-  }
-
-  @Override
-  public NoopSpan log(final String event) {
-    return this;
-  }
-
-  @Override
-  public NoopSpan log(final long timestampMicroseconds, final String event) {
-    return this;
-  }
-
-  @Override
   public NoopSpan setOperationName(final String operationName) {
     return this;
   }
 
   static final class NoopSpanContext implements SpanContext {
     static final NoopSpanContext INSTANCE = new NoopSpanContext();
-
-    @Override
-    public String toTraceId() {
-      return "";
-    }
-
-    @Override
-    public String toSpanId() {
-      return "";
-    }
   }
 }

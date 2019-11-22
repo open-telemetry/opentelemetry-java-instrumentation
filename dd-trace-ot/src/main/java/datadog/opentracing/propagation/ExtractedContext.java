@@ -15,16 +15,6 @@ public class ExtractedContext implements SpanContext {
     this.spanId = spanId;
   }
 
-  @Override
-  public String toTraceId() {
-    return "";
-  }
-
-  @Override
-  public String toSpanId() {
-    return "";
-  }
-
   public BigInteger getTraceId() {
     return traceId;
   }

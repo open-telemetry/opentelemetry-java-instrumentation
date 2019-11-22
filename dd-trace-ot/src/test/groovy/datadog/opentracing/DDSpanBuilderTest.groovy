@@ -147,7 +147,7 @@ class DDSpanBuilderTest extends DDSpecification {
       tracer.buildSpan("parent")
         .startActive(false)
 
-    final BigInteger expectedParentId = noopParent ? 0G : new BigInteger(parent.span().context().toSpanId())
+    final BigInteger expectedParentId = noopParent ? 0G : ((DDSpanContext) parent.span().context()).getSpanId()
 
     final String expectedName = "fakeName"
 
