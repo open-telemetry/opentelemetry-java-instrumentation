@@ -45,7 +45,6 @@ class SpanDecoratorTest extends DDSpecification {
       new LoggingWriter(),
       "some-runtime-id",
       emptyMap(),
-      emptyMap(),
       emptyMap()
     )
 
@@ -57,10 +56,10 @@ class SpanDecoratorTest extends DDSpecification {
     span.getServiceName() == expected
 
     where:
-    tag                   | name            | expected
-    DDTags.SERVICE_NAME   | "some-service"  | "some-service"
-    "service"             | "some-service"  | "some-service"
-    Tags.PEER_SERVICE.key | "some-service"  | "some-service"
+    tag                   | name           | expected
+    DDTags.SERVICE_NAME   | "some-service" | "some-service"
+    "service"             | "some-service" | "some-service"
+    Tags.PEER_SERVICE.key | "some-service" | "some-service"
   }
 
   def "set service name from servlet.context with context '#context'"() {
@@ -89,7 +88,6 @@ class SpanDecoratorTest extends DDSpecification {
       serviceName,
       new LoggingWriter(),
       "some-runtime-id",
-      emptyMap(),
       emptyMap(),
       emptyMap()
     )

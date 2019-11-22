@@ -1,7 +1,7 @@
 package datadog.trace
 
 import datadog.opentracing.DDTracer
-import datadog.opentracing.propagation.HttpCodec
+import datadog.opentracing.propagation.DatadogHttpCodec
 import datadog.trace.api.Config
 import datadog.trace.common.writer.DDAgentWriter
 import datadog.trace.common.writer.ListWriter
@@ -12,7 +12,6 @@ import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 
 import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
-import static datadog.trace.api.Config.HEADER_TAGS
 import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
 import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_PORT
 import static datadog.trace.api.Config.PREFIX
@@ -47,8 +46,8 @@ class DDTracerTest extends DDSpecification {
 
     tracer.spanContextDecorators.size() == 12
 
-    tracer.injector instanceof HttpCodec.CompoundInjector
-    tracer.extractor instanceof HttpCodec.CompoundExtractor
+    tracer.injector instanceof DatadogHttpCodec.Injector
+    tracer.extractor instanceof DatadogHttpCodec.Extractor
   }
 
   def "verify enabling health monitor"() {
@@ -79,17 +78,13 @@ class DDTracerTest extends DDSpecification {
   def "verify mapping configs on tracer"() {
     setup:
     System.setProperty(PREFIX + SPAN_TAGS, mapString)
-    System.setProperty(PREFIX + HEADER_TAGS, mapString)
 
     when:
     def config = new Config()
     def tracer = new DDTracer(config)
-    // Datadog extractor gets placed first
-    def taggedHeaders = tracer.extractor.extractors[0].taggedHeaders
 
     then:
     tracer.defaultSpanTags == map
-    taggedHeaders == map
 
     where:
     mapString       | map
@@ -131,7 +126,7 @@ class DDTracerTest extends DDSpecification {
 
   def "root tags are applied only to root spans"() {
     setup:
-    def tracer = new DDTracer('my_service', new ListWriter(), '', ['only_root': 'value'], [:], [:])
+    def tracer = new DDTracer('my_service', new ListWriter(), '', ['only_root': 'value'], [:])
     def root = tracer.buildSpan('my_root').start()
     def child = tracer.buildSpan('my_child').asChildOf(root).start()
 

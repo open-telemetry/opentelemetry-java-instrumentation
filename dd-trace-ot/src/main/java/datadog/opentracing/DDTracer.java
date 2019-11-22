@@ -4,7 +4,6 @@ import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.opentracing.decorators.DDDecoratorsFactory;
 import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HttpCodec;
-import datadog.opentracing.propagation.TagContext;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
 import datadog.opentracing.scopemanager.ScopeContext;
 import datadog.trace.api.Config;
@@ -98,20 +97,13 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         Writer.Builder.forConfig(config),
         config.getLocalRootSpanTags(),
         config.getMergedSpanTags(),
-        config.getHeaderTags(),
         config.getPartialFlushMinSpans());
     log.debug("Using config: {}", config);
   }
 
   /** Visible for testing */
   DDTracer(final String serviceName, final Writer writer, final Map<String, String> runtimeTags) {
-    this(
-        serviceName,
-        writer,
-        runtimeTags,
-        Collections.<String, String>emptyMap(),
-        Collections.<String, String>emptyMap(),
-        0);
+    this(serviceName, writer, runtimeTags, Collections.<String, String>emptyMap(), 0);
   }
 
   public DDTracer(final Writer writer) {
@@ -124,42 +116,37 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         writer,
         config.getLocalRootSpanTags(),
         config.getMergedSpanTags(),
-        config.getHeaderTags(),
         config.getPartialFlushMinSpans());
   }
 
-  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, Map, int)} instead. */
+  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, int)} instead. */
   @Deprecated
   public DDTracer(
       final String serviceName,
       final Writer writer,
       final String runtimeId,
       final Map<String, String> localRootSpanTags,
-      final Map<String, String> defaultSpanTags,
-      final Map<String, String> taggedHeaders) {
+      final Map<String, String> defaultSpanTags) {
     this(
         serviceName,
         writer,
         customRuntimeTags(runtimeId, localRootSpanTags),
         defaultSpanTags,
-        taggedHeaders,
         Config.get().getPartialFlushMinSpans());
   }
 
-  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map, Map, int)} instead. */
+  /** @deprecated Use {@link #DDTracer(String, Writer, Map, Map,int)} instead. */
   @Deprecated
   public DDTracer(
       final String serviceName,
       final Writer writer,
       final Map<String, String> localRootSpanTags,
-      final Map<String, String> defaultSpanTags,
-      final Map<String, String> taggedHeaders) {
+      final Map<String, String> defaultSpanTags) {
     this(
         serviceName,
         writer,
         localRootSpanTags,
         defaultSpanTags,
-        taggedHeaders,
         Config.get().getPartialFlushMinSpans());
   }
 
@@ -168,11 +155,9 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final Writer writer,
       final Map<String, String> localRootSpanTags,
       final Map<String, String> defaultSpanTags,
-      final Map<String, String> taggedHeaders,
       final int partialFlushMinSpans) {
     assert localRootSpanTags != null;
     assert defaultSpanTags != null;
-    assert taggedHeaders != null;
 
     this.serviceName = serviceName;
     this.writer = writer;
@@ -189,8 +174,8 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     }
 
     // TODO: we have too many constructors, we should move to some sort of builder approach
-    injector = HttpCodec.createInjector(Config.get());
-    extractor = HttpCodec.createExtractor(Config.get(), taggedHeaders);
+    injector = HttpCodec.createInjector();
+    extractor = HttpCodec.createExtractor();
 
     log.info("New instance: {}", this);
 
@@ -453,13 +438,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       return this;
     }
 
-    public Iterable<Map.Entry<String, String>> baggageItems() {
-      if (parent == null) {
-        return Collections.emptyList();
-      }
-      return parent.baggageItems();
-    }
-
     @Override
     public DDSpanBuilder asChildOf(final Span span) {
       return asChildOf(span == null ? null : span.context());
@@ -514,7 +492,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
     /**
      * Build the SpanContext, if the actual span has a parent, the following attributes must be
-     * propagated: - ServiceName - Baggage - Trace (a list of all spans related) - SpanType
+     * propagated: - ServiceName - Trace (a list of all spans related) - SpanType
      *
      * @return the context
      */
@@ -522,9 +500,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final BigInteger traceId;
       final BigInteger spanId = generateNewId();
       final BigInteger parentSpanId;
-      final Map<String, String> baggage;
       final PendingTrace parentTrace;
-      final String origin;
 
       final DDSpanContext context;
       SpanContext parentContext = parent;
@@ -543,9 +519,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         final DDSpanContext ddsc = (DDSpanContext) parentContext;
         traceId = ddsc.getTraceId();
         parentSpanId = ddsc.getSpanId();
-        baggage = ddsc.getBaggageItems();
         parentTrace = ddsc.getTrace();
-        origin = null;
         if (serviceName == null) {
           serviceName = ddsc.getServiceName();
         }
@@ -556,20 +530,10 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
           final ExtractedContext extractedContext = (ExtractedContext) parentContext;
           traceId = extractedContext.getTraceId();
           parentSpanId = extractedContext.getSpanId();
-          baggage = extractedContext.getBaggage();
         } else {
           // Start a new trace
           traceId = generateNewId();
           parentSpanId = BigInteger.ZERO;
-          baggage = null;
-        }
-
-        // Get header tags and set origin whether propagating or not.
-        if (parentContext instanceof TagContext) {
-          tags.putAll(((TagContext) parentContext).getTags());
-          origin = ((TagContext) parentContext).getOrigin();
-        } else {
-          origin = null;
         }
 
         tags.putAll(localRootSpanTags);
@@ -592,8 +556,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
               serviceName,
               operationName,
               resourceName,
-              origin,
-              baggage,
               errorFlag,
               spanType,
               tags,

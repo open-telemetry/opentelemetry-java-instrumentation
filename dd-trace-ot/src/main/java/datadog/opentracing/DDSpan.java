@@ -198,7 +198,7 @@ public class DDSpan implements Span {
    */
   @Override
   public final String getBaggageItem(final String key) {
-    return context.getBaggageItem(key);
+    return null;
   }
 
   /* (non-Javadoc)
@@ -206,7 +206,6 @@ public class DDSpan implements Span {
    */
   @Override
   public final DDSpan setBaggageItem(final String key, final String value) {
-    context.setBaggageItem(key, value);
     return this;
   }
 
@@ -277,16 +276,13 @@ public class DDSpan implements Span {
   // Getters and JSON serialisation instructions
 
   /**
-   * Meta merges baggage and tags (stringified values)
+   * Stringified tags
    *
-   * @return merged context baggage and tags
+   * @return stringified tags
    */
   @JsonGetter
   public Map<String, String> getMeta() {
     final Map<String, String> meta = new HashMap<>();
-    for (final Map.Entry<String, String> entry : context().getBaggageItems().entrySet()) {
-      meta.put(entry.getKey(), entry.getValue());
-    }
     for (final Map.Entry<String, Object> entry : getTags().entrySet()) {
       meta.put(entry.getKey(), String.valueOf(entry.getValue()));
     }

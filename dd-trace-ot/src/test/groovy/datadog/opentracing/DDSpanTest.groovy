@@ -1,8 +1,6 @@
 package datadog.opentracing
 
-
 import datadog.opentracing.propagation.ExtractedContext
-import datadog.opentracing.propagation.TagContext
 import datadog.trace.common.writer.ListWriter
 import datadog.trace.util.test.DDSpecification
 import io.opentracing.SpanContext
@@ -26,8 +24,6 @@ class DDSpanTest extends DDSpecification {
         "fakeService",
         "fakeOperation",
         "fakeResource",
-        null,
-        Collections.<String, String> emptyMap(),
         false,
         "fakeType",
         null,
@@ -148,23 +144,6 @@ class DDSpanTest extends DDSpecification {
     span.durationNano == 1
   }
 
-  def "origin set only on root span"() {
-    setup:
-    def parent = tracer.buildSpan("testParent").asChildOf(extractedContext).start().context()
-    def child = tracer.buildSpan("testChild1").asChildOf(parent).start().context()
-
-    expect:
-    parent.origin == "some-origin"
-    parent.@origin == "some-origin" // Access field directly instead of getter.
-    child.origin == "some-origin"
-    child.@origin == null // Access field directly instead of getter.
-
-    where:
-    extractedContext                                      | _
-    new TagContext("some-origin", [:])                    | _
-    new ExtractedContext(1G, 2G, "some-origin", [:], [:]) | _
-  }
-
   def "isRootSpan() in and not in the context of distributed tracing"() {
     setup:
     def root = tracer.buildSpan("root").asChildOf((SpanContext) extractedContext).start()
@@ -179,9 +158,9 @@ class DDSpanTest extends DDSpecification {
     root.finish()
 
     where:
-    extractedContext                                  | isTraceRootSpan
-    null                                              | true
-    new ExtractedContext(123G, 456G, "789", [:], [:]) | false
+    extractedContext                 | isTraceRootSpan
+    null                             | true
+    new ExtractedContext(123G, 456G) | false
   }
 
   def "getApplicationRootSpan() in and not in the context of distributed tracing"() {
@@ -201,8 +180,8 @@ class DDSpanTest extends DDSpecification {
     root.finish()
 
     where:
-    extractedContext                                  | isTraceRootSpan
-    null                                              | true
-    new ExtractedContext(123G, 456G, "789", [:], [:]) | false
+    extractedContext                 | isTraceRootSpan
+    null                             | true
+    new ExtractedContext(123G, 456G) | false
   }
 }

@@ -11,7 +11,6 @@ import static datadog.trace.api.Config.AGENT_UNIX_DOMAIN_SOCKET
 import static datadog.trace.api.Config.CONFIGURATION_FILE
 import static datadog.trace.api.Config.DB_CLIENT_HOST_SPLIT_BY_INSTANCE
 import static datadog.trace.api.Config.GLOBAL_TAGS
-import static datadog.trace.api.Config.HEADER_TAGS
 import static datadog.trace.api.Config.HEALTH_METRICS_ENABLED
 import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_HOST
 import static datadog.trace.api.Config.HEALTH_METRICS_STATSD_PORT
@@ -21,8 +20,6 @@ import static datadog.trace.api.Config.HTTP_SERVER_ERROR_STATUSES
 import static datadog.trace.api.Config.JMX_TAGS
 import static datadog.trace.api.Config.PARTIAL_FLUSH_MIN_SPANS
 import static datadog.trace.api.Config.PREFIX
-import static datadog.trace.api.Config.PROPAGATION_STYLE_EXTRACT
-import static datadog.trace.api.Config.PROPAGATION_STYLE_INJECT
 import static datadog.trace.api.Config.RUNTIME_CONTEXT_FIELD_INJECTION
 import static datadog.trace.api.Config.RUNTIME_ID_TAG
 import static datadog.trace.api.Config.SERVICE_NAME
@@ -44,9 +41,6 @@ class ConfigTest extends DDSpecification {
   private static final DD_TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
   private static final DD_WRITER_TYPE_ENV = "DD_WRITER_TYPE"
   private static final DD_SPAN_TAGS_ENV = "DD_SPAN_TAGS"
-  private static final DD_HEADER_TAGS_ENV = "DD_HEADER_TAGS"
-  private static final DD_PROPAGATION_STYLE_EXTRACT = "DD_PROPAGATION_STYLE_EXTRACT"
-  private static final DD_PROPAGATION_STYLE_INJECT = "DD_PROPAGATION_STYLE_INJECT"
   private static final DD_TRACE_AGENT_PORT_ENV = "DD_TRACE_AGENT_PORT"
   private static final DD_AGENT_PORT_LEGACY_ENV = "DD_AGENT_PORT"
   private static final DD_TRACE_REPORT_HOSTNAME = "DD_TRACE_REPORT_HOSTNAME"
@@ -65,7 +59,6 @@ class ConfigTest extends DDSpecification {
     config.traceResolverEnabled == true
     config.mergedSpanTags == [:]
     config.mergedJmxTags == [(RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
-    config.headerTags == [:]
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..499).toSet()
     config.httpClientSplitByDomain == false
@@ -73,8 +66,6 @@ class ConfigTest extends DDSpecification {
     config.partialFlushMinSpans == 1000
     config.reportHostName == false
     config.runtimeContextFieldInjection == true
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
     config.healthMetricsEnabled == false
     config.healthMetricsStatsdHost == null
     config.healthMetricsStatsdPort == null
@@ -102,7 +93,6 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(GLOBAL_TAGS, "b:2")
     prop.setProperty(SPAN_TAGS, "c:3")
     prop.setProperty(JMX_TAGS, "d:4")
-    prop.setProperty(HEADER_TAGS, "e:5")
     prop.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     prop.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     prop.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
@@ -110,8 +100,6 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
     prop.setProperty(TRACE_REPORT_HOSTNAME, "true")
     prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
-    prop.setProperty(PROPAGATION_STYLE_EXTRACT, "Datadog, B3")
-    prop.setProperty(PROPAGATION_STYLE_INJECT, "B3, Datadog")
     prop.setProperty(HEALTH_METRICS_ENABLED, "true")
     prop.setProperty(HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
     prop.setProperty(HEALTH_METRICS_STATSD_PORT, "654")
@@ -129,7 +117,6 @@ class ConfigTest extends DDSpecification {
     config.traceResolverEnabled == false
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
-    config.headerTags == [e: "5"]
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
@@ -137,8 +124,6 @@ class ConfigTest extends DDSpecification {
     config.partialFlushMinSpans == 15
     config.reportHostName == true
     config.runtimeContextFieldInjection == false
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
     config.healthMetricsEnabled == true
     config.healthMetricsStatsdHost == "metrics statsd host"
     config.healthMetricsStatsdPort == 654
@@ -157,7 +142,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + GLOBAL_TAGS, "b:2")
     System.setProperty(PREFIX + SPAN_TAGS, "c:3")
     System.setProperty(PREFIX + JMX_TAGS, "d:4")
-    System.setProperty(PREFIX + HEADER_TAGS, "e:5")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "111")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
@@ -165,8 +149,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "25")
     System.setProperty(PREFIX + TRACE_REPORT_HOSTNAME, "true")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
-    System.setProperty(PREFIX + PROPAGATION_STYLE_EXTRACT, "Datadog, B3")
-    System.setProperty(PREFIX + PROPAGATION_STYLE_INJECT, "B3, Datadog")
     System.setProperty(PREFIX + HEALTH_METRICS_ENABLED, "true")
     System.setProperty(PREFIX + HEALTH_METRICS_STATSD_HOST, "metrics statsd host")
     System.setProperty(PREFIX + HEALTH_METRICS_STATSD_PORT, "654")
@@ -184,7 +166,6 @@ class ConfigTest extends DDSpecification {
     config.traceResolverEnabled == false
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
-    config.headerTags == [e: "5"]
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
@@ -192,8 +173,6 @@ class ConfigTest extends DDSpecification {
     config.partialFlushMinSpans == 25
     config.reportHostName == true
     config.runtimeContextFieldInjection == false
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
     config.healthMetricsEnabled == true
     config.healthMetricsStatsdHost == "metrics statsd host"
     config.healthMetricsStatsdPort == 654
@@ -204,8 +183,6 @@ class ConfigTest extends DDSpecification {
     environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
     environmentVariables.set(DD_TRACE_ENABLED_ENV, "false")
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
-    environmentVariables.set(DD_PROPAGATION_STYLE_EXTRACT, "B3 Datadog")
-    environmentVariables.set(DD_PROPAGATION_STYLE_INJECT, "Datadog B3")
     environmentVariables.set(DD_TRACE_REPORT_HOSTNAME, "true")
 
     when:
@@ -215,8 +192,6 @@ class ConfigTest extends DDSpecification {
     config.serviceName == "still something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
     config.reportHostName == true
   }
 
@@ -250,14 +225,11 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + TRACE_AGENT_PORT, " ")
     System.setProperty(PREFIX + AGENT_PORT_LEGACY, "invalid")
     System.setProperty(PREFIX + TRACE_RESOLVER_ENABLED, " ")
-    System.setProperty(PREFIX + HEADER_TAGS, "1")
     System.setProperty(PREFIX + SPAN_TAGS, "invalid")
     System.setProperty(PREFIX + HTTP_SERVER_ERROR_STATUSES, "1111")
     System.setProperty(PREFIX + HTTP_CLIENT_ERROR_STATUSES, "1:1")
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "invalid")
     System.setProperty(PREFIX + DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "invalid")
-    System.setProperty(PREFIX + PROPAGATION_STYLE_EXTRACT, "some garbage")
-    System.setProperty(PREFIX + PROPAGATION_STYLE_INJECT, " ")
 
     when:
     def config = new Config()
@@ -270,13 +242,10 @@ class ConfigTest extends DDSpecification {
     config.agentPort == 8126
     config.traceResolverEnabled == true
     config.mergedSpanTags == [:]
-    config.headerTags == [:]
     config.httpServerErrorStatuses == (500..599).toSet()
     config.httpClientErrorStatuses == (400..499).toSet()
     config.httpClientSplitByDomain == false
     config.dbClientSplitByInstance == false
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.DATADOG]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG]
   }
 
   def "sys props and env vars overrides for trace_agent_port and agent_port_legacy as expected"() {
@@ -334,14 +303,11 @@ class ConfigTest extends DDSpecification {
     properties.setProperty(GLOBAL_TAGS, "b:2")
     properties.setProperty(SPAN_TAGS, "c:3")
     properties.setProperty(JMX_TAGS, "d:4")
-    properties.setProperty(HEADER_TAGS, "e:5")
     properties.setProperty(HTTP_SERVER_ERROR_STATUSES, "123-456,457,124-125,122")
     properties.setProperty(HTTP_CLIENT_ERROR_STATUSES, "111")
     properties.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     properties.setProperty(DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
     properties.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
-    properties.setProperty(PROPAGATION_STYLE_EXTRACT, "B3 Datadog")
-    properties.setProperty(PROPAGATION_STYLE_INJECT, "Datadog B3")
 
     when:
     def config = Config.get(properties)
@@ -356,14 +322,11 @@ class ConfigTest extends DDSpecification {
     config.traceResolverEnabled == false
     config.mergedSpanTags == [b: "2", c: "3"]
     config.mergedJmxTags == [b: "2", d: "4", (RUNTIME_ID_TAG): config.getRuntimeId(), (SERVICE_TAG): config.serviceName]
-    config.headerTags == [e: "5"]
     config.httpServerErrorStatuses == (122..457).toSet()
     config.httpClientErrorStatuses == (111..111).toSet()
     config.httpClientSplitByDomain == true
     config.dbClientSplitByInstance == true
     config.partialFlushMinSpans == 15
-    config.propagationStylesToExtract.toList() == [Config.PropagationStyle.B3, Config.PropagationStyle.DATADOG]
-    config.propagationStylesToInject.toList() == [Config.PropagationStyle.DATADOG, Config.PropagationStyle.B3]
   }
 
   def "override null properties"() {
@@ -466,10 +429,8 @@ class ConfigTest extends DDSpecification {
   def "verify mapping configs on tracer"() {
     setup:
     System.setProperty(PREFIX + SPAN_TAGS, mapString)
-    System.setProperty(PREFIX + HEADER_TAGS, mapString)
     def props = new Properties()
     props.setProperty(SPAN_TAGS, mapString)
-    props.setProperty(HEADER_TAGS, mapString)
 
     when:
     def config = new Config()
@@ -477,9 +438,7 @@ class ConfigTest extends DDSpecification {
 
     then:
     config.spanTags == map
-    config.headerTags == map
     propConfig.spanTags == map
-    propConfig.headerTags == map
 
     where:
     mapString                         | map
@@ -545,14 +504,12 @@ class ConfigTest extends DDSpecification {
   def "verify null value mapping configs on tracer"() {
     setup:
     environmentVariables.set(DD_SPAN_TAGS_ENV, mapString)
-    environmentVariables.set(DD_HEADER_TAGS_ENV, mapString)
 
     when:
     def config = new Config()
 
     then:
     config.spanTags == map
-    config.headerTags == map
 
     where:
     mapString | map

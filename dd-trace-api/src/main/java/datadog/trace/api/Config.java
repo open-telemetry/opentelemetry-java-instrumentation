@@ -60,7 +60,6 @@ public class Config {
   public static final String TRACE_METHODS = "trace.methods";
   public static final String TRACE_CLASSES_EXCLUDE = "trace.classes.exclude";
   public static final String TRACE_REPORT_HOSTNAME = "trace.report-hostname";
-  public static final String HEADER_TAGS = "trace.header.tags";
   public static final String HTTP_SERVER_ERROR_STATUSES = "http.server.error.statuses";
   public static final String HTTP_CLIENT_ERROR_STATUSES = "http.client.error.statuses";
   public static final String HTTP_SERVER_TAG_QUERY_STRING = "http.server.tag.query-string";
@@ -70,8 +69,6 @@ public class Config {
   public static final String PARTIAL_FLUSH_MIN_SPANS = "trace.partial.flush.min.spans";
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
-  public static final String PROPAGATION_STYLE_EXTRACT = "propagation.style.extract";
-  public static final String PROPAGATION_STYLE_INJECT = "propagation.style.inject";
 
   public static final String HEALTH_METRICS_ENABLED = "trace.health.metrics.enabled";
   public static final String HEALTH_METRICS_STATSD_HOST = "trace.health.metrics.statsd.host";
@@ -109,8 +106,6 @@ public class Config {
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final boolean DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE = false;
   private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 1000;
-  private static final String DEFAULT_PROPAGATION_STYLE_EXTRACT = PropagationStyle.DATADOG.name();
-  private static final String DEFAULT_PROPAGATION_STYLE_INJECT = PropagationStyle.DATADOG.name();
 
   public static final boolean DEFAULT_METRICS_ENABLED = false;
   // No default constants for metrics statsd support -- falls back to jmx fetch values
@@ -124,12 +119,6 @@ public class Config {
   private static final boolean DEFAULT_TRACE_EXECUTORS_ALL = false;
   private static final String DEFAULT_TRACE_EXECUTORS = "";
   private static final String DEFAULT_TRACE_METHODS = null;
-
-  public enum PropagationStyle {
-    DATADOG,
-    B3,
-    HAYSTACK
-  }
 
   /** A tag intended for internal use only, hence not added to the public api DDTags class. */
   private static final String INTERNAL_HOST_NAME = "_dd.hostname";
@@ -152,7 +141,6 @@ public class Config {
   private final Map<String, String> spanTags;
   private final Map<String, String> jmxTags;
   @Getter private final List<String> excludedClasses;
-  @Getter private final Map<String, String> headerTags;
   @Getter private final Set<Integer> httpServerErrorStatuses;
   @Getter private final Set<Integer> httpClientErrorStatuses;
   @Getter private final boolean httpServerTagQueryString;
@@ -161,8 +149,6 @@ public class Config {
   @Getter private final boolean dbClientSplitByInstance;
   @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
-  @Getter private final Set<PropagationStyle> propagationStylesToExtract;
-  @Getter private final Set<PropagationStyle> propagationStylesToInject;
 
   @Getter private final boolean healthMetricsEnabled;
   @Getter private final String healthMetricsStatsdHost;
@@ -210,7 +196,6 @@ public class Config {
     jmxTags = getMapSettingFromEnvironment(JMX_TAGS, null);
 
     excludedClasses = getListSettingFromEnvironment(TRACE_CLASSES_EXCLUDE, null);
-    headerTags = getMapSettingFromEnvironment(HEADER_TAGS, null);
 
     httpServerErrorStatuses =
         getIntegerRangeSettingFromEnvironment(
@@ -242,19 +227,6 @@ public class Config {
     runtimeContextFieldInjection =
         getBooleanSettingFromEnvironment(
             RUNTIME_CONTEXT_FIELD_INJECTION, DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION);
-
-    propagationStylesToExtract =
-        getEnumSetSettingFromEnvironment(
-            PROPAGATION_STYLE_EXTRACT,
-            DEFAULT_PROPAGATION_STYLE_EXTRACT,
-            PropagationStyle.class,
-            true);
-    propagationStylesToInject =
-        getEnumSetSettingFromEnvironment(
-            PROPAGATION_STYLE_INJECT,
-            DEFAULT_PROPAGATION_STYLE_INJECT,
-            PropagationStyle.class,
-            true);
 
     // Writer.Builder createMonitor will use the values of the JMX fetch & agent to fill-in defaults
     healthMetricsEnabled =
@@ -306,7 +278,6 @@ public class Config {
     jmxTags = getPropertyMapValue(properties, JMX_TAGS, parent.jmxTags);
     excludedClasses =
         getPropertyListValue(properties, TRACE_CLASSES_EXCLUDE, parent.excludedClasses);
-    headerTags = getPropertyMapValue(properties, HEADER_TAGS, parent.headerTags);
 
     httpServerErrorStatuses =
         getPropertyIntegerRangeValue(
@@ -338,19 +309,6 @@ public class Config {
     runtimeContextFieldInjection =
         getPropertyBooleanValue(
             properties, RUNTIME_CONTEXT_FIELD_INJECTION, parent.runtimeContextFieldInjection);
-
-    final Set<PropagationStyle> parsedPropagationStylesToExtract =
-        getPropertySetValue(properties, PROPAGATION_STYLE_EXTRACT, PropagationStyle.class);
-    propagationStylesToExtract =
-        parsedPropagationStylesToExtract == null
-            ? parent.propagationStylesToExtract
-            : parsedPropagationStylesToExtract;
-    final Set<PropagationStyle> parsedPropagationStylesToInject =
-        getPropertySetValue(properties, PROPAGATION_STYLE_INJECT, PropagationStyle.class);
-    propagationStylesToInject =
-        parsedPropagationStylesToInject == null
-            ? parent.propagationStylesToInject
-            : parsedPropagationStylesToInject;
 
     healthMetricsEnabled =
         getPropertyBooleanValue(properties, HEALTH_METRICS_ENABLED, DEFAULT_METRICS_ENABLED);
