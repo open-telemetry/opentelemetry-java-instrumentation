@@ -126,6 +126,7 @@ class SpringBootBasedTest extends HttpServerTest<ConfigurableApplicationContext,
       }
       tags {
         "span.origin.type" ApplicationFilterChain.name
+        "servlet.path" endpoint.path
 
         defaultTags(true)
         "$Tags.COMPONENT" serverDecorator.component()

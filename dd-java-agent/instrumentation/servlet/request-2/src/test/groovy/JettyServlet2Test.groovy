@@ -94,6 +94,7 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
       }
       tags {
         "servlet.context" "/$CONTEXT"
+        "servlet.path" endpoint.path
         "span.origin.type" TestServlet2.Sync.name
 
         defaultTags(true)
