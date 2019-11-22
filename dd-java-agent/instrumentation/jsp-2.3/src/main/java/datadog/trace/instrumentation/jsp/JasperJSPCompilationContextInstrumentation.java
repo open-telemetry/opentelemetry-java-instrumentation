@@ -42,7 +42,8 @@ public final class JasperJSPCompilationContextInstrumentation extends Instrument
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("compile").and(takesArguments(0)).and(isPublic()),
-        JasperJspCompilationContext.class.getName());
+        JasperJSPCompilationContextInstrumentation.class.getName()
+            + "$JasperJspCompilationContext");
   }
 
   public static class JasperJspCompilationContext {
