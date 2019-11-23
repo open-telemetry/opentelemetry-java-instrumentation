@@ -62,6 +62,7 @@ public class Servlet2Decorator
     assert span != null;
     if (request != null) {
       span.setTag("servlet.context", request.getContextPath());
+      span.setTag("servlet.path", request.getServletPath());
     }
     return super.onRequest(span, request);
   }

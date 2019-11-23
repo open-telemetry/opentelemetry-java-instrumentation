@@ -44,7 +44,8 @@ public final class AsyncContextInstrumentation extends Instrumenter.Default {
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod().and(isPublic()).and(named("dispatch")), DispatchAdvice.class.getName());
+        isMethod().and(isPublic()).and(named("dispatch")),
+        AsyncContextInstrumentation.class.getName() + "$DispatchAdvice");
   }
 
   /**

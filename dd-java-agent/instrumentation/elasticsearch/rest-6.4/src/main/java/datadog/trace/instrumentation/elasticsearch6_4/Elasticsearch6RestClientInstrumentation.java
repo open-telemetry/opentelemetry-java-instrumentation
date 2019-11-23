@@ -54,7 +54,7 @@ public class Elasticsearch6RestClientInstrumentation extends Instrumenter.Defaul
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.elasticsearch.client.Request")))
             .and(takesArgument(1, named("org.elasticsearch.client.ResponseListener"))),
-        ElasticsearchRestClientAdvice.class.getName());
+        Elasticsearch6RestClientInstrumentation.class.getName() + "$ElasticsearchRestClientAdvice");
   }
 
   public static class ElasticsearchRestClientAdvice {

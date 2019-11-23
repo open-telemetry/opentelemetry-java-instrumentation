@@ -57,9 +57,11 @@ public final class RunnableCallableInstrumentation extends Instrumenter.Default 
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
-        named("run").and(takesArguments(0)).and(isPublic()), RunnableAdvice.class.getName());
+        named("run").and(takesArguments(0)).and(isPublic()),
+        RunnableCallableInstrumentation.class.getName() + "$RunnableAdvice");
     transformers.put(
-        named("call").and(takesArguments(0)).and(isPublic()), CallableAdvice.class.getName());
+        named("call").and(takesArguments(0)).and(isPublic()),
+        RunnableCallableInstrumentation.class.getName() + "$CallableAdvice");
     return transformers;
   }
 

@@ -43,7 +43,7 @@ public class RoutesInstrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("spark.route.HttpMethod")))
             .and(returns(named("spark.routematch.RouteMatch")))
             .and(isPublic()),
-        RoutesAdvice.class.getName());
+        RoutesInstrumentation.class.getName() + "$RoutesAdvice");
   }
 
   public static class RoutesAdvice {

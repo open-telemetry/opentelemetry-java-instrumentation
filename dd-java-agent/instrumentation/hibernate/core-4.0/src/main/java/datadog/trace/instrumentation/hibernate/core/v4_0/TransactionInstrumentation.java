@@ -38,7 +38,7 @@ public class TransactionInstrumentation extends AbstractHibernateInstrumentation
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(named("commit")).and(takesArguments(0)),
-        TransactionCommitAdvice.class.getName());
+        TransactionInstrumentation.class.getName() + "$TransactionCommitAdvice");
   }
 
   public static class TransactionCommitAdvice extends V4Advice {

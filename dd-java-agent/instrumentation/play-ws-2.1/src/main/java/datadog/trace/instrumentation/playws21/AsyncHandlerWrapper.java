@@ -1,12 +1,13 @@
-package datadog.trace.instrumentation.playws;
+package datadog.trace.instrumentation.playws21;
 
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
-import static datadog.trace.instrumentation.playws.PlayWSClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.playws21.PlayWSClientDecorator.DECORATE;
 
 import datadog.trace.context.TraceScope;
 import datadog.trace.instrumentation.api.AgentSpan;
 import java.net.InetSocketAddress;
 import java.util.List;
+import javax.net.ssl.SSLSession;
 import play.shaded.ahc.io.netty.channel.Channel;
 import play.shaded.ahc.io.netty.handler.codec.http.HttpHeaders;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
@@ -123,8 +124,8 @@ public class AsyncHandlerWrapper implements AsyncHandler {
   }
 
   @Override
-  public void onTlsHandshakeSuccess() {
-    delegate.onTlsHandshakeSuccess();
+  public void onTlsHandshakeSuccess(final SSLSession sslSession) {
+    delegate.onTlsHandshakeSuccess(sslSession);
   }
 
   @Override

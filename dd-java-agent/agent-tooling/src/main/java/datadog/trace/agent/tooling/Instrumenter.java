@@ -126,7 +126,7 @@ public interface Instrumenter {
             if (log.isDebugEnabled()) {
               log.debug(
                   "Instrumentation muzzled: {} -- {} on {}",
-                  instrumentationPrimaryName,
+                  instrumentationNames,
                   Instrumenter.Default.this.getClass().getName(),
                   classLoader);
               for (final Reference.Mismatch mismatch : mismatches) {

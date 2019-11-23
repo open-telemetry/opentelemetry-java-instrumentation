@@ -1,5 +1,5 @@
 plugins {
-  id "com.github.johnrengelman.shadow" version "4.0.4"
+  id "com.github.johnrengelman.shadow" version "5.2.0"
 }
 
 description = 'dd-java-agent'
@@ -20,7 +20,7 @@ def includeShadowJar(subproject, jarname) {
   def agent_project = project
   subproject.afterEvaluate {
     agent_project.processResources {
-      from(zipTree(subproject.tasks.shadowJar.archivePath)) {
+      from(zipTree(subproject.tasks.shadowJar.archiveFile)) {
         into jarname
         rename '(^.*)\\.class$', '$1.classdata'
         // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
@@ -30,8 +30,6 @@ def includeShadowJar(subproject, jarname) {
 
     agent_project.processResources.dependsOn subproject.tasks.shadowJar
     subproject.shadowJar {
-      classifier null
-
       mergeServiceFiles()
 
       exclude '**/module-info.class'
@@ -57,13 +55,13 @@ def includeShadowJar(subproject, jarname) {
 includeShadowJar(project(':dd-java-agent:instrumentation'), 'agent-tooling-and-instrumentation.isolated')
 
 jar {
-  classifier = 'unbundled'
+  archiveClassifier = 'unbundled'
 
   manifest {
     attributes(
-      "Main-Class": "datadog.trace.agent.TracingAgent",
-      "Agent-Class": "datadog.trace.agent.TracingAgent",
-      "Premain-Class": "datadog.trace.agent.TracingAgent",
+      "Main-Class": "datadog.trace.bootstrap.AgentBootstrap",
+      "Agent-Class": "datadog.trace.bootstrap.AgentBootstrap",
+      "Premain-Class": "datadog.trace.bootstrap.AgentBootstrap",
       "Can-Redefine-Classes": true,
       "Can-Retransform-Classes": true,
     )
@@ -73,7 +71,7 @@ jar {
 shadowJar {
   configurations = [project.configurations.shadowInclude]
 
-  classifier null
+  archiveClassifier = ''
 
   mergeServiceFiles()
 
@@ -101,6 +99,7 @@ modifyPom {
 }
 
 dependencies {
+  testCompile project(':dd-java-agent:agent-bootstrap')
   testCompile project(':dd-trace-api')
   testCompile project(':dd-trace-ot')
   testCompile project(':utils:gc-utils')
@@ -109,7 +108,7 @@ dependencies {
   testCompile deps.testLogging
   testCompile deps.guava
 
-  shadowInclude project(':dd-java-agent:agent-bootstrap')
+  shadowInclude project(path: ':dd-java-agent:agent-bootstrap')
 }
 
 tasks.withType(Test).configureEach {

@@ -65,7 +65,7 @@ public final class PreparedStatementInstrumentation extends Instrumenter.Default
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         nameStartsWith("execute").and(takesArguments(0)).and(isPublic()),
-        PreparedStatementAdvice.class.getName());
+        PreparedStatementInstrumentation.class.getName() + "$PreparedStatementAdvice");
   }
 
   public static class PreparedStatementAdvice {

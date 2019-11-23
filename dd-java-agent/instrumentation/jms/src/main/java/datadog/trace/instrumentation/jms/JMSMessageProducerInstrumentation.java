@@ -58,13 +58,13 @@ public final class JMSMessageProducerInstrumentation extends Instrumenter.Defaul
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("send").and(takesArgument(0, named("javax.jms.Message"))).and(isPublic()),
-        ProducerAdvice.class.getName());
+        JMSMessageProducerInstrumentation.class.getName() + "$ProducerAdvice");
     transformers.put(
         named("send")
             .and(takesArgument(0, named("javax.jms.Destination")))
             .and(takesArgument(1, named("javax.jms.Message")))
             .and(isPublic()),
-        ProducerWithDestinationAdvice.class.getName());
+        JMSMessageProducerInstrumentation.class.getName() + "$ProducerWithDestinationAdvice");
     return transformers;
   }
 

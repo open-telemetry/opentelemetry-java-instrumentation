@@ -62,7 +62,7 @@ public class SessionInstrumentation extends Instrumenter.Default {
 
     transformers.put(
         isMethod().and(returns(safeHasSuperType(named("org.hibernate.procedure.ProcedureCall")))),
-        GetProcedureCallAdvice.class.getName());
+        SessionInstrumentation.class.getName() + "$GetProcedureCallAdvice");
 
     return transformers;
   }

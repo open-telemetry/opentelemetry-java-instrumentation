@@ -45,7 +45,8 @@ public final class AWSClientInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(isConstructor(), AWSClientAdvice.class.getName());
+    return singletonMap(
+        isConstructor(), AWSClientInstrumentation.class.getName() + "$AWSClientAdvice");
   }
 
   public static class AWSClientAdvice {

@@ -83,10 +83,10 @@ public class NettyChannelPipelineInstrumentation extends Instrumenter.Default {
         isMethod()
             .and(nameStartsWith("add"))
             .and(takesArgument(2, named("io.netty.channel.ChannelHandler"))),
-        ChannelPipelineAddAdvice.class.getName());
+        NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineAddAdvice");
     transformers.put(
         isMethod().and(named("connect")).and(returns(named("io.netty.channel.ChannelFuture"))),
-        ChannelPipelineConnectAdvice.class.getName());
+        NettyChannelPipelineInstrumentation.class.getName() + "$ChannelPipelineConnectAdvice");
     return transformers;
   }
 
