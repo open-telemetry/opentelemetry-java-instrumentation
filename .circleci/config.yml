@@ -288,13 +288,6 @@ workflows:
           tags:
             only: /.*/
 
-    - agent_integration_tests:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-
     - check:
         requires:
         - build
@@ -322,7 +315,6 @@ workflows:
         - test_zulu11
         - test_12
         - test_13
-        - agent_integration_tests
         - check
         filters:
           branches:
@@ -343,7 +335,6 @@ workflows:
         - test_zulu11
         - test_12
         - test_13
-        - agent_integration_tests
         - check
         filters:
           branches:
