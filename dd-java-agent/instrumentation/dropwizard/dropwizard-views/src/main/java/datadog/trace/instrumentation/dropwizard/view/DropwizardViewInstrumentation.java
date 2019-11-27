@@ -44,7 +44,7 @@ public final class DropwizardViewInstrumentation extends Instrumenter.Default {
             .and(named("render"))
             .and(takesArgument(0, named("io.dropwizard.views.View")))
             .and(isPublic()),
-        RenderAdvice.class.getName());
+        DropwizardViewInstrumentation.class.getName() + "$RenderAdvice");
   }
 
   public static class RenderAdvice {

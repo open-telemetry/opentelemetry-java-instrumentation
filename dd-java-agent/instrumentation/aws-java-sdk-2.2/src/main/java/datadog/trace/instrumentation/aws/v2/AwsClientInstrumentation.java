@@ -30,7 +30,8 @@ public final class AwsClientInstrumentation extends AbstractAwsClientInstrumenta
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
-        isMethod().and(isPublic()).and(named("build")), AwsBuilderAdvice.class.getName());
+        isMethod().and(isPublic()).and(named("build")),
+        AwsClientInstrumentation.class.getName() + "$AwsBuilderAdvice");
   }
 
   public static class AwsBuilderAdvice {

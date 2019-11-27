@@ -66,7 +66,7 @@ public class ApacheHttpAsyncClientInstrumentation extends Instrumenter.Default {
             .and(takesArgument(1, named("org.apache.http.nio.protocol.HttpAsyncResponseConsumer")))
             .and(takesArgument(2, named("org.apache.http.protocol.HttpContext")))
             .and(takesArgument(3, named("org.apache.http.concurrent.FutureCallback"))),
-        ClientAdvice.class.getName());
+        ApacheHttpAsyncClientInstrumentation.class.getName() + "$ClientAdvice");
   }
 
   public static class ClientAdvice {

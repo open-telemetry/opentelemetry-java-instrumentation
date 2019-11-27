@@ -296,6 +296,7 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
           // we can't reliably assert parent or child relationship here since both are tested.
           tags {
             "servlet.context" "/$context"
+            "servlet.path" endpoint.status == 404 ? endpoint.path : "/dispatch$endpoint.path"
             "servlet.dispatch" endpoint.path
             "span.origin.type" {
               it == TestServlet3.DispatchImmediate.name || it == TestServlet3.DispatchAsync.name || it == ApplicationFilterChain.name

@@ -74,7 +74,7 @@ public class TwilioSyncInstrumentation extends Instrumenter.Default {
                     .or(named("read"))
                     .or(named("fetch"))
                     .or(named("update"))),
-        TwilioClientAdvice.class.getName());
+        TwilioSyncInstrumentation.class.getName() + "$TwilioClientAdvice");
   }
 
   /** Advice for instrumenting Twilio service classes. */

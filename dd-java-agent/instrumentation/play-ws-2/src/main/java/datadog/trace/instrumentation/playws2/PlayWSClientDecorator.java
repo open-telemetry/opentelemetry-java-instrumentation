@@ -1,4 +1,4 @@
-package datadog.trace.instrumentation.playws;
+package datadog.trace.instrumentation.playws2;
 
 import datadog.trace.agent.decorator.HttpClientDecorator;
 import java.net.URI;

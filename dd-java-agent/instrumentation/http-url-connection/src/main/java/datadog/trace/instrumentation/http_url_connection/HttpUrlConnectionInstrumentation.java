@@ -64,7 +64,7 @@ public class HttpUrlConnectionInstrumentation extends Instrumenter.Default {
         isMethod()
             .and(isPublic())
             .and(named("connect").or(named("getOutputStream")).or(named("getInputStream"))),
-        HttpUrlConnectionAdvice.class.getName());
+        HttpUrlConnectionInstrumentation.class.getName() + "$HttpUrlConnectionAdvice");
   }
 
   public static class HttpUrlConnectionAdvice {

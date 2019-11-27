@@ -63,7 +63,8 @@ public class Elasticsearch53TransportClientInstrumentation extends Instrumenter.
             .and(takesArgument(0, named("org.elasticsearch.action.Action")))
             .and(takesArgument(1, named("org.elasticsearch.action.ActionRequest")))
             .and(takesArgument(2, named("org.elasticsearch.action.ActionListener"))),
-        ElasticsearchTransportClientAdvice.class.getName());
+        Elasticsearch53TransportClientInstrumentation.class.getName()
+            + "$ElasticsearchTransportClientAdvice");
   }
 
   public static class ElasticsearchTransportClientAdvice {

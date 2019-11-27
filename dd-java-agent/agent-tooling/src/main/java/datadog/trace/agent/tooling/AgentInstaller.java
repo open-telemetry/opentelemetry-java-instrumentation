@@ -12,11 +12,12 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import datadog.trace.api.Config;
 import java.lang.instrument.Instrumentation;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
@@ -28,7 +29,7 @@ import net.bytebuddy.utility.JavaModule;
 
 @Slf4j
 public class AgentInstaller {
-  private static final Map<String, Runnable> classLoadCallbacks = new ConcurrentHashMap<>();
+  private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
   private static volatile Instrumentation INSTRUMENTATION;
 
   public static Instrumentation getInstrumentation() {
@@ -254,15 +255,25 @@ public class AgentInstaller {
   /**
    * Register a callback to run when a class is loading.
    *
-   * <p>Caveats: 1: This callback will be invoked by a jvm class transformer. 2: Classes filtered
-   * out by {@link AgentInstaller}'s skip list will not be matched.
+   * <p>Caveats:
+   *
+   * <ul>
+   *   <li>This callback will be invoked by a jvm class transformer.
+   *   <li>Classes filtered out by {@link AgentInstaller}'s skip list will not be matched.
+   * </ul>
    *
    * @param className name of the class to match against
-   * @param classLoadCallback runnable to invoke when class name matches
+   * @param callback runnable to invoke when class name matches
    */
-  public static void registerClassLoadCallback(
-      final String className, final Runnable classLoadCallback) {
-    classLoadCallbacks.put(className, classLoadCallback);
+  public static void registerClassLoadCallback(final String className, final Runnable callback) {
+    synchronized (CLASS_LOAD_CALLBACKS) {
+      List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.get(className);
+      if (callbacks == null) {
+        callbacks = new ArrayList<>();
+        CLASS_LOAD_CALLBACKS.put(className, callbacks);
+      }
+      callbacks.add(callback);
+    }
   }
 
   private static class ClassLoadListener implements AgentBuilder.Listener {
@@ -302,9 +313,12 @@ public class AgentInstaller {
         final ClassLoader classLoader,
         final JavaModule javaModule,
         final boolean b) {
-      for (final Map.Entry<String, Runnable> entry : classLoadCallbacks.entrySet()) {
-        if (entry.getKey().equals(typeName)) {
-          entry.getValue().run();
+      synchronized (CLASS_LOAD_CALLBACKS) {
+        final List<Runnable> callbacks = CLASS_LOAD_CALLBACKS.get(typeName);
+        if (callbacks != null) {
+          for (final Runnable callback : callbacks) {
+            callback.run();
+          }
         }
       }
     }

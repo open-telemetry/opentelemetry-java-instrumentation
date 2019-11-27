@@ -54,6 +54,6 @@ public final class Servlet3Instrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("javax.servlet.ServletRequest")))
             .and(takesArgument(1, named("javax.servlet.ServletResponse")))
             .and(isPublic()),
-        Servlet3Advice.class.getName());
+        packageName + ".Servlet3Advice");
   }
 }

@@ -107,10 +107,10 @@ jobs:
     environment:
     - TEST_TASK: testJavaIBM8
 
-#  test_zulu8:
-#    <<: *default_test_job
-#    environment:
-#    - TEST_TASK: testJavaZULU8
+  test_zulu8:
+    <<: *default_test_job
+    environment:
+    - TEST_TASK: testJavaZULU8
 
   test_9:
     <<: *default_test_job
@@ -283,12 +283,12 @@ workflows:
         filters:
           tags:
             only: /.*/
-#    - test_zulu8:
-#        requires:
-#        - build
-#        filters:
-#          tags:
-#            only: /.*/
+    - test_zulu8:
+        requires:
+        - build
+        filters:
+          tags:
+            only: /.*/
     - test_9:
         requires:
         - build
@@ -353,7 +353,7 @@ workflows:
         - test_8
         - test_latest8
         - test_ibm8
-#        - test_zulu8
+        - test_zulu8
         - test_9
         - test_10
         - test_11
@@ -374,7 +374,7 @@ workflows:
         - test_8
         - test_latest8
         - test_ibm8
-#        - test_zulu8
+        - test_zulu8
         - test_9
         - test_10
         - test_11

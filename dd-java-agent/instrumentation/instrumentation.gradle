@@ -89,6 +89,3 @@ shadowJar {
   }
 }
 
-jar {
-  classifier = 'unbundled'
-}

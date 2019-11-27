@@ -10,8 +10,11 @@ ext {
 repositories {
   ivy {
     url 'https://download.jboss.org/'
-    layout 'pattern', {
+    patternLayout {
       artifact '/[organisation]/[revision]/[module]/[organisation]-[module]-[revision].[ext]'
+      metadataSources {
+        artifact()
+      }
     }
   }
 }

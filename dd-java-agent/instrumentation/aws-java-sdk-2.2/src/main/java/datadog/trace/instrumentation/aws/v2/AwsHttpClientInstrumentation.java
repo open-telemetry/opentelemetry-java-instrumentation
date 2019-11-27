@@ -39,7 +39,8 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
-        isMethod().and(isPublic()).and(named("execute")), AwsHttpClientAdvice.class.getName());
+        isMethod().and(isPublic()).and(named("execute")),
+        AwsHttpClientInstrumentation.class.getName() + "$AwsHttpClientAdvice");
   }
 
   public static class AwsHttpClientAdvice {

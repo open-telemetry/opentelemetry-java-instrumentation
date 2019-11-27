@@ -55,7 +55,7 @@ public final class JMSMessageListenerInstrumentation extends Instrumenter.Defaul
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("onMessage").and(takesArgument(0, named("javax.jms.Message"))).and(isPublic()),
-        MessageListenerAdvice.class.getName());
+        JMSMessageListenerInstrumentation.class.getName() + "$MessageListenerAdvice");
   }
 
   public static class MessageListenerAdvice {

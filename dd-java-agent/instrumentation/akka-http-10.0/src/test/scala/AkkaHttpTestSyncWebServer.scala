@@ -18,7 +18,7 @@ object AkkaHttpTestSyncWebServer {
   val syncHandler: HttpRequest => HttpResponse = {
     case HttpRequest(GET, uri: Uri, _, _, _) => {
       val endpoint = HttpServerTest.ServerEndpoint.forPath(uri.path.toString())
-      HttpServerTest.controller(endpoint, new Closure[HttpResponse]() {
+      HttpServerTest.controller(endpoint, new Closure[HttpResponse](()) {
         def doCall(): HttpResponse = {
           val resp = HttpResponse(status = endpoint.getStatus)
           endpoint match {

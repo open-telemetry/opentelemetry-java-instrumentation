@@ -55,6 +55,6 @@ public final class JettyHandlerInstrumentation extends Instrumenter.Default {
             .and(takesArgument(2, named("javax.servlet.http.HttpServletRequest")))
             .and(takesArgument(3, named("javax.servlet.http.HttpServletResponse")))
             .and(isPublic()),
-        JettyHandlerAdvice.class.getName());
+        packageName + ".JettyHandlerAdvice");
   }
 }

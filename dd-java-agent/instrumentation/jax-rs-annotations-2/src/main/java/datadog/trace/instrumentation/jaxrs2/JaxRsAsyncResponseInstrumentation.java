@@ -50,11 +50,13 @@ public final class JaxRsAsyncResponseInstrumentation extends Instrumenter.Defaul
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("resume").and(takesArgument(0, Object.class)).and(isPublic()),
-        AsyncResponseAdvice.class.getName());
+        JaxRsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseAdvice");
     transformers.put(
         named("resume").and(takesArgument(0, Throwable.class)).and(isPublic()),
-        AsyncResponseThrowableAdvice.class.getName());
-    transformers.put(named("cancel"), AsyncResponseCancelAdvice.class.getName());
+        JaxRsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseThrowableAdvice");
+    transformers.put(
+        named("cancel"),
+        JaxRsAsyncResponseInstrumentation.class.getName() + "$AsyncResponseCancelAdvice");
     return transformers;
   }
 
