@@ -20,7 +20,6 @@ import static datadog.trace.api.Config.SERVICE_NAME
 import static datadog.trace.api.Config.SERVICE_TAG
 import static datadog.trace.api.Config.SPAN_TAGS
 import static datadog.trace.api.Config.TRACE_ENABLED
-import static datadog.trace.api.Config.TRACE_REPORT_HOSTNAME
 import static datadog.trace.api.Config.TRACE_RESOLVER_ENABLED
 import static datadog.trace.api.Config.WRITER_TYPE
 
@@ -34,7 +33,6 @@ class ConfigTest extends DDSpecification {
   private static final DD_TRACE_ENABLED_ENV = "DD_TRACE_ENABLED"
   private static final DD_WRITER_TYPE_ENV = "DD_WRITER_TYPE"
   private static final DD_SPAN_TAGS_ENV = "DD_SPAN_TAGS"
-  private static final DD_TRACE_REPORT_HOSTNAME = "DD_TRACE_REPORT_HOSTNAME"
 
   def "verify defaults"() {
     when:
@@ -52,7 +50,6 @@ class ConfigTest extends DDSpecification {
     config.httpClientSplitByDomain == false
     config.dbClientSplitByInstance == false
     config.partialFlushMinSpans == 1000
-    config.reportHostName == false
     config.runtimeContextFieldInjection == true
     config.toString().contains("unnamed-java-app")
 
@@ -79,7 +76,6 @@ class ConfigTest extends DDSpecification {
     prop.setProperty(HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     prop.setProperty(DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
     prop.setProperty(PARTIAL_FLUSH_MIN_SPANS, "15")
-    prop.setProperty(TRACE_REPORT_HOSTNAME, "true")
     prop.setProperty(RUNTIME_CONTEXT_FIELD_INJECTION, "false")
 
     when:
@@ -97,7 +93,6 @@ class ConfigTest extends DDSpecification {
     config.httpClientSplitByDomain == true
     config.dbClientSplitByInstance == true
     config.partialFlushMinSpans == 15
-    config.reportHostName == true
     config.runtimeContextFieldInjection == false
   }
 
@@ -115,7 +110,6 @@ class ConfigTest extends DDSpecification {
     System.setProperty(PREFIX + HTTP_CLIENT_HOST_SPLIT_BY_DOMAIN, "true")
     System.setProperty(PREFIX + DB_CLIENT_HOST_SPLIT_BY_INSTANCE, "true")
     System.setProperty(PREFIX + PARTIAL_FLUSH_MIN_SPANS, "25")
-    System.setProperty(PREFIX + TRACE_REPORT_HOSTNAME, "true")
     System.setProperty(PREFIX + RUNTIME_CONTEXT_FIELD_INJECTION, "false")
 
     when:
@@ -133,7 +127,6 @@ class ConfigTest extends DDSpecification {
     config.httpClientSplitByDomain == true
     config.dbClientSplitByInstance == true
     config.partialFlushMinSpans == 25
-    config.reportHostName == true
     config.runtimeContextFieldInjection == false
   }
 
@@ -142,7 +135,6 @@ class ConfigTest extends DDSpecification {
     environmentVariables.set(DD_SERVICE_NAME_ENV, "still something else")
     environmentVariables.set(DD_TRACE_ENABLED_ENV, "false")
     environmentVariables.set(DD_WRITER_TYPE_ENV, "LoggingWriter")
-    environmentVariables.set(DD_TRACE_REPORT_HOSTNAME, "true")
 
     when:
     def config = new Config()
@@ -151,7 +143,6 @@ class ConfigTest extends DDSpecification {
     config.serviceName == "still something else"
     config.traceEnabled == false
     config.writerType == "LoggingWriter"
-    config.reportHostName == true
   }
 
   def "sys props override env vars"() {
@@ -427,18 +418,6 @@ class ConfigTest extends DDSpecification {
 
     then:
     !config.localRootSpanTags.containsKey('_dd.hostname')
-  }
-
-  def "verify configuration to add hostname to root span tags"() {
-    setup:
-    Properties properties = new Properties()
-    properties.setProperty(TRACE_REPORT_HOSTNAME, 'true')
-
-    when:
-    def config = Config.get(properties)
-
-    then:
-    config.localRootSpanTags.containsKey('_dd.hostname')
   }
 
   def "verify fallback to properties file"() {
