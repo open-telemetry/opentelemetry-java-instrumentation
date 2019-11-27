@@ -216,10 +216,7 @@ jobs:
 
     - run:
         name: Verify Muzzle
-        # Note: we do not have `--max-workers` here to have number of workers (threads) equal to number of CPUs (32 currently).
-        # This should speed things up slightly because muzzle may do a lot of IO bound work: reading off disk and downloading
-        # dependencies.
-        command: SKIP_BUILDSCAN="true" GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew muzzle --parallel --stacktrace --no-daemon
+        command: SKIP_BUILDSCAN="true" GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx4G -Xms64M' -Ddatadog.forkedMaxHeapSize=4G -Ddatadog.forkedMinHeapSize=64M" ./gradlew muzzle --parallel --stacktrace --no-daemon --max-workers=16
 
     - save_cache:
         key: dd-trace-java-muzzle-{{ checksum "dd-trace-java.gradle" }}
