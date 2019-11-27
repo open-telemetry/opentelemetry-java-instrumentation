@@ -41,6 +41,8 @@ class DDTracerTest extends DDSpecification {
 
     then:
     tracer.serviceName == "unnamed-java-app"
+    tracer.writer instanceof DDAgentWriter
+    ((DDAgentWriter) tracer.writer).api.tracesUrl.host() == "localhost"
     ((DDAgentWriter) tracer.writer).api.tracesUrl.port() == 8126
     ((DDAgentWriter) tracer.writer).api.tracesUrl.encodedPath() == "/v0.3/traces" ||
       ((DDAgentWriter) tracer.writer).api.tracesUrl.encodedPath() == "/v0.4/traces"
