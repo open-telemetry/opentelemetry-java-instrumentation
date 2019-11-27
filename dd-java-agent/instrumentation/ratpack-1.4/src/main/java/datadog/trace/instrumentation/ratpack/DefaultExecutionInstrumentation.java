@@ -43,7 +43,7 @@ public final class DefaultExecutionInstrumentation extends Instrumenter.Default 
         nameStartsWith("delimit") // include delimitStream
             .and(takesArgument(0, named("ratpack.func.Action")))
             .and(takesArgument(1, named("ratpack.func.Action"))),
-        DelimitAdvice.class.getName());
+        DefaultExecutionInstrumentation.class.getName() + "$DelimitAdvice");
   }
 
   public static class DelimitAdvice {

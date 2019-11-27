@@ -39,7 +39,7 @@ public final class ContinuationInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         named("resume").and(takesArgument(0, named("ratpack.func.Block"))),
-        ResumeAdvice.class.getName());
+        ContinuationInstrumentation.class.getName() + "$ResumeAdvice");
   }
 
   public static class ResumeAdvice {

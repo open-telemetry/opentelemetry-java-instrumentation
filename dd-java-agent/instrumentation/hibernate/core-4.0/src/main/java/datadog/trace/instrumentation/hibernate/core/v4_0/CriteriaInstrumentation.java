@@ -38,7 +38,7 @@ public class CriteriaInstrumentation extends AbstractHibernateInstrumentation {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(named("list").or(named("uniqueResult")).or(named("scroll"))),
-        CriteriaMethodAdvice.class.getName());
+        CriteriaInstrumentation.class.getName() + "$CriteriaMethodAdvice");
   }
 
   public static class CriteriaMethodAdvice extends V4Advice {

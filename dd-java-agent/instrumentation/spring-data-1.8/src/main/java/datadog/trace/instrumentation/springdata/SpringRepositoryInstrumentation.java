@@ -56,7 +56,8 @@ public final class SpringRepositoryInstrumentation extends Instrumenter.Default 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return Collections.singletonMap(
-        isConstructor(), RepositoryFactorySupportAdvice.class.getName());
+        isConstructor(),
+        SpringRepositoryInstrumentation.class.getName() + "$RepositoryFactorySupportAdvice");
   }
 
   public static class RepositoryFactorySupportAdvice {

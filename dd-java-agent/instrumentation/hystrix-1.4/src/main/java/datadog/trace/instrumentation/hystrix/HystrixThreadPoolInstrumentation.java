@@ -32,7 +32,7 @@ public class HystrixThreadPoolInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(named("schedule")).and(takesArguments(1)),
-        EnableAsyncAdvice.class.getName());
+        HystrixThreadPoolInstrumentation.class.getName() + "$EnableAsyncAdvice");
   }
 
   public static class EnableAsyncAdvice {

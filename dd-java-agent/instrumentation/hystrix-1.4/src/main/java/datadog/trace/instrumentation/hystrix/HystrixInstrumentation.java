@@ -52,10 +52,10 @@ public class HystrixInstrumentation extends Instrumenter.Default {
     final Map<ElementMatcher.Junction<MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         named("getExecutionObservable").and(returns(named("rx.Observable"))),
-        ExecuteAdvice.class.getName());
+        HystrixInstrumentation.class.getName() + "$ExecuteAdvice");
     transformers.put(
         named("getFallbackObservable").and(returns(named("rx.Observable"))),
-        FallbackAdvice.class.getName());
+        HystrixInstrumentation.class.getName() + "$FallbackAdvice");
     return transformers;
   }
 

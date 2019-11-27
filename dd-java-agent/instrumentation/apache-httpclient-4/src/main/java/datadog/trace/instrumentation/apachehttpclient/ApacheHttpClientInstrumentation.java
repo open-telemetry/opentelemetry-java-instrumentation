@@ -75,7 +75,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
             .and(not(isAbstract()))
             .and(takesArguments(1))
             .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest"))),
-        UriRequestAdvice.class.getName());
+        ApacheHttpClientInstrumentation.class.getName() + "$UriRequestAdvice");
 
     transformers.put(
         isMethod()
@@ -84,7 +84,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
             .and(takesArgument(1, named("org.apache.http.protocol.HttpContext"))),
-        UriRequestAdvice.class.getName());
+        ApacheHttpClientInstrumentation.class.getName() + "$UriRequestAdvice");
 
     transformers.put(
         isMethod()
@@ -93,7 +93,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
             .and(takesArgument(1, named("org.apache.http.client.ResponseHandler"))),
-        UriRequestWithHandlerAdvice.class.getName());
+        ApacheHttpClientInstrumentation.class.getName() + "$UriRequestWithHandlerAdvice");
 
     transformers.put(
         isMethod()
@@ -103,7 +103,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
             .and(takesArgument(1, named("org.apache.http.client.ResponseHandler")))
             .and(takesArgument(2, named("org.apache.http.protocol.HttpContext"))),
-        UriRequestWithHandlerAdvice.class.getName());
+        ApacheHttpClientInstrumentation.class.getName() + "$UriRequestWithHandlerAdvice");
 
     transformers.put(
         isMethod()
@@ -112,7 +112,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
             .and(takesArguments(2))
             .and(takesArgument(0, named("org.apache.http.HttpHost")))
             .and(takesArgument(1, named("org.apache.http.HttpRequest"))),
-        RequestAdvice.class.getName());
+        ApacheHttpClientInstrumentation.class.getName() + "$RequestAdvice");
 
     transformers.put(
         isMethod()
@@ -122,7 +122,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("org.apache.http.HttpHost")))
             .and(takesArgument(1, named("org.apache.http.HttpRequest")))
             .and(takesArgument(2, named("org.apache.http.protocol.HttpContext"))),
-        RequestAdvice.class.getName());
+        ApacheHttpClientInstrumentation.class.getName() + "$RequestAdvice");
 
     transformers.put(
         isMethod()
@@ -132,7 +132,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
             .and(takesArgument(0, named("org.apache.http.HttpHost")))
             .and(takesArgument(1, named("org.apache.http.HttpRequest")))
             .and(takesArgument(2, named("org.apache.http.client.ResponseHandler"))),
-        RequestWithHandlerAdvice.class.getName());
+        ApacheHttpClientInstrumentation.class.getName() + "$RequestWithHandlerAdvice");
 
     transformers.put(
         isMethod()
@@ -143,7 +143,7 @@ public class ApacheHttpClientInstrumentation extends Instrumenter.Default {
             .and(takesArgument(1, named("org.apache.http.HttpRequest")))
             .and(takesArgument(2, named("org.apache.http.client.ResponseHandler")))
             .and(takesArgument(3, named("org.apache.http.protocol.HttpContext"))),
-        RequestWithHandlerAdvice.class.getName());
+        ApacheHttpClientInstrumentation.class.getName() + "$RequestWithHandlerAdvice");
 
     return transformers;
   }

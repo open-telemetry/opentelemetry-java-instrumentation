@@ -47,7 +47,7 @@ public final class GlassFishInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(named("addToBlackList")).and(takesArguments(1)),
-        AvoidGlassFishBlacklistAdvice.class.getName());
+        GlassFishInstrumentation.class.getName() + "$AvoidGlassFishBlacklistAdvice");
   }
 
   public static class AvoidGlassFishBlacklistAdvice {

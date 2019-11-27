@@ -22,7 +22,7 @@ class ClassLoadingTest extends Specification {
     URLClassLoader loader = new URLClassLoader(classpath, (ClassLoader) null)
 
     when:
-    loader.loadClass("datadog.agent.TracingAgent")
+    loader.loadClass("datadog.trace.instrumentation.trace_annotation.TraceAdvice")
     then:
     thrown ClassNotFoundException
 

@@ -44,7 +44,7 @@ public class CassandraClientInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(isPrivate()).and(named("newSession")).and(takesArguments(0)),
-        CassandraClientAdvice.class.getName());
+        CassandraClientInstrumentation.class.getName() + "$CassandraClientAdvice");
   }
 
   public static class CassandraClientAdvice {

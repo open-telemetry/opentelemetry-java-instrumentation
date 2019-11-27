@@ -64,7 +64,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
     final Map<ElementMatcher<? super MethodDescription>, String> transformers = new HashMap<>();
     transformers.put(
         isMethod().and(isPublic()).and(named("execute")).and(takesArguments(0)),
-        GoogleHttpClientAdvice.class.getName());
+        GoogleHttpClientInstrumentation.class.getName() + "$GoogleHttpClientAdvice");
 
     transformers.put(
         isMethod()
@@ -72,7 +72,7 @@ public class GoogleHttpClientInstrumentation extends Instrumenter.Default {
             .and(named("executeAsync"))
             .and(takesArguments(1))
             .and(takesArgument(0, (named("java.util.concurrent.Executor")))),
-        GoogleHttpClientAsyncAdvice.class.getName());
+        GoogleHttpClientInstrumentation.class.getName() + "$GoogleHttpClientAsyncAdvice");
 
     return transformers;
   }

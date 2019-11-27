@@ -47,7 +47,7 @@ public final class TomcatClassloadingInstrumentation extends Instrumenter.Defaul
             .and(takesArgument(0, String.class))
             // Older versions have 1 argument method, newer versions have two arguments
             .and(takesArguments(2).or(takesArguments(1))),
-        WebappClassLoaderAdvice.class.getName());
+        TomcatClassloadingInstrumentation.class.getName() + "$WebappClassLoaderAdvice");
   }
 
   public static class WebappClassLoaderAdvice {

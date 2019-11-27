@@ -1,10 +1,10 @@
-package datadog.trace.instrumentation.playws;
+package datadog.trace.instrumentation.playws1;
 
 import static datadog.trace.agent.tooling.ByteBuddyElementMatchers.safeHasSuperType;
 import static datadog.trace.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.instrumentation.api.AgentTracer.startSpan;
-import static datadog.trace.instrumentation.playws.HeadersInjectAdapter.SETTER;
-import static datadog.trace.instrumentation.playws.PlayWSClientDecorator.DECORATE;
+import static datadog.trace.instrumentation.playws1.HeadersInjectAdapter.SETTER;
+import static datadog.trace.instrumentation.playws1.PlayWSClientDecorator.DECORATE;
 import static java.util.Collections.singletonMap;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -45,7 +45,7 @@ public class PlayWSClientInstrumentation extends Instrumenter.Default {
             .and(takesArguments(2))
             .and(takesArgument(0, named("play.shaded.ahc.org.asynchttpclient.Request")))
             .and(takesArgument(1, named("play.shaded.ahc.org.asynchttpclient.AsyncHandler"))),
-        ClientAdvice.class.getName());
+        PlayWSClientInstrumentation.class.getName() + "$ClientAdvice");
   }
 
   @Override

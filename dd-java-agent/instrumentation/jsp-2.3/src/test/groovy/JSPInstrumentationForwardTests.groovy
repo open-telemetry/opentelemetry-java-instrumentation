@@ -101,6 +101,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
+            "servlet.path" "/$forwardFromFileName"
             "http.status_code" 200
             defaultTags()
           }
@@ -203,6 +204,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
+            "servlet.path" "/forwards/forwardToHtml.jsp"
             "http.status_code" 200
             defaultTags()
           }
@@ -271,6 +273,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
+            "servlet.path" "/forwards/forwardToIncludeMulti.jsp"
             "http.status_code" 200
             defaultTags()
           }
@@ -426,6 +429,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
+            "servlet.path" "/forwards/forwardToJspForward.jsp"
             "http.status_code" 200
             defaultTags()
           }
@@ -552,6 +556,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
+            "servlet.path" "/forwards/forwardToCompileError.jsp"
             "http.status_code" 500
             errorTags(JasperException, String)
             defaultTags()
@@ -637,6 +642,7 @@ class JSPInstrumentationForwardTests extends AgentTestRunner {
             "component" "java-web-servlet"
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
+            "servlet.path" "/forwards/forwardToNonExistent.jsp"
             "http.status_code" 404
             defaultTags()
           }

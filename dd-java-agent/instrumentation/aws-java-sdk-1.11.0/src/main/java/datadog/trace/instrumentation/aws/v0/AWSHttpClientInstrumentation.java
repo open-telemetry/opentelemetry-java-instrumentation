@@ -51,7 +51,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
     return singletonMap(
         isMethod().and(not(isAbstract())).and(named("doExecute")),
-        HttpClientAdvice.class.getName());
+        AWSHttpClientInstrumentation.class.getName() + "$HttpClientAdvice");
   }
 
   public static class HttpClientAdvice {
@@ -87,7 +87,7 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Default {
     public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
       return singletonMap(
           isMethod().and(not(isAbstract())).and(named("doExecute")),
-          RequestExecutorAdvice.class.getName());
+          RequestExecutorInstrumentation.class.getName() + "$RequestExecutorAdvice");
     }
 
     public static class RequestExecutorAdvice {

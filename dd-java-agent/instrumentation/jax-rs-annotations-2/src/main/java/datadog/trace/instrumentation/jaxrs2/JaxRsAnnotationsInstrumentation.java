@@ -62,7 +62,7 @@ public final class JaxRsAnnotationsInstrumentation extends Instrumenter.Default 
                 .or(named("javax.ws.rs.OPTIONS"))
                 .or(named("javax.ws.rs.POST"))
                 .or(named("javax.ws.rs.PUT"))),
-        JaxRsAnnotationsAdvice.class.getName());
+        JaxRsAnnotationsInstrumentation.class.getName() + "$JaxRsAnnotationsAdvice");
   }
 
   public static class JaxRsAnnotationsAdvice {

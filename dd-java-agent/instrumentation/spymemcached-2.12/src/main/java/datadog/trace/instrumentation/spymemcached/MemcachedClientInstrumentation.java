@@ -61,16 +61,16 @@ public final class MemcachedClientInstrumentation extends Instrumenter.Default {
             Also tracing flush is probably of a very limited value.
             */
             .and(not(named("flush"))),
-        AsyncOperationAdvice.class.getName());
+        MemcachedClientInstrumentation.class.getName() + "$AsyncOperationAdvice");
     transformers.put(
         isMethod().and(isPublic()).and(returns(named(MEMCACHED_PACKAGE + ".internal.GetFuture"))),
-        AsyncGetAdvice.class.getName());
+        MemcachedClientInstrumentation.class.getName() + "$AsyncGetAdvice");
     transformers.put(
         isMethod().and(isPublic()).and(returns(named(MEMCACHED_PACKAGE + ".internal.BulkFuture"))),
-        AsyncBulkAdvice.class.getName());
+        MemcachedClientInstrumentation.class.getName() + "$AsyncBulkAdvice");
     transformers.put(
         isMethod().and(isPublic()).and(named("incr").or(named("decr"))),
-        SyncOperationAdvice.class.getName());
+        MemcachedClientInstrumentation.class.getName() + "$SyncOperationAdvice");
     return transformers;
   }
 

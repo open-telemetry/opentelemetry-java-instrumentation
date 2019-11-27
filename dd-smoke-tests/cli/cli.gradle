@@ -1,5 +1,5 @@
 plugins {
-  id "com.github.johnrengelman.shadow" version "4.0.4"
+  id "com.github.johnrengelman.shadow" version "5.2.0"
 }
 apply from: "${rootDir}/gradle/java.gradle"
 description = 'Command Line Application Smoke Tests.'

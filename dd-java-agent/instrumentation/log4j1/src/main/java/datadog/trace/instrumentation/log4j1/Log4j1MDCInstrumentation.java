@@ -36,7 +36,8 @@ public class Log4j1MDCInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(isConstructor(), MDCContextAdvice.class.getName());
+    return singletonMap(
+        isConstructor(), Log4j1MDCInstrumentation.class.getName() + "$MDCContextAdvice");
   }
 
   @Override

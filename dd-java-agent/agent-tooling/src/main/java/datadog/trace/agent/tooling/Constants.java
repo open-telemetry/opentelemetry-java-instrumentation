@@ -15,7 +15,6 @@ public final class Constants {
    */
   public static final String[] BOOTSTRAP_PACKAGE_PREFIXES = {
     "datadog.slf4j",
-    "datadog.trace.agent.TracingAgent",
     "datadog.trace.api",
     "datadog.trace.bootstrap",
     "datadog.trace.context",

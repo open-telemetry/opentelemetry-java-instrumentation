@@ -41,7 +41,9 @@ public class GrpcServerBuilderInstrumentation extends Instrumenter.Default {
 
   @Override
   public Map<? extends ElementMatcher<? super MethodDescription>, String> transformers() {
-    return singletonMap(isMethod().and(named("build")), AddInterceptorAdvice.class.getName());
+    return singletonMap(
+        isMethod().and(named("build")),
+        GrpcServerBuilderInstrumentation.class.getName() + "$AddInterceptorAdvice");
   }
 
   public static class AddInterceptorAdvice {

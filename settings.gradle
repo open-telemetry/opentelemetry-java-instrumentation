@@ -1,3 +1,21 @@
+plugins {
+  id 'com.gradle.enterprise' version '3.0'
+}
+
+def isCI = System.getenv("CI") != null
+def skipBuildscan = Boolean.valueOf(System.getenv("SKIP_BUILDSCAN"))
+gradleEnterprise {
+  buildScan {
+    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+    termsOfServiceAgree = 'yes'
+
+    if (isCI && !skipBuildscan) {
+      publishAlways()
+      tag 'CI'
+    }
+  }
+}
+
 rootProject.name = 'dd-trace-java'
 
 // external apis
@@ -8,6 +26,7 @@ include ':dd-trace-ot'
 include ':dd-java-agent'
 include ':dd-java-agent:agent-bootstrap'
 include ':dd-java-agent:agent-tooling'
+include ':dd-java-agent:load-generator'
 
 // misc
 include ':dd-java-agent:testing'
@@ -83,6 +102,7 @@ include ':dd-java-agent:instrumentation:play-2.4'
 include ':dd-java-agent:instrumentation:play-2.6'
 include ':dd-java-agent:instrumentation:play-ws-1'
 include ':dd-java-agent:instrumentation:play-ws-2'
+include ':dd-java-agent:instrumentation:play-ws-2.1'
 include ':dd-java-agent:instrumentation:rabbitmq-amqp-2.7'
 include ':dd-java-agent:instrumentation:ratpack-1.4'
 include ':dd-java-agent:instrumentation:rxjava-1'
