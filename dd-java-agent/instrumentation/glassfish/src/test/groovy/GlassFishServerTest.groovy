@@ -105,7 +105,6 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
         "servlet.path" endpoint.path
         "span.origin.type" { it.startsWith("TestServlets\$") || it == DefaultServlet.name }
         if (endpoint.errored) {
-          "$Tags.ERROR" endpoint.errored
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }

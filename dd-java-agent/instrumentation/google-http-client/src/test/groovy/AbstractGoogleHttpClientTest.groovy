@@ -67,7 +67,6 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
             "$Tags.HTTP_URL" "${uri.resolve(uri.path)}"
             "$Tags.HTTP_METHOD" method
             "$Tags.HTTP_STATUS" 500
-            "$Tags.ERROR" true
             defaultTags()
           }
         }

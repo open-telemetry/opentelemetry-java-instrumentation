@@ -123,6 +123,7 @@ public final class AkkaHttpServerInstrumentation extends Instrumenter.Default {
     public static void finishSpan(final AgentSpan span, final Throwable t) {
       DECORATE.onError(span, t);
       span.setTag(Tags.HTTP_STATUS, 500);
+      span.setError(true);
       DECORATE.beforeFinish(span);
 
       final TraceScope scope = activeScope();

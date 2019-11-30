@@ -82,6 +82,7 @@ public class Servlet3Advice {
         if (resp.getStatus() == HttpServletResponse.SC_OK) {
           // exception is thrown in filter chain, but status code is incorrect
           span.setTag(Tags.HTTP_STATUS, 500);
+          span.setError(true);
         }
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);

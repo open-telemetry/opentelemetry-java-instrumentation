@@ -139,8 +139,6 @@ class GrpcTest extends AgentTestRunner {
             "status.description" description
             if (status.cause != null) {
               errorTags status.cause.class, status.cause.message
-            } else {
-              tag "error", true
             }
             defaultTags(true)
           }
@@ -170,7 +168,6 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "${status.code.name()}"
             "status.description" description
-            tag "error", true
             defaultTags()
           }
         }
@@ -251,7 +248,6 @@ class GrpcTest extends AgentTestRunner {
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "UNKNOWN"
-            tag "error", true
             defaultTags()
           }
         }

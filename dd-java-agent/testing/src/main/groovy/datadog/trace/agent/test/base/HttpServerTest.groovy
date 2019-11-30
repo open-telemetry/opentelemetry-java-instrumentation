@@ -443,9 +443,6 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
 //          "$DDTags.HTTP_QUERY" uri.query
 //          "$DDTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
 //        }
-        if (endpoint.errored) {
-          "$Tags.ERROR" endpoint.errored
-        }
         defaultTags(true)
       }
     }

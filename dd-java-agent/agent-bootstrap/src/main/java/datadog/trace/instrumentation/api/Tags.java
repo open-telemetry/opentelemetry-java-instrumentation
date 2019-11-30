@@ -18,7 +18,6 @@ public class Tags {
   public static final String PEER_PORT = "peer.port";
   public static final String SPAN_KIND = "span.kind";
   public static final String COMPONENT = "component";
-  public static final String ERROR = "error";
   public static final String DB_TYPE = "db.type";
   public static final String DB_INSTANCE = "db.instance";
   public static final String DB_USER = "db.user";

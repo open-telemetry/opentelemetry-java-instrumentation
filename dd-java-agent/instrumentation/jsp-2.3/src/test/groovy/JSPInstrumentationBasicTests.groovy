@@ -311,7 +311,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" "org.apache.catalina.core.ApplicationFilterChain"
             "servlet.context" "/$jspWebappContext"
             "servlet.path" "/$jspFileName"
-            "error" true
             "error.type" { String tagExceptionType ->
               return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
             }
@@ -332,7 +331,6 @@ class JSPInstrumentationBasicTests extends AgentTestRunner {
             "span.origin.type" jspClassName
             "servlet.context" "/$jspWebappContext"
             "jsp.requestURL" reqUrl
-            "error" true
             "error.type" { String tagExceptionType ->
               return tagExceptionType == exceptionClass.getName() || tagExceptionType.contains(exceptionClass.getSimpleName())
             }

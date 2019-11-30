@@ -73,7 +73,6 @@ class AkkaHttpClientInstrumentationTest extends HttpClientTest<AkkaHttpClientDec
           tags {
             "$Tags.COMPONENT" "akka-http-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "$Tags.ERROR" true
             errorTags(NullPointerException)
             defaultTags()
           }

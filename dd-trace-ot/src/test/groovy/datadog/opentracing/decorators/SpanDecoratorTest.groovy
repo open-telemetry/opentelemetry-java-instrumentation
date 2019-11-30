@@ -65,37 +65,6 @@ class SpanDecoratorTest extends DDSpecification {
     type = "foo"
   }
 
-  def "set 5XX status code as an error"() {
-    when:
-    Tags.HTTP_STATUS.set(span, status)
-
-    then:
-    span.isError() == error
-
-    where:
-    status | error
-    400    | false
-    404    | false
-    499    | false
-    500    | true
-    550    | true
-    599    | true
-    600    | false
-  }
-
-  def "set error flag when error tag reported"() {
-    when:
-    Tags.ERROR.set(span, error)
-
-    then:
-    span.isError() == error
-
-    where:
-    error | _
-    true  | _
-    false | _
-  }
-
   def "#attribute decorators apply to builder too"() {
     setup:
     def span = tracer.buildSpan("decorator.test").withTag(name, value).start()
@@ -106,19 +75,5 @@ class SpanDecoratorTest extends DDSpecification {
     where:
     attribute  | name             | value
     "spanType" | DDTags.SPAN_TYPE | "my-span-type"
-  }
-
-  def "decorators apply to builder too"() {
-    when:
-    span = tracer.buildSpan("decorator.test").withTag("error", "true").start()
-
-    then:
-    span.error
-
-    when:
-    span = tracer.buildSpan("decorator.test").withTag(Tags.HTTP_STATUS.key, 500).start()
-
-    then:
-    span.error
   }
 }
