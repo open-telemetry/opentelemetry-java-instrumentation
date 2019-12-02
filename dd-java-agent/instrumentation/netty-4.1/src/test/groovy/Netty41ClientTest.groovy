@@ -199,8 +199,8 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
           resourceName "AnnotatedClass.makeRequestUnderTrace"
           errored false
           tags {
-            defaultTags()
             "$Tags.COMPONENT" "trace"
+            defaultTags()
           }
         }
         clientSpan(it, 2, span(1), method)

@@ -88,17 +88,17 @@ class PlayServerTest extends HttpServerTest<Server, NettyHttpServerDecorator> {
       childOf(parent as DDSpan)
       tags {
         "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.component()
-        "$Tags.HTTP_STATUS" Integer
-        "$Tags.HTTP_URL" String
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_METHOD" String
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-        defaultTags()
+        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+        "$Tags.HTTP_URL" String
+        "$Tags.HTTP_METHOD" String
+        "$Tags.HTTP_STATUS" Integer
         if (endpoint == ERROR) {
           "$Tags.ERROR" true
         } else if (endpoint == EXCEPTION) {
           errorTags(Exception, EXCEPTION.body)
         }
+        defaultTags()
       }
     }
   }

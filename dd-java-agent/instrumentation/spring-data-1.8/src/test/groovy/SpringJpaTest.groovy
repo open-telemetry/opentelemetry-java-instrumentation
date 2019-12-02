@@ -1,6 +1,6 @@
 // This file includes software developed at SignalFx
 import datadog.trace.agent.test.AgentTestRunner
-import io.opentracing.tag.Tags
+import datadog.trace.instrumentation.api.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spring.jpa.JpaCustomer
 import spring.jpa.JpaCustomerRepository
@@ -28,6 +28,9 @@ class SpringJpaTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "toString test"
+          tags {
+            defaultTags()
+          }
         }
       }
     }
@@ -55,8 +58,8 @@ class SpringJpaTest extends AgentTestRunner {
           resourceName "JpaRepository.findAll"
           errored false
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -64,6 +67,15 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
       }
     }
@@ -82,8 +94,8 @@ class SpringJpaTest extends AgentTestRunner {
           resourceName "CrudRepository.save"
           errored false
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -91,6 +103,15 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
       }
     }
@@ -109,8 +130,8 @@ class SpringJpaTest extends AgentTestRunner {
           resourceName "CrudRepository.save"
           errored false
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -118,11 +139,29 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
         span(2) { //update
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
       }
     }
@@ -139,8 +178,8 @@ class SpringJpaTest extends AgentTestRunner {
           resourceName "JpaCustomerRepository.findByLastName"
           errored false
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -148,6 +187,15 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
       }
     }
@@ -164,8 +212,8 @@ class SpringJpaTest extends AgentTestRunner {
           resourceName "CrudRepository.delete"
           errored false
           tags {
-            "$Tags.COMPONENT.key" "spring-data"
-            "$Tags.SPAN_KIND.key" Tags.SPAN_KIND_CLIENT
+            "$Tags.COMPONENT" "spring-data"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
@@ -173,11 +221,29 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
         span(2) { // delete
           serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
       }
     }

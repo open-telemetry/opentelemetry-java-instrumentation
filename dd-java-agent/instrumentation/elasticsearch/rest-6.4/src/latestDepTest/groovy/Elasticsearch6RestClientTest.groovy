@@ -91,12 +91,12 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           parent()
           tags {
             "$Tags.COMPONENT" "elasticsearch-java"
-            "$Tags.DB_TYPE" "elasticsearch"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.HTTP_URL" "_cluster/health"
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" httpPort
+            "$Tags.HTTP_URL" "_cluster/health"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.DB_TYPE" "elasticsearch"
             defaultTags()
           }
         }
@@ -109,8 +109,8 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
           tags {
             "$Tags.COMPONENT" "apache-httpasyncclient"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
-            "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_URL" "_cluster/health"
+            "$Tags.HTTP_METHOD" "GET"
             "$Tags.HTTP_STATUS" 200
             defaultTags()
           }

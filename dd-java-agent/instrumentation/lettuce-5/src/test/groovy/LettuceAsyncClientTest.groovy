@@ -1,6 +1,7 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import io.lettuce.core.ClientOptions
 import io.lettuce.core.ConnectionFuture
 import io.lettuce.core.RedisClient
@@ -121,13 +122,13 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored false
 
           tags {
-            defaultTags()
-            "component" "redis-client"
+            "$Tags.COMPONENT" "redis-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" HOST
+            "$Tags.PEER_PORT" port
+            "$Tags.DB_TYPE" "redis"
             "db.redis.dbIndex" 0
-            "db.type" "redis"
-            "peer.hostname" HOST
-            "peer.port" port
-            "span.kind" "client"
+            defaultTags()
           }
         }
       }
@@ -160,14 +161,14 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored true
 
           tags {
-            defaultTags()
-            "component" "redis-client"
+            "$Tags.COMPONENT" "redis-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" HOST
+            "$Tags.PEER_PORT" incorrectPort
+            "$Tags.DB_TYPE" "redis"
             "db.redis.dbIndex" 0
-            "db.type" "redis"
             errorTags CompletionException, String
-            "peer.hostname" HOST
-            "peer.port" incorrectPort
-            "span.kind" "client"
+            defaultTags()
           }
         }
       }
@@ -191,10 +192,10 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored false
 
           tags {
+            "$Tags.COMPONENT" "redis-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
           }
         }
       }
@@ -229,10 +230,10 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored false
 
           tags {
+            "$Tags.COMPONENT" "redis-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
           }
         }
       }
@@ -281,10 +282,10 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored false
 
           tags {
+            "$Tags.COMPONENT" "redis-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
           }
         }
       }
@@ -319,10 +320,10 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored false
 
           tags {
+            "$Tags.COMPONENT" "redis-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
           }
         }
       }
@@ -376,10 +377,10 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored false
 
           tags {
+            "$Tags.COMPONENT" "redis-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
           }
         }
       }
@@ -392,10 +393,10 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored false
 
           tags {
+            "$Tags.COMPONENT" "redis-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
           }
         }
       }
@@ -438,11 +439,11 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored true
 
           tags {
-            defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
+            "$Tags.COMPONENT" "redis-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             errorTags(IllegalStateException, "TestException")
-            "span.kind" "client"
+            defaultTags()
           }
         }
       }
@@ -479,11 +480,11 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored false
 
           tags {
-            defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
+            "$Tags.COMPONENT" "redis-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             "db.command.cancelled" true
-            "span.kind" "client"
+            defaultTags()
           }
         }
       }
@@ -505,10 +506,10 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored false
 
           tags {
+            "$Tags.COMPONENT" "redis-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
           }
         }
       }
@@ -531,10 +532,10 @@ class LettuceAsyncClientTest extends AgentTestRunner {
           errored false
 
           tags {
+            "$Tags.COMPONENT" "redis-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "redis"
             defaultTags()
-            "component" "redis-client"
-            "db.type" "redis"
-            "span.kind" "client"
           }
         }
       }

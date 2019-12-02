@@ -5,13 +5,13 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
 import datadog.trace.instrumentation.api.Tags
-import javax.sql.DataSource
 import org.apache.derby.jdbc.EmbeddedDriver
 import org.h2.Driver
 import org.hsqldb.jdbc.JDBCDriver
 import spock.lang.Shared
 import spock.lang.Unroll
 
+import javax.sql.DataSource
 import java.sql.CallableStatement
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -176,13 +176,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "db.type" driver
+            "$Tags.COMPONENT" "java-jdbc-statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" driver
+            "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
-              "db.user" username
+              "$Tags.DB_USER" username
             }
-            "span.kind" Tags.SPAN_KIND_CLIENT
-            "component" "java-jdbc-statement"
-            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -236,13 +236,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "db.type" driver
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" driver
+            "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
-              "db.user" username
+              "$Tags.DB_USER" username
             }
-            "span.kind" Tags.SPAN_KIND_CLIENT
-            "component" "java-jdbc-prepared_statement"
-            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -288,13 +288,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "db.type" driver
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" driver
+            "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
-              "db.user" username
+              "$Tags.DB_USER" username
             }
-            "span.kind" Tags.SPAN_KIND_CLIENT
-            "component" "java-jdbc-prepared_statement"
-            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -340,13 +340,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "db.type" driver
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" driver
+            "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
-              "db.user" username
+              "$Tags.DB_USER" username
             }
-            "span.kind" Tags.SPAN_KIND_CLIENT
-            "component" "java-jdbc-prepared_statement"
-            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -392,13 +392,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "db.type" driver
+            "$Tags.COMPONENT" "java-jdbc-statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" driver
+            "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
-              "db.user" username
+              "$Tags.DB_USER" username
             }
-            "span.kind" Tags.SPAN_KIND_CLIENT
-            "component" "java-jdbc-statement"
-            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -447,13 +447,13 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "db.type" driver
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" driver
+            "$Tags.DB_INSTANCE" dbName.toLowerCase()
             if (username != null) {
-              "db.user" username
+              "$Tags.DB_USER" username
             }
-            "span.kind" Tags.SPAN_KIND_CLIENT
-            "component" "java-jdbc-prepared_statement"
-            "db.instance" dbName.toLowerCase()
             "span.origin.type" String
             defaultTags()
           }
@@ -515,17 +515,17 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
-            "db.type" driver
-            if (username != null) {
-              "db.user" username
-            }
             if (prepareStatement) {
-              "component" "java-jdbc-prepared_statement"
+              "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             } else {
-              "component" "java-jdbc-statement"
+              "$Tags.COMPONENT" "java-jdbc-statement"
             }
-            "span.kind" Tags.SPAN_KIND_CLIENT
-            "db.instance" dbName.toLowerCase()
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" driver
+            "$Tags.DB_INSTANCE" dbName.toLowerCase()
+            if (username != null) {
+              "$Tags.DB_USER" username
+            }
             "span.origin.type" String
             defaultTags()
           }
@@ -590,11 +590,11 @@ class JDBCInstrumentationTest extends AgentTestRunner {
           spanType DDSpanTypes.SQL
           errored false
           tags {
-            "db.type" dbType
-            "db.user" "SA"
-            "component" "java-jdbc-prepared_statement"
-            "span.kind" Tags.SPAN_KIND_CLIENT
-            "db.instance" dbName.toLowerCase()
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" dbType
+            "$Tags.DB_INSTANCE" dbName.toLowerCase()
+            "$Tags.DB_USER" "SA"
             "span.origin.type" String
             defaultTags()
           }
@@ -609,11 +609,11 @@ class JDBCInstrumentationTest extends AgentTestRunner {
             spanType DDSpanTypes.SQL
             errored false
             tags {
-              "db.type" dbType
-              "db.user" "SA"
-              "component" "java-jdbc-prepared_statement"
-              "span.kind" Tags.SPAN_KIND_CLIENT
-              "db.instance" dbName.toLowerCase()
+              "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+              "$Tags.DB_TYPE" dbType
+              "$Tags.DB_INSTANCE" dbName.toLowerCase()
+              "$Tags.DB_USER" "SA"
               "span.origin.type" String
               defaultTags()
             }

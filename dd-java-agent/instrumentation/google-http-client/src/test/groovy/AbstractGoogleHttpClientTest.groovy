@@ -4,6 +4,7 @@ import com.google.api.client.http.HttpResponse
 import com.google.api.client.http.javanet.NetHttpTransport
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.googlehttpclient.GoogleHttpClientDecorator
 import spock.lang.Shared
 
@@ -59,6 +60,17 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
           resourceName "$method $uri.path"
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
+          tags {
+            "$Tags.COMPONENT" "google-http-client"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_PORT" Integer
+            "$Tags.HTTP_URL" String
+            "$Tags.HTTP_METHOD" String
+            "$Tags.HTTP_STATUS" Integer
+            "$Tags.ERROR" true
+            defaultTags()
+          }
         }
       }
     }

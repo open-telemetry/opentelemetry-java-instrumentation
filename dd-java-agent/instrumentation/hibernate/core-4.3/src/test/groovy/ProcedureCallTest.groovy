@@ -104,6 +104,15 @@ class ProcedureCallTest extends AgentTestRunner {
           serviceName "hsqldb"
           spanType "sql"
           childOf span(2)
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCCallableStatement"
+            defaultTags()
+          }
         }
       }
     }
@@ -162,9 +171,9 @@ class ProcedureCallTest extends AgentTestRunner {
           childOf span(0)
           errored(true)
           tags {
-            errorTags(SQLGrammarException, "could not prepare statement")
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            errorTags(SQLGrammarException, "could not prepare statement")
             defaultTags()
           }
         }

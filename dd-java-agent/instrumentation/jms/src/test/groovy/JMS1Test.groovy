@@ -126,10 +126,10 @@ class JMS1Test extends AgentTestRunner {
           errored false
 
           tags {
-            defaultTags()
-            "${Tags.COMPONENT}" "jms"
-            "${Tags.SPAN_KIND}" "consumer"
+            "$Tags.COMPONENT" "jms"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
+            defaultTags()
           }
         }
       }
@@ -164,10 +164,10 @@ class JMS1Test extends AgentTestRunner {
           errored false
 
           tags {
-            defaultTags()
-            "${Tags.COMPONENT}" "jms"
-            "${Tags.SPAN_KIND}" "consumer"
+            "$Tags.COMPONENT" "jms"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
+            defaultTags()
           }
         }
       }
@@ -215,10 +215,10 @@ class JMS1Test extends AgentTestRunner {
           errored false
 
           tags {
-            defaultTags()
-            "${Tags.COMPONENT}" "jms"
-            "${Tags.SPAN_KIND}" "consumer"
+            "$Tags.COMPONENT" "jms"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" ActiveMQMessageConsumer.name
+            defaultTags()
           }
         }
       }
@@ -247,10 +247,10 @@ class JMS1Test extends AgentTestRunner {
         parent()
 
         tags {
-          defaultTags()
-          "${Tags.COMPONENT}" "jms"
-          "${Tags.SPAN_KIND}" "producer"
+          "$Tags.COMPONENT" "jms"
+          "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           "span.origin.type" ActiveMQMessageProducer.name
+          defaultTags()
         }
       }
     }
@@ -272,10 +272,10 @@ class JMS1Test extends AgentTestRunner {
         childOf parentSpan
 
         tags {
-          defaultTags(true)
-          "${Tags.COMPONENT}" "jms"
-          "${Tags.SPAN_KIND}" "consumer"
+          "$Tags.COMPONENT" "jms"
+          "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
           "span.origin.type" origin.name
+          defaultTags(true)
         }
       }
     }

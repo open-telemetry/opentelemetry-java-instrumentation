@@ -82,10 +82,10 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
+            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT" "hystrix"
             defaultTags()
           }
         }
@@ -192,10 +192,10 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
+            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT" "hystrix"
             errorTags(IllegalArgumentException)
             defaultTags()
           }
@@ -208,10 +208,10 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
+            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT" "hystrix"
             defaultTags()
           }
         }
@@ -312,10 +312,10 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
+            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT" "hystrix"
             errorTags(IllegalArgumentException)
             defaultTags()
           }
@@ -328,10 +328,10 @@ class HystrixObservableTest extends AgentTestRunner {
           childOf span(1)
           errored true
           tags {
+            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableTest\$3"
             "hystrix.group" "FailingGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT" "hystrix"
             errorTags(UnsupportedOperationException, "No fallback available.")
             defaultTags()
           }

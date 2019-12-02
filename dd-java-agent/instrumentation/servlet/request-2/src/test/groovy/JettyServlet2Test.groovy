@@ -93,25 +93,24 @@ class JettyServlet2Test extends HttpServerTest<Server, Servlet2Decorator> {
         parent()
       }
       tags {
+        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+        "$Tags.PEER_HOSTNAME" "localhost"
+        "$Tags.PEER_HOST_IPV4" "127.0.0.1"
+        // No peer port
+        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_METHOD" method
+        "$Tags.HTTP_STATUS" endpoint.status
         "servlet.context" "/$CONTEXT"
         "servlet.path" endpoint.path
         "span.origin.type" TestServlet2.Sync.name
-
-        defaultTags(true)
-        "$Tags.COMPONENT" serverDecorator.component()
         if (endpoint.errored) {
           "$Tags.ERROR" endpoint.errored
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
-        "$Tags.HTTP_STATUS" endpoint.status
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
-        "$Tags.PEER_HOSTNAME" "localhost"
-        // No peer port
-        "$Tags.PEER_HOST_IPV4" "127.0.0.1"
-        "$Tags.HTTP_METHOD" method
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+        defaultTags(true)
       }
     }
   }

@@ -62,10 +62,10 @@ class HystrixTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
+            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT" "hystrix"
             defaultTags()
           }
         }
@@ -140,10 +140,10 @@ class HystrixTest extends AgentTestRunner {
           childOf span(0)
           errored true
           tags {
+            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT" "hystrix"
             errorTags(IllegalArgumentException)
             defaultTags()
           }
@@ -156,10 +156,10 @@ class HystrixTest extends AgentTestRunner {
           childOf span(1)
           errored false
           tags {
+            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT" "hystrix"
             defaultTags()
           }
         }

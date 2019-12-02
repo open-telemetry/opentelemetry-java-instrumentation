@@ -139,6 +139,9 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "test"
           errored false
           parent()
+          tags {
+            defaultTags()
+          }
         }
         span(1) {
           serviceName "twilio-sdk"
@@ -193,6 +196,9 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "test"
           errored false
           parent()
+          tags {
+            defaultTags()
+          }
         }
         span(1) {
           serviceName "twilio-sdk"
@@ -269,6 +275,9 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "test"
           errored false
           parent()
+          tags {
+            defaultTags()
+          }
         }
         span(1) {
           serviceName "twilio-sdk"
@@ -292,6 +301,15 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "POST /?/Accounts/abc/Messages.json"
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
+          tags {
+            "$Tags.COMPONENT" "apache-httpclient"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" String
+            "$Tags.HTTP_URL" String
+            "$Tags.HTTP_METHOD" String
+            "$Tags.HTTP_STATUS" Integer
+            defaultTags()
+          }
         }
       }
     }
@@ -368,6 +386,9 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "test"
           errored false
           parent()
+          tags {
+            defaultTags()
+          }
         }
         span(1) {
           serviceName "twilio-sdk"
@@ -391,6 +412,15 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "POST /?/Accounts/abc/Messages.json"
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
+          tags {
+            "$Tags.COMPONENT" "apache-httpclient"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" String
+            "$Tags.HTTP_URL" String
+            "$Tags.HTTP_METHOD" String
+            "$Tags.HTTP_STATUS" Integer
+            defaultTags()
+          }
         }
         span(3) {
           serviceName "twilio-sdk"
@@ -398,6 +428,16 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "POST /?/Accounts/abc/Messages.json"
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
+          tags {
+            "$Tags.COMPONENT" "apache-httpclient"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" String
+            "$Tags.HTTP_URL" String
+            "$Tags.HTTP_METHOD" String
+            "$Tags.HTTP_STATUS" Integer
+            "$Tags.ERROR" true
+            defaultTags()
+          }
         }
       }
     }
@@ -482,6 +522,9 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "test"
           errored false
           parent()
+          tags {
+            defaultTags()
+          }
         }
         span(1) {
           serviceName "twilio-sdk"
@@ -523,6 +566,15 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "POST /?/Accounts/abc/Messages.json"
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
+          tags {
+            "$Tags.COMPONENT" "apache-httpclient"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" String
+            "$Tags.HTTP_URL" String
+            "$Tags.HTTP_METHOD" String
+            "$Tags.HTTP_STATUS" Integer
+            defaultTags()
+          }
         }
         span(4) {
           serviceName "twilio-sdk"
@@ -530,6 +582,16 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "POST /?/Accounts/abc/Messages.json"
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
+          tags {
+            "$Tags.COMPONENT" "apache-httpclient"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.PEER_HOSTNAME" String
+            "$Tags.HTTP_URL" String
+            "$Tags.HTTP_METHOD" String
+            "$Tags.HTTP_STATUS" Integer
+            "$Tags.ERROR" true
+            defaultTags()
+          }
         }
       }
     }
@@ -574,6 +636,9 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "test"
           errored false
           parent()
+          tags {
+            defaultTags()
+          }
         }
         span(1) {
           serviceName "twilio-sdk"
@@ -581,6 +646,12 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "api.v2010.account.MessageCreator.create"
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
+          tags {
+            "$Tags.COMPONENT" "twilio-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            errorTags(ApiException, "Testing Failure")
+            defaultTags()
+          }
         }
       }
     }
@@ -667,6 +738,9 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "test"
           errored false
           parent()
+          tags {
+            defaultTags()
+          }
         }
         span(1) {
           serviceName "twilio-sdk"
@@ -755,6 +829,9 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "test"
           errored false
           parent()
+          tags {
+            defaultTags()
+          }
         }
         span(1) {
           serviceName "twilio-sdk"
@@ -762,6 +839,12 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "api.v2010.account.MessageCreator.createAsync"
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
+          tags {
+            "$Tags.COMPONENT" "twilio-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            errorTags(ApiException, "Testing Failure")
+            defaultTags()
+          }
         }
         span(2) {
           serviceName "twilio-sdk"
@@ -769,6 +852,12 @@ class TwilioClientTest extends AgentTestRunner {
           resourceName "api.v2010.account.MessageCreator.create"
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
+          tags {
+            "$Tags.COMPONENT" "twilio-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            errorTags(ApiException, "Testing Failure")
+            defaultTags()
+          }
         }
       }
     }
