@@ -50,7 +50,7 @@ class DDSpanTest extends DDSpecification {
     when:
     span.setSpanType("type")
     then:
-    span.getType() == "type"
+    span.getSpanType() == "type"
   }
 
   def "resource name equals operation name if null"() {

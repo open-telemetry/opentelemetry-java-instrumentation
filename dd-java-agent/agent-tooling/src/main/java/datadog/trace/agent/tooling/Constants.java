@@ -37,9 +37,6 @@ public final class Constants {
     "net.bytebuddy",
     // OT contribs for dd trace resolver
     "io.opentracing.contrib",
-    // jackson
-    "org.msgpack",
-    "com.fasterxml.jackson",
     "org.yaml.snakeyaml",
     // disruptor
     "com.lmax.disruptor",

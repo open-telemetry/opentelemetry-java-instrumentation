@@ -15,8 +15,6 @@ dependencies {
   jmh group: 'org.mongodb', name: 'mongodb-driver-async', version: '3.4.2'
   jmh(group: 'com.amazonaws', name: 'aws-java-sdk', version: '1.11.119') {
     exclude(module: 'httpclient')
-    exclude(module: 'jackson-databind')
-    exclude(module: 'jackson-dataformat-cbor')
   }
   jmh group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.6.0'
   jmh group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.3'

@@ -7,7 +7,6 @@ server_type=$1
 server_package=$2
 agent_jars="${@:3}"
 server_pid=""
-agent_pid=$(lsof -i tcp:8126 | awk '$8 == "TCP" { print $2 }')
 if [[ "$server_package" = "" ]] || [[ "$server_type" != "play-zip" && "$server_type" != "jar" ]]; then
     echo "usage: ./run-perf-test.sh [play-zip|jar] path-to-server-package path-to-agent1 path-to-agent2..."
     echo ""
@@ -21,14 +20,6 @@ if [[ "$server_package" = "" ]] || [[ "$server_type" != "play-zip" && "$server_t
     echo ""
     echo "Test results are saved to $test_csv_file"
     exit 1
-fi
-
-if [ "$agent_pid" = "" ]; then
-    echo "discarding traces"
-    writer_type="LoggingWriter"
-else
-    echo "sending traces to local trace agent: $agent_pid"
-    writer_type="DDAgentWriter"
 fi
 
 if [ -f perf-test-settings.rc ]; then
@@ -51,7 +42,7 @@ function start_server {
     agent_jar="$1"
     javaagent_arg=""
     if [ "$agent_jar" != "" -a -f "$agent_jar" ]; then
-        javaagent_arg="-javaagent:$agent_jar -Ddatadog.slf4j.simpleLogger.defaultLogLevel=off -Ddd.writer.type=$writer_type -Ddd.service.name=perf-test-app"
+        javaagent_arg="-javaagent:$agent_jar -Ddatadog.slf4j.simpleLogger.defaultLogLevel=off -Ddd.service.name=perf-test-app"
     fi
 
     if [ "$server_type" = "jar" ]; then
@@ -150,13 +141,6 @@ for agent_jar in $agent_jars; do
     fi
 
 
-    if [ "$agent_pid" = "" ]; then
-        agent_start_cpu=0
-        agent_start_rss=0
-    else
-        agent_start_cpu=$(ps -o 'pid,time' | awk "\$1 == $agent_pid { print \$2 }" | awk -F'[:\.]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
-        agent_start_rss=$(ps -o 'pid,rss' | awk "\$1 == $agent_pid { print \$2 }")
-    fi
     server_start_cpu=$(ps -o 'pid,time' | awk "\$1 == $server_pid { print \$2 }" | awk -F'[:\.]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
     server_start_rss=$(ps -o 'pid,rss' | awk "\$1 == $server_pid { print \$2 }")
 
@@ -177,17 +161,8 @@ for agent_jar in $agent_jars; do
         rm $test_output_file
     done
 
-    if [ "$agent_pid" = "" ]; then
-        agent_stop_cpu=0
-        agent_stop_rss=0
-    else
-        agent_stop_cpu=$(ps -o 'pid,time' | awk "\$1 == $agent_pid { print \$2 }" | awk -F'[:\.]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
-        agent_stop_rss=$(ps -o 'pid,rss' | awk "\$1 == $agent_pid { print \$2 }")
-    fi
     server_stop_cpu=$(ps -o 'pid,time' | awk "\$1 == $server_pid { print \$2 }" | awk -F'[:\.]' '{ print ($1 * 3600) + ($2 * 60) + $3 }')
 
-    let agent_cpu=$agent_stop_cpu-$agent_start_cpu
-    let agent_rss=$agent_stop_rss-$agent_start_rss
     let server_cpu=$server_stop_cpu-$server_start_cpu
 
     server_load_increase_rss=$(echo "scale=2; ( $server_total_rss / $server_total_rss_count ) - $server_start_rss" | bc)
@@ -197,7 +172,7 @@ for agent_jar in $agent_jars; do
     server_max_rss=$(awk '/.* maximum resident set size/ { print $1 }' $server_output)
     rm $server_output
 
-    echo "$result_row,$agent_cpu,$server_cpu,$agent_rss,$server_max_rss,$server_start_rss,$server_load_increase_rss" >> $test_csv_file
+    echo "$result_row,$server_cpu,$server_max_rss,$server_start_rss,$server_load_increase_rss" >> $test_csv_file
     echo "----/Testing agent $agent_jar----"
     echo ""
 done

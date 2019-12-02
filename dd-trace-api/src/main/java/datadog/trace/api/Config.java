@@ -46,10 +46,6 @@ public class Config {
   public static final String TRACE_ENABLED = "trace.enabled";
   public static final String INTEGRATIONS_ENABLED = "integrations.enabled";
   public static final String WRITER_TYPE = "writer.type";
-  public static final String AGENT_HOST = "agent.host";
-  public static final String TRACE_AGENT_PORT = "trace.agent.port";
-  public static final String AGENT_PORT_LEGACY = "agent.port";
-  public static final String AGENT_UNIX_DOMAIN_SOCKET = "trace.agent.unix.domain.socket";
   public static final String TRACE_RESOLVER_ENABLED = "trace.resolver.enabled";
   public static final String GLOBAL_TAGS = "trace.global.tags";
   public static final String SPAN_TAGS = "trace.span.tags";
@@ -70,10 +66,6 @@ public class Config {
   public static final String RUNTIME_CONTEXT_FIELD_INJECTION =
       "trace.runtime.context.field.injection";
 
-  public static final String HEALTH_METRICS_ENABLED = "trace.health.metrics.enabled";
-  public static final String HEALTH_METRICS_STATSD_HOST = "trace.health.metrics.statsd.host";
-  public static final String HEALTH_METRICS_STATSD_PORT = "trace.health.metrics.statsd.port";
-
   public static final String LOGS_INJECTION_ENABLED = "logs.injection";
 
   public static final String SERVICE_TAG = "service";
@@ -86,13 +78,8 @@ public class Config {
 
   private static final boolean DEFAULT_TRACE_ENABLED = true;
   public static final boolean DEFAULT_INTEGRATIONS_ENABLED = true;
-  public static final String DD_AGENT_WRITER_TYPE = "DDAgentWriter";
   public static final String LOGGING_WRITER_TYPE = "LoggingWriter";
-  private static final String DEFAULT_AGENT_WRITER_TYPE = DD_AGENT_WRITER_TYPE;
-
-  public static final String DEFAULT_AGENT_HOST = "localhost";
-  public static final int DEFAULT_TRACE_AGENT_PORT = 8126;
-  public static final String DEFAULT_AGENT_UNIX_DOMAIN_SOCKET = null;
+  private static final String DEFAULT_WRITER_TYPE = LOGGING_WRITER_TYPE;
 
   private static final boolean DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION = true;
 
@@ -106,9 +93,6 @@ public class Config {
   private static final boolean DEFAULT_HTTP_CLIENT_SPLIT_BY_DOMAIN = false;
   private static final boolean DEFAULT_DB_CLIENT_HOST_SPLIT_BY_INSTANCE = false;
   private static final int DEFAULT_PARTIAL_FLUSH_MIN_SPANS = 1000;
-
-  public static final boolean DEFAULT_METRICS_ENABLED = false;
-  // No default constants for metrics statsd support -- falls back to jmx fetch values
 
   public static final boolean DEFAULT_LOGS_INJECTION_ENABLED = false;
 
@@ -133,9 +117,6 @@ public class Config {
   @Getter private final boolean traceEnabled;
   @Getter private final boolean integrationsEnabled;
   @Getter private final String writerType;
-  @Getter private final String agentHost;
-  @Getter private final int agentPort;
-  @Getter private final String agentUnixDomainSocket;
   @Getter private final boolean traceResolverEnabled;
   private final Map<String, String> globalTags;
   private final Map<String, String> spanTags;
@@ -149,10 +130,6 @@ public class Config {
   @Getter private final boolean dbClientSplitByInstance;
   @Getter private final Integer partialFlushMinSpans;
   @Getter private final boolean runtimeContextFieldInjection;
-
-  @Getter private final boolean healthMetricsEnabled;
-  @Getter private final String healthMetricsStatsdHost;
-  @Getter private final Integer healthMetricsStatsdPort;
 
   @Getter private final boolean logsInjectionEnabled;
 
@@ -180,14 +157,7 @@ public class Config {
     traceEnabled = getBooleanSettingFromEnvironment(TRACE_ENABLED, DEFAULT_TRACE_ENABLED);
     integrationsEnabled =
         getBooleanSettingFromEnvironment(INTEGRATIONS_ENABLED, DEFAULT_INTEGRATIONS_ENABLED);
-    writerType = getSettingFromEnvironment(WRITER_TYPE, DEFAULT_AGENT_WRITER_TYPE);
-    agentHost = getSettingFromEnvironment(AGENT_HOST, DEFAULT_AGENT_HOST);
-    agentPort =
-        getIntegerSettingFromEnvironment(
-            TRACE_AGENT_PORT,
-            getIntegerSettingFromEnvironment(AGENT_PORT_LEGACY, DEFAULT_TRACE_AGENT_PORT));
-    agentUnixDomainSocket =
-        getSettingFromEnvironment(AGENT_UNIX_DOMAIN_SOCKET, DEFAULT_AGENT_UNIX_DOMAIN_SOCKET);
+    writerType = getSettingFromEnvironment(WRITER_TYPE, DEFAULT_WRITER_TYPE);
     traceResolverEnabled =
         getBooleanSettingFromEnvironment(TRACE_RESOLVER_ENABLED, DEFAULT_TRACE_RESOLVER_ENABLED);
 
@@ -228,12 +198,6 @@ public class Config {
         getBooleanSettingFromEnvironment(
             RUNTIME_CONTEXT_FIELD_INJECTION, DEFAULT_RUNTIME_CONTEXT_FIELD_INJECTION);
 
-    // Writer.Builder createMonitor will use the values of the JMX fetch & agent to fill-in defaults
-    healthMetricsEnabled =
-        getBooleanSettingFromEnvironment(HEALTH_METRICS_ENABLED, DEFAULT_METRICS_ENABLED);
-    healthMetricsStatsdHost = getSettingFromEnvironment(HEALTH_METRICS_STATSD_HOST, null);
-    healthMetricsStatsdPort = getIntegerSettingFromEnvironment(HEALTH_METRICS_STATSD_PORT, null);
-
     logsInjectionEnabled =
         getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
 
@@ -262,14 +226,6 @@ public class Config {
     integrationsEnabled =
         getPropertyBooleanValue(properties, INTEGRATIONS_ENABLED, parent.integrationsEnabled);
     writerType = properties.getProperty(WRITER_TYPE, parent.writerType);
-    agentHost = properties.getProperty(AGENT_HOST, parent.agentHost);
-    agentPort =
-        getPropertyIntegerValue(
-            properties,
-            TRACE_AGENT_PORT,
-            getPropertyIntegerValue(properties, AGENT_PORT_LEGACY, parent.agentPort));
-    agentUnixDomainSocket =
-        properties.getProperty(AGENT_UNIX_DOMAIN_SOCKET, parent.agentUnixDomainSocket);
     traceResolverEnabled =
         getPropertyBooleanValue(properties, TRACE_RESOLVER_ENABLED, parent.traceResolverEnabled);
 
@@ -309,14 +265,6 @@ public class Config {
     runtimeContextFieldInjection =
         getPropertyBooleanValue(
             properties, RUNTIME_CONTEXT_FIELD_INJECTION, parent.runtimeContextFieldInjection);
-
-    healthMetricsEnabled =
-        getPropertyBooleanValue(properties, HEALTH_METRICS_ENABLED, DEFAULT_METRICS_ENABLED);
-    healthMetricsStatsdHost =
-        properties.getProperty(HEALTH_METRICS_STATSD_HOST, parent.healthMetricsStatsdHost);
-    healthMetricsStatsdPort =
-        getPropertyIntegerValue(
-            properties, HEALTH_METRICS_STATSD_PORT, parent.healthMetricsStatsdPort);
 
     logsInjectionEnabled =
         getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);

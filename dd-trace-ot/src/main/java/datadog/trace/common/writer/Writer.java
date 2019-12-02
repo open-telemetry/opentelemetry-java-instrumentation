@@ -4,7 +4,6 @@ import datadog.opentracing.DDSpan;
 import datadog.trace.api.Config;
 import java.io.Closeable;
 import java.util.List;
-import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 
 /** A writer is responsible to send collected spans to some place */
@@ -38,54 +37,21 @@ public interface Writer extends Closeable {
 
       if (config != null) {
         final String configuredType = config.getWriterType();
-        if (Config.DD_AGENT_WRITER_TYPE.equals(configuredType)) {
-          writer = createAgentWriter(config);
-        } else if (Config.LOGGING_WRITER_TYPE.equals(configuredType)) {
+        if (Config.LOGGING_WRITER_TYPE.equals(configuredType)) {
           writer = new LoggingWriter();
         } else {
           log.warn(
-              "Writer type not configured correctly: Type {} not recognized. Defaulting to DDAgentWriter.",
+              "Writer type not configured correctly: Type {} not recognized. Defaulting to LoggingWriter.",
               configuredType);
-          writer = createAgentWriter(config);
+          writer = new LoggingWriter();
         }
       } else {
         log.warn(
-            "Writer type not configured correctly: No config provided! Defaulting to DDAgentWriter.");
-        writer = new DDAgentWriter();
+            "Writer type not configured correctly: No config provided! Defaulting to LoggingWriter.");
+        writer = new LoggingWriter();
       }
 
       return writer;
-    }
-
-    public static Writer forConfig(final Properties config) {
-      return forConfig(Config.get(config));
-    }
-
-    private static Writer createAgentWriter(final Config config) {
-      return new DDAgentWriter(createApi(config), createMonitor(config));
-    }
-
-    private static final DDApi createApi(final Config config) {
-      return new DDApi(
-          config.getAgentHost(), config.getAgentPort(), config.getAgentUnixDomainSocket());
-    }
-
-    private static final DDAgentWriter.Monitor createMonitor(final Config config) {
-      if (!config.isHealthMetricsEnabled()) {
-        return new DDAgentWriter.NoopMonitor();
-      } else {
-        String host = config.getHealthMetricsStatsdHost();
-        if (host == null) {
-          host = config.getAgentHost();
-        }
-
-        Integer port = config.getHealthMetricsStatsdPort();
-        if (port == null) {
-          return new DDAgentWriter.NoopMonitor();
-        }
-
-        return new DDAgentWriter.StatsDMonitor(host, port);
-      }
     }
 
     private Builder() {}

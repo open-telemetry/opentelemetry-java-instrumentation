@@ -142,44 +142,6 @@ jobs:
     environment:
     - TEST_TASK: testJava13
 
-  agent_integration_tests:
-    <<: *defaults
-    docker:
-    - image: *default_container
-    - image: datadog/docker-dd-agent
-      environment:
-      - DD_APM_ENABLED=true
-      - DD_BIND_HOST=0.0.0.0
-      - DD_API_KEY=invalid_key_but_this_is_fine
-    steps:
-    - checkout
-
-    - attach_workspace:
-        at: .
-
-    - restore_cache:
-        <<: *cache_keys
-
-    - run:
-        name: Run Trace Agent Tests
-        command: ./gradlew traceAgentTest --build-cache --parallel --stacktrace --no-daemon --max-workers=8
-
-    - run:
-        name: Collect Reports
-        when: on_fail
-        command: .circleci/collect_reports.sh
-
-    - store_artifacts:
-        path: ./reports
-
-    - run:
-        name: Collect Test Results
-        when: always
-        command: .circleci/collect_results.sh
-
-    - store_test_results:
-        path: ./results
-
   check:
     <<: *defaults
 
@@ -323,13 +285,6 @@ workflows:
           tags:
             only: /.*/
 
-    - agent_integration_tests:
-        requires:
-        - build
-        filters:
-          tags:
-            only: /.*/
-
     - check:
         requires:
         - build
@@ -357,7 +312,6 @@ workflows:
         - test_zulu11
         - test_12
         - test_13
-        - agent_integration_tests
         - check
         filters:
           branches:
@@ -378,7 +332,6 @@ workflows:
         - test_zulu11
         - test_12
         - test_13
-        - agent_integration_tests
         - check
         filters:
           branches:
