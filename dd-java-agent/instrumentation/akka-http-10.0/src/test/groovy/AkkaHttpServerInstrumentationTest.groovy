@@ -49,18 +49,18 @@ abstract class AkkaHttpServerInstrumentationTest extends HttpServerTest<Object, 
         parent()
       }
       tags {
-        defaultTags(true)
         "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_METHOD" method
+        "$Tags.HTTP_STATUS" endpoint.status
         if (endpoint.errored) {
           "$Tags.ERROR" endpoint.errored
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
-        "$Tags.HTTP_STATUS" endpoint.status
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
-        "$Tags.HTTP_METHOD" method
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+        defaultTags(true)
       }
     }
   }

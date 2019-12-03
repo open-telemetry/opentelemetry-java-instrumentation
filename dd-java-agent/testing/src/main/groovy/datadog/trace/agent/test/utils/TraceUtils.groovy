@@ -63,10 +63,10 @@ class TraceUtils {
       resourceName resource
       errored exception != null
       tags {
-        defaultTags()
         if (exception) {
           errorTags(exception.class, exception.message)
         }
+        defaultTags()
       }
     }
   }

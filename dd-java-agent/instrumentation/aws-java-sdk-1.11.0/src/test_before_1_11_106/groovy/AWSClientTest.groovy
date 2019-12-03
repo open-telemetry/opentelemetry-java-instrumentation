@@ -105,10 +105,10 @@ class AWSClientTest extends AgentTestRunner {
           parent()
           tags {
             "$Tags.COMPONENT" "java-aws-sdk"
-            "$Tags.HTTP_STATUS" 200
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "$method"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_STATUS" 200
             "aws.service" { it.contains(service) }
             "aws.endpoint" "$server.address"
             "aws.operation" "${operation}Request"
@@ -124,12 +124,12 @@ class AWSClientTest extends AgentTestRunner {
           childOf(span(0))
           tags {
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.HTTP_STATUS" 200
-            "$Tags.HTTP_URL" "$server.address/$url"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" server.address.port
+            "$Tags.HTTP_URL" "$server.address/$url"
             "$Tags.HTTP_METHOD" "$method"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.HTTP_STATUS" 200
             defaultTags()
           }
         }
@@ -179,9 +179,9 @@ class AWSClientTest extends AgentTestRunner {
           parent()
           tags {
             "$Tags.COMPONENT" "java-aws-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/"
             "$Tags.HTTP_METHOD" "$method"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "aws.service" { it.contains(service) }
             "aws.endpoint" "http://localhost:${UNUSABLE_PORT}"
             "aws.operation" "${operation}Request"
@@ -198,11 +198,11 @@ class AWSClientTest extends AgentTestRunner {
           childOf(span(0))
           tags {
             "$Tags.COMPONENT" "apache-httpclient"
-            "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/$url"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
             "$Tags.PEER_PORT" UNUSABLE_PORT
+            "$Tags.HTTP_URL" "http://localhost:${UNUSABLE_PORT}/$url"
             "$Tags.HTTP_METHOD" "$method"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             errorTags HttpHostConnectException, ~/Connection refused/
             defaultTags()
           }
@@ -242,9 +242,9 @@ class AWSClientTest extends AgentTestRunner {
           parent()
           tags {
             "$Tags.COMPONENT" "java-aws-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "https://s3.amazonaws.com/"
             "$Tags.HTTP_METHOD" "GET"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "aws.service" "Amazon S3"
             "aws.endpoint" "https://s3.amazonaws.com"
             "aws.operation" "GetObjectRequest"
@@ -288,9 +288,9 @@ class AWSClientTest extends AgentTestRunner {
           parent()
           tags {
             "$Tags.COMPONENT" "java-aws-sdk"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "$server.address/"
             "$Tags.HTTP_METHOD" "GET"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "aws.service" "Amazon S3"
             "aws.endpoint" "http://localhost:$server.address.port"
             "aws.operation" "GetObjectRequest"
@@ -308,11 +308,11 @@ class AWSClientTest extends AgentTestRunner {
             childOf(span(0))
             tags {
               "$Tags.COMPONENT" "apache-httpclient"
-              "$Tags.HTTP_URL" "$server.address/someBucket/someKey"
+              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.PEER_HOSTNAME" "localhost"
               "$Tags.PEER_PORT" server.address.port
+              "$Tags.HTTP_URL" "$server.address/someBucket/someKey"
               "$Tags.HTTP_METHOD" "GET"
-              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               try {
                 errorTags SocketException, "Socket closed"
               } catch (AssertionError e) {

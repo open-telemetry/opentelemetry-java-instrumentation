@@ -295,28 +295,27 @@ abstract class TomcatDispatchTest extends TomcatServlet3Test {
           errored endpoint.errored
           // we can't reliably assert parent or child relationship here since both are tested.
           tags {
+            "$Tags.COMPONENT" serverDecorator.component()
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+            "$Tags.PEER_HOSTNAME" "localhost"
+            "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+            "$Tags.PEER_PORT" Integer
+            "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+            "$Tags.HTTP_METHOD" "GET"
+            "$Tags.HTTP_STATUS" endpoint.status
             "servlet.context" "/$context"
             "servlet.path" endpoint.status == 404 ? endpoint.path : "/dispatch$endpoint.path"
             "servlet.dispatch" endpoint.path
             "span.origin.type" {
               it == TestServlet3.DispatchImmediate.name || it == TestServlet3.DispatchAsync.name || it == ApplicationFilterChain.name
             }
-
-            defaultTags(true)
-            "$Tags.COMPONENT" serverDecorator.component()
             if (endpoint.errored) {
               "$Tags.ERROR" endpoint.errored
               "error.msg" { it == null || it == EXCEPTION.body }
               "error.type" { it == null || it == Exception.name }
               "error.stack" { it == null || it instanceof String }
             }
-            "$Tags.HTTP_STATUS" endpoint.status
-            "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
-            "$Tags.PEER_HOSTNAME" "localhost"
-            "$Tags.PEER_PORT" Integer
-            "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-            "$Tags.HTTP_METHOD" "GET"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+            defaultTags(true)
           }
         }
       }

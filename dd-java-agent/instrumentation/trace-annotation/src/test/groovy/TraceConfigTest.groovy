@@ -1,5 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.utils.ConfigUtils
+import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.trace_annotation.TraceConfigInstrumentation
 
 import java.util.concurrent.Callable
@@ -38,6 +39,10 @@ class TraceConfigTest extends AgentTestRunner {
         span(0) {
           resourceName "ConfigTracedCallable.call"
           operationName "trace.annotation"
+          tags {
+            "$Tags.COMPONENT" "trace"
+            defaultTags()
+          }
         }
       }
     }

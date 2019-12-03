@@ -90,10 +90,10 @@ class HystrixObservableChainTest extends AgentTestRunner {
           childOf span(3)
           errored false
           tags {
+            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableChainTest\$2"
             "hystrix.group" "OtherGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT" "hystrix"
             defaultTags()
           }
         }
@@ -117,10 +117,10 @@ class HystrixObservableChainTest extends AgentTestRunner {
           childOf span(0)
           errored false
           tags {
+            "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableChainTest\$1"
             "hystrix.group" "ExampleGroup"
             "hystrix.circuit-open" false
-            "$Tags.COMPONENT" "hystrix"
             defaultTags()
           }
         }

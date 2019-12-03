@@ -82,25 +82,24 @@ abstract class AbstractServlet3Test<SERVER, CONTEXT> extends HttpServerTest<SERV
         parent()
       }
       tags {
+        "$Tags.COMPONENT" serverDecorator.component()
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
+        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
+        "$Tags.PEER_PORT" Integer
+        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_METHOD" method
+        "$Tags.HTTP_STATUS" endpoint.status
         "servlet.context" "/$context"
         "servlet.path" { it == endpoint.path || it == "/dispatch$endpoint.path" }
         "span.origin.type" { it == servlet.name || it == ApplicationFilterChain.name }
-
-        defaultTags(true)
-        "$Tags.COMPONENT" serverDecorator.component()
         if (endpoint.errored) {
           "$Tags.ERROR" endpoint.errored
           "error.msg" { it == null || it == EXCEPTION.body }
           "error.type" { it == null || it == Exception.name }
           "error.stack" { it == null || it instanceof String }
         }
-        "$Tags.HTTP_STATUS" endpoint.status
-        "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
-        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
-        "$Tags.PEER_PORT" Integer
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_METHOD" method
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+        defaultTags(true)
       }
     }
   }

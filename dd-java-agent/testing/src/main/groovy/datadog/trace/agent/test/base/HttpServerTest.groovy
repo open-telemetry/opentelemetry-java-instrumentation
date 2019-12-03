@@ -412,10 +412,10 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
       errored errorMessage != null
       childOf(parent as DDSpan)
       tags {
-        defaultTags()
         if (errorMessage) {
           errorTags(Exception, errorMessage)
         }
+        defaultTags()
       }
     }
   }
@@ -439,22 +439,22 @@ abstract class HttpServerTest<SERVER, DECORATOR extends HttpServerDecorator> ext
         parent()
       }
       tags {
-        defaultTags(true)
         "$Tags.COMPONENT" serverDecorator.component()
-        if (endpoint.errored) {
-          "$Tags.ERROR" endpoint.errored
-        }
-        "$Tags.HTTP_STATUS" endpoint.status
+        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
+        "$Tags.PEER_PORT" Integer
+        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
         "$Tags.HTTP_URL" "${endpoint.resolve(address)}"
+        "$Tags.HTTP_METHOD" method
+        "$Tags.HTTP_STATUS" endpoint.status
 //        if (tagQueryString) {
 //          "$DDTags.HTTP_QUERY" uri.query
 //          "$DDTags.HTTP_FRAGMENT" { it == null || it == uri.fragment } // Optional
 //        }
-        "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
-        "$Tags.PEER_PORT" Integer
-        "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
-        "$Tags.HTTP_METHOD" method
-        "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
+        if (endpoint.errored) {
+          "$Tags.ERROR" endpoint.errored
+        }
+        defaultTags(true)
       }
     }
   }

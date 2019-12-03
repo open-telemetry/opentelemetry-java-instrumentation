@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.instrumentation.api.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 import spring.jpa.Customer
@@ -31,6 +32,15 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           resourceName "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
           spanType "sql"
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
       }
     }
@@ -51,6 +61,15 @@ class SpringJpaTest extends AgentTestRunner {
             serviceName "hsqldb"
             resourceName "call next value for hibernate_sequence"
             spanType "sql"
+            tags {
+              "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+              "$Tags.DB_TYPE" "hsqldb"
+              "$Tags.DB_INSTANCE" "test"
+              "$Tags.DB_USER" "sa"
+              "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+              defaultTags()
+            }
           }
         }
       }
@@ -59,6 +78,15 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           resourceName ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
           spanType "sql"
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
       }
     }
@@ -76,6 +104,15 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           resourceName "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
           spanType "sql"
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
       }
       trace(1, 1) {
@@ -83,6 +120,15 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           resourceName "update Customer set firstName=?, lastName=? where id=?"
           spanType "sql"
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
       }
     }
@@ -100,6 +146,15 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           resourceName "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
           spanType "sql"
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
       }
     }
@@ -115,6 +170,15 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           resourceName "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
           spanType "sql"
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
       }
       trace(1, 1) {
@@ -122,6 +186,15 @@ class SpringJpaTest extends AgentTestRunner {
           serviceName "hsqldb"
           resourceName "delete from Customer where id=?"
           spanType "sql"
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "hsqldb"
+            "$Tags.DB_INSTANCE" "test"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.hsqldb.jdbc.JDBCPreparedStatement"
+            defaultTags()
+          }
         }
       }
     }

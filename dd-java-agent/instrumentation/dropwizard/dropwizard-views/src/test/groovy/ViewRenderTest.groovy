@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.instrumentation.api.Tags
 import io.dropwizard.views.View
 import io.dropwizard.views.freemarker.FreemarkerViewRenderer
 import io.dropwizard.views.mustache.MustacheViewRenderer
@@ -30,7 +31,7 @@ class ViewRenderTest extends AgentTestRunner {
           operationName "view.render"
           childOf span(0)
           tags {
-            "component" "dropwizard-view"
+            "$Tags.COMPONENT" "dropwizard-view"
             "span.origin.type" renderer.class.simpleName
             defaultTags()
           }

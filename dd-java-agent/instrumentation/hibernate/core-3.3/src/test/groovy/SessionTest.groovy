@@ -81,6 +81,15 @@ class SessionTest extends AbstractHibernateTest {
             serviceName "h2"
             spanType "sql"
             childOf span(2)
+            tags {
+              "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+              "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+              "$Tags.DB_TYPE" "h2"
+              "$Tags.DB_INSTANCE" "db1"
+              "$Tags.DB_USER" "sa"
+              "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
+              defaultTags()
+            }
           }
         }
       }
@@ -146,6 +155,15 @@ class SessionTest extends AbstractHibernateTest {
           serviceName "h2"
           spanType "sql"
           childOf span(1)
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_INSTANCE" "db1"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
+            defaultTags()
+          }
         }
         span(3) {
           serviceName "hibernate"
@@ -227,6 +245,15 @@ class SessionTest extends AbstractHibernateTest {
           serviceName "h2"
           spanType "sql"
           childOf span(1)
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_INSTANCE" "db1"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
+            defaultTags()
+          }
         }
         span(3) {
           serviceName "hibernate"
@@ -244,6 +271,15 @@ class SessionTest extends AbstractHibernateTest {
           serviceName "h2"
           spanType "sql"
           childOf span(3)
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_INSTANCE" "db1"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
+            defaultTags()
+          }
         }
       }
 
@@ -314,10 +350,9 @@ class SessionTest extends AbstractHibernateTest {
           childOf span(0)
           errored(true)
           tags {
-            errorTags(MappingException, "Unknown entity: java.lang.Long")
-
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            errorTags(MappingException, "Unknown entity: java.lang.Long")
             defaultTags()
           }
         }
@@ -373,6 +408,15 @@ class SessionTest extends AbstractHibernateTest {
           serviceName "h2"
           spanType "sql"
           childOf span(1)
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_INSTANCE" "db1"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
+            defaultTags()
+          }
         }
         span(3) {
           serviceName "hibernate"
@@ -474,6 +518,15 @@ class SessionTest extends AbstractHibernateTest {
           serviceName "h2"
           spanType "sql"
           childOf span(2)
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_INSTANCE" "db1"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
+            defaultTags()
+          }
         }
       }
     }
@@ -516,6 +569,9 @@ class SessionTest extends AbstractHibernateTest {
         span(0) {
           serviceName "unnamed-java-app"
           operationName "overlapping Sessions"
+          tags {
+            defaultTags()
+          }
         }
         span(1) {
           serviceName "hibernate"
@@ -557,11 +613,29 @@ class SessionTest extends AbstractHibernateTest {
           serviceName "h2"
           spanType "sql"
           childOf span(3)
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_INSTANCE" "db1"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
+            defaultTags()
+          }
         }
         span(5) {
           serviceName "h2"
           spanType "sql"
           childOf span(3)
+          tags {
+            "$Tags.COMPONENT" "java-jdbc-prepared_statement"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
+            "$Tags.DB_TYPE" "h2"
+            "$Tags.DB_INSTANCE" "db1"
+            "$Tags.DB_USER" "sa"
+            "span.origin.type" "org.h2.jdbc.JdbcPreparedStatement"
+            defaultTags()
+          }
         }
         span(6) {
           serviceName "hibernate"

@@ -65,18 +65,22 @@ class LagomTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
-            defaultTags()
-            "$Tags.HTTP_STATUS" 101
+            "$Tags.COMPONENT" "akka-http-server"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/echo"
             "$Tags.HTTP_METHOD" "GET"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.COMPONENT" "akka-http-server"
+            "$Tags.HTTP_STATUS" 101
+            defaultTags()
           }
         }
         span(1) {
           childOf span(0)
           operationName 'trace.annotation'
           resourceName 'EchoServiceImpl.tracedMethod'
+          tags {
+            "$Tags.COMPONENT" "trace"
+            defaultTags()
+          }
         }
       }
     }
@@ -104,13 +108,13 @@ class LagomTest extends AgentTestRunner {
           spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {
-            defaultTags()
-            "$Tags.HTTP_STATUS" 500
+            "$Tags.COMPONENT" "akka-http-server"
+            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/error"
             "$Tags.HTTP_METHOD" "GET"
-            "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
-            "$Tags.COMPONENT" "akka-http-server"
+            "$Tags.HTTP_STATUS" 500
             "$Tags.ERROR" true
+            defaultTags()
           }
         }
       }
