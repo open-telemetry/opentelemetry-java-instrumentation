@@ -48,12 +48,12 @@ class TraceAnnotationsTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "SAY_HA"
-          spanType "DB"
           parent()
           errored false
           tags {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHA"
+            "$DDTags.SPAN_TYPE" "DB"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -95,12 +95,12 @@ class TraceAnnotationsTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "SAY_HA"
-          spanType "DB"
           parent()
           errored false
           tags {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "EARTH"
+            "$DDTags.SPAN_TYPE" "DB"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -130,12 +130,12 @@ class TraceAnnotationsTest extends AgentTestRunner {
         }
         span(1) {
           operationName "SAY_HA"
-          spanType "DB"
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHA"
+            "$DDTags.SPAN_TYPE" "DB"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -176,12 +176,12 @@ class TraceAnnotationsTest extends AgentTestRunner {
         }
         span(1) {
           operationName "SAY_HA"
-          spanType "DB"
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "SayTracedHello.sayHA"
+            "$DDTags.SPAN_TYPE" "DB"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -222,12 +222,12 @@ class TraceAnnotationsTest extends AgentTestRunner {
         }
         span(1) {
           operationName "SAY_HA"
-          spanType "DB"
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" "test"
             "$DDTags.RESOURCE_NAME" "EARTH"
+            "$DDTags.SPAN_TYPE" "DB"
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }

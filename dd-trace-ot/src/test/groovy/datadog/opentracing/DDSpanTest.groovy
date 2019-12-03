@@ -21,7 +21,6 @@ class DDSpanTest extends DDSpecification {
         0G,
         "fakeOperation",
         false,
-        "fakeType",
         null,
         new PendingTrace(tracer, 1G),
         tracer)
@@ -32,11 +31,6 @@ class DDSpanTest extends DDSpecification {
     span.setOperationName("operation")
     then:
     span.getOperationName() == "operation"
-
-    when:
-    span.setSpanType("type")
-    then:
-    span.getSpanType() == "type"
   }
 
   def "duration measured in nanoseconds"() {

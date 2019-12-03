@@ -82,10 +82,10 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "elasticsearch.rest.query"
-          spanType DDSpanTypes.ELASTICSEARCH
           parent()
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -98,9 +98,9 @@ class Elasticsearch6RestClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "http.request"
-          spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpasyncclient"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.HTTP_URL" "_cluster/health"

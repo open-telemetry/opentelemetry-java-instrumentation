@@ -46,20 +46,20 @@ class HystrixTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "parent"
-          spanType null
           parent()
           errored false
           tags {
+            "$DDTags.SPAN_TYPE" null
             defaultTags()
           }
         }
         span(1) {
           operationName "hystrix.cmd"
-          spanType null
           childOf span(0)
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixTest\$1.execute"
+            "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -69,11 +69,11 @@ class HystrixTest extends AgentTestRunner {
         }
         span(2) {
           operationName "trace.annotation"
-          spanType null
           childOf span(1)
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "HystrixTest\$1.tracedMethod"
+            "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
@@ -120,20 +120,20 @@ class HystrixTest extends AgentTestRunner {
       trace(0, 3) {
         span(0) {
           operationName "parent"
-          spanType null
           parent()
           errored false
           tags {
+            "$DDTags.SPAN_TYPE" null
             defaultTags()
           }
         }
         span(1) {
           operationName "hystrix.cmd"
-          spanType null
           childOf span(0)
           errored true
           tags {
             "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixTest\$2.execute"
+            "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"
@@ -144,11 +144,11 @@ class HystrixTest extends AgentTestRunner {
         }
         span(2) {
           operationName "hystrix.cmd"
-          spanType null
           childOf span(1)
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixTest\$2.fallback"
+            "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixTest\$2"
             "hystrix.group" "ExampleGroup"

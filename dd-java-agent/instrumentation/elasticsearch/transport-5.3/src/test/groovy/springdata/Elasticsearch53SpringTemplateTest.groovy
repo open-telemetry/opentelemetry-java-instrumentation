@@ -100,11 +100,11 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
           errored true
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "RefreshAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -168,10 +168,10 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "CreateIndexAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -185,10 +185,10 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "ClusterHealthAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -201,10 +201,10 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       trace(2, 1) {
         span(0) {
           operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "SearchAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -219,10 +219,10 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       trace(3, 1) {
         span(0) {
           operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "PutMappingAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -235,10 +235,10 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       trace(4, 1) {
         span(0) {
           operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "IndexAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -258,10 +258,10 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       trace(5, 1) {
         span(0) {
           operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "RefreshAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -278,10 +278,10 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       trace(6, 1) {
         span(0) {
           operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "SearchAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"
@@ -362,10 +362,10 @@ class Elasticsearch53SpringTemplateTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "elasticsearch.query"
-          spanType DDSpanTypes.ELASTICSEARCH
           tags {
             "$DDTags.SERVICE_NAME" "elasticsearch"
             "$DDTags.RESOURCE_NAME" "SearchAction"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.ELASTICSEARCH
             "$Tags.COMPONENT" "elasticsearch-java"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "elasticsearch"

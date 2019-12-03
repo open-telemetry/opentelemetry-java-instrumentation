@@ -102,11 +102,11 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "ratpack.handler"
-      spanType DDSpanTypes.HTTP_SERVER
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf(parent as DDSpan)
       tags {
         "$DDTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint.path}"
+        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" RatpackServerDecorator.DECORATE.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" "localhost"
@@ -126,7 +126,6 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
   void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
-      spanType DDSpanTypes.HTTP_SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
@@ -136,6 +135,7 @@ class RatpackHttpServerTest extends HttpServerTest<EmbeddedApp, NettyHttpServerD
       }
       tags {
         "$DDTags.RESOURCE_NAME" endpoint.status == 404 ? "$method /" : "$method ${endpoint.path}"
+        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }

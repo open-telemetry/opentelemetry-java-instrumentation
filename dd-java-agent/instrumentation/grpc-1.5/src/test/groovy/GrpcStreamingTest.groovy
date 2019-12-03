@@ -86,11 +86,11 @@ class GrpcStreamingTest extends AgentTestRunner {
       trace(0, clientMessageCount + 1) {
         span(0) {
           operationName "grpc.server"
-          spanType DDSpanTypes.RPC
           childOf trace(1).get(0)
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "example.Greeter/Conversation"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT" "grpc-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "status.code" "OK"
@@ -100,10 +100,10 @@ class GrpcStreamingTest extends AgentTestRunner {
         clientRange.each {
           span(it) {
             operationName "grpc.message"
-            spanType DDSpanTypes.RPC
             childOf span(0)
             errored false
             tags {
+              "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
               "$Tags.COMPONENT" "grpc-server"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
               "message.type" "example.Helloworld\$Response"
@@ -115,11 +115,11 @@ class GrpcStreamingTest extends AgentTestRunner {
       trace(1, (clientMessageCount * serverMessageCount) + 1) {
         span(0) {
           operationName "grpc.client"
-          spanType DDSpanTypes.RPC
           parent()
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "example.Greeter/Conversation"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
             "$Tags.COMPONENT" "grpc-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "status.code" "OK"
@@ -129,10 +129,10 @@ class GrpcStreamingTest extends AgentTestRunner {
         (1..(clientMessageCount * serverMessageCount)).each {
           span(it) {
             operationName "grpc.message"
-            spanType DDSpanTypes.RPC
             childOf span(0)
             errored false
             tags {
+              "$DDTags.SPAN_TYPE" DDSpanTypes.RPC
               "$Tags.COMPONENT" "grpc-client"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "message.type" "example.Helloworld\$Response"

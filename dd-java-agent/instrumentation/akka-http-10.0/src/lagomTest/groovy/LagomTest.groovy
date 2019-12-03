@@ -61,9 +61,9 @@ class LagomTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "akka-http.request"
-          spanType DDSpanTypes.HTTP_SERVER
           errored false
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "akka-http-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/echo"
@@ -102,9 +102,9 @@ class LagomTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "akka-http.request"
-          spanType DDSpanTypes.HTTP_SERVER
           errored true
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "akka-http-server"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.HTTP_URL" "ws://localhost:${server.port()}/error"

@@ -4,6 +4,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.akkahttp.AkkaHttpServerDecorator
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.play26.PlayHttpServerDecorator
@@ -84,10 +85,10 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
   void handlerSpan(TraceAssert trace, int index, Object parent, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName "play.request"
-      spanType DDSpanTypes.HTTP_SERVER
       errored endpoint == ERROR || endpoint == EXCEPTION
       childOf(parent as DDSpan)
       tags {
+        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" PlayHttpServerDecorator.DECORATE.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOST_IPV4" { it == null || it == "127.0.0.1" } // Optional
@@ -105,7 +106,6 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
   void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
-      spanType DDSpanTypes.HTTP_SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
@@ -114,6 +114,7 @@ class PlayServerTest extends HttpServerTest<Server, AkkaHttpServerDecorator> {
         parent()
       }
       tags {
+        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.HTTP_STATUS" endpoint.status

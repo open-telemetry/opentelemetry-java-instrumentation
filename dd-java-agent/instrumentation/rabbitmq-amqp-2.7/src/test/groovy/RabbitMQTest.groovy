@@ -346,17 +346,6 @@ class RabbitMQTest extends AgentTestRunner {
   ) {
     trace.span(index) {
       operationName "amqp.command"
-      switch (span.tags["amqp.command"]) {
-        case "basic.publish":
-          spanType DDSpanTypes.MESSAGE_PRODUCER
-          break
-        case "basic.get":
-        case "basic.deliver":
-          spanType DDSpanTypes.MESSAGE_CONSUMER
-          break
-        default:
-          spanType DDSpanTypes.MESSAGE_CLIENT
-      }
 
       if (parentSpan) {
         childOf parentSpan
@@ -376,6 +365,7 @@ class RabbitMQTest extends AgentTestRunner {
 
         switch (tag("amqp.command")) {
           case "basic.publish":
+            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_PRODUCER
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             "amqp.command" "basic.publish"
             "amqp.exchange" { it == null || it == "some-exchange" || it == "some-error-exchange" }
@@ -386,12 +376,14 @@ class RabbitMQTest extends AgentTestRunner {
             "message.size" Integer
             break
           case "basic.get":
+            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "amqp.command" "basic.get"
             "amqp.queue" { it == "some-queue" || it == "some-routing-queue" || it.startsWith("amq.gen-") }
             "message.size" { it == null || it instanceof Integer }
             break
           case "basic.deliver":
+            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CONSUMER
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "amqp.command" "basic.deliver"
             "span.origin.type" { it == "RabbitMQTest\$1" || it == "RabbitMQTest\$2" }
@@ -399,6 +391,7 @@ class RabbitMQTest extends AgentTestRunner {
             "message.size" Integer
             break
           default:
+            "$DDTags.SPAN_TYPE" DDSpanTypes.MESSAGE_CLIENT
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "amqp.command" { it == null || it == resource }
         }

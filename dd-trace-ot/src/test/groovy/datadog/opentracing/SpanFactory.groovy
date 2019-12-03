@@ -16,7 +16,6 @@ class SpanFactory {
       0G,
       "fakeOperation",
       false,
-      "fakeType",
       Collections.emptyMap(),
       new PendingTrace(tracer, 1G),
       tracer)
@@ -31,7 +30,6 @@ class SpanFactory {
       0G,
       "fakeOperation",
       false,
-      "fakeType",
       Collections.emptyMap(),
       new PendingTrace(tracer, 1G),
       tracer)
@@ -45,7 +43,6 @@ class SpanFactory {
       0G,
       "fakeOperation",
       false,
-      "fakeType",
       Collections.emptyMap(),
       trace,
       trace.tracer)
@@ -61,7 +58,6 @@ class SpanFactory {
       0G,
       "fakeOperation",
       false,
-      "fakeType",
       Collections.emptyMap(),
       new PendingTrace(tracer, 1G),
       tracer)

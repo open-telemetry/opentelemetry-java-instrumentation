@@ -251,11 +251,6 @@ public class DDSpan implements Span {
     return this;
   }
 
-  public final DDSpan setSpanType(final String type) {
-    context().setSpanType(type);
-    return this;
-  }
-
   // Getters
 
   /**
@@ -289,10 +284,6 @@ public class DDSpan implements Span {
 
   public String getOperationName() {
     return context.getOperationName();
-  }
-
-  public String getSpanType() {
-    return context.getSpanType();
   }
 
   public Map<String, Object> getTags() {

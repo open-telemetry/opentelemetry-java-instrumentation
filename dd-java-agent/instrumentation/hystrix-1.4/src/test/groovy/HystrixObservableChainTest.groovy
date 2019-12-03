@@ -74,20 +74,20 @@ class HystrixObservableChainTest extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           operationName "parent"
-          spanType null
           parent()
           errored false
           tags {
+            "$DDTags.SPAN_TYPE" null
             defaultTags()
           }
         }
         span(1) {
           operationName "hystrix.cmd"
-          spanType null
           childOf span(3)
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "OtherGroup.HystrixObservableChainTest\$2.execute"
+            "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableChainTest\$2"
             "hystrix.group" "OtherGroup"
@@ -97,22 +97,22 @@ class HystrixObservableChainTest extends AgentTestRunner {
         }
         span(2) {
           operationName "trace.annotation"
-          spanType null
           childOf span(1)
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "HystrixObservableChainTest\$2.tracedMethod"
+            "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }
         }
         span(3) {
           operationName "hystrix.cmd"
-          spanType null
           childOf span(0)
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "ExampleGroup.HystrixObservableChainTest\$1.execute"
+            "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "hystrix"
             "hystrix.command" "HystrixObservableChainTest\$1"
             "hystrix.group" "ExampleGroup"
@@ -122,11 +122,11 @@ class HystrixObservableChainTest extends AgentTestRunner {
         }
         span(4) {
           operationName "trace.annotation"
-          spanType null
           childOf span(3)
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "HystrixObservableChainTest\$1.tracedMethod"
+            "$DDTags.SPAN_TYPE" null
             "$Tags.COMPONENT" "trace"
             defaultTags()
           }

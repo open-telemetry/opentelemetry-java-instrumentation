@@ -76,12 +76,12 @@ class AwsClientTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "aws.http"
-          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           parent()
           tags {
             "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$DDTags.RESOURCE_NAME" "$service.$operation"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -109,10 +109,10 @@ class AwsClientTest extends AgentTestRunner {
         }
         span(1) {
           operationName "http.request"
-          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           childOf(span(0))
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "apache-httpclient"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -192,12 +192,12 @@ class AwsClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "aws.http"
-          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           parent()
           tags {
             "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$DDTags.RESOURCE_NAME" "$service.$operation"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -228,10 +228,10 @@ class AwsClientTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "netty.client.request"
-          spanType DDSpanTypes.HTTP_CLIENT
           errored false
           parent()
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "netty-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -312,12 +312,12 @@ class AwsClientTest extends AgentTestRunner {
       trace(0, 5) {
         span(0) {
           operationName "aws.http"
-          spanType DDSpanTypes.HTTP_CLIENT
           errored true
           parent()
           tags {
             "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$DDTags.RESOURCE_NAME" "S3.GetObject"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -335,10 +335,10 @@ class AwsClientTest extends AgentTestRunner {
         (1..4).each {
           span(it) {
             operationName "http.request"
-            spanType DDSpanTypes.HTTP_CLIENT
             errored true
             childOf(span(0))
             tags {
+              "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
               "$Tags.COMPONENT" "apache-httpclient"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.PEER_HOSTNAME" "localhost"

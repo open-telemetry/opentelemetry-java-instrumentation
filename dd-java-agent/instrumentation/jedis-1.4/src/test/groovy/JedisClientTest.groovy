@@ -50,9 +50,9 @@ class JedisClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -76,9 +76,9 @@ class JedisClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -90,9 +90,9 @@ class JedisClientTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -116,9 +116,9 @@ class JedisClientTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"
@@ -130,9 +130,9 @@ class JedisClientTest extends AgentTestRunner {
       trace(1, 1) {
         span(0) {
           operationName "redis.query"
-          spanType DDSpanTypes.REDIS
           tags {
             "$DDTags.SERVICE_NAME" "redis"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.REDIS
             "$Tags.COMPONENT" "redis-command"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "redis"

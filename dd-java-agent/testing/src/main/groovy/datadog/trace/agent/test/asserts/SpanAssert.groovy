@@ -47,12 +47,6 @@ class SpanAssert {
     checked.operationName = true
   }
 
-  def spanType(String type) {
-    assert span.spanType == type
-    assert span.tags["span.type"] == null
-    checked.spanType = true
-  }
-
   def parent() {
     assert span.parentId == 0G
     checked.parentId = true
@@ -79,9 +73,6 @@ class SpanAssert {
   }
 
   void assertDefaults() {
-    if (!checked.spanType) {
-      spanType(null)
-    }
     if (!checked.errored) {
       errored(false)
     }

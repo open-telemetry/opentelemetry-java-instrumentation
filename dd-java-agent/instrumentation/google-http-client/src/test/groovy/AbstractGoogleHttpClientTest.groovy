@@ -4,6 +4,7 @@ import com.google.api.client.http.HttpResponse
 import com.google.api.client.http.javanet.NetHttpTransport
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.googlehttpclient.GoogleHttpClientDecorator
 import spock.lang.Shared
@@ -57,9 +58,9 @@ abstract class AbstractGoogleHttpClientTest extends HttpClientTest<GoogleHttpCli
       server.distributedRequestTrace(it, 0, trace(1).last())
       trace(1, size(1)) {
         span(0) {
-          spanType DDSpanTypes.HTTP_CLIENT
           errored true
           tags {
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "google-http-client"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"

@@ -31,9 +31,9 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
       trace(0, 1) {
         span(0) {
           operationName "jax-rs.request"
-          spanType "web"
           tags {
             "$DDTags.RESOURCE_NAME" "POST /a"
+            "$DDTags.SPAN_TYPE" "web"
             "$Tags.COMPONENT" "jax-rs-controller"
             defaultTags()
           }
@@ -63,10 +63,10 @@ class JaxRsAnnotationsInstrumentationTest extends AgentTestRunner {
         }
         span(1) {
           operationName "jax-rs.request"
-          spanType "web"
           childOf span(0)
           tags {
             "$DDTags.RESOURCE_NAME" "${className}.call"
+            "$DDTags.SPAN_TYPE" "web"
             "$Tags.COMPONENT" "jax-rs-controller"
             defaultTags()
           }

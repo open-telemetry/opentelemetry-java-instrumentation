@@ -65,11 +65,11 @@ class RatpackOtherTest extends AgentTestRunner {
       trace(0, 2) {
         span(0) {
           operationName "netty.request"
-          spanType DDSpanTypes.HTTP_SERVER
           parent()
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "GET /$route"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "netty"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "$app.address.host"
@@ -83,11 +83,11 @@ class RatpackOtherTest extends AgentTestRunner {
         }
         span(1) {
           operationName "ratpack.handler"
-          spanType DDSpanTypes.HTTP_SERVER
           childOf(span(0))
           errored false
           tags {
             "$DDTags.RESOURCE_NAME" "GET /$route"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
             "$Tags.COMPONENT" "ratpack"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
             "$Tags.PEER_HOSTNAME" "$app.address.host"

@@ -58,20 +58,17 @@ class DDSpanBuilderTest extends DDSpecification {
 
     when:
     // with all custom fields provided
-    final String expectedType = "fakeType"
 
     span =
       tracer
         .buildSpan(expectedName)
         .withErrorFlag()
-        .withSpanType(expectedType)
         .start()
 
     final DDSpanContext context = span.context()
 
     then:
     context.getErrorFlag()
-    context.getSpanType() == expectedType
 
     context.tags[DDTags.THREAD_NAME] == Thread.currentThread().getName()
     context.tags[DDTags.THREAD_ID] == Thread.currentThread().getId()
@@ -188,16 +185,12 @@ class DDSpanBuilderTest extends DDSpecification {
   def "should inherit the DD parent attributes"() {
     setup:
     def expectedName = "fakeName"
-    def expectedParentType = "fakeType"
-    def expectedChildType = "fakeType-child"
 
     final DDSpan parent =
       tracer
         .buildSpan(expectedName)
-        .withSpanType(expectedParentType)
         .start()
 
-    // SpanType is always set by the parent  if it is not present in the child
     DDSpan span =
       tracer
         .buildSpan(expectedName)
@@ -206,102 +199,46 @@ class DDSpanBuilderTest extends DDSpecification {
 
     expect:
     span.getOperationName() == expectedName
-    span.context().getSpanType() == null
-
-    when:
-    // SpanType is always overwritten by the child  if they are present
-    span =
-      tracer
-        .buildSpan(expectedName)
-        .withSpanType(expectedChildType)
-        .asChildOf(parent)
-        .start()
-
-    then:
-    span.getOperationName() == expectedName
-    span.context().getSpanType() == expectedChildType
   }
 
 
   def "should inherit the DD parent attributes addReference CHILD_OF"() {
     setup:
     def expectedName = "fakeName"
-    def expectedParentType = "fakeType"
-    def expectedChildType = "fakeType-child"
 
     final DDSpan parent =
       tracer
         .buildSpan(expectedName)
-        .withSpanType(expectedParentType)
         .start()
 
-    // SpanType is always set by the parent  if it is not present in the child
     DDSpan span =
       tracer
         .buildSpan(expectedName)
         .addReference("child_of", parent.context())
         .start()
 
-    println span.context().getSpanType()
-    println expectedParentType
-
     expect:
     span.getOperationName() == expectedName
-    span.context().getSpanType() == null
-
-    when:
-    // SpanType is always overwritten by the child  if they are present
-    span =
-      tracer
-        .buildSpan(expectedName)
-        .withSpanType(expectedChildType)
-        .addReference("child_of", parent.context())
-        .start()
-
-    then:
-    span.getOperationName() == expectedName
-    span.context().getSpanType() == expectedChildType
   }
 
 
   def "should inherit the DD parent attributes add reference FOLLOWS_FROM"() {
     setup:
     def expectedName = "fakeName"
-    def expectedParentType = "fakeType"
-    def expectedChildType = "fakeType-child"
 
     final DDSpan parent =
       tracer
         .buildSpan(expectedName)
-        .withSpanType(expectedParentType)
         .start()
 
-    // SpanType is always set by the parent  if it is not present in the child
     DDSpan span =
       tracer
         .buildSpan(expectedName)
         .addReference("follows_from", parent.context())
         .start()
 
-    println span.context().getSpanType()
-    println expectedParentType
-
     expect:
     span.getOperationName() == expectedName
-    span.context().getSpanType() == null
-
-    when:
-    // SpanType is always overwritten by the child  if they are present
-    span =
-      tracer
-        .buildSpan(expectedName)
-        .withSpanType(expectedChildType)
-        .addReference("follows_from", parent.context())
-        .start()
-
-    then:
-    span.getOperationName() == expectedName
-    span.context().getSpanType() == expectedChildType
   }
 
   def "should track all spans in trace"() {

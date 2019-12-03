@@ -24,10 +24,10 @@ class CriteriaTest extends AbstractHibernateTest {
       trace(0, 4) {
         span(0) {
           operationName "hibernate.session"
-          spanType DDSpanTypes.HIBERNATE
           parent()
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
@@ -35,10 +35,10 @@ class CriteriaTest extends AbstractHibernateTest {
         }
         span(1) {
           operationName "hibernate.transaction.commit"
-          spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
@@ -46,21 +46,21 @@ class CriteriaTest extends AbstractHibernateTest {
         }
         span(2) {
           operationName "hibernate.criteria.$methodName"
-          spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
             "$DDTags.SERVICE_NAME" "hibernate"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HIBERNATE
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
         span(3) {
-          spanType "sql"
           childOf span(2)
           tags {
             "$DDTags.SERVICE_NAME" "h2"
             "$DDTags.RESOURCE_NAME" ~/^select /
+            "$DDTags.SPAN_TYPE" "sql"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "h2"

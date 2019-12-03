@@ -113,7 +113,6 @@ class CassandraClientTest extends AgentTestRunner {
   def cassandraSpan(TraceAssert trace, int index, String statement, String keyspace, boolean renameService, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
       operationName "cassandra.query"
-      spanType DDSpanTypes.CASSANDRA
       if (parentSpan == null) {
         parent()
       } else {
@@ -121,6 +120,7 @@ class CassandraClientTest extends AgentTestRunner {
       }
       tags {
         "$DDTags.SERVICE_NAME" renameService && keyspace ? keyspace : "cassandra"
+        "$DDTags.SPAN_TYPE" DDSpanTypes.CASSANDRA
         "$Tags.COMPONENT" "java-cassandra"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"

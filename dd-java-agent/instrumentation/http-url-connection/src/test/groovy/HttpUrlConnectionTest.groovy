@@ -91,12 +91,12 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         }
         span(1) {
           operationName OPERATION_NAME
-          spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$DDTags.RESOURCE_NAME" "GET $url.path"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -109,12 +109,12 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         }
         span(2) {
           operationName OPERATION_NAME
-          spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$DDTags.RESOURCE_NAME" "GET $url.path"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -176,12 +176,12 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         }
         span(1) {
           operationName OPERATION_NAME
-          spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$DDTags.RESOURCE_NAME" "GET $url.path"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -194,12 +194,12 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         }
         span(2) {
           operationName OPERATION_NAME
-          spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$DDTags.RESOURCE_NAME" "GET $url.path"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -246,12 +246,12 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         }
         span(1) {
           operationName OPERATION_NAME
-          spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$DDTags.RESOURCE_NAME" "GET $url.path"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -314,12 +314,12 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
         }
         span(1) {
           operationName OPERATION_NAME
-          spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored false
           tags {
             "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$DDTags.RESOURCE_NAME" "POST $url.path"
+            "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_CLIENT
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"

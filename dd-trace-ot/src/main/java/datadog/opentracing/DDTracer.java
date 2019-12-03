@@ -258,7 +258,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     private long timestampMicro;
     private SpanContext parent;
     private boolean errorFlag;
-    private String spanType;
     private boolean ignoreScope = false;
 
     public DDSpanBuilder(final String operationName, final ScopeManager scopeManager) {
@@ -328,11 +327,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       return this;
     }
 
-    public DDSpanBuilder withSpanType(final String spanType) {
-      this.spanType = spanType;
-      return this;
-    }
-
     @Override
     public DDSpanBuilder asChildOf(final Span span) {
       return asChildOf(span == null ? null : span.context());
@@ -387,7 +381,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
     /**
      * Build the SpanContext, if the actual span has a parent, the following attributes must be
-     * propagated: - Trace (a list of all spans related) - SpanType
+     * propagated: - Trace (a list of all spans related)
      *
      * @return the context
      */
@@ -439,7 +433,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
               parentSpanId,
               operationName,
               errorFlag,
-              spanType,
               tags,
               parentTrace,
               DDTracer.this);

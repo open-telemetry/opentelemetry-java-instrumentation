@@ -114,7 +114,6 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
     def handlerName = handler().class.name
     trace.span(index) {
       operationName expectedOperationName()
-      spanType DDSpanTypes.HTTP_SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
@@ -124,6 +123,7 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
       }
       tags {
         "$DDTags.RESOURCE_NAME" "$method $handlerName"
+        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }

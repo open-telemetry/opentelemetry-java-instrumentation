@@ -1,6 +1,7 @@
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.base.HttpServerTest
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.servlet3.Servlet3Decorator
 import org.apache.catalina.servlets.DefaultServlet
@@ -84,7 +85,6 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
   void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     trace.span(index) {
       operationName expectedOperationName()
-      spanType DDSpanTypes.HTTP_SERVER
       errored endpoint.errored
       if (parentID != null) {
         traceId traceID
@@ -93,6 +93,7 @@ class GlassFishServerTest extends HttpServerTest<GlassFish, Servlet3Decorator> {
         parent()
       }
       tags {
+        "$DDTags.SPAN_TYPE" DDSpanTypes.HTTP_SERVER
         "$Tags.COMPONENT" serverDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_SERVER
         "$Tags.PEER_HOSTNAME" { it == "localhost" || it == "127.0.0.1" }
