@@ -42,12 +42,6 @@ abstract class DDSpecification extends Specification {
           .field(named("INSTANCE"))
           .transform(Transformer.ForField.withModifiers(PUBLIC, STATIC, VOLATILE))
       }
-    // Making runtimeId modifiable so that it can be preserved when resetting config in tests
-      .transform { builder, typeDescription, classLoader, module ->
-        builder
-          .field(named("runtimeId"))
-          .transform(Transformer.ForField.withModifiers(PUBLIC, VOLATILE))
-      }
       .installOn(instrumentation)
     isConfigInstanceModifiable = true
   }

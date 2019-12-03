@@ -9,7 +9,6 @@ import java.util.concurrent.Callable
 class ConfigUtils {
 
   static final CONFIG_INSTANCE_FIELD = Config.getDeclaredField("INSTANCE")
-  static final RUNTIME_ID_FIELD = Config.getDeclaredField("runtimeId")
 
   @SneakyThrows
   synchronized static <T extends Object> Object withConfigOverride(final String name, final String value, final Callable<T> r) {
@@ -52,16 +51,7 @@ class ConfigUtils {
     assert Modifier.isVolatile(CONFIG_INSTANCE_FIELD.getModifiers())
     assert !Modifier.isFinal(CONFIG_INSTANCE_FIELD.getModifiers())
 
-    assert Modifier.isPublic(RUNTIME_ID_FIELD.getModifiers())
-    assert !Modifier.isStatic(RUNTIME_ID_FIELD.getModifiers())
-    assert Modifier.isVolatile(RUNTIME_ID_FIELD.getModifiers())
-    assert !Modifier.isFinal(RUNTIME_ID_FIELD.getModifiers())
-
-    def previousConfig = CONFIG_INSTANCE_FIELD.get(null)
     def newConfig = new Config()
     CONFIG_INSTANCE_FIELD.set(null, newConfig)
-    if (previousConfig != null) {
-      RUNTIME_ID_FIELD.set(newConfig, RUNTIME_ID_FIELD.get(previousConfig))
-    }
   }
 }

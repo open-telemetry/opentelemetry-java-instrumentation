@@ -1,8 +1,6 @@
 package datadog.trace.agent.test.asserts
 
 import datadog.opentracing.DDSpan
-import datadog.trace.api.Config
-import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 
@@ -35,27 +33,9 @@ class TagsAssert {
   def defaultTags(boolean distributedRootSpan = false) {
     assertedTags.add("thread.name")
     assertedTags.add("thread.id")
-    assertedTags.add(Config.RUNTIME_ID_TAG)
-    assertedTags.add(Config.LANGUAGE_TAG_KEY)
 
     assert tags["thread.name"] != null
     assert tags["thread.id"] != null
-
-    // FIXME: DQH - Too much conditional logic?  Maybe create specialized methods for client & server cases
-
-    boolean isRoot = (0G == spanParentId)
-    if (isRoot || distributedRootSpan) {
-      assert tags[Config.RUNTIME_ID_TAG] == Config.get().runtimeId
-    } else {
-      assert tags[Config.RUNTIME_ID_TAG] == null
-    }
-
-    boolean isServer = (tags[Tags.SPAN_KIND] == Tags.SPAN_KIND_SERVER)
-    if (isRoot || distributedRootSpan || isServer) {
-      assert tags[Config.LANGUAGE_TAG_KEY] == Config.LANGUAGE_TAG_VALUE
-    } else {
-      assert tags[Config.LANGUAGE_TAG_KEY] == null
-    }
   }
 
   def errorTags(Class<Throwable> errorType) {

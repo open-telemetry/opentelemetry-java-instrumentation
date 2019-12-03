@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.UUID;
 import java.util.regex.Pattern;
 import lombok.Getter;
 import lombok.ToString;
@@ -43,9 +42,6 @@ public class Config {
   public static final String INTEGRATIONS_ENABLED = "integrations.enabled";
   public static final String WRITER_TYPE = "writer.type";
   public static final String TRACE_RESOLVER_ENABLED = "trace.resolver.enabled";
-  public static final String GLOBAL_TAGS = "trace.global.tags";
-  public static final String SPAN_TAGS = "trace.span.tags";
-  public static final String JMX_TAGS = "trace.jmx.tags";
   public static final String TRACE_ANNOTATIONS = "trace.annotations";
   public static final String TRACE_EXECUTORS_ALL = "trace.executors.all";
   public static final String TRACE_EXECUTORS = "trace.executors";
@@ -62,12 +58,6 @@ public class Config {
       "trace.runtime.context.field.injection";
 
   public static final String LOGS_INJECTION_ENABLED = "logs.injection";
-
-  public static final String SERVICE_TAG = "service";
-  @Deprecated public static final String SERVICE = SERVICE_TAG; // To be removed in 0.34.0
-  public static final String RUNTIME_ID_TAG = "runtime-id";
-  public static final String LANGUAGE_TAG_KEY = "language";
-  public static final String LANGUAGE_TAG_VALUE = "jvm";
 
   public static final String DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
@@ -98,20 +88,11 @@ public class Config {
   private static final String DEFAULT_TRACE_EXECUTORS = "";
   private static final String DEFAULT_TRACE_METHODS = null;
 
-  /**
-   * this is a random UUID that gets generated on JVM start up and is attached to every root span
-   * and every JMX metric that is sent out.
-   */
-  @Getter private final String runtimeId;
-
   @Getter private final String serviceName;
   @Getter private final boolean traceEnabled;
   @Getter private final boolean integrationsEnabled;
   @Getter private final String writerType;
   @Getter private final boolean traceResolverEnabled;
-  private final Map<String, String> globalTags;
-  private final Map<String, String> spanTags;
-  private final Map<String, String> jmxTags;
   @Getter private final List<String> excludedClasses;
   @Getter private final Set<Integer> httpServerErrorStatuses;
   @Getter private final Set<Integer> httpClientErrorStatuses;
@@ -139,8 +120,6 @@ public class Config {
   Config() {
     propertiesFromConfigFile = loadConfigurationFile();
 
-    runtimeId = UUID.randomUUID().toString();
-
     serviceName = getSettingFromEnvironment(SERVICE_NAME, DEFAULT_SERVICE_NAME);
 
     traceEnabled = getBooleanSettingFromEnvironment(TRACE_ENABLED, DEFAULT_TRACE_ENABLED);
@@ -149,10 +128,6 @@ public class Config {
     writerType = getSettingFromEnvironment(WRITER_TYPE, DEFAULT_WRITER_TYPE);
     traceResolverEnabled =
         getBooleanSettingFromEnvironment(TRACE_RESOLVER_ENABLED, DEFAULT_TRACE_RESOLVER_ENABLED);
-
-    globalTags = getMapSettingFromEnvironment(GLOBAL_TAGS, null);
-    spanTags = getMapSettingFromEnvironment(SPAN_TAGS, null);
-    jmxTags = getMapSettingFromEnvironment(JMX_TAGS, null);
 
     excludedClasses = getListSettingFromEnvironment(TRACE_CLASSES_EXCLUDE, null);
 
@@ -204,7 +179,6 @@ public class Config {
 
   // Read order: Properties -> Parent
   private Config(final Properties properties, final Config parent) {
-    runtimeId = parent.runtimeId;
 
     serviceName = properties.getProperty(SERVICE_NAME, parent.serviceName);
 
@@ -215,9 +189,6 @@ public class Config {
     traceResolverEnabled =
         getPropertyBooleanValue(properties, TRACE_RESOLVER_ENABLED, parent.traceResolverEnabled);
 
-    globalTags = getPropertyMapValue(properties, GLOBAL_TAGS, parent.globalTags);
-    spanTags = getPropertyMapValue(properties, SPAN_TAGS, parent.spanTags);
-    jmxTags = getPropertyMapValue(properties, JMX_TAGS, parent.jmxTags);
     excludedClasses =
         getPropertyListValue(properties, TRACE_CLASSES_EXCLUDE, parent.excludedClasses);
 
@@ -264,53 +235,6 @@ public class Config {
     traceExecutors = getPropertyListValue(properties, TRACE_EXECUTORS, parent.traceExecutors);
 
     log.debug("New instance: {}", this);
-  }
-
-  /** @return A map of tags to be applied only to the local application root span. */
-  public Map<String, String> getLocalRootSpanTags() {
-    final Map<String, String> runtimeTags = getRuntimeTags();
-    final Map<String, String> result = new HashMap<>(runtimeTags);
-    result.put(LANGUAGE_TAG_KEY, LANGUAGE_TAG_VALUE);
-
-    return Collections.unmodifiableMap(result);
-  }
-
-  public Map<String, String> getMergedSpanTags() {
-    // DO not include runtimeId into span tags: we only want that added to the root span
-    final Map<String, String> result = newHashMap(globalTags.size() + spanTags.size());
-    result.putAll(globalTags);
-    result.putAll(spanTags);
-    return Collections.unmodifiableMap(result);
-  }
-
-  public Map<String, String> getMergedJmxTags() {
-    final Map<String, String> runtimeTags = getRuntimeTags();
-    final Map<String, String> result =
-        newHashMap(
-            globalTags.size() + jmxTags.size() + runtimeTags.size() + 1 /* for serviceName */);
-    result.putAll(globalTags);
-    result.putAll(jmxTags);
-    result.putAll(runtimeTags);
-    // service name set here instead of getRuntimeTags because apm already manages the service tag
-    // and may chose to override it.
-    // Additionally, infra/JMX metrics require `service` rather than APM's `service.name` tag
-    result.put(SERVICE_TAG, serviceName);
-    return Collections.unmodifiableMap(result);
-  }
-
-  /**
-   * Return a map of tags required by the datadog backend to link runtime metrics (i.e. jmx) and
-   * traces.
-   *
-   * <p>These tags must be applied to every runtime metrics and placed on the root span of every
-   * trace.
-   *
-   * @return A map of tag-name -> tag-value
-   */
-  private Map<String, String> getRuntimeTags() {
-    final Map<String, String> result = newHashMap(2);
-    result.put(RUNTIME_ID_TAG, runtimeId);
-    return Collections.unmodifiableMap(result);
   }
 
   public boolean isIntegrationEnabled(
@@ -375,13 +299,6 @@ public class Config {
     }
 
     return defaultValue;
-  }
-
-  /** @deprecated This method should only be used internally. Use the explicit getter instead. */
-  private static Map<String, String> getMapSettingFromEnvironment(
-      final String name, final String defaultValue) {
-    return parseMap(
-        getSettingFromEnvironment(name, defaultValue), propertyNameToSystemPropertyName(name));
   }
 
   /**

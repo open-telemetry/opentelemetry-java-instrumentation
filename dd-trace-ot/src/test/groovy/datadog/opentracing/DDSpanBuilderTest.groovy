@@ -53,10 +53,8 @@ class DDSpanBuilderTest extends DDSpecification {
 
     then:
     span.getTags() == [
-      (DDTags.THREAD_NAME)     : Thread.currentThread().getName(),
-      (DDTags.THREAD_ID)       : Thread.currentThread().getId(),
-      (Config.RUNTIME_ID_TAG)  : config.getRuntimeId(),
-      (Config.LANGUAGE_TAG_KEY): Config.LANGUAGE_TAG_VALUE,
+      (DDTags.THREAD_NAME): Thread.currentThread().getName(),
+      (DDTags.THREAD_ID)  : Thread.currentThread().getId()
     ]
 
     when:
@@ -399,32 +397,5 @@ class DDSpanBuilderTest extends DDSpecification {
     extractedContext             | _
     new ExtractedContext(1G, 2G) | _
     new ExtractedContext(3G, 4G) | _
-  }
-
-  def "global span tags populated on each span"() {
-    setup:
-    System.setProperty("dd.trace.span.tags", tagString)
-    def config = new Config()
-    tracer = new DDTracer(config, writer)
-    def span = tracer.buildSpan("op name").withServiceName("foo").start()
-
-    expect:
-    span.tags == tags + [
-      (DDTags.THREAD_NAME)     : Thread.currentThread().getName(),
-      (DDTags.THREAD_ID)       : Thread.currentThread().getId(),
-      (Config.RUNTIME_ID_TAG)  : config.getRuntimeId(),
-      (Config.LANGUAGE_TAG_KEY): Config.LANGUAGE_TAG_VALUE,
-    ]
-
-    cleanup:
-    System.clearProperty("dd.trace.span.tags")
-
-    where:
-    tagString     | tags
-    ""            | [:]
-    "in:val:id"   | [:]
-    "a:x"         | [a: "x"]
-    "a:a,a:b,a:c" | [a: "c"]
-    "a:1,b-c:d"   | [a: "1", "b-c": "d"]
   }
 }
