@@ -1,5 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
@@ -74,13 +75,13 @@ class AwsClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          serviceName "java-aws-sdk"
           operationName "aws.http"
           resourceName "$service.$operation"
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -182,7 +183,7 @@ class AwsClientTest extends AgentTestRunner {
     response != null
 
     // Order is not guaranteed in these traces, so reorder them if needed to put aws trace first
-    if (TEST_WRITER[0][0].serviceName != "java-aws-sdk") {
+    if (TEST_WRITER[0][0].tags[DDTags.SERVICE_NAME] != "java-aws-sdk") {
       def tmp = TEST_WRITER[0]
       TEST_WRITER[0] = TEST_WRITER[1]
       TEST_WRITER[1] = tmp
@@ -191,13 +192,13 @@ class AwsClientTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          serviceName "java-aws-sdk"
           operationName "aws.http"
           resourceName "$service.$operation"
           spanType DDSpanTypes.HTTP_CLIENT
           errored false
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -312,13 +313,13 @@ class AwsClientTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 5) {
         span(0) {
-          serviceName "java-aws-sdk"
           operationName "aws.http"
           resourceName "S3.GetObject"
           spanType DDSpanTypes.HTTP_CLIENT
           errored true
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "java-aws-sdk"
             "$Tags.COMPONENT" "java-aws-sdk"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"

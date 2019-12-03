@@ -112,7 +112,6 @@ class JettyHandlerTest extends HttpServerTest<Server, JettyDecorator> {
   void serverSpan(TraceAssert trace, int index, BigInteger traceID = null, BigInteger parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS) {
     def handlerName = handler().class.name
     trace.span(index) {
-      serviceName expectedServiceName()
       operationName expectedOperationName()
       resourceName endpoint.status == 404 ? "404" : "$method $handlerName"
       spanType DDSpanTypes.HTTP_SERVER

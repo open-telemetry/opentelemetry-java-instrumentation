@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization.Serdes
@@ -127,13 +128,13 @@ class KafkaStreamsTest extends AgentTestRunner {
       trace(0, 1) {
         // PRODUCER span 0
         span(0) {
-          serviceName "kafka"
           operationName "kafka.produce"
           resourceName "Produce Topic $STREAM_PENDING"
           spanType "queue"
           errored false
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "kafka"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             defaultTags()
@@ -143,13 +144,13 @@ class KafkaStreamsTest extends AgentTestRunner {
       trace(1, 1) {
         // CONSUMER span 0
         span(0) {
-          serviceName "kafka"
           operationName "kafka.consume"
           resourceName "Consume Topic $STREAM_PENDING"
           spanType "queue"
           errored false
           childOf TEST_WRITER[0][0]
           tags {
+            "$DDTags.SERVICE_NAME" "kafka"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
@@ -162,7 +163,6 @@ class KafkaStreamsTest extends AgentTestRunner {
 
         // STREAMING span 0
         span(0) {
-          serviceName "kafka"
           operationName "kafka.produce"
           resourceName "Produce Topic $STREAM_PROCESSED"
           spanType "queue"
@@ -170,6 +170,7 @@ class KafkaStreamsTest extends AgentTestRunner {
           childOf span(1)
 
           tags {
+            "$DDTags.SERVICE_NAME" "kafka"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             defaultTags()
@@ -178,7 +179,6 @@ class KafkaStreamsTest extends AgentTestRunner {
 
         // STREAMING span 1
         span(1) {
-          serviceName "kafka"
           operationName "kafka.consume"
           resourceName "Consume Topic $STREAM_PENDING"
           spanType "queue"
@@ -186,6 +186,7 @@ class KafkaStreamsTest extends AgentTestRunner {
           childOf TEST_WRITER[0][0]
 
           tags {
+            "$DDTags.SERVICE_NAME" "kafka"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
@@ -198,13 +199,13 @@ class KafkaStreamsTest extends AgentTestRunner {
       trace(3, 1) {
         // CONSUMER span 0
         span(0) {
-          serviceName "kafka"
           operationName "kafka.consume"
           resourceName "Consume Topic $STREAM_PROCESSED"
           spanType "queue"
           errored false
           childOf TEST_WRITER[2][0]
           tags {
+            "$DDTags.SERVICE_NAME" "kafka"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }

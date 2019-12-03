@@ -17,6 +17,7 @@ import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.agent.test.utils.PortUtils
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
@@ -136,7 +137,6 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
 
   void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
-      serviceName "couchbase"
       resourceName name
       operationName "couchbase.call"
       spanType DDSpanTypes.COUCHBASE
@@ -147,6 +147,7 @@ abstract class AbstractCouchbaseTest extends AgentTestRunner {
         childOf((DDSpan) parentSpan)
       }
       tags {
+        "$DDTags.SERVICE_NAME" "couchbase"
         "$Tags.COMPONENT" "couchbase-client"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.DB_TYPE" "couchbase"

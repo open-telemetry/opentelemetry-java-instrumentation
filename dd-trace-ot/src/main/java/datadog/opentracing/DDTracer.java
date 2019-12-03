@@ -40,8 +40,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       BigInteger.valueOf(2).pow(64).subtract(BigInteger.ONE);
   public static final BigInteger TRACE_ID_MIN = BigInteger.ZERO;
 
-  /** Default service name if none provided on the trace or span */
-  final String serviceName;
   /** Writer is an charge of reporting traces and spans to the desired endpoint */
   final Writer writer;
   /** Scope manager is in charge of managing the scopes from which spans are created */
@@ -68,38 +66,25 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     this(Config.get());
   }
 
-  public DDTracer(final String serviceName) {
-    this(serviceName, Config.get());
-  }
-
   public DDTracer(final Properties config) {
     this(Config.get(config));
   }
 
-  public DDTracer(final Config config) {
-    this(config.getServiceName(), config);
-  }
-
-  private DDTracer(final String serviceName, final Config config) {
-    this(serviceName, Writer.Builder.forConfig(config), config.getPartialFlushMinSpans());
+  private DDTracer(final Config config) {
+    this(Writer.Builder.forConfig(config), config.getPartialFlushMinSpans());
     log.debug("Using config: {}", config);
   }
 
-  public DDTracer(final Writer writer) {
-    this(Config.get(), writer);
-  }
-
   public DDTracer(final Config config, final Writer writer) {
-    this(config.getServiceName(), writer, config.getPartialFlushMinSpans());
+    this(writer, config.getPartialFlushMinSpans());
   }
 
-  public DDTracer(final String serviceName, final Writer writer) {
-    this(serviceName, writer, Config.get().getPartialFlushMinSpans());
+  public DDTracer(final Writer writer) {
+    this(writer, Config.get().getPartialFlushMinSpans());
   }
 
-  public DDTracer(final String serviceName, final Writer writer, final int partialFlushMinSpans) {
+  public DDTracer(final Writer writer, final int partialFlushMinSpans) {
 
-    this.serviceName = serviceName;
     this.writer = writer;
     this.writer.start();
     this.partialFlushMinSpans = partialFlushMinSpans;
@@ -258,13 +243,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
   @Override
   public String toString() {
-    return "DDTracer-"
-        + Integer.toHexString(hashCode())
-        + "{ serviceName="
-        + serviceName
-        + ", writer="
-        + writer
-        + '}';
+    return "DDTracer-" + Integer.toHexString(hashCode()) + "{ writer=" + writer + '}';
   }
 
   /** Spans are built using this builder */
@@ -278,7 +257,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     private final Map<String, Object> tags = new HashMap<>();
     private long timestampMicro;
     private SpanContext parent;
-    private String serviceName;
     private String resourceName;
     private boolean errorFlag;
     private String spanType;
@@ -343,11 +321,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     @Override
     public DDSpanBuilder withStartTimestamp(final long timestampMicroseconds) {
       timestampMicro = timestampMicroseconds;
-      return this;
-    }
-
-    public DDSpanBuilder withServiceName(final String serviceName) {
-      this.serviceName = serviceName;
       return this;
     }
 
@@ -420,7 +393,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
     /**
      * Build the SpanContext, if the actual span has a parent, the following attributes must be
-     * propagated: - ServiceName - Trace (a list of all spans related) - SpanType
+     * propagated: - Trace (a list of all spans related) - SpanType
      *
      * @return the context
      */
@@ -448,9 +421,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         traceId = ddsc.getTraceId();
         parentSpanId = ddsc.getSpanId();
         parentTrace = ddsc.getTrace();
-        if (serviceName == null) {
-          serviceName = ddsc.getServiceName();
-        }
 
       } else {
         if (parentContext instanceof ExtractedContext) {
@@ -467,10 +437,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
         parentTrace = new PendingTrace(DDTracer.this, traceId);
       }
 
-      if (serviceName == null) {
-        serviceName = DDTracer.this.serviceName;
-      }
-
       final String operationName = this.operationName != null ? this.operationName : resourceName;
 
       // some attributes are inherited from the parent
@@ -479,7 +445,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
               traceId,
               spanId,
               parentSpanId,
-              serviceName,
               operationName,
               resourceName,
               errorFlag,

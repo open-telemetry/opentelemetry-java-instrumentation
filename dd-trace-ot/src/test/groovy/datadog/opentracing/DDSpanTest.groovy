@@ -7,12 +7,10 @@ import io.opentracing.SpanContext
 
 import java.util.concurrent.TimeUnit
 
-import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
-
 class DDSpanTest extends DDSpecification {
 
   def writer = new ListWriter()
-  def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer)
+  def tracer = new DDTracer(writer)
 
   def "getters and setters"() {
     setup:
@@ -21,7 +19,6 @@ class DDSpanTest extends DDSpecification {
         1G,
         1G,
         0G,
-        "fakeService",
         "fakeOperation",
         "fakeResource",
         false,
@@ -31,11 +28,6 @@ class DDSpanTest extends DDSpecification {
         tracer)
 
     final DDSpan span = new DDSpan(1L, context)
-
-    when:
-    span.setServiceName("service")
-    then:
-    span.getServiceName() == "service"
 
     when:
     span.setOperationName("operation")
@@ -62,19 +54,15 @@ class DDSpanTest extends DDSpecification {
     span = tracer.buildSpan(opName).start()
     then:
     span.getResourceName() == opName
-    span.getServiceName() == DEFAULT_SERVICE_NAME
 
     when:
     final String resourceName = "fake"
-    final String serviceName = "myService"
     span = new DDTracer()
       .buildSpan(opName)
       .withResourceName(resourceName)
-      .withServiceName(serviceName)
       .start()
     then:
     span.getResourceName() == resourceName
-    span.getServiceName() == serviceName
   }
 
   def "duration measured in nanoseconds"() {

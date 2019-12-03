@@ -1,6 +1,7 @@
 import datadog.trace.agent.test.base.HttpClientTest
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import datadog.trace.instrumentation.http_url_connection.HttpUrlConnectionDecorator
 import spock.lang.Ignore
@@ -89,13 +90,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(1) {
-          serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName OPERATION_NAME
           resourceName "GET $url.path"
           spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -107,13 +108,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(2) {
-          serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName OPERATION_NAME
           resourceName "GET $url.path"
           spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -174,13 +175,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(1) {
-          serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName OPERATION_NAME
           resourceName "GET $url.path"
           spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -192,13 +193,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(2) {
-          serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName OPERATION_NAME
           resourceName "GET $url.path"
           spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -244,13 +245,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(1) {
-          serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName OPERATION_NAME
           resourceName "GET $url.path"
           spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"
@@ -312,13 +313,13 @@ class HttpUrlConnectionTest extends HttpClientTest<HttpUrlConnectionDecorator> {
           }
         }
         span(1) {
-          serviceName renameService ? "localhost" : "unnamed-java-app"
           operationName OPERATION_NAME
           resourceName "POST $url.path"
           spanType DDSpanTypes.HTTP_CLIENT
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
             "$Tags.COMPONENT" "http-url-connection"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.PEER_HOSTNAME" "localhost"

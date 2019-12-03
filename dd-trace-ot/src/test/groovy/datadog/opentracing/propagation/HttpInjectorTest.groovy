@@ -22,7 +22,6 @@ class HttpInjectorTest extends DDSpecification {
         traceId,
         spanId,
         0G,
-        "fakeService",
         "fakeOperation",
         "fakeResource",
         false,

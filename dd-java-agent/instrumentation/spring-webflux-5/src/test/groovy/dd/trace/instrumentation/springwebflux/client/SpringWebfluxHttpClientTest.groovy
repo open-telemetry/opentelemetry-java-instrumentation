@@ -51,12 +51,12 @@ class SpringWebfluxHttpClientTest extends HttpClientTest<SpringWebfluxHttpClient
     if (!exception) {
       trace.span(index + 1) {
         childOf(trace.span(index))
-        serviceName renameService ? "localhost" : "unnamed-java-app"
         operationName "netty.client.request"
         resourceName "$method $uri.path"
         spanType DDSpanTypes.HTTP_CLIENT
         errored exception != null
         tags {
+          "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
           "$Tags.COMPONENT" NettyHttpClientDecorator.DECORATE.component()
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
           "$Tags.PEER_HOSTNAME" "localhost"

@@ -37,7 +37,6 @@ public class Config {
   private static final Pattern ENV_REPLACEMENT = Pattern.compile("[^a-zA-Z0-9_]");
 
   public static final String CONFIGURATION_FILE = "trace.config";
-  public static final String SERVICE_NAME = "service.name";
   public static final String TRACE_ENABLED = "trace.enabled";
   public static final String INTEGRATIONS_ENABLED = "integrations.enabled";
   public static final String WRITER_TYPE = "writer.type";
@@ -58,8 +57,6 @@ public class Config {
       "trace.runtime.context.field.injection";
 
   public static final String LOGS_INJECTION_ENABLED = "logs.injection";
-
-  public static final String DEFAULT_SERVICE_NAME = "unnamed-java-app";
 
   private static final boolean DEFAULT_TRACE_ENABLED = true;
   public static final boolean DEFAULT_INTEGRATIONS_ENABLED = true;
@@ -88,7 +85,6 @@ public class Config {
   private static final String DEFAULT_TRACE_EXECUTORS = "";
   private static final String DEFAULT_TRACE_METHODS = null;
 
-  @Getter private final String serviceName;
   @Getter private final boolean traceEnabled;
   @Getter private final boolean integrationsEnabled;
   @Getter private final String writerType;
@@ -119,8 +115,6 @@ public class Config {
   // Visible for testing
   Config() {
     propertiesFromConfigFile = loadConfigurationFile();
-
-    serviceName = getSettingFromEnvironment(SERVICE_NAME, DEFAULT_SERVICE_NAME);
 
     traceEnabled = getBooleanSettingFromEnvironment(TRACE_ENABLED, DEFAULT_TRACE_ENABLED);
     integrationsEnabled =
@@ -179,8 +173,6 @@ public class Config {
 
   // Read order: Properties -> Parent
   private Config(final Properties properties, final Config parent) {
-
-    serviceName = properties.getProperty(SERVICE_NAME, parent.serviceName);
 
     traceEnabled = getPropertyBooleanValue(properties, TRACE_ENABLED, parent.traceEnabled);
     integrationsEnabled =
@@ -389,10 +381,10 @@ public class Config {
   }
 
   /**
-   * Converts the property name, e.g. 'service.name' into a public environment variable name, e.g.
-   * `DD_SERVICE_NAME`.
+   * Converts the property name, e.g. 'trace.enabled' into a public environment variable name, e.g.
+   * `DD_TRACE_ENABLED`.
    *
-   * @param setting The setting name, e.g. `service.name`
+   * @param setting The setting name, e.g. `trace.enabled`
    * @return The public facing environment variable name
    */
   private static String propertyNameToEnvironmentVariableName(final String setting) {

@@ -251,11 +251,6 @@ public class DDSpan implements Span {
     return this;
   }
 
-  public final DDSpan setServiceName(final String serviceName) {
-    context().setServiceName(serviceName);
-    return this;
-  }
-
   public final DDSpan setResourceName(final String resourceName) {
     context().setResourceName(resourceName);
     return this;
@@ -283,10 +278,6 @@ public class DDSpan implements Span {
 
   public long getDurationNano() {
     return durationNano.get();
-  }
-
-  public String getServiceName() {
-    return context.getServiceName();
   }
 
   public BigInteger getTraceId() {

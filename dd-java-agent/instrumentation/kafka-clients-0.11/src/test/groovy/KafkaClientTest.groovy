@@ -1,4 +1,5 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -82,13 +83,13 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 1) {
         // PRODUCER span 0
         span(0) {
-          serviceName "kafka"
           operationName "kafka.produce"
           resourceName "Produce Topic $SHARED_TOPIC"
           spanType "queue"
           errored false
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "kafka"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             defaultTags()
@@ -98,13 +99,13 @@ class KafkaClientTest extends AgentTestRunner {
       trace(1, 1) {
         // CONSUMER span 0
         span(0) {
-          serviceName "kafka"
           operationName "kafka.consume"
           resourceName "Consume Topic $SHARED_TOPIC"
           spanType "queue"
           errored false
           childOf TEST_WRITER[0][0]
           tags {
+            "$DDTags.SERVICE_NAME" "kafka"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }
@@ -164,13 +165,13 @@ class KafkaClientTest extends AgentTestRunner {
       trace(0, 1) {
         // PRODUCER span 0
         span(0) {
-          serviceName "kafka"
           operationName "kafka.produce"
           resourceName "Produce Topic $SHARED_TOPIC"
           spanType "queue"
           errored false
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "kafka"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
             "kafka.partition" { it >= 0 }
@@ -181,13 +182,13 @@ class KafkaClientTest extends AgentTestRunner {
       trace(1, 1) {
         // CONSUMER span 0
         span(0) {
-          serviceName "kafka"
           operationName "kafka.consume"
           resourceName "Consume Topic $SHARED_TOPIC"
           spanType "queue"
           errored false
           childOf TEST_WRITER[0][0]
           tags {
+            "$DDTags.SERVICE_NAME" "kafka"
             "$Tags.COMPONENT" "java-kafka"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "partition" { it >= 0 }

@@ -109,7 +109,6 @@ class URLAsResourceNameTest extends DDSpecification {
         1G,
         1G,
         0G,
-        "fakeService",
         "fakeOperation",
         "fakeResource",
         false,

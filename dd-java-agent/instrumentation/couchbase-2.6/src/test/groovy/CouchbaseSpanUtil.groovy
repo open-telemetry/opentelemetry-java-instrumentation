@@ -1,6 +1,7 @@
 import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 
 class CouchbaseSpanUtil {
@@ -8,7 +9,6 @@ class CouchbaseSpanUtil {
   // Of the class hierarchy of these tests
   static void assertCouchbaseCall(TraceAssert trace, int index, String name, String bucketName = null, Object parentSpan = null) {
     trace.span(index) {
-      serviceName "couchbase"
       resourceName name
       operationName "couchbase.call"
       spanType DDSpanTypes.COUCHBASE
@@ -19,6 +19,7 @@ class CouchbaseSpanUtil {
         childOf((DDSpan) parentSpan)
       }
       tags {
+        "$DDTags.SERVICE_NAME" "couchbase"
         "$Tags.COMPONENT" "couchbase-client"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
 

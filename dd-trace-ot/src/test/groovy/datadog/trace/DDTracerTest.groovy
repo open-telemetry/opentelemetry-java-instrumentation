@@ -10,7 +10,6 @@ import org.junit.Rule
 import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.junit.contrib.java.lang.system.RestoreSystemProperties
 
-import static datadog.trace.api.Config.DEFAULT_SERVICE_NAME
 import static datadog.trace.api.Config.PREFIX
 import static datadog.trace.api.Config.WRITER_TYPE
 
@@ -36,9 +35,7 @@ class DDTracerTest extends DDSpecification {
     def tracer = new DDTracer()
 
     then:
-    tracer.serviceName == "unnamed-java-app"
-
-    tracer.spanContextDecorators.size() == 12
+    tracer.spanContextDecorators.size() == 8
 
     tracer.injector instanceof DatadogHttpCodec.Injector
     tracer.extractor instanceof DatadogHttpCodec.Extractor
@@ -60,10 +57,9 @@ class DDTracerTest extends DDSpecification {
     def writer = new ListWriter()
 
     when:
-    def tracer = new DDTracer(DEFAULT_SERVICE_NAME, writer)
+    def tracer = new DDTracer(writer)
 
     then:
-    tracer.serviceName == DEFAULT_SERVICE_NAME
     tracer.writer == writer
   }
 }

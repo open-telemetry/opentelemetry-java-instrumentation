@@ -1,5 +1,6 @@
 // This file includes software developed at SignalFx
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spring.jpa.JpaCustomer
@@ -64,10 +65,10 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(1) { // select
-          serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -100,10 +101,10 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(1) { // insert
-          serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -136,10 +137,10 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(1) { //select
-          serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -150,10 +151,10 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(2) { //update
-          serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -184,10 +185,10 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(1) { // select
-          serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -218,10 +219,10 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(1) { // select
-          serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -232,10 +233,10 @@ class SpringJpaTest extends AgentTestRunner {
           }
         }
         span(2) { // delete
-          serviceName "hsqldb"
           spanType "sql"
           childOf(span(0))
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"

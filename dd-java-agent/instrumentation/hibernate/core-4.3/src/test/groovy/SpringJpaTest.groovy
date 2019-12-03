@@ -1,11 +1,11 @@
 import datadog.trace.agent.test.AgentTestRunner
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import spock.lang.Shared
 import spring.jpa.Customer
 import spring.jpa.CustomerRepository
 import spring.jpa.PersistenceConfig
-
 
 /**
  * Unfortunately this test verifies that our hibernate instrumentation doesn't currently work with Spring Data Repositories.
@@ -29,10 +29,10 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "hsqldb"
           resourceName "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_"
           spanType "sql"
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -58,10 +58,10 @@ class SpringJpaTest extends AgentTestRunner {
       if (extraTrace) {
         trace(0, 1) {
           span(0) {
-            serviceName "hsqldb"
             resourceName "call next value for hibernate_sequence"
             spanType "sql"
             tags {
+              "$DDTags.SERVICE_NAME" "hsqldb"
               "$Tags.COMPONENT" "java-jdbc-prepared_statement"
               "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
               "$Tags.DB_TYPE" "hsqldb"
@@ -75,10 +75,10 @@ class SpringJpaTest extends AgentTestRunner {
       }
       trace(extraTrace ? 1 : 0, 1) {
         span(0) {
-          serviceName "hsqldb"
           resourceName ~/insert into Customer \(.*\) values \(.*, \?, \?\)/
           spanType "sql"
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -101,10 +101,10 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          serviceName "hsqldb"
           resourceName "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
           spanType "sql"
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -117,10 +117,10 @@ class SpringJpaTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          serviceName "hsqldb"
           resourceName "update Customer set firstName=?, lastName=? where id=?"
           spanType "sql"
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -143,10 +143,10 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 1) {
         span(0) {
-          serviceName "hsqldb"
           resourceName "select customer0_.id as id1_0_, customer0_.firstName as firstNam2_0_, customer0_.lastName as lastName3_0_ from Customer customer0_ where customer0_.lastName=?"
           spanType "sql"
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -167,10 +167,10 @@ class SpringJpaTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 1) {
         span(0) {
-          serviceName "hsqldb"
           resourceName "select customer0_.id as id1_0_0_, customer0_.firstName as firstNam2_0_0_, customer0_.lastName as lastName3_0_0_ from Customer customer0_ where customer0_.id=?"
           spanType "sql"
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"
@@ -183,10 +183,10 @@ class SpringJpaTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          serviceName "hsqldb"
           resourceName "delete from Customer where id=?"
           spanType "sql"
           tags {
+            "$DDTags.SERVICE_NAME" "hsqldb"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "hsqldb"

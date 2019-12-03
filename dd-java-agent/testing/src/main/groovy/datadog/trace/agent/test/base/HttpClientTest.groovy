@@ -318,12 +318,12 @@ abstract class HttpClientTest<DECORATOR extends HttpClientDecorator> extends Age
       } else {
         childOf((DDSpan) parentSpan)
       }
-      serviceName renameService ? "localhost" : "unnamed-java-app"
       operationName expectedOperationName()
       resourceName "$method $uri.path"
       spanType DDSpanTypes.HTTP_CLIENT
       errored exception != null
       tags {
+        "$DDTags.SERVICE_NAME" renameService ? "localhost" : null
         "$Tags.COMPONENT" clientDecorator.component()
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"

@@ -3,6 +3,7 @@ import datadog.opentracing.DDSpan
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.ListWriterAssert
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.hornetq.api.core.TransportConfiguration
 import org.hornetq.api.core.client.HornetQClient
@@ -156,13 +157,13 @@ class JMS2Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          serviceName "jms"
           operationName "jms.consume"
           resourceName "JMS receiveNoWait"
           spanType DDSpanTypes.MESSAGE_PRODUCER
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "jms"
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" HornetQMessageConsumer.name
@@ -194,13 +195,13 @@ class JMS2Test extends AgentTestRunner {
       trace(0, 1) { // Consumer trace
         span(0) {
           parent()
-          serviceName "jms"
           operationName "jms.consume"
           resourceName "JMS receive"
           spanType DDSpanTypes.MESSAGE_PRODUCER
           errored false
 
           tags {
+            "$DDTags.SERVICE_NAME" "jms"
             "$Tags.COMPONENT" "jms"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CONSUMER
             "span.origin.type" HornetQMessageConsumer.name
@@ -223,13 +224,13 @@ class JMS2Test extends AgentTestRunner {
     writer.trace(index, 1) {
       span(0) {
         parent()
-        serviceName "jms"
         operationName "jms.produce"
         resourceName "Produced for $jmsResourceName"
         spanType DDSpanTypes.MESSAGE_PRODUCER
         errored false
 
         tags {
+          "$DDTags.SERVICE_NAME" "jms"
           "$Tags.COMPONENT" "jms"
           "$Tags.SPAN_KIND" Tags.SPAN_KIND_PRODUCER
           "span.origin.type" HornetQMessageProducer.name
@@ -243,7 +244,6 @@ class JMS2Test extends AgentTestRunner {
     writer.trace(index, 1) {
       span(0) {
         childOf parentSpan
-        serviceName "jms"
         if (messageListener) {
           operationName "jms.onMessage"
           resourceName "Received from $jmsResourceName"
@@ -255,6 +255,7 @@ class JMS2Test extends AgentTestRunner {
         errored false
 
         tags {
+          "$DDTags.SERVICE_NAME" "jms"
           "${Tags.COMPONENT}" "jms"
           "${Tags.SPAN_KIND}" "consumer"
           "span.origin.type" origin.name

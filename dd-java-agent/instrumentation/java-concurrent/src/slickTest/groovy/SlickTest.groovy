@@ -1,5 +1,6 @@
 import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 
 class SlickTest extends AgentTestRunner {
@@ -18,7 +19,6 @@ class SlickTest extends AgentTestRunner {
     assertTraces(1) {
       trace(0, 2) {
         span(0) {
-          serviceName "unnamed-java-app"
           operationName "trace.annotation"
           resourceName "SlickUtils.startQuery"
           parent()
@@ -30,12 +30,12 @@ class SlickTest extends AgentTestRunner {
         }
         span(1) {
           operationName "${SlickUtils.Driver()}.query"
-          serviceName SlickUtils.Driver()
           resourceName SlickUtils.TestQuery()
           spanType DDSpanTypes.SQL
           childOf span(0)
           errored false
           tags {
+            "$DDTags.SERVICE_NAME" SlickUtils.Driver()
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" SlickUtils.Driver()

@@ -5,6 +5,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import net.spy.memcached.CASResponse
 import net.spy.memcached.ConnectionFactory
@@ -630,13 +631,13 @@ class SpymemcachedTest extends AgentTestRunner {
         childOf(trace.span(0))
       }
 
-      serviceName SERVICE_NAME
       operationName OPERATION_NAME
       resourceName operation
       spanType DDSpanTypes.MEMCACHED
       errored(error != null && error != "canceled")
 
       tags {
+        "$DDTags.SERVICE_NAME" SERVICE_NAME
         "$Tags.COMPONENT" COMPONENT_NAME
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.DB_TYPE" CompletionListener.DB_TYPE

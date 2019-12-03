@@ -1,4 +1,5 @@
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.hibernate.Criteria
 import org.hibernate.Session
@@ -22,46 +23,46 @@ class CriteriaTest extends AbstractHibernateTest {
     assertTraces(1) {
       trace(0, 4) {
         span(0) {
-          serviceName "hibernate"
           resourceName "hibernate.session"
           operationName "hibernate.session"
           spanType DDSpanTypes.HIBERNATE
           parent()
           tags {
+            "$DDTags.SERVICE_NAME" "hibernate"
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
         span(1) {
-          serviceName "hibernate"
           resourceName "hibernate.transaction.commit"
           operationName "hibernate.transaction.commit"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
+            "$DDTags.SERVICE_NAME" "hibernate"
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
         span(2) {
-          serviceName "hibernate"
           resourceName "hibernate.criteria.$methodName"
           operationName "hibernate.criteria.$methodName"
           spanType DDSpanTypes.HIBERNATE
           childOf span(0)
           tags {
+            "$DDTags.SERVICE_NAME" "hibernate"
             "$Tags.COMPONENT" "java-hibernate"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             defaultTags()
           }
         }
         span(3) {
-          serviceName "h2"
           spanType "sql"
           childOf span(2)
           tags {
+            "$DDTags.SERVICE_NAME" "h2"
             "$Tags.COMPONENT" "java-jdbc-prepared_statement"
             "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
             "$Tags.DB_TYPE" "h2"

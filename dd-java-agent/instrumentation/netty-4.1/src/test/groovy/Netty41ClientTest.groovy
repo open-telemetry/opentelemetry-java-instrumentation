@@ -194,7 +194,6 @@ class Netty41ClientTest extends HttpClientTest<NettyHttpClientDecorator> {
         basicSpan(it, 0, "parent")
         span(1) {
           childOf((DDSpan) span(0))
-          serviceName "unnamed-java-app"
           operationName "trace.annotation"
           resourceName "AnnotatedClass.makeRequestUnderTrace"
           errored false

@@ -5,6 +5,7 @@ import datadog.trace.agent.test.AgentTestRunner
 import datadog.trace.agent.test.asserts.TraceAssert
 import datadog.trace.api.Config
 import datadog.trace.api.DDSpanTypes
+import datadog.trace.api.DDTags
 import datadog.trace.instrumentation.api.Tags
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import spock.lang.Shared
@@ -111,7 +112,6 @@ class CassandraClientTest extends AgentTestRunner {
 
   def cassandraSpan(TraceAssert trace, int index, String statement, String keyspace, boolean renameService, Object parentSpan = null, Throwable exception = null) {
     trace.span(index) {
-      serviceName renameService && keyspace ? keyspace : "cassandra"
       operationName "cassandra.query"
       resourceName statement
       spanType DDSpanTypes.CASSANDRA
@@ -121,6 +121,7 @@ class CassandraClientTest extends AgentTestRunner {
         childOf((DDSpan) parentSpan)
       }
       tags {
+        "$DDTags.SERVICE_NAME" renameService && keyspace ? keyspace : "cassandra"
         "$Tags.COMPONENT" "java-cassandra"
         "$Tags.SPAN_KIND" Tags.SPAN_KIND_CLIENT
         "$Tags.PEER_HOSTNAME" "localhost"

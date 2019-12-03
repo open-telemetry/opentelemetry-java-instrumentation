@@ -40,7 +40,6 @@ class GrpcTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 2) {
         span(0) {
-          serviceName "unnamed-java-app"
           operationName "grpc.server"
           resourceName "example.Greeter/SayHello"
           spanType DDSpanTypes.RPC
@@ -54,7 +53,6 @@ class GrpcTest extends AgentTestRunner {
           }
         }
         span(1) {
-          serviceName "unnamed-java-app"
           operationName "grpc.message"
           resourceName "grpc.message"
           spanType DDSpanTypes.RPC
@@ -70,7 +68,6 @@ class GrpcTest extends AgentTestRunner {
       }
       trace(1, 2) {
         span(0) {
-          serviceName "unnamed-java-app"
           operationName "grpc.client"
           resourceName "example.Greeter/SayHello"
           spanType DDSpanTypes.RPC
@@ -84,7 +81,6 @@ class GrpcTest extends AgentTestRunner {
           }
         }
         span(1) {
-          serviceName "unnamed-java-app"
           operationName "grpc.message"
           resourceName "grpc.message"
           spanType DDSpanTypes.RPC
@@ -132,7 +128,6 @@ class GrpcTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 2) {
         span(0) {
-          serviceName "unnamed-java-app"
           operationName "grpc.server"
           resourceName "example.Greeter/SayHello"
           spanType DDSpanTypes.RPC
@@ -152,7 +147,6 @@ class GrpcTest extends AgentTestRunner {
           }
         }
         span(1) {
-          serviceName "unnamed-java-app"
           operationName "grpc.message"
           resourceName "grpc.message"
           spanType DDSpanTypes.RPC
@@ -168,7 +162,6 @@ class GrpcTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          serviceName "unnamed-java-app"
           operationName "grpc.client"
           resourceName "example.Greeter/SayHello"
           spanType DDSpanTypes.RPC
@@ -224,7 +217,6 @@ class GrpcTest extends AgentTestRunner {
     assertTraces(2) {
       trace(0, 2) {
         span(0) {
-          serviceName "unnamed-java-app"
           operationName "grpc.server"
           resourceName "example.Greeter/SayHello"
           spanType DDSpanTypes.RPC
@@ -238,7 +230,6 @@ class GrpcTest extends AgentTestRunner {
           }
         }
         span(1) {
-          serviceName "unnamed-java-app"
           operationName "grpc.message"
           resourceName "grpc.message"
           spanType DDSpanTypes.RPC
@@ -254,7 +245,6 @@ class GrpcTest extends AgentTestRunner {
       }
       trace(1, 1) {
         span(0) {
-          serviceName "unnamed-java-app"
           operationName "grpc.client"
           resourceName "example.Greeter/SayHello"
           spanType DDSpanTypes.RPC

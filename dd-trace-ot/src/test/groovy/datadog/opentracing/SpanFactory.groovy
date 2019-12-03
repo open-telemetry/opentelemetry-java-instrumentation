@@ -14,7 +14,6 @@ class SpanFactory {
       1G,
       1G,
       0G,
-      "fakeService",
       "fakeOperation",
       "fakeResource",
       false,
@@ -31,7 +30,6 @@ class SpanFactory {
       1G,
       1G,
       0G,
-      "fakeService",
       "fakeOperation",
       "fakeResource",
       false,
@@ -47,7 +45,6 @@ class SpanFactory {
       trace.traceId,
       1G,
       0G,
-      "fakeService",
       "fakeOperation",
       "fakeResource",
       false,
@@ -58,14 +55,13 @@ class SpanFactory {
     return new DDSpan(1, context)
   }
 
-  static DDSpan newSpanOf(String serviceName, String envName) {
+  static DDSpan newSpanOf(String envName) {
     def writer = new ListWriter()
     def tracer = new DDTracer(writer)
     def context = new DDSpanContext(
       1G,
       1G,
       0G,
-      serviceName,
       "fakeOperation",
       "fakeResource",
       false,
