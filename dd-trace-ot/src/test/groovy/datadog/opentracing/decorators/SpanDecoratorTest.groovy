@@ -171,6 +171,81 @@ class SpanDecoratorTest extends DDSpecification {
     mapping = [(serviceName): "new-service"]
   }
 
+  static createSplittingTracer(tag) {
+    def tracer = new DDTracer(
+      "my-service",
+      new LoggingWriter(),
+      new AllSampler(),
+      "some-runtime-id",
+      emptyMap(),
+      emptyMap(),
+      emptyMap(),
+      emptyMap()
+    )
+    // equivalent to split-by-tags: tag
+    tracer.addDecorator(new ServiceNameDecorator(tag, true))
+
+    return tracer
+  }
+
+  def "peer.service then split-by-tags via builder"() {
+    setup:
+    tracer = createSplittingTracer(Tags.MESSAGE_BUS_DESTINATION.key)
+
+    when:
+    def span = tracer.buildSpan("some span")
+      .withTag(Tags.PEER_SERVICE.key, "peer-service")
+      .withTag(Tags.MESSAGE_BUS_DESTINATION.key, "some-queue")
+      .start()
+    span.finish()
+
+    then:
+    span.serviceName == "some-queue"
+  }
+
+  def "peer.service then split-by-tags via setTag"() {
+    setup:
+    tracer = createSplittingTracer(Tags.MESSAGE_BUS_DESTINATION.key)
+
+    when:
+    def span = tracer.buildSpan("some span").start()
+    span.setTag(Tags.PEER_SERVICE.key, "peer-service")
+    span.setTag(Tags.MESSAGE_BUS_DESTINATION.key, "some-queue")
+    span.finish()
+
+    then:
+    span.serviceName == "some-queue"
+  }
+
+  def "split-by-tags then peer-service via builder"() {
+    setup:
+    tracer = createSplittingTracer(Tags.MESSAGE_BUS_DESTINATION.key)
+
+    when:
+    def span = tracer.buildSpan("some span")
+      .withTag(Tags.MESSAGE_BUS_DESTINATION.key, "some-queue")
+      .withTag(Tags.PEER_SERVICE.key, "peer-service")
+      .start()
+    span.finish()
+
+    then:
+    span.serviceName == "peer-service"
+  }
+
+  def "split-by-tags then peer-service via setTag"() {
+    setup:
+    tracer = createSplittingTracer(Tags.MESSAGE_BUS_DESTINATION.key)
+
+    when:
+    def span = tracer.buildSpan("some span").start()
+    span.setTag(Tags.MESSAGE_BUS_DESTINATION.key, "some-queue")
+    span.setTag(Tags.PEER_SERVICE.key, "peer-service")
+    span.finish()
+
+    then:
+    span.serviceName == "peer-service"
+  }
+
   def "set operation name"() {
     when:
     Tags.COMPONENT.set(span, component)

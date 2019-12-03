@@ -34,6 +34,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -489,7 +490,7 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     private final String operationName;
 
     // Builder attributes
-    private final Map<String, Object> tags = new HashMap<String, Object>(defaultSpanTags);
+    private final Map<String, Object> tags = new LinkedHashMap<String, Object>(defaultSpanTags);
     private long timestampMicro;
     private SpanContext parent;
     private String serviceName;
