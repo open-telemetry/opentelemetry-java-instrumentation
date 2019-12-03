@@ -1,13 +1,9 @@
 package datadog.trace.api;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -55,7 +51,6 @@ public class Config {
   public static final String TRACE_EXECUTORS = "trace.executors";
   public static final String TRACE_METHODS = "trace.methods";
   public static final String TRACE_CLASSES_EXCLUDE = "trace.classes.exclude";
-  public static final String TRACE_REPORT_HOSTNAME = "trace.report-hostname";
   public static final String HTTP_SERVER_ERROR_STATUSES = "http.server.error.statuses";
   public static final String HTTP_CLIENT_ERROR_STATUSES = "http.client.error.statuses";
   public static final String HTTP_SERVER_TAG_QUERY_STRING = "http.server.tag.query-string";
@@ -98,14 +93,10 @@ public class Config {
 
   private static final String SPLIT_BY_SPACE_OR_COMMA_REGEX = "[,\\s]+";
 
-  private static final boolean DEFAULT_TRACE_REPORT_HOSTNAME = false;
   private static final String DEFAULT_TRACE_ANNOTATIONS = null;
   private static final boolean DEFAULT_TRACE_EXECUTORS_ALL = false;
   private static final String DEFAULT_TRACE_EXECUTORS = "";
   private static final String DEFAULT_TRACE_METHODS = null;
-
-  /** A tag intended for internal use only, hence not added to the public api DDTags class. */
-  private static final String INTERNAL_HOST_NAME = "_dd.hostname";
 
   /**
    * this is a random UUID that gets generated on JVM start up and is attached to every root span
@@ -132,8 +123,6 @@ public class Config {
   @Getter private final boolean runtimeContextFieldInjection;
 
   @Getter private final boolean logsInjectionEnabled;
-
-  @Getter private final boolean reportHostName;
 
   @Getter private final String traceAnnotations;
 
@@ -201,9 +190,6 @@ public class Config {
     logsInjectionEnabled =
         getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
 
-    reportHostName =
-        getBooleanSettingFromEnvironment(TRACE_REPORT_HOSTNAME, DEFAULT_TRACE_REPORT_HOSTNAME);
-
     traceAnnotations = getSettingFromEnvironment(TRACE_ANNOTATIONS, DEFAULT_TRACE_ANNOTATIONS);
 
     traceMethods = getSettingFromEnvironment(TRACE_METHODS, DEFAULT_TRACE_METHODS);
@@ -269,9 +255,6 @@ public class Config {
     logsInjectionEnabled =
         getBooleanSettingFromEnvironment(LOGS_INJECTION_ENABLED, DEFAULT_LOGS_INJECTION_ENABLED);
 
-    reportHostName =
-        getPropertyBooleanValue(properties, TRACE_REPORT_HOSTNAME, parent.reportHostName);
-
     traceAnnotations = properties.getProperty(TRACE_ANNOTATIONS, parent.traceAnnotations);
 
     traceMethods = properties.getProperty(TRACE_METHODS, parent.traceMethods);
@@ -288,13 +271,6 @@ public class Config {
     final Map<String, String> runtimeTags = getRuntimeTags();
     final Map<String, String> result = new HashMap<>(runtimeTags);
     result.put(LANGUAGE_TAG_KEY, LANGUAGE_TAG_VALUE);
-
-    if (reportHostName) {
-      final String hostName = getHostName();
-      if (null != hostName && !hostName.isEmpty()) {
-        result.put(INTERNAL_HOST_NAME, hostName);
-      }
-    }
 
     return Collections.unmodifiableMap(result);
   }
@@ -717,47 +693,6 @@ public class Config {
     }
 
     return properties;
-  }
-
-  /** Returns the detected hostname. First tries locally, then using DNS */
-  private String getHostName() {
-    String possibleHostname = null;
-
-    // Try environment variable.  This works in almost all environments
-    if (System.getProperty("os.name").startsWith("Windows")) {
-      possibleHostname = System.getenv("COMPUTERNAME");
-    } else {
-      possibleHostname = System.getenv("HOSTNAME");
-    }
-
-    if (possibleHostname != null && !possibleHostname.isEmpty()) {
-      log.debug("Determined hostname from environment variable");
-      return possibleHostname.trim();
-    }
-
-    // Try hostname command
-    try {
-      final Process process = Runtime.getRuntime().exec("hostname");
-      final BufferedReader reader =
-          new BufferedReader(new InputStreamReader(process.getInputStream()));
-      possibleHostname = reader.readLine();
-    } catch (final Exception e) {
-      // Ignore.  Hostname command is not always available
-    }
-
-    if (possibleHostname != null && !possibleHostname.isEmpty()) {
-      log.debug("Determined hostname from hostname command");
-      return possibleHostname.trim();
-    }
-
-    // From DNS
-    try {
-      return InetAddress.getLocalHost().getHostName();
-    } catch (final UnknownHostException e) {
-      // If we are not able to detect the hostname we do not throw an exception.
-    }
-
-    return null;
   }
 
   // This has to be placed after all other static fields to give them a chance to initialize
