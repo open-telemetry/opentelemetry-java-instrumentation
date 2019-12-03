@@ -1,10 +1,8 @@
 package datadog.opentracing;
 
-import datadog.opentracing.decorators.AbstractDecorator;
 import datadog.trace.api.DDTags;
 import java.math.BigInteger;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -163,26 +161,7 @@ public class DDSpanContext implements io.opentracing.SpanContext {
       return;
     }
 
-    boolean addTag = true;
-
-    // Call decorators
-    final List<AbstractDecorator> decorators = tracer.getSpanContextDecorators(tag);
-    if (decorators != null) {
-      for (final AbstractDecorator decorator : decorators) {
-        try {
-          addTag &= decorator.shouldSetTag(this, tag, value);
-        } catch (final Throwable ex) {
-          log.debug(
-              "Could not decorate the span decorator={}: {}",
-              decorator.getClass().getSimpleName(),
-              ex.getMessage());
-        }
-      }
-    }
-
-    if (addTag) {
-      tags.put(tag, value);
-    }
+    tags.put(tag, value);
   }
 
   public synchronized Map<String, Object> getTags() {

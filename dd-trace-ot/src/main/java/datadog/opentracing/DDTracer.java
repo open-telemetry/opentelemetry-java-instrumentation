@@ -1,7 +1,5 @@
 package datadog.opentracing;
 
-import datadog.opentracing.decorators.AbstractDecorator;
-import datadog.opentracing.decorators.DDDecoratorsFactory;
 import datadog.opentracing.propagation.ExtractedContext;
 import datadog.opentracing.propagation.HttpCodec;
 import datadog.opentracing.scopemanager.ContextualScopeManager;
@@ -24,10 +22,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,10 +49,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
    * earlier
    */
   private final Thread shutdownCallback;
-
-  /** Span context decorators */
-  private final Map<String, List<AbstractDecorator>> spanContextDecorators =
-      new ConcurrentHashMap<>();
 
   private final HttpCodec.Injector injector;
   private final HttpCodec.Extractor extractor;
@@ -102,11 +94,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
 
     log.info("New instance: {}", this);
 
-    final List<AbstractDecorator> decorators = DDDecoratorsFactory.createBuiltinDecorators();
-    for (final AbstractDecorator decorator : decorators) {
-      addDecorator(decorator);
-    }
-
     // Ensure that PendingTrace.SPAN_CLEANER is initialized in this thread:
     // FIXME: add test to verify the span cleaner thread is started with this call.
     PendingTrace.initialize();
@@ -120,33 +107,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
     } catch (final Exception e) {
       log.error("Error while finalizing DDTracer.", e);
     }
-  }
-
-  /**
-   * Returns the list of span context decorators
-   *
-   * @return the list of span context decorators
-   */
-  public List<AbstractDecorator> getSpanContextDecorators(final String tag) {
-    return spanContextDecorators.get(tag);
-  }
-
-  /**
-   * Add a new decorator in the list ({@link AbstractDecorator})
-   *
-   * @param decorator The decorator in the list
-   */
-  public void addDecorator(final AbstractDecorator decorator) {
-
-    List<AbstractDecorator> list = spanContextDecorators.get(decorator.getMatchingTag());
-    if (list == null) {
-      list = new ArrayList<>();
-    }
-    list.add(decorator);
-
-    spanContextDecorators.put(decorator.getMatchingTag(), list);
-    log.debug(
-        "Decorator added: '{}' -> {}", decorator.getMatchingTag(), decorator.getClass().getName());
   }
 
   @Deprecated
@@ -391,7 +351,6 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       final BigInteger parentSpanId;
       final PendingTrace parentTrace;
 
-      final DDSpanContext context;
       SpanContext parentContext = parent;
       if (parentContext == null && !ignoreScope) {
         // use the Scope as parent unless overridden or ignored.
@@ -426,47 +385,15 @@ public class DDTracer implements io.opentracing.Tracer, Closeable, datadog.trace
       }
 
       // some attributes are inherited from the parent
-      context =
-          new DDSpanContext(
-              traceId,
-              spanId,
-              parentSpanId,
-              operationName,
-              errorFlag,
-              tags,
-              parentTrace,
-              DDTracer.this);
-
-      // Apply Decorators to handle any tags that may have been set via the builder.
-      for (final Map.Entry<String, Object> tag : tags.entrySet()) {
-        if (tag.getValue() == null) {
-          context.setTag(tag.getKey(), null);
-          continue;
-        }
-
-        boolean addTag = true;
-
-        // Call decorators
-        final List<AbstractDecorator> decorators = getSpanContextDecorators(tag.getKey());
-        if (decorators != null) {
-          for (final AbstractDecorator decorator : decorators) {
-            try {
-              addTag &= decorator.shouldSetTag(context, tag.getKey(), tag.getValue());
-            } catch (final Throwable ex) {
-              log.debug(
-                  "Could not decorate the span decorator={}: {}",
-                  decorator.getClass().getSimpleName(),
-                  ex.getMessage());
-            }
-          }
-        }
-
-        if (!addTag) {
-          context.setTag(tag.getKey(), null);
-        }
-      }
-
-      return context;
+      return new DDSpanContext(
+          traceId,
+          spanId,
+          parentSpanId,
+          operationName,
+          errorFlag,
+          tags,
+          parentTrace,
+          DDTracer.this);
     }
   }
 
